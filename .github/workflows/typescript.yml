@@ -1,0 +1,37 @@
+# Publishes a tagged version of the TypeScript SDK, typescript/, to npm and JSR.
+#
+# This repository is generated: Pethost's own repository writes each SDK's directory from the
+# API's description, proto/, and pushes it here with its tag, typescript/v<version>. Nothing
+# here is edited by hand but the workflows.
+# Both registries take the release by trusted publishing: no token is kept anywhere.
+name: TypeScript
+
+on:
+  push:
+    tags: ['typescript/v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+defaults:
+  run:
+    working-directory: typescript
+
+jobs:
+  publish:
+    name: Publish to npm and JSR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24 # Its npm publishes by trusted publishing.
+          registry-url: https://registry.npmjs.org
+      - run: npm install
+      - run: npm test
+      - run: npm publish --access public
+      - run: npx jsr@0.14.3 publish

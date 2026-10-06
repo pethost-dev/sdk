@@ -1,0 +1,36 @@
+# Checks a tagged version of the Go SDK, go/, and tells Go's module proxy of it.
+#
+# This repository is generated: Pethost's own repository writes each SDK's directory from the
+# API's description, proto/, and pushes it here with its tag, go/v<version>. Nothing here is
+# edited by hand but the workflows.
+# A Go module has no registry to upload to: the tag is the release, and pkg.go.dev reads it from
+# the proxy.
+name: Go
+
+on:
+  push:
+    tags: ['go/v*']
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: go
+
+jobs:
+  publish:
+    name: Check, and tell the proxy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go/go.mod
+      - run: go vet ./...
+      - run: go test ./...
+      # The proxy knows the module's version without the directory the tag names it by.
+      - run: curl -fsS "https://proxy.golang.org/github.com/pethost-dev/sdk/go/@v/${GITHUB_REF_NAME#go/}.info"

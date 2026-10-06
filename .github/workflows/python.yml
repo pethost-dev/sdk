@@ -1,0 +1,37 @@
+# Publishes a tagged version of the Python SDK, python/, to PyPI.
+#
+# This repository is generated: Pethost's own repository writes each SDK's directory from the
+# API's description, proto/, and pushes it here with its tag, python/v<version>. Nothing here is
+# edited by hand but the workflows.
+# PyPI takes the release by trusted publishing: no token is kept anywhere.
+name: Python
+
+on:
+  push:
+    tags: ['python/v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+defaults:
+  run:
+    working-directory: python
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: pipx install uv==0.12.23
+      - name: The package's own checks
+        run: |
+          uv venv
+          uv pip install .
+          .venv/bin/python -m unittest discover --start-directory tests --top-level-directory .
+      - run: uv build
+      - run: uv publish
