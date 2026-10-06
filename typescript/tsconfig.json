@@ -1,0 +1,21 @@
+// How the package is built for npm: src/ to dist/, JavaScript and its declarations. JSR takes
+// src/ as it is, so its relative imports end in .ts, which the compiler rewrites to .js.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["src"]
+}

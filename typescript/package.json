@@ -1,0 +1,40 @@
+{
+  "name": "pethost",
+  "version": "0.1.0",
+  "description": "TypeScript and JavaScript SDK for Pethost, a small cloud for personal projects: deploy Docker Compose projects to a machine of your own, read their logs and requests, run commands in their containers.",
+  "keywords": ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client"],
+  "homepage": "https://pethost.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pethost-dev/sdk.git",
+    "directory": "typescript"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "tsc -p test && node --experimental-strip-types test/run.ts",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "2.16.0",
+    "@connectrpc/connect": "2.2.0",
+    "@connectrpc/connect-web": "2.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "6.0.3"
+  }
+}

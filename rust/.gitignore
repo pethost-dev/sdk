@@ -1,0 +1,4 @@
+# Cargo's build directory, and the versions it chose on one day: a library's users choose
+# their own.
+/target
+/Cargo.lock

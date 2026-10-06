@@ -1,0 +1,18 @@
+edition = "2024";
+
+// The option that says a field's absence means something. In panel.proto every scalar field may
+// be absent, as in any edition 2024 file, and the convention is "Absent = 0, false or empty". A
+// field marked here is an exception: its comment says what leaving it out does, and that is not
+// what its zero value does ("Absent = 45; 0 = answer at once"). The SDKs' generator types a
+// marked field as optional and every other scalar as a plain value, which an SDK sends only when
+// it is not zero. Nothing on the wire and nothing in the panel's own code depends on the option.
+package pethost.panel.v1;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  // True = a scalar field whose absence differs from its zero value. Not for a message-typed
+  // field, which is absent by nature, a repeated one, which never is, or a oneof's member, whose
+  // oneof says which is set.
+  bool optional = 50002;
+}

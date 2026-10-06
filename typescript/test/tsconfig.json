@@ -1,0 +1,21 @@
+// How the checks and the README's program are compiled: as a strict user of the built package
+// would compile them, and without output. Only erasable syntax, since Node runs them as they
+// are.
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts", "../examples/*.ts"]
+}

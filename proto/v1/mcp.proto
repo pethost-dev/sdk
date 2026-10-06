@@ -1,0 +1,27 @@
+edition = "2024";
+
+// The option that makes an RPC an MCP tool. protoc-gen-panel-mcp (cmd/protoc-gen-panel-mcp) reads
+// it and writes the tool list agents see, v1/panel.mcp.json: the tool is named after the RPC
+// (people are shown the option's title), its description is the comment above the RPC, its input
+// schema the request message with each field's comment, and the server's instructions the comment
+// at the top of the RPC's file. A tool call runs the RPC's own handler, so the web panel and an
+// agent can never disagree.
+package pethost.panel.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// What an MCP client is told about a tool beyond its schema.
+message McpTool {
+  // True = the tool may delete or overwrite something: MCP's destructiveHint, which clients use
+  // to ask the person first. A read-only RPC (idempotency_level NO_SIDE_EFFECTS) never sets it.
+  bool destructive = 1;
+
+  // The tool's name for people, a few words ("Deploy a project"): MCP's annotations.title, which
+  // a client or a directory of connectors shows instead of the RPC's name. Every tool has one.
+  string title = 2;
+}
+
+extend google.protobuf.MethodOptions {
+  // Present = the RPC is an MCP tool. Only unary RPCs can be.
+  McpTool mcp_tool = 50001;
+}

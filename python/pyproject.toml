@@ -1,0 +1,67 @@
+# Generated with the package from v1/panel.proto: do not edit.
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pethost"
+version = "0.1.0"
+description = "The Python SDK for Pethost, hosting for Docker Compose projects: deploy, read logs and requests, run commands and move files through its API."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Pethost" }]
+keywords = ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client"]
+# A Python is named here once the package's checks (tests/) were seen to pass on it.
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+# The wire layer under pethost/_wire is the output of protoc-gen-py and protoc-gen-connectrpc:
+# each range is the minor release of the generator that wrote it.
+dependencies = [
+    "connectrpc>=0.12.1,<0.13",
+    "protobuf-py>=0.6.0,<0.7",
+]
+
+[project.urls]
+Homepage = "https://pethost.dev"
+Documentation = "https://pethost.dev/docs/api/"
+Repository = "https://github.com/pethost-dev/sdk"
+Issues = "https://github.com/pethost-dev/sdk/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pethost"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/pethost", "/tests", "/README.md", "/LICENSE"]
+
+# Both checkers hold the package and its checks to their strict mode. The wire layer is the
+# official generators' output as they wrote it: used, not judged.
+[tool.pyright]
+include = ["pethost", "tests"]
+ignore = ["pethost/_wire"]
+pythonVersion = "3.10"
+typeCheckingMode = "strict"
+
+[tool.mypy]
+packages = ["pethost", "tests"]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "pethost._wire.*"
+ignore_errors = true
