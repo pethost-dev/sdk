@@ -4,11 +4,15 @@
 # API's description, proto/, and pushes it here with its tag, python/v<version>. Nothing here is
 # edited by hand but the workflows.
 # PyPI takes the release by trusted publishing: no token is kept anywhere.
+#
+# By hand (workflow_dispatch) it publishes what main holds: for a tag whose own run failed on
+# this file as it then was, since a run again reads the file of the tag's commit.
 name: Python
 
 on:
   push:
     tags: ['python/v*']
+  workflow_dispatch:
 
 permissions:
   contents: read

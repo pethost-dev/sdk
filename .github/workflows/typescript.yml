@@ -3,12 +3,17 @@
 # This repository is generated: Pethost's own repository writes each SDK's directory from the
 # API's description, proto/, and pushes it here with its tag, typescript/v<version>. Nothing
 # here is edited by hand but the workflows.
-# Both registries take the release by trusted publishing: no token is kept anywhere.
+# Both registries take the release by trusted publishing: no token is kept anywhere. Each is a
+# job of its own, so one that failed is run again without the other.
+#
+# By hand (workflow_dispatch) it publishes what main holds: for a tag whose own run failed on
+# this file as it then was, since a run again reads the file of the tag's commit.
 name: TypeScript
 
 on:
   push:
     tags: ['typescript/v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,8 +24,8 @@ defaults:
     working-directory: typescript
 
 jobs:
-  publish:
-    name: Publish to npm and JSR
+  npm:
+    name: Publish to npm
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -31,7 +36,21 @@ jobs:
         with:
           node-version: 24 # Its npm publishes by trusted publishing.
           registry-url: https://registry.npmjs.org
-      - run: npm install
+      - run: npm install --no-package-lock
       - run: npm test
       - run: npm publish --access public
+
+  jsr:
+    name: Publish to JSR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      # No lock file: JSR publishes only from a tree with nothing uncommitted in it.
+      - run: npm install --no-package-lock
       - run: npx jsr@0.14.3 publish
