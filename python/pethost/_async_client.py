@@ -3,7 +3,8 @@ _client.py: do not edit."""
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Sequence
+import asyncio
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, Sequence
 from datetime import datetime
 from typing import TypeVar, overload
 
@@ -42,6 +43,9 @@ from pethost._types import (
     RunServiceCommandResponse,
     ServicesAction,
     SshKey,
+    TailContainerLogsResponse,
+    TailHttpTrafficResponse,
+    WatchOperationResponse,
 )
 from pethost._wire.v1.panel_connect import PanelServiceClient as _Wire
 
@@ -51,7 +55,8 @@ _Self = TypeVar("_Self", bound="AsyncPethost")
 
 
 class AsyncPethost:
-    """Pethost's API for asyncio: `Pethost`'s methods, each awaited.
+    """Pethost's API for asyncio: `Pethost`'s methods, each awaited, and its streams, each read
+    with `async for`.
 
         async with AsyncPethost() as pethost:
             print(await pethost.get_machine())
@@ -68,17 +73,18 @@ class AsyncPethost:
         Args:
             token: The API token, "pth_...": a person makes one in the panel's Settings, under "API tokens". None = the environment's PETHOST_TOKEN.
             base_url: The API's address.
-            timeout: Seconds one call may take, the API's own waiting included: a call that waits for an operation or runs a command can be told to take longer than this. None = no limit.
+            timeout: Seconds one call may take, the API's own waiting included: a call that waits for an operation or runs a command can be told to take longer than this. None = no limit. A stream has no limit: it lasts as long as its loop.
         """
-        self._wire = _Wire(
-            base_url,
-            interceptors=[_rt.Caller(_rt.token_or_environment(token))],
-            timeout_ms=_rt.timeout_ms(timeout),
-        )
+        caller = _rt.Caller(_rt.token_or_environment(token))
+        self._wire = _Wire(base_url, interceptors=[caller], timeout_ms=_rt.timeout_ms(timeout))
+        # The wire layer's timeout is a call's whole time, and a call cannot lift its client's:
+        # the streams have a client of their own, without one.
+        self._streams = _Wire(base_url, interceptors=[caller])
 
     async def aclose(self) -> None:
         """Closes its connections; `async with` does it."""
         await self._wire.close()
+        await self._streams.close()
 
     async def __aenter__(self: _Self) -> _Self:
         return self
@@ -91,6 +97,30 @@ class AsyncPethost:
             return await method(request)
         except _ConnectError as error:
             raise _convert.error_from_wire(error) from None
+
+    async def _stream(
+        self,
+        method: Callable[[_Request], AsyncIterator[_rt.Wire]],
+        request: _Request,
+        read: Callable[[_rt.Wire], _Response],
+    ) -> AsyncGenerator[_Response, None]:
+        """A stream's responses, each as the API sends it, without its pulses, and its failure
+        as the package's error. However it is left, it closes the wire layer's stream, which
+        ends the call."""
+        wired = method(request)
+        try:
+            async for response in wired:
+                if not _rt.is_pulse(response):
+                    yield read(response)
+        except _ConnectError as error:
+            # The wire layer reports its task's cancelling as a failed call. To asyncio it is
+            # none: the task ends cancelled, as with any other await.
+            if isinstance(error.__cause__, asyncio.CancelledError):
+                raise error.__cause__ from None
+            raise _convert.error_from_wire(error) from None
+        finally:
+            if isinstance(wired, AsyncGenerator):  # It is one, though the wire layer types it an iterator.
+                await wired.aclose()
 
     async def get_machine(self) -> GetMachineResponse:
         """Get the machine.
@@ -1776,3 +1806,81 @@ class AsyncPethost:
         At most one of `upload_archive`, `upload_file`, `download`.
         """
         return _convert.create_transfer_response_from_wire(await self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download)))
+
+    def watch_operation(
+        self,
+        project_id: str,
+        *,
+        operation_id: str = "",
+    ) -> AsyncGenerator[WatchOperationResponse, None]:
+        """Watch an operation, as a stream.
+
+        Streams an operation's log from its start, then follows it; the last message is the
+        finished operation. Without a stream: get_operation.
+
+        Read it with `async for`: the call is made when the loop starts, and each response comes as the
+        API sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as asyncio then closes the generator,
+        and so does cancelling its task; where a variable holds the generator, awaiting its `aclose()`
+        ends the call.
+
+            async for response in pethost.watch_operation("..."):
+                ...
+
+        Args:
+            operation_id: Empty = the latest.
+        """
+        return self._stream(self._streams.watch_operation, _convert.watch_operation_request(project_id=project_id, operation_id=operation_id), _convert.watch_operation_response_from_wire)
+
+    def tail_container_logs(
+        self,
+        project_id: str,
+        *,
+        filter: ContainerLogFilter | None = None,
+        after_cursor: str = "",
+    ) -> AsyncGenerator[TailContainerLogsResponse, None]:
+        """Follow container logs, as a stream.
+
+        Streams container output after a cursor, then new lines as they are written. OutOfRangeError =
+        the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
+        with query_container_logs and tail after its tail_cursor. Without a stream: query_container_logs.
+
+        Read it with `async for`: the call is made when the loop starts, and each response comes as the
+        API sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as asyncio then closes the generator,
+        and so does cancelling its task; where a variable holds the generator, awaiting its `aclose()`
+        ends the call.
+
+            async for response in pethost.tail_container_logs("..."):
+                ...
+
+        Args:
+            after_cursor: Empty = only lines written from now on.
+        """
+        return self._stream(self._streams.tail_container_logs, _convert.tail_container_logs_request(project_id=project_id, filter=filter, after_cursor=after_cursor), _convert.tail_container_logs_response_from_wire)
+
+    def tail_http_traffic(
+        self,
+        project_id: str,
+        *,
+        filter: HttpTrafficFilter | None = None,
+        after_sequence: int = 0,
+    ) -> AsyncGenerator[TailHttpTrafficResponse, None]:
+        """Follow HTTP traffic, as a stream.
+
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: query_http_traffic.
+
+        Read it with `async for`: the call is made when the loop starts, and each response comes as the
+        API sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as asyncio then closes the generator,
+        and so does cancelling its task; where a variable holds the generator, awaiting its `aclose()`
+        ends the call.
+
+            async for response in pethost.tail_http_traffic("..."):
+                ...
+
+        Args:
+            after_sequence: 0 = only requests from now on.
+        """
+        return self._stream(self._streams.tail_http_traffic, _convert.tail_http_traffic_request(project_id=project_id, filter=filter, after_sequence=after_sequence), _convert.tail_http_traffic_response_from_wire)

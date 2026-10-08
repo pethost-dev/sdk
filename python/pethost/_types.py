@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import final, overload
+from typing import Any, final, overload
 
 from ._runtime import OpenEnum
 from ._runtime import one_of as _one_of
@@ -410,6 +410,27 @@ class GetMachineResponse:
 
     github: GithubConnection | None = None
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.get_machine_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GetMachineResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.get_machine_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -555,6 +576,27 @@ class Machine:
     holds at once.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.machine_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Machine:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.machine_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -591,6 +633,27 @@ class MachineSession:
     """Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL."""
 
     ssh_key_fingerprint: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.machine_session_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MachineSession:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.machine_session_from_dict(data)
 
 
 @final
@@ -629,6 +692,27 @@ class DiskUsage:
     http_traffic_bytes: int = 0
     """The HTTP request log."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.disk_usage_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DiskUsage:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.disk_usage_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -648,6 +732,27 @@ class SshKey:
 
     fingerprint: str = ""
     """"SHA256:...". Ignored on input."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.ssh_key_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SshKey:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.ssh_key_from_dict(data)
 
 
 @final
@@ -682,6 +787,27 @@ class GithubConnection:
     webhooks_enabled: bool = False
     """False = pushes reach the panel only by its check every 5 minutes, not at once."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.github_connection_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GithubConnection:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.github_connection_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -699,6 +825,27 @@ class GithubRepository:
     private: bool = False
 
     push_time: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.github_repository_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GithubRepository:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.github_repository_from_dict(data)
 
 
 @final
@@ -721,6 +868,27 @@ class DeletedProject:
     snapshot_count: int = 0
     """In all."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.deleted_project_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DeletedProject:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.deleted_project_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -741,6 +909,27 @@ class RestartMachineAction:
     interrupt_operations: bool = False
     """False = wait for operations and nightly backups to end; true = cut them short."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.restart_machine_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RestartMachineAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.restart_machine_action_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -752,6 +941,27 @@ class RunMachineActionResponse:
 
     machine: Machine | None = None
     """As changed."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.run_machine_action_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RunMachineActionResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.run_machine_action_response_from_dict(data)
 
 
 @final
@@ -774,6 +984,27 @@ class ProjectMetadata:
 
     notes: str | None = None
     """Free text."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_metadata_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectMetadata:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_metadata_from_dict(data)
 
 
 @final
@@ -833,6 +1064,27 @@ class ProjectSummary:
     with another project counts in both. Measured every few minutes.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_summary_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectSummary:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_summary_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -840,6 +1092,27 @@ class ServiceSummary:
     service: str = ""
 
     state: ServiceState = ServiceState.UNSPECIFIED
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.service_summary_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ServiceSummary:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.service_summary_from_dict(data)
 
 
 @final
@@ -883,11 +1156,53 @@ class ProjectProblem:
     changed the project.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_problem_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectProblem:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_problem_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GetProjectResponse:
     project: Project | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.get_project_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GetProjectResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.get_project_response_from_dict(data)
 
 
 @final
@@ -1012,6 +1327,27 @@ class Project:
     deploy, and Service.state is still what it was before. Absent = none.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Project:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1028,6 +1364,27 @@ class RunningServicesAction:
     """Those it acts on."""
 
     start_time: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.running_services_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RunningServicesAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.running_services_action_from_dict(data)
 
 
 @final
@@ -1080,6 +1437,27 @@ class ProjectSource:
         object.__setattr__(self, "files", files)
         object.__setattr__(self, "github", github)
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_source_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectSource:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_source_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1130,6 +1508,27 @@ class GithubSource:
     A tried commit that failed or was refused waits for a person: deploy_project or a new push.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.github_source_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GithubSource:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.github_source_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1149,6 +1548,27 @@ class GithubCommit:
 
     url: str = ""
     """On github.com."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.github_commit_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GithubCommit:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.github_commit_from_dict(data)
 
 
 @final
@@ -1283,6 +1703,27 @@ class Service:
     It works once one of their public keys is among Machine.ssh_keys.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.service_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Service:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.service_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1306,6 +1747,27 @@ class PublishedPort:
     machine_only: bool = False
     """True = bound to 127.0.0.1: reachable only through an SSH tunnel."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.published_port_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> PublishedPort:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.published_port_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1319,6 +1781,27 @@ class VolumeMount:
 
     container_path: str = ""
     """E.g. "/var/lib/postgresql/data"."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.volume_mount_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> VolumeMount:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.volume_mount_from_dict(data)
 
 
 @final
@@ -1355,6 +1838,27 @@ class HealthCheck:
 
     last_failure_output: str = ""
     """Of the latest failed check, at most 4 KiB. Untrusted."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.health_check_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HealthCheck:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.health_check_from_dict(data)
 
 
 @final
@@ -1404,6 +1908,27 @@ class EnvironmentVariable:
     Read source_file with read_path.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.environment_variable_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> EnvironmentVariable:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.environment_variable_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1447,6 +1972,27 @@ class Volume:
     as it is.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.volume_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Volume:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.volume_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1454,6 +2000,27 @@ class VolumeMountedBy:
     service: str = ""
 
     container_path: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.volume_mounted_by_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> VolumeMountedBy:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.volume_mounted_by_from_dict(data)
 
 
 @final
@@ -1494,6 +2061,27 @@ class Host:
     deep). Change its host. Empty = it answers, or it is the person's own domain.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.host_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Host:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.host_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1526,6 +2114,27 @@ class Route:
 
     strip_path: bool = False
     """True = the path's prefix is removed from the request."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.route_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Route:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.route_from_dict(data)
 
 
 @final
@@ -1639,6 +2248,27 @@ class Operation:
     same, the newest has it.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.operation_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Operation:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.operation_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1659,6 +2289,27 @@ class Snapshot:
     volumes: Sequence[str] = ()
     """The volumes it holds, besides the project's directory."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.snapshot_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Snapshot:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.snapshot_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1678,6 +2329,27 @@ class HttpTrafficSummary:
     """Of responses: WebSockets, logged when they close, count as requests but not here."""
 
     latency_p95_ms: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_summary_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HttpTrafficSummary:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_summary_from_dict(data)
 
 
 @final
@@ -1711,6 +2383,27 @@ class CreateProjectResponse:
     log: Sequence[OperationLogLine] = ()
     """The log's last lines, unless it SUCCEEDED: why it FAILED, or what it is doing."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.create_project_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CreateProjectResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.create_project_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1731,6 +2424,27 @@ class MountVolume:
 
     container_path: str = ""
     """Absolute, e.g. "/data"."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.mount_volume_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MountVolume:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.mount_volume_from_dict(data)
 
 
 @final
@@ -1763,6 +2477,27 @@ class ProjectExtension:
 
     remove_password: bool = False
     """True = no password. Not with password."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_extension_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectExtension:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_extension_from_dict(data)
 
 
 @final
@@ -1927,6 +2662,27 @@ class FileChange:
         object.__setattr__(self, "rename_to", rename_to)
         object.__setattr__(self, "executable", executable)
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.file_change_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> FileChange:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.file_change_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1958,6 +2714,27 @@ class DeployProjectResponse:
     log: Sequence[OperationLogLine] = ()
     """The log's last lines, unless it SUCCEEDED: why it FAILED, or what it is doing."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.deploy_project_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DeployProjectResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.deploy_project_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1981,6 +2758,27 @@ class SpecViolation:
     violation_message: str = ""
     """What is wrong and what to write instead."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.spec_violation_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SpecViolation:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.spec_violation_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1996,6 +2794,27 @@ class ListCommitsResponse:
 
     more: bool = False
     """Older ones exist: pass the last one's sha as before_commit."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.list_commits_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ListCommitsResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.list_commits_response_from_dict(data)
 
 
 @final
@@ -2033,6 +2852,27 @@ class BranchCommit:
     deploying any other turns auto_deploy off (see deploy_project).
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.branch_commit_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> BranchCommit:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.branch_commit_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2044,6 +2884,27 @@ class ServicesAction:
 
     services: Sequence[str] = ()
     """Empty = all (start: those with a container; restart: running ones)."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.services_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ServicesAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.services_action_from_dict(data)
 
 
 @final
@@ -2059,11 +2920,51 @@ class RecreateServiceAction:
     pull_latest_image: bool = False
     """True = pull the tag's newest image, or rebuild on the newest base images."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.recreate_service_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RecreateServiceAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.recreate_service_action_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class BackUpAction:
-    pass
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.back_up_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> BackUpAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.back_up_action_from_dict(data)
 
 
 @final
@@ -2084,6 +2985,27 @@ class RestoreSnapshotAction:
     and volumes return, then it deploys.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.restore_snapshot_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RestoreSnapshotAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.restore_snapshot_action_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2096,6 +3018,27 @@ class CancelOperationAction:
     operation_id: str = ""
     """Required."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.cancel_operation_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CancelOperationAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.cancel_operation_action_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2107,6 +3050,27 @@ class DeleteProjectAction:
 
     skip_final_backup: bool = False
     """True = no final backup, while backups are on: changes since the newest snapshot are lost."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.delete_project_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DeleteProjectAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.delete_project_action_from_dict(data)
 
 
 @final
@@ -2137,6 +3101,27 @@ class RunProjectActionResponse:
 
     log: Sequence[OperationLogLine] = ()
     """The operation's last log lines, unless it SUCCEEDED."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.run_project_action_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RunProjectActionResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.run_project_action_response_from_dict(data)
 
 
 @final
@@ -2173,6 +3158,27 @@ class GetOperationResponse:
     line of the log.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.get_operation_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> GetOperationResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.get_operation_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2189,6 +3195,27 @@ class OperationLogLine:
     """From Compose, BuildKit, restic or the daemon, as LogLine.text is kept; at most 2 KiB, a
     longer line is cut.
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.operation_log_line_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> OperationLogLine:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.operation_log_line_from_dict(data)
 
 
 @final
@@ -2218,6 +3245,27 @@ class HttpTrafficFilter:
     status_class: int = 0
     """1-5: 5 = 5xx."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_filter_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HttpTrafficFilter:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_filter_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2229,9 +3277,9 @@ class QueryHttpTrafficResponse:
         buckets: Oldest first, each bucket_width_seconds wide; one with no request is left out.
         top_paths: The 10 busiest, busiest first.
         newest_sequence: The sequence of the newest request the machine had logged: summary, buckets and top_paths
-            count every one up to it, and TailHttpTraffic streams the later ones. 0 = none was logged.
+            count every one up to it, and tail_http_traffic streams the later ones. 0 = none was logged.
         next_page_token: Empty = no more requests.
-        tail_sequence: Where TailHttpTraffic goes on from (after_sequence), so it misses no request newer than
+        tail_sequence: Where tail_http_traffic goes on from (after_sequence), so it misses no request newer than
             these: set on a first page with request_limit, empty or not. 0 = the machine had logged
             none.
     """
@@ -2254,7 +3302,7 @@ class QueryHttpTrafficResponse:
 
     newest_sequence: int = 0
     """The sequence of the newest request the machine had logged: summary, buckets and top_paths
-    count every one up to it, and TailHttpTraffic streams the later ones. 0 = none was logged.
+    count every one up to it, and tail_http_traffic streams the later ones. 0 = none was logged.
     """
 
     requests: Sequence[HttpRequest] = ()
@@ -2263,10 +3311,31 @@ class QueryHttpTrafficResponse:
     """Empty = no more requests."""
 
     tail_sequence: int = 0
-    """Where TailHttpTraffic goes on from (after_sequence), so it misses no request newer than
+    """Where tail_http_traffic goes on from (after_sequence), so it misses no request newer than
     these: set on a first page with request_limit, empty or not. 0 = the machine had logged
     none.
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.query_http_traffic_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> QueryHttpTrafficResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.query_http_traffic_response_from_dict(data)
 
 
 @final
@@ -2275,6 +3344,27 @@ class HttpTrafficBucket:
     start_time: datetime | None = None
 
     summary: HttpTrafficSummary | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_bucket_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HttpTrafficBucket:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.http_traffic_bucket_from_dict(data)
 
 
 @final
@@ -2292,13 +3382,34 @@ class HttpPathTraffic:
 
     summary: HttpTrafficSummary | None = None
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.http_path_traffic_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HttpPathTraffic:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.http_path_traffic_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class HttpRequest:
     """
     Attributes:
-        sequence: Unique and increasing on the machine: TailHttpTraffic's cursor.
+        sequence: Unique and increasing on the machine: tail_http_traffic's cursor.
         finish_time: When the response finished. A WebSocket is logged when it closes, with status 0.
         path: With the query. Untrusted.
         route_path: The route that matched.
@@ -2311,7 +3422,7 @@ class HttpRequest:
     """
 
     sequence: int = 0
-    """Unique and increasing on the machine: TailHttpTraffic's cursor."""
+    """Unique and increasing on the machine: tail_http_traffic's cursor."""
 
     finish_time: datetime | None = None
     """When the response finished. A WebSocket is logged when it closes, with status 0."""
@@ -2351,6 +3462,27 @@ class HttpRequest:
     user_agent: str = ""
     """Untrusted."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.http_request_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HttpRequest:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.http_request_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2371,6 +3503,27 @@ class ContainerLogFilter:
     text_contains: str = ""
     """Literal, any ASCII case, ignoring escape sequences. Length limited (InvalidArgumentError)."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.container_log_filter_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ContainerLogFilter:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.container_log_filter_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2381,7 +3534,7 @@ class QueryContainerLogsResponse:
         oldest_kept_time: Of the oldest line of container output the machine keeps: nothing older can be queried.
             Absent = none is kept.
         next_page_token: Empty = no more.
-        tail_cursor: Where TailContainerLogs goes on from (after_cursor), so it misses no line newer than these:
+        tail_cursor: Where tail_container_logs goes on from (after_cursor), so it misses no line newer than these:
             set on every page, an empty one too. Empty = the machine had logged no line.
     """
 
@@ -2401,9 +3554,30 @@ class QueryContainerLogsResponse:
     """Empty = no more."""
 
     tail_cursor: str = ""
-    """Where TailContainerLogs goes on from (after_cursor), so it misses no line newer than these:
+    """Where tail_container_logs goes on from (after_cursor), so it misses no line newer than these:
     set on every page, an empty one too. Empty = the machine had logged no line.
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.query_container_logs_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> QueryContainerLogsResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.query_container_logs_response_from_dict(data)
 
 
 @final
@@ -2427,6 +3601,27 @@ class LogLine:
     control characters but tab, are removed. A line over 4 KiB is cut (over 16 KiB in streams).
     Untrusted.
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.log_line_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> LogLine:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.log_line_from_dict(data)
 
 
 @final
@@ -2456,6 +3651,27 @@ class RunServiceCommandResponse:
 
     output_truncated: bool = False
     """True = the start of stdout or stderr was cut."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.run_service_command_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> RunServiceCommandResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.run_service_command_response_from_dict(data)
 
 
 @final
@@ -2490,6 +3706,27 @@ class FileEntry:
 
     symlink_target: str = ""
     """When SYMLINK."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.file_entry_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> FileEntry:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.file_entry_from_dict(data)
 
 
 @final
@@ -2545,6 +3782,27 @@ class ReadPathResponse:
     base_deploy_id to be refused if they changed since you read them.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.read_path_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ReadPathResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.read_path_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2559,6 +3817,27 @@ class ArchiveUpload:
 
     file_name: str = ""
     """The archive's name for people, e.g. "recipes.zip". Empty = "archive.tgz"."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.archive_upload_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ArchiveUpload:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.archive_upload_from_dict(data)
 
 
 @final
@@ -2626,6 +3905,27 @@ class FileUpload:
         object.__setattr__(self, "service", service)
         object.__setattr__(self, "volume", volume)
         object.__setattr__(self, "path", path)
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.file_upload_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> FileUpload:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.file_upload_from_dict(data)
 
 
 @final
@@ -2697,6 +3997,27 @@ class PathDownload:
         object.__setattr__(self, "volume", volume)
         object.__setattr__(self, "path", path)
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.path_download_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> PathDownload:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.path_download_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2716,6 +4037,8 @@ class CreateTransferResponse:
         replaces: upload_file: a file is at path now; the upload replaces it.
         file_name: download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
             after the project and its service or volume. Empty for an upload.
+        exclude_names: upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+            directory. A program that packs the directory itself leaves out the same.
     """
 
     url: str = ""
@@ -2748,6 +4071,32 @@ class CreateTransferResponse:
     after the project and its service or volume. Empty for an upload.
     """
 
+    exclude_names: Sequence[str] = ()
+    """upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+    directory. A program that packs the directory itself leaves out the same.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.create_transfer_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CreateTransferResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.create_transfer_response_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2775,6 +4124,27 @@ class ProjectBusy:
     start_time: datetime | None = None
     """Since when it holds the project."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_busy_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectBusy:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_busy_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2783,6 +4153,27 @@ class ProjectChanged:
     since you read it. Read it again (Project.deploy_id) and redo your change on its files.
     """
 
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_changed_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectChanged:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_changed_from_dict(data)
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2790,6 +4181,27 @@ class MachineUnreachable:
     """Detail of an UnavailableError error: the machine does not answer now, as while it restarts. Call
     again later.
     """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.machine_unreachable_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MachineUnreachable:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.machine_unreachable_from_dict(data)
 
 
 @final
@@ -2805,3 +4217,156 @@ class NoMachine:
 
     url: str = ""
     """Where the person goes on in the browser."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.no_machine_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> NoMachine:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.no_machine_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True, init=False)
+class WatchOperationResponse:
+    """At most one of `log`, `finished_operation`. The others are None.
+
+    Attributes:
+        finished_operation: Always the last message.
+    """
+
+    log: OperationLogLine | None = None
+
+    finished_operation: Operation | None = None
+    """Always the last message."""
+
+    @overload
+    def __init__(
+        self,
+        *,
+        log: None = None,
+        finished_operation: None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        log: OperationLogLine,
+        finished_operation: None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        log: None = None,
+        finished_operation: Operation,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        log: OperationLogLine | None = None,
+        finished_operation: Operation | None = None,
+    ) -> None:
+        _one_of("WatchOperationResponse", log=log, finished_operation=finished_operation)
+        object.__setattr__(self, "log", log)
+        object.__setattr__(self, "finished_operation", finished_operation)
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.watch_operation_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> WatchOperationResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.watch_operation_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TailContainerLogsResponse:
+    """
+    Attributes:
+        cursor: To reconnect after this line.
+    """
+
+    line: LogLine | None = None
+
+    cursor: str = ""
+    """To reconnect after this line."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.tail_container_logs_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TailContainerLogsResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.tail_container_logs_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TailHttpTrafficResponse:
+    request: HttpRequest | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.tail_http_traffic_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TailHttpTrafficResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.tail_http_traffic_response_from_dict(data)

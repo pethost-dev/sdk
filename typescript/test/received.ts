@@ -2,16 +2,19 @@
 //
 // What every message of a response reads as: nothing set, a field this SDK does not know, and
 // each field set alone, with each value of an enum, one no version has, and a zero where the
-// server may send one. A block is one message, reached through the call that returns it.
+// server may send one. A block is one message, reached through the call that returns it: of a
+// stream, as its first response. A stream's own response has no check of nothing set: that is
+// a pulse, which streams.ts has.
 import * as w from "../dist/wire/v1/panel_pb.js";
-import { newer, reading, readingDetail, type Init } from "./harness.ts";
+import { first, newer, reading, readingDetail, type Init } from "./harness.ts";
 import type { Pethost } from "pethost";
 
 // The call an error is read from: any will do, since every call fails the same way.
 const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
 
-// What each message reads as when the server set nothing in it.
-const empty = {
+// What each message reads as when nothing is set in it: from a response, and from its JSON.
+export const empty = {
+  GetMachineRequest: () => ({}),
   GetMachineResponse: () => ({ projects: [], deletedProjects: [] }),
   Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [] }),
   MachineSession: () => ({ sessionId: "", projectId: "", service: "", port: 0, clientAddress: "", sshKeyLabel: "", sshKeyFingerprint: "" }),
@@ -20,11 +23,14 @@ const empty = {
   GithubConnection: () => ({ appName: "", installUrl: "", repositories: [], repositoryCount: 0, webhooksEnabled: false }),
   GithubRepository: () => ({ repository: "", defaultBranch: "", private: false }),
   DeletedProject: () => ({ projectId: "", snapshotCount: 0 }),
+  RunMachineActionRequest: () => ({}),
+  RestartMachineAction: () => ({ atMaintenanceWindow: false, interruptOperations: false }),
   RunMachineActionResponse: () => ({}),
   ProjectMetadata: () => ({}),
   ProjectSummary: () => ({ projectId: "", problems: [], services: [], url: "", hosts: [], cpuUsedCores: 0, memoryUsedBytes: 0n, runningOperations: [], pinned: false, diskUsedBytes: 0n }),
   ServiceSummary: () => ({ service: "" }),
   ProjectProblem: () => ({ service: "", operationId: "", problemMessage: "" }),
+  GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "" }),
   GetProjectResponse: () => ({}),
   Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0 }),
   RunningServicesAction: () => ({ services: [] }),
@@ -43,28 +49,58 @@ const empty = {
   Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false }),
   Snapshot: () => ({ snapshotId: "", sizeBytes: 0n, volumes: [] }),
   HttpTrafficSummary: () => ({ requestCount: 0n, serverErrorCount: 0n, latencyP50Ms: 0, latencyP95Ms: 0 }),
+  CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "" }),
   CreateProjectResponse: () => ({ violations: [], adjustments: [], log: [] }),
+  DeployProjectRequest: () => ({ projectId: "", baseDeployId: "", files: [], timeoutSeconds: 0, operationId: "" }),
+  MountVolume: () => ({ service: "", volume: "", containerPath: "" }),
+  ProjectExtension: () => ({ routes: [], removeRoutes: false, password: "", removePassword: false }),
+  FileChange: () => ({ path: "", executable: false }),
   DeployProjectResponse: () => ({ violations: [], adjustments: [], log: [] }),
   SpecViolation: () => ({ service: "", location: "", violationMessage: "" }),
+  ListCommitsRequest: () => ({ projectId: "", beforeCommit: "" }),
   ListCommitsResponse: () => ({ commits: [], more: false }),
   BranchCommit: () => ({ author: "", deployed: false, newest: false }),
+  RunProjectActionRequest: () => ({ projectId: "", operationId: "" }),
+  ServicesAction: () => ({ services: [] }),
+  RecreateServiceAction: () => ({ service: "", pullLatestImage: false }),
+  BackUpAction: () => ({}),
+  RestoreSnapshotAction: () => ({ snapshotId: "", volumes: [] }),
+  CancelOperationAction: () => ({ operationId: "" }),
+  DeleteProjectAction: () => ({ skipFinalBackup: false }),
   RunProjectActionResponse: () => ({ log: [] }),
+  GetOperationRequest: () => ({ projectId: "", operationId: "" }),
   GetOperationResponse: () => ({ log: [], logLineCount: 0, nextAfterLogLine: 0 }),
   OperationLogLine: () => ({ text: "" }),
+  HttpTrafficFilter: () => ({ host: "", method: "", pathContains: "", pathPattern: "", statusClass: 0 }),
+  QueryHttpTrafficRequest: () => ({ projectId: "", lastSeconds: 0, bucketWidthSeconds: 0, requestLimit: 0, pageToken: "" }),
   QueryHttpTrafficResponse: () => ({ buckets: [], topPaths: [], newestSequence: 0n, requests: [], nextPageToken: "", tailSequence: 0n }),
   HttpTrafficBucket: () => ({}),
   HttpPathTraffic: () => ({ method: "", pathPattern: "" }),
   HttpRequest: () => ({ sequence: 0n, host: "", method: "", path: "", pathPattern: "", routePath: "", service: "", port: 0, statusCode: 0, responseSizeBytes: 0n, durationMs: 0, serviceDurationMs: 0, clientIpAddress: "", userAgent: "" }),
+  ContainerLogFilter: () => ({ service: "", textContains: "" }),
+  QueryContainerLogsRequest: () => ({ projectId: "", lastSeconds: 0, limit: 0, fromStart: false, pageToken: "" }),
   QueryContainerLogsResponse: () => ({ lines: [], nextPageToken: "", tailCursor: "" }),
   LogLine: () => ({ service: "", text: "" }),
+  RunServiceCommandRequest: () => ({ projectId: "", service: "", command: [], stdin: "", runAsUser: "", workingDirectory: "", timeoutSeconds: 0 }),
   RunServiceCommandResponse: () => ({ exitCode: 0, timedOut: false, stdout: "", stderr: "", outputTruncated: false }),
   FileEntry: () => ({ name: "", sizeBytes: 0n, mode: "", ownerUid: 0, ownerGid: 0, symlinkTarget: "" }),
+  ReadPathRequest: () => ({ projectId: "", path: "", entryLimit: 0, offsetBytes: 0n, lengthBytes: 0, entryPageToken: "" }),
   ReadPathResponse: () => ({ volume: "", entries: [], entryCount: 0, nextEntryPageToken: "", text: "", binary: false, nextOffsetBytes: 0n, deployId: "" }),
-  CreateTransferResponse: () => ({ url: "", httpMethod: "", command: "", uploadId: "", replaces: false, fileName: "" }),
+  CreateTransferRequest: () => ({}),
+  ArchiveUpload: () => ({ fileName: "" }),
+  FileUpload: () => ({ projectId: "", path: "" }),
+  PathDownload: () => ({ projectId: "", path: "" }),
+  CreateTransferResponse: () => ({ url: "", httpMethod: "", command: "", uploadId: "", replaces: false, fileName: "", excludeNames: [] }),
   ProjectBusy: () => ({ operationId: "" }),
   ProjectChanged: () => ({}),
   MachineUnreachable: () => ({}),
   NoMachine: () => ({ url: "" }),
+  WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
+  WatchOperationResponse: () => ({}),
+  TailContainerLogsRequest: () => ({ projectId: "", afterCursor: "" }),
+  TailContainerLogsResponse: () => ({ cursor: "" }),
+  TailHttpTrafficRequest: () => ({ projectId: "", afterSequence: 0n }),
+  TailHttpTrafficResponse: () => ({}),
 };
 
 {
@@ -763,6 +799,7 @@ const empty = {
   m.reads("CreateTransferResponse.upload_id", { uploadId: "upload_id" }, { ...empty.CreateTransferResponse(), uploadId: "upload_id" });
   m.reads("CreateTransferResponse.replaces", { replaces: true }, { ...empty.CreateTransferResponse(), replaces: true });
   m.reads("CreateTransferResponse.file_name", { fileName: "file_name" }, { ...empty.CreateTransferResponse(), fileName: "file_name" });
+  m.reads("CreateTransferResponse.exclude_names", { excludeNames: ["exclude_names", ""] }, { ...empty.CreateTransferResponse(), excludeNames: ["exclude_names", ""] });
 }
 
 {
@@ -799,5 +836,25 @@ const empty = {
   m.reads("NoMachine.reason: BEING_PREPARED", { reason: w.NoMachineReason.BEING_PREPARED }, { ...empty.NoMachine(), reason: "BEING_PREPARED" });
   m.reads("NoMachine.reason: a value newer than the SDK", { reason: 9999 as w.NoMachineReason }, { ...empty.NoMachine(), reason: 9999 });
   m.reads("NoMachine.url", { url: "url" }, { ...empty.NoMachine(), url: "url" });
+}
+
+{
+  const m = reading(w.WatchOperationResponseSchema, (leaf: Init<typeof w.WatchOperationResponseSchema>): Init<typeof w.WatchOperationResponseSchema> => (leaf), async (api) => (await first(api.watchOperation({}))));
+  m.reads("WatchOperationResponse: a field or a oneof's member newer than the SDK", newer(w.WatchOperationResponseSchema), empty.WatchOperationResponse());
+  m.reads("WatchOperationResponse.log", { message: { case: "log", value: {} } }, { ...empty.WatchOperationResponse(), message: "log", log: empty.OperationLogLine() });
+  m.reads("WatchOperationResponse.finished_operation", { message: { case: "finishedOperation", value: {} } }, { ...empty.WatchOperationResponse(), message: "finishedOperation", finishedOperation: empty.Operation() });
+}
+
+{
+  const m = reading(w.TailContainerLogsResponseSchema, (leaf: Init<typeof w.TailContainerLogsResponseSchema>): Init<typeof w.TailContainerLogsResponseSchema> => (leaf), async (api) => (await first(api.tailContainerLogs({}))));
+  m.reads("TailContainerLogsResponse: a field newer than the SDK", newer(w.TailContainerLogsResponseSchema), empty.TailContainerLogsResponse());
+  m.reads("TailContainerLogsResponse.line", { line: {} }, { ...empty.TailContainerLogsResponse(), line: empty.LogLine() });
+  m.reads("TailContainerLogsResponse.cursor", { cursor: "cursor" }, { ...empty.TailContainerLogsResponse(), cursor: "cursor" });
+}
+
+{
+  const m = reading(w.TailHttpTrafficResponseSchema, (leaf: Init<typeof w.TailHttpTrafficResponseSchema>): Init<typeof w.TailHttpTrafficResponseSchema> => (leaf), async (api) => (await first(api.tailHttpTraffic({}))));
+  m.reads("TailHttpTrafficResponse: a field newer than the SDK", newer(w.TailHttpTrafficResponseSchema), empty.TailHttpTrafficResponse());
+  m.reads("TailHttpTrafficResponse.request", { request: {} }, { ...empty.TailHttpTrafficResponse(), request: empty.HttpRequest() });
 }
 

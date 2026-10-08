@@ -25,8 +25,9 @@ Each directory's README has a first program. Every call carries an API token: ma
 server is built from. Every SDK here is generated whole from it, with no line written by hand
 per method or per message: the types, the client, the errors, and the documentation, which is
 the proto's comments. An SDK has the methods marked `option (mcp_tool)`, the ones an agent has
-as tools; the others serve the web panel. When the API changes, the SDKs it concerns get a new
-version, tagged `<language>/v<version>`.
+as tools, and those marked `option (sdk_method)`, the live streams, each read in the language's
+own way of iterating; the others serve the web panel. When the API changes, the SDKs it
+concerns get a new version, tagged `<language>/v<version>`.
 
 ## Another language
 

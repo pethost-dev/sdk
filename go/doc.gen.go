@@ -8,6 +8,7 @@
 //
 // Every method of [Client] is one call of the API: it takes a request, a struct you fill in,
 // and returns its response, or an [*Error] with a Code, a Message and the API's details. A
+// stream, such as [Client.WatchOperation], returns its responses one by one, to range over. A
 // token is an API token of the account: make one in the panel's Settings, under "API tokens"
 // (https://console.pethost.dev).
 //
@@ -29,6 +30,19 @@
 //   - An enum is an integer type with a constant for each value, which prints as the API's
 //     comments write it: "TUNNEL".
 //
+// # JSON
+//
+// Every message of the package is the API's own JSON to [encoding/json], both ways:
+// json.Marshal(response) writes what the API answers over HTTP, and json.Unmarshal(data,
+// &request) reads what it takes, which https://pethost.dev/docs/api documents. A field has the
+// API's name for it, such as project_id; an enum's value is its whole name there, a 64-bit
+// integer a string, a time RFC 3339, bytes base64, and a choice's member stands under its own
+// name. What is absent is left out.
+//
+// Reading refuses a field the API does not have, takes a 64-bit integer as a number too and a
+// field under either spelling of its name, and replaces the value whole. An enum's value
+// alone, or in a struct of the program's, is written and read the same way.
+//
 // # An API newer than the package
 //
 // The API grows, and a program built with this version goes on working:
@@ -40,6 +54,9 @@
 //   - A field without a struct field is not shown. In a message that requests take as well,
 //     such as [SSHKey], it is kept and goes back when the program sends the message.
 //   - An error's detail without a field is left out.
+//   - JSON is the exception: it has no name for a later API's field or for an enum's value
+//     without a constant, so the one is not written and the other is written as its number,
+//     and JSON that a later API wrote may not read.
 //
 // The API's own documentation follows; the comments of the methods and the types are its
 // words.

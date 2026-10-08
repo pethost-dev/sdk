@@ -12,7 +12,11 @@ machine and its projects, deploy, read logs and HTTP requests, run commands, mov
 `Pethost` is the synchronous client and `AsyncPethost` the asyncio one, with the same methods:
 one for each call of the API. What the API calls absent is None where a type allows None, and
 the zero value everywhere else: 0, False, "", () or an enum's UNSPECIFIED. A failed call raises
-a PethostError: a subclass for each code, e.g. NotFoundError.
+a PethostError: a subclass for each code, e.g. NotFoundError. Every message has the API's own
+JSON form: `to_dict()` gives it for `json.dumps`, and `from_dict()` reads it.
+
+A stream is a method that returns a generator of its responses: `for` reads it, each response
+as the API sends it, and `async for` the asyncio client's. Leaving the loop ends the call.
 
 The API's own documentation follows; each method's and each class's docstring is its words.
 
@@ -174,9 +178,12 @@ from ._types import (
     Snapshot,
     SpecViolation,
     SshKey,
+    TailContainerLogsResponse,
+    TailHttpTrafficResponse,
     Volume,
     VolumeMount,
     VolumeMountedBy,
+    WatchOperationResponse,
 )
 
 __all__ = [
@@ -275,6 +282,8 @@ __all__ = [
     "Snapshot",
     "SpecViolation",
     "SshKey",
+    "TailContainerLogsResponse",
+    "TailHttpTrafficResponse",
     "UnauthenticatedError",
     "UnavailableError",
     "UnimplementedError",
@@ -282,4 +291,5 @@ __all__ = [
     "Volume",
     "VolumeMount",
     "VolumeMountedBy",
+    "WatchOperationResponse",
 ]

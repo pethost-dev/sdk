@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.1.0
+go get github.com/pethost-dev/sdk/go@v0.1.1
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -92,7 +92,7 @@ one among several is a value of the member's type, as the file's change above.
 ## Methods
 
 Each is a method of `pethost.Client` that takes a context and its request, and returns its
-response or an error.
+response or an error; a stream returns its responses one by one, as "Streams" below shows.
 
 | Method | What it does | |
 |---|---|---|
@@ -109,6 +109,124 @@ response or an error.
 | `RunServiceCommand` | Run a command in a service | destructive |
 | `ReadPath` | Read a file or directory | read-only |
 | `CreateTransfer` | Upload or download a file | destructive |
+| `WatchOperation` | Watch an operation | stream |
+| `TailContainerLogs` | Follow container logs | stream |
+| `TailHTTPTraffic` | Follow HTTP traffic | stream |
+
+## Streams
+
+A stream is a method that returns what to range over: each response as the API sends it, for
+as long as the loop runs. This program prints a project's newest log lines, then follows them.
+The same program is `example/logs/main.go`.
+
+```go
+// Command logs is the README's stream: it prints the newest container logs of the project
+// "notes", then each new line as it is written. Run it with an API token in PETHOST_TOKEN.
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	pethost "github.com/pethost-dev/sdk/go"
+)
+
+func main() {
+	ctx := context.Background()
+	client := pethost.NewClient(pethost.Config{Token: os.Getenv("PETHOST_TOKEN")})
+
+	// The newest lines, and where a stream goes on from them without missing one.
+	newest, err := client.QueryContainerLogs(ctx, &pethost.QueryContainerLogsRequest{ProjectID: "notes"})
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, line := range newest.Lines {
+		fmt.Println(line.Service, line.Text)
+	}
+
+	// Each later line as it is written, until the stream fails. To stop sooner, leave the loop,
+	// or cancel ctx: that is a failure too, with pethost.CodeCanceled.
+	request := &pethost.TailContainerLogsRequest{ProjectID: "notes", AfterCursor: newest.TailCursor}
+	for response, err := range client.TailContainerLogs(ctx, request) {
+		if err != nil {
+			log.Fatal(err)
+		}
+		if line := response.Line; line != nil {
+			fmt.Println(line.Service, line.Text)
+		}
+	}
+}
+```
+
+The call is made when the loop starts. An error ends the loop: it comes once, beside a nil
+response. Leaving the loop ends the call; cancelling the context ends it too, and the loop with
+a `pethost.CodeCanceled` error. The package does not call again by itself: where a response
+carries a cursor, as a log line does, a new call goes on from it.
+
+## JSON
+
+Every message type is the API's own JSON to `encoding/json`, both ways: the form the API takes
+and answers over HTTP, which [its reference](https://pethost.dev/docs/api/) documents. This
+program reads a request from JSON and prints the response as JSON. The same program is
+`example/json/main.go`.
+
+```go
+// Command json is the README's JSON: it reads a request from the API's JSON, calls the API
+// with it and prints the response as the API's JSON. Run it with an API token in PETHOST_TOKEN.
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+
+	pethost "github.com/pethost-dev/sdk/go"
+)
+
+func main() {
+	client := pethost.NewClient(pethost.Config{Token: os.Getenv("PETHOST_TOKEN")})
+
+	// A request from JSON. A field the API does not have is an error here.
+	var request pethost.GetProjectRequest
+	if err := json.Unmarshal([]byte(`{"project_id": "notes"}`), &request); err != nil {
+		log.Fatal(err)
+	}
+
+	response, err := client.GetProject(context.Background(), &request)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// The response as JSON: {"project": {"project_id": "notes", ...
+	answer, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(answer))
+}
+```
+
+A field has the API's name for it, such as `project_id`. An enum's value is its whole name
+there, a 64-bit integer is a string, a time is RFC 3339, bytes are base64, and a choice's
+member stands under its own name. What is absent is left out, and so is a plain field at its
+zero, as in the API's own answers.
+
+Reading refuses a field the API does not have, so a misspelled one is an error and never
+another request. It takes a 64-bit integer as a number too, and a field under either spelling
+of its name, `project_id` or `projectId`. It replaces the value whole. A stream's responses
+are written one by one, each a document of its own.
+
+A message is written by its own method, so a struct of yours that embeds one is written as
+that message alone, as `encoding/json` does with a `time.Time`: give it a named field.
+
+JSON has names only for what this version of the package knows. A later API's field that a
+message keeps is not written, and an enum's value without a constant is written as its number.
+JSON that a later API wrote may not read here: its new field, or its new value's name, is
+refused, where the calls themselves go on working.
 
 ## Errors
 

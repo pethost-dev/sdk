@@ -5,16 +5,16 @@
 // absence means something else and for a oneof's member. A block is one message, sent through
 // the call that takes it.
 import * as w from "../dist/wire/v1/panel_pb.js";
-import { sending, type Init } from "./harness.ts";
+import { first, sending, type Init } from "./harness.ts";
 import type * as p from "pethost";
 
 {
-  const m = sending(w.GetMachineRequestSchema, (leaf: Init<typeof w.GetMachineRequestSchema>): Init<typeof w.GetMachineRequestSchema> => (leaf), (api, given: p.GetMachineRequest) => api.getMachine(given));
+  const m = sending(w.GetMachineRequestSchema, (leaf: Init<typeof w.GetMachineRequestSchema>): Init<typeof w.GetMachineRequestSchema> => (leaf), async (api, given: p.GetMachineRequest) => api.getMachine(given));
   m.sends("GetMachineRequest: nothing set", {}, {});
 }
 
 {
-  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.SshKeySchema>): Init<typeof w.RunMachineActionRequestSchema> => ({ action: { case: "addSshKey", value: leaf } }), (api, given: p.SshKeyInput) => api.runMachineAction({ addSshKey: given }));
+  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.SshKeySchema>): Init<typeof w.RunMachineActionRequestSchema> => ({ action: { case: "addSshKey", value: leaf } }), async (api, given: p.SshKeyInput) => api.runMachineAction({ addSshKey: given }));
   m.sends("SshKey: nothing set", {}, {});
   m.sends("SshKey.public_key", { publicKey: "public_key" }, { publicKey: "public_key" });
   m.sends("SshKey.public_key: zero is not sent", { publicKey: "" }, {});
@@ -25,7 +25,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.RunMachineActionRequestSchema>): Init<typeof w.RunMachineActionRequestSchema> => (leaf), (api, given: p.RunMachineActionRequest) => api.runMachineAction(given));
+  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.RunMachineActionRequestSchema>): Init<typeof w.RunMachineActionRequestSchema> => (leaf), async (api, given: p.RunMachineActionRequest) => api.runMachineAction(given));
   m.sends("RunMachineActionRequest: nothing set", {}, {});
   m.sends("RunMachineActionRequest.add_ssh_key", { addSshKey: {} }, { action: { case: "addSshKey", value: {} } });
   m.sends("RunMachineActionRequest.remove_ssh_key_fingerprint", { removeSshKeyFingerprint: "remove_ssh_key_fingerprint" }, { action: { case: "removeSshKeyFingerprint", value: "remove_ssh_key_fingerprint" } });
@@ -39,7 +39,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.RestartMachineActionSchema>): Init<typeof w.RunMachineActionRequestSchema> => ({ action: { case: "restartMachine", value: leaf } }), (api, given: p.RestartMachineActionInput) => api.runMachineAction({ restartMachine: given }));
+  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.RestartMachineActionSchema>): Init<typeof w.RunMachineActionRequestSchema> => ({ action: { case: "restartMachine", value: leaf } }), async (api, given: p.RestartMachineActionInput) => api.runMachineAction({ restartMachine: given }));
   m.sends("RestartMachineAction: nothing set", {}, {});
   m.sends("RestartMachineAction.restart_time", { restartTime: new Date(1790000000123) }, { restartTime: { seconds: 1790000000n, nanos: 123000000 } });
   m.sends("RestartMachineAction.at_maintenance_window", { atMaintenanceWindow: true }, { atMaintenanceWindow: true });
@@ -49,7 +49,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectMetadataSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: { metadata: leaf } }), (api, given: p.ProjectMetadataInput) => api.createProject({ xPethost: { metadata: given } }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectMetadataSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: { metadata: leaf } }), async (api, given: p.ProjectMetadataInput) => api.createProject({ xPethost: { metadata: given } }));
   m.sends("ProjectMetadata: nothing set", {}, {});
   m.sends("ProjectMetadata.name", { name: "name" }, { name: "name" });
   m.sends("ProjectMetadata.name: zero", { name: "" }, { name: "" });
@@ -66,7 +66,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.GetProjectRequestSchema, (leaf: Init<typeof w.GetProjectRequestSchema>): Init<typeof w.GetProjectRequestSchema> => (leaf), (api, given: p.GetProjectRequest) => api.getProject(given));
+  const m = sending(w.GetProjectRequestSchema, (leaf: Init<typeof w.GetProjectRequestSchema>): Init<typeof w.GetProjectRequestSchema> => (leaf), async (api, given: p.GetProjectRequest) => api.getProject(given));
   m.sends("GetProjectRequest: nothing set", {}, {});
   m.sends("GetProjectRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("GetProjectRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -78,7 +78,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectSourceSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: leaf }), (api, given: p.ProjectSourceInput) => api.createProject({ source: given }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectSourceSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: leaf }), async (api, given: p.ProjectSourceInput) => api.createProject({ source: given }));
   m.sends("ProjectSource: nothing set", {}, {});
   m.sends("ProjectSource.files", { files: true }, { kind: { case: "files", value: true } });
   m.sends("ProjectSource.files: zero", { files: false }, { kind: { case: "files", value: false } });
@@ -87,7 +87,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.GithubSourceSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: { kind: { case: "github", value: leaf } } }), (api, given: p.GithubSourceInput) => api.createProject({ source: { github: given } }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.GithubSourceSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: { kind: { case: "github", value: leaf } } }), async (api, given: p.GithubSourceInput) => api.createProject({ source: { github: given } }));
   m.sends("GithubSource: nothing set", {}, {});
   m.sends("GithubSource.repository", { repository: "repository" }, { repository: "repository" });
   m.sends("GithubSource.repository: zero", { repository: "" }, { repository: "" });
@@ -110,7 +110,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.GithubCommitSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: { kind: { case: "github", value: { newestCommit: leaf } } } }), (api, given: p.GithubCommitInput) => api.createProject({ source: { github: { newestCommit: given } } }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.GithubCommitSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ source: { kind: { case: "github", value: { newestCommit: leaf } } } }), async (api, given: p.GithubCommitInput) => api.createProject({ source: { github: { newestCommit: given } } }));
   m.sends("GithubCommit: nothing set", {}, {});
   m.sends("GithubCommit.sha", { sha: "sha" }, { sha: "sha" });
   m.sends("GithubCommit.sha: zero is not sent", { sha: "" }, {});
@@ -121,7 +121,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.RouteSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: { routes: [leaf] } }), (api, given: p.RouteInput) => api.createProject({ xPethost: { routes: [given] } }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.RouteSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: { routes: [leaf] } }), async (api, given: p.RouteInput) => api.createProject({ xPethost: { routes: [given] } }));
   m.sends("Route: nothing set", {}, {});
   m.sends("Route.host", { host: "host" }, { host: "host" });
   m.sends("Route.host: zero is not sent", { host: "" }, {});
@@ -136,7 +136,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.CreateProjectRequestSchema>): Init<typeof w.CreateProjectRequestSchema> => (leaf), (api, given: p.CreateProjectRequest) => api.createProject(given));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.CreateProjectRequestSchema>): Init<typeof w.CreateProjectRequestSchema> => (leaf), async (api, given: p.CreateProjectRequest) => api.createProject(given));
   m.sends("CreateProjectRequest: nothing set", {}, {});
   m.sends("CreateProjectRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("CreateProjectRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -155,7 +155,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.DeployProjectRequestSchema, (leaf: Init<typeof w.DeployProjectRequestSchema>): Init<typeof w.DeployProjectRequestSchema> => (leaf), (api, given: p.DeployProjectRequest) => api.deployProject(given));
+  const m = sending(w.DeployProjectRequestSchema, (leaf: Init<typeof w.DeployProjectRequestSchema>): Init<typeof w.DeployProjectRequestSchema> => (leaf), async (api, given: p.DeployProjectRequest) => api.deployProject(given));
   m.sends("DeployProjectRequest: nothing set", {}, {});
   m.sends("DeployProjectRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("DeployProjectRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -183,7 +183,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.DeployProjectRequestSchema, (leaf: Init<typeof w.MountVolumeSchema>): Init<typeof w.DeployProjectRequestSchema> => ({ mountVolume: leaf }), (api, given: p.MountVolumeInput) => api.deployProject({ mountVolume: given }));
+  const m = sending(w.DeployProjectRequestSchema, (leaf: Init<typeof w.MountVolumeSchema>): Init<typeof w.DeployProjectRequestSchema> => ({ mountVolume: leaf }), async (api, given: p.MountVolumeInput) => api.deployProject({ mountVolume: given }));
   m.sends("MountVolume: nothing set", {}, {});
   m.sends("MountVolume.service", { service: "service" }, { service: "service" });
   m.sends("MountVolume.service: zero is not sent", { service: "" }, {});
@@ -194,7 +194,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectExtensionSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: leaf }), (api, given: p.ProjectExtensionInput) => api.createProject({ xPethost: given }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectExtensionSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: leaf }), async (api, given: p.ProjectExtensionInput) => api.createProject({ xPethost: given }));
   m.sends("ProjectExtension: nothing set", {}, {});
   m.sends("ProjectExtension.metadata", { metadata: {} }, { metadata: {} });
   m.sends("ProjectExtension.routes", { routes: [{}] }, { routes: [{}] });
@@ -207,7 +207,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.FileChangeSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ files: [leaf] }), (api, given: p.FileChangeInput) => api.createProject({ files: [given] }));
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.FileChangeSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ files: [leaf] }), async (api, given: p.FileChangeInput) => api.createProject({ files: [given] }));
   m.sends("FileChange: nothing set", {}, {});
   m.sends("FileChange.path", { path: "path" }, { path: "path" });
   m.sends("FileChange.path: zero is not sent", { path: "" }, {});
@@ -229,7 +229,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.ListCommitsRequestSchema, (leaf: Init<typeof w.ListCommitsRequestSchema>): Init<typeof w.ListCommitsRequestSchema> => (leaf), (api, given: p.ListCommitsRequest) => api.listCommits(given));
+  const m = sending(w.ListCommitsRequestSchema, (leaf: Init<typeof w.ListCommitsRequestSchema>): Init<typeof w.ListCommitsRequestSchema> => (leaf), async (api, given: p.ListCommitsRequest) => api.listCommits(given));
   m.sends("ListCommitsRequest: nothing set", {}, {});
   m.sends("ListCommitsRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("ListCommitsRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -238,7 +238,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RunProjectActionRequestSchema>): Init<typeof w.RunProjectActionRequestSchema> => (leaf), (api, given: p.RunProjectActionRequest) => api.runProjectAction(given));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RunProjectActionRequestSchema>): Init<typeof w.RunProjectActionRequestSchema> => (leaf), async (api, given: p.RunProjectActionRequest) => api.runProjectAction(given));
   m.sends("RunProjectActionRequest: nothing set", {}, {});
   m.sends("RunProjectActionRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("RunProjectActionRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -262,13 +262,13 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.ServicesActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "startServices", value: leaf } }), (api, given: p.ServicesActionInput) => api.runProjectAction({ startServices: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.ServicesActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "startServices", value: leaf } }), async (api, given: p.ServicesActionInput) => api.runProjectAction({ startServices: given }));
   m.sends("ServicesAction: nothing set", {}, {});
   m.sends("ServicesAction.services", { services: ["services", ""] }, { services: ["services", ""] });
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RecreateServiceActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "recreateService", value: leaf } }), (api, given: p.RecreateServiceActionInput) => api.runProjectAction({ recreateService: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RecreateServiceActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "recreateService", value: leaf } }), async (api, given: p.RecreateServiceActionInput) => api.runProjectAction({ recreateService: given }));
   m.sends("RecreateServiceAction: nothing set", {}, {});
   m.sends("RecreateServiceAction.service", { service: "service" }, { service: "service" });
   m.sends("RecreateServiceAction.service: zero is not sent", { service: "" }, {});
@@ -277,12 +277,12 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.BackUpActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "backUp", value: leaf } }), (api, given: p.BackUpActionInput) => api.runProjectAction({ backUp: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.BackUpActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "backUp", value: leaf } }), async (api, given: p.BackUpActionInput) => api.runProjectAction({ backUp: given }));
   m.sends("BackUpAction: nothing set", {}, {});
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RestoreSnapshotActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "restoreSnapshot", value: leaf } }), (api, given: p.RestoreSnapshotActionInput) => api.runProjectAction({ restoreSnapshot: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RestoreSnapshotActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "restoreSnapshot", value: leaf } }), async (api, given: p.RestoreSnapshotActionInput) => api.runProjectAction({ restoreSnapshot: given }));
   m.sends("RestoreSnapshotAction: nothing set", {}, {});
   m.sends("RestoreSnapshotAction.snapshot_id", { snapshotId: "snapshot_id" }, { snapshotId: "snapshot_id" });
   m.sends("RestoreSnapshotAction.snapshot_id: zero is not sent", { snapshotId: "" }, {});
@@ -290,21 +290,21 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.CancelOperationActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "cancelOperation", value: leaf } }), (api, given: p.CancelOperationActionInput) => api.runProjectAction({ cancelOperation: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.CancelOperationActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "cancelOperation", value: leaf } }), async (api, given: p.CancelOperationActionInput) => api.runProjectAction({ cancelOperation: given }));
   m.sends("CancelOperationAction: nothing set", {}, {});
   m.sends("CancelOperationAction.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
   m.sends("CancelOperationAction.operation_id: zero is not sent", { operationId: "" }, {});
 }
 
 {
-  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.DeleteProjectActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "deleteProject", value: leaf } }), (api, given: p.DeleteProjectActionInput) => api.runProjectAction({ deleteProject: given }));
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.DeleteProjectActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "deleteProject", value: leaf } }), async (api, given: p.DeleteProjectActionInput) => api.runProjectAction({ deleteProject: given }));
   m.sends("DeleteProjectAction: nothing set", {}, {});
   m.sends("DeleteProjectAction.skip_final_backup", { skipFinalBackup: true }, { skipFinalBackup: true });
   m.sends("DeleteProjectAction.skip_final_backup: zero is not sent", { skipFinalBackup: false }, {});
 }
 
 {
-  const m = sending(w.GetOperationRequestSchema, (leaf: Init<typeof w.GetOperationRequestSchema>): Init<typeof w.GetOperationRequestSchema> => (leaf), (api, given: p.GetOperationRequest) => api.getOperation(given));
+  const m = sending(w.GetOperationRequestSchema, (leaf: Init<typeof w.GetOperationRequestSchema>): Init<typeof w.GetOperationRequestSchema> => (leaf), async (api, given: p.GetOperationRequest) => api.getOperation(given));
   m.sends("GetOperationRequest: nothing set", {}, {});
   m.sends("GetOperationRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("GetOperationRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -322,7 +322,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.QueryHttpTrafficRequestSchema, (leaf: Init<typeof w.HttpTrafficFilterSchema>): Init<typeof w.QueryHttpTrafficRequestSchema> => ({ filter: leaf }), (api, given: p.HttpTrafficFilterInput) => api.queryHttpTraffic({ filter: given }));
+  const m = sending(w.QueryHttpTrafficRequestSchema, (leaf: Init<typeof w.HttpTrafficFilterSchema>): Init<typeof w.QueryHttpTrafficRequestSchema> => ({ filter: leaf }), async (api, given: p.HttpTrafficFilterInput) => api.queryHttpTraffic({ filter: given }));
   m.sends("HttpTrafficFilter: nothing set", {}, {});
   m.sends("HttpTrafficFilter.host", { host: "host" }, { host: "host" });
   m.sends("HttpTrafficFilter.host: zero is not sent", { host: "" }, {});
@@ -337,7 +337,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.QueryHttpTrafficRequestSchema, (leaf: Init<typeof w.QueryHttpTrafficRequestSchema>): Init<typeof w.QueryHttpTrafficRequestSchema> => (leaf), (api, given: p.QueryHttpTrafficRequest) => api.queryHttpTraffic(given));
+  const m = sending(w.QueryHttpTrafficRequestSchema, (leaf: Init<typeof w.QueryHttpTrafficRequestSchema>): Init<typeof w.QueryHttpTrafficRequestSchema> => (leaf), async (api, given: p.QueryHttpTrafficRequest) => api.queryHttpTraffic(given));
   m.sends("QueryHttpTrafficRequest: nothing set", {}, {});
   m.sends("QueryHttpTrafficRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("QueryHttpTrafficRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -355,7 +355,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.QueryContainerLogsRequestSchema, (leaf: Init<typeof w.ContainerLogFilterSchema>): Init<typeof w.QueryContainerLogsRequestSchema> => ({ filter: leaf }), (api, given: p.ContainerLogFilterInput) => api.queryContainerLogs({ filter: given }));
+  const m = sending(w.QueryContainerLogsRequestSchema, (leaf: Init<typeof w.ContainerLogFilterSchema>): Init<typeof w.QueryContainerLogsRequestSchema> => ({ filter: leaf }), async (api, given: p.ContainerLogFilterInput) => api.queryContainerLogs({ filter: given }));
   m.sends("ContainerLogFilter: nothing set", {}, {});
   m.sends("ContainerLogFilter.service", { service: "service" }, { service: "service" });
   m.sends("ContainerLogFilter.service: zero is not sent", { service: "" }, {});
@@ -366,7 +366,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.QueryContainerLogsRequestSchema, (leaf: Init<typeof w.QueryContainerLogsRequestSchema>): Init<typeof w.QueryContainerLogsRequestSchema> => (leaf), (api, given: p.QueryContainerLogsRequest) => api.queryContainerLogs(given));
+  const m = sending(w.QueryContainerLogsRequestSchema, (leaf: Init<typeof w.QueryContainerLogsRequestSchema>): Init<typeof w.QueryContainerLogsRequestSchema> => (leaf), async (api, given: p.QueryContainerLogsRequest) => api.queryContainerLogs(given));
   m.sends("QueryContainerLogsRequest: nothing set", {}, {});
   m.sends("QueryContainerLogsRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("QueryContainerLogsRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -384,7 +384,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.RunServiceCommandRequestSchema, (leaf: Init<typeof w.RunServiceCommandRequestSchema>): Init<typeof w.RunServiceCommandRequestSchema> => (leaf), (api, given: p.RunServiceCommandRequest) => api.runServiceCommand(given));
+  const m = sending(w.RunServiceCommandRequestSchema, (leaf: Init<typeof w.RunServiceCommandRequestSchema>): Init<typeof w.RunServiceCommandRequestSchema> => (leaf), async (api, given: p.RunServiceCommandRequest) => api.runServiceCommand(given));
   m.sends("RunServiceCommandRequest: nothing set", {}, {});
   m.sends("RunServiceCommandRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("RunServiceCommandRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -402,7 +402,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.ReadPathRequestSchema, (leaf: Init<typeof w.ReadPathRequestSchema>): Init<typeof w.ReadPathRequestSchema> => (leaf), (api, given: p.ReadPathRequest) => api.readPath(given));
+  const m = sending(w.ReadPathRequestSchema, (leaf: Init<typeof w.ReadPathRequestSchema>): Init<typeof w.ReadPathRequestSchema> => (leaf), async (api, given: p.ReadPathRequest) => api.readPath(given));
   m.sends("ReadPathRequest: nothing set", {}, {});
   m.sends("ReadPathRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("ReadPathRequest.project_id: zero is not sent", { projectId: "" }, {});
@@ -424,7 +424,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.CreateTransferRequestSchema>): Init<typeof w.CreateTransferRequestSchema> => (leaf), (api, given: p.CreateTransferRequest) => api.createTransfer(given));
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.CreateTransferRequestSchema>): Init<typeof w.CreateTransferRequestSchema> => (leaf), async (api, given: p.CreateTransferRequest) => api.createTransfer(given));
   m.sends("CreateTransferRequest: nothing set", {}, {});
   m.sends("CreateTransferRequest.upload_archive", { uploadArchive: {} }, { transfer: { case: "uploadArchive", value: {} } });
   m.sends("CreateTransferRequest.upload_file", { uploadFile: {} }, { transfer: { case: "uploadFile", value: {} } });
@@ -433,14 +433,14 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.ArchiveUploadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "uploadArchive", value: leaf } }), (api, given: p.ArchiveUploadInput) => api.createTransfer({ uploadArchive: given }));
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.ArchiveUploadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "uploadArchive", value: leaf } }), async (api, given: p.ArchiveUploadInput) => api.createTransfer({ uploadArchive: given }));
   m.sends("ArchiveUpload: nothing set", {}, {});
   m.sends("ArchiveUpload.file_name", { fileName: "file_name" }, { fileName: "file_name" });
   m.sends("ArchiveUpload.file_name: zero is not sent", { fileName: "" }, {});
 }
 
 {
-  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.FileUploadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "uploadFile", value: leaf } }), (api, given: p.FileUploadInput) => api.createTransfer({ uploadFile: given }));
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.FileUploadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "uploadFile", value: leaf } }), async (api, given: p.FileUploadInput) => api.createTransfer({ uploadFile: given }));
   m.sends("FileUpload: nothing set", {}, {});
   m.sends("FileUpload.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("FileUpload.project_id: zero is not sent", { projectId: "" }, {});
@@ -454,7 +454,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.PathDownloadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "download", value: leaf } }), (api, given: p.PathDownloadInput) => api.createTransfer({ download: given }));
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.PathDownloadSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "download", value: leaf } }), async (api, given: p.PathDownloadInput) => api.createTransfer({ download: given }));
   m.sends("PathDownload: nothing set", {}, {});
   m.sends("PathDownload.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("PathDownload.project_id: zero is not sent", { projectId: "" }, {});
@@ -465,5 +465,34 @@ import type * as p from "pethost";
   m.sends("PathDownload.path", { path: "path" }, { path: "path" });
   m.sends("PathDownload.path: zero is not sent", { path: "" }, {});
   m.refuses("PathDownload.root: two members", { service: "service", volume: "volume" }, "root: service and volume are both set; set one");
+}
+
+{
+  const m = sending(w.WatchOperationRequestSchema, (leaf: Init<typeof w.WatchOperationRequestSchema>): Init<typeof w.WatchOperationRequestSchema> => (leaf), async (api, given: p.WatchOperationRequest) => first(api.watchOperation(given)));
+  m.sends("WatchOperationRequest: nothing set", {}, {});
+  m.sends("WatchOperationRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("WatchOperationRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("WatchOperationRequest.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
+  m.sends("WatchOperationRequest.operation_id: zero is not sent", { operationId: "" }, {});
+}
+
+{
+  const m = sending(w.TailContainerLogsRequestSchema, (leaf: Init<typeof w.TailContainerLogsRequestSchema>): Init<typeof w.TailContainerLogsRequestSchema> => (leaf), async (api, given: p.TailContainerLogsRequest) => first(api.tailContainerLogs(given)));
+  m.sends("TailContainerLogsRequest: nothing set", {}, {});
+  m.sends("TailContainerLogsRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("TailContainerLogsRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("TailContainerLogsRequest.filter", { filter: {} }, { filter: {} });
+  m.sends("TailContainerLogsRequest.after_cursor", { afterCursor: "after_cursor" }, { afterCursor: "after_cursor" });
+  m.sends("TailContainerLogsRequest.after_cursor: zero is not sent", { afterCursor: "" }, {});
+}
+
+{
+  const m = sending(w.TailHttpTrafficRequestSchema, (leaf: Init<typeof w.TailHttpTrafficRequestSchema>): Init<typeof w.TailHttpTrafficRequestSchema> => (leaf), async (api, given: p.TailHttpTrafficRequest) => first(api.tailHttpTraffic(given)));
+  m.sends("TailHttpTrafficRequest: nothing set", {}, {});
+  m.sends("TailHttpTrafficRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("TailHttpTrafficRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("TailHttpTrafficRequest.filter", { filter: {} }, { filter: {} });
+  m.sends("TailHttpTrafficRequest.after_sequence", { afterSequence: 9007199254740993n }, { afterSequence: 9007199254740993n });
+  m.sends("TailHttpTrafficRequest.after_sequence: zero is not sent", { afterSequence: 0n }, {});
 }
 

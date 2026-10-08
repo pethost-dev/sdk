@@ -4,6 +4,47 @@
 //!
 //! A struct without `#[non_exhaustive]` is one a request holds: write it as a literal that ends in
 //! `..Default::default()`.
+//!
+//! # JSON
+//!
+//! Every struct and enum here is `serde`'s `Serialize` and `Deserialize`, and its JSON is the
+//! API's own, as the API answers and takes it over HTTP and as
+//! [its reference](https://pethost.dev/docs/api/) shows it:
+//!
+//! - a field under its name in the proto, as the struct has it: `project_id`;
+//! - a field that is absent, or an unmarked one at its zero, left out;
+//! - an enum as its value's name, `"OPERATION_STATUS_RUNNING"`, and a value this version does
+//!   not know, `Unrecognized(number)`, as the number;
+//! - a 64-bit integer as a string, a time as RFC 3339, bytes as base64;
+//! - a oneof as the field of the member that is set, beside its message's other fields. A
+//!   oneof's enum has no JSON of its own, and its `Unrecognized` is written as no member.
+//!
+//! Reading takes the same form, and a 64-bit integer as a number too. It refuses a field this
+//! version does not know, any other spelling of one (`projectId`) and an enum's name it does
+//! not know, as the API refuses a field it does not have: a misspelled field cannot make a call
+//! that does something else. The JSON of a later API, with a field added since, is refused so
+//! too.
+//!
+//! ```
+//! use pethost::types::{FileChange, FileChangeChange};
+//!
+//! fn main() -> Result<(), serde_json::Error> {
+//!     let change = FileChange {
+//!         path: "/hello.txt".into(),
+//!         change: Some(FileChangeChange::Text("Hello".into())),
+//!         ..Default::default()
+//!     };
+//!
+//!     // The API's JSON, and the message back from it.
+//!     let json = serde_json::to_string(&change)?;
+//!     assert_eq!(json, r#"{"path":"/hello.txt","text":"Hello"}"#);
+//!     assert_eq!(serde_json::from_str::<FileChange>(&json)?, change);
+//!
+//!     // A field the API does not have is refused: here, one misspelled.
+//!     assert!(serde_json::from_str::<FileChange>(r#"{"pth": "/hello.txt"}"#).is_err());
+//!     Ok(())
+//! }
+//! ```
 
 /// What [`Client::get_machine`](crate::Client::get_machine) takes.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -1146,12 +1187,12 @@ pub struct QueryHttpTrafficResponse {
     pub buckets: ::std::vec::Vec<HttpTrafficBucket>,
     /// The 10 busiest, busiest first.
     pub top_paths: ::std::vec::Vec<HttpPathTraffic>,
-    /// The sequence of the newest request the machine had logged: summary, buckets and `top_paths` count every one up to it, and `TailHttpTraffic` streams the later ones. 0 = none was logged.
+    /// The sequence of the newest request the machine had logged: summary, buckets and `top_paths` count every one up to it, and [`Client::tail_http_traffic`](crate::Client::tail_http_traffic) streams the later ones. 0 = none was logged.
     pub newest_sequence: u64,
     pub requests: ::std::vec::Vec<HttpRequest>,
     /// Empty = no more requests.
     pub next_page_token: ::std::string::String,
-    /// Where `TailHttpTraffic` goes on from (`after_sequence`), so it misses no request newer than these: set on a first page with `request_limit`, empty or not. 0 = the machine had logged none.
+    /// Where [`Client::tail_http_traffic`](crate::Client::tail_http_traffic) goes on from (`after_sequence`), so it misses no request newer than these: set on a first page with `request_limit`, empty or not. 0 = the machine had logged none.
     pub tail_sequence: u64,
 }
 
@@ -1174,7 +1215,7 @@ pub struct HttpPathTraffic {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct HttpRequest {
-    /// Unique and increasing on the machine: `TailHttpTraffic`\'s cursor.
+    /// Unique and increasing on the machine: [`Client::tail_http_traffic`](crate::Client::tail_http_traffic)\'s cursor.
     pub sequence: u64,
     /// When the response finished. A WebSocket is logged when it closes, with status 0.
     pub finish_time: ::core::option::Option<crate::Timestamp>,
@@ -1253,7 +1294,7 @@ pub struct QueryContainerLogsResponse {
     pub lines: ::std::vec::Vec<LogLine>,
     /// Empty = no more.
     pub next_page_token: ::std::string::String,
-    /// Where `TailContainerLogs` goes on from (`after_cursor`), so it misses no line newer than these: set on every page, an empty one too. Empty = the machine had logged no line.
+    /// Where [`Client::tail_container_logs`](crate::Client::tail_container_logs) goes on from (`after_cursor`), so it misses no line newer than these: set on every page, an empty one too. Empty = the machine had logged no line.
     pub tail_cursor: ::std::string::String,
 }
 
@@ -1488,6 +1529,8 @@ pub struct CreateTransferResponse {
     pub replaces: bool,
     /// download: the name it saves as: a file's own; a directory's ends in \".tar\", and \"/\" is named after the project and its service or volume. Empty for an upload.
     pub file_name: ::std::string::String,
+    /// `upload_archive`: the names `command` leaves out of the archive, wherever they lie in the directory. A program that packs the directory itself leaves out the same.
+    pub exclude_names: ::std::vec::Vec<::std::string::String>,
 }
 
 /// Detail of an [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) error: an operation, or a short action, holds the project. The message says the same in words.
@@ -1533,4 +1576,66 @@ pub enum NoMachineReason {
     BeingPrepared,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
+}
+
+/// What [`Client::watch_operation`](crate::Client::watch_operation) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct WatchOperationRequest {
+    pub project_id: ::std::string::String,
+    /// Empty = the latest.
+    pub operation_id: ::std::string::String,
+}
+
+/// What [`Client::watch_operation`](crate::Client::watch_operation) yields.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct WatchOperationResponse {
+    pub message: ::core::option::Option<WatchOperationResponseMessage>,
+}
+
+/// The oneof [`WatchOperationResponse::message`](crate::types::WatchOperationResponse::message): one of its members.
+#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
+#[allow(clippy::large_enum_variant)]
+pub enum WatchOperationResponseMessage {
+    Log(OperationLogLine),
+    /// Always the last message.
+    FinishedOperation(Operation),
+    /// A member this version of the crate does not know: the API set none it knows, and sent
+    /// fields it does not know. Sent, it counts as no member.
+    Unrecognized,
+}
+
+/// What [`Client::tail_container_logs`](crate::Client::tail_container_logs) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TailContainerLogsRequest {
+    pub project_id: ::std::string::String,
+    pub filter: ::core::option::Option<ContainerLogFilter>,
+    /// Empty = only lines written from now on.
+    pub after_cursor: ::std::string::String,
+}
+
+/// What [`Client::tail_container_logs`](crate::Client::tail_container_logs) yields.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct TailContainerLogsResponse {
+    pub line: ::core::option::Option<LogLine>,
+    /// To reconnect after this line.
+    pub cursor: ::std::string::String,
+}
+
+/// What [`Client::tail_http_traffic`](crate::Client::tail_http_traffic) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TailHttpTrafficRequest {
+    pub project_id: ::std::string::String,
+    pub filter: ::core::option::Option<HttpTrafficFilter>,
+    /// 0 = only requests from now on.
+    pub after_sequence: u64,
+}
+
+/// What [`Client::tail_http_traffic`](crate::Client::tail_http_traffic) yields.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct TailHttpTrafficResponse {
+    pub request: ::core::option::Option<HttpRequest>,
 }

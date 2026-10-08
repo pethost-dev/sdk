@@ -3,6 +3,7 @@
 package pethost
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -17,8 +18,25 @@ import (
 
 // shape is a struct of the package beside its wire message.
 type shape struct {
-	public any
+	public any // The struct, empty.
 	wire   proto.Message
+
+	sample func(seed) any            // A sample of the struct.
+	read   func([]byte) (any, error) // The struct that encoding/json reads from JSON.
+}
+
+func shapeOf[P any](sample func(seed) P, wire proto.Message) shape {
+	var empty P
+	return shape{
+		public: empty,
+		wire:   wire,
+		sample: func(s seed) any { return sample(s) },
+		read: func(data []byte) (any, error) {
+			var read P
+			err := json.Unmarshal(data, &read)
+			return read, err
+		},
+	}
 }
 
 // enum is an enum of the package beside the wire layer's.
@@ -26,6 +44,10 @@ type enum struct {
 	name string
 	wire protoreflect.EnumDescriptor
 	text func(protoreflect.EnumNumber) string // String of the package's value of that number.
+
+	// The value of that number as encoding/json writes it, and the number of what it reads.
+	write func(protoreflect.EnumNumber) ([]byte, error)
+	read  func([]byte) (protoreflect.EnumNumber, error)
 }
 
 func enumOf[E interface {
@@ -33,7 +55,17 @@ func enumOf[E interface {
 	String() string
 }, W protoreflect.Enum](name string) enum {
 	var wire W
-	return enum{name, wire.Descriptor(), func(number protoreflect.EnumNumber) string { return E(number).String() }}
+	return enum{
+		name:  name,
+		wire:  wire.Descriptor(),
+		text:  func(number protoreflect.EnumNumber) string { return E(number).String() },
+		write: func(number protoreflect.EnumNumber) ([]byte, error) { return json.Marshal(E(number)) },
+		read: func(data []byte) (protoreflect.EnumNumber, error) {
+			var read E
+			err := json.Unmarshal(data, &read)
+			return protoreflect.EnumNumber(read), err
+		},
+	}
 }
 
 // TestShapes holds each struct against its wire message: a field per field outside a oneof

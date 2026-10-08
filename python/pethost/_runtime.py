@@ -1,21 +1,21 @@
 """What the generated modules lean on, the same for any version of the API: the open enum, the
-oneof and encoding checks, times, the token, who calls. Written by hand: nothing here names a
-message or a method."""
+oneof and encoding checks, the API's JSON, a stream's pulse, times, the token, who calls. Written
+by hand: nothing here names a message or a method."""
 
 from __future__ import annotations
 
 import datetime
 import enum
 import os
-from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeAlias, TypeVar, cast
 
-from protobuf import Message
+from protobuf import Message, message_from_json_value, message_to_json_value
 from protobuf.wkt.google.protobuf.timestamp_pb import Timestamp
 
 from ._version import VERSION
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Awaitable, Callable, Sequence
 
     from connectrpc.request import RequestContext
 
@@ -23,7 +23,13 @@ TOKEN_VARIABLE = "PETHOST_TOKEN"
 USER_AGENT = f"pethost-python/{VERSION}"
 
 _EPOCH = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
-_Wire = TypeVar("_Wire", bound="Message[Any]")
+Wire = TypeVar("Wire", bound="Message[Any]")  # A message of the wire layer.
+_Request = TypeVar("_Request")
+_Answer = TypeVar("_Answer")
+# What an interceptor is given of a call, and what it hands the call on to: the next
+# interceptor, or the wire layer itself.
+_Context: TypeAlias = "RequestContext[Any, Any]"
+_Next: TypeAlias = "Callable[[_Request, _Context], _Answer]"
 
 # A value the API added after this version was generated, kept so that it is one object however
 # often it arrives: `is` and `==` work on it as on a declared member.
@@ -68,7 +74,7 @@ def strings(name: str, values: Sequence[str]) -> list[str]:
     return list(values)
 
 
-def checked(wire: _Wire) -> _Wire:
+def checked(wire: Wire) -> Wire:
     """Makes the wire layer refuse here what it cannot encode, as Python's own error: an integer
     out of its kind's range (OverflowError), a string that is not text (UnicodeEncodeError).
     Inside the call the same refusal would come back as UNAVAILABLE, "retry later"."""
@@ -76,6 +82,29 @@ def checked(wire: _Wire) -> _Wire:
     # instead when a request grows large enough for that to show.
     wire.to_binary()
     return wire
+
+
+def to_dict(wire: Message[Any]) -> dict[str, Any]:
+    """A wire message as the API's JSON has it. The wire layer's own JSON codec writes it, under
+    the proto's field names, which is how the API writes JSON over HTTP."""
+    # A message of the API is no well-known type, so its JSON is an object.
+    return cast("dict[str, Any]", message_to_json_value(wire, use_proto_field_name=True))
+
+
+def from_dict(wire: type[Wire], data: dict[str, Any]) -> Wire:
+    """The wire message the API's JSON says, read as the API reads it: a key that is no field is
+    refused, so a misspelt one cannot pass for an absent one."""
+    return message_from_json_value(wire, data, ignore_unknown_fields=False)
+
+
+def is_pulse(response: Message[Any]) -> bool:
+    """Whether a stream's response is the API's pulse: one with nothing set, which the API sends
+    through a quiet stream so that no proxy on the way takes it for a dead one. A stream passes
+    over it. A pulse's protobuf encoding is no bytes at all: a response that carries anything, a
+    field this version does not know among it, is none."""
+    # ponytail: this encodes every response of a stream once more; ask the wire layer for the
+    # message's length, after it is decompressed, when a stream grows busy enough for that to show.
+    return not response.to_binary()
 
 
 def time_from_wire(wire: Timestamp) -> datetime.datetime:
@@ -111,23 +140,29 @@ def timeout_ms(timeout: float | None) -> int | None:
 
 class Caller:
     """Says who calls, on every call: the token, and this package with its version. It is
-    connectrpc's metadata interceptor, for the synchronous client and the asyncio one."""
+    connectrpc's interceptor of a call and of a stream, for the synchronous client and the
+    asyncio one. It hands on what the wire layer returns and wraps nothing around it, so the
+    stream a client closes is the HTTP call itself."""
 
     def __init__(self, token: str) -> None:
         self._authorization = f"Bearer {token}"
 
-    def _sign(self, ctx: RequestContext[Any, Any]) -> None:
+    def _sign(self, ctx: _Context) -> None:
         ctx.request_headers["authorization"] = self._authorization
         ctx.request_headers["user-agent"] = USER_AGENT
 
-    def on_start_sync(self, ctx: RequestContext[Any, Any], /) -> None:
+    def intercept_unary_sync(self, call_next: _Next[_Request, _Answer], request: _Request, ctx: _Context, /) -> _Answer:
         self._sign(ctx)
+        return call_next(request, ctx)
 
-    def on_end_sync(self, token: None, ctx: RequestContext[Any, Any], error: Exception | None, /) -> None:
-        return
-
-    async def on_start(self, ctx: RequestContext[Any, Any]) -> None:
+    def intercept_server_stream_sync(self, call_next: _Next[_Request, _Answer], request: _Request, ctx: _Context, /) -> _Answer:
         self._sign(ctx)
+        return call_next(request, ctx)
 
-    async def on_end(self, token: None, ctx: RequestContext[Any, Any], error: Exception | None, /) -> None:
-        return
+    async def intercept_unary(self, call_next: _Next[_Request, Awaitable[_Answer]], request: _Request, ctx: _Context, /) -> _Answer:
+        self._sign(ctx)
+        return await call_next(request, ctx)
+
+    def intercept_server_stream(self, call_next: _Next[_Request, _Answer], request: _Request, ctx: _Context, /) -> _Answer:
+        self._sign(ctx)
+        return call_next(request, ctx)

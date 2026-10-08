@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any as _Any
 from typing import Literal as _Literal
 
 from connectrpc.code import Code as _Code
@@ -21,40 +22,80 @@ def machine_session_kind_from_wire(_w: _pb.MachineSessionKind) -> _t.MachineSess
     return _t.MachineSessionKind(_w.value)
 
 
+def machine_session_kind_to_wire(_v: _t.MachineSessionKind) -> _pb.MachineSessionKind:
+    return _pb.MachineSessionKind(_v.value)
+
+
 def project_problem_kind_from_wire(_w: _pb.ProjectProblemKind) -> _t.ProjectProblemKind:
     return _t.ProjectProblemKind(_w.value)
+
+
+def project_problem_kind_to_wire(_v: _t.ProjectProblemKind) -> _pb.ProjectProblemKind:
+    return _pb.ProjectProblemKind(_v.value)
 
 
 def services_action_kind_from_wire(_w: _pb.ServicesActionKind) -> _t.ServicesActionKind:
     return _t.ServicesActionKind(_w.value)
 
 
+def services_action_kind_to_wire(_v: _t.ServicesActionKind) -> _pb.ServicesActionKind:
+    return _pb.ServicesActionKind(_v.value)
+
+
 def service_state_from_wire(_w: _pb.ServiceState) -> _t.ServiceState:
     return _t.ServiceState(_w.value)
+
+
+def service_state_to_wire(_v: _t.ServiceState) -> _pb.ServiceState:
+    return _pb.ServiceState(_v.value)
 
 
 def restart_policy_from_wire(_w: _pb.RestartPolicy) -> _t.RestartPolicy:
     return _t.RestartPolicy(_w.value)
 
 
+def restart_policy_to_wire(_v: _t.RestartPolicy) -> _pb.RestartPolicy:
+    return _pb.RestartPolicy(_v.value)
+
+
 def health_status_from_wire(_w: _pb.HealthStatus) -> _t.HealthStatus:
     return _t.HealthStatus(_w.value)
+
+
+def health_status_to_wire(_v: _t.HealthStatus) -> _pb.HealthStatus:
+    return _pb.HealthStatus(_v.value)
 
 
 def certificate_source_from_wire(_w: _pb.CertificateSource) -> _t.CertificateSource:
     return _t.CertificateSource(_w.value)
 
 
+def certificate_source_to_wire(_v: _t.CertificateSource) -> _pb.CertificateSource:
+    return _pb.CertificateSource(_v.value)
+
+
 def operation_kind_from_wire(_w: _pb.OperationKind) -> _t.OperationKind:
     return _t.OperationKind(_w.value)
+
+
+def operation_kind_to_wire(_v: _t.OperationKind) -> _pb.OperationKind:
+    return _pb.OperationKind(_v.value)
 
 
 def operation_status_from_wire(_w: _pb.OperationStatus) -> _t.OperationStatus:
     return _t.OperationStatus(_w.value)
 
 
+def operation_status_to_wire(_v: _t.OperationStatus) -> _pb.OperationStatus:
+    return _pb.OperationStatus(_v.value)
+
+
 def deploy_failure_reason_from_wire(_w: _pb.DeployFailureReason) -> _t.DeployFailureReason:
     return _t.DeployFailureReason(_w.value)
+
+
+def deploy_failure_reason_to_wire(_v: _t.DeployFailureReason) -> _pb.DeployFailureReason:
+    return _pb.DeployFailureReason(_v.value)
 
 
 def output_stream_from_wire(_w: _pb.OutputStream) -> _t.OutputStream:
@@ -69,12 +110,24 @@ def file_type_from_wire(_w: _pb.FileType) -> _t.FileType:
     return _t.FileType(_w.value)
 
 
+def file_type_to_wire(_v: _t.FileType) -> _pb.FileType:
+    return _pb.FileType(_v.value)
+
+
 def file_location_from_wire(_w: _pb.FileLocation) -> _t.FileLocation:
     return _t.FileLocation(_w.value)
 
 
+def file_location_to_wire(_v: _t.FileLocation) -> _pb.FileLocation:
+    return _pb.FileLocation(_v.value)
+
+
 def no_machine_reason_from_wire(_w: _pb.NoMachineReason) -> _t.NoMachineReason:
     return _t.NoMachineReason(_w.value)
+
+
+def no_machine_reason_to_wire(_v: _t.NoMachineReason) -> _pb.NoMachineReason:
+    return _pb.NoMachineReason(_v.value)
 
 
 def get_machine_response_from_wire(_w: _pb.GetMachineResponse) -> _t.GetMachineResponse:
@@ -84,6 +137,23 @@ def get_machine_response_from_wire(_w: _pb.GetMachineResponse) -> _t.GetMachineR
         deleted_projects=tuple(deleted_project_from_wire(_x) for _x in _w.deleted_projects),
         github=github_connection_from_wire(_w.github) if _w.github is not None else None,
     )
+
+
+def get_machine_response_to_wire(_v: _t.GetMachineResponse) -> _pb.GetMachineResponse:
+    return _pb.GetMachineResponse(
+        machine=machine_to_wire(_v.machine) if _v.machine is not None else None,
+        projects=[project_summary_to_wire(_x) for _x in _v.projects],
+        deleted_projects=[deleted_project_to_wire(_x) for _x in _v.deleted_projects],
+        github=github_connection_to_wire(_v.github) if _v.github is not None else None,
+    )
+
+
+def get_machine_response_to_dict(_v: _t.GetMachineResponse) -> dict[str, _Any]:
+    return _rt.to_dict(get_machine_response_to_wire(_v))
+
+
+def get_machine_response_from_dict(_j: dict[str, _Any]) -> _t.GetMachineResponse:
+    return get_machine_response_from_wire(_rt.from_dict(_pb.GetMachineResponse, _j))
 
 
 def machine_from_wire(_w: _pb.Machine) -> _t.Machine:
@@ -116,6 +186,44 @@ def machine_from_wire(_w: _pb.Machine) -> _t.Machine:
     )
 
 
+def machine_to_wire(_v: _t.Machine) -> _pb.Machine:
+    return _pb.Machine(
+        name=_v.name or None,
+        location=_v.location or None,
+        sample_time=_rt.time_to_wire(_v.sample_time) if _v.sample_time is not None else None,
+        cpu_used_cores=_v.cpu_used_cores or None,
+        cpu_total_cores=_v.cpu_total_cores or None,
+        memory_used_bytes=_v.memory_used_bytes or None,
+        memory_total_bytes=_v.memory_total_bytes or None,
+        disk_used_bytes=_v.disk_used_bytes or None,
+        disk_total_bytes=_v.disk_total_bytes or None,
+        disk_usage=disk_usage_to_wire(_v.disk_usage) if _v.disk_usage is not None else None,
+        hostname=_v.hostname or None,
+        ssh_host_key_fingerprint=_v.ssh_host_key_fingerprint or None,
+        ssh_keys=[ssh_key_to_wire(_x) for _x in _v.ssh_keys],
+        backups_enabled=_v.backups_enabled or None,
+        snapshot_list_time=_rt.time_to_wire(_v.snapshot_list_time) if _v.snapshot_list_time is not None else None,
+        snapshot_list_failure_message=_v.snapshot_list_failure_message or None,
+        backup_retention_hours=_v.backup_retention_hours or None,
+        acme_enabled=_v.acme_enabled or None,
+        apps_domain=_v.apps_domain or None,
+        daemon_version=_v.daemon_version or None,
+        docker_version=_v.docker_version or None,
+        boot_time=_rt.time_to_wire(_v.boot_time) if _v.boot_time is not None else None,
+        restart_required_time=_rt.time_to_wire(_v.restart_required_time) if _v.restart_required_time is not None else None,
+        scheduled_restart_time=_rt.time_to_wire(_v.scheduled_restart_time) if _v.scheduled_restart_time is not None else None,
+        sessions=[machine_session_to_wire(_x) for _x in _v.sessions],
+    )
+
+
+def machine_to_dict(_v: _t.Machine) -> dict[str, _Any]:
+    return _rt.to_dict(machine_to_wire(_v))
+
+
+def machine_from_dict(_j: dict[str, _Any]) -> _t.Machine:
+    return machine_from_wire(_rt.from_dict(_pb.Machine, _j))
+
+
 def machine_session_from_wire(_w: _pb.MachineSession) -> _t.MachineSession:
     return _t.MachineSession(
         session_id=_w.session_id,
@@ -130,6 +238,28 @@ def machine_session_from_wire(_w: _pb.MachineSession) -> _t.MachineSession:
     )
 
 
+def machine_session_to_wire(_v: _t.MachineSession) -> _pb.MachineSession:
+    return _pb.MachineSession(
+        session_id=_v.session_id or None,
+        kind=machine_session_kind_to_wire(_v.kind) if _v.kind.value else None,
+        project_id=_v.project_id or None,
+        service=_v.service or None,
+        port=_v.port or None,
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        client_address=_v.client_address or None,
+        ssh_key_label=_v.ssh_key_label or None,
+        ssh_key_fingerprint=_v.ssh_key_fingerprint or None,
+    )
+
+
+def machine_session_to_dict(_v: _t.MachineSession) -> dict[str, _Any]:
+    return _rt.to_dict(machine_session_to_wire(_v))
+
+
+def machine_session_from_dict(_j: dict[str, _Any]) -> _t.MachineSession:
+    return machine_session_from_wire(_rt.from_dict(_pb.MachineSession, _j))
+
+
 def disk_usage_from_wire(_w: _pb.DiskUsage) -> _t.DiskUsage:
     return _t.DiskUsage(
         images_bytes=_w.images_bytes,
@@ -140,6 +270,26 @@ def disk_usage_from_wire(_w: _pb.DiskUsage) -> _t.DiskUsage:
         container_logs_bytes=_w.container_logs_bytes,
         http_traffic_bytes=_w.http_traffic_bytes,
     )
+
+
+def disk_usage_to_wire(_v: _t.DiskUsage) -> _pb.DiskUsage:
+    return _pb.DiskUsage(
+        images_bytes=_v.images_bytes or None,
+        build_cache_bytes=_v.build_cache_bytes,
+        volumes_bytes=_v.volumes_bytes or None,
+        container_layers_bytes=_v.container_layers_bytes or None,
+        project_files_bytes=_v.project_files_bytes or None,
+        container_logs_bytes=_v.container_logs_bytes or None,
+        http_traffic_bytes=_v.http_traffic_bytes or None,
+    )
+
+
+def disk_usage_to_dict(_v: _t.DiskUsage) -> dict[str, _Any]:
+    return _rt.to_dict(disk_usage_to_wire(_v))
+
+
+def disk_usage_from_dict(_j: dict[str, _Any]) -> _t.DiskUsage:
+    return disk_usage_from_wire(_rt.from_dict(_pb.DiskUsage, _j))
 
 
 def ssh_key_from_wire(_w: _pb.SshKey) -> _t.SshKey:
@@ -158,6 +308,14 @@ def ssh_key_to_wire(_v: _t.SshKey) -> _pb.SshKey:
     )
 
 
+def ssh_key_to_dict(_v: _t.SshKey) -> dict[str, _Any]:
+    return _rt.to_dict(ssh_key_to_wire(_v))
+
+
+def ssh_key_from_dict(_j: dict[str, _Any]) -> _t.SshKey:
+    return ssh_key_from_wire(_rt.from_dict(_pb.SshKey, _j))
+
+
 def github_connection_from_wire(_w: _pb.GithubConnection) -> _t.GithubConnection:
     return _t.GithubConnection(
         app_name=_w.app_name,
@@ -166,6 +324,24 @@ def github_connection_from_wire(_w: _pb.GithubConnection) -> _t.GithubConnection
         repository_count=_w.repository_count,
         webhooks_enabled=_w.webhooks_enabled,
     )
+
+
+def github_connection_to_wire(_v: _t.GithubConnection) -> _pb.GithubConnection:
+    return _pb.GithubConnection(
+        app_name=_v.app_name or None,
+        install_url=_v.install_url or None,
+        repositories=[github_repository_to_wire(_x) for _x in _v.repositories],
+        repository_count=_v.repository_count or None,
+        webhooks_enabled=_v.webhooks_enabled or None,
+    )
+
+
+def github_connection_to_dict(_v: _t.GithubConnection) -> dict[str, _Any]:
+    return _rt.to_dict(github_connection_to_wire(_v))
+
+
+def github_connection_from_dict(_j: dict[str, _Any]) -> _t.GithubConnection:
+    return github_connection_from_wire(_rt.from_dict(_pb.GithubConnection, _j))
 
 
 def github_repository_from_wire(_w: _pb.GithubRepository) -> _t.GithubRepository:
@@ -177,11 +353,52 @@ def github_repository_from_wire(_w: _pb.GithubRepository) -> _t.GithubRepository
     )
 
 
+def github_repository_to_wire(_v: _t.GithubRepository) -> _pb.GithubRepository:
+    return _pb.GithubRepository(
+        repository=_v.repository or None,
+        default_branch=_v.default_branch or None,
+        private=_v.private or None,
+        push_time=_rt.time_to_wire(_v.push_time) if _v.push_time is not None else None,
+    )
+
+
+def github_repository_to_dict(_v: _t.GithubRepository) -> dict[str, _Any]:
+    return _rt.to_dict(github_repository_to_wire(_v))
+
+
+def github_repository_from_dict(_j: dict[str, _Any]) -> _t.GithubRepository:
+    return github_repository_from_wire(_rt.from_dict(_pb.GithubRepository, _j))
+
+
 def deleted_project_from_wire(_w: _pb.DeletedProject) -> _t.DeletedProject:
     return _t.DeletedProject(
         project_id=_w.project_id,
         newest_snapshot=snapshot_from_wire(_w.newest_snapshot) if _w.newest_snapshot is not None else None,
         snapshot_count=_w.snapshot_count,
+    )
+
+
+def deleted_project_to_wire(_v: _t.DeletedProject) -> _pb.DeletedProject:
+    return _pb.DeletedProject(
+        project_id=_v.project_id or None,
+        newest_snapshot=snapshot_to_wire(_v.newest_snapshot) if _v.newest_snapshot is not None else None,
+        snapshot_count=_v.snapshot_count or None,
+    )
+
+
+def deleted_project_to_dict(_v: _t.DeletedProject) -> dict[str, _Any]:
+    return _rt.to_dict(deleted_project_to_wire(_v))
+
+
+def deleted_project_from_dict(_j: dict[str, _Any]) -> _t.DeletedProject:
+    return deleted_project_from_wire(_rt.from_dict(_pb.DeletedProject, _j))
+
+
+def restart_machine_action_from_wire(_w: _pb.RestartMachineAction) -> _t.RestartMachineAction:
+    return _t.RestartMachineAction(
+        restart_time=_rt.time_from_wire(_w.restart_time) if _w.restart_time is not None else None,
+        at_maintenance_window=_w.at_maintenance_window,
+        interrupt_operations=_w.interrupt_operations,
     )
 
 
@@ -193,10 +410,32 @@ def restart_machine_action_to_wire(_v: _t.RestartMachineAction) -> _pb.RestartMa
     )
 
 
+def restart_machine_action_to_dict(_v: _t.RestartMachineAction) -> dict[str, _Any]:
+    return _rt.to_dict(restart_machine_action_to_wire(_v))
+
+
+def restart_machine_action_from_dict(_j: dict[str, _Any]) -> _t.RestartMachineAction:
+    return restart_machine_action_from_wire(_rt.from_dict(_pb.RestartMachineAction, _j))
+
+
 def run_machine_action_response_from_wire(_w: _pb.RunMachineActionResponse) -> _t.RunMachineActionResponse:
     return _t.RunMachineActionResponse(
         machine=machine_from_wire(_w.machine) if _w.machine is not None else None,
     )
+
+
+def run_machine_action_response_to_wire(_v: _t.RunMachineActionResponse) -> _pb.RunMachineActionResponse:
+    return _pb.RunMachineActionResponse(
+        machine=machine_to_wire(_v.machine) if _v.machine is not None else None,
+    )
+
+
+def run_machine_action_response_to_dict(_v: _t.RunMachineActionResponse) -> dict[str, _Any]:
+    return _rt.to_dict(run_machine_action_response_to_wire(_v))
+
+
+def run_machine_action_response_from_dict(_j: dict[str, _Any]) -> _t.RunMachineActionResponse:
+    return run_machine_action_response_from_wire(_rt.from_dict(_pb.RunMachineActionResponse, _j))
 
 
 def project_metadata_from_wire(_w: _pb.ProjectMetadata) -> _t.ProjectMetadata:
@@ -217,6 +456,14 @@ def project_metadata_to_wire(_v: _t.ProjectMetadata) -> _pb.ProjectMetadata:
     )
 
 
+def project_metadata_to_dict(_v: _t.ProjectMetadata) -> dict[str, _Any]:
+    return _rt.to_dict(project_metadata_to_wire(_v))
+
+
+def project_metadata_from_dict(_j: dict[str, _Any]) -> _t.ProjectMetadata:
+    return project_metadata_from_wire(_rt.from_dict(_pb.ProjectMetadata, _j))
+
+
 def project_summary_from_wire(_w: _pb.ProjectSummary) -> _t.ProjectSummary:
     return _t.ProjectSummary(
         project_id=_w.project_id,
@@ -235,11 +482,52 @@ def project_summary_from_wire(_w: _pb.ProjectSummary) -> _t.ProjectSummary:
     )
 
 
+def project_summary_to_wire(_v: _t.ProjectSummary) -> _pb.ProjectSummary:
+    return _pb.ProjectSummary(
+        project_id=_v.project_id or None,
+        metadata=project_metadata_to_wire(_v.metadata) if _v.metadata is not None else None,
+        problems=[project_problem_to_wire(_x) for _x in _v.problems],
+        services=[service_summary_to_wire(_x) for _x in _v.services],
+        url=_v.url or None,
+        hosts=_rt.strings("ProjectSummary.hosts", _v.hosts),
+        http_traffic_last_day=http_traffic_summary_to_wire(_v.http_traffic_last_day) if _v.http_traffic_last_day is not None else None,
+        cpu_used_cores=_v.cpu_used_cores or None,
+        memory_used_bytes=_v.memory_used_bytes or None,
+        deploy_time=_rt.time_to_wire(_v.deploy_time) if _v.deploy_time is not None else None,
+        running_operations=[operation_to_wire(_x) for _x in _v.running_operations],
+        pinned=_v.pinned or None,
+        disk_used_bytes=_v.disk_used_bytes or None,
+    )
+
+
+def project_summary_to_dict(_v: _t.ProjectSummary) -> dict[str, _Any]:
+    return _rt.to_dict(project_summary_to_wire(_v))
+
+
+def project_summary_from_dict(_j: dict[str, _Any]) -> _t.ProjectSummary:
+    return project_summary_from_wire(_rt.from_dict(_pb.ProjectSummary, _j))
+
+
 def service_summary_from_wire(_w: _pb.ServiceSummary) -> _t.ServiceSummary:
     return _t.ServiceSummary(
         service=_w.service,
         state=service_state_from_wire(_w.state),
     )
+
+
+def service_summary_to_wire(_v: _t.ServiceSummary) -> _pb.ServiceSummary:
+    return _pb.ServiceSummary(
+        service=_v.service or None,
+        state=service_state_to_wire(_v.state) if _v.state.value else None,
+    )
+
+
+def service_summary_to_dict(_v: _t.ServiceSummary) -> dict[str, _Any]:
+    return _rt.to_dict(service_summary_to_wire(_v))
+
+
+def service_summary_from_dict(_j: dict[str, _Any]) -> _t.ServiceSummary:
+    return service_summary_from_wire(_rt.from_dict(_pb.ServiceSummary, _j))
 
 
 def project_problem_from_wire(_w: _pb.ProjectProblem) -> _t.ProjectProblem:
@@ -252,10 +540,42 @@ def project_problem_from_wire(_w: _pb.ProjectProblem) -> _t.ProjectProblem:
     )
 
 
+def project_problem_to_wire(_v: _t.ProjectProblem) -> _pb.ProjectProblem:
+    return _pb.ProjectProblem(
+        kind=project_problem_kind_to_wire(_v.kind) if _v.kind.value else None,
+        service=_v.service or None,
+        operation_id=_v.operation_id or None,
+        since_time=_rt.time_to_wire(_v.since_time) if _v.since_time is not None else None,
+        problem_message=_v.problem_message or None,
+    )
+
+
+def project_problem_to_dict(_v: _t.ProjectProblem) -> dict[str, _Any]:
+    return _rt.to_dict(project_problem_to_wire(_v))
+
+
+def project_problem_from_dict(_j: dict[str, _Any]) -> _t.ProjectProblem:
+    return project_problem_from_wire(_rt.from_dict(_pb.ProjectProblem, _j))
+
+
 def get_project_response_from_wire(_w: _pb.GetProjectResponse) -> _t.GetProjectResponse:
     return _t.GetProjectResponse(
         project=project_from_wire(_w.project) if _w.project is not None else None,
     )
+
+
+def get_project_response_to_wire(_v: _t.GetProjectResponse) -> _pb.GetProjectResponse:
+    return _pb.GetProjectResponse(
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+    )
+
+
+def get_project_response_to_dict(_v: _t.GetProjectResponse) -> dict[str, _Any]:
+    return _rt.to_dict(get_project_response_to_wire(_v))
+
+
+def get_project_response_from_dict(_j: dict[str, _Any]) -> _t.GetProjectResponse:
+    return get_project_response_from_wire(_rt.from_dict(_pb.GetProjectResponse, _j))
 
 
 def project_from_wire(_w: _pb.Project) -> _t.Project:
@@ -285,12 +605,63 @@ def project_from_wire(_w: _pb.Project) -> _t.Project:
     )
 
 
+def project_to_wire(_v: _t.Project) -> _pb.Project:
+    return _pb.Project(
+        project_id=_v.project_id or None,
+        metadata=project_metadata_to_wire(_v.metadata) if _v.metadata is not None else None,
+        problems=[project_problem_to_wire(_x) for _x in _v.problems],
+        url=_v.url or None,
+        cpu_used_cores=_v.cpu_used_cores or None,
+        memory_used_bytes=_v.memory_used_bytes or None,
+        deploy_id=_v.deploy_id or None,
+        deploy_status=operation_status_to_wire(_v.deploy_status) if _v.deploy_status.value else None,
+        deploy_time=_rt.time_to_wire(_v.deploy_time) if _v.deploy_time is not None else None,
+        x_pethost_applies_at_once=_v.x_pethost_applies_at_once or None,
+        services=[service_to_wire(_x) for _x in _v.services],
+        volumes=[volume_to_wire(_x) for _x in _v.volumes],
+        routes=[route_to_wire(_x) for _x in _v.routes],
+        hosts=[host_to_wire(_x) for _x in _v.hosts],
+        password_protected=_v.password_protected or None,
+        operations=[operation_to_wire(_x) for _x in _v.operations],
+        snapshots=[snapshot_to_wire(_x) for _x in _v.snapshots],
+        snapshot_count=_v.snapshot_count or None,
+        snapshot_list_time=_rt.time_to_wire(_v.snapshot_list_time) if _v.snapshot_list_time is not None else None,
+        http_traffic_last_day=http_traffic_summary_to_wire(_v.http_traffic_last_day) if _v.http_traffic_last_day is not None else None,
+        source=project_source_to_wire(_v.source) if _v.source is not None else None,
+        running_services_action=running_services_action_to_wire(_v.running_services_action) if _v.running_services_action is not None else None,
+    )
+
+
+def project_to_dict(_v: _t.Project) -> dict[str, _Any]:
+    return _rt.to_dict(project_to_wire(_v))
+
+
+def project_from_dict(_j: dict[str, _Any]) -> _t.Project:
+    return project_from_wire(_rt.from_dict(_pb.Project, _j))
+
+
 def running_services_action_from_wire(_w: _pb.RunningServicesAction) -> _t.RunningServicesAction:
     return _t.RunningServicesAction(
         kind=services_action_kind_from_wire(_w.kind),
         services=tuple(_w.services),
         start_time=_rt.time_from_wire(_w.start_time) if _w.start_time is not None else None,
     )
+
+
+def running_services_action_to_wire(_v: _t.RunningServicesAction) -> _pb.RunningServicesAction:
+    return _pb.RunningServicesAction(
+        kind=services_action_kind_to_wire(_v.kind) if _v.kind.value else None,
+        services=_rt.strings("RunningServicesAction.services", _v.services),
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+    )
+
+
+def running_services_action_to_dict(_v: _t.RunningServicesAction) -> dict[str, _Any]:
+    return _rt.to_dict(running_services_action_to_wire(_v))
+
+
+def running_services_action_from_dict(_j: dict[str, _Any]) -> _t.RunningServicesAction:
+    return running_services_action_from_wire(_rt.from_dict(_pb.RunningServicesAction, _j))
 
 
 def project_source_from_wire(_w: _pb.ProjectSource) -> _t.ProjectSource:
@@ -315,6 +686,14 @@ def project_source_to_wire(_v: _t.ProjectSource) -> _pb.ProjectSource:
     elif _v.github is not None:
         _w.kind = _Oneof[_Literal["github"], _pb.GithubSource]("github", github_source_to_wire(_v.github))
     return _w
+
+
+def project_source_to_dict(_v: _t.ProjectSource) -> dict[str, _Any]:
+    return _rt.to_dict(project_source_to_wire(_v))
+
+
+def project_source_from_dict(_j: dict[str, _Any]) -> _t.ProjectSource:
+    return project_source_from_wire(_rt.from_dict(_pb.ProjectSource, _j))
 
 
 def github_source_from_wire(_w: _pb.GithubSource) -> _t.GithubSource:
@@ -343,6 +722,14 @@ def github_source_to_wire(_v: _t.GithubSource) -> _pb.GithubSource:
     )
 
 
+def github_source_to_dict(_v: _t.GithubSource) -> dict[str, _Any]:
+    return _rt.to_dict(github_source_to_wire(_v))
+
+
+def github_source_from_dict(_j: dict[str, _Any]) -> _t.GithubSource:
+    return github_source_from_wire(_rt.from_dict(_pb.GithubSource, _j))
+
+
 def github_commit_from_wire(_w: _pb.GithubCommit) -> _t.GithubCommit:
     return _t.GithubCommit(
         sha=_w.sha,
@@ -357,6 +744,14 @@ def github_commit_to_wire(_v: _t.GithubCommit) -> _pb.GithubCommit:
         title=_v.title or None,
         url=_v.url or None,
     )
+
+
+def github_commit_to_dict(_v: _t.GithubCommit) -> dict[str, _Any]:
+    return _rt.to_dict(github_commit_to_wire(_v))
+
+
+def github_commit_from_dict(_j: dict[str, _Any]) -> _t.GithubCommit:
+    return github_commit_from_wire(_rt.from_dict(_pb.GithubCommit, _j))
 
 
 def service_from_wire(_w: _pb.Service) -> _t.Service:
@@ -392,6 +787,47 @@ def service_from_wire(_w: _pb.Service) -> _t.Service:
     )
 
 
+def service_to_wire(_v: _t.Service) -> _pb.Service:
+    return _pb.Service(
+        service=_v.service or None,
+        state=service_state_to_wire(_v.state) if _v.state.value else None,
+        container_running=_v.container_running or None,
+        image=_v.image or None,
+        builds_image=_v.builds_image or None,
+        image_digest=_v.image_digest or None,
+        image_size_bytes=_v.image_size_bytes or None,
+        command=_rt.strings("Service.command", _v.command),
+        run_as_user=_v.run_as_user or None,
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        finish_time=_rt.time_to_wire(_v.finish_time) if _v.finish_time is not None else None,
+        exit_code=_v.exit_code,
+        out_of_memory=_v.out_of_memory or None,
+        restart_count=_v.restart_count or None,
+        cpu_used_cores=_v.cpu_used_cores or None,
+        memory_used_bytes=_v.memory_used_bytes or None,
+        memory_limit_bytes=_v.memory_limit_bytes or None,
+        cpu_limit_cores=_v.cpu_limit_cores or None,
+        writable_layer_bytes=_v.writable_layer_bytes or None,
+        ports=[*_v.ports],
+        listening_ports=[*_v.listening_ports],
+        published_ports=[published_port_to_wire(_x) for _x in _v.published_ports],
+        volume_mounts=[volume_mount_to_wire(_x) for _x in _v.volume_mounts],
+        restart_policy=restart_policy_to_wire(_v.restart_policy) if _v.restart_policy.value else None,
+        health_check=health_check_to_wire(_v.health_check) if _v.health_check is not None else None,
+        environment=[environment_variable_to_wire(_x) for _x in _v.environment],
+        env_files=_rt.strings("Service.env_files", _v.env_files),
+        ssh_command=_v.ssh_command or None,
+    )
+
+
+def service_to_dict(_v: _t.Service) -> dict[str, _Any]:
+    return _rt.to_dict(service_to_wire(_v))
+
+
+def service_from_dict(_j: dict[str, _Any]) -> _t.Service:
+    return service_from_wire(_rt.from_dict(_pb.Service, _j))
+
+
 def published_port_from_wire(_w: _pb.PublishedPort) -> _t.PublishedPort:
     return _t.PublishedPort(
         machine_port=_w.machine_port,
@@ -401,11 +837,43 @@ def published_port_from_wire(_w: _pb.PublishedPort) -> _t.PublishedPort:
     )
 
 
+def published_port_to_wire(_v: _t.PublishedPort) -> _pb.PublishedPort:
+    return _pb.PublishedPort(
+        machine_port=_v.machine_port or None,
+        container_port=_v.container_port or None,
+        protocol=_v.protocol or None,
+        machine_only=_v.machine_only or None,
+    )
+
+
+def published_port_to_dict(_v: _t.PublishedPort) -> dict[str, _Any]:
+    return _rt.to_dict(published_port_to_wire(_v))
+
+
+def published_port_from_dict(_j: dict[str, _Any]) -> _t.PublishedPort:
+    return published_port_from_wire(_rt.from_dict(_pb.PublishedPort, _j))
+
+
 def volume_mount_from_wire(_w: _pb.VolumeMount) -> _t.VolumeMount:
     return _t.VolumeMount(
         volume=_w.volume,
         container_path=_w.container_path,
     )
+
+
+def volume_mount_to_wire(_v: _t.VolumeMount) -> _pb.VolumeMount:
+    return _pb.VolumeMount(
+        volume=_v.volume or None,
+        container_path=_v.container_path or None,
+    )
+
+
+def volume_mount_to_dict(_v: _t.VolumeMount) -> dict[str, _Any]:
+    return _rt.to_dict(volume_mount_to_wire(_v))
+
+
+def volume_mount_from_dict(_j: dict[str, _Any]) -> _t.VolumeMount:
+    return volume_mount_from_wire(_rt.from_dict(_pb.VolumeMount, _j))
 
 
 def health_check_from_wire(_w: _pb.HealthCheck) -> _t.HealthCheck:
@@ -419,6 +887,25 @@ def health_check_from_wire(_w: _pb.HealthCheck) -> _t.HealthCheck:
     )
 
 
+def health_check_to_wire(_v: _t.HealthCheck) -> _pb.HealthCheck:
+    return _pb.HealthCheck(
+        command=_rt.strings("HealthCheck.command", _v.command),
+        interval_seconds=_v.interval_seconds or None,
+        status=health_status_to_wire(_v.status) if _v.status.value else None,
+        consecutive_failure_count=_v.consecutive_failure_count or None,
+        recent_results_passed=[*_v.recent_results_passed],
+        last_failure_output=_v.last_failure_output or None,
+    )
+
+
+def health_check_to_dict(_v: _t.HealthCheck) -> dict[str, _Any]:
+    return _rt.to_dict(health_check_to_wire(_v))
+
+
+def health_check_from_dict(_j: dict[str, _Any]) -> _t.HealthCheck:
+    return health_check_from_wire(_rt.from_dict(_pb.HealthCheck, _j))
+
+
 def environment_variable_from_wire(_w: _pb.EnvironmentVariable) -> _t.EnvironmentVariable:
     return _t.EnvironmentVariable(
         name=_w.name,
@@ -428,6 +915,25 @@ def environment_variable_from_wire(_w: _pb.EnvironmentVariable) -> _t.Environmen
         from_env_file_variables=tuple(_w.from_env_file_variables),
         value_left_out=_w.value_left_out,
     )
+
+
+def environment_variable_to_wire(_v: _t.EnvironmentVariable) -> _pb.EnvironmentVariable:
+    return _pb.EnvironmentVariable(
+        name=_v.name or None,
+        value=_v.value or None,
+        secret=_v.secret or None,
+        source_file=_v.source_file or None,
+        from_env_file_variables=_rt.strings("EnvironmentVariable.from_env_file_variables", _v.from_env_file_variables),
+        value_left_out=_v.value_left_out or None,
+    )
+
+
+def environment_variable_to_dict(_v: _t.EnvironmentVariable) -> dict[str, _Any]:
+    return _rt.to_dict(environment_variable_to_wire(_v))
+
+
+def environment_variable_from_dict(_j: dict[str, _Any]) -> _t.EnvironmentVariable:
+    return environment_variable_from_wire(_rt.from_dict(_pb.EnvironmentVariable, _j))
 
 
 def volume_from_wire(_w: _pb.Volume) -> _t.Volume:
@@ -441,11 +947,45 @@ def volume_from_wire(_w: _pb.Volume) -> _t.Volume:
     )
 
 
+def volume_to_wire(_v: _t.Volume) -> _pb.Volume:
+    return _pb.Volume(
+        volume=_v.volume or None,
+        size_bytes=_v.size_bytes or None,
+        mounted_by=[volume_mounted_by_to_wire(_x) for _x in _v.mounted_by],
+        last_backup_time=_rt.time_to_wire(_v.last_backup_time) if _v.last_backup_time is not None else None,
+        snapshot_count=_v.snapshot_count or None,
+        declared=_v.declared or None,
+    )
+
+
+def volume_to_dict(_v: _t.Volume) -> dict[str, _Any]:
+    return _rt.to_dict(volume_to_wire(_v))
+
+
+def volume_from_dict(_j: dict[str, _Any]) -> _t.Volume:
+    return volume_from_wire(_rt.from_dict(_pb.Volume, _j))
+
+
 def volume_mounted_by_from_wire(_w: _pb.VolumeMountedBy) -> _t.VolumeMountedBy:
     return _t.VolumeMountedBy(
         service=_w.service,
         container_path=_w.container_path,
     )
+
+
+def volume_mounted_by_to_wire(_v: _t.VolumeMountedBy) -> _pb.VolumeMountedBy:
+    return _pb.VolumeMountedBy(
+        service=_v.service or None,
+        container_path=_v.container_path or None,
+    )
+
+
+def volume_mounted_by_to_dict(_v: _t.VolumeMountedBy) -> dict[str, _Any]:
+    return _rt.to_dict(volume_mounted_by_to_wire(_v))
+
+
+def volume_mounted_by_from_dict(_j: dict[str, _Any]) -> _t.VolumeMountedBy:
+    return volume_mounted_by_from_wire(_rt.from_dict(_pb.VolumeMountedBy, _j))
 
 
 def host_from_wire(_w: _pb.Host) -> _t.Host:
@@ -456,6 +996,24 @@ def host_from_wire(_w: _pb.Host) -> _t.Host:
         certificate_expire_time=_rt.time_from_wire(_w.certificate_expire_time) if _w.certificate_expire_time is not None else None,
         unavailable_message=_w.unavailable_message,
     )
+
+
+def host_to_wire(_v: _t.Host) -> _pb.Host:
+    return _pb.Host(
+        host=_v.host or None,
+        url=_v.url or None,
+        certificate_source=certificate_source_to_wire(_v.certificate_source) if _v.certificate_source.value else None,
+        certificate_expire_time=_rt.time_to_wire(_v.certificate_expire_time) if _v.certificate_expire_time is not None else None,
+        unavailable_message=_v.unavailable_message or None,
+    )
+
+
+def host_to_dict(_v: _t.Host) -> dict[str, _Any]:
+    return _rt.to_dict(host_to_wire(_v))
+
+
+def host_from_dict(_j: dict[str, _Any]) -> _t.Host:
+    return host_from_wire(_rt.from_dict(_pb.Host, _j))
 
 
 def route_from_wire(_w: _pb.Route) -> _t.Route:
@@ -476,6 +1034,14 @@ def route_to_wire(_v: _t.Route) -> _pb.Route:
         port=_v.port or None,
         strip_path=_v.strip_path or None,
     )
+
+
+def route_to_dict(_v: _t.Route) -> dict[str, _Any]:
+    return _rt.to_dict(route_to_wire(_v))
+
+
+def route_from_dict(_j: dict[str, _Any]) -> _t.Route:
+    return route_from_wire(_rt.from_dict(_pb.Route, _j))
 
 
 def operation_from_wire(_w: _pb.Operation) -> _t.Operation:
@@ -502,6 +1068,38 @@ def operation_from_wire(_w: _pb.Operation) -> _t.Operation:
     )
 
 
+def operation_to_wire(_v: _t.Operation) -> _pb.Operation:
+    return _pb.Operation(
+        operation_id=_v.operation_id or None,
+        kind=operation_kind_to_wire(_v.kind) if _v.kind.value else None,
+        status=operation_status_to_wire(_v.status) if _v.status.value else None,
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        finish_time=_rt.time_to_wire(_v.finish_time) if _v.finish_time is not None else None,
+        failure_message=_v.failure_message or None,
+        deploy_failure_reason=deploy_failure_reason_to_wire(_v.deploy_failure_reason) if _v.deploy_failure_reason.value else None,
+        made_current=_v.made_current or None,
+        service=_v.service or None,
+        failed_exit_code=_v.failed_exit_code or None,
+        snapshot_id=_v.snapshot_id or None,
+        restored_volumes=_rt.strings("Operation.restored_volumes", _v.restored_volumes),
+        undo_snapshot_id=_v.undo_snapshot_id or None,
+        github_commit=github_commit_to_wire(_v.github_commit) if _v.github_commit is not None else None,
+        archive_name=_v.archive_name or None,
+        adjustments=_rt.strings("Operation.adjustments", _v.adjustments),
+        changed_paths=_rt.strings("Operation.changed_paths", _v.changed_paths),
+        changed_path_count=_v.changed_path_count or None,
+        files_kept=_v.files_kept or None,
+    )
+
+
+def operation_to_dict(_v: _t.Operation) -> dict[str, _Any]:
+    return _rt.to_dict(operation_to_wire(_v))
+
+
+def operation_from_dict(_j: dict[str, _Any]) -> _t.Operation:
+    return operation_from_wire(_rt.from_dict(_pb.Operation, _j))
+
+
 def snapshot_from_wire(_w: _pb.Snapshot) -> _t.Snapshot:
     return _t.Snapshot(
         snapshot_id=_w.snapshot_id,
@@ -511,6 +1109,23 @@ def snapshot_from_wire(_w: _pb.Snapshot) -> _t.Snapshot:
     )
 
 
+def snapshot_to_wire(_v: _t.Snapshot) -> _pb.Snapshot:
+    return _pb.Snapshot(
+        snapshot_id=_v.snapshot_id or None,
+        create_time=_rt.time_to_wire(_v.create_time) if _v.create_time is not None else None,
+        size_bytes=_v.size_bytes or None,
+        volumes=_rt.strings("Snapshot.volumes", _v.volumes),
+    )
+
+
+def snapshot_to_dict(_v: _t.Snapshot) -> dict[str, _Any]:
+    return _rt.to_dict(snapshot_to_wire(_v))
+
+
+def snapshot_from_dict(_j: dict[str, _Any]) -> _t.Snapshot:
+    return snapshot_from_wire(_rt.from_dict(_pb.Snapshot, _j))
+
+
 def http_traffic_summary_from_wire(_w: _pb.HttpTrafficSummary) -> _t.HttpTrafficSummary:
     return _t.HttpTrafficSummary(
         request_count=_w.request_count,
@@ -518,6 +1133,23 @@ def http_traffic_summary_from_wire(_w: _pb.HttpTrafficSummary) -> _t.HttpTraffic
         latency_p50_ms=_w.latency_p50_ms,
         latency_p95_ms=_w.latency_p95_ms,
     )
+
+
+def http_traffic_summary_to_wire(_v: _t.HttpTrafficSummary) -> _pb.HttpTrafficSummary:
+    return _pb.HttpTrafficSummary(
+        request_count=_v.request_count or None,
+        server_error_count=_v.server_error_count or None,
+        latency_p50_ms=_v.latency_p50_ms or None,
+        latency_p95_ms=_v.latency_p95_ms or None,
+    )
+
+
+def http_traffic_summary_to_dict(_v: _t.HttpTrafficSummary) -> dict[str, _Any]:
+    return _rt.to_dict(http_traffic_summary_to_wire(_v))
+
+
+def http_traffic_summary_from_dict(_j: dict[str, _Any]) -> _t.HttpTrafficSummary:
+    return http_traffic_summary_from_wire(_rt.from_dict(_pb.HttpTrafficSummary, _j))
 
 
 def create_project_response_from_wire(_w: _pb.CreateProjectResponse) -> _t.CreateProjectResponse:
@@ -530,11 +1162,55 @@ def create_project_response_from_wire(_w: _pb.CreateProjectResponse) -> _t.Creat
     )
 
 
+def create_project_response_to_wire(_v: _t.CreateProjectResponse) -> _pb.CreateProjectResponse:
+    return _pb.CreateProjectResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        violations=[spec_violation_to_wire(_x) for _x in _v.violations],
+        adjustments=_rt.strings("CreateProjectResponse.adjustments", _v.adjustments),
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        log=[operation_log_line_to_wire(_x) for _x in _v.log],
+    )
+
+
+def create_project_response_to_dict(_v: _t.CreateProjectResponse) -> dict[str, _Any]:
+    return _rt.to_dict(create_project_response_to_wire(_v))
+
+
+def create_project_response_from_dict(_j: dict[str, _Any]) -> _t.CreateProjectResponse:
+    return create_project_response_from_wire(_rt.from_dict(_pb.CreateProjectResponse, _j))
+
+
+def mount_volume_from_wire(_w: _pb.MountVolume) -> _t.MountVolume:
+    return _t.MountVolume(
+        service=_w.service,
+        volume=_w.volume,
+        container_path=_w.container_path,
+    )
+
+
 def mount_volume_to_wire(_v: _t.MountVolume) -> _pb.MountVolume:
     return _pb.MountVolume(
         service=_v.service or None,
         volume=_v.volume or None,
         container_path=_v.container_path or None,
+    )
+
+
+def mount_volume_to_dict(_v: _t.MountVolume) -> dict[str, _Any]:
+    return _rt.to_dict(mount_volume_to_wire(_v))
+
+
+def mount_volume_from_dict(_j: dict[str, _Any]) -> _t.MountVolume:
+    return mount_volume_from_wire(_rt.from_dict(_pb.MountVolume, _j))
+
+
+def project_extension_from_wire(_w: _pb.ProjectExtension) -> _t.ProjectExtension:
+    return _t.ProjectExtension(
+        metadata=project_metadata_from_wire(_w.metadata) if _w.metadata is not None else None,
+        routes=tuple(route_from_wire(_x) for _x in _w.routes),
+        remove_routes=_w.remove_routes,
+        password=_w.password,
+        remove_password=_w.remove_password,
     )
 
 
@@ -546,6 +1222,60 @@ def project_extension_to_wire(_v: _t.ProjectExtension) -> _pb.ProjectExtension:
         password=_v.password or None,
         remove_password=_v.remove_password or None,
     )
+
+
+def project_extension_to_dict(_v: _t.ProjectExtension) -> dict[str, _Any]:
+    return _rt.to_dict(project_extension_to_wire(_v))
+
+
+def project_extension_from_dict(_j: dict[str, _Any]) -> _t.ProjectExtension:
+    return project_extension_from_wire(_rt.from_dict(_pb.ProjectExtension, _j))
+
+
+def file_change_from_wire(_w: _pb.FileChange) -> _t.FileChange:
+    _k = _w.change
+    if _k is None:
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+        )
+    if _k.field == "text":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            text=_k.value,
+        )
+    if _k.field == "data":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            data=_k.value,
+        )
+    if _k.field == "make_directory":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            make_directory=_k.value,
+        )
+    if _k.field == "delete":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            delete=_k.value,
+        )
+    if _k.field == "delete_tree":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            delete_tree=_k.value,
+        )
+    if _k.field == "rename_to":
+        return _t.FileChange(
+            path=_w.path,
+            executable=_w.executable,
+            rename_to=_k.value,
+        )
+    _rt.never(_k)
 
 
 def file_change_to_wire(_v: _t.FileChange) -> _pb.FileChange:
@@ -568,6 +1298,14 @@ def file_change_to_wire(_v: _t.FileChange) -> _pb.FileChange:
     return _w
 
 
+def file_change_to_dict(_v: _t.FileChange) -> dict[str, _Any]:
+    return _rt.to_dict(file_change_to_wire(_v))
+
+
+def file_change_from_dict(_j: dict[str, _Any]) -> _t.FileChange:
+    return file_change_from_wire(_rt.from_dict(_pb.FileChange, _j))
+
+
 def deploy_project_response_from_wire(_w: _pb.DeployProjectResponse) -> _t.DeployProjectResponse:
     return _t.DeployProjectResponse(
         operation=operation_from_wire(_w.operation) if _w.operation is not None else None,
@@ -578,6 +1316,24 @@ def deploy_project_response_from_wire(_w: _pb.DeployProjectResponse) -> _t.Deplo
     )
 
 
+def deploy_project_response_to_wire(_v: _t.DeployProjectResponse) -> _pb.DeployProjectResponse:
+    return _pb.DeployProjectResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        violations=[spec_violation_to_wire(_x) for _x in _v.violations],
+        adjustments=_rt.strings("DeployProjectResponse.adjustments", _v.adjustments),
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        log=[operation_log_line_to_wire(_x) for _x in _v.log],
+    )
+
+
+def deploy_project_response_to_dict(_v: _t.DeployProjectResponse) -> dict[str, _Any]:
+    return _rt.to_dict(deploy_project_response_to_wire(_v))
+
+
+def deploy_project_response_from_dict(_j: dict[str, _Any]) -> _t.DeployProjectResponse:
+    return deploy_project_response_from_wire(_rt.from_dict(_pb.DeployProjectResponse, _j))
+
+
 def spec_violation_from_wire(_w: _pb.SpecViolation) -> _t.SpecViolation:
     return _t.SpecViolation(
         service=_w.service,
@@ -586,11 +1342,42 @@ def spec_violation_from_wire(_w: _pb.SpecViolation) -> _t.SpecViolation:
     )
 
 
+def spec_violation_to_wire(_v: _t.SpecViolation) -> _pb.SpecViolation:
+    return _pb.SpecViolation(
+        service=_v.service or None,
+        location=_v.location or None,
+        violation_message=_v.violation_message or None,
+    )
+
+
+def spec_violation_to_dict(_v: _t.SpecViolation) -> dict[str, _Any]:
+    return _rt.to_dict(spec_violation_to_wire(_v))
+
+
+def spec_violation_from_dict(_j: dict[str, _Any]) -> _t.SpecViolation:
+    return spec_violation_from_wire(_rt.from_dict(_pb.SpecViolation, _j))
+
+
 def list_commits_response_from_wire(_w: _pb.ListCommitsResponse) -> _t.ListCommitsResponse:
     return _t.ListCommitsResponse(
         commits=tuple(branch_commit_from_wire(_x) for _x in _w.commits),
         more=_w.more,
     )
+
+
+def list_commits_response_to_wire(_v: _t.ListCommitsResponse) -> _pb.ListCommitsResponse:
+    return _pb.ListCommitsResponse(
+        commits=[branch_commit_to_wire(_x) for _x in _v.commits],
+        more=_v.more or None,
+    )
+
+
+def list_commits_response_to_dict(_v: _t.ListCommitsResponse) -> dict[str, _Any]:
+    return _rt.to_dict(list_commits_response_to_wire(_v))
+
+
+def list_commits_response_from_dict(_j: dict[str, _Any]) -> _t.ListCommitsResponse:
+    return list_commits_response_from_wire(_rt.from_dict(_pb.ListCommitsResponse, _j))
 
 
 def branch_commit_from_wire(_w: _pb.BranchCommit) -> _t.BranchCommit:
@@ -604,9 +1391,49 @@ def branch_commit_from_wire(_w: _pb.BranchCommit) -> _t.BranchCommit:
     )
 
 
+def branch_commit_to_wire(_v: _t.BranchCommit) -> _pb.BranchCommit:
+    return _pb.BranchCommit(
+        commit=github_commit_to_wire(_v.commit) if _v.commit is not None else None,
+        author=_v.author or None,
+        commit_time=_rt.time_to_wire(_v.commit_time) if _v.commit_time is not None else None,
+        deployed=_v.deployed or None,
+        last_deploy=operation_to_wire(_v.last_deploy) if _v.last_deploy is not None else None,
+        newest=_v.newest or None,
+    )
+
+
+def branch_commit_to_dict(_v: _t.BranchCommit) -> dict[str, _Any]:
+    return _rt.to_dict(branch_commit_to_wire(_v))
+
+
+def branch_commit_from_dict(_j: dict[str, _Any]) -> _t.BranchCommit:
+    return branch_commit_from_wire(_rt.from_dict(_pb.BranchCommit, _j))
+
+
+def services_action_from_wire(_w: _pb.ServicesAction) -> _t.ServicesAction:
+    return _t.ServicesAction(
+        services=tuple(_w.services),
+    )
+
+
 def services_action_to_wire(_v: _t.ServicesAction) -> _pb.ServicesAction:
     return _pb.ServicesAction(
         services=_rt.strings("ServicesAction.services", _v.services),
+    )
+
+
+def services_action_to_dict(_v: _t.ServicesAction) -> dict[str, _Any]:
+    return _rt.to_dict(services_action_to_wire(_v))
+
+
+def services_action_from_dict(_j: dict[str, _Any]) -> _t.ServicesAction:
+    return services_action_from_wire(_rt.from_dict(_pb.ServicesAction, _j))
+
+
+def recreate_service_action_from_wire(_w: _pb.RecreateServiceAction) -> _t.RecreateServiceAction:
+    return _t.RecreateServiceAction(
+        service=_w.service,
+        pull_latest_image=_w.pull_latest_image,
     )
 
 
@@ -617,8 +1444,35 @@ def recreate_service_action_to_wire(_v: _t.RecreateServiceAction) -> _pb.Recreat
     )
 
 
+def recreate_service_action_to_dict(_v: _t.RecreateServiceAction) -> dict[str, _Any]:
+    return _rt.to_dict(recreate_service_action_to_wire(_v))
+
+
+def recreate_service_action_from_dict(_j: dict[str, _Any]) -> _t.RecreateServiceAction:
+    return recreate_service_action_from_wire(_rt.from_dict(_pb.RecreateServiceAction, _j))
+
+
+def back_up_action_from_wire(_w: _pb.BackUpAction) -> _t.BackUpAction:
+    return _t.BackUpAction()
+
+
 def back_up_action_to_wire(_v: _t.BackUpAction) -> _pb.BackUpAction:
     return _pb.BackUpAction()
+
+
+def back_up_action_to_dict(_v: _t.BackUpAction) -> dict[str, _Any]:
+    return _rt.to_dict(back_up_action_to_wire(_v))
+
+
+def back_up_action_from_dict(_j: dict[str, _Any]) -> _t.BackUpAction:
+    return back_up_action_from_wire(_rt.from_dict(_pb.BackUpAction, _j))
+
+
+def restore_snapshot_action_from_wire(_w: _pb.RestoreSnapshotAction) -> _t.RestoreSnapshotAction:
+    return _t.RestoreSnapshotAction(
+        snapshot_id=_w.snapshot_id,
+        volumes=tuple(_w.volumes),
+    )
 
 
 def restore_snapshot_action_to_wire(_v: _t.RestoreSnapshotAction) -> _pb.RestoreSnapshotAction:
@@ -628,9 +1482,37 @@ def restore_snapshot_action_to_wire(_v: _t.RestoreSnapshotAction) -> _pb.Restore
     )
 
 
+def restore_snapshot_action_to_dict(_v: _t.RestoreSnapshotAction) -> dict[str, _Any]:
+    return _rt.to_dict(restore_snapshot_action_to_wire(_v))
+
+
+def restore_snapshot_action_from_dict(_j: dict[str, _Any]) -> _t.RestoreSnapshotAction:
+    return restore_snapshot_action_from_wire(_rt.from_dict(_pb.RestoreSnapshotAction, _j))
+
+
+def cancel_operation_action_from_wire(_w: _pb.CancelOperationAction) -> _t.CancelOperationAction:
+    return _t.CancelOperationAction(
+        operation_id=_w.operation_id,
+    )
+
+
 def cancel_operation_action_to_wire(_v: _t.CancelOperationAction) -> _pb.CancelOperationAction:
     return _pb.CancelOperationAction(
         operation_id=_v.operation_id or None,
+    )
+
+
+def cancel_operation_action_to_dict(_v: _t.CancelOperationAction) -> dict[str, _Any]:
+    return _rt.to_dict(cancel_operation_action_to_wire(_v))
+
+
+def cancel_operation_action_from_dict(_j: dict[str, _Any]) -> _t.CancelOperationAction:
+    return cancel_operation_action_from_wire(_rt.from_dict(_pb.CancelOperationAction, _j))
+
+
+def delete_project_action_from_wire(_w: _pb.DeleteProjectAction) -> _t.DeleteProjectAction:
+    return _t.DeleteProjectAction(
+        skip_final_backup=_w.skip_final_backup,
     )
 
 
@@ -640,12 +1522,36 @@ def delete_project_action_to_wire(_v: _t.DeleteProjectAction) -> _pb.DeleteProje
     )
 
 
+def delete_project_action_to_dict(_v: _t.DeleteProjectAction) -> dict[str, _Any]:
+    return _rt.to_dict(delete_project_action_to_wire(_v))
+
+
+def delete_project_action_from_dict(_j: dict[str, _Any]) -> _t.DeleteProjectAction:
+    return delete_project_action_from_wire(_rt.from_dict(_pb.DeleteProjectAction, _j))
+
+
 def run_project_action_response_from_wire(_w: _pb.RunProjectActionResponse) -> _t.RunProjectActionResponse:
     return _t.RunProjectActionResponse(
         operation=operation_from_wire(_w.operation) if _w.operation is not None else None,
         project=project_from_wire(_w.project) if _w.project is not None else None,
         log=tuple(operation_log_line_from_wire(_x) for _x in _w.log),
     )
+
+
+def run_project_action_response_to_wire(_v: _t.RunProjectActionResponse) -> _pb.RunProjectActionResponse:
+    return _pb.RunProjectActionResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        log=[operation_log_line_to_wire(_x) for _x in _v.log],
+    )
+
+
+def run_project_action_response_to_dict(_v: _t.RunProjectActionResponse) -> dict[str, _Any]:
+    return _rt.to_dict(run_project_action_response_to_wire(_v))
+
+
+def run_project_action_response_from_dict(_j: dict[str, _Any]) -> _t.RunProjectActionResponse:
+    return run_project_action_response_from_wire(_rt.from_dict(_pb.RunProjectActionResponse, _j))
 
 
 def get_operation_response_from_wire(_w: _pb.GetOperationResponse) -> _t.GetOperationResponse:
@@ -658,10 +1564,53 @@ def get_operation_response_from_wire(_w: _pb.GetOperationResponse) -> _t.GetOper
     )
 
 
+def get_operation_response_to_wire(_v: _t.GetOperationResponse) -> _pb.GetOperationResponse:
+    return _pb.GetOperationResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        log=[operation_log_line_to_wire(_x) for _x in _v.log],
+        log_line_count=_v.log_line_count or None,
+        next_after_log_line=_v.next_after_log_line or None,
+    )
+
+
+def get_operation_response_to_dict(_v: _t.GetOperationResponse) -> dict[str, _Any]:
+    return _rt.to_dict(get_operation_response_to_wire(_v))
+
+
+def get_operation_response_from_dict(_j: dict[str, _Any]) -> _t.GetOperationResponse:
+    return get_operation_response_from_wire(_rt.from_dict(_pb.GetOperationResponse, _j))
+
+
 def operation_log_line_from_wire(_w: _pb.OperationLogLine) -> _t.OperationLogLine:
     return _t.OperationLogLine(
         time=_rt.time_from_wire(_w.time) if _w.time is not None else None,
         text=_w.text,
+    )
+
+
+def operation_log_line_to_wire(_v: _t.OperationLogLine) -> _pb.OperationLogLine:
+    return _pb.OperationLogLine(
+        time=_rt.time_to_wire(_v.time) if _v.time is not None else None,
+        text=_v.text or None,
+    )
+
+
+def operation_log_line_to_dict(_v: _t.OperationLogLine) -> dict[str, _Any]:
+    return _rt.to_dict(operation_log_line_to_wire(_v))
+
+
+def operation_log_line_from_dict(_j: dict[str, _Any]) -> _t.OperationLogLine:
+    return operation_log_line_from_wire(_rt.from_dict(_pb.OperationLogLine, _j))
+
+
+def http_traffic_filter_from_wire(_w: _pb.HttpTrafficFilter) -> _t.HttpTrafficFilter:
+    return _t.HttpTrafficFilter(
+        host=_w.host,
+        method=_w.method,
+        path_contains=_w.path_contains,
+        path_pattern=_w.path_pattern,
+        status_class=_w.status_class,
     )
 
 
@@ -673,6 +1622,14 @@ def http_traffic_filter_to_wire(_v: _t.HttpTrafficFilter) -> _pb.HttpTrafficFilt
         path_pattern=_v.path_pattern or None,
         status_class=_v.status_class or None,
     )
+
+
+def http_traffic_filter_to_dict(_v: _t.HttpTrafficFilter) -> dict[str, _Any]:
+    return _rt.to_dict(http_traffic_filter_to_wire(_v))
+
+
+def http_traffic_filter_from_dict(_j: dict[str, _Any]) -> _t.HttpTrafficFilter:
+    return http_traffic_filter_from_wire(_rt.from_dict(_pb.HttpTrafficFilter, _j))
 
 
 def query_http_traffic_response_from_wire(_w: _pb.QueryHttpTrafficResponse) -> _t.QueryHttpTrafficResponse:
@@ -690,11 +1647,49 @@ def query_http_traffic_response_from_wire(_w: _pb.QueryHttpTrafficResponse) -> _
     )
 
 
+def query_http_traffic_response_to_wire(_v: _t.QueryHttpTrafficResponse) -> _pb.QueryHttpTrafficResponse:
+    return _pb.QueryHttpTrafficResponse(
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        end_time=_rt.time_to_wire(_v.end_time) if _v.end_time is not None else None,
+        oldest_kept_time=_rt.time_to_wire(_v.oldest_kept_time) if _v.oldest_kept_time is not None else None,
+        summary=http_traffic_summary_to_wire(_v.summary) if _v.summary is not None else None,
+        buckets=[http_traffic_bucket_to_wire(_x) for _x in _v.buckets],
+        top_paths=[http_path_traffic_to_wire(_x) for _x in _v.top_paths],
+        newest_sequence=_v.newest_sequence or None,
+        requests=[http_request_to_wire(_x) for _x in _v.requests],
+        next_page_token=_v.next_page_token or None,
+        tail_sequence=_v.tail_sequence or None,
+    )
+
+
+def query_http_traffic_response_to_dict(_v: _t.QueryHttpTrafficResponse) -> dict[str, _Any]:
+    return _rt.to_dict(query_http_traffic_response_to_wire(_v))
+
+
+def query_http_traffic_response_from_dict(_j: dict[str, _Any]) -> _t.QueryHttpTrafficResponse:
+    return query_http_traffic_response_from_wire(_rt.from_dict(_pb.QueryHttpTrafficResponse, _j))
+
+
 def http_traffic_bucket_from_wire(_w: _pb.HttpTrafficBucket) -> _t.HttpTrafficBucket:
     return _t.HttpTrafficBucket(
         start_time=_rt.time_from_wire(_w.start_time) if _w.start_time is not None else None,
         summary=http_traffic_summary_from_wire(_w.summary) if _w.summary is not None else None,
     )
+
+
+def http_traffic_bucket_to_wire(_v: _t.HttpTrafficBucket) -> _pb.HttpTrafficBucket:
+    return _pb.HttpTrafficBucket(
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        summary=http_traffic_summary_to_wire(_v.summary) if _v.summary is not None else None,
+    )
+
+
+def http_traffic_bucket_to_dict(_v: _t.HttpTrafficBucket) -> dict[str, _Any]:
+    return _rt.to_dict(http_traffic_bucket_to_wire(_v))
+
+
+def http_traffic_bucket_from_dict(_j: dict[str, _Any]) -> _t.HttpTrafficBucket:
+    return http_traffic_bucket_from_wire(_rt.from_dict(_pb.HttpTrafficBucket, _j))
 
 
 def http_path_traffic_from_wire(_w: _pb.HttpPathTraffic) -> _t.HttpPathTraffic:
@@ -703,6 +1698,22 @@ def http_path_traffic_from_wire(_w: _pb.HttpPathTraffic) -> _t.HttpPathTraffic:
         path_pattern=_w.path_pattern,
         summary=http_traffic_summary_from_wire(_w.summary) if _w.summary is not None else None,
     )
+
+
+def http_path_traffic_to_wire(_v: _t.HttpPathTraffic) -> _pb.HttpPathTraffic:
+    return _pb.HttpPathTraffic(
+        method=_v.method or None,
+        path_pattern=_v.path_pattern or None,
+        summary=http_traffic_summary_to_wire(_v.summary) if _v.summary is not None else None,
+    )
+
+
+def http_path_traffic_to_dict(_v: _t.HttpPathTraffic) -> dict[str, _Any]:
+    return _rt.to_dict(http_path_traffic_to_wire(_v))
+
+
+def http_path_traffic_from_dict(_j: dict[str, _Any]) -> _t.HttpPathTraffic:
+    return http_path_traffic_from_wire(_rt.from_dict(_pb.HttpPathTraffic, _j))
 
 
 def http_request_from_wire(_w: _pb.HttpRequest) -> _t.HttpRequest:
@@ -725,12 +1736,56 @@ def http_request_from_wire(_w: _pb.HttpRequest) -> _t.HttpRequest:
     )
 
 
+def http_request_to_wire(_v: _t.HttpRequest) -> _pb.HttpRequest:
+    return _pb.HttpRequest(
+        sequence=_v.sequence or None,
+        finish_time=_rt.time_to_wire(_v.finish_time) if _v.finish_time is not None else None,
+        host=_v.host or None,
+        method=_v.method or None,
+        path=_v.path or None,
+        path_pattern=_v.path_pattern or None,
+        route_path=_v.route_path or None,
+        service=_v.service or None,
+        port=_v.port or None,
+        status_code=_v.status_code or None,
+        response_size_bytes=_v.response_size_bytes or None,
+        duration_ms=_v.duration_ms or None,
+        service_duration_ms=_v.service_duration_ms or None,
+        client_ip_address=_v.client_ip_address or None,
+        user_agent=_v.user_agent or None,
+    )
+
+
+def http_request_to_dict(_v: _t.HttpRequest) -> dict[str, _Any]:
+    return _rt.to_dict(http_request_to_wire(_v))
+
+
+def http_request_from_dict(_j: dict[str, _Any]) -> _t.HttpRequest:
+    return http_request_from_wire(_rt.from_dict(_pb.HttpRequest, _j))
+
+
+def container_log_filter_from_wire(_w: _pb.ContainerLogFilter) -> _t.ContainerLogFilter:
+    return _t.ContainerLogFilter(
+        service=_w.service,
+        stream=output_stream_from_wire(_w.stream),
+        text_contains=_w.text_contains,
+    )
+
+
 def container_log_filter_to_wire(_v: _t.ContainerLogFilter) -> _pb.ContainerLogFilter:
     return _pb.ContainerLogFilter(
         service=_v.service or None,
         stream=output_stream_to_wire(_v.stream) if _v.stream.value else None,
         text_contains=_v.text_contains or None,
     )
+
+
+def container_log_filter_to_dict(_v: _t.ContainerLogFilter) -> dict[str, _Any]:
+    return _rt.to_dict(container_log_filter_to_wire(_v))
+
+
+def container_log_filter_from_dict(_j: dict[str, _Any]) -> _t.ContainerLogFilter:
+    return container_log_filter_from_wire(_rt.from_dict(_pb.ContainerLogFilter, _j))
 
 
 def query_container_logs_response_from_wire(_w: _pb.QueryContainerLogsResponse) -> _t.QueryContainerLogsResponse:
@@ -744,6 +1799,25 @@ def query_container_logs_response_from_wire(_w: _pb.QueryContainerLogsResponse) 
     )
 
 
+def query_container_logs_response_to_wire(_v: _t.QueryContainerLogsResponse) -> _pb.QueryContainerLogsResponse:
+    return _pb.QueryContainerLogsResponse(
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        end_time=_rt.time_to_wire(_v.end_time) if _v.end_time is not None else None,
+        oldest_kept_time=_rt.time_to_wire(_v.oldest_kept_time) if _v.oldest_kept_time is not None else None,
+        lines=[log_line_to_wire(_x) for _x in _v.lines],
+        next_page_token=_v.next_page_token or None,
+        tail_cursor=_v.tail_cursor or None,
+    )
+
+
+def query_container_logs_response_to_dict(_v: _t.QueryContainerLogsResponse) -> dict[str, _Any]:
+    return _rt.to_dict(query_container_logs_response_to_wire(_v))
+
+
+def query_container_logs_response_from_dict(_j: dict[str, _Any]) -> _t.QueryContainerLogsResponse:
+    return query_container_logs_response_from_wire(_rt.from_dict(_pb.QueryContainerLogsResponse, _j))
+
+
 def log_line_from_wire(_w: _pb.LogLine) -> _t.LogLine:
     return _t.LogLine(
         time=_rt.time_from_wire(_w.time) if _w.time is not None else None,
@@ -751,6 +1825,23 @@ def log_line_from_wire(_w: _pb.LogLine) -> _t.LogLine:
         stream=output_stream_from_wire(_w.stream),
         text=_w.text,
     )
+
+
+def log_line_to_wire(_v: _t.LogLine) -> _pb.LogLine:
+    return _pb.LogLine(
+        time=_rt.time_to_wire(_v.time) if _v.time is not None else None,
+        service=_v.service or None,
+        stream=output_stream_to_wire(_v.stream) if _v.stream.value else None,
+        text=_v.text or None,
+    )
+
+
+def log_line_to_dict(_v: _t.LogLine) -> dict[str, _Any]:
+    return _rt.to_dict(log_line_to_wire(_v))
+
+
+def log_line_from_dict(_j: dict[str, _Any]) -> _t.LogLine:
+    return log_line_from_wire(_rt.from_dict(_pb.LogLine, _j))
 
 
 def run_service_command_response_from_wire(_w: _pb.RunServiceCommandResponse) -> _t.RunServiceCommandResponse:
@@ -761,6 +1852,24 @@ def run_service_command_response_from_wire(_w: _pb.RunServiceCommandResponse) ->
         stderr=_w.stderr,
         output_truncated=_w.output_truncated,
     )
+
+
+def run_service_command_response_to_wire(_v: _t.RunServiceCommandResponse) -> _pb.RunServiceCommandResponse:
+    return _pb.RunServiceCommandResponse(
+        exit_code=_v.exit_code or None,
+        timed_out=_v.timed_out or None,
+        stdout=_v.stdout or None,
+        stderr=_v.stderr or None,
+        output_truncated=_v.output_truncated or None,
+    )
+
+
+def run_service_command_response_to_dict(_v: _t.RunServiceCommandResponse) -> dict[str, _Any]:
+    return _rt.to_dict(run_service_command_response_to_wire(_v))
+
+
+def run_service_command_response_from_dict(_j: dict[str, _Any]) -> _t.RunServiceCommandResponse:
+    return run_service_command_response_from_wire(_rt.from_dict(_pb.RunServiceCommandResponse, _j))
 
 
 def file_entry_from_wire(_w: _pb.FileEntry) -> _t.FileEntry:
@@ -774,6 +1883,27 @@ def file_entry_from_wire(_w: _pb.FileEntry) -> _t.FileEntry:
         owner_gid=_w.owner_gid,
         symlink_target=_w.symlink_target,
     )
+
+
+def file_entry_to_wire(_v: _t.FileEntry) -> _pb.FileEntry:
+    return _pb.FileEntry(
+        name=_v.name or None,
+        type=file_type_to_wire(_v.type) if _v.type.value else None,
+        size_bytes=_v.size_bytes or None,
+        modify_time=_rt.time_to_wire(_v.modify_time) if _v.modify_time is not None else None,
+        mode=_v.mode or None,
+        owner_uid=_v.owner_uid or None,
+        owner_gid=_v.owner_gid or None,
+        symlink_target=_v.symlink_target or None,
+    )
+
+
+def file_entry_to_dict(_v: _t.FileEntry) -> dict[str, _Any]:
+    return _rt.to_dict(file_entry_to_wire(_v))
+
+
+def file_entry_from_dict(_j: dict[str, _Any]) -> _t.FileEntry:
+    return file_entry_from_wire(_rt.from_dict(_pb.FileEntry, _j))
 
 
 def read_path_response_from_wire(_w: _pb.ReadPathResponse) -> _t.ReadPathResponse:
@@ -791,10 +1921,69 @@ def read_path_response_from_wire(_w: _pb.ReadPathResponse) -> _t.ReadPathRespons
     )
 
 
+def read_path_response_to_wire(_v: _t.ReadPathResponse) -> _pb.ReadPathResponse:
+    return _pb.ReadPathResponse(
+        entry=file_entry_to_wire(_v.entry) if _v.entry is not None else None,
+        location=file_location_to_wire(_v.location) if _v.location.value else None,
+        volume=_v.volume or None,
+        entries=[file_entry_to_wire(_x) for _x in _v.entries],
+        entry_count=_v.entry_count or None,
+        next_entry_page_token=_v.next_entry_page_token or None,
+        text=_v.text or None,
+        binary=_v.binary or None,
+        next_offset_bytes=_v.next_offset_bytes or None,
+        deploy_id=_v.deploy_id or None,
+    )
+
+
+def read_path_response_to_dict(_v: _t.ReadPathResponse) -> dict[str, _Any]:
+    return _rt.to_dict(read_path_response_to_wire(_v))
+
+
+def read_path_response_from_dict(_j: dict[str, _Any]) -> _t.ReadPathResponse:
+    return read_path_response_from_wire(_rt.from_dict(_pb.ReadPathResponse, _j))
+
+
+def archive_upload_from_wire(_w: _pb.ArchiveUpload) -> _t.ArchiveUpload:
+    return _t.ArchiveUpload(
+        file_name=_w.file_name,
+    )
+
+
 def archive_upload_to_wire(_v: _t.ArchiveUpload) -> _pb.ArchiveUpload:
     return _pb.ArchiveUpload(
         file_name=_v.file_name or None,
     )
+
+
+def archive_upload_to_dict(_v: _t.ArchiveUpload) -> dict[str, _Any]:
+    return _rt.to_dict(archive_upload_to_wire(_v))
+
+
+def archive_upload_from_dict(_j: dict[str, _Any]) -> _t.ArchiveUpload:
+    return archive_upload_from_wire(_rt.from_dict(_pb.ArchiveUpload, _j))
+
+
+def file_upload_from_wire(_w: _pb.FileUpload) -> _t.FileUpload:
+    _k = _w.root
+    if _k is None:
+        return _t.FileUpload(
+            project_id=_w.project_id,
+            path=_w.path,
+        )
+    if _k.field == "service":
+        return _t.FileUpload(
+            project_id=_w.project_id,
+            path=_w.path,
+            service=_k.value,
+        )
+    if _k.field == "volume":
+        return _t.FileUpload(
+            project_id=_w.project_id,
+            path=_w.path,
+            volume=_k.value,
+        )
+    _rt.never(_k)
 
 
 def file_upload_to_wire(_v: _t.FileUpload) -> _pb.FileUpload:
@@ -809,6 +1998,36 @@ def file_upload_to_wire(_v: _t.FileUpload) -> _pb.FileUpload:
     return _w
 
 
+def file_upload_to_dict(_v: _t.FileUpload) -> dict[str, _Any]:
+    return _rt.to_dict(file_upload_to_wire(_v))
+
+
+def file_upload_from_dict(_j: dict[str, _Any]) -> _t.FileUpload:
+    return file_upload_from_wire(_rt.from_dict(_pb.FileUpload, _j))
+
+
+def path_download_from_wire(_w: _pb.PathDownload) -> _t.PathDownload:
+    _k = _w.root
+    if _k is None:
+        return _t.PathDownload(
+            project_id=_w.project_id,
+            path=_w.path,
+        )
+    if _k.field == "service":
+        return _t.PathDownload(
+            project_id=_w.project_id,
+            path=_w.path,
+            service=_k.value,
+        )
+    if _k.field == "volume":
+        return _t.PathDownload(
+            project_id=_w.project_id,
+            path=_w.path,
+            volume=_k.value,
+        )
+    _rt.never(_k)
+
+
 def path_download_to_wire(_v: _t.PathDownload) -> _pb.PathDownload:
     _w = _pb.PathDownload(
         project_id=_v.project_id or None,
@@ -821,6 +2040,14 @@ def path_download_to_wire(_v: _t.PathDownload) -> _pb.PathDownload:
     return _w
 
 
+def path_download_to_dict(_v: _t.PathDownload) -> dict[str, _Any]:
+    return _rt.to_dict(path_download_to_wire(_v))
+
+
+def path_download_from_dict(_j: dict[str, _Any]) -> _t.PathDownload:
+    return path_download_from_wire(_rt.from_dict(_pb.PathDownload, _j))
+
+
 def create_transfer_response_from_wire(_w: _pb.CreateTransferResponse) -> _t.CreateTransferResponse:
     return _t.CreateTransferResponse(
         url=_w.url,
@@ -830,7 +2057,29 @@ def create_transfer_response_from_wire(_w: _pb.CreateTransferResponse) -> _t.Cre
         upload_id=_w.upload_id,
         replaces=_w.replaces,
         file_name=_w.file_name,
+        exclude_names=tuple(_w.exclude_names),
     )
+
+
+def create_transfer_response_to_wire(_v: _t.CreateTransferResponse) -> _pb.CreateTransferResponse:
+    return _pb.CreateTransferResponse(
+        url=_v.url or None,
+        http_method=_v.http_method or None,
+        expire_time=_rt.time_to_wire(_v.expire_time) if _v.expire_time is not None else None,
+        command=_v.command or None,
+        upload_id=_v.upload_id or None,
+        replaces=_v.replaces or None,
+        file_name=_v.file_name or None,
+        exclude_names=_rt.strings("CreateTransferResponse.exclude_names", _v.exclude_names),
+    )
+
+
+def create_transfer_response_to_dict(_v: _t.CreateTransferResponse) -> dict[str, _Any]:
+    return _rt.to_dict(create_transfer_response_to_wire(_v))
+
+
+def create_transfer_response_from_dict(_j: dict[str, _Any]) -> _t.CreateTransferResponse:
+    return create_transfer_response_from_wire(_rt.from_dict(_pb.CreateTransferResponse, _j))
 
 
 def project_busy_from_wire(_w: _pb.ProjectBusy) -> _t.ProjectBusy:
@@ -841,12 +2090,52 @@ def project_busy_from_wire(_w: _pb.ProjectBusy) -> _t.ProjectBusy:
     )
 
 
+def project_busy_to_wire(_v: _t.ProjectBusy) -> _pb.ProjectBusy:
+    return _pb.ProjectBusy(
+        operation_id=_v.operation_id or None,
+        kind=operation_kind_to_wire(_v.kind) if _v.kind.value else None,
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+    )
+
+
+def project_busy_to_dict(_v: _t.ProjectBusy) -> dict[str, _Any]:
+    return _rt.to_dict(project_busy_to_wire(_v))
+
+
+def project_busy_from_dict(_j: dict[str, _Any]) -> _t.ProjectBusy:
+    return project_busy_from_wire(_rt.from_dict(_pb.ProjectBusy, _j))
+
+
 def project_changed_from_wire(_w: _pb.ProjectChanged) -> _t.ProjectChanged:
     return _t.ProjectChanged()
 
 
+def project_changed_to_wire(_v: _t.ProjectChanged) -> _pb.ProjectChanged:
+    return _pb.ProjectChanged()
+
+
+def project_changed_to_dict(_v: _t.ProjectChanged) -> dict[str, _Any]:
+    return _rt.to_dict(project_changed_to_wire(_v))
+
+
+def project_changed_from_dict(_j: dict[str, _Any]) -> _t.ProjectChanged:
+    return project_changed_from_wire(_rt.from_dict(_pb.ProjectChanged, _j))
+
+
 def machine_unreachable_from_wire(_w: _pb.MachineUnreachable) -> _t.MachineUnreachable:
     return _t.MachineUnreachable()
+
+
+def machine_unreachable_to_wire(_v: _t.MachineUnreachable) -> _pb.MachineUnreachable:
+    return _pb.MachineUnreachable()
+
+
+def machine_unreachable_to_dict(_v: _t.MachineUnreachable) -> dict[str, _Any]:
+    return _rt.to_dict(machine_unreachable_to_wire(_v))
+
+
+def machine_unreachable_from_dict(_j: dict[str, _Any]) -> _t.MachineUnreachable:
+    return machine_unreachable_from_wire(_rt.from_dict(_pb.MachineUnreachable, _j))
 
 
 def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
@@ -854,6 +2143,95 @@ def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
         reason=no_machine_reason_from_wire(_w.reason),
         url=_w.url,
     )
+
+
+def no_machine_to_wire(_v: _t.NoMachine) -> _pb.NoMachine:
+    return _pb.NoMachine(
+        reason=no_machine_reason_to_wire(_v.reason) if _v.reason.value else None,
+        url=_v.url or None,
+    )
+
+
+def no_machine_to_dict(_v: _t.NoMachine) -> dict[str, _Any]:
+    return _rt.to_dict(no_machine_to_wire(_v))
+
+
+def no_machine_from_dict(_j: dict[str, _Any]) -> _t.NoMachine:
+    return no_machine_from_wire(_rt.from_dict(_pb.NoMachine, _j))
+
+
+def watch_operation_response_from_wire(_w: _pb.WatchOperationResponse) -> _t.WatchOperationResponse:
+    _k = _w.message
+    if _k is None:
+        return _t.WatchOperationResponse()
+    if _k.field == "log":
+        return _t.WatchOperationResponse(
+            log=operation_log_line_from_wire(_k.value),
+        )
+    if _k.field == "finished_operation":
+        return _t.WatchOperationResponse(
+            finished_operation=operation_from_wire(_k.value),
+        )
+    _rt.never(_k)
+
+
+def watch_operation_response_to_wire(_v: _t.WatchOperationResponse) -> _pb.WatchOperationResponse:
+    _w = _pb.WatchOperationResponse()
+    if _v.log is not None:
+        _w.message = _Oneof[_Literal["log"], _pb.OperationLogLine]("log", operation_log_line_to_wire(_v.log))
+    elif _v.finished_operation is not None:
+        _w.message = _Oneof[_Literal["finished_operation"], _pb.Operation]("finished_operation", operation_to_wire(_v.finished_operation))
+    return _w
+
+
+def watch_operation_response_to_dict(_v: _t.WatchOperationResponse) -> dict[str, _Any]:
+    return _rt.to_dict(watch_operation_response_to_wire(_v))
+
+
+def watch_operation_response_from_dict(_j: dict[str, _Any]) -> _t.WatchOperationResponse:
+    return watch_operation_response_from_wire(_rt.from_dict(_pb.WatchOperationResponse, _j))
+
+
+def tail_container_logs_response_from_wire(_w: _pb.TailContainerLogsResponse) -> _t.TailContainerLogsResponse:
+    return _t.TailContainerLogsResponse(
+        line=log_line_from_wire(_w.line) if _w.line is not None else None,
+        cursor=_w.cursor,
+    )
+
+
+def tail_container_logs_response_to_wire(_v: _t.TailContainerLogsResponse) -> _pb.TailContainerLogsResponse:
+    return _pb.TailContainerLogsResponse(
+        line=log_line_to_wire(_v.line) if _v.line is not None else None,
+        cursor=_v.cursor or None,
+    )
+
+
+def tail_container_logs_response_to_dict(_v: _t.TailContainerLogsResponse) -> dict[str, _Any]:
+    return _rt.to_dict(tail_container_logs_response_to_wire(_v))
+
+
+def tail_container_logs_response_from_dict(_j: dict[str, _Any]) -> _t.TailContainerLogsResponse:
+    return tail_container_logs_response_from_wire(_rt.from_dict(_pb.TailContainerLogsResponse, _j))
+
+
+def tail_http_traffic_response_from_wire(_w: _pb.TailHttpTrafficResponse) -> _t.TailHttpTrafficResponse:
+    return _t.TailHttpTrafficResponse(
+        request=http_request_from_wire(_w.request) if _w.request is not None else None,
+    )
+
+
+def tail_http_traffic_response_to_wire(_v: _t.TailHttpTrafficResponse) -> _pb.TailHttpTrafficResponse:
+    return _pb.TailHttpTrafficResponse(
+        request=http_request_to_wire(_v.request) if _v.request is not None else None,
+    )
+
+
+def tail_http_traffic_response_to_dict(_v: _t.TailHttpTrafficResponse) -> dict[str, _Any]:
+    return _rt.to_dict(tail_http_traffic_response_to_wire(_v))
+
+
+def tail_http_traffic_response_from_dict(_j: dict[str, _Any]) -> _t.TailHttpTrafficResponse:
+    return tail_http_traffic_response_from_wire(_rt.from_dict(_pb.TailHttpTrafficResponse, _j))
 
 
 def get_machine_request(
@@ -1148,6 +2526,46 @@ def create_transfer_request(
         _w.transfer = _Oneof[_Literal["upload_file"], _pb.FileUpload]("upload_file", file_upload_to_wire(upload_file))
     elif download is not None:
         _w.transfer = _Oneof[_Literal["download"], _pb.PathDownload]("download", path_download_to_wire(download))
+    return _rt.checked(_w)
+
+
+def watch_operation_request(
+    *,
+    project_id: str,
+    operation_id: str,
+) -> _pb.WatchOperationRequest:
+    _w = _pb.WatchOperationRequest(
+        project_id=project_id or None,
+        operation_id=operation_id or None,
+    )
+    return _rt.checked(_w)
+
+
+def tail_container_logs_request(
+    *,
+    project_id: str,
+    filter: _t.ContainerLogFilter | None,
+    after_cursor: str,
+) -> _pb.TailContainerLogsRequest:
+    _w = _pb.TailContainerLogsRequest(
+        project_id=project_id or None,
+        filter=container_log_filter_to_wire(filter) if filter is not None else None,
+        after_cursor=after_cursor or None,
+    )
+    return _rt.checked(_w)
+
+
+def tail_http_traffic_request(
+    *,
+    project_id: str,
+    filter: _t.HttpTrafficFilter | None,
+    after_sequence: int,
+) -> _pb.TailHttpTrafficRequest:
+    _w = _pb.TailHttpTrafficRequest(
+        project_id=project_id or None,
+        filter=http_traffic_filter_to_wire(filter) if filter is not None else None,
+        after_sequence=after_sequence or None,
+    )
     return _rt.checked(_w)
 
 

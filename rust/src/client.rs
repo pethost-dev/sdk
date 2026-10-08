@@ -8,17 +8,19 @@ use connectrpc::rustls;
 
 use crate::connect::pethost::panel::v1::PanelServiceClient;
 use crate::types;
-use crate::{Error, ErrorCode};
+use crate::{Error, ErrorCode, ResponseStream};
 
 /// Where the API is served.
 const BASE_URL: &str = "https://console.pethost.dev";
 
 /// The Pethost API of one account: a method per call.
 ///
-/// Every method is `async`, takes its request by value and runs on Tokio. To give up on a
-/// call, drop its future, as `tokio::time::timeout` does; an operation it started runs on, and
-/// a call with the same `operation_id` returns it. A clone shares the connections: clone it
-/// rather than make a second one.
+/// Every method takes its request by value and runs on Tokio. A call of one response is
+/// `async`: to give up on it, drop its future, as `tokio::time::timeout` does; an operation it
+/// started runs on, and a call with the same `operation_id` returns it. A stream's method
+/// returns a [`ResponseStream`] at once: its call is made when the stream is first read, and
+/// ends when the stream is dropped. A clone shares the connections: clone it rather than make
+/// a second one.
 #[derive(Clone)]
 pub struct Client {
     wire: PanelServiceClient<HttpClient>,
@@ -272,6 +274,78 @@ impl Client {
             .await
             .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
+    }
+
+    /// Watch an operation.
+    ///
+    /// Streams an operation's log from its start, then follows it; the last message is the finished operation. Without a stream: [`Client::get_operation`](crate::Client::get_operation).
+    ///
+    /// Returns a [`ResponseStream`](crate::ResponseStream) at once: the call is made when the stream is first read, and each response comes as the API sends it. A stream that fails yields its [`Error`](crate::Error) last, once; one that ends by itself just ends. Dropping the stream ends the call.
+    ///
+    /// ```no_run
+    /// # async fn read(pethost: pethost::Client, request: pethost::types::WatchOperationRequest) -> Result<(), pethost::Error> {
+    /// let mut responses = pethost.watch_operation(request);
+    /// while let Some(response) = responses.next().await {
+    ///     println!("{:?}", response?);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn watch_operation(
+        &self,
+        request: types::WatchOperationRequest,
+    ) -> ResponseStream<types::WatchOperationResponse> {
+        // The stream owns its client: it outlives this borrow, and goes where it is read.
+        let wire = self.wire.clone();
+        ResponseStream::new(async move { wire.watch_operation(request.into()).await })
+    }
+
+    /// Follow container logs.
+    ///
+    /// Streams container output after a cursor, then new lines as they are written. [`ErrorCode::OutOfRange`](crate::ErrorCode::OutOfRange) = the machine no longer keeps the cursor's line, so lines after it may be gone too: start over with [`Client::query_container_logs`](crate::Client::query_container_logs) and tail after its `tail_cursor`. Without a stream: [`Client::query_container_logs`](crate::Client::query_container_logs).
+    ///
+    /// Returns a [`ResponseStream`](crate::ResponseStream) at once: the call is made when the stream is first read, and each response comes as the API sends it. A stream that fails yields its [`Error`](crate::Error) last, once; one that ends by itself just ends. Dropping the stream ends the call.
+    ///
+    /// ```no_run
+    /// # async fn read(pethost: pethost::Client, request: pethost::types::TailContainerLogsRequest) -> Result<(), pethost::Error> {
+    /// let mut responses = pethost.tail_container_logs(request);
+    /// while let Some(response) = responses.next().await {
+    ///     println!("{:?}", response?);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn tail_container_logs(
+        &self,
+        request: types::TailContainerLogsRequest,
+    ) -> ResponseStream<types::TailContainerLogsResponse> {
+        // The stream owns its client: it outlives this borrow, and goes where it is read.
+        let wire = self.wire.clone();
+        ResponseStream::new(async move { wire.tail_container_logs(request.into()).await })
+    }
+
+    /// Follow HTTP traffic.
+    ///
+    /// Streams HTTP requests after a sequence number, then new ones as they finish. Without a stream: [`Client::query_http_traffic`](crate::Client::query_http_traffic).
+    ///
+    /// Returns a [`ResponseStream`](crate::ResponseStream) at once: the call is made when the stream is first read, and each response comes as the API sends it. A stream that fails yields its [`Error`](crate::Error) last, once; one that ends by itself just ends. Dropping the stream ends the call.
+    ///
+    /// ```no_run
+    /// # async fn read(pethost: pethost::Client, request: pethost::types::TailHttpTrafficRequest) -> Result<(), pethost::Error> {
+    /// let mut responses = pethost.tail_http_traffic(request);
+    /// while let Some(response) = responses.next().await {
+    ///     println!("{:?}", response?);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn tail_http_traffic(
+        &self,
+        request: types::TailHttpTrafficRequest,
+    ) -> ResponseStream<types::TailHttpTrafficResponse> {
+        // The stream owns its client: it outlives this borrow, and goes where it is read.
+        let wire = self.wire.clone();
+        ResponseStream::new(async move { wire.tail_http_traffic(request.into()).await })
     }
 }
 

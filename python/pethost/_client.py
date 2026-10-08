@@ -3,7 +3,7 @@ _async_client.py: do not edit."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from datetime import datetime
 from typing import TypeVar, overload
 
@@ -42,6 +42,9 @@ from pethost._types import (
     RunServiceCommandResponse,
     ServicesAction,
     SshKey,
+    TailContainerLogsResponse,
+    TailHttpTrafficResponse,
+    WatchOperationResponse,
 )
 from pethost._wire.v1.panel_connect import PanelServiceClientSync as _Wire
 
@@ -70,17 +73,18 @@ class Pethost:
         Args:
             token: The API token, "pth_...": a person makes one in the panel's Settings, under "API tokens". None = the environment's PETHOST_TOKEN.
             base_url: The API's address.
-            timeout: Seconds one call may take, the API's own waiting included: a call that waits for an operation or runs a command can be told to take longer than this. None = no limit.
+            timeout: Seconds one call may take, the API's own waiting included: a call that waits for an operation or runs a command can be told to take longer than this. None = no limit. A stream has no limit: it lasts as long as its loop.
         """
-        self._wire = _Wire(
-            base_url,
-            interceptors=[_rt.Caller(_rt.token_or_environment(token))],
-            timeout_ms=_rt.timeout_ms(timeout),
-        )
+        caller = _rt.Caller(_rt.token_or_environment(token))
+        self._wire = _Wire(base_url, interceptors=[caller], timeout_ms=_rt.timeout_ms(timeout))
+        # The wire layer's timeout is a call's whole time, and a call cannot lift its client's:
+        # the streams have a client of their own, without one.
+        self._streams = _Wire(base_url, interceptors=[caller])
 
     def close(self) -> None:
         """Closes its connections; `with` does it."""
         self._wire.close()
+        self._streams.close()
 
     def __enter__(self: _Self) -> _Self:
         return self
@@ -93,6 +97,26 @@ class Pethost:
             return method(request)
         except _ConnectError as error:
             raise _convert.error_from_wire(error) from None
+
+    def _stream(
+        self,
+        method: Callable[[_Request], Iterator[_rt.Wire]],
+        request: _Request,
+        read: Callable[[_rt.Wire], _Response],
+    ) -> Generator[_Response, None, None]:
+        """A stream's responses, each as the API sends it, without its pulses, and its failure
+        as the package's error. However it is left, it closes the wire layer's stream, which
+        ends the call."""
+        wired = method(request)
+        try:
+            for response in wired:
+                if not _rt.is_pulse(response):
+                    yield read(response)
+        except _ConnectError as error:
+            raise _convert.error_from_wire(error) from None
+        finally:
+            if isinstance(wired, Generator):  # It is one, though the wire layer types it an iterator.
+                wired.close()
 
     def get_machine(self) -> GetMachineResponse:
         """Get the machine.
@@ -1778,3 +1802,81 @@ class Pethost:
         At most one of `upload_archive`, `upload_file`, `download`.
         """
         return _convert.create_transfer_response_from_wire(self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download)))
+
+    def watch_operation(
+        self,
+        project_id: str,
+        *,
+        operation_id: str = "",
+    ) -> Generator[WatchOperationResponse, None, None]:
+        """Watch an operation, as a stream.
+
+        Streams an operation's log from its start, then follows it; the last message is the
+        finished operation. Without a stream: get_operation.
+
+        Read it with `for`: the call is made when the loop starts, and each response comes as the API
+        sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as Python then closes the generator;
+        where a variable holds the generator, its `close()` ends the call. Ctrl-C is raised when the API
+        next sends something, not while the loop waits for it.
+
+            for response in pethost.watch_operation("..."):
+                ...
+
+        Args:
+            operation_id: Empty = the latest.
+        """
+        return self._stream(self._streams.watch_operation, _convert.watch_operation_request(project_id=project_id, operation_id=operation_id), _convert.watch_operation_response_from_wire)
+
+    def tail_container_logs(
+        self,
+        project_id: str,
+        *,
+        filter: ContainerLogFilter | None = None,
+        after_cursor: str = "",
+    ) -> Generator[TailContainerLogsResponse, None, None]:
+        """Follow container logs, as a stream.
+
+        Streams container output after a cursor, then new lines as they are written. OutOfRangeError =
+        the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
+        with query_container_logs and tail after its tail_cursor. Without a stream: query_container_logs.
+
+        Read it with `for`: the call is made when the loop starts, and each response comes as the API
+        sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as Python then closes the generator;
+        where a variable holds the generator, its `close()` ends the call. Ctrl-C is raised when the API
+        next sends something, not while the loop waits for it.
+
+            for response in pethost.tail_container_logs("..."):
+                ...
+
+        Args:
+            after_cursor: Empty = only lines written from now on.
+        """
+        return self._stream(self._streams.tail_container_logs, _convert.tail_container_logs_request(project_id=project_id, filter=filter, after_cursor=after_cursor), _convert.tail_container_logs_response_from_wire)
+
+    def tail_http_traffic(
+        self,
+        project_id: str,
+        *,
+        filter: HttpTrafficFilter | None = None,
+        after_sequence: int = 0,
+    ) -> Generator[TailHttpTrafficResponse, None, None]:
+        """Follow HTTP traffic, as a stream.
+
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: query_http_traffic.
+
+        Read it with `for`: the call is made when the loop starts, and each response comes as the API
+        sends it. A stream that fails raises its PethostError from the loop, once; one that ends by
+        itself just ends the loop. Leaving the loop ends the call, as Python then closes the generator;
+        where a variable holds the generator, its `close()` ends the call. Ctrl-C is raised when the API
+        next sends something, not while the loop waits for it.
+
+            for response in pethost.tail_http_traffic("..."):
+                ...
+
+        Args:
+            after_sequence: 0 = only requests from now on.
+        """
+        return self._stream(self._streams.tail_http_traffic, _convert.tail_http_traffic_request(project_id=project_id, filter=filter, after_sequence=after_sequence), _convert.tail_http_traffic_response_from_wire)

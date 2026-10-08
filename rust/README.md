@@ -77,26 +77,82 @@ PETHOST_TOKEN=pth_... cargo run
 
 ## The calls
 
-Each is a method of [`Client`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html):
-it takes the request's struct and returns the response's, or an `Error`.
+Each is a method of [`Client`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html):
+it takes the request's struct and returns the response's, or an `Error`; a stream returns its
+responses one by one, as "Streams" below shows.
 
 | Method | What it does | Effect |
 |---|---|---|
-| [`get_machine`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
-| [`run_machine_action`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
-| [`get_project`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
-| [`create_project`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.create_project) | Create a project |  |
-| [`deploy_project`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
-| [`list_commits`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
-| [`run_project_action`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
-| [`get_operation`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
-| [`query_http_traffic`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
-| [`query_container_logs`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
-| [`run_service_command`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
-| [`read_path`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
-| [`create_transfer`](https://docs.rs/pethost/0.1.0/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
+| [`get_machine`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
+| [`run_machine_action`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
+| [`get_project`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
+| [`create_project`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.create_project) | Create a project |  |
+| [`deploy_project`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
+| [`list_commits`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
+| [`run_project_action`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
+| [`get_operation`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
+| [`query_http_traffic`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
+| [`query_container_logs`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
+| [`run_service_command`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
+| [`read_path`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
+| [`create_transfer`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
+| [`watch_operation`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.watch_operation) | Watch an operation | stream |
+| [`tail_container_logs`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.tail_container_logs) | Follow container logs | stream |
+| [`tail_http_traffic`](https://docs.rs/pethost/0.1.1/pethost/struct.Client.html#method.tail_http_traffic) | Follow HTTP traffic | stream |
 
-Read-only = it changes nothing. Destructive = it may delete or overwrite something.
+Read-only = it changes nothing. Destructive = it may delete or overwrite something. Stream =
+it returns its responses one by one.
+
+## Streams
+
+A stream's method returns a
+[`ResponseStream`](https://docs.rs/pethost/0.1.1/pethost/struct.ResponseStream.html) at
+once: its `next` is each response as the API sends it, for as long as the program reads. This
+program prints a project's newest log lines, then follows them. The same program is
+`examples/logs.rs`.
+
+```rust
+use pethost::types::{QueryContainerLogsRequest, TailContainerLogsRequest};
+use pethost::{Client, Error};
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    // An API token from the panel's Settings, kept out of the code.
+    let token = std::env::var("PETHOST_TOKEN").expect("PETHOST_TOKEN is not set");
+    let pethost = Client::new(&token);
+
+    // The newest lines of the project `notes`, and where a stream goes on from them without
+    // missing one.
+    let request = QueryContainerLogsRequest {
+        project_id: "notes".into(),
+        ..Default::default()
+    };
+    let newest = pethost.query_container_logs(request).await?;
+    for line in &newest.lines {
+        println!("{} {}", line.service, line.text);
+    }
+
+    // Each later line as it is written. The loop ends when the stream does, and `?` returns
+    // the error of one that failed; to stop sooner, leave the loop.
+    let request = TailContainerLogsRequest {
+        project_id: "notes".into(),
+        after_cursor: newest.tail_cursor,
+        ..Default::default()
+    };
+    let mut lines = pethost.tail_container_logs(request);
+    while let Some(response) = lines.next().await {
+        if let Some(line) = response?.line {
+            println!("{} {}", line.service, line.text);
+        }
+    }
+    Ok(())
+}
+```
+
+The call is made when the stream is first read. An error ends the stream: it comes once, as
+the last item. Dropping the stream ends the call. The crate does not call again by itself:
+where a response carries a cursor, as a log line does, a new call goes on from it. A
+`ResponseStream` is a `Stream` of the `futures` crates too, for their combinators.
 
 ## How the API reads in Rust
 
@@ -107,6 +163,35 @@ Read-only = it changes nothing. Destructive = it may delete or overwrite somethi
 - An older crate keeps reading a later API: a value it does not know reads as
   `Unrecognized(number)`, a oneof's member it does not know as `Unrecognized`, and a field it
   does not know is not seen.
+
+## JSON
+
+Every message and enum is `serde`'s `Serialize` and `Deserialize`, and its JSON is the API's
+own, as the [API's reference](https://pethost.dev/docs/api/) shows it: the proto's field names
+(`project_id`), an enum as its value's name, a 64-bit integer as a string, a time as RFC 3339,
+bytes as base64. Reading refuses a field this version of the crate does not know, as the API
+refuses one it does not have. With `cargo add serde_json`:
+
+```rust
+use pethost::types::{FileChange, FileChangeChange};
+
+fn main() -> Result<(), serde_json::Error> {
+    let change = FileChange {
+        path: "/hello.txt".into(),
+        change: Some(FileChangeChange::Text("Hello".into())),
+        ..Default::default()
+    };
+
+    // The API's JSON, and the message back from it.
+    let json = serde_json::to_string(&change)?;
+    assert_eq!(json, r#"{"path":"/hello.txt","text":"Hello"}"#);
+    assert_eq!(serde_json::from_str::<FileChange>(&json)?, change);
+
+    // A field the API does not have is refused: here, one misspelled.
+    assert!(serde_json::from_str::<FileChange>(r#"{"pth": "/hello.txt"}"#).is_err());
+    Ok(())
+}
+```
 
 ## Errors
 
@@ -131,7 +216,7 @@ with the cause as the error's `source()`.
 
 ## Links
 
-- [The crate's documentation](https://docs.rs/pethost/0.1.0): every call and message, with the API's own comments.
+- [The crate's documentation](https://docs.rs/pethost/0.1.1): every call and message, with the API's own comments.
 - [The API's reference](https://pethost.dev/docs/api/): the same API for any language.
 - [The panel](https://console.pethost.dev): where a token is made.
 

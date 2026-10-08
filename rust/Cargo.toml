@@ -2,7 +2,7 @@
 
 [package]
 name = "pethost"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.88"
 description = "Client for the API of Pethost, managed hosting for Docker Compose projects: deploy, logs, HTTP traffic, files"
@@ -14,19 +14,25 @@ readme = "README.md"
 # crates.io takes five keywords at most; the categories say that it is an API's client.
 keywords = ["pethost", "hosting", "deploy", "docker-compose", "paas"]
 categories = ["api-bindings", "web-programming::http-client"]
-# What a crate holds: the code, its checks and example, and the two pages.
+# What a crate holds: the code, its checks and examples, and the two pages.
 include = ["/src", "/tests", "/examples", "/README.md", "/LICENSE"]
 
 [dependencies]
+# The two crates with a trait in the public API: a ResponseStream is a Stream of the one, and
+# the types are Serialize and Deserialize of the other. The wire layer's JSON needs serde in
+# every build, so the two traits are behind no feature.
+futures-core = "0.3"
+serde = { version = "1", features = ["derive"] }
 # The wire layer's, all private: no type of these crates is in a public signature.
 connectrpc = { version = "0.9.1", default-features = false, features = ["client", "client-tls"] }
 buffa = { version = "0.9.2", features = ["json"] }
 buffa-types = { version = "0.9.2", features = ["json"] }
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 http = "1"
 webpki-roots = "1"
 base64 = "0.22"
+# What makes a ResponseStream of the wire layer's stream: private as well.
+futures-util = { version = "0.3", default-features = false }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "io-util", "time"] }

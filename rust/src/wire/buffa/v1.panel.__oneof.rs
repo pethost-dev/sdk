@@ -45,19 +45,19 @@ pub mod run_machine_action_request {
             let mut map = s.serialize_map(Some(1))?;
             match self {
                 Self::AddSshKey(v) => {
-                    map.serialize_entry("addSshKey", &**v)?;
+                    map.serialize_entry("add_ssh_key", &**v)?;
                 }
                 Self::RemoveSshKeyFingerprint(v) => {
-                    map.serialize_entry("removeSshKeyFingerprint", v)?;
+                    map.serialize_entry("remove_ssh_key_fingerprint", v)?;
                 }
                 Self::RestartMachine(v) => {
-                    map.serialize_entry("restartMachine", &**v)?;
+                    map.serialize_entry("restart_machine", &**v)?;
                 }
                 Self::CancelRestart(v) => {
-                    map.serialize_entry("cancelRestart", v)?;
+                    map.serialize_entry("cancel_restart", v)?;
                 }
                 Self::EndSessionId(v) => {
-                    map.serialize_entry("endSessionId", v)?;
+                    map.serialize_entry("end_session_id", v)?;
                 }
             }
             map.end()
@@ -123,16 +123,16 @@ pub mod deploy_project_request {
             let mut map = s.serialize_map(Some(1))?;
             match self {
                 Self::UploadId(v) => {
-                    map.serialize_entry("uploadId", v)?;
+                    map.serialize_entry("upload_id", v)?;
                 }
                 Self::Commit(v) => {
                     map.serialize_entry("commit", v)?;
                 }
                 Self::NewestCommit(v) => {
-                    map.serialize_entry("newestCommit", v)?;
+                    map.serialize_entry("newest_commit", v)?;
                 }
                 Self::RollbackDeployId(v) => {
-                    map.serialize_entry("rollbackDeployId", v)?;
+                    map.serialize_entry("rollback_deploy_id", v)?;
                 }
             }
             map.end()
@@ -167,16 +167,16 @@ pub mod file_change {
                     map.serialize_entry("data", &::buffa::json_helpers::ProtoJson(v))?;
                 }
                 Self::MakeDirectory(v) => {
-                    map.serialize_entry("makeDirectory", v)?;
+                    map.serialize_entry("make_directory", v)?;
                 }
                 Self::Delete(v) => {
                     map.serialize_entry("delete", v)?;
                 }
                 Self::DeleteTree(v) => {
-                    map.serialize_entry("deleteTree", v)?;
+                    map.serialize_entry("delete_tree", v)?;
                 }
                 Self::RenameTo(v) => {
-                    map.serialize_entry("renameTo", v)?;
+                    map.serialize_entry("rename_to", v)?;
                 }
             }
             map.end()
@@ -281,34 +281,34 @@ pub mod run_project_action_request {
             let mut map = s.serialize_map(Some(1))?;
             match self {
                 Self::StartServices(v) => {
-                    map.serialize_entry("startServices", &**v)?;
+                    map.serialize_entry("start_services", &**v)?;
                 }
                 Self::StopServices(v) => {
-                    map.serialize_entry("stopServices", &**v)?;
+                    map.serialize_entry("stop_services", &**v)?;
                 }
                 Self::RestartServices(v) => {
-                    map.serialize_entry("restartServices", &**v)?;
+                    map.serialize_entry("restart_services", &**v)?;
                 }
                 Self::RecreateService(v) => {
-                    map.serialize_entry("recreateService", &**v)?;
+                    map.serialize_entry("recreate_service", &**v)?;
                 }
                 Self::BackUp(v) => {
-                    map.serialize_entry("backUp", &**v)?;
+                    map.serialize_entry("back_up", &**v)?;
                 }
                 Self::RestoreSnapshot(v) => {
-                    map.serialize_entry("restoreSnapshot", &**v)?;
+                    map.serialize_entry("restore_snapshot", &**v)?;
                 }
                 Self::CancelOperation(v) => {
-                    map.serialize_entry("cancelOperation", &**v)?;
+                    map.serialize_entry("cancel_operation", &**v)?;
                 }
                 Self::DeleteProject(v) => {
-                    map.serialize_entry("deleteProject", &**v)?;
+                    map.serialize_entry("delete_project", &**v)?;
                 }
                 Self::SetSource(v) => {
-                    map.serialize_entry("setSource", &**v)?;
+                    map.serialize_entry("set_source", &**v)?;
                 }
                 Self::DeleteVolume(v) => {
-                    map.serialize_entry("deleteVolume", v)?;
+                    map.serialize_entry("delete_volume", v)?;
                 }
             }
             map.end()
@@ -394,10 +394,10 @@ pub mod create_transfer_request {
             let mut map = s.serialize_map(Some(1))?;
             match self {
                 Self::UploadArchive(v) => {
-                    map.serialize_entry("uploadArchive", &**v)?;
+                    map.serialize_entry("upload_archive", &**v)?;
                 }
                 Self::UploadFile(v) => {
-                    map.serialize_entry("uploadFile", &**v)?;
+                    map.serialize_entry("upload_file", &**v)?;
                 }
                 Self::Download(v) => {
                     map.serialize_entry("download", &**v)?;
@@ -506,7 +506,7 @@ pub mod watch_operation_response {
                     map.serialize_entry("log", &**v)?;
                 }
                 Self::FinishedOperation(v) => {
-                    map.serialize_entry("finishedOperation", &**v)?;
+                    map.serialize_entry("finished_operation", &**v)?;
                 }
             }
             map.end()

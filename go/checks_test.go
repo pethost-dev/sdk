@@ -5,11 +5,14 @@ package pethost
 import (
 	"context"
 	"fmt"
+	"iter"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -37,9 +40,18 @@ type exchange struct {
 	response proto.Message // What to answer with,
 	err      error         // unless the answer is this error.
 
-	received proto.Message // The request of the last call,
-	method   string        // and how it came.
-	header   http.Header
+	// A stream answers with each of these in turn, or with response alone when there are none,
+	// and then ends with err. With left it does not end: it waits for its caller to leave, and
+	// says so there.
+	responses []proto.Message
+	left      chan struct{}
+
+	received  proto.Message // The request of the last call,
+	method    string        // and how it came.
+	header    http.Header
+	httpMajor int // The major version of the HTTP it came by.
+
+	connections atomic.Int32 // The connections its callers have opened.
 }
 
 // answer is the fake's handler of every RPC.
@@ -52,23 +64,47 @@ func answer[R proto.Message](x *exchange, request proto.Message) (R, error) {
 	return x.response.(R), nil
 }
 
-// serve starts a fake of the API, which answers the token alone as the API.
+// serve starts a fake of the API as a developer's own panel is served: without TLS, where a
+// call comes by HTTP/1.1. It answers the token alone as the API.
 func serve(t *testing.T) (*fake, *httptest.Server) {
+	api, server := unstarted()
+	server.Start()
+	t.Cleanup(server.Close)
+	return api, server
+}
+
+// serveTLS starts one as the API itself is served: over TLS, where its caller and it agree on
+// HTTP/2.
+func serveTLS(t *testing.T) (*fake, *httptest.Server) {
+	api, server := unstarted()
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	t.Cleanup(server.Close)
+	return api, server
+}
+
+func unstarted() (*fake, *httptest.Server) {
 	api := &fake{}
 	handler := api.handler()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.method, api.header = r.Method, r.Header.Clone()
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		api.method, api.header, api.httpMajor = r.Method, r.Header.Clone(), r.ProtoMajor
 		if r.Header.Get("Authorization") != "Bearer "+account {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		handler.ServeHTTP(w, r)
 	}))
-	t.Cleanup(server.Close)
+	server.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			api.connections.Add(1)
+		}
+	}
 	return api, server
 }
 
+// clientOf is a client of a fake, over the fake's own HTTP client: one like http.DefaultClient
+// that also trusts the certificate of a fake served over TLS.
 func clientOf(server *httptest.Server, token string) *Client {
 	return NewClient(Config{Token: token, BaseURL: server.URL, HTTPClient: server.Client()})
 }
@@ -83,6 +119,10 @@ type call struct {
 	// response: nil when the method returned none.
 	do   func(ctx context.Context, client *Client, sample *seed) (any, error)
 	want func(sample seed) any // The sample of its response.
+
+	// A stream's method, called with a nil request: each response it yields, and the error.
+	// nil = the method is one request and one response.
+	stream func(ctx context.Context, client *Client) iter.Seq2[any, error]
 }
 
 func callOf[Q, R any](name string, method func(*Client, context.Context, *Q) (*R, error), request func(seed) Q, response func(seed) R, wireRequest, wireResponse proto.Message) call {
@@ -195,6 +235,12 @@ func wireDifference(got, want proto.Message) string {
 // differ is where two values of one type differ, as a path from their root; empty = nowhere.
 // A nil list and an empty one are the same, as the package says of them.
 func differ(got, want reflect.Value, path string) string {
+	return differIn(got, want, path, true)
+}
+
+// differIn is differ, with or without what a struct keeps of a later API: its fields that are
+// not exported.
+func differIn(got, want reflect.Value, path string, later bool) string {
 	differs := func() string { return fmt.Sprintf("%s: got %s, want %s", path, show(got), show(want)) }
 
 	switch got.Kind() {
@@ -207,14 +253,14 @@ func differ(got, want reflect.Value, path string) string {
 		case got.Elem().Type() != want.Elem().Type():
 			return fmt.Sprintf("%s: got a %s, want a %s", path, got.Elem().Type(), want.Elem().Type())
 		}
-		return differ(got.Elem(), want.Elem(), path)
+		return differIn(got.Elem(), want.Elem(), path, later)
 
 	case reflect.Slice:
 		if got.Len() != want.Len() {
 			return fmt.Sprintf("%s: got %d of them, want %d", path, got.Len(), want.Len())
 		}
 		for i := range got.Len() {
-			if where := differ(got.Index(i), want.Index(i), fmt.Sprintf("%s[%d]", path, i)); where != "" {
+			if where := differIn(got.Index(i), want.Index(i), fmt.Sprintf("%s[%d]", path, i), later); where != "" {
 				return where
 			}
 		}
@@ -228,7 +274,10 @@ func differ(got, want reflect.Value, path string) string {
 			return ""
 		}
 		for i := range got.NumField() {
-			if where := differ(got.Field(i), want.Field(i), path+"."+got.Type().Field(i).Name); where != "" {
+			if !later && !got.Type().Field(i).IsExported() {
+				continue
+			}
+			if where := differIn(got.Field(i), want.Field(i), path+"."+got.Type().Field(i).Name, later); where != "" {
 				return where
 			}
 		}

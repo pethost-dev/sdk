@@ -3,9 +3,10 @@
 The Python SDK for [Pethost](https://pethost.dev), hosting for Docker Compose projects on a
 machine of your own. It has the 13 calls of Pethost's API, the ones an agent has through its
 MCP server: read the machine and its projects, deploy, read logs and HTTP requests, run
-commands, move files. Everything is typed, there is a synchronous client and an asyncio one, and
-the whole package is generated from the API's definition, so its methods, its fields and their
-documentation are the API's own.
+commands, move files. It has the API's streams too, which follow an operation, the logs
+and the requests as they happen. Everything is typed, there is a synchronous client and an
+asyncio one, and the whole package is generated from the API's definition, so its methods, its
+fields and their documentation are the API's own.
 
 ## Install
 
@@ -86,12 +87,72 @@ asyncio.run(main())
 | `run_service_command(project_id, ...)` | Run a command in a service | destructive |
 | `read_path(project_id, ...)` | Read a file or directory | read-only |
 | `create_transfer(...)` | Upload or download a file | destructive |
+| `watch_operation(project_id, ...)` | Watch an operation | stream |
+| `tail_container_logs(project_id, ...)` | Follow container logs | stream |
+| `tail_http_traffic(project_id, ...)` | Follow HTTP traffic | stream |
 
-A read-only call changes nothing; a destructive one may delete or overwrite something. A
-request's fields are its method's keyword arguments, a message is a frozen dataclass of the same
-name, and each docstring is the API's own description: `help(Pethost)` and your editor show it.
-What the API calls absent is `None` where a type allows `None`, and the zero value anywhere
-else.
+A read-only call changes nothing; a destructive one may delete or overwrite something; a stream
+returns its responses one by one, as "Streams" below shows. A request's fields are its method's
+keyword arguments, a message is a frozen dataclass of the same name, and each docstring is the
+API's own description: `help(Pethost)` and your editor show it. What the API calls absent is
+`None` where a type allows `None`, and the zero value anywhere else.
+
+## Streams
+
+A stream is a method that returns a generator: read it with `for`, and each response comes as
+the API sends it, for as long as the loop runs. This program prints a project's newest log
+lines, then follows them.
+
+```python
+from pethost import Pethost
+
+with Pethost() as pethost:
+    # The newest lines, and where a stream goes on from them without missing one.
+    newest = pethost.query_container_logs("notes")
+    for line in newest.lines:
+        print(line.service, line.text)
+
+    # Each later line as it is written. The loop runs until the stream fails, which raises; to
+    # stop it sooner, leave the loop.
+    for response in pethost.tail_container_logs("notes", after_cursor=newest.tail_cursor):
+        if response.line is not None:
+            print(response.line.service, response.line.text)
+```
+
+The call is made when the loop starts. A stream that fails raises its `PethostError` from the
+loop, once, after the responses that came before it; one that ends by itself just ends the
+loop. Leaving the loop ends the call: Python closes a generator that nothing else holds. Where
+a variable holds it, its `close()` ends the call, and so does `contextlib.closing` around it.
+The client's `timeout` does not bound a stream, and the package does not call again by itself:
+where a response carries a cursor, as a log line does, a new call goes on from it.
+
+While this client waits for a response, Python does not act on Ctrl-C: `KeyboardInterrupt` is
+raised when the API next sends something. That is the next response or, on a quiet stream, what
+the API sends through a silence to keep the stream open, which the loop never sees. A program that
+must stop at once reads the stream with `AsyncPethost`.
+
+`AsyncPethost` has each stream as an asynchronous generator, read with `async for`:
+
+```python
+import asyncio
+
+from pethost import AsyncPethost
+
+
+async def main() -> None:
+    async with AsyncPethost() as pethost:
+        async for response in pethost.tail_container_logs("notes"):  # From now on.
+            if response.line is not None:
+                print(response.line.service, response.line.text)
+
+
+asyncio.run(main())
+```
+
+Leaving that loop ends the call on the event loop's next turn. Cancelling the task ends it too,
+so Ctrl-C stops the program at once, and `asyncio.wait_for` can bound the reading by time.
+Where a variable holds the generator, `await` its `aclose()`, or put `contextlib.aclosing`
+around it.
 
 ## Errors
 
@@ -114,6 +175,35 @@ with Pethost() as pethost:
 
 A wrong argument the SDK sees itself, such as two members of one oneof, is Python's own
 `TypeError`, `ValueError` or `OverflowError`, raised before anything is sent.
+
+## JSON
+
+Every message has the API's own JSON form, the one the API speaks over HTTP and
+[its reference](https://pethost.dev/docs/api/) documents. `to_dict()` gives it as a dict for
+`json.dumps`, and the class's `from_dict()` reads one back.
+
+```python
+import json
+
+from pethost import Pethost, Project
+
+with Pethost() as pethost:
+    project = pethost.get_project("notes").project
+    if project is not None:
+        text = json.dumps(project.to_dict())  # {"project_id": "notes", ...}
+        print(Project.from_dict(json.loads(text)) == project)  # True
+```
+
+A key is the API's name of a field, an enum is its value's full name, a 64-bit integer a
+string, a time RFC 3339 and bytes base64. What is absent is left out, and so is a zero where
+the type has no `None`: the API may write such a zero, and reads its absence as the same.
+
+`from_dict` refuses a key that is no field of the message with a `ValueError`, as the API does,
+so a misspelt key cannot pass for an absent one. A field that a newer API added is such a key
+to an older version of the package. It takes what the API takes beside its own form: a key in
+lowerCamelCase, a 64-bit integer as a number, an enum by its number. An enum's value that this
+version of the package has no name for is its number, both ways. `dataclasses.asdict` is not
+this form: it keeps a `datetime` and an enum's member as Python has them.
 
 ## Links
 

@@ -8,6 +8,8 @@ import { check, runChecks } from "./harness.ts";
 import "./received.ts";
 import "./sent.ts";
 import "./errors.ts";
+import "./streams.ts";
+import "./codecs.ts";
 
 check("the published types name nothing of the wire layer", async () => {
   const declarations = readFileSync(new URL("../dist/index.d.ts", import.meta.url), "utf8");

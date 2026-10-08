@@ -130,7 +130,8 @@ func TestNotReached(t *testing.T) {
 	}
 }
 
-// TestCaller: every call says who calls, and is a POST of binary protobuf.
+// TestCaller: every call says who calls, and is the Connect protocol's: a POST of binary
+// protobuf.
 func TestCaller(t *testing.T) {
 	api, server := serve(t)
 	api.response = calls[0].response
@@ -139,9 +140,10 @@ func TestCaller(t *testing.T) {
 		t.Fatal(err)
 	}
 	for name, want := range map[string]string{
-		"Authorization": "Bearer " + account,
-		"User-Agent":    "pethost-go/0.1.0",
-		"Content-Type":  "application/proto",
+		"Authorization":            "Bearer " + account,
+		"User-Agent":               "pethost-go/0.1.1",
+		"Content-Type":             "application/proto",
+		"Connect-Protocol-Version": "1",
 	} {
 		if got := api.header.Get(name); got != want {
 			t.Errorf("%s: %q, want %q", name, got, want)
@@ -155,6 +157,20 @@ func TestCaller(t *testing.T) {
 	failure(t, api, clientOf(server, ""), nil)
 	if _, has := api.header["Authorization"]; has {
 		t.Errorf("a client without a token sent %q", api.header.Get("Authorization"))
+	}
+}
+
+// TestOverTLS: a call is the same to an https address, as the API's own is, where the HTTP
+// client and the API agree on HTTP/2 by TLS.
+func TestOverTLS(t *testing.T) {
+	api, server := serveTLS(t)
+	api.response = calls[0].response
+
+	if _, err := calls[0].do(t.Context(), clientOf(server, account), nil); err != nil {
+		t.Fatal(err)
+	}
+	if api.httpMajor != 2 {
+		t.Errorf("the call came over HTTP/%d", api.httpMajor)
 	}
 }
 

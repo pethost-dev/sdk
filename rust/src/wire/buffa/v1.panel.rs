@@ -2839,8 +2839,7 @@ pub struct GetMachineResponse {
     ///
     /// Field 3: `deleted_projects`
     #[serde(
-        rename = "deletedProjects",
-        alias = "deleted_projects",
+        rename = "deleted_projects",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -3093,8 +3092,7 @@ pub struct Machine {
     ///
     /// Field 3: `sample_time`
     #[serde(
-        rename = "sampleTime",
-        alias = "sample_time",
+        rename = "sample_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub sample_time: ::buffa::MessageField<
@@ -3105,16 +3103,14 @@ pub struct Machine {
     ///
     /// Field 5: `cpu_used_cores`
     #[serde(
-        rename = "cpuUsedCores",
-        alias = "cpu_used_cores",
+        rename = "cpu_used_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub cpu_used_cores: ::core::option::Option<f64>,
     /// Field 6: `cpu_total_cores`
     #[serde(
-        rename = "cpuTotalCores",
-        alias = "cpu_total_cores",
+        rename = "cpu_total_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -3123,8 +3119,7 @@ pub struct Machine {
     ///
     /// Field 7: `memory_used_bytes`
     #[serde(
-        rename = "memoryUsedBytes",
-        alias = "memory_used_bytes",
+        rename = "memory_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -3133,8 +3128,7 @@ pub struct Machine {
     ///
     /// Field 8: `memory_total_bytes`
     #[serde(
-        rename = "memoryTotalBytes",
-        alias = "memory_total_bytes",
+        rename = "memory_total_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -3144,24 +3138,21 @@ pub struct Machine {
     ///
     /// Field 9: `disk_used_bytes`
     #[serde(
-        rename = "diskUsedBytes",
-        alias = "disk_used_bytes",
+        rename = "disk_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub disk_used_bytes: ::core::option::Option<u64>,
     /// Field 10: `disk_total_bytes`
     #[serde(
-        rename = "diskTotalBytes",
-        alias = "disk_total_bytes",
+        rename = "disk_total_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub disk_total_bytes: ::core::option::Option<u64>,
     /// Field 11: `disk_usage`
     #[serde(
-        rename = "diskUsage",
-        alias = "disk_usage",
+        rename = "disk_usage",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub disk_usage: ::buffa::MessageField<DiskUsage, ::buffa::Inline<DiskUsage>>,
@@ -3179,8 +3170,7 @@ pub struct Machine {
     ///
     /// Field 13: `ssh_host_key_fingerprint`
     #[serde(
-        rename = "sshHostKeyFingerprint",
-        alias = "ssh_host_key_fingerprint",
+        rename = "ssh_host_key_fingerprint",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub ssh_host_key_fingerprint: ::core::option::Option<::buffa::alloc::string::String>,
@@ -3189,8 +3179,7 @@ pub struct Machine {
     ///
     /// Field 14: `ssh_keys`
     #[serde(
-        rename = "sshKeys",
-        alias = "ssh_keys",
+        rename = "ssh_keys",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -3200,8 +3189,7 @@ pub struct Machine {
     ///
     /// Field 15: `backups_enabled`
     #[serde(
-        rename = "backupsEnabled",
-        alias = "backups_enabled",
+        rename = "backups_enabled",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub backups_enabled: ::core::option::Option<bool>,
@@ -3212,8 +3200,7 @@ pub struct Machine {
     ///
     /// Field 22: `snapshot_list_time`
     #[serde(
-        rename = "snapshotListTime",
-        alias = "snapshot_list_time",
+        rename = "snapshot_list_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub snapshot_list_time: ::buffa::MessageField<
@@ -3227,8 +3214,7 @@ pub struct Machine {
     ///
     /// Field 23: `snapshot_list_failure_message`
     #[serde(
-        rename = "snapshotListFailureMessage",
-        alias = "snapshot_list_failure_message",
+        rename = "snapshot_list_failure_message",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshot_list_failure_message: ::core::option::Option<
@@ -3239,8 +3225,7 @@ pub struct Machine {
     ///
     /// Field 4: `backup_retention_hours`
     #[serde(
-        rename = "backupRetentionHours",
-        alias = "backup_retention_hours",
+        rename = "backup_retention_hours",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -3250,8 +3235,7 @@ pub struct Machine {
     ///
     /// Field 21: `acme_enabled`
     #[serde(
-        rename = "acmeEnabled",
-        alias = "acme_enabled",
+        rename = "acme_enabled",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub acme_enabled: ::core::option::Option<bool>,
@@ -3263,29 +3247,25 @@ pub struct Machine {
     ///
     /// Field 25: `apps_domain`
     #[serde(
-        rename = "appsDomain",
-        alias = "apps_domain",
+        rename = "apps_domain",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub apps_domain: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 16: `daemon_version`
     #[serde(
-        rename = "daemonVersion",
-        alias = "daemon_version",
+        rename = "daemon_version",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub daemon_version: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 17: `docker_version`
     #[serde(
-        rename = "dockerVersion",
-        alias = "docker_version",
+        rename = "docker_version",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub docker_version: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 18: `boot_time`
     #[serde(
-        rename = "bootTime",
-        alias = "boot_time",
+        rename = "boot_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub boot_time: ::buffa::MessageField<
@@ -3296,8 +3276,7 @@ pub struct Machine {
     ///
     /// Field 19: `restart_required_time`
     #[serde(
-        rename = "restartRequiredTime",
-        alias = "restart_required_time",
+        rename = "restart_required_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub restart_required_time: ::buffa::MessageField<
@@ -3309,8 +3288,7 @@ pub struct Machine {
     ///
     /// Field 20: `scheduled_restart_time`
     #[serde(
-        rename = "scheduledRestartTime",
-        alias = "scheduled_restart_time",
+        rename = "scheduled_restart_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub scheduled_restart_time: ::buffa::MessageField<
@@ -4128,8 +4106,7 @@ pub struct MachineSession {
     ///
     /// Field 1: `session_id`
     #[serde(
-        rename = "sessionId",
-        alias = "session_id",
+        rename = "session_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub session_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -4142,8 +4119,7 @@ pub struct MachineSession {
     pub kind: ::core::option::Option<::buffa::EnumValue<MachineSessionKind>>,
     /// Field 3: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -4161,8 +4137,7 @@ pub struct MachineSession {
     pub port: ::core::option::Option<u32>,
     /// Field 6: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -4173,8 +4148,7 @@ pub struct MachineSession {
     ///
     /// Field 7: `client_address`
     #[serde(
-        rename = "clientAddress",
-        alias = "client_address",
+        rename = "client_address",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub client_address: ::core::option::Option<::buffa::alloc::string::String>,
@@ -4182,15 +4156,13 @@ pub struct MachineSession {
     ///
     /// Field 8: `ssh_key_label`
     #[serde(
-        rename = "sshKeyLabel",
-        alias = "ssh_key_label",
+        rename = "ssh_key_label",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub ssh_key_label: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 9: `ssh_key_fingerprint`
     #[serde(
-        rename = "sshKeyFingerprint",
-        alias = "ssh_key_fingerprint",
+        rename = "ssh_key_fingerprint",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub ssh_key_fingerprint: ::core::option::Option<::buffa::alloc::string::String>,
@@ -4562,8 +4534,7 @@ pub const __MACHINE_SESSION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::b
 pub struct DiskUsage {
     /// Field 1: `images_bytes`
     #[serde(
-        rename = "imagesBytes",
-        alias = "images_bytes",
+        rename = "images_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4572,16 +4543,14 @@ pub struct DiskUsage {
     ///
     /// Field 2: `build_cache_bytes`
     #[serde(
-        rename = "buildCacheBytes",
-        alias = "build_cache_bytes",
+        rename = "build_cache_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub build_cache_bytes: ::core::option::Option<u64>,
     /// Field 3: `volumes_bytes`
     #[serde(
-        rename = "volumesBytes",
-        alias = "volumes_bytes",
+        rename = "volumes_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4590,8 +4559,7 @@ pub struct DiskUsage {
     ///
     /// Field 4: `container_layers_bytes`
     #[serde(
-        rename = "containerLayersBytes",
-        alias = "container_layers_bytes",
+        rename = "container_layers_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4600,8 +4568,7 @@ pub struct DiskUsage {
     ///
     /// Field 5: `project_files_bytes`
     #[serde(
-        rename = "projectFilesBytes",
-        alias = "project_files_bytes",
+        rename = "project_files_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4611,8 +4578,7 @@ pub struct DiskUsage {
     ///
     /// Field 6: `container_logs_bytes`
     #[serde(
-        rename = "containerLogsBytes",
-        alias = "container_logs_bytes",
+        rename = "container_logs_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4621,8 +4587,7 @@ pub struct DiskUsage {
     ///
     /// Field 7: `http_traffic_bytes`
     #[serde(
-        rename = "httpTrafficBytes",
-        alias = "http_traffic_bytes",
+        rename = "http_traffic_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -4905,8 +4870,7 @@ pub struct SshKey {
     ///
     /// Field 1: `public_key`
     #[serde(
-        rename = "publicKey",
-        alias = "public_key",
+        rename = "public_key",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub public_key: ::core::option::Option<::buffa::alloc::string::String>,
@@ -5123,8 +5087,7 @@ pub struct GithubConnection {
     ///
     /// Field 1: `app_name`
     #[serde(
-        rename = "appName",
-        alias = "app_name",
+        rename = "app_name",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub app_name: ::core::option::Option<::buffa::alloc::string::String>,
@@ -5133,8 +5096,7 @@ pub struct GithubConnection {
     ///
     /// Field 2: `install_url`
     #[serde(
-        rename = "installUrl",
-        alias = "install_url",
+        rename = "install_url",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub install_url: ::core::option::Option<::buffa::alloc::string::String>,
@@ -5151,8 +5113,7 @@ pub struct GithubConnection {
     ///
     /// Field 4: `repository_count`
     #[serde(
-        rename = "repositoryCount",
-        alias = "repository_count",
+        rename = "repository_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -5161,8 +5122,7 @@ pub struct GithubConnection {
     ///
     /// Field 5: `webhooks_enabled`
     #[serde(
-        rename = "webhooksEnabled",
-        alias = "webhooks_enabled",
+        rename = "webhooks_enabled",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub webhooks_enabled: ::core::option::Option<bool>,
@@ -5420,8 +5380,7 @@ pub struct GithubRepository {
     pub repository: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 2: `default_branch`
     #[serde(
-        rename = "defaultBranch",
-        alias = "default_branch",
+        rename = "default_branch",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub default_branch: ::core::option::Option<::buffa::alloc::string::String>,
@@ -5430,8 +5389,7 @@ pub struct GithubRepository {
     pub private: ::core::option::Option<bool>,
     /// Field 4: `push_time`
     #[serde(
-        rename = "pushTime",
-        alias = "push_time",
+        rename = "push_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub push_time: ::buffa::MessageField<
@@ -5659,8 +5617,7 @@ pub const __GITHUB_REPOSITORY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = :
 pub struct DeletedProject {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -5669,8 +5626,7 @@ pub struct DeletedProject {
     ///
     /// Field 2: `newest_snapshot`
     #[serde(
-        rename = "newestSnapshot",
-        alias = "newest_snapshot",
+        rename = "newest_snapshot",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub newest_snapshot: ::buffa::MessageField<Snapshot, ::buffa::Inline<Snapshot>>,
@@ -5678,8 +5634,7 @@ pub struct DeletedProject {
     ///
     /// Field 3: `snapshot_count`
     #[serde(
-        rename = "snapshotCount",
-        alias = "snapshot_count",
+        rename = "snapshot_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -6125,7 +6080,7 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "addSshKey" | "add_ssh_key" => {
+                        "add_ssh_key" => {
                             let v: ::core::option::Option<SshKey> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -6149,7 +6104,7 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                                 );
                             }
                         }
-                        "removeSshKeyFingerprint" | "remove_ssh_key_fingerprint" => {
+                        "remove_ssh_key_fingerprint" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -6175,7 +6130,7 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                                 );
                             }
                         }
-                        "restartMachine" | "restart_machine" => {
+                        "restart_machine" => {
                             let v: ::core::option::Option<RestartMachineAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -6199,7 +6154,7 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                                 );
                             }
                         }
-                        "cancelRestart" | "cancel_restart" => {
+                        "cancel_restart" => {
                             let v: ::core::option::Option<bool> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -6221,7 +6176,7 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                                 );
                             }
                         }
-                        "endSessionId" | "end_session_id" => {
+                        "end_session_id" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -6296,8 +6251,7 @@ pub struct RestartMachineAction {
     ///
     /// Field 1: `restart_time`
     #[serde(
-        rename = "restartTime",
-        alias = "restart_time",
+        rename = "restart_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub restart_time: ::buffa::MessageField<
@@ -6308,8 +6262,7 @@ pub struct RestartMachineAction {
     ///
     /// Field 3: `at_maintenance_window`
     #[serde(
-        rename = "atMaintenanceWindow",
-        alias = "at_maintenance_window",
+        rename = "at_maintenance_window",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub at_maintenance_window: ::core::option::Option<bool>,
@@ -6317,8 +6270,7 @@ pub struct RestartMachineAction {
     ///
     /// Field 2: `interrupt_operations`
     #[serde(
-        rename = "interruptOperations",
-        alias = "interrupt_operations",
+        rename = "interrupt_operations",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub interrupt_operations: ::core::option::Option<bool>,
@@ -6890,8 +6842,7 @@ pub const __PROJECT_METADATA_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::
 pub struct ProjectSummary {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -6941,8 +6892,7 @@ pub struct ProjectSummary {
     ///
     /// Field 7: `http_traffic_last_day`
     #[serde(
-        rename = "httpTrafficLastDay",
-        alias = "http_traffic_last_day",
+        rename = "http_traffic_last_day",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub http_traffic_last_day: ::buffa::MessageField<
@@ -6951,16 +6901,14 @@ pub struct ProjectSummary {
     >,
     /// Field 8: `cpu_used_cores`
     #[serde(
-        rename = "cpuUsedCores",
-        alias = "cpu_used_cores",
+        rename = "cpu_used_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub cpu_used_cores: ::core::option::Option<f64>,
     /// Field 9: `memory_used_bytes`
     #[serde(
-        rename = "memoryUsedBytes",
-        alias = "memory_used_bytes",
+        rename = "memory_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -6969,8 +6917,7 @@ pub struct ProjectSummary {
     ///
     /// Field 10: `deploy_time`
     #[serde(
-        rename = "deployTime",
-        alias = "deploy_time",
+        rename = "deploy_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub deploy_time: ::buffa::MessageField<
@@ -6981,8 +6928,7 @@ pub struct ProjectSummary {
     ///
     /// Field 11: `running_operations`
     #[serde(
-        rename = "runningOperations",
-        alias = "running_operations",
+        rename = "running_operations",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -6997,8 +6943,7 @@ pub struct ProjectSummary {
     ///
     /// Field 13: `disk_used_bytes`
     #[serde(
-        rename = "diskUsedBytes",
-        alias = "disk_used_bytes",
+        rename = "disk_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -7645,8 +7590,7 @@ pub struct ProjectProblem {
     ///
     /// Field 3: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -7657,8 +7601,7 @@ pub struct ProjectProblem {
     ///
     /// Field 4: `since_time`
     #[serde(
-        rename = "sinceTime",
-        alias = "since_time",
+        rename = "since_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub since_time: ::buffa::MessageField<
@@ -7671,8 +7614,7 @@ pub struct ProjectProblem {
     ///
     /// Field 5: `problem_message`
     #[serde(
-        rename = "problemMessage",
-        alias = "problem_message",
+        rename = "problem_message",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub problem_message: ::core::option::Option<::buffa::alloc::string::String>,
@@ -7928,8 +7870,7 @@ pub const __PROJECT_PROBLEM_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::b
 pub struct GetProjectRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -7937,8 +7878,7 @@ pub struct GetProjectRequest {
     ///
     /// Field 2: `include_secret_values`
     #[serde(
-        rename = "includeSecretValues",
-        alias = "include_secret_values",
+        rename = "include_secret_values",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub include_secret_values: ::core::option::Option<bool>,
@@ -7946,8 +7886,7 @@ pub struct GetProjectRequest {
     ///
     /// Field 3: `snapshots_before`
     #[serde(
-        rename = "snapshotsBefore",
-        alias = "snapshots_before",
+        rename = "snapshots_before",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub snapshots_before: ::buffa::MessageField<
@@ -7958,8 +7897,7 @@ pub struct GetProjectRequest {
     ///
     /// Field 4: `snapshots_volume`
     #[serde(
-        rename = "snapshotsVolume",
-        alias = "snapshots_volume",
+        rename = "snapshots_volume",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshots_volume: ::core::option::Option<::buffa::alloc::string::String>,
@@ -8321,8 +8259,7 @@ pub const __GET_PROJECT_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry 
 pub struct Project {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -8349,16 +8286,14 @@ pub struct Project {
     pub url: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 5: `cpu_used_cores`
     #[serde(
-        rename = "cpuUsedCores",
-        alias = "cpu_used_cores",
+        rename = "cpu_used_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub cpu_used_cores: ::core::option::Option<f64>,
     /// Field 6: `memory_used_bytes`
     #[serde(
-        rename = "memoryUsedBytes",
-        alias = "memory_used_bytes",
+        rename = "memory_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -8368,8 +8303,7 @@ pub struct Project {
     ///
     /// Field 7: `deploy_id`
     #[serde(
-        rename = "deployId",
-        alias = "deploy_id",
+        rename = "deploy_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub deploy_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -8377,8 +8311,7 @@ pub struct Project {
     ///
     /// Field 18: `deploy_status`
     #[serde(
-        rename = "deployStatus",
-        alias = "deploy_status",
+        rename = "deploy_status",
         with = "::buffa::json_helpers::opt_enum",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -8388,8 +8321,7 @@ pub struct Project {
     ///
     /// Field 8: `deploy_time`
     #[serde(
-        rename = "deployTime",
-        alias = "deploy_time",
+        rename = "deploy_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub deploy_time: ::buffa::MessageField<
@@ -8402,8 +8334,7 @@ pub struct Project {
     ///
     /// Field 19: `x_pethost_applies_at_once`
     #[serde(
-        rename = "xPethostAppliesAtOnce",
-        alias = "x_pethost_applies_at_once",
+        rename = "x_pethost_applies_at_once",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub x_pethost_applies_at_once: ::core::option::Option<bool>,
@@ -8449,8 +8380,7 @@ pub struct Project {
     ///
     /// Field 22: `password_protected`
     #[serde(
-        rename = "passwordProtected",
-        alias = "password_protected",
+        rename = "password_protected",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub password_protected: ::core::option::Option<bool>,
@@ -8480,8 +8410,7 @@ pub struct Project {
     ///
     /// Field 15: `snapshot_count`
     #[serde(
-        rename = "snapshotCount",
-        alias = "snapshot_count",
+        rename = "snapshot_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -8493,8 +8422,7 @@ pub struct Project {
     ///
     /// Field 20: `snapshot_list_time`
     #[serde(
-        rename = "snapshotListTime",
-        alias = "snapshot_list_time",
+        rename = "snapshot_list_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub snapshot_list_time: ::buffa::MessageField<
@@ -8505,8 +8433,7 @@ pub struct Project {
     ///
     /// Field 16: `http_traffic_last_day`
     #[serde(
-        rename = "httpTrafficLastDay",
-        alias = "http_traffic_last_day",
+        rename = "http_traffic_last_day",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub http_traffic_last_day: ::buffa::MessageField<
@@ -8525,8 +8452,7 @@ pub struct Project {
     ///
     /// Field 21: `running_services_action`
     #[serde(
-        rename = "runningServicesAction",
-        alias = "running_services_action",
+        rename = "running_services_action",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub running_services_action: ::buffa::MessageField<
@@ -9274,8 +9200,7 @@ pub struct RunningServicesAction {
     pub services: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     /// Field 3: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -9746,8 +9671,7 @@ pub struct GithubSource {
     ///
     /// Field 4: `auto_deploy`
     #[serde(
-        rename = "autoDeploy",
-        alias = "auto_deploy",
+        rename = "auto_deploy",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub auto_deploy: ::core::option::Option<bool>,
@@ -9756,8 +9680,7 @@ pub struct GithubSource {
     ///
     /// Field 5: `newest_commit`
     #[serde(
-        rename = "newestCommit",
-        alias = "newest_commit",
+        rename = "newest_commit",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub newest_commit: ::buffa::MessageField<
@@ -9768,8 +9691,7 @@ pub struct GithubSource {
     ///
     /// Field 6: `deployed_commit`
     #[serde(
-        rename = "deployedCommit",
-        alias = "deployed_commit",
+        rename = "deployed_commit",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub deployed_commit: ::buffa::MessageField<
@@ -9786,8 +9708,7 @@ pub struct GithubSource {
     ///
     /// Field 9: `auto_deploy_pending`
     #[serde(
-        rename = "autoDeployPending",
-        alias = "auto_deploy_pending",
+        rename = "auto_deploy_pending",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub auto_deploy_pending: ::core::option::Option<bool>,
@@ -10330,8 +10251,7 @@ pub struct Service {
     ///
     /// Field 25: `container_running`
     #[serde(
-        rename = "containerRunning",
-        alias = "container_running",
+        rename = "container_running",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub container_running: ::core::option::Option<bool>,
@@ -10344,8 +10264,7 @@ pub struct Service {
     ///
     /// Field 4: `builds_image`
     #[serde(
-        rename = "buildsImage",
-        alias = "builds_image",
+        rename = "builds_image",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub builds_image: ::core::option::Option<bool>,
@@ -10353,8 +10272,7 @@ pub struct Service {
     ///
     /// Field 5: `image_digest`
     #[serde(
-        rename = "imageDigest",
-        alias = "image_digest",
+        rename = "image_digest",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub image_digest: ::core::option::Option<::buffa::alloc::string::String>,
@@ -10362,8 +10280,7 @@ pub struct Service {
     ///
     /// Field 6: `image_size_bytes`
     #[serde(
-        rename = "imageSizeBytes",
-        alias = "image_size_bytes",
+        rename = "image_size_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10382,8 +10299,7 @@ pub struct Service {
     pub command: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     /// Field 8: `run_as_user`
     #[serde(
-        rename = "runAsUser",
-        alias = "run_as_user",
+        rename = "run_as_user",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub run_as_user: ::core::option::Option<::buffa::alloc::string::String>,
@@ -10391,8 +10307,7 @@ pub struct Service {
     ///
     /// Field 9: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -10405,8 +10320,7 @@ pub struct Service {
     ///
     /// Field 10: `finish_time`
     #[serde(
-        rename = "finishTime",
-        alias = "finish_time",
+        rename = "finish_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub finish_time: ::buffa::MessageField<
@@ -10415,16 +10329,14 @@ pub struct Service {
     >,
     /// Field 11: `exit_code`
     #[serde(
-        rename = "exitCode",
-        alias = "exit_code",
+        rename = "exit_code",
         with = "::buffa::json_helpers::opt_int32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub exit_code: ::core::option::Option<i32>,
     /// Field 12: `out_of_memory`
     #[serde(
-        rename = "outOfMemory",
-        alias = "out_of_memory",
+        rename = "out_of_memory",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub out_of_memory: ::core::option::Option<bool>,
@@ -10432,24 +10344,21 @@ pub struct Service {
     ///
     /// Field 13: `restart_count`
     #[serde(
-        rename = "restartCount",
-        alias = "restart_count",
+        rename = "restart_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub restart_count: ::core::option::Option<u32>,
     /// Field 14: `cpu_used_cores`
     #[serde(
-        rename = "cpuUsedCores",
-        alias = "cpu_used_cores",
+        rename = "cpu_used_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub cpu_used_cores: ::core::option::Option<f64>,
     /// Field 15: `memory_used_bytes`
     #[serde(
-        rename = "memoryUsedBytes",
-        alias = "memory_used_bytes",
+        rename = "memory_used_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10458,8 +10367,7 @@ pub struct Service {
     ///
     /// Field 16: `memory_limit_bytes`
     #[serde(
-        rename = "memoryLimitBytes",
-        alias = "memory_limit_bytes",
+        rename = "memory_limit_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10468,8 +10376,7 @@ pub struct Service {
     ///
     /// Field 17: `cpu_limit_cores`
     #[serde(
-        rename = "cpuLimitCores",
-        alias = "cpu_limit_cores",
+        rename = "cpu_limit_cores",
         with = "::buffa::json_helpers::opt_double",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10478,8 +10385,7 @@ pub struct Service {
     ///
     /// Field 18: `writable_layer_bytes`
     #[serde(
-        rename = "writableLayerBytes",
-        alias = "writable_layer_bytes",
+        rename = "writable_layer_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10500,32 +10406,28 @@ pub struct Service {
     ///
     /// Field 28: `listening_ports`
     #[serde(
-        rename = "listeningPorts",
-        alias = "listening_ports",
+        rename = "listening_ports",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub listening_ports: ::buffa::alloc::vec::Vec<u32>,
     /// Field 20: `published_ports`
     #[serde(
-        rename = "publishedPorts",
-        alias = "published_ports",
+        rename = "published_ports",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub published_ports: ::buffa::alloc::vec::Vec<PublishedPort>,
     /// Field 21: `volume_mounts`
     #[serde(
-        rename = "volumeMounts",
-        alias = "volume_mounts",
+        rename = "volume_mounts",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub volume_mounts: ::buffa::alloc::vec::Vec<VolumeMount>,
     /// Field 22: `restart_policy`
     #[serde(
-        rename = "restartPolicy",
-        alias = "restart_policy",
+        rename = "restart_policy",
         with = "::buffa::json_helpers::opt_enum",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -10534,8 +10436,7 @@ pub struct Service {
     ///
     /// Field 23: `health_check`
     #[serde(
-        rename = "healthCheck",
-        alias = "health_check",
+        rename = "health_check",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub health_check: ::buffa::MessageField<HealthCheck, ::buffa::Inline<HealthCheck>>,
@@ -10553,8 +10454,7 @@ pub struct Service {
     ///
     /// Field 26: `env_files`
     #[serde(
-        rename = "envFiles",
-        alias = "env_files",
+        rename = "env_files",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -10565,8 +10465,7 @@ pub struct Service {
     ///
     /// Field 27: `ssh_command`
     #[serde(
-        rename = "sshCommand",
-        alias = "ssh_command",
+        rename = "ssh_command",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub ssh_command: ::core::option::Option<::buffa::alloc::string::String>,
@@ -11482,16 +11381,14 @@ pub struct PublishedPort {
     ///
     /// Field 1: `machine_port`
     #[serde(
-        rename = "machinePort",
-        alias = "machine_port",
+        rename = "machine_port",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub machine_port: ::core::option::Option<u32>,
     /// Field 2: `container_port`
     #[serde(
-        rename = "containerPort",
-        alias = "container_port",
+        rename = "container_port",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -11508,8 +11405,7 @@ pub struct PublishedPort {
     ///
     /// Field 4: `machine_only`
     #[serde(
-        rename = "machineOnly",
-        alias = "machine_only",
+        rename = "machine_only",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub machine_only: ::core::option::Option<bool>,
@@ -11728,8 +11624,7 @@ pub struct VolumeMount {
     ///
     /// Field 2: `container_path`
     #[serde(
-        rename = "containerPath",
-        alias = "container_path",
+        rename = "container_path",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub container_path: ::core::option::Option<::buffa::alloc::string::String>,
@@ -11913,8 +11808,7 @@ pub struct HealthCheck {
     ///
     /// Field 2: `interval_seconds`
     #[serde(
-        rename = "intervalSeconds",
-        alias = "interval_seconds",
+        rename = "interval_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -11930,8 +11824,7 @@ pub struct HealthCheck {
     pub status: ::core::option::Option<::buffa::EnumValue<HealthStatus>>,
     /// Field 4: `consecutive_failure_count`
     #[serde(
-        rename = "consecutiveFailureCount",
-        alias = "consecutive_failure_count",
+        rename = "consecutive_failure_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -11940,8 +11833,7 @@ pub struct HealthCheck {
     ///
     /// Field 5: `recent_results_passed`
     #[serde(
-        rename = "recentResultsPassed",
-        alias = "recent_results_passed",
+        rename = "recent_results_passed",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -11950,8 +11842,7 @@ pub struct HealthCheck {
     ///
     /// Field 6: `last_failure_output`
     #[serde(
-        rename = "lastFailureOutput",
-        alias = "last_failure_output",
+        rename = "last_failure_output",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub last_failure_output: ::core::option::Option<::buffa::alloc::string::String>,
@@ -12263,8 +12154,7 @@ pub struct EnvironmentVariable {
     ///
     /// Field 4: `source_file`
     #[serde(
-        rename = "sourceFile",
-        alias = "source_file",
+        rename = "source_file",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub source_file: ::core::option::Option<::buffa::alloc::string::String>,
@@ -12272,8 +12162,7 @@ pub struct EnvironmentVariable {
     ///
     /// Field 5: `from_env_file_variables`
     #[serde(
-        rename = "fromEnvFileVariables",
-        alias = "from_env_file_variables",
+        rename = "from_env_file_variables",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -12285,8 +12174,7 @@ pub struct EnvironmentVariable {
     ///
     /// Field 6: `value_left_out`
     #[serde(
-        rename = "valueLeftOut",
-        alias = "value_left_out",
+        rename = "value_left_out",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub value_left_out: ::core::option::Option<bool>,
@@ -12556,16 +12444,14 @@ pub struct Volume {
     ///
     /// Field 2: `size_bytes`
     #[serde(
-        rename = "sizeBytes",
-        alias = "size_bytes",
+        rename = "size_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub size_bytes: ::core::option::Option<u64>,
     /// Field 3: `mounted_by`
     #[serde(
-        rename = "mountedBy",
-        alias = "mounted_by",
+        rename = "mounted_by",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -12575,8 +12461,7 @@ pub struct Volume {
     ///
     /// Field 4: `last_backup_time`
     #[serde(
-        rename = "lastBackupTime",
-        alias = "last_backup_time",
+        rename = "last_backup_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub last_backup_time: ::buffa::MessageField<
@@ -12588,8 +12473,7 @@ pub struct Volume {
     ///
     /// Field 6: `snapshot_count`
     #[serde(
-        rename = "snapshotCount",
-        alias = "snapshot_count",
+        rename = "snapshot_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -12876,8 +12760,7 @@ pub struct VolumeMountedBy {
     pub service: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 2: `container_path`
     #[serde(
-        rename = "containerPath",
-        alias = "container_path",
+        rename = "container_path",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub container_path: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13061,8 +12944,7 @@ pub struct Host {
     pub url: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 3: `certificate_source`
     #[serde(
-        rename = "certificateSource",
-        alias = "certificate_source",
+        rename = "certificate_source",
         with = "::buffa::json_helpers::opt_enum",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -13073,8 +12955,7 @@ pub struct Host {
     ///
     /// Field 4: `certificate_expire_time`
     #[serde(
-        rename = "certificateExpireTime",
-        alias = "certificate_expire_time",
+        rename = "certificate_expire_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub certificate_expire_time: ::buffa::MessageField<
@@ -13087,8 +12968,7 @@ pub struct Host {
     ///
     /// Field 5: `unavailable_message`
     #[serde(
-        rename = "unavailableMessage",
-        alias = "unavailable_message",
+        rename = "unavailable_message",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub unavailable_message: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13367,8 +13247,7 @@ pub struct Route {
     ///
     /// Field 5: `strip_path`
     #[serde(
-        rename = "stripPath",
-        alias = "strip_path",
+        rename = "strip_path",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub strip_path: ::core::option::Option<bool>,
@@ -13612,8 +13491,7 @@ pub const __ROUTE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type
 pub struct Operation {
     /// Field 1: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13633,8 +13511,7 @@ pub struct Operation {
     pub status: ::core::option::Option<::buffa::EnumValue<OperationStatus>>,
     /// Field 4: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -13645,8 +13522,7 @@ pub struct Operation {
     ///
     /// Field 5: `finish_time`
     #[serde(
-        rename = "finishTime",
-        alias = "finish_time",
+        rename = "finish_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub finish_time: ::buffa::MessageField<
@@ -13657,8 +13533,7 @@ pub struct Operation {
     ///
     /// Field 6: `failure_message`
     #[serde(
-        rename = "failureMessage",
-        alias = "failure_message",
+        rename = "failure_message",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub failure_message: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13666,8 +13541,7 @@ pub struct Operation {
     ///
     /// Field 7: `deploy_failure_reason`
     #[serde(
-        rename = "deployFailureReason",
-        alias = "deploy_failure_reason",
+        rename = "deploy_failure_reason",
         with = "::buffa::json_helpers::opt_enum",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -13683,8 +13557,7 @@ pub struct Operation {
     ///
     /// Field 8: `made_current`
     #[serde(
-        rename = "madeCurrent",
-        alias = "made_current",
+        rename = "made_current",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub made_current: ::core::option::Option<bool>,
@@ -13697,8 +13570,7 @@ pub struct Operation {
     ///
     /// Field 10: `failed_exit_code`
     #[serde(
-        rename = "failedExitCode",
-        alias = "failed_exit_code",
+        rename = "failed_exit_code",
         with = "::buffa::json_helpers::opt_int32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -13708,8 +13580,7 @@ pub struct Operation {
     ///
     /// Field 11: `snapshot_id`
     #[serde(
-        rename = "snapshotId",
-        alias = "snapshot_id",
+        rename = "snapshot_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshot_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13717,8 +13588,7 @@ pub struct Operation {
     ///
     /// Field 12: `restored_volumes`
     #[serde(
-        rename = "restoredVolumes",
-        alias = "restored_volumes",
+        rename = "restored_volumes",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -13727,8 +13597,7 @@ pub struct Operation {
     ///
     /// Field 13: `undo_snapshot_id`
     #[serde(
-        rename = "undoSnapshotId",
-        alias = "undo_snapshot_id",
+        rename = "undo_snapshot_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub undo_snapshot_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13737,8 +13606,7 @@ pub struct Operation {
     ///
     /// Field 14: `github_commit`
     #[serde(
-        rename = "githubCommit",
-        alias = "github_commit",
+        rename = "github_commit",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub github_commit: ::buffa::MessageField<
@@ -13749,8 +13617,7 @@ pub struct Operation {
     ///
     /// Field 15: `archive_name`
     #[serde(
-        rename = "archiveName",
-        alias = "archive_name",
+        rename = "archive_name",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub archive_name: ::core::option::Option<::buffa::alloc::string::String>,
@@ -13772,8 +13639,7 @@ pub struct Operation {
     ///
     /// Field 17: `changed_paths`
     #[serde(
-        rename = "changedPaths",
-        alias = "changed_paths",
+        rename = "changed_paths",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -13782,8 +13648,7 @@ pub struct Operation {
     ///
     /// Field 18: `changed_path_count`
     #[serde(
-        rename = "changedPathCount",
-        alias = "changed_path_count",
+        rename = "changed_path_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -13795,8 +13660,7 @@ pub struct Operation {
     ///
     /// Field 19: `files_kept`
     #[serde(
-        rename = "filesKept",
-        alias = "files_kept",
+        rename = "files_kept",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub files_kept: ::core::option::Option<bool>,
@@ -14407,15 +14271,13 @@ pub const __OPERATION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::
 pub struct Snapshot {
     /// Field 1: `snapshot_id`
     #[serde(
-        rename = "snapshotId",
-        alias = "snapshot_id",
+        rename = "snapshot_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshot_id: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 2: `create_time`
     #[serde(
-        rename = "createTime",
-        alias = "create_time",
+        rename = "create_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub create_time: ::buffa::MessageField<
@@ -14426,8 +14288,7 @@ pub struct Snapshot {
     ///
     /// Field 3: `size_bytes`
     #[serde(
-        rename = "sizeBytes",
-        alias = "size_bytes",
+        rename = "size_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -14651,8 +14512,7 @@ pub const __SNAPSHOT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::t
 pub struct HttpTrafficSummary {
     /// Field 1: `request_count`
     #[serde(
-        rename = "requestCount",
-        alias = "request_count",
+        rename = "request_count",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -14661,8 +14521,7 @@ pub struct HttpTrafficSummary {
     ///
     /// Field 2: `server_error_count`
     #[serde(
-        rename = "serverErrorCount",
-        alias = "server_error_count",
+        rename = "server_error_count",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -14671,16 +14530,14 @@ pub struct HttpTrafficSummary {
     ///
     /// Field 3: `latency_p50_ms`
     #[serde(
-        rename = "latencyP50Ms",
-        alias = "latency_p50_ms",
+        rename = "latency_p50_ms",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub latency_p50_ms: ::core::option::Option<u32>,
     /// Field 4: `latency_p95_ms`
     #[serde(
-        rename = "latencyP95Ms",
-        alias = "latency_p95_ms",
+        rename = "latency_p95_ms",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -14892,8 +14749,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -14911,8 +14767,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 3: `upload_id`
     #[serde(
-        rename = "uploadId",
-        alias = "upload_id",
+        rename = "upload_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub upload_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -14930,8 +14785,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 5: `x_pethost`
     #[serde(
-        rename = "xPethost",
-        alias = "x_pethost",
+        rename = "x_pethost",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub x_pethost: ::buffa::MessageField<
@@ -14942,8 +14796,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 6: `timeout_seconds`
     #[serde(
-        rename = "timeoutSeconds",
-        alias = "timeout_seconds",
+        rename = "timeout_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -14952,8 +14805,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 7: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -14961,8 +14813,7 @@ pub struct CreateProjectRequest {
     ///
     /// Field 9: `wait_seconds`
     #[serde(
-        rename = "waitSeconds",
-        alias = "wait_seconds",
+        rename = "wait_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -15586,8 +15437,7 @@ pub const __CREATE_PROJECT_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEnt
 pub struct DeployProjectRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -15595,8 +15445,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 2: `base_deploy_id`
     #[serde(
-        rename = "baseDeployId",
-        alias = "base_deploy_id",
+        rename = "base_deploy_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub base_deploy_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -15616,8 +15465,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 10: `x_pethost`
     #[serde(
-        rename = "xPethost",
-        alias = "x_pethost",
+        rename = "x_pethost",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub x_pethost: ::buffa::MessageField<
@@ -15628,8 +15476,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 11: `mount_volume`
     #[serde(
-        rename = "mountVolume",
-        alias = "mount_volume",
+        rename = "mount_volume",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub mount_volume: ::buffa::MessageField<MountVolume, ::buffa::Inline<MountVolume>>,
@@ -15637,8 +15484,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 4: `timeout_seconds`
     #[serde(
-        rename = "timeoutSeconds",
-        alias = "timeout_seconds",
+        rename = "timeout_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -15648,8 +15494,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 5: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -15658,8 +15503,7 @@ pub struct DeployProjectRequest {
     ///
     /// Field 13: `wait_seconds`
     #[serde(
-        rename = "waitSeconds",
-        alias = "wait_seconds",
+        rename = "wait_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -16102,7 +15946,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "projectId" | "project_id" => {
+                        "project_id" => {
                             __f_project_id = Some(
                                 map
                                     .next_value::<
@@ -16110,7 +15954,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                     >()?,
                             );
                         }
-                        "baseDeployId" | "base_deploy_id" => {
+                        "base_deploy_id" => {
                             __f_base_deploy_id = Some(
                                 map
                                     .next_value::<
@@ -16136,7 +15980,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "xPethost" | "x_pethost" => {
+                        "x_pethost" => {
                             __f_x_pethost = Some(
                                 map
                                     .next_value::<
@@ -16147,7 +15991,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                     >()?,
                             );
                         }
-                        "mountVolume" | "mount_volume" => {
+                        "mount_volume" => {
                             __f_mount_volume = Some(
                                 map
                                     .next_value::<
@@ -16158,7 +16002,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                     >()?,
                             );
                         }
-                        "timeoutSeconds" | "timeout_seconds" => {
+                        "timeout_seconds" => {
                             __f_timeout_seconds = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -16176,7 +16020,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "operationId" | "operation_id" => {
+                        "operation_id" => {
                             __f_operation_id = Some(
                                 map
                                     .next_value::<
@@ -16184,7 +16028,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                     >()?,
                             );
                         }
-                        "waitSeconds" | "wait_seconds" => {
+                        "wait_seconds" => {
                             __f_wait_seconds = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -16202,7 +16046,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "uploadId" | "upload_id" => {
+                        "upload_id" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -16250,7 +16094,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 );
                             }
                         }
-                        "newestCommit" | "newest_commit" => {
+                        "newest_commit" => {
                             let v: ::core::option::Option<bool> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -16272,7 +16116,7 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 );
                             }
                         }
-                        "rollbackDeployId" | "rollback_deploy_id" => {
+                        "rollback_deploy_id" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -16382,8 +16226,7 @@ pub struct MountVolume {
     ///
     /// Field 3: `container_path`
     #[serde(
-        rename = "containerPath",
-        alias = "container_path",
+        rename = "container_path",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub container_path: ::core::option::Option<::buffa::alloc::string::String>,
@@ -16605,8 +16448,7 @@ pub struct ProjectExtension {
     ///
     /// Field 3: `remove_routes`
     #[serde(
-        rename = "removeRoutes",
-        alias = "remove_routes",
+        rename = "remove_routes",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub remove_routes: ::core::option::Option<bool>,
@@ -16622,8 +16464,7 @@ pub struct ProjectExtension {
     ///
     /// Field 5: `remove_password`
     #[serde(
-        rename = "removePassword",
-        alias = "remove_password",
+        rename = "remove_password",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub remove_password: ::core::option::Option<bool>,
@@ -17231,7 +17072,7 @@ impl<'de> ::serde::Deserialize<'de> for FileChange {
                                 );
                             }
                         }
-                        "makeDirectory" | "make_directory" => {
+                        "make_directory" => {
                             let v: ::core::option::Option<bool> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -17271,7 +17112,7 @@ impl<'de> ::serde::Deserialize<'de> for FileChange {
                                 );
                             }
                         }
-                        "deleteTree" | "delete_tree" => {
+                        "delete_tree" => {
                             let v: ::core::option::Option<bool> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -17291,7 +17132,7 @@ impl<'de> ::serde::Deserialize<'de> for FileChange {
                                 );
                             }
                         }
-                        "renameTo" | "rename_to" => {
+                        "rename_to" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -17669,8 +17510,7 @@ pub struct SpecViolation {
     ///
     /// Field 3: `violation_message`
     #[serde(
-        rename = "violationMessage",
-        alias = "violation_message",
+        rename = "violation_message",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub violation_message: ::core::option::Option<::buffa::alloc::string::String>,
@@ -17871,8 +17711,7 @@ pub const __SPEC_VIOLATION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::bu
 pub struct ListCommitsRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -17880,8 +17719,7 @@ pub struct ListCommitsRequest {
     ///
     /// Field 2: `before_commit`
     #[serde(
-        rename = "beforeCommit",
-        alias = "before_commit",
+        rename = "before_commit",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub before_commit: ::core::option::Option<::buffa::alloc::string::String>,
@@ -18240,8 +18078,7 @@ pub struct BranchCommit {
     ///
     /// Field 3: `commit_time`
     #[serde(
-        rename = "commitTime",
-        alias = "commit_time",
+        rename = "commit_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub commit_time: ::buffa::MessageField<
@@ -18261,8 +18098,7 @@ pub struct BranchCommit {
     ///
     /// Field 5: `last_deploy`
     #[serde(
-        rename = "lastDeploy",
-        alias = "last_deploy",
+        rename = "last_deploy",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub last_deploy: ::buffa::MessageField<Operation, ::buffa::Inline<Operation>>,
@@ -18544,8 +18380,7 @@ pub const __BRANCH_COMMIT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buf
 pub struct RunProjectActionRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -18553,8 +18388,7 @@ pub struct RunProjectActionRequest {
     ///
     /// Field 10: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -18562,8 +18396,7 @@ pub struct RunProjectActionRequest {
     ///
     /// Field 13: `wait_seconds`
     #[serde(
-        rename = "waitSeconds",
-        alias = "wait_seconds",
+        rename = "wait_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -19155,7 +18988,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "projectId" | "project_id" => {
+                        "project_id" => {
                             __f_project_id = Some(
                                 map
                                     .next_value::<
@@ -19163,7 +18996,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                     >()?,
                             );
                         }
-                        "operationId" | "operation_id" => {
+                        "operation_id" => {
                             __f_operation_id = Some(
                                 map
                                     .next_value::<
@@ -19171,7 +19004,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                     >()?,
                             );
                         }
-                        "waitSeconds" | "wait_seconds" => {
+                        "wait_seconds" => {
                             __f_wait_seconds = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -19189,7 +19022,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "startServices" | "start_services" => {
+                        "start_services" => {
                             let v: ::core::option::Option<ServicesAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19213,7 +19046,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "stopServices" | "stop_services" => {
+                        "stop_services" => {
                             let v: ::core::option::Option<ServicesAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19237,7 +19070,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "restartServices" | "restart_services" => {
+                        "restart_services" => {
                             let v: ::core::option::Option<ServicesAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19261,7 +19094,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "recreateService" | "recreate_service" => {
+                        "recreate_service" => {
                             let v: ::core::option::Option<RecreateServiceAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19285,7 +19118,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "backUp" | "back_up" => {
+                        "back_up" => {
                             let v: ::core::option::Option<BackUpAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19309,7 +19142,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "restoreSnapshot" | "restore_snapshot" => {
+                        "restore_snapshot" => {
                             let v: ::core::option::Option<RestoreSnapshotAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19333,7 +19166,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "cancelOperation" | "cancel_operation" => {
+                        "cancel_operation" => {
                             let v: ::core::option::Option<CancelOperationAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19357,7 +19190,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "deleteProject" | "delete_project" => {
+                        "delete_project" => {
                             let v: ::core::option::Option<DeleteProjectAction> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19381,7 +19214,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "setSource" | "set_source" => {
+                        "set_source" => {
                             let v: ::core::option::Option<ProjectSource> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -19405,7 +19238,7 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
-                        "deleteVolume" | "delete_volume" => {
+                        "delete_volume" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
                             > = map
@@ -19622,8 +19455,7 @@ pub struct RecreateServiceAction {
     ///
     /// Field 2: `pull_latest_image`
     #[serde(
-        rename = "pullLatestImage",
-        alias = "pull_latest_image",
+        rename = "pull_latest_image",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub pull_latest_image: ::core::option::Option<bool>,
@@ -19890,8 +19722,7 @@ pub const __BACK_UP_ACTION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::bu
 pub struct RestoreSnapshotAction {
     /// Field 1: `snapshot_id`
     #[serde(
-        rename = "snapshotId",
-        alias = "snapshot_id",
+        rename = "snapshot_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshot_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -20065,8 +19896,7 @@ pub struct CancelOperationAction {
     ///
     /// Field 1: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -20210,8 +20040,7 @@ pub struct DeleteProjectAction {
     ///
     /// Field 1: `skip_final_backup`
     #[serde(
-        rename = "skipFinalBackup",
-        alias = "skip_final_backup",
+        rename = "skip_final_backup",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub skip_final_backup: ::core::option::Option<bool>,
@@ -20569,8 +20398,7 @@ pub const __RUN_PROJECT_ACTION_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAn
 pub struct GetOperationRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -20578,8 +20406,7 @@ pub struct GetOperationRequest {
     ///
     /// Field 2: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -20587,8 +20414,7 @@ pub struct GetOperationRequest {
     ///
     /// Field 3: `wait_seconds`
     #[serde(
-        rename = "waitSeconds",
-        alias = "wait_seconds",
+        rename = "wait_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -20597,8 +20423,7 @@ pub struct GetOperationRequest {
     ///
     /// Field 4: `after_log_line`
     #[serde(
-        rename = "afterLogLine",
-        alias = "after_log_line",
+        rename = "after_log_line",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -20607,8 +20432,7 @@ pub struct GetOperationRequest {
     ///
     /// Field 5: `log_line_limit`
     #[serde(
-        rename = "logLineLimit",
-        alias = "log_line_limit",
+        rename = "log_line_limit",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -20880,8 +20704,7 @@ pub struct GetOperationResponse {
     ///
     /// Field 3: `log_line_count`
     #[serde(
-        rename = "logLineCount",
-        alias = "log_line_count",
+        rename = "log_line_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -20891,8 +20714,7 @@ pub struct GetOperationResponse {
     ///
     /// Field 4: `next_after_log_line`
     #[serde(
-        rename = "nextAfterLogLine",
-        alias = "next_after_log_line",
+        rename = "next_after_log_line",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -21332,8 +21154,7 @@ pub struct HttpTrafficFilter {
     ///
     /// Field 3: `path_contains`
     #[serde(
-        rename = "pathContains",
-        alias = "path_contains",
+        rename = "path_contains",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub path_contains: ::core::option::Option<::buffa::alloc::string::String>,
@@ -21341,8 +21162,7 @@ pub struct HttpTrafficFilter {
     ///
     /// Field 4: `path_pattern`
     #[serde(
-        rename = "pathPattern",
-        alias = "path_pattern",
+        rename = "path_pattern",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub path_pattern: ::core::option::Option<::buffa::alloc::string::String>,
@@ -21350,8 +21170,7 @@ pub struct HttpTrafficFilter {
     ///
     /// Field 5: `status_class`
     #[serde(
-        rename = "statusClass",
-        alias = "status_class",
+        rename = "status_class",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -21604,8 +21423,7 @@ pub const __HTTP_TRAFFIC_FILTER_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
 pub struct QueryHttpTrafficRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -21622,8 +21440,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 3: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -21634,8 +21451,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 4: `end_time`
     #[serde(
-        rename = "endTime",
-        alias = "end_time",
+        rename = "end_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub end_time: ::buffa::MessageField<
@@ -21646,8 +21462,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 8: `last_seconds`
     #[serde(
-        rename = "lastSeconds",
-        alias = "last_seconds",
+        rename = "last_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -21656,8 +21471,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 5: `bucket_width_seconds`
     #[serde(
-        rename = "bucketWidthSeconds",
-        alias = "bucket_width_seconds",
+        rename = "bucket_width_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -21666,8 +21480,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 6: `request_limit`
     #[serde(
-        rename = "requestLimit",
-        alias = "request_limit",
+        rename = "request_limit",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -21676,8 +21489,7 @@ pub struct QueryHttpTrafficRequest {
     ///
     /// Field 7: `page_token`
     #[serde(
-        rename = "pageToken",
-        alias = "page_token",
+        rename = "page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -22010,8 +21822,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 1: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -22020,8 +21831,7 @@ pub struct QueryHttpTrafficResponse {
     >,
     /// Field 2: `end_time`
     #[serde(
-        rename = "endTime",
-        alias = "end_time",
+        rename = "end_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub end_time: ::buffa::MessageField<
@@ -22032,8 +21842,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 8: `oldest_kept_time`
     #[serde(
-        rename = "oldestKeptTime",
-        alias = "oldest_kept_time",
+        rename = "oldest_kept_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub oldest_kept_time: ::buffa::MessageField<
@@ -22062,8 +21871,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 5: `top_paths`
     #[serde(
-        rename = "topPaths",
-        alias = "top_paths",
+        rename = "top_paths",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
@@ -22073,8 +21881,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 9: `newest_sequence`
     #[serde(
-        rename = "newestSequence",
-        alias = "newest_sequence",
+        rename = "newest_sequence",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -22090,8 +21897,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 7: `next_page_token`
     #[serde(
-        rename = "nextPageToken",
-        alias = "next_page_token",
+        rename = "next_page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub next_page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -22101,8 +21907,7 @@ pub struct QueryHttpTrafficResponse {
     ///
     /// Field 10: `tail_sequence`
     #[serde(
-        rename = "tailSequence",
-        alias = "tail_sequence",
+        rename = "tail_sequence",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -22499,8 +22304,7 @@ pub const __QUERY_HTTP_TRAFFIC_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAn
 pub struct HttpTrafficBucket {
     /// Field 1: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -22685,8 +22489,7 @@ pub struct HttpPathTraffic {
     ///
     /// Field 2: `path_pattern`
     #[serde(
-        rename = "pathPattern",
-        alias = "path_pattern",
+        rename = "path_pattern",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub path_pattern: ::core::option::Option<::buffa::alloc::string::String>,
@@ -22905,8 +22708,7 @@ pub struct HttpRequest {
     ///
     /// Field 2: `finish_time`
     #[serde(
-        rename = "finishTime",
-        alias = "finish_time",
+        rename = "finish_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub finish_time: ::buffa::MessageField<
@@ -22926,8 +22728,7 @@ pub struct HttpRequest {
     pub path: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 6: `path_pattern`
     #[serde(
-        rename = "pathPattern",
-        alias = "path_pattern",
+        rename = "path_pattern",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub path_pattern: ::core::option::Option<::buffa::alloc::string::String>,
@@ -22935,8 +22736,7 @@ pub struct HttpRequest {
     ///
     /// Field 7: `route_path`
     #[serde(
-        rename = "routePath",
-        alias = "route_path",
+        rename = "route_path",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub route_path: ::core::option::Option<::buffa::alloc::string::String>,
@@ -22957,16 +22757,14 @@ pub struct HttpRequest {
     ///
     /// Field 10: `status_code`
     #[serde(
-        rename = "statusCode",
-        alias = "status_code",
+        rename = "status_code",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub status_code: ::core::option::Option<u32>,
     /// Field 11: `response_size_bytes`
     #[serde(
-        rename = "responseSizeBytes",
-        alias = "response_size_bytes",
+        rename = "response_size_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -22975,8 +22773,7 @@ pub struct HttpRequest {
     ///
     /// Field 12: `duration_ms`
     #[serde(
-        rename = "durationMs",
-        alias = "duration_ms",
+        rename = "duration_ms",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -22985,16 +22782,14 @@ pub struct HttpRequest {
     ///
     /// Field 13: `service_duration_ms`
     #[serde(
-        rename = "serviceDurationMs",
-        alias = "service_duration_ms",
+        rename = "service_duration_ms",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub service_duration_ms: ::core::option::Option<u32>,
     /// Field 14: `client_ip_address`
     #[serde(
-        rename = "clientIpAddress",
-        alias = "client_ip_address",
+        rename = "client_ip_address",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub client_ip_address: ::core::option::Option<::buffa::alloc::string::String>,
@@ -23002,8 +22797,7 @@ pub struct HttpRequest {
     ///
     /// Field 15: `user_agent`
     #[serde(
-        rename = "userAgent",
-        alias = "user_agent",
+        rename = "user_agent",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub user_agent: ::core::option::Option<::buffa::alloc::string::String>,
@@ -23537,8 +23331,7 @@ pub struct ContainerLogFilter {
     ///
     /// Field 3: `text_contains`
     #[serde(
-        rename = "textContains",
-        alias = "text_contains",
+        rename = "text_contains",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub text_contains: ::core::option::Option<::buffa::alloc::string::String>,
@@ -23735,8 +23528,7 @@ pub const __CONTAINER_LOG_FILTER_JSON_ANY: ::buffa::type_registry::JsonAnyEntry 
 pub struct QueryContainerLogsRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -23753,8 +23545,7 @@ pub struct QueryContainerLogsRequest {
     ///
     /// Field 3: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -23765,8 +23556,7 @@ pub struct QueryContainerLogsRequest {
     ///
     /// Field 4: `end_time`
     #[serde(
-        rename = "endTime",
-        alias = "end_time",
+        rename = "end_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub end_time: ::buffa::MessageField<
@@ -23777,8 +23567,7 @@ pub struct QueryContainerLogsRequest {
     ///
     /// Field 8: `last_seconds`
     #[serde(
-        rename = "lastSeconds",
-        alias = "last_seconds",
+        rename = "last_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -23796,8 +23585,7 @@ pub struct QueryContainerLogsRequest {
     ///
     /// Field 6: `from_start`
     #[serde(
-        rename = "fromStart",
-        alias = "from_start",
+        rename = "from_start",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub from_start: ::core::option::Option<bool>,
@@ -23805,8 +23593,7 @@ pub struct QueryContainerLogsRequest {
     ///
     /// Field 7: `page_token`
     #[serde(
-        rename = "pageToken",
-        alias = "page_token",
+        rename = "page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24139,8 +23926,7 @@ pub struct QueryContainerLogsResponse {
     ///
     /// Field 4: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -24149,8 +23935,7 @@ pub struct QueryContainerLogsResponse {
     >,
     /// Field 5: `end_time`
     #[serde(
-        rename = "endTime",
-        alias = "end_time",
+        rename = "end_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub end_time: ::buffa::MessageField<
@@ -24162,8 +23947,7 @@ pub struct QueryContainerLogsResponse {
     ///
     /// Field 6: `oldest_kept_time`
     #[serde(
-        rename = "oldestKeptTime",
-        alias = "oldest_kept_time",
+        rename = "oldest_kept_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub oldest_kept_time: ::buffa::MessageField<
@@ -24181,8 +23965,7 @@ pub struct QueryContainerLogsResponse {
     ///
     /// Field 2: `next_page_token`
     #[serde(
-        rename = "nextPageToken",
-        alias = "next_page_token",
+        rename = "next_page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub next_page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24191,8 +23974,7 @@ pub struct QueryContainerLogsResponse {
     ///
     /// Field 3: `tail_cursor`
     #[serde(
-        rename = "tailCursor",
-        alias = "tail_cursor",
+        rename = "tail_cursor",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub tail_cursor: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24726,8 +24508,7 @@ pub const __LOG_LINE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::t
 pub struct RunServiceCommandRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24752,8 +24533,7 @@ pub struct RunServiceCommandRequest {
     ///
     /// Field 5: `run_as_user`
     #[serde(
-        rename = "runAsUser",
-        alias = "run_as_user",
+        rename = "run_as_user",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub run_as_user: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24761,8 +24541,7 @@ pub struct RunServiceCommandRequest {
     ///
     /// Field 6: `working_directory`
     #[serde(
-        rename = "workingDirectory",
-        alias = "working_directory",
+        rename = "working_directory",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub working_directory: ::core::option::Option<::buffa::alloc::string::String>,
@@ -24771,8 +24550,7 @@ pub struct RunServiceCommandRequest {
     ///
     /// Field 7: `timeout_seconds`
     #[serde(
-        rename = "timeoutSeconds",
-        alias = "timeout_seconds",
+        rename = "timeout_seconds",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25074,8 +24852,7 @@ pub const __RUN_SERVICE_COMMAND_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAn
 pub struct RunServiceCommandResponse {
     /// Field 1: `exit_code`
     #[serde(
-        rename = "exitCode",
-        alias = "exit_code",
+        rename = "exit_code",
         with = "::buffa::json_helpers::opt_int32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25084,8 +24861,7 @@ pub struct RunServiceCommandResponse {
     ///
     /// Field 2: `timed_out`
     #[serde(
-        rename = "timedOut",
-        alias = "timed_out",
+        rename = "timed_out",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub timed_out: ::core::option::Option<bool>,
@@ -25103,8 +24879,7 @@ pub struct RunServiceCommandResponse {
     ///
     /// Field 5: `output_truncated`
     #[serde(
-        rename = "outputTruncated",
-        alias = "output_truncated",
+        rename = "output_truncated",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub output_truncated: ::core::option::Option<bool>,
@@ -25359,16 +25134,14 @@ pub struct FileEntry {
     ///
     /// Field 3: `size_bytes`
     #[serde(
-        rename = "sizeBytes",
-        alias = "size_bytes",
+        rename = "size_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub size_bytes: ::core::option::Option<u64>,
     /// Field 4: `modify_time`
     #[serde(
-        rename = "modifyTime",
-        alias = "modify_time",
+        rename = "modify_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub modify_time: ::buffa::MessageField<
@@ -25384,16 +25157,14 @@ pub struct FileEntry {
     ///
     /// Field 6: `owner_uid`
     #[serde(
-        rename = "ownerUid",
-        alias = "owner_uid",
+        rename = "owner_uid",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub owner_uid: ::core::option::Option<u32>,
     /// Field 7: `owner_gid`
     #[serde(
-        rename = "ownerGid",
-        alias = "owner_gid",
+        rename = "owner_gid",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25402,8 +25173,7 @@ pub struct FileEntry {
     ///
     /// Field 8: `symlink_target`
     #[serde(
-        rename = "symlinkTarget",
-        alias = "symlink_target",
+        rename = "symlink_target",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub symlink_target: ::core::option::Option<::buffa::alloc::string::String>,
@@ -25726,8 +25496,7 @@ pub const __FILE_ENTRY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa:
 pub struct ReadPathRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -25740,8 +25509,7 @@ pub struct ReadPathRequest {
     ///
     /// Field 6: `entry_limit`
     #[serde(
-        rename = "entryLimit",
-        alias = "entry_limit",
+        rename = "entry_limit",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25750,8 +25518,7 @@ pub struct ReadPathRequest {
     ///
     /// Field 7: `offset_bytes`
     #[serde(
-        rename = "offsetBytes",
-        alias = "offset_bytes",
+        rename = "offset_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25760,8 +25527,7 @@ pub struct ReadPathRequest {
     ///
     /// Field 8: `length_bytes`
     #[serde(
-        rename = "lengthBytes",
-        alias = "length_bytes",
+        rename = "length_bytes",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -25770,8 +25536,7 @@ pub struct ReadPathRequest {
     ///
     /// Field 9: `entry_page_token`
     #[serde(
-        rename = "entryPageToken",
-        alias = "entry_page_token",
+        rename = "entry_page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub entry_page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -26104,7 +25869,7 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "projectId" | "project_id" => {
+                        "project_id" => {
                             __f_project_id = Some(
                                 map
                                     .next_value::<
@@ -26120,7 +25885,7 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                                     >()?,
                             );
                         }
-                        "entryLimit" | "entry_limit" => {
+                        "entry_limit" => {
                             __f_entry_limit = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -26138,7 +25903,7 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "offsetBytes" | "offset_bytes" => {
+                        "offset_bytes" => {
                             __f_offset_bytes = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -26156,7 +25921,7 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "lengthBytes" | "length_bytes" => {
+                        "length_bytes" => {
                             __f_length_bytes = Some({
                                 struct _S;
                                 impl<'de> ::serde::de::DeserializeSeed<'de> for _S {
@@ -26174,7 +25939,7 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                                 map.next_value_seed(_S)?
                             });
                         }
-                        "entryPageToken" | "entry_page_token" => {
+                        "entry_page_token" => {
                             __f_entry_page_token = Some(
                                 map
                                     .next_value::<
@@ -26328,8 +26093,7 @@ pub struct ReadPathResponse {
     ///
     /// Field 4: `entry_count`
     #[serde(
-        rename = "entryCount",
-        alias = "entry_count",
+        rename = "entry_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -26338,8 +26102,7 @@ pub struct ReadPathResponse {
     ///
     /// Field 8: `next_entry_page_token`
     #[serde(
-        rename = "nextEntryPageToken",
-        alias = "next_entry_page_token",
+        rename = "next_entry_page_token",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub next_entry_page_token: ::core::option::Option<::buffa::alloc::string::String>,
@@ -26358,8 +26121,7 @@ pub struct ReadPathResponse {
     ///
     /// Field 7: `next_offset_bytes`
     #[serde(
-        rename = "nextOffsetBytes",
-        alias = "next_offset_bytes",
+        rename = "next_offset_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -26369,8 +26131,7 @@ pub struct ReadPathResponse {
     ///
     /// Field 9: `deploy_id`
     #[serde(
-        rename = "deployId",
-        alias = "deploy_id",
+        rename = "deploy_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub deploy_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -26985,7 +26746,7 @@ impl<'de> ::serde::Deserialize<'de> for CreateTransferRequest {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "uploadArchive" | "upload_archive" => {
+                        "upload_archive" => {
                             let v: ::core::option::Option<ArchiveUpload> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -27009,7 +26770,7 @@ impl<'de> ::serde::Deserialize<'de> for CreateTransferRequest {
                                 );
                             }
                         }
-                        "uploadFile" | "upload_file" => {
+                        "upload_file" => {
                             let v: ::core::option::Option<FileUpload> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -27109,8 +26870,7 @@ pub struct ArchiveUpload {
     ///
     /// Field 1: `file_name`
     #[serde(
-        rename = "fileName",
-        alias = "file_name",
+        rename = "file_name",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub file_name: ::core::option::Option<::buffa::alloc::string::String>,
@@ -27250,8 +27010,7 @@ pub const __ARCHIVE_UPLOAD_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::bu
 pub struct FileUpload {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -27475,7 +27234,7 @@ impl<'de> ::serde::Deserialize<'de> for FileUpload {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "projectId" | "project_id" => {
+                        "project_id" => {
                             __f_project_id = Some(
                                 map
                                     .next_value::<
@@ -27593,8 +27352,7 @@ pub mod file_upload {
 pub struct PathDownload {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -27818,7 +27576,7 @@ impl<'de> ::serde::Deserialize<'de> for PathDownload {
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
-                        "projectId" | "project_id" => {
+                        "project_id" => {
                             __f_project_id = Some(
                                 map
                                     .next_value::<
@@ -27942,8 +27700,7 @@ pub struct CreateTransferResponse {
     ///
     /// Field 2: `http_method`
     #[serde(
-        rename = "httpMethod",
-        alias = "http_method",
+        rename = "http_method",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub http_method: ::core::option::Option<::buffa::alloc::string::String>,
@@ -27951,8 +27708,7 @@ pub struct CreateTransferResponse {
     ///
     /// Field 3: `expire_time`
     #[serde(
-        rename = "expireTime",
-        alias = "expire_time",
+        rename = "expire_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub expire_time: ::buffa::MessageField<
@@ -27973,8 +27729,7 @@ pub struct CreateTransferResponse {
     ///
     /// Field 5: `upload_id`
     #[serde(
-        rename = "uploadId",
-        alias = "upload_id",
+        rename = "upload_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub upload_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -27991,11 +27746,20 @@ pub struct CreateTransferResponse {
     ///
     /// Field 7: `file_name`
     #[serde(
-        rename = "fileName",
-        alias = "file_name",
+        rename = "file_name",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub file_name: ::core::option::Option<::buffa::alloc::string::String>,
+    /// upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+    /// directory. A program that packs the directory itself leaves out the same.
+    ///
+    /// Field 8: `exclude_names`
+    #[serde(
+        rename = "exclude_names",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub exclude_names: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -28010,6 +27774,7 @@ impl ::core::fmt::Debug for CreateTransferResponse {
             .field("upload_id", &self.upload_id)
             .field("replaces", &self.replaces)
             .field("file_name", &self.file_name)
+            .field("exclude_names", &self.exclude_names)
             .finish()
     }
 }
@@ -28122,6 +27887,9 @@ impl ::buffa::Message for CreateTransferResponse {
         if let Some(ref v) = self.file_name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        for v in &self.exclude_names {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -28157,6 +27925,9 @@ impl ::buffa::Message for CreateTransferResponse {
         }
         if let Some(ref v) = self.file_name {
             ::buffa::types::put_string_field(7u32, v, buf);
+        }
+        for v in &self.exclude_names {
+            ::buffa::types::put_string_field(8u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -28247,6 +28018,17 @@ impl ::buffa::Message for CreateTransferResponse {
                     buf,
                 )?;
             }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.exclude_names.push(__elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -28262,6 +28044,7 @@ impl ::buffa::Message for CreateTransferResponse {
         self.upload_id = ::core::option::Option::None;
         self.replaces = ::core::option::Option::None;
         self.file_name = ::core::option::Option::None;
+        self.exclude_names.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -28302,8 +28085,7 @@ pub struct GetUploadRequest {
     ///
     /// Field 1: `upload_id`
     #[serde(
-        rename = "uploadId",
-        alias = "upload_id",
+        rename = "upload_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub upload_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -28445,8 +28227,7 @@ pub struct GetUploadResponse {
     ///
     /// Field 1: `file_name`
     #[serde(
-        rename = "fileName",
-        alias = "file_name",
+        rename = "file_name",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub file_name: ::core::option::Option<::buffa::alloc::string::String>,
@@ -28454,8 +28235,7 @@ pub struct GetUploadResponse {
     ///
     /// Field 2: `file_count`
     #[serde(
-        rename = "fileCount",
-        alias = "file_count",
+        rename = "file_count",
         with = "::buffa::json_helpers::opt_uint32",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -28464,8 +28244,7 @@ pub struct GetUploadResponse {
     ///
     /// Field 3: `unpacked_bytes`
     #[serde(
-        rename = "unpackedBytes",
-        alias = "unpacked_bytes",
+        rename = "unpacked_bytes",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -28476,8 +28255,7 @@ pub struct GetUploadResponse {
     ///
     /// Field 4: `compose_source`
     #[serde(
-        rename = "composeSource",
-        alias = "compose_source",
+        rename = "compose_source",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub compose_source: ::core::option::Option<::buffa::alloc::string::String>,
@@ -28485,8 +28263,7 @@ pub struct GetUploadResponse {
     ///
     /// Field 5: `env_file`
     #[serde(
-        rename = "envFile",
-        alias = "env_file",
+        rename = "env_file",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub env_file: ::core::option::Option<::buffa::alloc::string::String>,
@@ -28784,8 +28561,7 @@ pub struct ProjectBusy {
     ///
     /// Field 1: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -28802,8 +28578,7 @@ pub struct ProjectBusy {
     ///
     /// Field 3: `start_time`
     #[serde(
-        rename = "startTime",
-        alias = "start_time",
+        rename = "start_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub start_time: ::buffa::MessageField<
@@ -29386,8 +29161,7 @@ pub const __NO_MACHINE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa:
 pub struct WatchOperationRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -29395,8 +29169,7 @@ pub struct WatchOperationRequest {
     ///
     /// Field 2: `operation_id`
     #[serde(
-        rename = "operationId",
-        alias = "operation_id",
+        rename = "operation_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -29785,7 +29558,7 @@ impl<'de> ::serde::Deserialize<'de> for WatchOperationResponse {
                                 );
                             }
                         }
-                        "finishedOperation" | "finished_operation" => {
+                        "finished_operation" => {
                             let v: ::core::option::Option<Operation> = map
                                 .next_value_seed(
                                     ::buffa::json_helpers::NullableDeserializeSeed(
@@ -29856,8 +29629,7 @@ pub mod watch_operation_response {
 pub struct TailContainerLogsRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -29874,8 +29646,7 @@ pub struct TailContainerLogsRequest {
     ///
     /// Field 3: `after_cursor`
     #[serde(
-        rename = "afterCursor",
-        alias = "after_cursor",
+        rename = "after_cursor",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub after_cursor: ::core::option::Option<::buffa::alloc::string::String>,
@@ -30250,8 +30021,7 @@ pub const __TAIL_CONTAINER_LOGS_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonA
 pub struct TailHttpTrafficRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -30268,8 +30038,7 @@ pub struct TailHttpTrafficRequest {
     ///
     /// Field 3: `after_sequence`
     #[serde(
-        rename = "afterSequence",
-        alias = "after_sequence",
+        rename = "after_sequence",
         with = "::buffa::json_helpers::opt_uint64",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
@@ -30604,8 +30373,7 @@ pub const __TAIL_HTTP_TRAFFIC_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAny
 pub struct OpenTerminalRequest {
     /// Field 1: `project_id`
     #[serde(
-        rename = "projectId",
-        alias = "project_id",
+        rename = "project_id",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
@@ -30633,8 +30401,7 @@ pub struct OpenTerminalRequest {
     ///
     /// Field 5: `run_as_user`
     #[serde(
-        rename = "runAsUser",
-        alias = "run_as_user",
+        rename = "run_as_user",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub run_as_user: ::core::option::Option<::buffa::alloc::string::String>,
@@ -30642,8 +30409,7 @@ pub struct OpenTerminalRequest {
     ///
     /// Field 6: `working_directory`
     #[serde(
-        rename = "workingDirectory",
-        alias = "working_directory",
+        rename = "working_directory",
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub working_directory: ::core::option::Option<::buffa::alloc::string::String>,
@@ -31096,8 +30862,7 @@ pub struct OpenTerminalResponse {
     ///
     /// Field 2: `expire_time`
     #[serde(
-        rename = "expireTime",
-        alias = "expire_time",
+        rename = "expire_time",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub expire_time: ::buffa::MessageField<

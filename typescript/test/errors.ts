@@ -4,7 +4,7 @@
 // protocol, each error detail, and the failures that are not the server's.
 import assert from "node:assert/strict";
 import * as w from "../dist/wire/v1/panel_pb.js";
-import { check, detail, detailsOf, fake, refusal, rejection, token } from "./harness.ts";
+import { check, detail, detailsOf, fake, first, refusal, rejection, token } from "./harness.ts";
 import { PethostError, type Pethost } from "pethost";
 
 const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
@@ -18,7 +18,7 @@ check("GetMachine: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/GetMachine");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -32,7 +32,7 @@ check("RunMachineAction: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/RunMachineAction");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -46,7 +46,7 @@ check("GetProject: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/GetProject");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -60,7 +60,7 @@ check("CreateProject: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/CreateProject");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -74,7 +74,7 @@ check("DeployProject: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/DeployProject");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -88,7 +88,7 @@ check("ListCommits: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/ListCommits");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -102,7 +102,7 @@ check("RunProjectAction: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/RunProjectAction");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -116,7 +116,7 @@ check("GetOperation: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/GetOperation");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -130,7 +130,7 @@ check("QueryHttpTraffic: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/QueryHttpTraffic");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -144,7 +144,7 @@ check("QueryContainerLogs: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/QueryContainerLogs");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -158,7 +158,7 @@ check("RunServiceCommand: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/RunServiceCommand");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -172,7 +172,7 @@ check("ReadPath: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/ReadPath");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -186,8 +186,50 @@ check("CreateTransfer: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/CreateTransfer");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
+  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
+});
+
+check("WatchOperation: its address and headers", async () => {
+  const { api, calls } = fake();
+  await first(api.watchOperation({}));
+
+  assert.equal(calls.length, 1);
+  const [call] = calls;
+  assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/WatchOperation");
+  assert.equal(call?.method, "POST");
+  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
+  assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
+  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
+});
+
+check("TailContainerLogs: its address and headers", async () => {
+  const { api, calls } = fake();
+  await first(api.tailContainerLogs({}));
+
+  assert.equal(calls.length, 1);
+  const [call] = calls;
+  assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/TailContainerLogs");
+  assert.equal(call?.method, "POST");
+  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
+  assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
+  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
+});
+
+check("TailHttpTraffic: its address and headers", async () => {
+  const { api, calls } = fake();
+  await first(api.tailHttpTraffic({}));
+
+  assert.equal(calls.length, 1);
+  const [call] = calls;
+  assert.equal(call?.url, "https://console.pethost.dev/pethost.panel.v1.PanelService/TailHttpTraffic");
+  assert.equal(call?.method, "POST");
+  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.1.1");
+  assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
 

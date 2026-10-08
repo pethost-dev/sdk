@@ -251,7 +251,7 @@ class PanelService(Protocol):
     def watch_operation(self, request: WatchOperationRequest, ctx: RequestContext[WatchOperationRequest, WatchOperationResponse], /) -> AsyncIterator[WatchOperationResponse]:
         """
         Streams an operation's log from its start, then follows it; the last message is the
-        finished operation. Agents: GetOperation.
+        finished operation. Without a stream: GetOperation.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -259,14 +259,14 @@ class PanelService(Protocol):
         """
         Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
         the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-        with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+        with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
     def tail_http_traffic(self, request: TailHttpTrafficRequest, ctx: RequestContext[TailHttpTrafficRequest, TailHttpTrafficResponse], /) -> AsyncIterator[TailHttpTrafficResponse]:
         """
-        Streams HTTP requests after a sequence number, then new ones as they finish.
-        Agents: QueryHttpTraffic.
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: QueryHttpTraffic.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -982,7 +982,7 @@ class PanelServiceClient(ConnectClient):
     ) -> AsyncIterator[WatchOperationResponse]:
         """
         Streams an operation's log from its start, then follows it; the last message is the
-        finished operation. Agents: GetOperation.
+        finished operation. Without a stream: GetOperation.
         """
         return self.execute_server_stream(
             request=request,
@@ -1007,7 +1007,7 @@ class PanelServiceClient(ConnectClient):
         """
         Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
         the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-        with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+        with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
         """
         return self.execute_server_stream(
             request=request,
@@ -1030,8 +1030,8 @@ class PanelServiceClient(ConnectClient):
         timeout_ms: int | None = None,
     ) -> AsyncIterator[TailHttpTrafficResponse]:
         """
-        Streams HTTP requests after a sequence number, then new ones as they finish.
-        Agents: QueryHttpTraffic.
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: QueryHttpTraffic.
         """
         return self.execute_server_stream(
             request=request,
@@ -1270,7 +1270,7 @@ class PanelServiceSync(Protocol):
     def watch_operation(self, request: WatchOperationRequest, ctx: RequestContext[WatchOperationRequest, WatchOperationResponse], /) -> Iterator[WatchOperationResponse]:
         """
         Streams an operation's log from its start, then follows it; the last message is the
-        finished operation. Agents: GetOperation.
+        finished operation. Without a stream: GetOperation.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1278,14 +1278,14 @@ class PanelServiceSync(Protocol):
         """
         Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
         the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-        with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+        with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
     def tail_http_traffic(self, request: TailHttpTrafficRequest, ctx: RequestContext[TailHttpTrafficRequest, TailHttpTrafficResponse], /) -> Iterator[TailHttpTrafficResponse]:
         """
-        Streams HTTP requests after a sequence number, then new ones as they finish.
-        Agents: QueryHttpTraffic.
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: QueryHttpTraffic.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1984,7 +1984,7 @@ class PanelServiceClientSync(ConnectClientSync):
     ) -> Iterator[WatchOperationResponse]:
         """
         Streams an operation's log from its start, then follows it; the last message is the
-        finished operation. Agents: GetOperation.
+        finished operation. Without a stream: GetOperation.
         """
         return self.execute_server_stream(
             request=request,
@@ -2008,7 +2008,7 @@ class PanelServiceClientSync(ConnectClientSync):
         """
         Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
         the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-        with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+        with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
         """
         return self.execute_server_stream(
             request=request,
@@ -2030,8 +2030,8 @@ class PanelServiceClientSync(ConnectClientSync):
         timeout_ms: int | None = None,
     ) -> Iterator[TailHttpTrafficResponse]:
         """
-        Streams HTTP requests after a sequence number, then new ones as they finish.
-        Agents: QueryHttpTraffic.
+        Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+        stream: QueryHttpTraffic.
         """
         return self.execute_server_stream(
             request=request,

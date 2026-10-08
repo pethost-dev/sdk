@@ -119,7 +119,24 @@ optional<p.ArchiveUploadInput>({ fileName: true });
 accepts<p.FileUploadInput>({ service: "service", volume: "volume" });
 // @ts-expect-error two members of pethost.panel.v1.PathDownload.root
 accepts<p.PathDownloadInput>({ service: "service", volume: "volume" });
-optional<p.CreateTransferResponse>({ url: false, httpMethod: false, expireTime: true, command: false, uploadId: false, replaces: false, fileName: false });
+optional<p.CreateTransferResponse>({ url: false, httpMethod: false, expireTime: true, command: false, uploadId: false, replaces: false, fileName: false, excludeNames: false });
 optional<p.ProjectBusy>({ operationId: false, kind: true, startTime: true });
 optional<p.NoMachine>({ reason: true, url: false });
+optional<p.WatchOperationRequest>({ projectId: true, operationId: true });
+{
+  const read = a<p.WatchOperationResponse>();
+  if (read.message === "log") accepts<p.OperationLogLine>(read.log);
+  // @ts-expect-error log is there only when message says so
+  accepts<p.OperationLogLine>(read.log);
+}
+{
+  const read = a<p.WatchOperationResponse>();
+  if (read.message === "finishedOperation") accepts<p.Operation>(read.finishedOperation);
+  // @ts-expect-error finishedOperation is there only when message says so
+  accepts<p.Operation>(read.finishedOperation);
+}
+optional<p.TailContainerLogsRequest>({ projectId: true, filter: true, afterCursor: true });
+optional<p.TailContainerLogsResponse>({ line: true, cursor: false });
+optional<p.TailHttpTrafficRequest>({ projectId: true, filter: true, afterSequence: true });
+optional<p.TailHttpTrafficResponse>({ request: true });
 

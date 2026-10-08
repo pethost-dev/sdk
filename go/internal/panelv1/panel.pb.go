@@ -7,7 +7,8 @@
 // The header below is the MCP server's instructions; an RPC marked `(mcp_tool)` is also an MCP
 // tool of the same name: its request is the input, its response the output, its comment the
 // description. Some agents see only the instructions' first 500 characters: the first paragraph
-// stands alone. The other RPCs serve the web panel; an agent uses what is named beside each.
+// stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
+// too, as methods of every SDK; an agent uses what is named beside each.
 
 // Pethost is the user's own hosting: their account rents one dedicated Linux machine that runs
 // Docker Compose projects. Use it whenever the user wants to deploy, host, publish or put online
@@ -17793,18 +17794,19 @@ func (*pathDownload_Service) isPathDownload_Root() {}
 func (*pathDownload_Volume) isPathDownload_Root() {}
 
 type CreateTransferResponse struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Url         *string                `protobuf:"bytes,1,opt,name=url"`
-	xxx_hidden_HttpMethod  *string                `protobuf:"bytes,2,opt,name=http_method,json=httpMethod"`
-	xxx_hidden_ExpireTime  *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expire_time,json=expireTime"`
-	xxx_hidden_Command     *string                `protobuf:"bytes,4,opt,name=command"`
-	xxx_hidden_UploadId    *string                `protobuf:"bytes,5,opt,name=upload_id,json=uploadId"`
-	xxx_hidden_Replaces    bool                   `protobuf:"varint,6,opt,name=replaces"`
-	xxx_hidden_FileName    *string                `protobuf:"bytes,7,opt,name=file_name,json=fileName"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state                   protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Url          *string                `protobuf:"bytes,1,opt,name=url"`
+	xxx_hidden_HttpMethod   *string                `protobuf:"bytes,2,opt,name=http_method,json=httpMethod"`
+	xxx_hidden_ExpireTime   *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expire_time,json=expireTime"`
+	xxx_hidden_Command      *string                `protobuf:"bytes,4,opt,name=command"`
+	xxx_hidden_UploadId     *string                `protobuf:"bytes,5,opt,name=upload_id,json=uploadId"`
+	xxx_hidden_Replaces     bool                   `protobuf:"varint,6,opt,name=replaces"`
+	xxx_hidden_FileName     *string                `protobuf:"bytes,7,opt,name=file_name,json=fileName"`
+	xxx_hidden_ExcludeNames []string               `protobuf:"bytes,8,rep,name=exclude_names,json=excludeNames"`
+	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
+	XXX_presence            [1]uint32
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *CreateTransferResponse) Reset() {
@@ -17896,14 +17898,21 @@ func (x *CreateTransferResponse) GetFileName() string {
 	return ""
 }
 
+func (x *CreateTransferResponse) GetExcludeNames() []string {
+	if x != nil {
+		return x.xxx_hidden_ExcludeNames
+	}
+	return nil
+}
+
 func (x *CreateTransferResponse) SetUrl(v string) {
 	x.xxx_hidden_Url = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *CreateTransferResponse) SetHttpMethod(v string) {
 	x.xxx_hidden_HttpMethod = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
 }
 
 func (x *CreateTransferResponse) SetExpireTime(v *timestamppb.Timestamp) {
@@ -17912,22 +17921,26 @@ func (x *CreateTransferResponse) SetExpireTime(v *timestamppb.Timestamp) {
 
 func (x *CreateTransferResponse) SetCommand(v string) {
 	x.xxx_hidden_Command = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
 }
 
 func (x *CreateTransferResponse) SetUploadId(v string) {
 	x.xxx_hidden_UploadId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
 }
 
 func (x *CreateTransferResponse) SetReplaces(v bool) {
 	x.xxx_hidden_Replaces = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *CreateTransferResponse) SetFileName(v string) {
 	x.xxx_hidden_FileName = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *CreateTransferResponse) SetExcludeNames(v []string) {
+	x.xxx_hidden_ExcludeNames = v
 }
 
 func (x *CreateTransferResponse) HasUrl() bool {
@@ -18032,6 +18045,9 @@ type CreateTransferResponse_builder struct {
 	// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
 	// after the project and its service or volume. Empty for an upload.
 	FileName *string
+	// upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+	// directory. A program that packs the directory itself leaves out the same.
+	ExcludeNames []string
 }
 
 func (b0 CreateTransferResponse_builder) Build() *CreateTransferResponse {
@@ -18039,30 +18055,31 @@ func (b0 CreateTransferResponse_builder) Build() *CreateTransferResponse {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Url != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_Url = b.Url
 	}
 	if b.HttpMethod != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
 		x.xxx_hidden_HttpMethod = b.HttpMethod
 	}
 	x.xxx_hidden_ExpireTime = b.ExpireTime
 	if b.Command != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
 		x.xxx_hidden_Command = b.Command
 	}
 	if b.UploadId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
 		x.xxx_hidden_UploadId = b.UploadId
 	}
 	if b.Replaces != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_Replaces = *b.Replaces
 	}
 	if b.FileName != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_FileName = b.FileName
 	}
+	x.xxx_hidden_ExcludeNames = b.ExcludeNames
 	return m0
 }
 
@@ -20474,7 +20491,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\aservice\x18\x02 \x01(\tH\x00R\aservice\x12\x18\n" +
 	"\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n" +
 	"\x04path\x18\x05 \x01(\tR\x04pathB\x06\n" +
-	"\x04root\"\xf8\x01\n" +
+	"\x04root\"\x9d\x02\n" +
 	"\x16CreateTransferResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x1f\n" +
 	"\vhttp_method\x18\x02 \x01(\tR\n" +
@@ -20484,7 +20501,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\acommand\x18\x04 \x01(\tR\acommand\x12\x1b\n" +
 	"\tupload_id\x18\x05 \x01(\tR\buploadId\x12\x1a\n" +
 	"\breplaces\x18\x06 \x01(\bR\breplaces\x12\x1b\n" +
-	"\tfile_name\x18\a \x01(\tR\bfileName\"/\n" +
+	"\tfile_name\x18\a \x01(\tR\bfileName\x12#\n" +
+	"\rexclude_names\x18\b \x03(\tR\fexcludeNames\"/\n" +
 	"\x10GetUploadRequest\x12\x1b\n" +
 	"\tupload_id\x18\x01 \x01(\tR\buploadId\"\xf9\x01\n" +
 	"\x11GetUploadResponse\x12\x1b\n" +
@@ -20641,7 +20659,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x9c\x11\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xf0\x11\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
@@ -20659,12 +20677,15 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\fOpenTerminal\x12%.pethost.panel.v1.OpenTerminalRequest\x1a&.pethost.panel.v1.OpenTerminalResponse\x12t\n" +
 	"\bReadPath\x12!.pethost.panel.v1.ReadPathRequest\x1a\".pethost.panel.v1.ReadPathResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18Read a file or directory\x12\x86\x01\n" +
 	"\x0eCreateTransfer\x12'.pethost.panel.v1.CreateTransferRequest\x1a(.pethost.panel.v1.CreateTransferResponse\"!\x8a\xb5\x18\x1d\b\x01\x12\x19Upload or download a file\x12Y\n" +
-	"\tGetUpload\x12\".pethost.panel.v1.GetUploadRequest\x1a#.pethost.panel.v1.GetUploadResponse\"\x03\x90\x02\x01\x12e\n" +
-	"\x0eWatchOperation\x12'.pethost.panel.v1.WatchOperationRequest\x1a(.pethost.panel.v1.WatchOperationResponse0\x01\x12n\n" +
-	"\x11TailContainerLogs\x12*.pethost.panel.v1.TailContainerLogsRequest\x1a+.pethost.panel.v1.TailContainerLogsResponse0\x01\x12h\n" +
-	"\x0fTailHttpTraffic\x12(.pethost.panel.v1.TailHttpTrafficRequest\x1a).pethost.panel.v1.TailHttpTrafficResponse0\x01B\xba\x01\n" +
+	"\tGetUpload\x12\".pethost.panel.v1.GetUploadRequest\x1a#.pethost.panel.v1.GetUploadResponse\"\x03\x90\x02\x01\x12\x7f\n" +
+	"\x0eWatchOperation\x12'.pethost.panel.v1.WatchOperationRequest\x1a(.pethost.panel.v1.WatchOperationResponse\"\x18\x9a\xb5\x18\x14\n" +
+	"\x12Watch an operation0\x01\x12\x8b\x01\n" +
+	"\x11TailContainerLogs\x12*.pethost.panel.v1.TailContainerLogsRequest\x1a+.pethost.panel.v1.TailContainerLogsResponse\"\x1b\x9a\xb5\x18\x17\n" +
+	"\x15Follow container logs0\x01\x12\x83\x01\n" +
+	"\x0fTailHttpTraffic\x12(.pethost.panel.v1.TailHttpTrafficRequest\x1a).pethost.panel.v1.TailHttpTrafficResponse\"\x19\x9a\xb5\x18\x15\n" +
+	"\x13Follow HTTP traffic0\x01B\xba\x01\n" +
 	"\x14com.pethost.panel.v1B\n" +
-	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.proto"
+	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
 var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
 var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 92)

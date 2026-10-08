@@ -4,6 +4,7 @@ package pethost
 
 import (
 	"context"
+	"iter"
 
 	"github.com/pethost-dev/sdk/go/internal/panelv1/panelv1connect"
 )
@@ -12,6 +13,10 @@ import (
 // account's machine. A method returns when its call ends: bound it with the context. A nil
 // request is the empty one, and the response is nil exactly when the error is not. A Client
 // is safe for concurrent use.
+//
+// A stream's method, such as [Client.WatchOperation], returns at once what to range over: its
+// call is made when the loop starts, and lasts as long as the loop. A second loop over it is a
+// second call, with the same request.
 type Client struct {
 	wire panelv1connect.PanelServiceClient
 }
@@ -293,4 +298,66 @@ func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequ
 		return nil, fromWireError(err)
 	}
 	return new(fromWireCreateTransferResponse(response)), nil
+}
+
+// WatchOperation: watch an operation, as a stream.
+//
+// Streams an operation's log from its start, then follows it; the last message is the finished
+// operation. Without a stream: [Client.GetOperation].
+//
+// Range over what it returns: the call is made when the loop starts, and each response comes
+// as the API sends it. A stream that fails ends the loop with the error, once, beside a nil
+// response; one that ends by itself just ends the loop. Leaving the loop ends the call;
+// cancelling ctx ends it too, and the loop with a [CodeCanceled] error.
+//
+//	for response, err := range client.WatchOperation(ctx, request) {
+//		if err != nil {
+//			return err
+//		}
+//		// Use response.
+//	}
+func (c *Client) WatchOperation(ctx context.Context, request *WatchOperationRequest) iter.Seq2[*WatchOperationResponse, error] {
+	return responses(ctx, c.wire.WatchOperation, toWireWatchOperationRequest(orZero(request)), fromWireWatchOperationResponse)
+}
+
+// TailContainerLogs: follow container logs, as a stream.
+//
+// Streams container output after a cursor, then new lines as they are written.
+// [CodeOutOfRange] = the machine no longer keeps the cursor's line, so lines after it may be
+// gone too: start over with [Client.QueryContainerLogs] and tail after its
+// [QueryContainerLogsResponse.TailCursor]. Without a stream: [Client.QueryContainerLogs].
+//
+// Range over what it returns: the call is made when the loop starts, and each response comes
+// as the API sends it. A stream that fails ends the loop with the error, once, beside a nil
+// response; one that ends by itself just ends the loop. Leaving the loop ends the call;
+// cancelling ctx ends it too, and the loop with a [CodeCanceled] error.
+//
+//	for response, err := range client.TailContainerLogs(ctx, request) {
+//		if err != nil {
+//			return err
+//		}
+//		// Use response.
+//	}
+func (c *Client) TailContainerLogs(ctx context.Context, request *TailContainerLogsRequest) iter.Seq2[*TailContainerLogsResponse, error] {
+	return responses(ctx, c.wire.TailContainerLogs, toWireTailContainerLogsRequest(orZero(request)), fromWireTailContainerLogsResponse)
+}
+
+// TailHTTPTraffic: follow HTTP traffic, as a stream.
+//
+// Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+// stream: [Client.QueryHTTPTraffic].
+//
+// Range over what it returns: the call is made when the loop starts, and each response comes
+// as the API sends it. A stream that fails ends the loop with the error, once, beside a nil
+// response; one that ends by itself just ends the loop. Leaving the loop ends the call;
+// cancelling ctx ends it too, and the loop with a [CodeCanceled] error.
+//
+//	for response, err := range client.TailHTTPTraffic(ctx, request) {
+//		if err != nil {
+//			return err
+//		}
+//		// Use response.
+//	}
+func (c *Client) TailHTTPTraffic(ctx context.Context, request *TailHTTPTrafficRequest) iter.Seq2[*TailHTTPTrafficResponse, error] {
+	return responses(ctx, c.wire.TailHttpTraffic, toWireTailHTTPTrafficRequest(orZero(request)), fromWireTailHTTPTrafficResponse)
 }

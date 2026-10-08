@@ -65,6 +65,14 @@
 //!   to make one.
 //! - **A failed call is an [`Error`]**: its [`code`](Error::code) to branch on, its
 //!   [`message`](Error::message) for people, and what the API attached as [`ErrorDetail`].
+//! - **A stream is a [`ResponseStream`]**, which its method returns at once: its
+//!   [`next`](ResponseStream::next) is each response as the API sends it, then the [`Error`] of
+//!   a stream that failed, and dropping it ends the call. The crate does not call again by
+//!   itself: a response's cursor goes into the next call's request.
+//! - **JSON is the API's.** Every message and enum of [`types`], and a [`Timestamp`], is
+//!   `serde`'s `Serialize` and `Deserialize`: `serde_json::to_string(&response)` is the JSON
+//!   the API answers over HTTP, with the proto's field names, and reading refuses a field
+//!   this version does not know. [`types`] says the rest.
 //! - **Async, on Tokio.** Pages, retries and waiting are the caller's loops: a response's
 //!   `next_page_token` goes into the next request's `page_token`.
 //!
@@ -115,6 +123,8 @@
 mod client;
 mod convert;
 mod error;
+mod json;
+mod stream;
 mod timestamp;
 pub mod types;
 
@@ -132,4 +142,5 @@ pub(crate) mod connect;
 
 pub use client::Client;
 pub use error::{Error, ErrorCode, ErrorDetail};
+pub use stream::ResponseStream;
 pub use timestamp::Timestamp;

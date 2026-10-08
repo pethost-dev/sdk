@@ -80,6 +80,18 @@ func (f *fake) CreateTransfer(_ context.Context, request *panelv1.CreateTransfer
 	return answer[*panelv1.CreateTransferResponse](&f.exchange, request)
 }
 
+func (f *fake) WatchOperation(ctx context.Context, request *panelv1.WatchOperationRequest, stream panelv1connect.PanelServiceWatchOperationServerStream) error {
+	return answerStream(ctx, &f.exchange, request, stream.Send)
+}
+
+func (f *fake) TailContainerLogs(ctx context.Context, request *panelv1.TailContainerLogsRequest, stream panelv1connect.PanelServiceTailContainerLogsServerStream) error {
+	return answerStream(ctx, &f.exchange, request, stream.Send)
+}
+
+func (f *fake) TailHttpTraffic(ctx context.Context, request *panelv1.TailHttpTrafficRequest, stream panelv1connect.PanelServiceTailHttpTrafficServerStream) error {
+	return answerStream(ctx, &f.exchange, request, stream.Send)
+}
+
 // calls are the package's methods.
 var calls = []call{
 	callOf("GetMachine", (*Client).GetMachine, sampleGetMachineRequest, sampleGetMachineResponse, &panelv1.GetMachineRequest{}, &panelv1.GetMachineResponse{}),
@@ -95,6 +107,9 @@ var calls = []call{
 	callOf("RunServiceCommand", (*Client).RunServiceCommand, sampleRunServiceCommandRequest, sampleRunServiceCommandResponse, &panelv1.RunServiceCommandRequest{}, &panelv1.RunServiceCommandResponse{}),
 	callOf("ReadPath", (*Client).ReadPath, sampleReadPathRequest, sampleReadPathResponse, &panelv1.ReadPathRequest{}, &panelv1.ReadPathResponse{}),
 	callOf("CreateTransfer", (*Client).CreateTransfer, sampleCreateTransferRequest, sampleCreateTransferResponse, &panelv1.CreateTransferRequest{}, &panelv1.CreateTransferResponse{}),
+	streamOf("WatchOperation", (*Client).WatchOperation, sampleWatchOperationRequest, sampleWatchOperationResponse, &panelv1.WatchOperationRequest{}, &panelv1.WatchOperationResponse{}),
+	streamOf("TailContainerLogs", (*Client).TailContainerLogs, sampleTailContainerLogsRequest, sampleTailContainerLogsResponse, &panelv1.TailContainerLogsRequest{}, &panelv1.TailContainerLogsResponse{}),
+	streamOf("TailHTTPTraffic", (*Client).TailHTTPTraffic, sampleTailHTTPTrafficRequest, sampleTailHTTPTrafficResponse, &panelv1.TailHttpTrafficRequest{}, &panelv1.TailHttpTrafficResponse{}),
 }
 
 // details are the error details.
@@ -107,87 +122,93 @@ var details = []detail{
 
 // shapes are the package's structs, each beside its wire message.
 var shapes = []shape{
-	{GetMachineRequest{}, &panelv1.GetMachineRequest{}},
-	{GetMachineResponse{}, &panelv1.GetMachineResponse{}},
-	{Machine{}, &panelv1.Machine{}},
-	{MachineSession{}, &panelv1.MachineSession{}},
-	{DiskUsage{}, &panelv1.DiskUsage{}},
-	{SSHKey{}, &panelv1.SshKey{}},
-	{GithubConnection{}, &panelv1.GithubConnection{}},
-	{GithubRepository{}, &panelv1.GithubRepository{}},
-	{DeletedProject{}, &panelv1.DeletedProject{}},
-	{RunMachineActionRequest{}, &panelv1.RunMachineActionRequest{}},
-	{RestartMachineAction{}, &panelv1.RestartMachineAction{}},
-	{RunMachineActionResponse{}, &panelv1.RunMachineActionResponse{}},
-	{ProjectMetadata{}, &panelv1.ProjectMetadata{}},
-	{ProjectSummary{}, &panelv1.ProjectSummary{}},
-	{ServiceSummary{}, &panelv1.ServiceSummary{}},
-	{ProjectProblem{}, &panelv1.ProjectProblem{}},
-	{GetProjectRequest{}, &panelv1.GetProjectRequest{}},
-	{GetProjectResponse{}, &panelv1.GetProjectResponse{}},
-	{Project{}, &panelv1.Project{}},
-	{RunningServicesAction{}, &panelv1.RunningServicesAction{}},
-	{ProjectSource{}, &panelv1.ProjectSource{}},
-	{GithubSource{}, &panelv1.GithubSource{}},
-	{GithubCommit{}, &panelv1.GithubCommit{}},
-	{Service{}, &panelv1.Service{}},
-	{PublishedPort{}, &panelv1.PublishedPort{}},
-	{VolumeMount{}, &panelv1.VolumeMount{}},
-	{HealthCheck{}, &panelv1.HealthCheck{}},
-	{EnvironmentVariable{}, &panelv1.EnvironmentVariable{}},
-	{Volume{}, &panelv1.Volume{}},
-	{VolumeMountedBy{}, &panelv1.VolumeMountedBy{}},
-	{Host{}, &panelv1.Host{}},
-	{Route{}, &panelv1.Route{}},
-	{Operation{}, &panelv1.Operation{}},
-	{Snapshot{}, &panelv1.Snapshot{}},
-	{HTTPTrafficSummary{}, &panelv1.HttpTrafficSummary{}},
-	{CreateProjectRequest{}, &panelv1.CreateProjectRequest{}},
-	{CreateProjectResponse{}, &panelv1.CreateProjectResponse{}},
-	{DeployProjectRequest{}, &panelv1.DeployProjectRequest{}},
-	{MountVolume{}, &panelv1.MountVolume{}},
-	{ProjectExtension{}, &panelv1.ProjectExtension{}},
-	{FileChange{}, &panelv1.FileChange{}},
-	{DeployProjectResponse{}, &panelv1.DeployProjectResponse{}},
-	{SpecViolation{}, &panelv1.SpecViolation{}},
-	{ListCommitsRequest{}, &panelv1.ListCommitsRequest{}},
-	{ListCommitsResponse{}, &panelv1.ListCommitsResponse{}},
-	{BranchCommit{}, &panelv1.BranchCommit{}},
-	{RunProjectActionRequest{}, &panelv1.RunProjectActionRequest{}},
-	{ServicesAction{}, &panelv1.ServicesAction{}},
-	{RecreateServiceAction{}, &panelv1.RecreateServiceAction{}},
-	{BackUpAction{}, &panelv1.BackUpAction{}},
-	{RestoreSnapshotAction{}, &panelv1.RestoreSnapshotAction{}},
-	{CancelOperationAction{}, &panelv1.CancelOperationAction{}},
-	{DeleteProjectAction{}, &panelv1.DeleteProjectAction{}},
-	{RunProjectActionResponse{}, &panelv1.RunProjectActionResponse{}},
-	{GetOperationRequest{}, &panelv1.GetOperationRequest{}},
-	{GetOperationResponse{}, &panelv1.GetOperationResponse{}},
-	{OperationLogLine{}, &panelv1.OperationLogLine{}},
-	{HTTPTrafficFilter{}, &panelv1.HttpTrafficFilter{}},
-	{QueryHTTPTrafficRequest{}, &panelv1.QueryHttpTrafficRequest{}},
-	{QueryHTTPTrafficResponse{}, &panelv1.QueryHttpTrafficResponse{}},
-	{HTTPTrafficBucket{}, &panelv1.HttpTrafficBucket{}},
-	{HTTPPathTraffic{}, &panelv1.HttpPathTraffic{}},
-	{HTTPRequest{}, &panelv1.HttpRequest{}},
-	{ContainerLogFilter{}, &panelv1.ContainerLogFilter{}},
-	{QueryContainerLogsRequest{}, &panelv1.QueryContainerLogsRequest{}},
-	{QueryContainerLogsResponse{}, &panelv1.QueryContainerLogsResponse{}},
-	{LogLine{}, &panelv1.LogLine{}},
-	{RunServiceCommandRequest{}, &panelv1.RunServiceCommandRequest{}},
-	{RunServiceCommandResponse{}, &panelv1.RunServiceCommandResponse{}},
-	{FileEntry{}, &panelv1.FileEntry{}},
-	{ReadPathRequest{}, &panelv1.ReadPathRequest{}},
-	{ReadPathResponse{}, &panelv1.ReadPathResponse{}},
-	{CreateTransferRequest{}, &panelv1.CreateTransferRequest{}},
-	{ArchiveUpload{}, &panelv1.ArchiveUpload{}},
-	{FileUpload{}, &panelv1.FileUpload{}},
-	{PathDownload{}, &panelv1.PathDownload{}},
-	{CreateTransferResponse{}, &panelv1.CreateTransferResponse{}},
-	{ProjectBusy{}, &panelv1.ProjectBusy{}},
-	{ProjectChanged{}, &panelv1.ProjectChanged{}},
-	{MachineUnreachable{}, &panelv1.MachineUnreachable{}},
-	{NoMachine{}, &panelv1.NoMachine{}},
+	shapeOf(sampleGetMachineRequest, &panelv1.GetMachineRequest{}),
+	shapeOf(sampleGetMachineResponse, &panelv1.GetMachineResponse{}),
+	shapeOf(sampleMachine, &panelv1.Machine{}),
+	shapeOf(sampleMachineSession, &panelv1.MachineSession{}),
+	shapeOf(sampleDiskUsage, &panelv1.DiskUsage{}),
+	shapeOf(sampleSSHKey, &panelv1.SshKey{}),
+	shapeOf(sampleGithubConnection, &panelv1.GithubConnection{}),
+	shapeOf(sampleGithubRepository, &panelv1.GithubRepository{}),
+	shapeOf(sampleDeletedProject, &panelv1.DeletedProject{}),
+	shapeOf(sampleRunMachineActionRequest, &panelv1.RunMachineActionRequest{}),
+	shapeOf(sampleRestartMachineAction, &panelv1.RestartMachineAction{}),
+	shapeOf(sampleRunMachineActionResponse, &panelv1.RunMachineActionResponse{}),
+	shapeOf(sampleProjectMetadata, &panelv1.ProjectMetadata{}),
+	shapeOf(sampleProjectSummary, &panelv1.ProjectSummary{}),
+	shapeOf(sampleServiceSummary, &panelv1.ServiceSummary{}),
+	shapeOf(sampleProjectProblem, &panelv1.ProjectProblem{}),
+	shapeOf(sampleGetProjectRequest, &panelv1.GetProjectRequest{}),
+	shapeOf(sampleGetProjectResponse, &panelv1.GetProjectResponse{}),
+	shapeOf(sampleProject, &panelv1.Project{}),
+	shapeOf(sampleRunningServicesAction, &panelv1.RunningServicesAction{}),
+	shapeOf(sampleProjectSource, &panelv1.ProjectSource{}),
+	shapeOf(sampleGithubSource, &panelv1.GithubSource{}),
+	shapeOf(sampleGithubCommit, &panelv1.GithubCommit{}),
+	shapeOf(sampleService, &panelv1.Service{}),
+	shapeOf(samplePublishedPort, &panelv1.PublishedPort{}),
+	shapeOf(sampleVolumeMount, &panelv1.VolumeMount{}),
+	shapeOf(sampleHealthCheck, &panelv1.HealthCheck{}),
+	shapeOf(sampleEnvironmentVariable, &panelv1.EnvironmentVariable{}),
+	shapeOf(sampleVolume, &panelv1.Volume{}),
+	shapeOf(sampleVolumeMountedBy, &panelv1.VolumeMountedBy{}),
+	shapeOf(sampleHost, &panelv1.Host{}),
+	shapeOf(sampleRoute, &panelv1.Route{}),
+	shapeOf(sampleOperation, &panelv1.Operation{}),
+	shapeOf(sampleSnapshot, &panelv1.Snapshot{}),
+	shapeOf(sampleHTTPTrafficSummary, &panelv1.HttpTrafficSummary{}),
+	shapeOf(sampleCreateProjectRequest, &panelv1.CreateProjectRequest{}),
+	shapeOf(sampleCreateProjectResponse, &panelv1.CreateProjectResponse{}),
+	shapeOf(sampleDeployProjectRequest, &panelv1.DeployProjectRequest{}),
+	shapeOf(sampleMountVolume, &panelv1.MountVolume{}),
+	shapeOf(sampleProjectExtension, &panelv1.ProjectExtension{}),
+	shapeOf(sampleFileChange, &panelv1.FileChange{}),
+	shapeOf(sampleDeployProjectResponse, &panelv1.DeployProjectResponse{}),
+	shapeOf(sampleSpecViolation, &panelv1.SpecViolation{}),
+	shapeOf(sampleListCommitsRequest, &panelv1.ListCommitsRequest{}),
+	shapeOf(sampleListCommitsResponse, &panelv1.ListCommitsResponse{}),
+	shapeOf(sampleBranchCommit, &panelv1.BranchCommit{}),
+	shapeOf(sampleRunProjectActionRequest, &panelv1.RunProjectActionRequest{}),
+	shapeOf(sampleServicesAction, &panelv1.ServicesAction{}),
+	shapeOf(sampleRecreateServiceAction, &panelv1.RecreateServiceAction{}),
+	shapeOf(sampleBackUpAction, &panelv1.BackUpAction{}),
+	shapeOf(sampleRestoreSnapshotAction, &panelv1.RestoreSnapshotAction{}),
+	shapeOf(sampleCancelOperationAction, &panelv1.CancelOperationAction{}),
+	shapeOf(sampleDeleteProjectAction, &panelv1.DeleteProjectAction{}),
+	shapeOf(sampleRunProjectActionResponse, &panelv1.RunProjectActionResponse{}),
+	shapeOf(sampleGetOperationRequest, &panelv1.GetOperationRequest{}),
+	shapeOf(sampleGetOperationResponse, &panelv1.GetOperationResponse{}),
+	shapeOf(sampleOperationLogLine, &panelv1.OperationLogLine{}),
+	shapeOf(sampleHTTPTrafficFilter, &panelv1.HttpTrafficFilter{}),
+	shapeOf(sampleQueryHTTPTrafficRequest, &panelv1.QueryHttpTrafficRequest{}),
+	shapeOf(sampleQueryHTTPTrafficResponse, &panelv1.QueryHttpTrafficResponse{}),
+	shapeOf(sampleHTTPTrafficBucket, &panelv1.HttpTrafficBucket{}),
+	shapeOf(sampleHTTPPathTraffic, &panelv1.HttpPathTraffic{}),
+	shapeOf(sampleHTTPRequest, &panelv1.HttpRequest{}),
+	shapeOf(sampleContainerLogFilter, &panelv1.ContainerLogFilter{}),
+	shapeOf(sampleQueryContainerLogsRequest, &panelv1.QueryContainerLogsRequest{}),
+	shapeOf(sampleQueryContainerLogsResponse, &panelv1.QueryContainerLogsResponse{}),
+	shapeOf(sampleLogLine, &panelv1.LogLine{}),
+	shapeOf(sampleRunServiceCommandRequest, &panelv1.RunServiceCommandRequest{}),
+	shapeOf(sampleRunServiceCommandResponse, &panelv1.RunServiceCommandResponse{}),
+	shapeOf(sampleFileEntry, &panelv1.FileEntry{}),
+	shapeOf(sampleReadPathRequest, &panelv1.ReadPathRequest{}),
+	shapeOf(sampleReadPathResponse, &panelv1.ReadPathResponse{}),
+	shapeOf(sampleCreateTransferRequest, &panelv1.CreateTransferRequest{}),
+	shapeOf(sampleArchiveUpload, &panelv1.ArchiveUpload{}),
+	shapeOf(sampleFileUpload, &panelv1.FileUpload{}),
+	shapeOf(samplePathDownload, &panelv1.PathDownload{}),
+	shapeOf(sampleCreateTransferResponse, &panelv1.CreateTransferResponse{}),
+	shapeOf(sampleProjectBusy, &panelv1.ProjectBusy{}),
+	shapeOf(sampleProjectChanged, &panelv1.ProjectChanged{}),
+	shapeOf(sampleMachineUnreachable, &panelv1.MachineUnreachable{}),
+	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
+	shapeOf(sampleWatchOperationRequest, &panelv1.WatchOperationRequest{}),
+	shapeOf(sampleWatchOperationResponse, &panelv1.WatchOperationResponse{}),
+	shapeOf(sampleTailContainerLogsRequest, &panelv1.TailContainerLogsRequest{}),
+	shapeOf(sampleTailContainerLogsResponse, &panelv1.TailContainerLogsResponse{}),
+	shapeOf(sampleTailHTTPTrafficRequest, &panelv1.TailHttpTrafficRequest{}),
+	shapeOf(sampleTailHTTPTrafficResponse, &panelv1.TailHttpTrafficResponse{}),
 }
 
 // enums are the package's enums, each beside the wire layer's.
@@ -1128,13 +1149,14 @@ func samplePathDownloadRoot(s seed) PathDownloadRoot {
 
 func sampleCreateTransferResponse(s seed) CreateTransferResponse {
 	return CreateTransferResponse{
-		URL:        plain[string](s.at("pethost.panel.v1.CreateTransferResponse.url")),
-		HTTPMethod: plain[string](s.at("pethost.panel.v1.CreateTransferResponse.http_method")),
-		ExpireTime: instant(s.at("pethost.panel.v1.CreateTransferResponse.expire_time")),
-		Command:    plain[string](s.at("pethost.panel.v1.CreateTransferResponse.command")),
-		UploadID:   plain[string](s.at("pethost.panel.v1.CreateTransferResponse.upload_id")),
-		Replaces:   plain[bool](s.at("pethost.panel.v1.CreateTransferResponse.replaces")),
-		FileName:   plain[string](s.at("pethost.panel.v1.CreateTransferResponse.file_name")),
+		URL:          plain[string](s.at("pethost.panel.v1.CreateTransferResponse.url")),
+		HTTPMethod:   plain[string](s.at("pethost.panel.v1.CreateTransferResponse.http_method")),
+		ExpireTime:   instant(s.at("pethost.panel.v1.CreateTransferResponse.expire_time")),
+		Command:      plain[string](s.at("pethost.panel.v1.CreateTransferResponse.command")),
+		UploadID:     plain[string](s.at("pethost.panel.v1.CreateTransferResponse.upload_id")),
+		Replaces:     plain[bool](s.at("pethost.panel.v1.CreateTransferResponse.replaces")),
+		FileName:     plain[string](s.at("pethost.panel.v1.CreateTransferResponse.file_name")),
+		ExcludeNames: list(s.at("pethost.panel.v1.CreateTransferResponse.exclude_names"), scalar[string]),
 	}
 }
 
@@ -1158,5 +1180,57 @@ func sampleNoMachine(s seed) NoMachine {
 	return NoMachine{
 		Reason: plain[NoMachineReason](s.at("pethost.panel.v1.NoMachine.reason")),
 		URL:    plain[string](s.at("pethost.panel.v1.NoMachine.url")),
+	}
+}
+
+func sampleWatchOperationRequest(s seed) WatchOperationRequest {
+	return WatchOperationRequest{
+		ProjectID:   plain[string](s.at("pethost.panel.v1.WatchOperationRequest.project_id")),
+		OperationID: plain[string](s.at("pethost.panel.v1.WatchOperationRequest.operation_id")),
+	}
+}
+
+func sampleWatchOperationResponse(s seed) WatchOperationResponse {
+	return WatchOperationResponse{
+		Message: sampleWatchOperationResponseMessage(s.at("pethost.panel.v1.WatchOperationResponse.message")),
+	}
+}
+
+func sampleWatchOperationResponseMessage(s seed) WatchOperationResponseMessage {
+	switch s.member(2) {
+	case 0:
+		return WatchOperationResponseLog(member(s, sampleOperationLogLine))
+	case 1:
+		return WatchOperationResponseFinishedOperation(member(s, sampleOperation))
+	}
+	return nil
+}
+
+func sampleTailContainerLogsRequest(s seed) TailContainerLogsRequest {
+	return TailContainerLogsRequest{
+		ProjectID:   plain[string](s.at("pethost.panel.v1.TailContainerLogsRequest.project_id")),
+		Filter:      pointer(s.at("pethost.panel.v1.TailContainerLogsRequest.filter"), sampleContainerLogFilter),
+		AfterCursor: plain[string](s.at("pethost.panel.v1.TailContainerLogsRequest.after_cursor")),
+	}
+}
+
+func sampleTailContainerLogsResponse(s seed) TailContainerLogsResponse {
+	return TailContainerLogsResponse{
+		Line:   pointer(s.at("pethost.panel.v1.TailContainerLogsResponse.line"), sampleLogLine),
+		Cursor: plain[string](s.at("pethost.panel.v1.TailContainerLogsResponse.cursor")),
+	}
+}
+
+func sampleTailHTTPTrafficRequest(s seed) TailHTTPTrafficRequest {
+	return TailHTTPTrafficRequest{
+		ProjectID:     plain[string](s.at("pethost.panel.v1.TailHttpTrafficRequest.project_id")),
+		Filter:        pointer(s.at("pethost.panel.v1.TailHttpTrafficRequest.filter"), sampleHTTPTrafficFilter),
+		AfterSequence: plain[uint64](s.at("pethost.panel.v1.TailHttpTrafficRequest.after_sequence")),
+	}
+}
+
+func sampleTailHTTPTrafficResponse(s seed) TailHTTPTrafficResponse {
+	return TailHTTPTrafficResponse{
+		Request: pointer(s.at("pethost.panel.v1.TailHttpTrafficResponse.request"), sampleHTTPRequest),
 	}
 }

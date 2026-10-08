@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 import unittest.mock
-from typing import Any
 
 import pethost
 from pethost._version import VERSION
 
 from .api import METHODS
-from .harness import MOST_MEMBERS, Case
+from .fake import CALL
+from .harness import MOST_MEMBERS, AsyncCase, Case
 from .samples import Plan
 
 
 class Clients(Case):
     def test_who_calls(self) -> None:
-        """Every call carries the token and the package's name and version."""
+        """Every call carries the token and the package's name and version, and is a call of
+        the Connect protocol whose message is binary protobuf."""
         self.fake.answer(b"")
         method = next(iter(METHODS))
         self.call(method, **self.required(method))
@@ -25,7 +25,7 @@ class Clients(Case):
         headers = self.fake.calls[-1].headers
         self.assertEqual(headers["authorization"], "Bearer pth_check")
         self.assertEqual(headers["user-agent"], f"pethost-python/{VERSION}")
-        self.assertEqual(headers["content-type"], "application/proto")
+        self.assertEqual((headers["content-type"], headers["connect-protocol-version"]), (CALL, "1"))
 
     def test_token(self) -> None:
         """Without a token given, the environment's; without that, no client."""
@@ -60,25 +60,9 @@ class Clients(Case):
                 pethost.Pethost("pth_check", timeout=timeout)
 
 
-class AsyncClients(Case):
+class AsyncClients(AsyncCase):
     """The asyncio client, through the checks of the synchronous one: every field of every
     message, both ways. The converters are the same; its methods are its own."""
-
-    client_class = pethost.AsyncPethost
-    loop: asyncio.AbstractEventLoop
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.loop = asyncio.new_event_loop()
-        super().setUpClass()
-
-    @classmethod
-    def close(cls) -> None:
-        cls.loop.run_until_complete(cls.client.aclose())
-        cls.loop.close()
-
-    def call(self, method: str, **arguments: Any) -> Any:
-        return self.loop.run_until_complete(getattr(self.client, method)(**arguments))
 
     def test_every_field_set(self) -> None:
         for method in METHODS:

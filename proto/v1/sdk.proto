@@ -1,0 +1,24 @@
+edition = "2024";
+
+// The option that gives the SDKs an RPC that is no MCP tool. An SDK (sdk/README.md) has every
+// RPC marked `(mcp_tool)` (v1/mcp.proto), which a program calls as an agent does, and every RPC
+// marked here: one that a tool call cannot carry, such as a stream, which an agent has a tool
+// in place of. The generators of cmd/protoc-gen-panel-<language> read both through
+// internal/sdk; nothing on the wire and nothing in the panel's own code depends on the option.
+package pethost.panel.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// What an SDK is told about such an RPC.
+message SdkMethod {
+  // The method's name for people, a few words ("Follow container logs"), as McpTool.title is a
+  // tool's: an SDK's documentation lists its methods by it. Every one has it.
+  string title = 1;
+}
+
+extend google.protobuf.MethodOptions {
+  // Present = the SDKs have the RPC, though it is no MCP tool. Not with (mcp_tool): the SDKs have
+  // a tool anyway. A server stream is a method that yields each response as it comes, until the
+  // stream ends or the caller leaves; a client stream cannot be marked.
+  SdkMethod sdk_method = 50003;
+}

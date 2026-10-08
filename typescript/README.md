@@ -3,8 +3,8 @@
 [Pethost](https://pethost.dev) is a small cloud for personal projects, easy to use for you and
 your agent: a machine of your own that runs Docker Compose projects, at one flat price. This
 package is its API as a typed client for Node 22, Bun and Deno. It reads the machine, deploys
-a project, queries its logs and requests and runs commands in its containers: the same
-13 calls an agent makes.
+a project, queries its logs and requests or follows them as they come, and runs commands in
+its containers: the calls an agent makes, and the API's streams.
 
 ## Install
 
@@ -55,7 +55,7 @@ try {
 
 A method is one call of the API. It takes the call's request and answers with its response,
 both described in [the API's reference](https://pethost.dev/docs/api/) and in the comments an
-editor shows.
+editor shows. A stream answers with its responses one by one, as "Streams" below shows.
 
 | Method | What it does | Effect |
 |---|---|---|
@@ -72,6 +72,9 @@ editor shows.
 | `runServiceCommand` | Run a command in a service | Destructive |
 | `readPath` | Read a file or directory | Reads only |
 | `createTransfer` | Upload or download a file | Destructive |
+| `watchOperation` | Watch an operation | Stream |
+| `tailContainerLogs` | Follow container logs | Stream |
+| `tailHttpTraffic` | Follow HTTP traffic | Stream |
 
 - A key left out of a request, or `undefined`, is not sent.
 - Where the API takes one of several fields, the request takes one of several keys, and two
@@ -81,6 +84,66 @@ editor shows.
   arrives as its number.
 - Nothing retries, pages or waits on its own. To cancel a call or limit its time, pass
   `{ signal }` as the second argument.
+
+## Streams
+
+A stream is a method that returns what to loop over with `for await`: each response as the API
+sends it, for as long as the loop runs. This program prints a project's newest log lines, then
+follows them.
+
+```ts
+import { Pethost } from "pethost";
+
+const pethost = new Pethost({ token: process.env.PETHOST_TOKEN! });
+
+// The newest lines of the project "notes", and where a stream goes on from them without
+// missing one.
+const newest = await pethost.queryContainerLogs({ projectId: "notes" });
+for (const line of newest.lines) console.log(line.service, line.text);
+
+// Each later line as it is written. The loop ends when the stream fails; to stop it sooner,
+// leave the loop or abort a signal given as `{ signal }`.
+const request = { projectId: "notes", afterCursor: newest.tailCursor };
+for await (const { line } of pethost.tailContainerLogs(request)) {
+  if (line) console.log(line.service, line.text);
+}
+```
+
+The call is made when the loop starts. A stream that fails throws a `PethostError` from the
+loop, once, after the responses that came before it. Leaving the loop, or aborting the signal,
+ends the call. The package does not call again by itself: where a response carries a cursor,
+as a log line does, a new call goes on from it.
+
+## JSON
+
+Every message has a constant of its name that writes it as the API's own JSON and reads it
+back: what the API answers and takes over HTTP, and what
+[its reference](https://pethost.dev/docs/api/) documents. This program prints the machine
+that way.
+
+```ts
+import { GetMachineResponse, Pethost } from "pethost";
+
+const pethost = new Pethost({ token: process.env.PETHOST_TOKEN! });
+
+// The machine and its projects as the API's own JSON: `apps_domain`, not `appsDomain`.
+const json = GetMachineResponse.toJson(await pethost.getMachine());
+const text = JSON.stringify(json, null, 2);
+console.log(text);
+
+// And back: the message again, typed as the call answered it.
+const { machine } = GetMachineResponse.fromJson(JSON.parse(text));
+console.log(machine?.appsDomain);
+```
+
+- The JSON has the API's names, not this package's: a field as `project_id`, a value of an
+  enum with its prefix, a 64-bit number as a string, a time as RFC 3339.
+- `JSON.stringify` of a message is not the API's JSON: use `toJson` first.
+- `toJson` writes a message as a call sends it: no key for a zero that the API reads as
+  absent, and a time to the millisecond. In those two ways a response written back may differ
+  from what the API wrote.
+- `fromJson` throws on a field the API does not have, as the API refuses one, and on a name of
+  an enum's value newer than your version of the SDK.
 
 ## Errors
 

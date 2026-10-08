@@ -18,6 +18,9 @@ METHODS = {
     "run_service_command": "RunServiceCommand",
     "read_path": "ReadPath",
     "create_transfer": "CreateTransfer",
+    "watch_operation": "WatchOperation",
+    "tail_container_logs": "TailContainerLogs",
+    "tail_http_traffic": "TailHttpTraffic",
 }
 
 OPTIONAL = frozenset({

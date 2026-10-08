@@ -1,8 +1,9 @@
-"""What every check stands on: the fake, a client that calls it, and the two ways a sample goes
-through the package."""
+"""What every check stands on: the fake, a client of each kind that calls it, and the two ways a
+sample goes through the package."""
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 import unittest
 from typing import Any
@@ -20,6 +21,7 @@ RPCS: dict[str, DescMethod] = {
     method: next(rpc for rpc in SERVICE.methods if rpc.name == name) for method, name in METHODS.items()
 }
 MESSAGES: dict[str, DescMessage] = {desc.name: desc for desc in wire.desc().messages}
+STREAMS = frozenset(method for method, rpc in RPCS.items() if rpc.method_kind == "server_streaming")
 REQUESTS = {method: rpc.input for method, rpc in RPCS.items()}
 RESPONSES = {method: rpc.output for method, rpc in RPCS.items()}
 
@@ -59,7 +61,30 @@ class Case(unittest.TestCase):
         cls.client.close()
 
     def call(self, method: str, **arguments: Any) -> Any:
-        return getattr(self.client, method)(**arguments)
+        """Calls a method: its response. To the checks of every method a stream is a call too,
+        the one that returns the stream's only response; None = it yielded none."""
+        answer = getattr(self.client, method)(**arguments)
+        if method not in STREAMS:
+            return self.result(answer)
+        responses, error = self.read(answer)
+        if error is not None:
+            raise error
+        (response,) = responses or [None]
+        return response
+
+    def result(self, answer: Any) -> Any:
+        """What a method that is no stream returned."""
+        return answer
+
+    def read(self, stream: Any) -> tuple[list[Any], Exception | None]:
+        """Reads a stream to its end: its responses, and the error that ended it, if one did."""
+        responses: list[Any] = []
+        try:
+            for response in stream:
+                responses.append(response)
+        except Exception as error:
+            return responses, error
+        return responses, None
 
     def required(self, method: str) -> dict[str, str]:
         """The arguments a method cannot be called without, each empty: the call's subject."""
@@ -80,10 +105,13 @@ class Case(unittest.TestCase):
         self.assertEqual(call.body, expected.to_binary())
 
     def receives(self, method: str, plan: Plan) -> None:
-        """Answers a method with a sample of its response: the call must return the public side."""
+        """Answers a method with a sample of its response: the call must return the public side.
+        A stream's response with nothing set is the API's pulse, and the stream yields none."""
         sent, given = pair(RESPONSES[method], plan)
         self.fake.answer(sent.to_binary())
-        self.assertEqual(self.call(method, **self.required(method)), public_class(RESPONSES[method])(**given))
+        pulse = method in STREAMS and not sent.to_binary()
+        expected = None if pulse else public_class(RESPONSES[method])(**given)
+        self.assertEqual(self.call(method, **self.required(method)), expected)
 
     def fails(self) -> pethost.PethostError:
         """Calls the API's first method, which the fake was told to fail: the error it raises."""
@@ -91,3 +119,35 @@ class Case(unittest.TestCase):
         with self.assertRaises(pethost.PethostError) as raised:
             self.call(method, **self.required(method))
         return raised.exception
+
+
+class AsyncCase(Case):
+    """A check of the asyncio client: the checks of the synchronous one, on a loop of its own."""
+
+    client_class = pethost.AsyncPethost
+    loop: asyncio.AbstractEventLoop
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.loop = asyncio.new_event_loop()
+        super().setUpClass()
+
+    @classmethod
+    def close(cls) -> None:
+        cls.loop.run_until_complete(cls.client.aclose())
+        cls.loop.close()
+
+    def result(self, answer: Any) -> Any:
+        return self.loop.run_until_complete(answer)
+
+    def read(self, stream: Any) -> tuple[list[Any], Exception | None]:
+        async def read() -> tuple[list[Any], Exception | None]:
+            responses: list[Any] = []
+            try:
+                async for response in stream:
+                    responses.append(response)
+            except Exception as error:
+                return responses, error
+            return responses, None
+
+        return self.loop.run_until_complete(read())

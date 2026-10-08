@@ -1,6 +1,6 @@
 {
   "name": "pethost",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript and JavaScript SDK for Pethost, a small cloud for personal projects: deploy Docker Compose projects to a machine of your own, read their logs and requests, run commands in their containers.",
   "keywords": ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client"],
   "homepage": "https://pethost.dev",

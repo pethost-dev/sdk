@@ -1424,7 +1424,7 @@ pub trait PanelService: Send + Sync + 'static {
         >,
     > + Send;
     /// Streams an operation's log from its start, then follows it; the last message is the
-    /// finished operation. Agents: GetOperation.
+    /// finished operation. Without a stream: GetOperation.
     ///
     /// `request` is borrowed from the request body and is valid for the
     /// duration of the call (until the response stream is returned);
@@ -1449,7 +1449,7 @@ pub trait PanelService: Send + Sync + 'static {
     > + Send;
     /// Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
     /// the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-    /// with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+    /// with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
     ///
     /// `request` is borrowed from the request body and is valid for the
     /// duration of the call (until the response stream is returned);
@@ -1472,8 +1472,8 @@ pub trait PanelService: Send + Sync + 'static {
             >,
         >,
     > + Send;
-    /// Streams HTTP requests after a sequence number, then new ones as they finish.
-    /// Agents: QueryHttpTraffic.
+    /// Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+    /// stream: QueryHttpTraffic.
     ///
     /// `request` is borrowed from the request body and is valid for the
     /// duration of the call (until the response stream is returned);

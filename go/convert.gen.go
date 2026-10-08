@@ -6,6 +6,10 @@ import (
 	"github.com/pethost-dev/sdk/go/internal/panelv1"
 )
 
+func fromWireGetMachineRequest(w *panelv1.GetMachineRequest) GetMachineRequest {
+	return GetMachineRequest{}
+}
+
 func toWireGetMachineRequest(v GetMachineRequest) *panelv1.GetMachineRequest {
 	b := panelv1.GetMachineRequest_builder{}
 	return b.Build()
@@ -18,6 +22,16 @@ func fromWireGetMachineResponse(w *panelv1.GetMachineResponse) GetMachineRespons
 		sliceFromWire(w.GetDeletedProjects(), fromWireDeletedProject),
 		pointerFromWire(w.GetGithub(), fromWireGithubConnection),
 	}
+}
+
+func toWireGetMachineResponse(v GetMachineResponse) *panelv1.GetMachineResponse {
+	b := panelv1.GetMachineResponse_builder{
+		Machine:         pointerToWire(v.Machine, toWireMachine),
+		Projects:        sliceToWire(v.Projects, toWireProjectSummary),
+		DeletedProjects: sliceToWire(v.DeletedProjects, toWireDeletedProject),
+		Github:          pointerToWire(v.Github, toWireGithubConnection),
+	}
+	return b.Build()
 }
 
 func fromWireMachine(w *panelv1.Machine) Machine {
@@ -50,6 +64,37 @@ func fromWireMachine(w *panelv1.Machine) Machine {
 	}
 }
 
+func toWireMachine(v Machine) *panelv1.Machine {
+	b := panelv1.Machine_builder{
+		Name:                       nonZero(v.Name),
+		Location:                   nonZero(v.Location),
+		SampleTime:                 timeToWire(v.SampleTime),
+		CpuUsedCores:               nonZero(v.CPUUsedCores),
+		CpuTotalCores:              nonZero(v.CPUTotalCores),
+		MemoryUsedBytes:            nonZero(v.MemoryUsedBytes),
+		MemoryTotalBytes:           nonZero(v.MemoryTotalBytes),
+		DiskUsedBytes:              nonZero(v.DiskUsedBytes),
+		DiskTotalBytes:             nonZero(v.DiskTotalBytes),
+		DiskUsage:                  pointerToWire(v.DiskUsage, toWireDiskUsage),
+		Hostname:                   nonZero(v.Hostname),
+		SshHostKeyFingerprint:      nonZero(v.SSHHostKeyFingerprint),
+		SshKeys:                    sliceToWire(v.SSHKeys, toWireSSHKey),
+		BackupsEnabled:             nonZero(v.BackupsEnabled),
+		SnapshotListTime:           timeToWire(v.SnapshotListTime),
+		SnapshotListFailureMessage: nonZero(v.SnapshotListFailureMessage),
+		BackupRetentionHours:       nonZero(v.BackupRetentionHours),
+		AcmeEnabled:                nonZero(v.AcmeEnabled),
+		AppsDomain:                 nonZero(v.AppsDomain),
+		DaemonVersion:              nonZero(v.DaemonVersion),
+		DockerVersion:              nonZero(v.DockerVersion),
+		BootTime:                   timeToWire(v.BootTime),
+		RestartRequiredTime:        timeToWire(v.RestartRequiredTime),
+		ScheduledRestartTime:       timeToWire(v.ScheduledRestartTime),
+		Sessions:                   sliceToWire(v.Sessions, toWireMachineSession),
+	}
+	return b.Build()
+}
+
 func fromWireMachineSession(w *panelv1.MachineSession) MachineSession {
 	return MachineSession{
 		w.GetSessionId(),
@@ -64,6 +109,21 @@ func fromWireMachineSession(w *panelv1.MachineSession) MachineSession {
 	}
 }
 
+func toWireMachineSession(v MachineSession) *panelv1.MachineSession {
+	b := panelv1.MachineSession_builder{
+		SessionId:         nonZero(v.SessionID),
+		Kind:              nonZero(toWireMachineSessionKind(v.Kind)),
+		ProjectId:         nonZero(v.ProjectID),
+		Service:           nonZero(v.Service),
+		Port:              nonZero(v.Port),
+		StartTime:         timeToWire(v.StartTime),
+		ClientAddress:     nonZero(v.ClientAddress),
+		SshKeyLabel:       nonZero(v.SSHKeyLabel),
+		SshKeyFingerprint: nonZero(v.SSHKeyFingerprint),
+	}
+	return b.Build()
+}
+
 func fromWireDiskUsage(w *panelv1.DiskUsage) DiskUsage {
 	return DiskUsage{
 		w.GetImagesBytes(),
@@ -74,6 +134,19 @@ func fromWireDiskUsage(w *panelv1.DiskUsage) DiskUsage {
 		w.GetContainerLogsBytes(),
 		w.GetHttpTrafficBytes(),
 	}
+}
+
+func toWireDiskUsage(v DiskUsage) *panelv1.DiskUsage {
+	b := panelv1.DiskUsage_builder{
+		ImagesBytes:          nonZero(v.ImagesBytes),
+		BuildCacheBytes:      v.BuildCacheBytes,
+		VolumesBytes:         nonZero(v.VolumesBytes),
+		ContainerLayersBytes: nonZero(v.ContainerLayersBytes),
+		ProjectFilesBytes:    nonZero(v.ProjectFilesBytes),
+		ContainerLogsBytes:   nonZero(v.ContainerLogsBytes),
+		HttpTrafficBytes:     nonZero(v.HTTPTrafficBytes),
+	}
+	return b.Build()
 }
 
 func fromWireSSHKey(w *panelv1.SshKey) SSHKey {
@@ -104,6 +177,17 @@ func fromWireGithubConnection(w *panelv1.GithubConnection) GithubConnection {
 	}
 }
 
+func toWireGithubConnection(v GithubConnection) *panelv1.GithubConnection {
+	b := panelv1.GithubConnection_builder{
+		AppName:         nonZero(v.AppName),
+		InstallUrl:      nonZero(v.InstallURL),
+		Repositories:    sliceToWire(v.Repositories, toWireGithubRepository),
+		RepositoryCount: nonZero(v.RepositoryCount),
+		WebhooksEnabled: nonZero(v.WebhooksEnabled),
+	}
+	return b.Build()
+}
+
 func fromWireGithubRepository(w *panelv1.GithubRepository) GithubRepository {
 	return GithubRepository{
 		w.GetRepository(),
@@ -111,6 +195,16 @@ func fromWireGithubRepository(w *panelv1.GithubRepository) GithubRepository {
 		w.GetPrivate(),
 		timeFromWire(w.GetPushTime()),
 	}
+}
+
+func toWireGithubRepository(v GithubRepository) *panelv1.GithubRepository {
+	b := panelv1.GithubRepository_builder{
+		Repository:    nonZero(v.Repository),
+		DefaultBranch: nonZero(v.DefaultBranch),
+		Private:       nonZero(v.Private),
+		PushTime:      timeToWire(v.PushTime),
+	}
+	return b.Build()
 }
 
 func fromWireDeletedProject(w *panelv1.DeletedProject) DeletedProject {
@@ -121,12 +215,43 @@ func fromWireDeletedProject(w *panelv1.DeletedProject) DeletedProject {
 	}
 }
 
+func toWireDeletedProject(v DeletedProject) *panelv1.DeletedProject {
+	b := panelv1.DeletedProject_builder{
+		ProjectId:      nonZero(v.ProjectID),
+		NewestSnapshot: pointerToWire(v.NewestSnapshot, toWireSnapshot),
+		SnapshotCount:  nonZero(v.SnapshotCount),
+	}
+	return b.Build()
+}
+
+func fromWireRunMachineActionRequest(w *panelv1.RunMachineActionRequest) RunMachineActionRequest {
+	return RunMachineActionRequest{
+		fromWireRunMachineActionAction(w),
+	}
+}
+
 func toWireRunMachineActionRequest(v RunMachineActionRequest) *panelv1.RunMachineActionRequest {
 	b := panelv1.RunMachineActionRequest_builder{}
 	if v.Action != nil {
 		v.Action.toRunMachineActionAction(&b)
 	}
 	return b.Build()
+}
+
+func fromWireRunMachineActionAction(w *panelv1.RunMachineActionRequest) RunMachineActionAction {
+	switch w.WhichAction() {
+	case panelv1.RunMachineActionRequest_AddSshKey_case:
+		return RunMachineActionAddSSHKey(fromWireSSHKey(w.GetAddSshKey()))
+	case panelv1.RunMachineActionRequest_RemoveSshKeyFingerprint_case:
+		return RunMachineActionRemoveSSHKeyFingerprint(w.GetRemoveSshKeyFingerprint())
+	case panelv1.RunMachineActionRequest_RestartMachine_case:
+		return RunMachineActionRestartMachine(fromWireRestartMachineAction(w.GetRestartMachine()))
+	case panelv1.RunMachineActionRequest_CancelRestart_case:
+		return RunMachineActionCancelRestart(w.GetCancelRestart())
+	case panelv1.RunMachineActionRequest_EndSessionId_case:
+		return RunMachineActionEndSessionID(w.GetEndSessionId())
+	}
+	return nil
 }
 
 func (v RunMachineActionAddSSHKey) toRunMachineActionAction(b *panelv1.RunMachineActionRequest_builder) {
@@ -157,6 +282,14 @@ var (
 	_ RunMachineActionAction = RunMachineActionEndSessionID("")
 )
 
+func fromWireRestartMachineAction(w *panelv1.RestartMachineAction) RestartMachineAction {
+	return RestartMachineAction{
+		timeFromWire(w.GetRestartTime()),
+		w.GetAtMaintenanceWindow(),
+		w.GetInterruptOperations(),
+	}
+}
+
 func toWireRestartMachineAction(v RestartMachineAction) *panelv1.RestartMachineAction {
 	b := panelv1.RestartMachineAction_builder{
 		RestartTime:         timeToWire(v.RestartTime),
@@ -170,6 +303,13 @@ func fromWireRunMachineActionResponse(w *panelv1.RunMachineActionResponse) RunMa
 	return RunMachineActionResponse{
 		pointerFromWire(w.GetMachine(), fromWireMachine),
 	}
+}
+
+func toWireRunMachineActionResponse(v RunMachineActionResponse) *panelv1.RunMachineActionResponse {
+	b := panelv1.RunMachineActionResponse_builder{
+		Machine: pointerToWire(v.Machine, toWireMachine),
+	}
+	return b.Build()
 }
 
 func fromWireProjectMetadata(w *panelv1.ProjectMetadata) ProjectMetadata {
@@ -210,11 +350,38 @@ func fromWireProjectSummary(w *panelv1.ProjectSummary) ProjectSummary {
 	}
 }
 
+func toWireProjectSummary(v ProjectSummary) *panelv1.ProjectSummary {
+	b := panelv1.ProjectSummary_builder{
+		ProjectId:          nonZero(v.ProjectID),
+		Metadata:           pointerToWire(v.Metadata, toWireProjectMetadata),
+		Problems:           sliceToWire(v.Problems, toWireProjectProblem),
+		Services:           sliceToWire(v.Services, toWireServiceSummary),
+		Url:                nonZero(v.URL),
+		Hosts:              v.Hosts,
+		HttpTrafficLastDay: pointerToWire(v.HTTPTrafficLastDay, toWireHTTPTrafficSummary),
+		CpuUsedCores:       nonZero(v.CPUUsedCores),
+		MemoryUsedBytes:    nonZero(v.MemoryUsedBytes),
+		DeployTime:         timeToWire(v.DeployTime),
+		RunningOperations:  sliceToWire(v.RunningOperations, toWireOperation),
+		Pinned:             nonZero(v.Pinned),
+		DiskUsedBytes:      nonZero(v.DiskUsedBytes),
+	}
+	return b.Build()
+}
+
 func fromWireServiceSummary(w *panelv1.ServiceSummary) ServiceSummary {
 	return ServiceSummary{
 		w.GetService(),
 		fromWireServiceState(w.GetState()),
 	}
+}
+
+func toWireServiceSummary(v ServiceSummary) *panelv1.ServiceSummary {
+	b := panelv1.ServiceSummary_builder{
+		Service: nonZero(v.Service),
+		State:   nonZero(toWireServiceState(v.State)),
+	}
+	return b.Build()
 }
 
 func fromWireProjectProblem(w *panelv1.ProjectProblem) ProjectProblem {
@@ -224,6 +391,26 @@ func fromWireProjectProblem(w *panelv1.ProjectProblem) ProjectProblem {
 		w.GetOperationId(),
 		timeFromWire(w.GetSinceTime()),
 		w.GetProblemMessage(),
+	}
+}
+
+func toWireProjectProblem(v ProjectProblem) *panelv1.ProjectProblem {
+	b := panelv1.ProjectProblem_builder{
+		Kind:           nonZero(toWireProjectProblemKind(v.Kind)),
+		Service:        nonZero(v.Service),
+		OperationId:    nonZero(v.OperationID),
+		SinceTime:      timeToWire(v.SinceTime),
+		ProblemMessage: nonZero(v.ProblemMessage),
+	}
+	return b.Build()
+}
+
+func fromWireGetProjectRequest(w *panelv1.GetProjectRequest) GetProjectRequest {
+	return GetProjectRequest{
+		w.GetProjectId(),
+		w.GetIncludeSecretValues(),
+		timeFromWire(w.GetSnapshotsBefore()),
+		w.GetSnapshotsVolume(),
 	}
 }
 
@@ -241,6 +428,13 @@ func fromWireGetProjectResponse(w *panelv1.GetProjectResponse) GetProjectRespons
 	return GetProjectResponse{
 		pointerFromWire(w.GetProject(), fromWireProject),
 	}
+}
+
+func toWireGetProjectResponse(v GetProjectResponse) *panelv1.GetProjectResponse {
+	b := panelv1.GetProjectResponse_builder{
+		Project: pointerToWire(v.Project, toWireProject),
+	}
+	return b.Build()
 }
 
 func fromWireProject(w *panelv1.Project) Project {
@@ -270,12 +464,49 @@ func fromWireProject(w *panelv1.Project) Project {
 	}
 }
 
+func toWireProject(v Project) *panelv1.Project {
+	b := panelv1.Project_builder{
+		ProjectId:             nonZero(v.ProjectID),
+		Metadata:              pointerToWire(v.Metadata, toWireProjectMetadata),
+		Problems:              sliceToWire(v.Problems, toWireProjectProblem),
+		Url:                   nonZero(v.URL),
+		CpuUsedCores:          nonZero(v.CPUUsedCores),
+		MemoryUsedBytes:       nonZero(v.MemoryUsedBytes),
+		DeployId:              nonZero(v.DeployID),
+		DeployStatus:          nonZero(toWireOperationStatus(v.DeployStatus)),
+		DeployTime:            timeToWire(v.DeployTime),
+		XPethostAppliesAtOnce: nonZero(v.XPethostAppliesAtOnce),
+		Services:              sliceToWire(v.Services, toWireService),
+		Volumes:               sliceToWire(v.Volumes, toWireVolume),
+		Routes:                sliceToWire(v.Routes, toWireRoute),
+		Hosts:                 sliceToWire(v.Hosts, toWireHost),
+		PasswordProtected:     nonZero(v.PasswordProtected),
+		Operations:            sliceToWire(v.Operations, toWireOperation),
+		Snapshots:             sliceToWire(v.Snapshots, toWireSnapshot),
+		SnapshotCount:         nonZero(v.SnapshotCount),
+		SnapshotListTime:      timeToWire(v.SnapshotListTime),
+		HttpTrafficLastDay:    pointerToWire(v.HTTPTrafficLastDay, toWireHTTPTrafficSummary),
+		Source:                pointerToWire(v.Source, toWireProjectSource),
+		RunningServicesAction: pointerToWire(v.RunningServicesAction, toWireRunningServicesAction),
+	}
+	return b.Build()
+}
+
 func fromWireRunningServicesAction(w *panelv1.RunningServicesAction) RunningServicesAction {
 	return RunningServicesAction{
 		fromWireServicesActionKind(w.GetKind()),
 		w.GetServices(),
 		timeFromWire(w.GetStartTime()),
 	}
+}
+
+func toWireRunningServicesAction(v RunningServicesAction) *panelv1.RunningServicesAction {
+	b := panelv1.RunningServicesAction_builder{
+		Kind:      nonZero(toWireServicesActionKind(v.Kind)),
+		Services:  v.Services,
+		StartTime: timeToWire(v.StartTime),
+	}
+	return b.Build()
 }
 
 func fromWireProjectSource(w *panelv1.ProjectSource) ProjectSource {
@@ -398,6 +629,40 @@ func fromWireService(w *panelv1.Service) Service {
 	}
 }
 
+func toWireService(v Service) *panelv1.Service {
+	b := panelv1.Service_builder{
+		Service:            nonZero(v.Service),
+		State:              nonZero(toWireServiceState(v.State)),
+		ContainerRunning:   nonZero(v.ContainerRunning),
+		Image:              nonZero(v.Image),
+		BuildsImage:        nonZero(v.BuildsImage),
+		ImageDigest:        nonZero(v.ImageDigest),
+		ImageSizeBytes:     nonZero(v.ImageSizeBytes),
+		Command:            v.Command,
+		RunAsUser:          nonZero(v.RunAsUser),
+		StartTime:          timeToWire(v.StartTime),
+		FinishTime:         timeToWire(v.FinishTime),
+		ExitCode:           v.ExitCode,
+		OutOfMemory:        nonZero(v.OutOfMemory),
+		RestartCount:       nonZero(v.RestartCount),
+		CpuUsedCores:       nonZero(v.CPUUsedCores),
+		MemoryUsedBytes:    nonZero(v.MemoryUsedBytes),
+		MemoryLimitBytes:   nonZero(v.MemoryLimitBytes),
+		CpuLimitCores:      nonZero(v.CPULimitCores),
+		WritableLayerBytes: nonZero(v.WritableLayerBytes),
+		Ports:              v.Ports,
+		ListeningPorts:     v.ListeningPorts,
+		PublishedPorts:     sliceToWire(v.PublishedPorts, toWirePublishedPort),
+		VolumeMounts:       sliceToWire(v.VolumeMounts, toWireVolumeMount),
+		RestartPolicy:      nonZero(toWireRestartPolicy(v.RestartPolicy)),
+		HealthCheck:        pointerToWire(v.HealthCheck, toWireHealthCheck),
+		Environment:        sliceToWire(v.Environment, toWireEnvironmentVariable),
+		EnvFiles:           v.EnvFiles,
+		SshCommand:         nonZero(v.SSHCommand),
+	}
+	return b.Build()
+}
+
 func fromWirePublishedPort(w *panelv1.PublishedPort) PublishedPort {
 	return PublishedPort{
 		w.GetMachinePort(),
@@ -407,11 +672,29 @@ func fromWirePublishedPort(w *panelv1.PublishedPort) PublishedPort {
 	}
 }
 
+func toWirePublishedPort(v PublishedPort) *panelv1.PublishedPort {
+	b := panelv1.PublishedPort_builder{
+		MachinePort:   nonZero(v.MachinePort),
+		ContainerPort: nonZero(v.ContainerPort),
+		Protocol:      nonZero(v.Protocol),
+		MachineOnly:   nonZero(v.MachineOnly),
+	}
+	return b.Build()
+}
+
 func fromWireVolumeMount(w *panelv1.VolumeMount) VolumeMount {
 	return VolumeMount{
 		w.GetVolume(),
 		w.GetContainerPath(),
 	}
+}
+
+func toWireVolumeMount(v VolumeMount) *panelv1.VolumeMount {
+	b := panelv1.VolumeMount_builder{
+		Volume:        nonZero(v.Volume),
+		ContainerPath: nonZero(v.ContainerPath),
+	}
+	return b.Build()
 }
 
 func fromWireHealthCheck(w *panelv1.HealthCheck) HealthCheck {
@@ -425,6 +708,18 @@ func fromWireHealthCheck(w *panelv1.HealthCheck) HealthCheck {
 	}
 }
 
+func toWireHealthCheck(v HealthCheck) *panelv1.HealthCheck {
+	b := panelv1.HealthCheck_builder{
+		Command:                 v.Command,
+		IntervalSeconds:         nonZero(v.IntervalSeconds),
+		Status:                  nonZero(toWireHealthStatus(v.Status)),
+		ConsecutiveFailureCount: nonZero(v.ConsecutiveFailureCount),
+		RecentResultsPassed:     v.RecentResultsPassed,
+		LastFailureOutput:       nonZero(v.LastFailureOutput),
+	}
+	return b.Build()
+}
+
 func fromWireEnvironmentVariable(w *panelv1.EnvironmentVariable) EnvironmentVariable {
 	return EnvironmentVariable{
 		w.GetName(),
@@ -434,6 +729,18 @@ func fromWireEnvironmentVariable(w *panelv1.EnvironmentVariable) EnvironmentVari
 		w.GetFromEnvFileVariables(),
 		w.GetValueLeftOut(),
 	}
+}
+
+func toWireEnvironmentVariable(v EnvironmentVariable) *panelv1.EnvironmentVariable {
+	b := panelv1.EnvironmentVariable_builder{
+		Name:                 nonZero(v.Name),
+		Value:                nonZero(v.Value),
+		Secret:               nonZero(v.Secret),
+		SourceFile:           nonZero(v.SourceFile),
+		FromEnvFileVariables: v.FromEnvFileVariables,
+		ValueLeftOut:         nonZero(v.ValueLeftOut),
+	}
+	return b.Build()
 }
 
 func fromWireVolume(w *panelv1.Volume) Volume {
@@ -447,11 +754,31 @@ func fromWireVolume(w *panelv1.Volume) Volume {
 	}
 }
 
+func toWireVolume(v Volume) *panelv1.Volume {
+	b := panelv1.Volume_builder{
+		Volume:         nonZero(v.Volume),
+		SizeBytes:      nonZero(v.SizeBytes),
+		MountedBy:      sliceToWire(v.MountedBy, toWireVolumeMountedBy),
+		LastBackupTime: timeToWire(v.LastBackupTime),
+		SnapshotCount:  nonZero(v.SnapshotCount),
+		Declared:       nonZero(v.Declared),
+	}
+	return b.Build()
+}
+
 func fromWireVolumeMountedBy(w *panelv1.VolumeMountedBy) VolumeMountedBy {
 	return VolumeMountedBy{
 		w.GetService(),
 		w.GetContainerPath(),
 	}
+}
+
+func toWireVolumeMountedBy(v VolumeMountedBy) *panelv1.VolumeMountedBy {
+	b := panelv1.VolumeMountedBy_builder{
+		Service:       nonZero(v.Service),
+		ContainerPath: nonZero(v.ContainerPath),
+	}
+	return b.Build()
 }
 
 func fromWireHost(w *panelv1.Host) Host {
@@ -462,6 +789,17 @@ func fromWireHost(w *panelv1.Host) Host {
 		timeFromWire(w.GetCertificateExpireTime()),
 		w.GetUnavailableMessage(),
 	}
+}
+
+func toWireHost(v Host) *panelv1.Host {
+	b := panelv1.Host_builder{
+		Host:                  nonZero(v.Host),
+		Url:                   nonZero(v.URL),
+		CertificateSource:     nonZero(toWireCertificateSource(v.CertificateSource)),
+		CertificateExpireTime: timeToWire(v.CertificateExpireTime),
+		UnavailableMessage:    nonZero(v.UnavailableMessage),
+	}
+	return b.Build()
 }
 
 func fromWireRoute(w *panelv1.Route) Route {
@@ -510,6 +848,31 @@ func fromWireOperation(w *panelv1.Operation) Operation {
 	}
 }
 
+func toWireOperation(v Operation) *panelv1.Operation {
+	b := panelv1.Operation_builder{
+		OperationId:         nonZero(v.OperationID),
+		Kind:                nonZero(toWireOperationKind(v.Kind)),
+		Status:              nonZero(toWireOperationStatus(v.Status)),
+		StartTime:           timeToWire(v.StartTime),
+		FinishTime:          timeToWire(v.FinishTime),
+		FailureMessage:      nonZero(v.FailureMessage),
+		DeployFailureReason: nonZero(toWireDeployFailureReason(v.DeployFailureReason)),
+		MadeCurrent:         nonZero(v.MadeCurrent),
+		Service:             nonZero(v.Service),
+		FailedExitCode:      nonZero(v.FailedExitCode),
+		SnapshotId:          nonZero(v.SnapshotID),
+		RestoredVolumes:     v.RestoredVolumes,
+		UndoSnapshotId:      nonZero(v.UndoSnapshotID),
+		GithubCommit:        pointerToWire(v.GithubCommit, toWireGithubCommit),
+		ArchiveName:         nonZero(v.ArchiveName),
+		Adjustments:         v.Adjustments,
+		ChangedPaths:        v.ChangedPaths,
+		ChangedPathCount:    nonZero(v.ChangedPathCount),
+		FilesKept:           nonZero(v.FilesKept),
+	}
+	return b.Build()
+}
+
 func fromWireSnapshot(w *panelv1.Snapshot) Snapshot {
 	return Snapshot{
 		w.GetSnapshotId(),
@@ -519,12 +882,45 @@ func fromWireSnapshot(w *panelv1.Snapshot) Snapshot {
 	}
 }
 
+func toWireSnapshot(v Snapshot) *panelv1.Snapshot {
+	b := panelv1.Snapshot_builder{
+		SnapshotId: nonZero(v.SnapshotID),
+		CreateTime: timeToWire(v.CreateTime),
+		SizeBytes:  nonZero(v.SizeBytes),
+		Volumes:    v.Volumes,
+	}
+	return b.Build()
+}
+
 func fromWireHTTPTrafficSummary(w *panelv1.HttpTrafficSummary) HTTPTrafficSummary {
 	return HTTPTrafficSummary{
 		w.GetRequestCount(),
 		w.GetServerErrorCount(),
 		w.GetLatencyP50Ms(),
 		w.GetLatencyP95Ms(),
+	}
+}
+
+func toWireHTTPTrafficSummary(v HTTPTrafficSummary) *panelv1.HttpTrafficSummary {
+	b := panelv1.HttpTrafficSummary_builder{
+		RequestCount:     nonZero(v.RequestCount),
+		ServerErrorCount: nonZero(v.ServerErrorCount),
+		LatencyP50Ms:     nonZero(v.LatencyP50Ms),
+		LatencyP95Ms:     nonZero(v.LatencyP95Ms),
+	}
+	return b.Build()
+}
+
+func fromWireCreateProjectRequest(w *panelv1.CreateProjectRequest) CreateProjectRequest {
+	return CreateProjectRequest{
+		w.GetProjectId(),
+		pointerFromWire(w.GetSource(), fromWireProjectSource),
+		w.GetUploadId(),
+		sliceFromWire(w.GetFiles(), fromWireFileChange),
+		pointerFromWire(w.GetXPethost(), fromWireProjectExtension),
+		w.GetTimeoutSeconds(),
+		w.GetOperationId(),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
 	}
 }
 
@@ -552,6 +948,31 @@ func fromWireCreateProjectResponse(w *panelv1.CreateProjectResponse) CreateProje
 	}
 }
 
+func toWireCreateProjectResponse(v CreateProjectResponse) *panelv1.CreateProjectResponse {
+	b := panelv1.CreateProjectResponse_builder{
+		Operation:   pointerToWire(v.Operation, toWireOperation),
+		Violations:  sliceToWire(v.Violations, toWireSpecViolation),
+		Adjustments: v.Adjustments,
+		Project:     pointerToWire(v.Project, toWireProject),
+		Log:         sliceToWire(v.Log, toWireOperationLogLine),
+	}
+	return b.Build()
+}
+
+func fromWireDeployProjectRequest(w *panelv1.DeployProjectRequest) DeployProjectRequest {
+	return DeployProjectRequest{
+		w.GetProjectId(),
+		w.GetBaseDeployId(),
+		sliceFromWire(w.GetFiles(), fromWireFileChange),
+		pointerFromWire(w.GetXPethost(), fromWireProjectExtension),
+		pointerFromWire(w.GetMountVolume(), fromWireMountVolume),
+		w.GetTimeoutSeconds(),
+		w.GetOperationId(),
+		fromWireDeployProjectVersion(w),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+	}
+}
+
 func toWireDeployProjectRequest(v DeployProjectRequest) *panelv1.DeployProjectRequest {
 	b := panelv1.DeployProjectRequest_builder{
 		ProjectId:      nonZero(v.ProjectID),
@@ -567,6 +988,20 @@ func toWireDeployProjectRequest(v DeployProjectRequest) *panelv1.DeployProjectRe
 		v.Version.toDeployProjectVersion(&b)
 	}
 	return b.Build()
+}
+
+func fromWireDeployProjectVersion(w *panelv1.DeployProjectRequest) DeployProjectVersion {
+	switch w.WhichVersion() {
+	case panelv1.DeployProjectRequest_UploadId_case:
+		return DeployProjectUploadID(w.GetUploadId())
+	case panelv1.DeployProjectRequest_Commit_case:
+		return DeployProjectCommit(w.GetCommit())
+	case panelv1.DeployProjectRequest_NewestCommit_case:
+		return DeployProjectNewestCommit(w.GetNewestCommit())
+	case panelv1.DeployProjectRequest_RollbackDeployId_case:
+		return DeployProjectRollbackDeployID(w.GetRollbackDeployId())
+	}
+	return nil
 }
 
 func (v DeployProjectUploadID) toDeployProjectVersion(b *panelv1.DeployProjectRequest_builder) {
@@ -592,6 +1027,14 @@ var (
 	_ DeployProjectVersion = DeployProjectRollbackDeployID("")
 )
 
+func fromWireMountVolume(w *panelv1.MountVolume) MountVolume {
+	return MountVolume{
+		w.GetService(),
+		w.GetVolume(),
+		w.GetContainerPath(),
+	}
+}
+
 func toWireMountVolume(v MountVolume) *panelv1.MountVolume {
 	b := panelv1.MountVolume_builder{
 		Service:       nonZero(v.Service),
@@ -599,6 +1042,16 @@ func toWireMountVolume(v MountVolume) *panelv1.MountVolume {
 		ContainerPath: nonZero(v.ContainerPath),
 	}
 	return b.Build()
+}
+
+func fromWireProjectExtension(w *panelv1.ProjectExtension) ProjectExtension {
+	return ProjectExtension{
+		pointerFromWire(w.GetMetadata(), fromWireProjectMetadata),
+		sliceFromWire(w.GetRoutes(), fromWireRoute),
+		w.GetRemoveRoutes(),
+		w.GetPassword(),
+		w.GetRemovePassword(),
+	}
 }
 
 func toWireProjectExtension(v ProjectExtension) *panelv1.ProjectExtension {
@@ -612,6 +1065,14 @@ func toWireProjectExtension(v ProjectExtension) *panelv1.ProjectExtension {
 	return b.Build()
 }
 
+func fromWireFileChange(w *panelv1.FileChange) FileChange {
+	return FileChange{
+		w.GetPath(),
+		fromWireFileChangeChange(w),
+		w.GetExecutable(),
+	}
+}
+
 func toWireFileChange(v FileChange) *panelv1.FileChange {
 	b := panelv1.FileChange_builder{
 		Path:       nonZero(v.Path),
@@ -621,6 +1082,24 @@ func toWireFileChange(v FileChange) *panelv1.FileChange {
 		v.Change.toFileChangeChange(&b)
 	}
 	return b.Build()
+}
+
+func fromWireFileChangeChange(w *panelv1.FileChange) FileChangeChange {
+	switch w.WhichChange() {
+	case panelv1.FileChange_Text_case:
+		return FileChangeText(w.GetText())
+	case panelv1.FileChange_Data_case:
+		return FileChangeData(w.GetData())
+	case panelv1.FileChange_MakeDirectory_case:
+		return FileChangeMakeDirectory(w.GetMakeDirectory())
+	case panelv1.FileChange_Delete_case:
+		return FileChangeDelete(w.GetDelete())
+	case panelv1.FileChange_DeleteTree_case:
+		return FileChangeDeleteTree(w.GetDeleteTree())
+	case panelv1.FileChange_RenameTo_case:
+		return FileChangeRenameTo(w.GetRenameTo())
+	}
+	return nil
 }
 
 func (v FileChangeText) toFileChangeChange(b *panelv1.FileChange_builder) {
@@ -666,11 +1145,38 @@ func fromWireDeployProjectResponse(w *panelv1.DeployProjectResponse) DeployProje
 	}
 }
 
+func toWireDeployProjectResponse(v DeployProjectResponse) *panelv1.DeployProjectResponse {
+	b := panelv1.DeployProjectResponse_builder{
+		Operation:   pointerToWire(v.Operation, toWireOperation),
+		Violations:  sliceToWire(v.Violations, toWireSpecViolation),
+		Adjustments: v.Adjustments,
+		Project:     pointerToWire(v.Project, toWireProject),
+		Log:         sliceToWire(v.Log, toWireOperationLogLine),
+	}
+	return b.Build()
+}
+
 func fromWireSpecViolation(w *panelv1.SpecViolation) SpecViolation {
 	return SpecViolation{
 		w.GetService(),
 		w.GetLocation(),
 		w.GetViolationMessage(),
+	}
+}
+
+func toWireSpecViolation(v SpecViolation) *panelv1.SpecViolation {
+	b := panelv1.SpecViolation_builder{
+		Service:          nonZero(v.Service),
+		Location:         nonZero(v.Location),
+		ViolationMessage: nonZero(v.ViolationMessage),
+	}
+	return b.Build()
+}
+
+func fromWireListCommitsRequest(w *panelv1.ListCommitsRequest) ListCommitsRequest {
+	return ListCommitsRequest{
+		w.GetProjectId(),
+		w.GetBeforeCommit(),
 	}
 }
 
@@ -689,6 +1195,14 @@ func fromWireListCommitsResponse(w *panelv1.ListCommitsResponse) ListCommitsResp
 	}
 }
 
+func toWireListCommitsResponse(v ListCommitsResponse) *panelv1.ListCommitsResponse {
+	b := panelv1.ListCommitsResponse_builder{
+		Commits: sliceToWire(v.Commits, toWireBranchCommit),
+		More:    nonZero(v.More),
+	}
+	return b.Build()
+}
+
 func fromWireBranchCommit(w *panelv1.BranchCommit) BranchCommit {
 	return BranchCommit{
 		pointerFromWire(w.GetCommit(), fromWireGithubCommit),
@@ -697,6 +1211,27 @@ func fromWireBranchCommit(w *panelv1.BranchCommit) BranchCommit {
 		w.GetDeployed(),
 		pointerFromWire(w.GetLastDeploy(), fromWireOperation),
 		w.GetNewest(),
+	}
+}
+
+func toWireBranchCommit(v BranchCommit) *panelv1.BranchCommit {
+	b := panelv1.BranchCommit_builder{
+		Commit:     pointerToWire(v.Commit, toWireGithubCommit),
+		Author:     nonZero(v.Author),
+		CommitTime: timeToWire(v.CommitTime),
+		Deployed:   nonZero(v.Deployed),
+		LastDeploy: pointerToWire(v.LastDeploy, toWireOperation),
+		Newest:     nonZero(v.Newest),
+	}
+	return b.Build()
+}
+
+func fromWireRunProjectActionRequest(w *panelv1.RunProjectActionRequest) RunProjectActionRequest {
+	return RunProjectActionRequest{
+		w.GetProjectId(),
+		fromWireRunProjectActionAction(w),
+		w.GetOperationId(),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
 	}
 }
 
@@ -710,6 +1245,32 @@ func toWireRunProjectActionRequest(v RunProjectActionRequest) *panelv1.RunProjec
 		v.Action.toRunProjectActionAction(&b)
 	}
 	return b.Build()
+}
+
+func fromWireRunProjectActionAction(w *panelv1.RunProjectActionRequest) RunProjectActionAction {
+	switch w.WhichAction() {
+	case panelv1.RunProjectActionRequest_StartServices_case:
+		return RunProjectActionStartServices(fromWireServicesAction(w.GetStartServices()))
+	case panelv1.RunProjectActionRequest_StopServices_case:
+		return RunProjectActionStopServices(fromWireServicesAction(w.GetStopServices()))
+	case panelv1.RunProjectActionRequest_RestartServices_case:
+		return RunProjectActionRestartServices(fromWireServicesAction(w.GetRestartServices()))
+	case panelv1.RunProjectActionRequest_RecreateService_case:
+		return RunProjectActionRecreateService(fromWireRecreateServiceAction(w.GetRecreateService()))
+	case panelv1.RunProjectActionRequest_BackUp_case:
+		return RunProjectActionBackUp(fromWireBackUpAction(w.GetBackUp()))
+	case panelv1.RunProjectActionRequest_RestoreSnapshot_case:
+		return RunProjectActionRestoreSnapshot(fromWireRestoreSnapshotAction(w.GetRestoreSnapshot()))
+	case panelv1.RunProjectActionRequest_CancelOperation_case:
+		return RunProjectActionCancelOperation(fromWireCancelOperationAction(w.GetCancelOperation()))
+	case panelv1.RunProjectActionRequest_DeleteProject_case:
+		return RunProjectActionDeleteProject(fromWireDeleteProjectAction(w.GetDeleteProject()))
+	case panelv1.RunProjectActionRequest_SetSource_case:
+		return RunProjectActionSetSource(fromWireProjectSource(w.GetSetSource()))
+	case panelv1.RunProjectActionRequest_DeleteVolume_case:
+		return RunProjectActionDeleteVolume(w.GetDeleteVolume())
+	}
+	return nil
 }
 
 func (v RunProjectActionStartServices) toRunProjectActionAction(b *panelv1.RunProjectActionRequest_builder) {
@@ -765,11 +1326,24 @@ var (
 	_ RunProjectActionAction = RunProjectActionDeleteVolume("")
 )
 
+func fromWireServicesAction(w *panelv1.ServicesAction) ServicesAction {
+	return ServicesAction{
+		w.GetServices(),
+	}
+}
+
 func toWireServicesAction(v ServicesAction) *panelv1.ServicesAction {
 	b := panelv1.ServicesAction_builder{
 		Services: v.Services,
 	}
 	return b.Build()
+}
+
+func fromWireRecreateServiceAction(w *panelv1.RecreateServiceAction) RecreateServiceAction {
+	return RecreateServiceAction{
+		w.GetService(),
+		w.GetPullLatestImage(),
+	}
 }
 
 func toWireRecreateServiceAction(v RecreateServiceAction) *panelv1.RecreateServiceAction {
@@ -780,9 +1354,20 @@ func toWireRecreateServiceAction(v RecreateServiceAction) *panelv1.RecreateServi
 	return b.Build()
 }
 
+func fromWireBackUpAction(w *panelv1.BackUpAction) BackUpAction {
+	return BackUpAction{}
+}
+
 func toWireBackUpAction(v BackUpAction) *panelv1.BackUpAction {
 	b := panelv1.BackUpAction_builder{}
 	return b.Build()
+}
+
+func fromWireRestoreSnapshotAction(w *panelv1.RestoreSnapshotAction) RestoreSnapshotAction {
+	return RestoreSnapshotAction{
+		w.GetSnapshotId(),
+		w.GetVolumes(),
+	}
 }
 
 func toWireRestoreSnapshotAction(v RestoreSnapshotAction) *panelv1.RestoreSnapshotAction {
@@ -793,11 +1378,23 @@ func toWireRestoreSnapshotAction(v RestoreSnapshotAction) *panelv1.RestoreSnapsh
 	return b.Build()
 }
 
+func fromWireCancelOperationAction(w *panelv1.CancelOperationAction) CancelOperationAction {
+	return CancelOperationAction{
+		w.GetOperationId(),
+	}
+}
+
 func toWireCancelOperationAction(v CancelOperationAction) *panelv1.CancelOperationAction {
 	b := panelv1.CancelOperationAction_builder{
 		OperationId: nonZero(v.OperationID),
 	}
 	return b.Build()
+}
+
+func fromWireDeleteProjectAction(w *panelv1.DeleteProjectAction) DeleteProjectAction {
+	return DeleteProjectAction{
+		w.GetSkipFinalBackup(),
+	}
 }
 
 func toWireDeleteProjectAction(v DeleteProjectAction) *panelv1.DeleteProjectAction {
@@ -812,6 +1409,25 @@ func fromWireRunProjectActionResponse(w *panelv1.RunProjectActionResponse) RunPr
 		pointerFromWire(w.GetOperation(), fromWireOperation),
 		pointerFromWire(w.GetProject(), fromWireProject),
 		sliceFromWire(w.GetLog(), fromWireOperationLogLine),
+	}
+}
+
+func toWireRunProjectActionResponse(v RunProjectActionResponse) *panelv1.RunProjectActionResponse {
+	b := panelv1.RunProjectActionResponse_builder{
+		Operation: pointerToWire(v.Operation, toWireOperation),
+		Project:   pointerToWire(v.Project, toWireProject),
+		Log:       sliceToWire(v.Log, toWireOperationLogLine),
+	}
+	return b.Build()
+}
+
+func fromWireGetOperationRequest(w *panelv1.GetOperationRequest) GetOperationRequest {
+	return GetOperationRequest{
+		w.GetProjectId(),
+		w.GetOperationId(),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		optional(w.HasAfterLogLine(), w.GetAfterLogLine()),
+		optional(w.HasLogLineLimit(), w.GetLogLineLimit()),
 	}
 }
 
@@ -836,10 +1452,39 @@ func fromWireGetOperationResponse(w *panelv1.GetOperationResponse) GetOperationR
 	}
 }
 
+func toWireGetOperationResponse(v GetOperationResponse) *panelv1.GetOperationResponse {
+	b := panelv1.GetOperationResponse_builder{
+		Operation:        pointerToWire(v.Operation, toWireOperation),
+		Project:          pointerToWire(v.Project, toWireProject),
+		Log:              sliceToWire(v.Log, toWireOperationLogLine),
+		LogLineCount:     nonZero(v.LogLineCount),
+		NextAfterLogLine: nonZero(v.NextAfterLogLine),
+	}
+	return b.Build()
+}
+
 func fromWireOperationLogLine(w *panelv1.OperationLogLine) OperationLogLine {
 	return OperationLogLine{
 		timeFromWire(w.GetTime()),
 		w.GetText(),
+	}
+}
+
+func toWireOperationLogLine(v OperationLogLine) *panelv1.OperationLogLine {
+	b := panelv1.OperationLogLine_builder{
+		Time: timeToWire(v.Time),
+		Text: nonZero(v.Text),
+	}
+	return b.Build()
+}
+
+func fromWireHTTPTrafficFilter(w *panelv1.HttpTrafficFilter) HTTPTrafficFilter {
+	return HTTPTrafficFilter{
+		w.GetHost(),
+		w.GetMethod(),
+		w.GetPathContains(),
+		w.GetPathPattern(),
+		w.GetStatusClass(),
 	}
 }
 
@@ -852,6 +1497,19 @@ func toWireHTTPTrafficFilter(v HTTPTrafficFilter) *panelv1.HttpTrafficFilter {
 		StatusClass:  nonZero(v.StatusClass),
 	}
 	return b.Build()
+}
+
+func fromWireQueryHTTPTrafficRequest(w *panelv1.QueryHttpTrafficRequest) QueryHTTPTrafficRequest {
+	return QueryHTTPTrafficRequest{
+		w.GetProjectId(),
+		pointerFromWire(w.GetFilter(), fromWireHTTPTrafficFilter),
+		timeFromWire(w.GetStartTime()),
+		timeFromWire(w.GetEndTime()),
+		w.GetLastSeconds(),
+		w.GetBucketWidthSeconds(),
+		w.GetRequestLimit(),
+		w.GetPageToken(),
+	}
 }
 
 func toWireQueryHTTPTrafficRequest(v QueryHTTPTrafficRequest) *panelv1.QueryHttpTrafficRequest {
@@ -883,11 +1541,35 @@ func fromWireQueryHTTPTrafficResponse(w *panelv1.QueryHttpTrafficResponse) Query
 	}
 }
 
+func toWireQueryHTTPTrafficResponse(v QueryHTTPTrafficResponse) *panelv1.QueryHttpTrafficResponse {
+	b := panelv1.QueryHttpTrafficResponse_builder{
+		StartTime:      timeToWire(v.StartTime),
+		EndTime:        timeToWire(v.EndTime),
+		OldestKeptTime: timeToWire(v.OldestKeptTime),
+		Summary:        pointerToWire(v.Summary, toWireHTTPTrafficSummary),
+		Buckets:        sliceToWire(v.Buckets, toWireHTTPTrafficBucket),
+		TopPaths:       sliceToWire(v.TopPaths, toWireHTTPPathTraffic),
+		NewestSequence: nonZero(v.NewestSequence),
+		Requests:       sliceToWire(v.Requests, toWireHTTPRequest),
+		NextPageToken:  nonZero(v.NextPageToken),
+		TailSequence:   nonZero(v.TailSequence),
+	}
+	return b.Build()
+}
+
 func fromWireHTTPTrafficBucket(w *panelv1.HttpTrafficBucket) HTTPTrafficBucket {
 	return HTTPTrafficBucket{
 		timeFromWire(w.GetStartTime()),
 		pointerFromWire(w.GetSummary(), fromWireHTTPTrafficSummary),
 	}
+}
+
+func toWireHTTPTrafficBucket(v HTTPTrafficBucket) *panelv1.HttpTrafficBucket {
+	b := panelv1.HttpTrafficBucket_builder{
+		StartTime: timeToWire(v.StartTime),
+		Summary:   pointerToWire(v.Summary, toWireHTTPTrafficSummary),
+	}
+	return b.Build()
 }
 
 func fromWireHTTPPathTraffic(w *panelv1.HttpPathTraffic) HTTPPathTraffic {
@@ -896,6 +1578,15 @@ func fromWireHTTPPathTraffic(w *panelv1.HttpPathTraffic) HTTPPathTraffic {
 		w.GetPathPattern(),
 		pointerFromWire(w.GetSummary(), fromWireHTTPTrafficSummary),
 	}
+}
+
+func toWireHTTPPathTraffic(v HTTPPathTraffic) *panelv1.HttpPathTraffic {
+	b := panelv1.HttpPathTraffic_builder{
+		Method:      nonZero(v.Method),
+		PathPattern: nonZero(v.PathPattern),
+		Summary:     pointerToWire(v.Summary, toWireHTTPTrafficSummary),
+	}
+	return b.Build()
 }
 
 func fromWireHTTPRequest(w *panelv1.HttpRequest) HTTPRequest {
@@ -918,6 +1609,35 @@ func fromWireHTTPRequest(w *panelv1.HttpRequest) HTTPRequest {
 	}
 }
 
+func toWireHTTPRequest(v HTTPRequest) *panelv1.HttpRequest {
+	b := panelv1.HttpRequest_builder{
+		Sequence:          nonZero(v.Sequence),
+		FinishTime:        timeToWire(v.FinishTime),
+		Host:              nonZero(v.Host),
+		Method:            nonZero(v.Method),
+		Path:              nonZero(v.Path),
+		PathPattern:       nonZero(v.PathPattern),
+		RoutePath:         nonZero(v.RoutePath),
+		Service:           nonZero(v.Service),
+		Port:              nonZero(v.Port),
+		StatusCode:        nonZero(v.StatusCode),
+		ResponseSizeBytes: nonZero(v.ResponseSizeBytes),
+		DurationMs:        nonZero(v.DurationMs),
+		ServiceDurationMs: nonZero(v.ServiceDurationMs),
+		ClientIpAddress:   nonZero(v.ClientIPAddress),
+		UserAgent:         nonZero(v.UserAgent),
+	}
+	return b.Build()
+}
+
+func fromWireContainerLogFilter(w *panelv1.ContainerLogFilter) ContainerLogFilter {
+	return ContainerLogFilter{
+		w.GetService(),
+		fromWireOutputStream(w.GetStream()),
+		w.GetTextContains(),
+	}
+}
+
 func toWireContainerLogFilter(v ContainerLogFilter) *panelv1.ContainerLogFilter {
 	b := panelv1.ContainerLogFilter_builder{
 		Service:      nonZero(v.Service),
@@ -925,6 +1645,19 @@ func toWireContainerLogFilter(v ContainerLogFilter) *panelv1.ContainerLogFilter 
 		TextContains: nonZero(v.TextContains),
 	}
 	return b.Build()
+}
+
+func fromWireQueryContainerLogsRequest(w *panelv1.QueryContainerLogsRequest) QueryContainerLogsRequest {
+	return QueryContainerLogsRequest{
+		w.GetProjectId(),
+		pointerFromWire(w.GetFilter(), fromWireContainerLogFilter),
+		timeFromWire(w.GetStartTime()),
+		timeFromWire(w.GetEndTime()),
+		w.GetLastSeconds(),
+		w.GetLimit(),
+		w.GetFromStart(),
+		w.GetPageToken(),
+	}
 }
 
 func toWireQueryContainerLogsRequest(v QueryContainerLogsRequest) *panelv1.QueryContainerLogsRequest {
@@ -952,12 +1685,46 @@ func fromWireQueryContainerLogsResponse(w *panelv1.QueryContainerLogsResponse) Q
 	}
 }
 
+func toWireQueryContainerLogsResponse(v QueryContainerLogsResponse) *panelv1.QueryContainerLogsResponse {
+	b := panelv1.QueryContainerLogsResponse_builder{
+		StartTime:      timeToWire(v.StartTime),
+		EndTime:        timeToWire(v.EndTime),
+		OldestKeptTime: timeToWire(v.OldestKeptTime),
+		Lines:          sliceToWire(v.Lines, toWireLogLine),
+		NextPageToken:  nonZero(v.NextPageToken),
+		TailCursor:     nonZero(v.TailCursor),
+	}
+	return b.Build()
+}
+
 func fromWireLogLine(w *panelv1.LogLine) LogLine {
 	return LogLine{
 		timeFromWire(w.GetTime()),
 		w.GetService(),
 		fromWireOutputStream(w.GetStream()),
 		w.GetText(),
+	}
+}
+
+func toWireLogLine(v LogLine) *panelv1.LogLine {
+	b := panelv1.LogLine_builder{
+		Time:    timeToWire(v.Time),
+		Service: nonZero(v.Service),
+		Stream:  nonZero(toWireOutputStream(v.Stream)),
+		Text:    nonZero(v.Text),
+	}
+	return b.Build()
+}
+
+func fromWireRunServiceCommandRequest(w *panelv1.RunServiceCommandRequest) RunServiceCommandRequest {
+	return RunServiceCommandRequest{
+		w.GetProjectId(),
+		w.GetService(),
+		w.GetCommand(),
+		w.GetStdin(),
+		w.GetRunAsUser(),
+		w.GetWorkingDirectory(),
+		w.GetTimeoutSeconds(),
 	}
 }
 
@@ -984,6 +1751,17 @@ func fromWireRunServiceCommandResponse(w *panelv1.RunServiceCommandResponse) Run
 	}
 }
 
+func toWireRunServiceCommandResponse(v RunServiceCommandResponse) *panelv1.RunServiceCommandResponse {
+	b := panelv1.RunServiceCommandResponse_builder{
+		ExitCode:        nonZero(v.ExitCode),
+		TimedOut:        nonZero(v.TimedOut),
+		Stdout:          nonZero(v.Stdout),
+		Stderr:          nonZero(v.Stderr),
+		OutputTruncated: nonZero(v.OutputTruncated),
+	}
+	return b.Build()
+}
+
 func fromWireFileEntry(w *panelv1.FileEntry) FileEntry {
 	return FileEntry{
 		w.GetName(),
@@ -994,6 +1772,32 @@ func fromWireFileEntry(w *panelv1.FileEntry) FileEntry {
 		w.GetOwnerUid(),
 		w.GetOwnerGid(),
 		w.GetSymlinkTarget(),
+	}
+}
+
+func toWireFileEntry(v FileEntry) *panelv1.FileEntry {
+	b := panelv1.FileEntry_builder{
+		Name:          nonZero(v.Name),
+		Type:          nonZero(toWireFileType(v.Type)),
+		SizeBytes:     nonZero(v.SizeBytes),
+		ModifyTime:    timeToWire(v.ModifyTime),
+		Mode:          nonZero(v.Mode),
+		OwnerUid:      nonZero(v.OwnerUID),
+		OwnerGid:      nonZero(v.OwnerGID),
+		SymlinkTarget: nonZero(v.SymlinkTarget),
+	}
+	return b.Build()
+}
+
+func fromWireReadPathRequest(w *panelv1.ReadPathRequest) ReadPathRequest {
+	return ReadPathRequest{
+		w.GetProjectId(),
+		fromWireReadPathRoot(w),
+		w.GetPath(),
+		w.GetEntryLimit(),
+		w.GetOffsetBytes(),
+		w.GetLengthBytes(),
+		w.GetEntryPageToken(),
 	}
 }
 
@@ -1010,6 +1814,16 @@ func toWireReadPathRequest(v ReadPathRequest) *panelv1.ReadPathRequest {
 		v.Root.toReadPathRoot(&b)
 	}
 	return b.Build()
+}
+
+func fromWireReadPathRoot(w *panelv1.ReadPathRequest) ReadPathRoot {
+	switch w.WhichRoot() {
+	case panelv1.ReadPathRequest_Service_case:
+		return ReadPathService(w.GetService())
+	case panelv1.ReadPathRequest_Volume_case:
+		return ReadPathVolume(w.GetVolume())
+	}
+	return nil
 }
 
 func (v ReadPathService) toReadPathRoot(b *panelv1.ReadPathRequest_builder) {
@@ -1040,12 +1854,46 @@ func fromWireReadPathResponse(w *panelv1.ReadPathResponse) ReadPathResponse {
 	}
 }
 
+func toWireReadPathResponse(v ReadPathResponse) *panelv1.ReadPathResponse {
+	b := panelv1.ReadPathResponse_builder{
+		Entry:              pointerToWire(v.Entry, toWireFileEntry),
+		Location:           nonZero(toWireFileLocation(v.Location)),
+		Volume:             nonZero(v.Volume),
+		Entries:            sliceToWire(v.Entries, toWireFileEntry),
+		EntryCount:         nonZero(v.EntryCount),
+		NextEntryPageToken: nonZero(v.NextEntryPageToken),
+		Text:               nonZero(v.Text),
+		Binary:             nonZero(v.Binary),
+		NextOffsetBytes:    nonZero(v.NextOffsetBytes),
+		DeployId:           nonZero(v.DeployID),
+	}
+	return b.Build()
+}
+
+func fromWireCreateTransferRequest(w *panelv1.CreateTransferRequest) CreateTransferRequest {
+	return CreateTransferRequest{
+		fromWireCreateTransferTransfer(w),
+	}
+}
+
 func toWireCreateTransferRequest(v CreateTransferRequest) *panelv1.CreateTransferRequest {
 	b := panelv1.CreateTransferRequest_builder{}
 	if v.Transfer != nil {
 		v.Transfer.toCreateTransferTransfer(&b)
 	}
 	return b.Build()
+}
+
+func fromWireCreateTransferTransfer(w *panelv1.CreateTransferRequest) CreateTransferTransfer {
+	switch w.WhichTransfer() {
+	case panelv1.CreateTransferRequest_UploadArchive_case:
+		return CreateTransferUploadArchive(fromWireArchiveUpload(w.GetUploadArchive()))
+	case panelv1.CreateTransferRequest_UploadFile_case:
+		return CreateTransferUploadFile(fromWireFileUpload(w.GetUploadFile()))
+	case panelv1.CreateTransferRequest_Download_case:
+		return CreateTransferDownload(fromWirePathDownload(w.GetDownload()))
+	}
+	return nil
 }
 
 func (v CreateTransferUploadArchive) toCreateTransferTransfer(b *panelv1.CreateTransferRequest_builder) {
@@ -1066,11 +1914,25 @@ var (
 	_ CreateTransferTransfer = CreateTransferDownload{}
 )
 
+func fromWireArchiveUpload(w *panelv1.ArchiveUpload) ArchiveUpload {
+	return ArchiveUpload{
+		w.GetFileName(),
+	}
+}
+
 func toWireArchiveUpload(v ArchiveUpload) *panelv1.ArchiveUpload {
 	b := panelv1.ArchiveUpload_builder{
 		FileName: nonZero(v.FileName),
 	}
 	return b.Build()
+}
+
+func fromWireFileUpload(w *panelv1.FileUpload) FileUpload {
+	return FileUpload{
+		w.GetProjectId(),
+		fromWireFileUploadRoot(w),
+		w.GetPath(),
+	}
 }
 
 func toWireFileUpload(v FileUpload) *panelv1.FileUpload {
@@ -1082,6 +1944,16 @@ func toWireFileUpload(v FileUpload) *panelv1.FileUpload {
 		v.Root.toFileUploadRoot(&b)
 	}
 	return b.Build()
+}
+
+func fromWireFileUploadRoot(w *panelv1.FileUpload) FileUploadRoot {
+	switch w.WhichRoot() {
+	case panelv1.FileUpload_Service_case:
+		return FileUploadService(w.GetService())
+	case panelv1.FileUpload_Volume_case:
+		return FileUploadVolume(w.GetVolume())
+	}
+	return nil
 }
 
 func (v FileUploadService) toFileUploadRoot(b *panelv1.FileUpload_builder) {
@@ -1097,6 +1969,14 @@ var (
 	_ FileUploadRoot = FileUploadVolume("")
 )
 
+func fromWirePathDownload(w *panelv1.PathDownload) PathDownload {
+	return PathDownload{
+		w.GetProjectId(),
+		fromWirePathDownloadRoot(w),
+		w.GetPath(),
+	}
+}
+
 func toWirePathDownload(v PathDownload) *panelv1.PathDownload {
 	b := panelv1.PathDownload_builder{
 		ProjectId: nonZero(v.ProjectID),
@@ -1106,6 +1986,16 @@ func toWirePathDownload(v PathDownload) *panelv1.PathDownload {
 		v.Root.toPathDownloadRoot(&b)
 	}
 	return b.Build()
+}
+
+func fromWirePathDownloadRoot(w *panelv1.PathDownload) PathDownloadRoot {
+	switch w.WhichRoot() {
+	case panelv1.PathDownload_Service_case:
+		return PathDownloadService(w.GetService())
+	case panelv1.PathDownload_Volume_case:
+		return PathDownloadVolume(w.GetVolume())
+	}
+	return nil
 }
 
 func (v PathDownloadService) toPathDownloadRoot(b *panelv1.PathDownload_builder) {
@@ -1130,7 +2020,22 @@ func fromWireCreateTransferResponse(w *panelv1.CreateTransferResponse) CreateTra
 		w.GetUploadId(),
 		w.GetReplaces(),
 		w.GetFileName(),
+		w.GetExcludeNames(),
 	}
+}
+
+func toWireCreateTransferResponse(v CreateTransferResponse) *panelv1.CreateTransferResponse {
+	b := panelv1.CreateTransferResponse_builder{
+		Url:          nonZero(v.URL),
+		HttpMethod:   nonZero(v.HTTPMethod),
+		ExpireTime:   timeToWire(v.ExpireTime),
+		Command:      nonZero(v.Command),
+		UploadId:     nonZero(v.UploadID),
+		Replaces:     nonZero(v.Replaces),
+		FileName:     nonZero(v.FileName),
+		ExcludeNames: v.ExcludeNames,
+	}
+	return b.Build()
 }
 
 func fromWireProjectBusy(w *panelv1.ProjectBusy) ProjectBusy {
@@ -1141,12 +2046,31 @@ func fromWireProjectBusy(w *panelv1.ProjectBusy) ProjectBusy {
 	}
 }
 
+func toWireProjectBusy(v ProjectBusy) *panelv1.ProjectBusy {
+	b := panelv1.ProjectBusy_builder{
+		OperationId: nonZero(v.OperationID),
+		Kind:        nonZero(toWireOperationKind(v.Kind)),
+		StartTime:   timeToWire(v.StartTime),
+	}
+	return b.Build()
+}
+
 func fromWireProjectChanged(w *panelv1.ProjectChanged) ProjectChanged {
 	return ProjectChanged{}
 }
 
+func toWireProjectChanged(v ProjectChanged) *panelv1.ProjectChanged {
+	b := panelv1.ProjectChanged_builder{}
+	return b.Build()
+}
+
 func fromWireMachineUnreachable(w *panelv1.MachineUnreachable) MachineUnreachable {
 	return MachineUnreachable{}
+}
+
+func toWireMachineUnreachable(v MachineUnreachable) *panelv1.MachineUnreachable {
+	b := panelv1.MachineUnreachable_builder{}
+	return b.Build()
 }
 
 func fromWireNoMachine(w *panelv1.NoMachine) NoMachine {
@@ -1156,34 +2080,188 @@ func fromWireNoMachine(w *panelv1.NoMachine) NoMachine {
 	}
 }
 
+func toWireNoMachine(v NoMachine) *panelv1.NoMachine {
+	b := panelv1.NoMachine_builder{
+		Reason: nonZero(toWireNoMachineReason(v.Reason)),
+		Url:    nonZero(v.URL),
+	}
+	return b.Build()
+}
+
+func fromWireWatchOperationRequest(w *panelv1.WatchOperationRequest) WatchOperationRequest {
+	return WatchOperationRequest{
+		w.GetProjectId(),
+		w.GetOperationId(),
+	}
+}
+
+func toWireWatchOperationRequest(v WatchOperationRequest) *panelv1.WatchOperationRequest {
+	b := panelv1.WatchOperationRequest_builder{
+		ProjectId:   nonZero(v.ProjectID),
+		OperationId: nonZero(v.OperationID),
+	}
+	return b.Build()
+}
+
+func fromWireWatchOperationResponse(w *panelv1.WatchOperationResponse) WatchOperationResponse {
+	return WatchOperationResponse{
+		fromWireWatchOperationResponseMessage(w),
+	}
+}
+
+func toWireWatchOperationResponse(v WatchOperationResponse) *panelv1.WatchOperationResponse {
+	b := panelv1.WatchOperationResponse_builder{}
+	if v.Message != nil {
+		v.Message.toWatchOperationResponseMessage(&b)
+	}
+	return b.Build()
+}
+
+func fromWireWatchOperationResponseMessage(w *panelv1.WatchOperationResponse) WatchOperationResponseMessage {
+	switch w.WhichMessage() {
+	case panelv1.WatchOperationResponse_Log_case:
+		return WatchOperationResponseLog(fromWireOperationLogLine(w.GetLog()))
+	case panelv1.WatchOperationResponse_FinishedOperation_case:
+		return WatchOperationResponseFinishedOperation(fromWireOperation(w.GetFinishedOperation()))
+	}
+	return nil
+}
+
+func (v WatchOperationResponseLog) toWatchOperationResponseMessage(b *panelv1.WatchOperationResponse_builder) {
+	b.Log = toWireOperationLogLine(OperationLogLine(v))
+}
+
+func (v WatchOperationResponseFinishedOperation) toWatchOperationResponseMessage(b *panelv1.WatchOperationResponse_builder) {
+	b.FinishedOperation = toWireOperation(Operation(v))
+}
+
+var (
+	_ WatchOperationResponseMessage = WatchOperationResponseLog{}
+	_ WatchOperationResponseMessage = WatchOperationResponseFinishedOperation{}
+)
+
+func fromWireTailContainerLogsRequest(w *panelv1.TailContainerLogsRequest) TailContainerLogsRequest {
+	return TailContainerLogsRequest{
+		w.GetProjectId(),
+		pointerFromWire(w.GetFilter(), fromWireContainerLogFilter),
+		w.GetAfterCursor(),
+	}
+}
+
+func toWireTailContainerLogsRequest(v TailContainerLogsRequest) *panelv1.TailContainerLogsRequest {
+	b := panelv1.TailContainerLogsRequest_builder{
+		ProjectId:   nonZero(v.ProjectID),
+		Filter:      pointerToWire(v.Filter, toWireContainerLogFilter),
+		AfterCursor: nonZero(v.AfterCursor),
+	}
+	return b.Build()
+}
+
+func fromWireTailContainerLogsResponse(w *panelv1.TailContainerLogsResponse) TailContainerLogsResponse {
+	return TailContainerLogsResponse{
+		pointerFromWire(w.GetLine(), fromWireLogLine),
+		w.GetCursor(),
+	}
+}
+
+func toWireTailContainerLogsResponse(v TailContainerLogsResponse) *panelv1.TailContainerLogsResponse {
+	b := panelv1.TailContainerLogsResponse_builder{
+		Line:   pointerToWire(v.Line, toWireLogLine),
+		Cursor: nonZero(v.Cursor),
+	}
+	return b.Build()
+}
+
+func fromWireTailHTTPTrafficRequest(w *panelv1.TailHttpTrafficRequest) TailHTTPTrafficRequest {
+	return TailHTTPTrafficRequest{
+		w.GetProjectId(),
+		pointerFromWire(w.GetFilter(), fromWireHTTPTrafficFilter),
+		w.GetAfterSequence(),
+	}
+}
+
+func toWireTailHTTPTrafficRequest(v TailHTTPTrafficRequest) *panelv1.TailHttpTrafficRequest {
+	b := panelv1.TailHttpTrafficRequest_builder{
+		ProjectId:     nonZero(v.ProjectID),
+		Filter:        pointerToWire(v.Filter, toWireHTTPTrafficFilter),
+		AfterSequence: nonZero(v.AfterSequence),
+	}
+	return b.Build()
+}
+
+func fromWireTailHTTPTrafficResponse(w *panelv1.TailHttpTrafficResponse) TailHTTPTrafficResponse {
+	return TailHTTPTrafficResponse{
+		pointerFromWire(w.GetRequest(), fromWireHTTPRequest),
+	}
+}
+
+func toWireTailHTTPTrafficResponse(v TailHTTPTrafficResponse) *panelv1.TailHttpTrafficResponse {
+	b := panelv1.TailHttpTrafficResponse_builder{
+		Request: pointerToWire(v.Request, toWireHTTPRequest),
+	}
+	return b.Build()
+}
+
 func fromWireMachineSessionKind(w panelv1.MachineSessionKind) MachineSessionKind {
 	return MachineSessionKind(w)
+}
+
+func toWireMachineSessionKind(v MachineSessionKind) panelv1.MachineSessionKind {
+	return panelv1.MachineSessionKind(v)
 }
 
 func fromWireProjectProblemKind(w panelv1.ProjectProblemKind) ProjectProblemKind {
 	return ProjectProblemKind(w)
 }
 
+func toWireProjectProblemKind(v ProjectProblemKind) panelv1.ProjectProblemKind {
+	return panelv1.ProjectProblemKind(v)
+}
+
 func fromWireServicesActionKind(w panelv1.ServicesActionKind) ServicesActionKind {
 	return ServicesActionKind(w)
 }
 
+func toWireServicesActionKind(v ServicesActionKind) panelv1.ServicesActionKind {
+	return panelv1.ServicesActionKind(v)
+}
+
 func fromWireServiceState(w panelv1.ServiceState) ServiceState { return ServiceState(w) }
+
+func toWireServiceState(v ServiceState) panelv1.ServiceState { return panelv1.ServiceState(v) }
 
 func fromWireRestartPolicy(w panelv1.RestartPolicy) RestartPolicy { return RestartPolicy(w) }
 
+func toWireRestartPolicy(v RestartPolicy) panelv1.RestartPolicy { return panelv1.RestartPolicy(v) }
+
 func fromWireHealthStatus(w panelv1.HealthStatus) HealthStatus { return HealthStatus(w) }
+
+func toWireHealthStatus(v HealthStatus) panelv1.HealthStatus { return panelv1.HealthStatus(v) }
 
 func fromWireCertificateSource(w panelv1.CertificateSource) CertificateSource {
 	return CertificateSource(w)
 }
 
+func toWireCertificateSource(v CertificateSource) panelv1.CertificateSource {
+	return panelv1.CertificateSource(v)
+}
+
 func fromWireOperationKind(w panelv1.OperationKind) OperationKind { return OperationKind(w) }
+
+func toWireOperationKind(v OperationKind) panelv1.OperationKind { return panelv1.OperationKind(v) }
 
 func fromWireOperationStatus(w panelv1.OperationStatus) OperationStatus { return OperationStatus(w) }
 
+func toWireOperationStatus(v OperationStatus) panelv1.OperationStatus {
+	return panelv1.OperationStatus(v)
+}
+
 func fromWireDeployFailureReason(w panelv1.DeployFailureReason) DeployFailureReason {
 	return DeployFailureReason(w)
+}
+
+func toWireDeployFailureReason(v DeployFailureReason) panelv1.DeployFailureReason {
+	return panelv1.DeployFailureReason(v)
 }
 
 func fromWireOutputStream(w panelv1.OutputStream) OutputStream { return OutputStream(w) }
@@ -1192,9 +2270,17 @@ func toWireOutputStream(v OutputStream) panelv1.OutputStream { return panelv1.Ou
 
 func fromWireFileType(w panelv1.FileType) FileType { return FileType(w) }
 
+func toWireFileType(v FileType) panelv1.FileType { return panelv1.FileType(v) }
+
 func fromWireFileLocation(w panelv1.FileLocation) FileLocation { return FileLocation(w) }
 
+func toWireFileLocation(v FileLocation) panelv1.FileLocation { return panelv1.FileLocation(v) }
+
 func fromWireNoMachineReason(w panelv1.NoMachineReason) NoMachineReason { return NoMachineReason(w) }
+
+func toWireNoMachineReason(v NoMachineReason) panelv1.NoMachineReason {
+	return panelv1.NoMachineReason(v)
+}
 
 // Each constant of the package is the wire layer's number: one that differs does not compile.
 func _() {

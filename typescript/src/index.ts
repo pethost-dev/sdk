@@ -3,6 +3,7 @@
 // The whole public surface of the package. Its only imports are the private layers its bodies
 // call, each as a namespace, so that no message's name can meet an import's; no signature
 // below names them.
+import * as protobuf from "@bufbuild/protobuf";
 import * as connect from "@connectrpc/connect";
 import * as connectWeb from "@connectrpc/connect-web";
 import * as convert from "./convert.ts";
@@ -378,6 +379,12 @@ export const NoMachineReason = {
 
 export type GetMachineRequest = Record<string, never>;
 
+/** {@link GetMachineRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetMachineRequest: JsonCodec<GetMachineRequest, GetMachineRequest> = {
+  toJson: (value) => writeJson(wire.GetMachineRequestSchema, convert.toGetMachineRequest(value)),
+  fromJson: (json) => convert.fromGetMachineRequest(readJson(wire.GetMachineRequestSchema, json)),
+};
+
 export interface GetMachineResponse {
   machine?: Machine;
   /** By projectId. */
@@ -391,6 +398,12 @@ export interface GetMachineResponse {
   deletedProjects: DeletedProject[];
   github?: GithubConnection;
 }
+
+/** {@link GetMachineResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetMachineResponse: JsonCodec<GetMachineResponse, GetMachineResponse> = {
+  toJson: (value) => writeJson(wire.GetMachineResponseSchema, convert.toGetMachineResponse(value)),
+  fromJson: (json) => convert.fromGetMachineResponse(readJson(wire.GetMachineResponseSchema, json)),
+};
 
 export interface Machine {
   /** Its plan's name, e.g. "Starter". */
@@ -479,6 +492,12 @@ export interface Machine {
   sessions: MachineSession[];
 }
 
+/** {@link Machine} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Machine: JsonCodec<Machine, Machine> = {
+  toJson: (value) => writeJson(wire.MachineSchema, convert.toMachine(value)),
+  fromJson: (json) => convert.fromMachine(readJson(wire.MachineSchema, json)),
+};
+
 /**
  * Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
  * program, SFTP or one connection of a tunnel. It lasts until the program exits or the connection
@@ -499,6 +518,12 @@ export interface MachineSession {
   sshKeyLabel: string;
   sshKeyFingerprint: string;
 }
+
+/** {@link MachineSession} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MachineSession: JsonCodec<MachineSession, MachineSession> = {
+  toJson: (value) => writeJson(wire.MachineSessionSchema, convert.toMachineSession(value)),
+  fromJson: (json) => convert.fromMachineSession(readJson(wire.MachineSessionSchema, json)),
+};
 
 /**
  * Where the disk goes; the rest of diskUsedBytes is the filesystem's own metadata and the
@@ -522,6 +547,12 @@ export interface DiskUsage {
   httpTrafficBytes: bigint;
 }
 
+/** {@link DiskUsage} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DiskUsage: JsonCodec<DiskUsage, DiskUsage> = {
+  toJson: (value) => writeJson(wire.DiskUsageSchema, convert.toDiskUsage(value)),
+  fromJson: (json) => convert.fromDiskUsage(readJson(wire.DiskUsageSchema, json)),
+};
+
 export interface SshKey {
   /** The public key, as in authorized_keys: "ssh-ed25519 AAAA..."; never a private key. */
   publicKey: string;
@@ -539,6 +570,15 @@ export interface SshKeyInput {
   /** "SHA256:...". Ignored on input. */
   fingerprint?: string | undefined;
 }
+
+/**
+ * {@link SshKeyInput} as the API's JSON, and the API's JSON as {@link SshKey}: {@link JsonCodec}
+ * says how.
+ */
+export const SshKey: JsonCodec<SshKeyInput, SshKey> = {
+  toJson: (value) => writeJson(wire.SshKeySchema, convert.toSshKey(value)),
+  fromJson: (json) => convert.fromSshKey(readJson(wire.SshKeySchema, json)),
+};
 
 /**
  * The panel's GitHub App, one for every account: projects are created from the repositories of the
@@ -560,6 +600,12 @@ export interface GithubConnection {
   webhooksEnabled: boolean;
 }
 
+/** {@link GithubConnection} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GithubConnection: JsonCodec<GithubConnection, GithubConnection> = {
+  toJson: (value) => writeJson(wire.GithubConnectionSchema, convert.toGithubConnection(value)),
+  fromJson: (json) => convert.fromGithubConnection(readJson(wire.GithubConnectionSchema, json)),
+};
+
 export interface GithubRepository {
   /** "owner/name". */
   repository: string;
@@ -567,6 +613,12 @@ export interface GithubRepository {
   private: boolean;
   pushTime?: Date;
 }
+
+/** {@link GithubRepository} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GithubRepository: JsonCodec<GithubRepository, GithubRepository> = {
+  toJson: (value) => writeJson(wire.GithubRepositorySchema, convert.toGithubRepository(value)),
+  fromJson: (json) => convert.fromGithubRepository(readJson(wire.GithubRepositorySchema, json)),
+};
 
 export interface DeletedProject {
   projectId: string;
@@ -578,6 +630,12 @@ export interface DeletedProject {
   /** In all. */
   snapshotCount: number;
 }
+
+/** {@link DeletedProject} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DeletedProject: JsonCodec<DeletedProject, DeletedProject> = {
+  toJson: (value) => writeJson(wire.DeletedProjectSchema, convert.toDeletedProject(value)),
+  fromJson: (json) => convert.fromDeletedProject(readJson(wire.DeletedProjectSchema, json)),
+};
 
 export type RunMachineActionRequest = (
   | {
@@ -648,6 +706,12 @@ export type RunMachineActionRequest = (
     }
 );
 
+/** {@link RunMachineActionRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunMachineActionRequest: JsonCodec<RunMachineActionRequest, RunMachineActionRequest> = {
+  toJson: (value) => writeJson(wire.RunMachineActionRequestSchema, convert.toRunMachineActionRequest(value)),
+  fromJson: (json) => convert.fromRunMachineActionRequest(readJson(wire.RunMachineActionRequestSchema, json)),
+};
+
 export interface RestartMachineActionInput {
   /** Absent = now, or atMaintenanceWindow. INVALID_ARGUMENT = in the past. */
   restartTime?: Date | undefined;
@@ -657,10 +721,22 @@ export interface RestartMachineActionInput {
   interruptOperations?: boolean | undefined;
 }
 
+/** {@link RestartMachineActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RestartMachineAction: JsonCodec<RestartMachineActionInput, RestartMachineActionInput> = {
+  toJson: (value) => writeJson(wire.RestartMachineActionSchema, convert.toRestartMachineAction(value)),
+  fromJson: (json) => convert.fromRestartMachineAction(readJson(wire.RestartMachineActionSchema, json)),
+};
+
 export interface RunMachineActionResponse {
   /** As changed. */
   machine?: Machine;
 }
+
+/** {@link RunMachineActionResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunMachineActionResponse: JsonCodec<RunMachineActionResponse, RunMachineActionResponse> = {
+  toJson: (value) => writeJson(wire.RunMachineActionResponseSchema, convert.toRunMachineActionResponse(value)),
+  fromJson: (json) => convert.fromRunMachineActionResponse(readJson(wire.RunMachineActionResponseSchema, json)),
+};
 
 export interface ProjectMetadata {
   /** Empty = none: people see the id. */
@@ -681,6 +757,15 @@ export interface ProjectMetadataInput {
   /** Free text. */
   notes?: string | undefined;
 }
+
+/**
+ * {@link ProjectMetadataInput} as the API's JSON, and the API's JSON as {@link ProjectMetadata}:
+ * {@link JsonCodec} says how.
+ */
+export const ProjectMetadata: JsonCodec<ProjectMetadataInput, ProjectMetadata> = {
+  toJson: (value) => writeJson(wire.ProjectMetadataSchema, convert.toProjectMetadata(value)),
+  fromJson: (json) => convert.fromProjectMetadata(readJson(wire.ProjectMetadataSchema, json)),
+};
 
 export interface ProjectSummary {
   projectId: string;
@@ -713,10 +798,22 @@ export interface ProjectSummary {
   diskUsedBytes: bigint;
 }
 
+/** {@link ProjectSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectSummary: JsonCodec<ProjectSummary, ProjectSummary> = {
+  toJson: (value) => writeJson(wire.ProjectSummarySchema, convert.toProjectSummary(value)),
+  fromJson: (json) => convert.fromProjectSummary(readJson(wire.ProjectSummarySchema, json)),
+};
+
 export interface ServiceSummary {
   service: string;
   state?: ServiceState | number;
 }
+
+/** {@link ServiceSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ServiceSummary: JsonCodec<ServiceSummary, ServiceSummary> = {
+  toJson: (value) => writeJson(wire.ServiceSummarySchema, convert.toServiceSummary(value)),
+  fromJson: (json) => convert.fromServiceSummary(readJson(wire.ServiceSummarySchema, json)),
+};
 
 /** Something that needs attention. A service has at most one, its cause first. */
 export interface ProjectProblem {
@@ -743,6 +840,12 @@ export interface ProjectProblem {
   problemMessage: string;
 }
 
+/** {@link ProjectProblem} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectProblem: JsonCodec<ProjectProblem, ProjectProblem> = {
+  toJson: (value) => writeJson(wire.ProjectProblemSchema, convert.toProjectProblem(value)),
+  fromJson: (json) => convert.fromProjectProblem(readJson(wire.ProjectProblemSchema, json)),
+};
+
 export interface GetProjectRequest {
   projectId?: string | undefined;
   /**
@@ -756,9 +859,21 @@ export interface GetProjectRequest {
   snapshotsVolume?: string | undefined;
 }
 
+/** {@link GetProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetProjectRequest: JsonCodec<GetProjectRequest, GetProjectRequest> = {
+  toJson: (value) => writeJson(wire.GetProjectRequestSchema, convert.toGetProjectRequest(value)),
+  fromJson: (json) => convert.fromGetProjectRequest(readJson(wire.GetProjectRequestSchema, json)),
+};
+
 export interface GetProjectResponse {
   project?: Project;
 }
+
+/** {@link GetProjectResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetProjectResponse: JsonCodec<GetProjectResponse, GetProjectResponse> = {
+  toJson: (value) => writeJson(wire.GetProjectResponseSchema, convert.toGetProjectResponse(value)),
+  fromJson: (json) => convert.fromGetProjectResponse(readJson(wire.GetProjectResponseSchema, json)),
+};
 
 export interface Project {
   projectId: string;
@@ -834,6 +949,12 @@ export interface Project {
   runningServicesAction?: RunningServicesAction;
 }
 
+/** {@link Project} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Project: JsonCodec<Project, Project> = {
+  toJson: (value) => writeJson(wire.ProjectSchema, convert.toProject(value)),
+  fromJson: (json) => convert.fromProject(readJson(wire.ProjectSchema, json)),
+};
+
 /** A start, stop or restart of services that has not ended yet. */
 export interface RunningServicesAction {
   kind?: ServicesActionKind | number;
@@ -841,6 +962,12 @@ export interface RunningServicesAction {
   services: string[];
   startTime?: Date;
 }
+
+/** {@link RunningServicesAction} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunningServicesAction: JsonCodec<RunningServicesAction, RunningServicesAction> = {
+  toJson: (value) => writeJson(wire.RunningServicesActionSchema, convert.toRunningServicesAction(value)),
+  fromJson: (json) => convert.fromRunningServicesAction(readJson(wire.RunningServicesActionSchema, json)),
+};
 
 /** Where the files come from (THE PROJECT IS ITS DIRECTORY). */
 export type ProjectSource = (
@@ -879,6 +1006,15 @@ export type ProjectSourceInput = (
       files?: undefined;
     }
 );
+
+/**
+ * {@link ProjectSourceInput} as the API's JSON, and the API's JSON as {@link ProjectSource}:
+ * {@link JsonCodec} says how.
+ */
+export const ProjectSource: JsonCodec<ProjectSourceInput, ProjectSource> = {
+  toJson: (value) => writeJson(wire.ProjectSourceSchema, convert.toProjectSource(value)),
+  fromJson: (json) => convert.fromProjectSource(readJson(wire.ProjectSourceSchema, json)),
+};
 
 /** Input: an absent field keeps its value (setSource) or takes its default (new source). */
 export interface GithubSource {
@@ -940,6 +1076,15 @@ export interface GithubSourceInput {
   autoDeployPending?: boolean | undefined;
 }
 
+/**
+ * {@link GithubSourceInput} as the API's JSON, and the API's JSON as {@link GithubSource}:
+ * {@link JsonCodec} says how.
+ */
+export const GithubSource: JsonCodec<GithubSourceInput, GithubSource> = {
+  toJson: (value) => writeJson(wire.GithubSourceSchema, convert.toGithubSource(value)),
+  fromJson: (json) => convert.fromGithubSource(readJson(wire.GithubSourceSchema, json)),
+};
+
 export interface GithubCommit {
   /** Full. */
   sha: string;
@@ -957,6 +1102,15 @@ export interface GithubCommitInput {
   /** On github.com. */
   url?: string | undefined;
 }
+
+/**
+ * {@link GithubCommitInput} as the API's JSON, and the API's JSON as {@link GithubCommit}:
+ * {@link JsonCodec} says how.
+ */
+export const GithubCommit: JsonCodec<GithubCommitInput, GithubCommit> = {
+  toJson: (value) => writeJson(wire.GithubCommitSchema, convert.toGithubCommit(value)),
+  fromJson: (json) => convert.fromGithubCommit(readJson(wire.GithubCommitSchema, json)),
+};
 
 export interface Service {
   service: string;
@@ -1034,6 +1188,12 @@ export interface Service {
   sshCommand: string;
 }
 
+/** {@link Service} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Service: JsonCodec<Service, Service> = {
+  toJson: (value) => writeJson(wire.ServiceSchema, convert.toService(value)),
+  fromJson: (json) => convert.fromService(readJson(wire.ServiceSchema, json)),
+};
+
 /** A port that `ports:` opens on the machine directly, bypassing the proxy. */
 export interface PublishedPort {
   /** 0 = Docker picks one when the container starts. */
@@ -1045,11 +1205,23 @@ export interface PublishedPort {
   machineOnly: boolean;
 }
 
+/** {@link PublishedPort} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const PublishedPort: JsonCodec<PublishedPort, PublishedPort> = {
+  toJson: (value) => writeJson(wire.PublishedPortSchema, convert.toPublishedPort(value)),
+  fromJson: (json) => convert.fromPublishedPort(readJson(wire.PublishedPortSchema, json)),
+};
+
 export interface VolumeMount {
   volume: string;
   /** E.g. "/var/lib/postgresql/data". */
   containerPath: string;
 }
+
+/** {@link VolumeMount} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const VolumeMount: JsonCodec<VolumeMount, VolumeMount> = {
+  toJson: (value) => writeJson(wire.VolumeMountSchema, convert.toVolumeMount(value)),
+  fromJson: (json) => convert.fromVolumeMount(readJson(wire.VolumeMountSchema, json)),
+};
 
 /** The healthcheck Docker runs: compose.yaml's, else the image's HEALTHCHECK. */
 export interface HealthCheck {
@@ -1069,6 +1241,12 @@ export interface HealthCheck {
   /** Of the latest failed check, at most 4 KiB. Untrusted. */
   lastFailureOutput: string;
 }
+
+/** {@link HealthCheck} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HealthCheck: JsonCodec<HealthCheck, HealthCheck> = {
+  toJson: (value) => writeJson(wire.HealthCheckSchema, convert.toHealthCheck(value)),
+  fromJson: (json) => convert.fromHealthCheck(readJson(wire.HealthCheckSchema, json)),
+};
 
 export interface EnvironmentVariable {
   name: string;
@@ -1098,6 +1276,12 @@ export interface EnvironmentVariable {
   valueLeftOut: boolean;
 }
 
+/** {@link EnvironmentVariable} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const EnvironmentVariable: JsonCodec<EnvironmentVariable, EnvironmentVariable> = {
+  toJson: (value) => writeJson(wire.EnvironmentVariableSchema, convert.toEnvironmentVariable(value)),
+  fromJson: (json) => convert.fromEnvironmentVariable(readJson(wire.EnvironmentVariableSchema, json)),
+};
+
 export interface Volume {
   volume: string;
   /** Measured every few minutes. */
@@ -1122,10 +1306,22 @@ export interface Volume {
   declared: boolean;
 }
 
+/** {@link Volume} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Volume: JsonCodec<Volume, Volume> = {
+  toJson: (value) => writeJson(wire.VolumeSchema, convert.toVolume(value)),
+  fromJson: (json) => convert.fromVolume(readJson(wire.VolumeSchema, json)),
+};
+
 export interface VolumeMountedBy {
   service: string;
   containerPath: string;
 }
+
+/** {@link VolumeMountedBy} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const VolumeMountedBy: JsonCodec<VolumeMountedBy, VolumeMountedBy> = {
+  toJson: (value) => writeJson(wire.VolumeMountedBySchema, convert.toVolumeMountedBy(value)),
+  fromJson: (json) => convert.fromVolumeMountedBy(readJson(wire.VolumeMountedBySchema, json)),
+};
 
 /** A host of Project.routes, with its certificate. */
 export interface Host {
@@ -1148,6 +1344,12 @@ export interface Host {
    */
   unavailableMessage: string;
 }
+
+/** {@link Host} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Host: JsonCodec<Host, Host> = {
+  toJson: (value) => writeJson(wire.HostSchema, convert.toHost(value)),
+  fromJson: (json) => convert.fromHost(readJson(wire.HostSchema, json)),
+};
 
 /**
  * An x-pethost route: requests for `host` under `path` go to `port` of `service`. The field names
@@ -1188,6 +1390,15 @@ export interface RouteInput {
   /** True = the path's prefix is removed from the request. */
   stripPath?: boolean | undefined;
 }
+
+/**
+ * {@link RouteInput} as the API's JSON, and the API's JSON as {@link Route}: {@link JsonCodec}
+ * says how.
+ */
+export const Route: JsonCodec<RouteInput, Route> = {
+  toJson: (value) => writeJson(wire.RouteSchema, convert.toRoute(value)),
+  fromJson: (json) => convert.fromRoute(readJson(wire.RouteSchema, json)),
+};
 
 export interface Operation {
   operationId: string;
@@ -1253,6 +1464,12 @@ export interface Operation {
   filesKept: boolean;
 }
 
+/** {@link Operation} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Operation: JsonCodec<Operation, Operation> = {
+  toJson: (value) => writeJson(wire.OperationSchema, convert.toOperation(value)),
+  fromJson: (json) => convert.fromOperation(readJson(wire.OperationSchema, json)),
+};
+
 export interface Snapshot {
   snapshotId: string;
   createTime?: Date;
@@ -1262,6 +1479,12 @@ export interface Snapshot {
   volumes: string[];
 }
 
+/** {@link Snapshot} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Snapshot: JsonCodec<Snapshot, Snapshot> = {
+  toJson: (value) => writeJson(wire.SnapshotSchema, convert.toSnapshot(value)),
+  fromJson: (json) => convert.fromSnapshot(readJson(wire.SnapshotSchema, json)),
+};
+
 export interface HttpTrafficSummary {
   requestCount: bigint;
   /** 5xx responses. */
@@ -1270,6 +1493,12 @@ export interface HttpTrafficSummary {
   latencyP50Ms: number;
   latencyP95Ms: number;
 }
+
+/** {@link HttpTrafficSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HttpTrafficSummary: JsonCodec<HttpTrafficSummary, HttpTrafficSummary> = {
+  toJson: (value) => writeJson(wire.HttpTrafficSummarySchema, convert.toHttpTrafficSummary(value)),
+  fromJson: (json) => convert.fromHttpTrafficSummary(readJson(wire.HttpTrafficSummarySchema, json)),
+};
 
 export interface CreateProjectRequest {
   /** New, [a-z0-9][a-z0-9_-]*, ≤63 chars; immutable. */
@@ -1297,6 +1526,12 @@ export interface CreateProjectRequest {
   waitSeconds?: number | undefined;
 }
 
+/** {@link CreateProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateProjectRequest: JsonCodec<CreateProjectRequest, CreateProjectRequest> = {
+  toJson: (value) => writeJson(wire.CreateProjectRequestSchema, convert.toCreateProjectRequest(value)),
+  fromJson: (json) => convert.fromCreateProjectRequest(readJson(wire.CreateProjectRequestSchema, json)),
+};
+
 export interface CreateProjectResponse {
   /**
    * The first deploy: finished, or IN_PROGRESS when waitSeconds ran out (then
@@ -1318,6 +1553,12 @@ export interface CreateProjectResponse {
   /** The log's last lines, unless it SUCCEEDED: why it FAILED, or what it is doing. */
   log: OperationLogLine[];
 }
+
+/** {@link CreateProjectResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateProjectResponse: JsonCodec<CreateProjectResponse, CreateProjectResponse> = {
+  toJson: (value) => writeJson(wire.CreateProjectResponseSchema, convert.toCreateProjectResponse(value)),
+  fromJson: (json) => convert.fromCreateProjectResponse(readJson(wire.CreateProjectResponseSchema, json)),
+};
 
 export type DeployProjectRequest = {
   projectId?: string | undefined;
@@ -1399,6 +1640,12 @@ export type DeployProjectRequest = {
     }
 );
 
+/** {@link DeployProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DeployProjectRequest: JsonCodec<DeployProjectRequest, DeployProjectRequest> = {
+  toJson: (value) => writeJson(wire.DeployProjectRequestSchema, convert.toDeployProjectRequest(value)),
+  fromJson: (json) => convert.fromDeployProjectRequest(readJson(wire.DeployProjectRequestSchema, json)),
+};
+
 /** Adds `<volume>:<container_path>` to the service, declaring the volume if needed. */
 export interface MountVolumeInput {
   /** A service of compose.yaml. */
@@ -1408,6 +1655,12 @@ export interface MountVolumeInput {
   /** Absolute, e.g. "/data". */
   containerPath?: string | undefined;
 }
+
+/** {@link MountVolumeInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MountVolume: JsonCodec<MountVolumeInput, MountVolumeInput> = {
+  toJson: (value) => writeJson(wire.MountVolumeSchema, convert.toMountVolume(value)),
+  fromJson: (json) => convert.fromMountVolume(readJson(wire.MountVolumeSchema, json)),
+};
 
 /** x-pethost as data. Absent parts stay. */
 export interface ProjectExtensionInput {
@@ -1425,6 +1678,12 @@ export interface ProjectExtensionInput {
   /** True = no password. Not with password. */
   removePassword?: boolean | undefined;
 }
+
+/** {@link ProjectExtensionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectExtension: JsonCodec<ProjectExtensionInput, ProjectExtensionInput> = {
+  toJson: (value) => writeJson(wire.ProjectExtensionSchema, convert.toProjectExtension(value)),
+  fromJson: (json) => convert.fromProjectExtension(readJson(wire.ProjectExtensionSchema, json)),
+};
 
 /** `path` and exactly one change. */
 export type FileChangeInput = {
@@ -1513,6 +1772,12 @@ export type FileChangeInput = {
     }
 );
 
+/** {@link FileChangeInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const FileChange: JsonCodec<FileChangeInput, FileChangeInput> = {
+  toJson: (value) => writeJson(wire.FileChangeSchema, convert.toFileChange(value)),
+  fromJson: (json) => convert.fromFileChange(readJson(wire.FileChangeSchema, json)),
+};
+
 export interface DeployProjectResponse {
   /**
    * The deploy: finished, or IN_PROGRESS when waitSeconds ran out (then
@@ -1532,6 +1797,12 @@ export interface DeployProjectResponse {
   log: OperationLogLine[];
 }
 
+/** {@link DeployProjectResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DeployProjectResponse: JsonCodec<DeployProjectResponse, DeployProjectResponse> = {
+  toJson: (value) => writeJson(wire.DeployProjectResponseSchema, convert.toDeployProjectResponse(value)),
+  fromJson: (json) => convert.fromDeployProjectResponse(readJson(wire.DeployProjectResponseSchema, json)),
+};
+
 export interface SpecViolation {
   /** Empty = not about one service. */
   service: string;
@@ -1544,11 +1815,23 @@ export interface SpecViolation {
   violationMessage: string;
 }
 
+/** {@link SpecViolation} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SpecViolation: JsonCodec<SpecViolation, SpecViolation> = {
+  toJson: (value) => writeJson(wire.SpecViolationSchema, convert.toSpecViolation(value)),
+  fromJson: (json) => convert.fromSpecViolation(readJson(wire.SpecViolationSchema, json)),
+};
+
 export interface ListCommitsRequest {
   projectId?: string | undefined;
   /** The previous page's last sha. Empty = from the newest. */
   beforeCommit?: string | undefined;
 }
+
+/** {@link ListCommitsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ListCommitsRequest: JsonCodec<ListCommitsRequest, ListCommitsRequest> = {
+  toJson: (value) => writeJson(wire.ListCommitsRequestSchema, convert.toListCommitsRequest(value)),
+  fromJson: (json) => convert.fromListCommitsRequest(readJson(wire.ListCommitsRequestSchema, json)),
+};
 
 export interface ListCommitsResponse {
   /** Newest first, at most 30. */
@@ -1556,6 +1839,12 @@ export interface ListCommitsResponse {
   /** Older ones exist: pass the last one's sha as beforeCommit. */
   more: boolean;
 }
+
+/** {@link ListCommitsResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ListCommitsResponse: JsonCodec<ListCommitsResponse, ListCommitsResponse> = {
+  toJson: (value) => writeJson(wire.ListCommitsResponseSchema, convert.toListCommitsResponse(value)),
+  fromJson: (json) => convert.fromListCommitsResponse(readJson(wire.ListCommitsResponseSchema, json)),
+};
 
 export interface BranchCommit {
   commit?: GithubCommit;
@@ -1576,6 +1865,12 @@ export interface BranchCommit {
    */
   newest: boolean;
 }
+
+/** {@link BranchCommit} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const BranchCommit: JsonCodec<BranchCommit, BranchCommit> = {
+  toJson: (value) => writeJson(wire.BranchCommitSchema, convert.toBranchCommit(value)),
+  fromJson: (json) => convert.fromBranchCommit(readJson(wire.BranchCommitSchema, json)),
+};
 
 export type RunProjectActionRequest = {
   projectId?: string | undefined;
@@ -1777,10 +2072,22 @@ export type RunProjectActionRequest = {
     }
 );
 
+/** {@link RunProjectActionRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunProjectActionRequest: JsonCodec<RunProjectActionRequest, RunProjectActionRequest> = {
+  toJson: (value) => writeJson(wire.RunProjectActionRequestSchema, convert.toRunProjectActionRequest(value)),
+  fromJson: (json) => convert.fromRunProjectActionRequest(readJson(wire.RunProjectActionRequestSchema, json)),
+};
+
 export interface ServicesActionInput {
   /** Empty = all (start: those with a container; restart: running ones). */
   services?: readonly string[] | undefined;
 }
+
+/** {@link ServicesActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ServicesAction: JsonCodec<ServicesActionInput, ServicesActionInput> = {
+  toJson: (value) => writeJson(wire.ServicesActionSchema, convert.toServicesAction(value)),
+  fromJson: (json) => convert.fromServicesAction(readJson(wire.ServicesActionSchema, json)),
+};
 
 export interface RecreateServiceActionInput {
   service?: string | undefined;
@@ -1788,7 +2095,19 @@ export interface RecreateServiceActionInput {
   pullLatestImage?: boolean | undefined;
 }
 
+/** {@link RecreateServiceActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RecreateServiceAction: JsonCodec<RecreateServiceActionInput, RecreateServiceActionInput> = {
+  toJson: (value) => writeJson(wire.RecreateServiceActionSchema, convert.toRecreateServiceAction(value)),
+  fromJson: (json) => convert.fromRecreateServiceAction(readJson(wire.RecreateServiceActionSchema, json)),
+};
+
 export type BackUpActionInput = Record<string, never>;
+
+/** {@link BackUpActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const BackUpAction: JsonCodec<BackUpActionInput, BackUpActionInput> = {
+  toJson: (value) => writeJson(wire.BackUpActionSchema, convert.toBackUpAction(value)),
+  fromJson: (json) => convert.fromBackUpAction(readJson(wire.BackUpActionSchema, json)),
+};
 
 export interface RestoreSnapshotActionInput {
   snapshotId?: string | undefined;
@@ -1800,15 +2119,33 @@ export interface RestoreSnapshotActionInput {
   volumes?: readonly string[] | undefined;
 }
 
+/** {@link RestoreSnapshotActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RestoreSnapshotAction: JsonCodec<RestoreSnapshotActionInput, RestoreSnapshotActionInput> = {
+  toJson: (value) => writeJson(wire.RestoreSnapshotActionSchema, convert.toRestoreSnapshotAction(value)),
+  fromJson: (json) => convert.fromRestoreSnapshotAction(readJson(wire.RestoreSnapshotActionSchema, json)),
+};
+
 export interface CancelOperationActionInput {
   /** Required. */
   operationId?: string | undefined;
 }
 
+/** {@link CancelOperationActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CancelOperationAction: JsonCodec<CancelOperationActionInput, CancelOperationActionInput> = {
+  toJson: (value) => writeJson(wire.CancelOperationActionSchema, convert.toCancelOperationAction(value)),
+  fromJson: (json) => convert.fromCancelOperationAction(readJson(wire.CancelOperationActionSchema, json)),
+};
+
 export interface DeleteProjectActionInput {
   /** True = no final backup, while backups are on: changes since the newest snapshot are lost. */
   skipFinalBackup?: boolean | undefined;
 }
+
+/** {@link DeleteProjectActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DeleteProjectAction: JsonCodec<DeleteProjectActionInput, DeleteProjectActionInput> = {
+  toJson: (value) => writeJson(wire.DeleteProjectActionSchema, convert.toDeleteProjectAction(value)),
+  fromJson: (json) => convert.fromDeleteProjectAction(readJson(wire.DeleteProjectActionSchema, json)),
+};
 
 export interface RunProjectActionResponse {
   /**
@@ -1828,6 +2165,12 @@ export interface RunProjectActionResponse {
   log: OperationLogLine[];
 }
 
+/** {@link RunProjectActionResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunProjectActionResponse: JsonCodec<RunProjectActionResponse, RunProjectActionResponse> = {
+  toJson: (value) => writeJson(wire.RunProjectActionResponseSchema, convert.toRunProjectActionResponse(value)),
+  fromJson: (json) => convert.fromRunProjectActionResponse(readJson(wire.RunProjectActionResponseSchema, json)),
+};
+
 export interface GetOperationRequest {
   projectId?: string | undefined;
   /** Empty = the latest. */
@@ -1839,6 +2182,12 @@ export interface GetOperationRequest {
   /** ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB. */
   logLineLimit?: number | undefined;
 }
+
+/** {@link GetOperationRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetOperationRequest: JsonCodec<GetOperationRequest, GetOperationRequest> = {
+  toJson: (value) => writeJson(wire.GetOperationRequestSchema, convert.toGetOperationRequest(value)),
+  fromJson: (json) => convert.fromGetOperationRequest(readJson(wire.GetOperationRequestSchema, json)),
+};
 
 export interface GetOperationResponse {
   operation?: Operation;
@@ -1861,6 +2210,12 @@ export interface GetOperationResponse {
   nextAfterLogLine: number;
 }
 
+/** {@link GetOperationResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const GetOperationResponse: JsonCodec<GetOperationResponse, GetOperationResponse> = {
+  toJson: (value) => writeJson(wire.GetOperationResponseSchema, convert.toGetOperationResponse(value)),
+  fromJson: (json) => convert.fromGetOperationResponse(readJson(wire.GetOperationResponseSchema, json)),
+};
+
 export interface OperationLogLine {
   time?: Date;
   /**
@@ -1869,6 +2224,12 @@ export interface OperationLogLine {
    */
   text: string;
 }
+
+/** {@link OperationLogLine} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const OperationLogLine: JsonCodec<OperationLogLine, OperationLogLine> = {
+  toJson: (value) => writeJson(wire.OperationLogLineSchema, convert.toOperationLogLine(value)),
+  fromJson: (json) => convert.fromOperationLogLine(readJson(wire.OperationLogLineSchema, json)),
+};
 
 export interface HttpTrafficFilterInput {
   /** As Host.host; a removed host still matches. */
@@ -1882,6 +2243,12 @@ export interface HttpTrafficFilterInput {
   /** 1-5: 5 = 5xx. */
   statusClass?: number | undefined;
 }
+
+/** {@link HttpTrafficFilterInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HttpTrafficFilter: JsonCodec<HttpTrafficFilterInput, HttpTrafficFilterInput> = {
+  toJson: (value) => writeJson(wire.HttpTrafficFilterSchema, convert.toHttpTrafficFilter(value)),
+  fromJson: (json) => convert.fromHttpTrafficFilter(readJson(wire.HttpTrafficFilterSchema, json)),
+};
 
 export interface QueryHttpTrafficRequest {
   projectId?: string | undefined;
@@ -1900,6 +2267,12 @@ export interface QueryHttpTrafficRequest {
   pageToken?: string | undefined;
 }
 
+/** {@link QueryHttpTrafficRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const QueryHttpTrafficRequest: JsonCodec<QueryHttpTrafficRequest, QueryHttpTrafficRequest> = {
+  toJson: (value) => writeJson(wire.QueryHttpTrafficRequestSchema, convert.toQueryHttpTrafficRequest(value)),
+  fromJson: (json) => convert.fromQueryHttpTrafficRequest(readJson(wire.QueryHttpTrafficRequestSchema, json)),
+};
+
 export interface QueryHttpTrafficResponse {
   /** The range queried, as the machine resolved it: defaults applied, on its clock. */
   startTime?: Date;
@@ -1913,23 +2286,37 @@ export interface QueryHttpTrafficResponse {
   topPaths: HttpPathTraffic[];
   /**
    * The sequence of the newest request the machine had logged: summary, buckets and topPaths count
-   * every one up to it, and TailHttpTraffic streams the later ones. 0 = none was logged.
+   * every one up to it, and {@link Pethost.tailHttpTraffic | tailHttpTraffic} streams the later
+   * ones. 0 = none was logged.
    */
   newestSequence: bigint;
   requests: HttpRequest[];
   /** Empty = no more requests. */
   nextPageToken: string;
   /**
-   * Where TailHttpTraffic goes on from (after_sequence), so it misses no request newer than these:
-   * set on a first page with requestLimit, empty or not. 0 = the machine had logged none.
+   * Where {@link Pethost.tailHttpTraffic | tailHttpTraffic} goes on from (afterSequence), so it
+   * misses no request newer than these: set on a first page with requestLimit, empty or not. 0 = the
+   * machine had logged none.
    */
   tailSequence: bigint;
 }
+
+/** {@link QueryHttpTrafficResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const QueryHttpTrafficResponse: JsonCodec<QueryHttpTrafficResponse, QueryHttpTrafficResponse> = {
+  toJson: (value) => writeJson(wire.QueryHttpTrafficResponseSchema, convert.toQueryHttpTrafficResponse(value)),
+  fromJson: (json) => convert.fromQueryHttpTrafficResponse(readJson(wire.QueryHttpTrafficResponseSchema, json)),
+};
 
 export interface HttpTrafficBucket {
   startTime?: Date;
   summary?: HttpTrafficSummary;
 }
+
+/** {@link HttpTrafficBucket} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HttpTrafficBucket: JsonCodec<HttpTrafficBucket, HttpTrafficBucket> = {
+  toJson: (value) => writeJson(wire.HttpTrafficBucketSchema, convert.toHttpTrafficBucket(value)),
+  fromJson: (json) => convert.fromHttpTrafficBucket(readJson(wire.HttpTrafficBucketSchema, json)),
+};
 
 export interface HttpPathTraffic {
   method: string;
@@ -1938,8 +2325,17 @@ export interface HttpPathTraffic {
   summary?: HttpTrafficSummary;
 }
 
+/** {@link HttpPathTraffic} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HttpPathTraffic: JsonCodec<HttpPathTraffic, HttpPathTraffic> = {
+  toJson: (value) => writeJson(wire.HttpPathTrafficSchema, convert.toHttpPathTraffic(value)),
+  fromJson: (json) => convert.fromHttpPathTraffic(readJson(wire.HttpPathTrafficSchema, json)),
+};
+
 export interface HttpRequest {
-  /** Unique and increasing on the machine: TailHttpTraffic's cursor. */
+  /**
+   * Unique and increasing on the machine: {@link Pethost.tailHttpTraffic | tailHttpTraffic}'s
+   * cursor.
+   */
   sequence: bigint;
   /** When the response finished. A WebSocket is logged when it closes, with status 0. */
   finishTime?: Date;
@@ -1968,6 +2364,12 @@ export interface HttpRequest {
   userAgent: string;
 }
 
+/** {@link HttpRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HttpRequest: JsonCodec<HttpRequest, HttpRequest> = {
+  toJson: (value) => writeJson(wire.HttpRequestSchema, convert.toHttpRequest(value)),
+  fromJson: (json) => convert.fromHttpRequest(readJson(wire.HttpRequestSchema, json)),
+};
+
 export interface ContainerLogFilterInput {
   /** Empty = all, removed services too. */
   service?: string | undefined;
@@ -1976,6 +2378,12 @@ export interface ContainerLogFilterInput {
   /** Literal, any ASCII case, ignoring escape sequences. Length limited (INVALID_ARGUMENT). */
   textContains?: string | undefined;
 }
+
+/** {@link ContainerLogFilterInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ContainerLogFilter: JsonCodec<ContainerLogFilterInput, ContainerLogFilterInput> = {
+  toJson: (value) => writeJson(wire.ContainerLogFilterSchema, convert.toContainerLogFilter(value)),
+  fromJson: (json) => convert.fromContainerLogFilter(readJson(wire.ContainerLogFilterSchema, json)),
+};
 
 export interface QueryContainerLogsRequest {
   projectId?: string | undefined;
@@ -1994,6 +2402,12 @@ export interface QueryContainerLogsRequest {
   pageToken?: string | undefined;
 }
 
+/** {@link QueryContainerLogsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const QueryContainerLogsRequest: JsonCodec<QueryContainerLogsRequest, QueryContainerLogsRequest> = {
+  toJson: (value) => writeJson(wire.QueryContainerLogsRequestSchema, convert.toQueryContainerLogsRequest(value)),
+  fromJson: (json) => convert.fromQueryContainerLogsRequest(readJson(wire.QueryContainerLogsRequestSchema, json)),
+};
+
 export interface QueryContainerLogsResponse {
   /** The range queried, as the machine resolved it: defaults applied, on its clock. */
   startTime?: Date;
@@ -2007,11 +2421,18 @@ export interface QueryContainerLogsResponse {
   /** Empty = no more. */
   nextPageToken: string;
   /**
-   * Where TailContainerLogs goes on from (after_cursor), so it misses no line newer than these: set
-   * on every page, an empty one too. Empty = the machine had logged no line.
+   * Where {@link Pethost.tailContainerLogs | tailContainerLogs} goes on from (afterCursor), so it
+   * misses no line newer than these: set on every page, an empty one too. Empty = the machine had
+   * logged no line.
    */
   tailCursor: string;
 }
+
+/** {@link QueryContainerLogsResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const QueryContainerLogsResponse: JsonCodec<QueryContainerLogsResponse, QueryContainerLogsResponse> = {
+  toJson: (value) => writeJson(wire.QueryContainerLogsResponseSchema, convert.toQueryContainerLogsResponse(value)),
+  fromJson: (json) => convert.fromQueryContainerLogsResponse(readJson(wire.QueryContainerLogsResponseSchema, json)),
+};
 
 export interface LogLine {
   time?: Date;
@@ -2024,6 +2445,12 @@ export interface LogLine {
    */
   text: string;
 }
+
+/** {@link LogLine} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const LogLine: JsonCodec<LogLine, LogLine> = {
+  toJson: (value) => writeJson(wire.LogLineSchema, convert.toLogLine(value)),
+  fromJson: (json) => convert.fromLogLine(readJson(wire.LogLineSchema, json)),
+};
 
 export interface RunServiceCommandRequest {
   projectId?: string | undefined;
@@ -2043,6 +2470,12 @@ export interface RunServiceCommandRequest {
   timeoutSeconds?: number | undefined;
 }
 
+/** {@link RunServiceCommandRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunServiceCommandRequest: JsonCodec<RunServiceCommandRequest, RunServiceCommandRequest> = {
+  toJson: (value) => writeJson(wire.RunServiceCommandRequestSchema, convert.toRunServiceCommandRequest(value)),
+  fromJson: (json) => convert.fromRunServiceCommandRequest(readJson(wire.RunServiceCommandRequestSchema, json)),
+};
+
 export interface RunServiceCommandResponse {
   exitCode: number;
   /** True = the machine killed it at the timeout; exitCode is then -1. */
@@ -2056,6 +2489,12 @@ export interface RunServiceCommandResponse {
   /** True = the start of stdout or stderr was cut. */
   outputTruncated: boolean;
 }
+
+/** {@link RunServiceCommandResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const RunServiceCommandResponse: JsonCodec<RunServiceCommandResponse, RunServiceCommandResponse> = {
+  toJson: (value) => writeJson(wire.RunServiceCommandResponseSchema, convert.toRunServiceCommandResponse(value)),
+  fromJson: (json) => convert.fromRunServiceCommandResponse(readJson(wire.RunServiceCommandResponseSchema, json)),
+};
 
 export interface FileEntry {
   /** Without its directory. */
@@ -2072,6 +2511,12 @@ export interface FileEntry {
   /** When SYMLINK. */
   symlinkTarget: string;
 }
+
+/** {@link FileEntry} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const FileEntry: JsonCodec<FileEntry, FileEntry> = {
+  toJson: (value) => writeJson(wire.FileEntrySchema, convert.toFileEntry(value)),
+  fromJson: (json) => convert.fromFileEntry(readJson(wire.FileEntrySchema, json)),
+};
 
 export type ReadPathRequest = {
   projectId?: string | undefined;
@@ -2110,6 +2555,12 @@ export type ReadPathRequest = {
     }
 );
 
+/** {@link ReadPathRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ReadPathRequest: JsonCodec<ReadPathRequest, ReadPathRequest> = {
+  toJson: (value) => writeJson(wire.ReadPathRequestSchema, convert.toReadPathRequest(value)),
+  fromJson: (json) => convert.fromReadPathRequest(readJson(wire.ReadPathRequestSchema, json)),
+};
+
 export interface ReadPathResponse {
   /** The path itself, symlinks followed; a symlink whose target does not exist is its own entry. */
   entry?: FileEntry;
@@ -2140,6 +2591,12 @@ export interface ReadPathResponse {
   deployId: string;
 }
 
+/** {@link ReadPathResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ReadPathResponse: JsonCodec<ReadPathResponse, ReadPathResponse> = {
+  toJson: (value) => writeJson(wire.ReadPathResponseSchema, convert.toReadPathResponse(value)),
+  fromJson: (json) => convert.fromReadPathResponse(readJson(wire.ReadPathResponseSchema, json)),
+};
+
 export type CreateTransferRequest = (
   | {
       /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`. */
@@ -2161,6 +2618,12 @@ export type CreateTransferRequest = (
     }
 );
 
+/** {@link CreateTransferRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateTransferRequest: JsonCodec<CreateTransferRequest, CreateTransferRequest> = {
+  toJson: (value) => writeJson(wire.CreateTransferRequestSchema, convert.toCreateTransferRequest(value)),
+  fromJson: (json) => convert.fromCreateTransferRequest(readJson(wire.CreateTransferRequestSchema, json)),
+};
+
 /**
  * The project's directory as a zip, tar or tar.gz (told by content), for
  * {@link Pethost.createProject | createProject}'s or
@@ -2172,6 +2635,12 @@ export interface ArchiveUploadInput {
   /** The archive's name for people, e.g. "recipes.zip". Empty = "archive.tgz". */
   fileName?: string | undefined;
 }
+
+/** {@link ArchiveUploadInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ArchiveUpload: JsonCodec<ArchiveUploadInput, ArchiveUploadInput> = {
+  toJson: (value) => writeJson(wire.ArchiveUploadSchema, convert.toArchiveUpload(value)),
+  fromJson: (json) => convert.fromArchiveUpload(readJson(wire.ArchiveUploadSchema, json)),
+};
 
 export type FileUploadInput = {
   projectId?: string | undefined;
@@ -2197,6 +2666,12 @@ export type FileUploadInput = {
       service?: undefined;
     }
 );
+
+/** {@link FileUploadInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const FileUpload: JsonCodec<FileUploadInput, FileUploadInput> = {
+  toJson: (value) => writeJson(wire.FileUploadSchema, convert.toFileUpload(value)),
+  fromJson: (json) => convert.fromFileUpload(readJson(wire.FileUploadSchema, json)),
+};
 
 /** A directory comes as a .tar of what {@link Pethost.readPath | readPath} shows; symlinks kept. */
 export type PathDownloadInput = {
@@ -2226,6 +2701,12 @@ export type PathDownloadInput = {
     }
 );
 
+/** {@link PathDownloadInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const PathDownload: JsonCodec<PathDownloadInput, PathDownloadInput> = {
+  toJson: (value) => writeJson(wire.PathDownloadSchema, convert.toPathDownload(value)),
+  fromJson: (json) => convert.fromPathDownload(readJson(wire.PathDownloadSchema, json)),
+};
+
 export interface CreateTransferResponse {
   /** On the machine's hostname (Machine.hostname); it works once. */
   url: string;
@@ -2253,7 +2734,18 @@ export interface CreateTransferResponse {
    * after the project and its service or volume. Empty for an upload.
    */
   fileName: string;
+  /**
+   * uploadArchive: the names `command` leaves out of the archive, wherever they lie in the
+   * directory. A program that packs the directory itself leaves out the same.
+   */
+  excludeNames: string[];
 }
+
+/** {@link CreateTransferResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateTransferResponse: JsonCodec<CreateTransferResponse, CreateTransferResponse> = {
+  toJson: (value) => writeJson(wire.CreateTransferResponseSchema, convert.toCreateTransferResponse(value)),
+  fromJson: (json) => convert.fromCreateTransferResponse(readJson(wire.CreateTransferResponseSchema, json)),
+};
 
 /**
  * Detail of an UNAVAILABLE error: an operation, or a short action, holds the project. The message
@@ -2272,11 +2764,23 @@ export interface ProjectBusy {
   startTime?: Date;
 }
 
+/** {@link ProjectBusy} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectBusy: JsonCodec<ProjectBusy, ProjectBusy> = {
+  toJson: (value) => writeJson(wire.ProjectBusySchema, convert.toProjectBusy(value)),
+  fromJson: (json) => convert.fromProjectBusy(readJson(wire.ProjectBusySchema, json)),
+};
+
 /**
  * Detail of an ABORTED error: baseDeployId is not the current deploy: the project was deployed
  * since you read it. Read it again (Project.deployId) and redo your change on its files.
  */
 export type ProjectChanged = Record<string, never>;
+
+/** {@link ProjectChanged} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectChanged: JsonCodec<ProjectChanged, ProjectChanged> = {
+  toJson: (value) => writeJson(wire.ProjectChangedSchema, convert.toProjectChanged(value)),
+  fromJson: (json) => convert.fromProjectChanged(readJson(wire.ProjectChangedSchema, json)),
+};
 
 /**
  * Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call
@@ -2284,11 +2788,167 @@ export type ProjectChanged = Record<string, never>;
  */
 export type MachineUnreachable = Record<string, never>;
 
+/** {@link MachineUnreachable} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MachineUnreachable: JsonCodec<MachineUnreachable, MachineUnreachable> = {
+  toJson: (value) => writeJson(wire.MachineUnreachableSchema, convert.toMachineUnreachable(value)),
+  fromJson: (json) => convert.fromMachineUnreachable(readJson(wire.MachineUnreachableSchema, json)),
+};
+
 /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
 export interface NoMachine {
   reason?: NoMachineReason | number;
   /** Where the person goes on in the browser. */
   url: string;
+}
+
+/** {@link NoMachine} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const NoMachine: JsonCodec<NoMachine, NoMachine> = {
+  toJson: (value) => writeJson(wire.NoMachineSchema, convert.toNoMachine(value)),
+  fromJson: (json) => convert.fromNoMachine(readJson(wire.NoMachineSchema, json)),
+};
+
+export interface WatchOperationRequest {
+  projectId?: string | undefined;
+  /** Empty = the latest. */
+  operationId?: string | undefined;
+}
+
+/** {@link WatchOperationRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const WatchOperationRequest: JsonCodec<WatchOperationRequest, WatchOperationRequest> = {
+  toJson: (value) => writeJson(wire.WatchOperationRequestSchema, convert.toWatchOperationRequest(value)),
+  fromJson: (json) => convert.fromWatchOperationRequest(readJson(wire.WatchOperationRequestSchema, json)),
+};
+
+export type WatchOperationResponse = (
+  | {
+      /**
+       * Which of `log`, `finishedOperation` is set. `undefined` = none, or one this version of the SDK
+       * does not know.
+       */
+      message: "log";
+      log: OperationLogLine;
+      finishedOperation?: undefined;
+    }
+  | {
+      message: "finishedOperation";
+      /** Always the last message. */
+      finishedOperation: Operation;
+      log?: undefined;
+    }
+  | { message?: undefined; log?: undefined; finishedOperation?: undefined; }
+);
+
+/** {@link WatchOperationResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const WatchOperationResponse: JsonCodec<WatchOperationResponse, WatchOperationResponse> = {
+  toJson: (value) => writeJson(wire.WatchOperationResponseSchema, convert.toWatchOperationResponse(value)),
+  fromJson: (json) => convert.fromWatchOperationResponse(readJson(wire.WatchOperationResponseSchema, json)),
+};
+
+export interface TailContainerLogsRequest {
+  projectId?: string | undefined;
+  filter?: ContainerLogFilterInput | undefined;
+  /** Empty = only lines written from now on. */
+  afterCursor?: string | undefined;
+}
+
+/** {@link TailContainerLogsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const TailContainerLogsRequest: JsonCodec<TailContainerLogsRequest, TailContainerLogsRequest> = {
+  toJson: (value) => writeJson(wire.TailContainerLogsRequestSchema, convert.toTailContainerLogsRequest(value)),
+  fromJson: (json) => convert.fromTailContainerLogsRequest(readJson(wire.TailContainerLogsRequestSchema, json)),
+};
+
+export interface TailContainerLogsResponse {
+  line?: LogLine;
+  /** To reconnect after this line. */
+  cursor: string;
+}
+
+/** {@link TailContainerLogsResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const TailContainerLogsResponse: JsonCodec<TailContainerLogsResponse, TailContainerLogsResponse> = {
+  toJson: (value) => writeJson(wire.TailContainerLogsResponseSchema, convert.toTailContainerLogsResponse(value)),
+  fromJson: (json) => convert.fromTailContainerLogsResponse(readJson(wire.TailContainerLogsResponseSchema, json)),
+};
+
+export interface TailHttpTrafficRequest {
+  projectId?: string | undefined;
+  filter?: HttpTrafficFilterInput | undefined;
+  /** 0 = only requests from now on. */
+  afterSequence?: bigint | undefined;
+}
+
+/** {@link TailHttpTrafficRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const TailHttpTrafficRequest: JsonCodec<TailHttpTrafficRequest, TailHttpTrafficRequest> = {
+  toJson: (value) => writeJson(wire.TailHttpTrafficRequestSchema, convert.toTailHttpTrafficRequest(value)),
+  fromJson: (json) => convert.fromTailHttpTrafficRequest(readJson(wire.TailHttpTrafficRequestSchema, json)),
+};
+
+export interface TailHttpTrafficResponse {
+  request?: HttpRequest;
+}
+
+/** {@link TailHttpTrafficResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const TailHttpTrafficResponse: JsonCodec<TailHttpTrafficResponse, TailHttpTrafficResponse> = {
+  toJson: (value) => writeJson(wire.TailHttpTrafficResponseSchema, convert.toTailHttpTrafficResponse(value)),
+  fromJson: (json) => convert.fromTailHttpTrafficResponse(readJson(wire.TailHttpTrafficResponseSchema, json)),
+};
+
+/** A value of JSON: what `JSON.parse` gives and `JSON.stringify` takes. */
+export type JsonValue = null | boolean | number | string | JsonValue[] | JsonObject;
+
+/** An object of JSON. */
+export type JsonObject = { [key: string]: JsonValue };
+
+/**
+ * A message as the API's own JSON, and back. Every message has one, a constant of the
+ * message's name: `Project.toJson(project)`, `Project.fromJson(json)`.
+ *
+ * The JSON is what the API answers and takes over HTTP, and what its reference documents: a
+ * field under its name in the API (`project_id`, not `projectId`), a value of an enum as its
+ * whole name there, with the prefix this package leaves out, a 64-bit integer as a string, a
+ * time as RFC 3339, bytes as base64, one of several fields under its own name, and no key for
+ * what is not set. `JSON.stringify` of a message is not that: it has this package's keys and
+ * values, and fails on a `bigint`.
+ */
+export interface JsonCodec<Written, Read> {
+  /**
+   * The message as the API's JSON, which `JSON.stringify` takes. It takes what a request
+   * takes of the message, and so what a response holds of it too, and writes what a call
+   * sends of it. A scalar at its zero and an empty list have no key, which says the same to
+   * the API; a zero is written where it says something else: for a field whose comment says
+   * what absent does, and for one of several fields. So the JSON of a response may lack a
+   * zero that the API wrote. A time is written to the millisecond: a `Date` holds no more.
+   *
+   * @throws when the message is not one a request could send: two of several fields set.
+   */
+  toJson(value: Written): JsonObject;
+
+  /**
+   * The message that the API's JSON says, read as a response is: a scalar the JSON lacks is
+   * its zero, and a list is never absent. It reads what the API reads: either spelling of a
+   * field's name, a 64-bit integer as a string or a number, an enum's value as its name or
+   * its number. A number that this version of the package has no name for stays a number in
+   * what a response holds, as in a call's answer; a message only requests take has no type
+   * for it, and refuses it.
+   *
+   * @throws when the JSON is not the message's, as the API refuses it: a field the message
+   * does not have, a value of another type, a name of an enum's value that this version of the
+   * package does not know.
+   */
+  fromJson(json: JsonValue): Read;
+}
+
+/**
+ * A wire message as the API's JSON: the wire layer's own, with the fields' names as the proto
+ * has them. A message's JSON is an object: only a well-known type's is not, and the package
+ * has none of those as a message.
+ */
+function writeJson<S extends protobuf.DescMessage>(schema: S, message: protobuf.MessageInitShape<S>): JsonObject {
+  return protobuf.toJson(schema, protobuf.create(schema, message), { useProtoFieldName: true }) as JsonObject;
+}
+
+/** The wire message the API's JSON says. A field the message does not have is refused, as the API refuses it. */
+function readJson<S extends protobuf.DescMessage>(schema: S, json: JsonValue): protobuf.MessageShape<S> {
+  return protobuf.fromJson(schema, json, { ignoreUnknownFields: false });
 }
 
 /** How a call failed. What the API means by each code is in {@link Pethost}'s conventions. */
@@ -2364,7 +3024,10 @@ export interface PethostOptions {
 
 /** What one call takes beside its request. */
 export interface CallOptions {
-  /** Aborts the call: it then fails as CANCELLED. A time limit is `AbortSignal.timeout(ms)`. */
+  /**
+   * Aborts the call: it then fails as CANCELLED, which a stream throws from its loop. A time
+   * limit is `AbortSignal.timeout(ms)`.
+   */
   signal?: AbortSignal | undefined;
 }
 
@@ -2372,7 +3035,8 @@ export interface CallOptions {
  * The client of Pethost's API. Pethost (https://pethost.dev) is a small cloud for personal
  * projects: a machine of your own that runs Docker Compose projects. A method here is one call
  * of the API: it reads the machine, deploys a project, queries its logs and requests, or runs
- * a command in one of its containers.
+ * a command in one of its containers. A stream's method returns what `for await` loops over:
+ * its call is made when the loop starts, and lasts as long as the loop.
  *
  * The API's own documentation follows; the comments of the methods and the types are its words.
  *
@@ -2439,7 +3103,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.1.0");
+      request.header.set("User-Agent", "pethost-typescript/0.1.1");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -2812,6 +3476,127 @@ export class Pethost {
       throw toError(error);
     }
   }
+
+  /**
+   * Watch an operation, as a stream.
+   *
+   * Streams an operation's log from its start, then follows it; the last message is the finished
+   * operation. Without a stream: {@link Pethost.getOperation | getOperation}.
+   *
+   * Read it with `for await`: the call is made when the loop starts, and each response comes as the
+   * API sends it. A stream that fails throws from the loop, once, after the responses that came
+   * before it; one that ends by itself just ends the loop. Leaving the loop ends the call; aborting
+   * `options.signal` ends it too, and the loop with a CANCELLED error. Nothing calls again by
+   * itself: where a response carries a cursor, a new call goes on from it.
+   *
+   * ```ts
+   * for await (const response of pethost.watchOperation(request)) {
+   *   // Use response.
+   * }
+   * ```
+   *
+   * @throws {@link PethostError} from the loop, when the call or the stream fails.
+   */
+  watchOperation(request: WatchOperationRequest, options?: CallOptions): AsyncIterable<WatchOperationResponse> {
+    const wireRequest = convert.toWatchOperationRequest(request);
+    const call = (signal: AbortSignal) => this.#wire.watchOperation(wireRequest, { signal });
+    return responses(wire.WatchOperationResponseSchema, call, convert.fromWatchOperationResponse, options?.signal);
+  }
+
+  /**
+   * Follow container logs, as a stream.
+   *
+   * Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE = the
+   * machine no longer keeps the cursor's line, so lines after it may be gone too: start over with
+   * {@link Pethost.queryContainerLogs | queryContainerLogs} and tail after its tailCursor. Without a
+   * stream: {@link Pethost.queryContainerLogs | queryContainerLogs}.
+   *
+   * Read it with `for await`: the call is made when the loop starts, and each response comes as the
+   * API sends it. A stream that fails throws from the loop, once, after the responses that came
+   * before it; one that ends by itself just ends the loop. Leaving the loop ends the call; aborting
+   * `options.signal` ends it too, and the loop with a CANCELLED error. Nothing calls again by
+   * itself: where a response carries a cursor, a new call goes on from it.
+   *
+   * ```ts
+   * for await (const response of pethost.tailContainerLogs(request)) {
+   *   // Use response.
+   * }
+   * ```
+   *
+   * @throws {@link PethostError} from the loop, when the call or the stream fails.
+   */
+  tailContainerLogs(request: TailContainerLogsRequest, options?: CallOptions): AsyncIterable<TailContainerLogsResponse> {
+    const wireRequest = convert.toTailContainerLogsRequest(request);
+    const call = (signal: AbortSignal) => this.#wire.tailContainerLogs(wireRequest, { signal });
+    return responses(wire.TailContainerLogsResponseSchema, call, convert.fromTailContainerLogsResponse, options?.signal);
+  }
+
+  /**
+   * Follow HTTP traffic, as a stream.
+   *
+   * Streams HTTP requests after a sequence number, then new ones as they finish. Without a stream:
+   * {@link Pethost.queryHttpTraffic | queryHttpTraffic}.
+   *
+   * Read it with `for await`: the call is made when the loop starts, and each response comes as the
+   * API sends it. A stream that fails throws from the loop, once, after the responses that came
+   * before it; one that ends by itself just ends the loop. Leaving the loop ends the call; aborting
+   * `options.signal` ends it too, and the loop with a CANCELLED error. Nothing calls again by
+   * itself: where a response carries a cursor, a new call goes on from it.
+   *
+   * ```ts
+   * for await (const response of pethost.tailHttpTraffic(request)) {
+   *   // Use response.
+   * }
+   * ```
+   *
+   * @throws {@link PethostError} from the loop, when the call or the stream fails.
+   */
+  tailHttpTraffic(request: TailHttpTrafficRequest, options?: CallOptions): AsyncIterable<TailHttpTrafficResponse> {
+    const wireRequest = convert.toTailHttpTrafficRequest(request);
+    const call = (signal: AbortSignal) => this.#wire.tailHttpTraffic(wireRequest, { signal });
+    return responses(wire.TailHttpTrafficResponseSchema, call, convert.fromTailHttpTrafficResponse, options?.signal);
+  }
+}
+
+/**
+ * A server stream as its method returns it. The call is made when the loop asks for the first
+ * response, and each response is yielded as it arrives. The wire layer's own iterable has no
+ * `return`: a loop left early would leave its call open. So the call gets a signal of its own,
+ * aborted however the loop ends, and the caller's signal aborts it too.
+ *
+ * A pulse is passed over: the loop never sees one, and it neither fails nor ends the stream.
+ */
+async function* responses<S extends protobuf.DescMessage, R>(
+  schema: S,
+  call: (signal: AbortSignal) => AsyncIterable<protobuf.MessageShape<S>>,
+  read: (response: protobuf.MessageShape<S>) => R,
+  signal: AbortSignal | undefined,
+): AsyncIterable<R> {
+  const left = new AbortController();
+  try {
+    for await (const response of call(signal ? AbortSignal.any([signal, left.signal]) : left.signal)) {
+      if (isPulse(schema, response)) continue;
+      yield read(response);
+    }
+  } catch (error) {
+    throw toError(error);
+  } finally {
+    left.abort();
+  }
+}
+
+/**
+ * A pulse is what the API sends on a stream that has had nothing to send for a while, so that
+ * no proxy on the way ends it as dead: a response of no bytes, with nothing set. The wire layer
+ * hands over the message it read, not the bytes, so the message is written again to count
+ * them. A field that this version of the package does not know is written too: a response
+ * that holds only such a field is no pulse.
+ */
+function isPulse<S extends protobuf.DescMessage>(schema: S, response: protobuf.MessageShape<S>): boolean {
+  // ponytail: every response of a stream is encoded once more, to be told from a pulse. When
+  // a stream's responses are large or many enough for that to show: a transport that hands
+  // over the length of each envelope.
+  return protobuf.toBinary(schema, response).length === 0;
 }
 
 const codes: Record<connect.Code, ErrorCode> = {

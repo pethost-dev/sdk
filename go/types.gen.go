@@ -1166,14 +1166,15 @@ type QueryHTTPTrafficResponse struct {
 	// The 10 busiest, busiest first.
 	TopPaths []HTTPPathTraffic
 	// The sequence of the newest request the machine had logged: summary, buckets and TopPaths
-	// count every one up to it, and TailHttpTraffic streams the later ones. 0 = none was logged.
+	// count every one up to it, and [Client.TailHTTPTraffic] streams the later ones. 0 = none was
+	// logged.
 	NewestSequence uint64
 	Requests       []HTTPRequest
 	// Empty = no more requests.
 	NextPageToken string
-	// Where TailHttpTraffic goes on from (after_sequence), so it misses no request newer than
-	// these: set on a first page with [QueryHTTPTrafficRequest.RequestLimit], empty or not. 0 =
-	// the machine had logged none.
+	// Where [Client.TailHTTPTraffic] goes on from ([TailHTTPTrafficRequest.AfterSequence]), so it
+	// misses no request newer than these: set on a first page with
+	// [QueryHTTPTrafficRequest.RequestLimit], empty or not. 0 = the machine had logged none.
 	TailSequence uint64
 }
 
@@ -1190,7 +1191,7 @@ type HTTPPathTraffic struct {
 }
 
 type HTTPRequest struct {
-	// Unique and increasing on the machine: TailHttpTraffic's cursor.
+	// Unique and increasing on the machine: [Client.TailHTTPTraffic]'s cursor.
 	Sequence uint64
 	// When the response finished. A WebSocket is logged when it closes, with status 0.
 	FinishTime time.Time
@@ -1255,8 +1256,9 @@ type QueryContainerLogsResponse struct {
 	Lines          []LogLine
 	// Empty = no more.
 	NextPageToken string
-	// Where TailContainerLogs goes on from (after_cursor), so it misses no line newer than these:
-	// set on every page, an empty one too. Empty = the machine had logged no line.
+	// Where [Client.TailContainerLogs] goes on from ([TailContainerLogsRequest.AfterCursor]), so
+	// it misses no line newer than these: set on every page, an empty one too. Empty = the machine
+	// had logged no line.
 	TailCursor string
 }
 
@@ -1501,6 +1503,9 @@ type CreateTransferResponse struct {
 	// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
 	// after the project and its service or volume. Empty for an upload.
 	FileName string
+	// [CreateTransferUploadArchive]: the names Command leaves out of the archive, wherever they
+	// lie in the directory. A program that packs the directory itself leaves out the same.
+	ExcludeNames []string
 }
 
 // ProjectBusy is a detail of an [Error]: [Error.ProjectBusy].
@@ -1539,6 +1544,66 @@ type NoMachine struct {
 	Reason NoMachineReason
 	// Where the person goes on in the browser.
 	URL string
+}
+
+// WatchOperationRequest is the request of [Client.WatchOperation].
+type WatchOperationRequest struct {
+	ProjectID string
+	// Empty = the latest.
+	OperationID string
+}
+
+// WatchOperationResponse is the response of [Client.WatchOperation].
+type WatchOperationResponse struct {
+	// One of [WatchOperationResponseLog] or [WatchOperationResponseFinishedOperation]; nil = none.
+	Message WatchOperationResponseMessage
+}
+
+// WatchOperationResponseMessage is what [WatchOperationResponse.Message] holds: one of
+// [WatchOperationResponseLog] or [WatchOperationResponseFinishedOperation].
+//
+// nil = none, or in a response a member that this version of the package does not know: a type
+// switch on it needs a default.
+type WatchOperationResponseMessage interface {
+	toWatchOperationResponseMessage(*panelv1.WatchOperationResponse_builder)
+}
+
+// WatchOperationResponseLog is a member of [WatchOperationResponseMessage], with the fields of
+// [OperationLogLine].
+type WatchOperationResponseLog OperationLogLine
+
+// WatchOperationResponseFinishedOperation is a member of [WatchOperationResponseMessage], with
+// the fields of [Operation].
+//
+// Always the last message.
+type WatchOperationResponseFinishedOperation Operation
+
+// TailContainerLogsRequest is the request of [Client.TailContainerLogs].
+type TailContainerLogsRequest struct {
+	ProjectID string
+	Filter    *ContainerLogFilter
+	// Empty = only lines written from now on.
+	AfterCursor string
+}
+
+// TailContainerLogsResponse is the response of [Client.TailContainerLogs].
+type TailContainerLogsResponse struct {
+	Line *LogLine
+	// To reconnect after this line.
+	Cursor string
+}
+
+// TailHTTPTrafficRequest is the request of [Client.TailHTTPTraffic].
+type TailHTTPTrafficRequest struct {
+	ProjectID string
+	Filter    *HTTPTrafficFilter
+	// 0 = only requests from now on.
+	AfterSequence uint64
+}
+
+// TailHTTPTrafficResponse is the response of [Client.TailHTTPTraffic].
+type TailHTTPTrafficResponse struct {
+	Request *HTTPRequest
 }
 
 // The API may add values: one that this version of the package does not know keeps its number

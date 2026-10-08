@@ -3,6 +3,10 @@
 package pethost
 
 import (
+	"context"
+	"errors"
+	"io"
+	"iter"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,7 +19,8 @@ import (
 )
 
 // This file is the part of the package that no proto file decides: the client's configuration,
-// the status codes and the helpers of the generated converters. It names nothing of the API.
+// the status codes, how a stream is ranged over and the helpers of the generated converters. It
+// names nothing of the API.
 
 // Config is what a [Client] is made of.
 type Config struct {
@@ -23,17 +28,18 @@ type Config struct {
 	Token string
 	// Where the API is served. Empty = "https://console.pethost.dev".
 	BaseURL string
-	// What sends the requests. nil = [http.DefaultClient].
+	// What sends the requests. nil = [http.DefaultClient]. A Timeout of it bounds each call
+	// whole, so it ends a stream too.
 	HTTPClient *http.Client
 }
 
 const defaultBaseURL = "https://console.pethost.dev"
 
 // userAgent says which client calls, and of which release.
-const userAgent = "pethost-go/0.1.0"
+const userAgent = "pethost-go/0.1.1"
 
 // newTransport is the wire layer's client for config: the Connect protocol over HTTP, by POST
-// with binary protobuf.
+// with binary protobuf, a stream's responses in the one answer.
 func newTransport(config Config) *connect.Client {
 	baseURL := config.BaseURL
 	if baseURL == "" {
@@ -159,6 +165,53 @@ func (e *Error) Error() string {
 // a failure the API itself answered with.
 func (e *Error) Unwrap() error {
 	return e.cause
+}
+
+// ── Streams ────────────────────────────────────────────────────────────────
+
+// wireStream is a server stream of the wire layer, whose every RPC has a type of its own for it.
+type wireStream[W proto.Message] interface {
+	Receive() (W, error)
+	Close() error
+}
+
+// responses is a server stream as its method returns it: the call is made when the loop starts,
+// each response is yielded as it arrives, and an error, the call's or the stream's, is yielded
+// once and ends the loop. The stream's own end is no error, and a pulse is passed over. However
+// the loop ends, the stream is closed, which ends the call.
+func responses[Q any, W proto.Message, R any, S wireStream[W]](ctx context.Context, call func(context.Context, *Q) (S, error), request *Q, fromWire func(W) R) iter.Seq2[*R, error] {
+	return func(yield func(*R, error) bool) {
+		stream, err := call(ctx, request)
+		if err != nil {
+			yield(nil, fromWireError(err))
+			return
+		}
+		defer stream.Close()
+
+		for {
+			response, err := stream.Receive()
+			if errors.Is(err, io.EOF) {
+				return
+			}
+			if err != nil {
+				yield(nil, fromWireError(err))
+				return
+			}
+			if isPulse(response) {
+				continue
+			}
+			if !yield(new(fromWire(response)), nil) {
+				return
+			}
+		}
+	}
+}
+
+// isPulse reports whether a stream's response is the API's pulse: the response with nothing set
+// that it sends after a while with nothing to send, so that no proxy on the way ends the stream
+// as dead. Such a response is no bytes on the wire, and one that says anything is some.
+func isPulse(response proto.Message) bool {
+	return proto.Size(response) == 0
 }
 
 // ── The converters' helpers ────────────────────────────────────────────────

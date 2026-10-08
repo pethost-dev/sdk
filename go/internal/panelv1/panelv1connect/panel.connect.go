@@ -5,7 +5,8 @@
 // The header below is the MCP server's instructions; an RPC marked `(mcp_tool)` is also an MCP
 // tool of the same name: its request is the input, its response the output, its comment the
 // description. Some agents see only the instructions' first 500 characters: the first paragraph
-// stands alone. The other RPCs serve the web panel; an agent uses what is named beside each.
+// stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
+// too, as methods of every SDK; an agent uses what is named beside each.
 
 // Pethost is the user's own hosting: their account rents one dedicated Linux machine that runs
 // Docker Compose projects. Use it whenever the user wants to deploy, host, publish or put online
@@ -430,14 +431,14 @@ type PanelServiceClient interface {
 	// NOT_FOUND = expired, or used by a deploy.
 	GetUpload(context.Context, *panelv1.GetUploadRequest) (*panelv1.GetUploadResponse, error)
 	// Streams an operation's log from its start, then follows it; the last message is the
-	// finished operation. Agents: GetOperation.
+	// finished operation. Without a stream: GetOperation.
 	WatchOperation(context.Context, *panelv1.WatchOperationRequest) (PanelServiceWatchOperationClientStream, error)
 	// Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
 	// the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-	// with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+	// with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
 	TailContainerLogs(context.Context, *panelv1.TailContainerLogsRequest) (PanelServiceTailContainerLogsClientStream, error)
-	// Streams HTTP requests after a sequence number, then new ones as they finish.
-	// Agents: QueryHttpTraffic.
+	// Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+	// stream: QueryHttpTraffic.
 	TailHttpTraffic(context.Context, *panelv1.TailHttpTrafficRequest) (PanelServiceTailHttpTrafficClientStream, error)
 }
 
@@ -670,14 +671,14 @@ type PanelServiceHandler interface {
 	// NOT_FOUND = expired, or used by a deploy.
 	GetUpload(context.Context, *panelv1.GetUploadRequest) (*panelv1.GetUploadResponse, error)
 	// Streams an operation's log from its start, then follows it; the last message is the
-	// finished operation. Agents: GetOperation.
+	// finished operation. Without a stream: GetOperation.
 	WatchOperation(context.Context, *panelv1.WatchOperationRequest, PanelServiceWatchOperationServerStream) error
 	// Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
 	// the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-	// with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
+	// with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
 	TailContainerLogs(context.Context, *panelv1.TailContainerLogsRequest, PanelServiceTailContainerLogsServerStream) error
-	// Streams HTTP requests after a sequence number, then new ones as they finish.
-	// Agents: QueryHttpTraffic.
+	// Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+	// stream: QueryHttpTraffic.
 	TailHttpTraffic(context.Context, *panelv1.TailHttpTrafficRequest, PanelServiceTailHttpTrafficServerStream) error
 }
 

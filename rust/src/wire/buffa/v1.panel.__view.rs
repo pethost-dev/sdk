@@ -532,7 +532,7 @@ impl<'__a> ::serde::Serialize for GetMachineResponseView<'__a> {
             __map.serialize_entry("projects", &*self.projects)?;
         }
         if !self.deleted_projects.is_empty() {
-            __map.serialize_entry("deletedProjects", &*self.deleted_projects)?;
+            __map.serialize_entry("deleted_projects", &*self.deleted_projects)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.github.as_option() {
@@ -1541,101 +1541,101 @@ impl<'__a> ::serde::Serialize for MachineView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.sample_time.as_option() {
-                __map.serialize_entry("sampleTime", __v)?;
+                __map.serialize_entry("sample_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.cpu_used_cores {
             __map
                 .serialize_entry(
-                    "cpuUsedCores",
+                    "cpu_used_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.cpu_total_cores {
             __map
                 .serialize_entry(
-                    "cpuTotalCores",
+                    "cpu_total_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_used_bytes {
             __map
                 .serialize_entry(
-                    "memoryUsedBytes",
+                    "memory_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_total_bytes {
             __map
                 .serialize_entry(
-                    "memoryTotalBytes",
+                    "memory_total_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.disk_used_bytes {
             __map
                 .serialize_entry(
-                    "diskUsedBytes",
+                    "disk_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.disk_total_bytes {
             __map
                 .serialize_entry(
-                    "diskTotalBytes",
+                    "disk_total_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.disk_usage.as_option() {
-                __map.serialize_entry("diskUsage", __v)?;
+                __map.serialize_entry("disk_usage", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.hostname {
             __map.serialize_entry("hostname", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.ssh_host_key_fingerprint {
-            __map.serialize_entry("sshHostKeyFingerprint", __v)?;
+            __map.serialize_entry("ssh_host_key_fingerprint", __v)?;
         }
         if !self.ssh_keys.is_empty() {
-            __map.serialize_entry("sshKeys", &*self.ssh_keys)?;
+            __map.serialize_entry("ssh_keys", &*self.ssh_keys)?;
         }
         if let ::core::option::Option::Some(__v) = self.backups_enabled {
-            __map.serialize_entry("backupsEnabled", &__v)?;
+            __map.serialize_entry("backups_enabled", &__v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self
                 .snapshot_list_time
                 .as_option()
             {
-                __map.serialize_entry("snapshotListTime", __v)?;
+                __map.serialize_entry("snapshot_list_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.snapshot_list_failure_message {
-            __map.serialize_entry("snapshotListFailureMessage", __v)?;
+            __map.serialize_entry("snapshot_list_failure_message", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.backup_retention_hours {
             __map
                 .serialize_entry(
-                    "backupRetentionHours",
+                    "backup_retention_hours",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.acme_enabled {
-            __map.serialize_entry("acmeEnabled", &__v)?;
+            __map.serialize_entry("acme_enabled", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.apps_domain {
-            __map.serialize_entry("appsDomain", __v)?;
+            __map.serialize_entry("apps_domain", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.daemon_version {
-            __map.serialize_entry("daemonVersion", __v)?;
+            __map.serialize_entry("daemon_version", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.docker_version {
-            __map.serialize_entry("dockerVersion", __v)?;
+            __map.serialize_entry("docker_version", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.boot_time.as_option() {
-                __map.serialize_entry("bootTime", __v)?;
+                __map.serialize_entry("boot_time", __v)?;
             }
         }
         {
@@ -1643,7 +1643,7 @@ impl<'__a> ::serde::Serialize for MachineView<'__a> {
                 .restart_required_time
                 .as_option()
             {
-                __map.serialize_entry("restartRequiredTime", __v)?;
+                __map.serialize_entry("restart_required_time", __v)?;
             }
         }
         {
@@ -1651,7 +1651,7 @@ impl<'__a> ::serde::Serialize for MachineView<'__a> {
                 .scheduled_restart_time
                 .as_option()
             {
-                __map.serialize_entry("scheduledRestartTime", __v)?;
+                __map.serialize_entry("scheduled_restart_time", __v)?;
             }
         }
         if !self.sessions.is_empty() {
@@ -2281,13 +2281,13 @@ impl<'__a> ::serde::Serialize for MachineSessionView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.session_id {
-            __map.serialize_entry("sessionId", __v)?;
+            __map.serialize_entry("session_id", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.kind {
             __map.serialize_entry("kind", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.service {
             __map.serialize_entry("service", __v)?;
@@ -2297,17 +2297,17 @@ impl<'__a> ::serde::Serialize for MachineSessionView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.client_address {
-            __map.serialize_entry("clientAddress", __v)?;
+            __map.serialize_entry("client_address", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.ssh_key_label {
-            __map.serialize_entry("sshKeyLabel", __v)?;
+            __map.serialize_entry("ssh_key_label", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.ssh_key_fingerprint {
-            __map.serialize_entry("sshKeyFingerprint", __v)?;
+            __map.serialize_entry("ssh_key_fingerprint", __v)?;
         }
         __map.end()
     }
@@ -2725,49 +2725,49 @@ impl<'__a> ::serde::Serialize for DiskUsageView<'__a> {
         if let ::core::option::Option::Some(__v) = self.images_bytes {
             __map
                 .serialize_entry(
-                    "imagesBytes",
+                    "images_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.build_cache_bytes {
             __map
                 .serialize_entry(
-                    "buildCacheBytes",
+                    "build_cache_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.volumes_bytes {
             __map
                 .serialize_entry(
-                    "volumesBytes",
+                    "volumes_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.container_layers_bytes {
             __map
                 .serialize_entry(
-                    "containerLayersBytes",
+                    "container_layers_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.project_files_bytes {
             __map
                 .serialize_entry(
-                    "projectFilesBytes",
+                    "project_files_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.container_logs_bytes {
             __map
                 .serialize_entry(
-                    "containerLogsBytes",
+                    "container_logs_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.http_traffic_bytes {
             __map
                 .serialize_entry(
-                    "httpTrafficBytes",
+                    "http_traffic_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -3093,7 +3093,7 @@ impl<'__a> ::serde::Serialize for SshKeyView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.public_key {
-            __map.serialize_entry("publicKey", __v)?;
+            __map.serialize_entry("public_key", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.label {
             __map.serialize_entry("label", __v)?;
@@ -3461,10 +3461,10 @@ impl<'__a> ::serde::Serialize for GithubConnectionView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.app_name {
-            __map.serialize_entry("appName", __v)?;
+            __map.serialize_entry("app_name", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.install_url {
-            __map.serialize_entry("installUrl", __v)?;
+            __map.serialize_entry("install_url", __v)?;
         }
         if !self.repositories.is_empty() {
             __map.serialize_entry("repositories", &*self.repositories)?;
@@ -3472,12 +3472,12 @@ impl<'__a> ::serde::Serialize for GithubConnectionView<'__a> {
         if let ::core::option::Option::Some(__v) = self.repository_count {
             __map
                 .serialize_entry(
-                    "repositoryCount",
+                    "repository_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.webhooks_enabled {
-            __map.serialize_entry("webhooksEnabled", &__v)?;
+            __map.serialize_entry("webhooks_enabled", &__v)?;
         }
         __map.end()
     }
@@ -3847,14 +3847,14 @@ impl<'__a> ::serde::Serialize for GithubRepositoryView<'__a> {
             __map.serialize_entry("repository", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.default_branch {
-            __map.serialize_entry("defaultBranch", __v)?;
+            __map.serialize_entry("default_branch", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.private {
             __map.serialize_entry("private", &__v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.push_time.as_option() {
-                __map.serialize_entry("pushTime", __v)?;
+                __map.serialize_entry("push_time", __v)?;
             }
         }
         __map.end()
@@ -4194,17 +4194,17 @@ impl<'__a> ::serde::Serialize for DeletedProjectView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.newest_snapshot.as_option() {
-                __map.serialize_entry("newestSnapshot", __v)?;
+                __map.serialize_entry("newest_snapshot", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.snapshot_count {
             __map
                 .serialize_entry(
-                    "snapshotCount",
+                    "snapshot_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -4688,27 +4688,27 @@ impl<'__a> ::serde::Serialize for RunMachineActionRequestView<'__a> {
                 super::super::__buffa::view::oneof::run_machine_action_request::Action::AddSshKey(
                     v,
                 ) => {
-                    __map.serialize_entry("addSshKey", v)?;
+                    __map.serialize_entry("add_ssh_key", v)?;
                 }
                 super::super::__buffa::view::oneof::run_machine_action_request::Action::RemoveSshKeyFingerprint(
                     v,
                 ) => {
-                    __map.serialize_entry("removeSshKeyFingerprint", v)?;
+                    __map.serialize_entry("remove_ssh_key_fingerprint", v)?;
                 }
                 super::super::__buffa::view::oneof::run_machine_action_request::Action::RestartMachine(
                     v,
                 ) => {
-                    __map.serialize_entry("restartMachine", v)?;
+                    __map.serialize_entry("restart_machine", v)?;
                 }
                 super::super::__buffa::view::oneof::run_machine_action_request::Action::CancelRestart(
                     v,
                 ) => {
-                    __map.serialize_entry("cancelRestart", v)?;
+                    __map.serialize_entry("cancel_restart", v)?;
                 }
                 super::super::__buffa::view::oneof::run_machine_action_request::Action::EndSessionId(
                     v,
                 ) => {
-                    __map.serialize_entry("endSessionId", v)?;
+                    __map.serialize_entry("end_session_id", v)?;
                 }
             }
         }
@@ -5044,14 +5044,14 @@ impl<'__a> ::serde::Serialize for RestartMachineActionView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         {
             if let ::core::option::Option::Some(__v) = self.restart_time.as_option() {
-                __map.serialize_entry("restartTime", __v)?;
+                __map.serialize_entry("restart_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.at_maintenance_window {
-            __map.serialize_entry("atMaintenanceWindow", &__v)?;
+            __map.serialize_entry("at_maintenance_window", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.interrupt_operations {
-            __map.serialize_entry("interruptOperations", &__v)?;
+            __map.serialize_entry("interrupt_operations", &__v)?;
         }
         __map.end()
     }
@@ -6353,7 +6353,7 @@ impl<'__a> ::serde::Serialize for ProjectSummaryView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.metadata.as_option() {
@@ -6377,30 +6377,30 @@ impl<'__a> ::serde::Serialize for ProjectSummaryView<'__a> {
                 .http_traffic_last_day
                 .as_option()
             {
-                __map.serialize_entry("httpTrafficLastDay", __v)?;
+                __map.serialize_entry("http_traffic_last_day", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.cpu_used_cores {
             __map
                 .serialize_entry(
-                    "cpuUsedCores",
+                    "cpu_used_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_used_bytes {
             __map
                 .serialize_entry(
-                    "memoryUsedBytes",
+                    "memory_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.deploy_time.as_option() {
-                __map.serialize_entry("deployTime", __v)?;
+                __map.serialize_entry("deploy_time", __v)?;
             }
         }
         if !self.running_operations.is_empty() {
-            __map.serialize_entry("runningOperations", &*self.running_operations)?;
+            __map.serialize_entry("running_operations", &*self.running_operations)?;
         }
         if let ::core::option::Option::Some(__v) = self.pinned {
             __map.serialize_entry("pinned", &__v)?;
@@ -6408,7 +6408,7 @@ impl<'__a> ::serde::Serialize for ProjectSummaryView<'__a> {
         if let ::core::option::Option::Some(__v) = self.disk_used_bytes {
             __map
                 .serialize_entry(
-                    "diskUsedBytes",
+                    "disk_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -7159,15 +7159,15 @@ impl<'__a> ::serde::Serialize for ProjectProblemView<'__a> {
             __map.serialize_entry("service", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.since_time.as_option() {
-                __map.serialize_entry("sinceTime", __v)?;
+                __map.serialize_entry("since_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.problem_message {
-            __map.serialize_entry("problemMessage", __v)?;
+            __map.serialize_entry("problem_message", __v)?;
         }
         __map.end()
     }
@@ -7544,19 +7544,19 @@ impl<'__a> ::serde::Serialize for GetProjectRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.include_secret_values {
-            __map.serialize_entry("includeSecretValues", &__v)?;
+            __map.serialize_entry("include_secret_values", &__v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.snapshots_before.as_option()
             {
-                __map.serialize_entry("snapshotsBefore", __v)?;
+                __map.serialize_entry("snapshots_before", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.snapshots_volume {
-            __map.serialize_entry("snapshotsVolume", __v)?;
+            __map.serialize_entry("snapshots_volume", __v)?;
         }
         __map.end()
     }
@@ -8897,7 +8897,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.metadata.as_option() {
@@ -8913,30 +8913,30 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
         if let ::core::option::Option::Some(__v) = self.cpu_used_cores {
             __map
                 .serialize_entry(
-                    "cpuUsedCores",
+                    "cpu_used_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_used_bytes {
             __map
                 .serialize_entry(
-                    "memoryUsedBytes",
+                    "memory_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.deploy_id {
-            __map.serialize_entry("deployId", __v)?;
+            __map.serialize_entry("deploy_id", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.deploy_status {
-            __map.serialize_entry("deployStatus", __v)?;
+            __map.serialize_entry("deploy_status", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.deploy_time.as_option() {
-                __map.serialize_entry("deployTime", __v)?;
+                __map.serialize_entry("deploy_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.x_pethost_applies_at_once {
-            __map.serialize_entry("xPethostAppliesAtOnce", &__v)?;
+            __map.serialize_entry("x_pethost_applies_at_once", &__v)?;
         }
         if !self.services.is_empty() {
             __map.serialize_entry("services", &*self.services)?;
@@ -8951,7 +8951,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
             __map.serialize_entry("hosts", &*self.hosts)?;
         }
         if let ::core::option::Option::Some(__v) = self.password_protected {
-            __map.serialize_entry("passwordProtected", &__v)?;
+            __map.serialize_entry("password_protected", &__v)?;
         }
         if !self.operations.is_empty() {
             __map.serialize_entry("operations", &*self.operations)?;
@@ -8962,7 +8962,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
         if let ::core::option::Option::Some(__v) = self.snapshot_count {
             __map
                 .serialize_entry(
-                    "snapshotCount",
+                    "snapshot_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -8971,7 +8971,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
                 .snapshot_list_time
                 .as_option()
             {
-                __map.serialize_entry("snapshotListTime", __v)?;
+                __map.serialize_entry("snapshot_list_time", __v)?;
             }
         }
         {
@@ -8979,7 +8979,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
                 .http_traffic_last_day
                 .as_option()
             {
-                __map.serialize_entry("httpTrafficLastDay", __v)?;
+                __map.serialize_entry("http_traffic_last_day", __v)?;
             }
         }
         {
@@ -8992,7 +8992,7 @@ impl<'__a> ::serde::Serialize for ProjectView<'__a> {
                 .running_services_action
                 .as_option()
             {
-                __map.serialize_entry("runningServicesAction", __v)?;
+                __map.serialize_entry("running_services_action", __v)?;
             }
         }
         __map.end()
@@ -9519,7 +9519,7 @@ impl<'__a> ::serde::Serialize for RunningServicesActionView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         __map.end()
@@ -10337,23 +10337,23 @@ impl<'__a> ::serde::Serialize for GithubSourceView<'__a> {
             __map.serialize_entry("directory", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.auto_deploy {
-            __map.serialize_entry("autoDeploy", &__v)?;
+            __map.serialize_entry("auto_deploy", &__v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.newest_commit.as_option() {
-                __map.serialize_entry("newestCommit", __v)?;
+                __map.serialize_entry("newest_commit", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.deployed_commit.as_option() {
-                __map.serialize_entry("deployedCommit", __v)?;
+                __map.serialize_entry("deployed_commit", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.pinned {
             __map.serialize_entry("pinned", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.auto_deploy_pending {
-            __map.serialize_entry("autoDeployPending", &__v)?;
+            __map.serialize_entry("auto_deploy_pending", &__v)?;
         }
         __map.end()
     }
@@ -11706,21 +11706,21 @@ impl<'__a> ::serde::Serialize for ServiceView<'__a> {
             __map.serialize_entry("state", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.container_running {
-            __map.serialize_entry("containerRunning", &__v)?;
+            __map.serialize_entry("container_running", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.image {
             __map.serialize_entry("image", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.builds_image {
-            __map.serialize_entry("buildsImage", &__v)?;
+            __map.serialize_entry("builds_image", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.image_digest {
-            __map.serialize_entry("imageDigest", __v)?;
+            __map.serialize_entry("image_digest", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.image_size_bytes {
             __map
                 .serialize_entry(
-                    "imageSizeBytes",
+                    "image_size_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -11728,63 +11728,63 @@ impl<'__a> ::serde::Serialize for ServiceView<'__a> {
             __map.serialize_entry("command", &*self.command)?;
         }
         if let ::core::option::Option::Some(__v) = self.run_as_user {
-            __map.serialize_entry("runAsUser", __v)?;
+            __map.serialize_entry("run_as_user", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.finish_time.as_option() {
-                __map.serialize_entry("finishTime", __v)?;
+                __map.serialize_entry("finish_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.exit_code {
-            __map.serialize_entry("exitCode", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map.serialize_entry("exit_code", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.out_of_memory {
-            __map.serialize_entry("outOfMemory", &__v)?;
+            __map.serialize_entry("out_of_memory", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.restart_count {
             __map
                 .serialize_entry(
-                    "restartCount",
+                    "restart_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.cpu_used_cores {
             __map
                 .serialize_entry(
-                    "cpuUsedCores",
+                    "cpu_used_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_used_bytes {
             __map
                 .serialize_entry(
-                    "memoryUsedBytes",
+                    "memory_used_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.memory_limit_bytes {
             __map
                 .serialize_entry(
-                    "memoryLimitBytes",
+                    "memory_limit_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.cpu_limit_cores {
             __map
                 .serialize_entry(
-                    "cpuLimitCores",
+                    "cpu_limit_cores",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.writable_layer_bytes {
             __map
                 .serialize_entry(
-                    "writableLayerBytes",
+                    "writable_layer_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -11798,32 +11798,32 @@ impl<'__a> ::serde::Serialize for ServiceView<'__a> {
         if !self.listening_ports.is_empty() {
             __map
                 .serialize_entry(
-                    "listeningPorts",
+                    "listening_ports",
                     &::buffa::json_helpers::RepeatedJson(&self.listening_ports),
                 )?;
         }
         if !self.published_ports.is_empty() {
-            __map.serialize_entry("publishedPorts", &*self.published_ports)?;
+            __map.serialize_entry("published_ports", &*self.published_ports)?;
         }
         if !self.volume_mounts.is_empty() {
-            __map.serialize_entry("volumeMounts", &*self.volume_mounts)?;
+            __map.serialize_entry("volume_mounts", &*self.volume_mounts)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.restart_policy {
-            __map.serialize_entry("restartPolicy", __v)?;
+            __map.serialize_entry("restart_policy", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.health_check.as_option() {
-                __map.serialize_entry("healthCheck", __v)?;
+                __map.serialize_entry("health_check", __v)?;
             }
         }
         if !self.environment.is_empty() {
             __map.serialize_entry("environment", &*self.environment)?;
         }
         if !self.env_files.is_empty() {
-            __map.serialize_entry("envFiles", &*self.env_files)?;
+            __map.serialize_entry("env_files", &*self.env_files)?;
         }
         if let ::core::option::Option::Some(__v) = self.ssh_command {
-            __map.serialize_entry("sshCommand", __v)?;
+            __map.serialize_entry("ssh_command", __v)?;
         }
         __map.end()
     }
@@ -12330,14 +12330,14 @@ impl<'__a> ::serde::Serialize for PublishedPortView<'__a> {
         if let ::core::option::Option::Some(__v) = self.machine_port {
             __map
                 .serialize_entry(
-                    "machinePort",
+                    "machine_port",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.container_port {
             __map
                 .serialize_entry(
-                    "containerPort",
+                    "container_port",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -12345,7 +12345,7 @@ impl<'__a> ::serde::Serialize for PublishedPortView<'__a> {
             __map.serialize_entry("protocol", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.machine_only {
-            __map.serialize_entry("machineOnly", &__v)?;
+            __map.serialize_entry("machine_only", &__v)?;
         }
         __map.end()
     }
@@ -12632,7 +12632,7 @@ impl<'__a> ::serde::Serialize for VolumeMountView<'__a> {
             __map.serialize_entry("volume", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.container_path {
-            __map.serialize_entry("containerPath", __v)?;
+            __map.serialize_entry("container_path", __v)?;
         }
         __map.end()
     }
@@ -13010,7 +13010,7 @@ impl<'__a> ::serde::Serialize for HealthCheckView<'__a> {
         if let ::core::option::Option::Some(__v) = self.interval_seconds {
             __map
                 .serialize_entry(
-                    "intervalSeconds",
+                    "interval_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -13020,15 +13020,16 @@ impl<'__a> ::serde::Serialize for HealthCheckView<'__a> {
         if let ::core::option::Option::Some(__v) = self.consecutive_failure_count {
             __map
                 .serialize_entry(
-                    "consecutiveFailureCount",
+                    "consecutive_failure_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if !self.recent_results_passed.is_empty() {
-            __map.serialize_entry("recentResultsPassed", &*self.recent_results_passed)?;
+            __map
+                .serialize_entry("recent_results_passed", &*self.recent_results_passed)?;
         }
         if let ::core::option::Option::Some(__v) = self.last_failure_output {
-            __map.serialize_entry("lastFailureOutput", __v)?;
+            __map.serialize_entry("last_failure_output", __v)?;
         }
         __map.end()
     }
@@ -13432,17 +13433,17 @@ impl<'__a> ::serde::Serialize for EnvironmentVariableView<'__a> {
             __map.serialize_entry("secret", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.source_file {
-            __map.serialize_entry("sourceFile", __v)?;
+            __map.serialize_entry("source_file", __v)?;
         }
         if !self.from_env_file_variables.is_empty() {
             __map
                 .serialize_entry(
-                    "fromEnvFileVariables",
+                    "from_env_file_variables",
                     &*self.from_env_file_variables,
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.value_left_out {
-            __map.serialize_entry("valueLeftOut", &__v)?;
+            __map.serialize_entry("value_left_out", &__v)?;
         }
         __map.end()
     }
@@ -13894,21 +13895,22 @@ impl<'__a> ::serde::Serialize for VolumeView<'__a> {
             __map.serialize_entry("volume", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.size_bytes {
-            __map.serialize_entry("sizeBytes", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map
+                .serialize_entry("size_bytes", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if !self.mounted_by.is_empty() {
-            __map.serialize_entry("mountedBy", &*self.mounted_by)?;
+            __map.serialize_entry("mounted_by", &*self.mounted_by)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.last_backup_time.as_option()
             {
-                __map.serialize_entry("lastBackupTime", __v)?;
+                __map.serialize_entry("last_backup_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.snapshot_count {
             __map
                 .serialize_entry(
-                    "snapshotCount",
+                    "snapshot_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -14219,7 +14221,7 @@ impl<'__a> ::serde::Serialize for VolumeMountedByView<'__a> {
             __map.serialize_entry("service", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.container_path {
-            __map.serialize_entry("containerPath", __v)?;
+            __map.serialize_entry("container_path", __v)?;
         }
         __map.end()
     }
@@ -14593,18 +14595,18 @@ impl<'__a> ::serde::Serialize for HostView<'__a> {
             __map.serialize_entry("url", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.certificate_source {
-            __map.serialize_entry("certificateSource", __v)?;
+            __map.serialize_entry("certificate_source", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self
                 .certificate_expire_time
                 .as_option()
             {
-                __map.serialize_entry("certificateExpireTime", __v)?;
+                __map.serialize_entry("certificate_expire_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.unavailable_message {
-            __map.serialize_entry("unavailableMessage", __v)?;
+            __map.serialize_entry("unavailable_message", __v)?;
         }
         __map.end()
     }
@@ -14969,7 +14971,7 @@ impl<'__a> ::serde::Serialize for RouteView<'__a> {
             __map.serialize_entry("port", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.strip_path {
-            __map.serialize_entry("stripPath", &__v)?;
+            __map.serialize_entry("strip_path", &__v)?;
         }
         __map.end()
     }
@@ -15698,7 +15700,7 @@ impl<'__a> ::serde::Serialize for OperationView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.kind {
             __map.serialize_entry("kind", __v)?;
@@ -15708,22 +15710,22 @@ impl<'__a> ::serde::Serialize for OperationView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.finish_time.as_option() {
-                __map.serialize_entry("finishTime", __v)?;
+                __map.serialize_entry("finish_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.failure_message {
-            __map.serialize_entry("failureMessage", __v)?;
+            __map.serialize_entry("failure_message", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.deploy_failure_reason {
-            __map.serialize_entry("deployFailureReason", __v)?;
+            __map.serialize_entry("deploy_failure_reason", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.made_current {
-            __map.serialize_entry("madeCurrent", &__v)?;
+            __map.serialize_entry("made_current", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.service {
             __map.serialize_entry("service", __v)?;
@@ -15731,42 +15733,42 @@ impl<'__a> ::serde::Serialize for OperationView<'__a> {
         if let ::core::option::Option::Some(__v) = self.failed_exit_code {
             __map
                 .serialize_entry(
-                    "failedExitCode",
+                    "failed_exit_code",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.snapshot_id {
-            __map.serialize_entry("snapshotId", __v)?;
+            __map.serialize_entry("snapshot_id", __v)?;
         }
         if !self.restored_volumes.is_empty() {
-            __map.serialize_entry("restoredVolumes", &*self.restored_volumes)?;
+            __map.serialize_entry("restored_volumes", &*self.restored_volumes)?;
         }
         if let ::core::option::Option::Some(__v) = self.undo_snapshot_id {
-            __map.serialize_entry("undoSnapshotId", __v)?;
+            __map.serialize_entry("undo_snapshot_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.github_commit.as_option() {
-                __map.serialize_entry("githubCommit", __v)?;
+                __map.serialize_entry("github_commit", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.archive_name {
-            __map.serialize_entry("archiveName", __v)?;
+            __map.serialize_entry("archive_name", __v)?;
         }
         if !self.adjustments.is_empty() {
             __map.serialize_entry("adjustments", &*self.adjustments)?;
         }
         if !self.changed_paths.is_empty() {
-            __map.serialize_entry("changedPaths", &*self.changed_paths)?;
+            __map.serialize_entry("changed_paths", &*self.changed_paths)?;
         }
         if let ::core::option::Option::Some(__v) = self.changed_path_count {
             __map
                 .serialize_entry(
-                    "changedPathCount",
+                    "changed_path_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.files_kept {
-            __map.serialize_entry("filesKept", &__v)?;
+            __map.serialize_entry("files_kept", &__v)?;
         }
         __map.end()
     }
@@ -16252,15 +16254,16 @@ impl<'__a> ::serde::Serialize for SnapshotView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.snapshot_id {
-            __map.serialize_entry("snapshotId", __v)?;
+            __map.serialize_entry("snapshot_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.create_time.as_option() {
-                __map.serialize_entry("createTime", __v)?;
+                __map.serialize_entry("create_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.size_bytes {
-            __map.serialize_entry("sizeBytes", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map
+                .serialize_entry("size_bytes", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if !self.volumes.is_empty() {
             __map.serialize_entry("volumes", &*self.volumes)?;
@@ -16583,28 +16586,28 @@ impl<'__a> ::serde::Serialize for HttpTrafficSummaryView<'__a> {
         if let ::core::option::Option::Some(__v) = self.request_count {
             __map
                 .serialize_entry(
-                    "requestCount",
+                    "request_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.server_error_count {
             __map
                 .serialize_entry(
-                    "serverErrorCount",
+                    "server_error_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.latency_p50_ms {
             __map
                 .serialize_entry(
-                    "latencyP50Ms",
+                    "latency_p50_ms",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.latency_p95_ms {
             __map
                 .serialize_entry(
-                    "latencyP95Ms",
+                    "latency_p95_ms",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -17108,7 +17111,7 @@ impl<'__a> ::serde::Serialize for CreateProjectRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.source.as_option() {
@@ -17116,30 +17119,30 @@ impl<'__a> ::serde::Serialize for CreateProjectRequestView<'__a> {
             }
         }
         if let ::core::option::Option::Some(__v) = self.upload_id {
-            __map.serialize_entry("uploadId", __v)?;
+            __map.serialize_entry("upload_id", __v)?;
         }
         if !self.files.is_empty() {
             __map.serialize_entry("files", &*self.files)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.x_pethost.as_option() {
-                __map.serialize_entry("xPethost", __v)?;
+                __map.serialize_entry("x_pethost", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.timeout_seconds {
             __map
                 .serialize_entry(
-                    "timeoutSeconds",
+                    "timeout_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.wait_seconds {
             __map
                 .serialize_entry(
-                    "waitSeconds",
+                    "wait_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -18330,38 +18333,38 @@ impl<'__a> ::serde::Serialize for DeployProjectRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.base_deploy_id {
-            __map.serialize_entry("baseDeployId", __v)?;
+            __map.serialize_entry("base_deploy_id", __v)?;
         }
         if !self.files.is_empty() {
             __map.serialize_entry("files", &*self.files)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.x_pethost.as_option() {
-                __map.serialize_entry("xPethost", __v)?;
+                __map.serialize_entry("x_pethost", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.mount_volume.as_option() {
-                __map.serialize_entry("mountVolume", __v)?;
+                __map.serialize_entry("mount_volume", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.timeout_seconds {
             __map
                 .serialize_entry(
-                    "timeoutSeconds",
+                    "timeout_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.wait_seconds {
             __map
                 .serialize_entry(
-                    "waitSeconds",
+                    "wait_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -18370,7 +18373,7 @@ impl<'__a> ::serde::Serialize for DeployProjectRequestView<'__a> {
                 super::super::__buffa::view::oneof::deploy_project_request::Version::UploadId(
                     v,
                 ) => {
-                    __map.serialize_entry("uploadId", v)?;
+                    __map.serialize_entry("upload_id", v)?;
                 }
                 super::super::__buffa::view::oneof::deploy_project_request::Version::Commit(
                     v,
@@ -18380,12 +18383,12 @@ impl<'__a> ::serde::Serialize for DeployProjectRequestView<'__a> {
                 super::super::__buffa::view::oneof::deploy_project_request::Version::NewestCommit(
                     v,
                 ) => {
-                    __map.serialize_entry("newestCommit", v)?;
+                    __map.serialize_entry("newest_commit", v)?;
                 }
                 super::super::__buffa::view::oneof::deploy_project_request::Version::RollbackDeployId(
                     v,
                 ) => {
-                    __map.serialize_entry("rollbackDeployId", v)?;
+                    __map.serialize_entry("rollback_deploy_id", v)?;
                 }
             }
         }
@@ -18752,7 +18755,7 @@ impl<'__a> ::serde::Serialize for MountVolumeView<'__a> {
             __map.serialize_entry("volume", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.container_path {
-            __map.serialize_entry("containerPath", __v)?;
+            __map.serialize_entry("container_path", __v)?;
         }
         __map.end()
     }
@@ -19156,13 +19159,13 @@ impl<'__a> ::serde::Serialize for ProjectExtensionView<'__a> {
             __map.serialize_entry("routes", &*self.routes)?;
         }
         if let ::core::option::Option::Some(__v) = self.remove_routes {
-            __map.serialize_entry("removeRoutes", &__v)?;
+            __map.serialize_entry("remove_routes", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.password {
             __map.serialize_entry("password", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.remove_password {
-            __map.serialize_entry("removePassword", &__v)?;
+            __map.serialize_entry("remove_password", &__v)?;
         }
         __map.end()
     }
@@ -19641,7 +19644,7 @@ impl<'__a> ::serde::Serialize for FileChangeView<'__a> {
                 super::super::__buffa::view::oneof::file_change::Change::MakeDirectory(
                     v,
                 ) => {
-                    __map.serialize_entry("makeDirectory", v)?;
+                    __map.serialize_entry("make_directory", v)?;
                 }
                 super::super::__buffa::view::oneof::file_change::Change::Delete(v) => {
                     __map.serialize_entry("delete", v)?;
@@ -19649,10 +19652,10 @@ impl<'__a> ::serde::Serialize for FileChangeView<'__a> {
                 super::super::__buffa::view::oneof::file_change::Change::DeleteTree(
                     v,
                 ) => {
-                    __map.serialize_entry("deleteTree", v)?;
+                    __map.serialize_entry("delete_tree", v)?;
                 }
                 super::super::__buffa::view::oneof::file_change::Change::RenameTo(v) => {
-                    __map.serialize_entry("renameTo", v)?;
+                    __map.serialize_entry("rename_to", v)?;
                 }
             }
         }
@@ -20480,7 +20483,7 @@ impl<'__a> ::serde::Serialize for SpecViolationView<'__a> {
             __map.serialize_entry("location", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.violation_message {
-            __map.serialize_entry("violationMessage", __v)?;
+            __map.serialize_entry("violation_message", __v)?;
         }
         __map.end()
     }
@@ -20761,10 +20764,10 @@ impl<'__a> ::serde::Serialize for ListCommitsRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.before_commit {
-            __map.serialize_entry("beforeCommit", __v)?;
+            __map.serialize_entry("before_commit", __v)?;
         }
         __map.end()
     }
@@ -21542,7 +21545,7 @@ impl<'__a> ::serde::Serialize for BranchCommitView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.commit_time.as_option() {
-                __map.serialize_entry("commitTime", __v)?;
+                __map.serialize_entry("commit_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.deployed {
@@ -21550,7 +21553,7 @@ impl<'__a> ::serde::Serialize for BranchCommitView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.last_deploy.as_option() {
-                __map.serialize_entry("lastDeploy", __v)?;
+                __map.serialize_entry("last_deploy", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.newest {
@@ -22475,15 +22478,15 @@ impl<'__a> ::serde::Serialize for RunProjectActionRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.wait_seconds {
             __map
                 .serialize_entry(
-                    "waitSeconds",
+                    "wait_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -22492,52 +22495,52 @@ impl<'__a> ::serde::Serialize for RunProjectActionRequestView<'__a> {
                 super::super::__buffa::view::oneof::run_project_action_request::Action::StartServices(
                     v,
                 ) => {
-                    __map.serialize_entry("startServices", v)?;
+                    __map.serialize_entry("start_services", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::StopServices(
                     v,
                 ) => {
-                    __map.serialize_entry("stopServices", v)?;
+                    __map.serialize_entry("stop_services", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::RestartServices(
                     v,
                 ) => {
-                    __map.serialize_entry("restartServices", v)?;
+                    __map.serialize_entry("restart_services", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::RecreateService(
                     v,
                 ) => {
-                    __map.serialize_entry("recreateService", v)?;
+                    __map.serialize_entry("recreate_service", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::BackUp(
                     v,
                 ) => {
-                    __map.serialize_entry("backUp", v)?;
+                    __map.serialize_entry("back_up", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::RestoreSnapshot(
                     v,
                 ) => {
-                    __map.serialize_entry("restoreSnapshot", v)?;
+                    __map.serialize_entry("restore_snapshot", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::CancelOperation(
                     v,
                 ) => {
-                    __map.serialize_entry("cancelOperation", v)?;
+                    __map.serialize_entry("cancel_operation", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::DeleteProject(
                     v,
                 ) => {
-                    __map.serialize_entry("deleteProject", v)?;
+                    __map.serialize_entry("delete_project", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::SetSource(
                     v,
                 ) => {
-                    __map.serialize_entry("setSource", v)?;
+                    __map.serialize_entry("set_source", v)?;
                 }
                 super::super::__buffa::view::oneof::run_project_action_request::Action::DeleteVolume(
                     v,
                 ) => {
-                    __map.serialize_entry("deleteVolume", v)?;
+                    __map.serialize_entry("delete_volume", v)?;
                 }
             }
         }
@@ -23093,7 +23096,7 @@ impl<'__a> ::serde::Serialize for RecreateServiceActionView<'__a> {
             __map.serialize_entry("service", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.pull_latest_image {
-            __map.serialize_entry("pullLatestImage", &__v)?;
+            __map.serialize_entry("pull_latest_image", &__v)?;
         }
         __map.end()
     }
@@ -23600,7 +23603,7 @@ impl<'__a> ::serde::Serialize for RestoreSnapshotActionView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.snapshot_id {
-            __map.serialize_entry("snapshotId", __v)?;
+            __map.serialize_entry("snapshot_id", __v)?;
         }
         if !self.volumes.is_empty() {
             __map.serialize_entry("volumes", &*self.volumes)?;
@@ -23869,7 +23872,7 @@ impl<'__a> ::serde::Serialize for CancelOperationActionView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         __map.end()
     }
@@ -24128,7 +24131,7 @@ impl<'__a> ::serde::Serialize for DeleteProjectActionView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.skip_final_backup {
-            __map.serialize_entry("skipFinalBackup", &__v)?;
+            __map.serialize_entry("skip_final_backup", &__v)?;
         }
         __map.end()
     }
@@ -24890,29 +24893,29 @@ impl<'__a> ::serde::Serialize for GetOperationRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.wait_seconds {
             __map
                 .serialize_entry(
-                    "waitSeconds",
+                    "wait_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.after_log_line {
             __map
                 .serialize_entry(
-                    "afterLogLine",
+                    "after_log_line",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.log_line_limit {
             __map
                 .serialize_entry(
-                    "logLineLimit",
+                    "log_line_limit",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -25385,14 +25388,14 @@ impl<'__a> ::serde::Serialize for GetOperationResponseView<'__a> {
         if let ::core::option::Option::Some(__v) = self.log_line_count {
             __map
                 .serialize_entry(
-                    "logLineCount",
+                    "log_line_count",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.next_after_log_line {
             __map
                 .serialize_entry(
-                    "nextAfterLogLine",
+                    "next_after_log_line",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -26081,15 +26084,15 @@ impl<'__a> ::serde::Serialize for HttpTrafficFilterView<'__a> {
             __map.serialize_entry("method", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path_contains {
-            __map.serialize_entry("pathContains", __v)?;
+            __map.serialize_entry("path_contains", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path_pattern {
-            __map.serialize_entry("pathPattern", __v)?;
+            __map.serialize_entry("path_pattern", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.status_class {
             __map
                 .serialize_entry(
-                    "statusClass",
+                    "status_class",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -26604,7 +26607,7 @@ impl<'__a> ::serde::Serialize for QueryHttpTrafficRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.filter.as_option() {
@@ -26613,37 +26616,37 @@ impl<'__a> ::serde::Serialize for QueryHttpTrafficRequestView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.end_time.as_option() {
-                __map.serialize_entry("endTime", __v)?;
+                __map.serialize_entry("end_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.last_seconds {
             __map
                 .serialize_entry(
-                    "lastSeconds",
+                    "last_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.bucket_width_seconds {
             __map
                 .serialize_entry(
-                    "bucketWidthSeconds",
+                    "bucket_width_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.request_limit {
             __map
                 .serialize_entry(
-                    "requestLimit",
+                    "request_limit",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.page_token {
-            __map.serialize_entry("pageToken", __v)?;
+            __map.serialize_entry("page_token", __v)?;
         }
         __map.end()
     }
@@ -27345,18 +27348,18 @@ impl<'__a> ::serde::Serialize for QueryHttpTrafficResponseView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.end_time.as_option() {
-                __map.serialize_entry("endTime", __v)?;
+                __map.serialize_entry("end_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.oldest_kept_time.as_option()
             {
-                __map.serialize_entry("oldestKeptTime", __v)?;
+                __map.serialize_entry("oldest_kept_time", __v)?;
             }
         }
         {
@@ -27368,12 +27371,12 @@ impl<'__a> ::serde::Serialize for QueryHttpTrafficResponseView<'__a> {
             __map.serialize_entry("buckets", &*self.buckets)?;
         }
         if !self.top_paths.is_empty() {
-            __map.serialize_entry("topPaths", &*self.top_paths)?;
+            __map.serialize_entry("top_paths", &*self.top_paths)?;
         }
         if let ::core::option::Option::Some(__v) = self.newest_sequence {
             __map
                 .serialize_entry(
-                    "newestSequence",
+                    "newest_sequence",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -27381,12 +27384,12 @@ impl<'__a> ::serde::Serialize for QueryHttpTrafficResponseView<'__a> {
             __map.serialize_entry("requests", &*self.requests)?;
         }
         if let ::core::option::Option::Some(__v) = self.next_page_token {
-            __map.serialize_entry("nextPageToken", __v)?;
+            __map.serialize_entry("next_page_token", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.tail_sequence {
             __map
                 .serialize_entry(
-                    "tailSequence",
+                    "tail_sequence",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -27812,7 +27815,7 @@ impl<'__a> ::serde::Serialize for HttpTrafficBucketView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
@@ -28151,7 +28154,7 @@ impl<'__a> ::serde::Serialize for HttpPathTrafficView<'__a> {
             __map.serialize_entry("method", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path_pattern {
-            __map.serialize_entry("pathPattern", __v)?;
+            __map.serialize_entry("path_pattern", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.summary.as_option() {
@@ -28704,7 +28707,7 @@ impl<'__a> ::serde::Serialize for HttpRequestView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.finish_time.as_option() {
-                __map.serialize_entry("finishTime", __v)?;
+                __map.serialize_entry("finish_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.host {
@@ -28717,10 +28720,10 @@ impl<'__a> ::serde::Serialize for HttpRequestView<'__a> {
             __map.serialize_entry("path", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path_pattern {
-            __map.serialize_entry("pathPattern", __v)?;
+            __map.serialize_entry("path_pattern", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.route_path {
-            __map.serialize_entry("routePath", __v)?;
+            __map.serialize_entry("route_path", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.service {
             __map.serialize_entry("service", __v)?;
@@ -28730,31 +28733,37 @@ impl<'__a> ::serde::Serialize for HttpRequestView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.status_code {
             __map
-                .serialize_entry("statusCode", &::buffa::json_helpers::ProtoJson(&__v))?;
+                .serialize_entry(
+                    "status_code",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
         }
         if let ::core::option::Option::Some(__v) = self.response_size_bytes {
             __map
                 .serialize_entry(
-                    "responseSizeBytes",
+                    "response_size_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.duration_ms {
             __map
-                .serialize_entry("durationMs", &::buffa::json_helpers::ProtoJson(&__v))?;
+                .serialize_entry(
+                    "duration_ms",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
         }
         if let ::core::option::Option::Some(__v) = self.service_duration_ms {
             __map
                 .serialize_entry(
-                    "serviceDurationMs",
+                    "service_duration_ms",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.client_ip_address {
-            __map.serialize_entry("clientIpAddress", __v)?;
+            __map.serialize_entry("client_ip_address", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.user_agent {
-            __map.serialize_entry("userAgent", __v)?;
+            __map.serialize_entry("user_agent", __v)?;
         }
         __map.end()
     }
@@ -29139,7 +29148,7 @@ impl<'__a> ::serde::Serialize for ContainerLogFilterView<'__a> {
             __map.serialize_entry("stream", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.text_contains {
-            __map.serialize_entry("textContains", __v)?;
+            __map.serialize_entry("text_contains", __v)?;
         }
         __map.end()
     }
@@ -29638,7 +29647,7 @@ impl<'__a> ::serde::Serialize for QueryContainerLogsRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.filter.as_option() {
@@ -29647,18 +29656,18 @@ impl<'__a> ::serde::Serialize for QueryContainerLogsRequestView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.end_time.as_option() {
-                __map.serialize_entry("endTime", __v)?;
+                __map.serialize_entry("end_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.last_seconds {
             __map
                 .serialize_entry(
-                    "lastSeconds",
+                    "last_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -29666,10 +29675,10 @@ impl<'__a> ::serde::Serialize for QueryContainerLogsRequestView<'__a> {
             __map.serialize_entry("limit", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.from_start {
-            __map.serialize_entry("fromStart", &__v)?;
+            __map.serialize_entry("from_start", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.page_token {
-            __map.serialize_entry("pageToken", __v)?;
+            __map.serialize_entry("page_token", __v)?;
         }
         __map.end()
     }
@@ -30201,28 +30210,28 @@ impl<'__a> ::serde::Serialize for QueryContainerLogsResponseView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.end_time.as_option() {
-                __map.serialize_entry("endTime", __v)?;
+                __map.serialize_entry("end_time", __v)?;
             }
         }
         {
             if let ::core::option::Option::Some(__v) = self.oldest_kept_time.as_option()
             {
-                __map.serialize_entry("oldestKeptTime", __v)?;
+                __map.serialize_entry("oldest_kept_time", __v)?;
             }
         }
         if !self.lines.is_empty() {
             __map.serialize_entry("lines", &*self.lines)?;
         }
         if let ::core::option::Option::Some(__v) = self.next_page_token {
-            __map.serialize_entry("nextPageToken", __v)?;
+            __map.serialize_entry("next_page_token", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.tail_cursor {
-            __map.serialize_entry("tailCursor", __v)?;
+            __map.serialize_entry("tail_cursor", __v)?;
         }
         __map.end()
     }
@@ -31005,7 +31014,7 @@ impl<'__a> ::serde::Serialize for RunServiceCommandRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.service {
             __map.serialize_entry("service", __v)?;
@@ -31017,15 +31026,15 @@ impl<'__a> ::serde::Serialize for RunServiceCommandRequestView<'__a> {
             __map.serialize_entry("stdin", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.run_as_user {
-            __map.serialize_entry("runAsUser", __v)?;
+            __map.serialize_entry("run_as_user", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.working_directory {
-            __map.serialize_entry("workingDirectory", __v)?;
+            __map.serialize_entry("working_directory", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.timeout_seconds {
             __map
                 .serialize_entry(
-                    "timeoutSeconds",
+                    "timeout_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -31395,10 +31404,10 @@ impl<'__a> ::serde::Serialize for RunServiceCommandResponseView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.exit_code {
-            __map.serialize_entry("exitCode", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map.serialize_entry("exit_code", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.timed_out {
-            __map.serialize_entry("timedOut", &__v)?;
+            __map.serialize_entry("timed_out", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.stdout {
             __map.serialize_entry("stdout", __v)?;
@@ -31407,7 +31416,7 @@ impl<'__a> ::serde::Serialize for RunServiceCommandResponseView<'__a> {
             __map.serialize_entry("stderr", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.output_truncated {
-            __map.serialize_entry("outputTruncated", &__v)?;
+            __map.serialize_entry("output_truncated", &__v)?;
         }
         __map.end()
     }
@@ -31849,24 +31858,25 @@ impl<'__a> ::serde::Serialize for FileEntryView<'__a> {
             __map.serialize_entry("type", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.size_bytes {
-            __map.serialize_entry("sizeBytes", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map
+                .serialize_entry("size_bytes", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.modify_time.as_option() {
-                __map.serialize_entry("modifyTime", __v)?;
+                __map.serialize_entry("modify_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.mode {
             __map.serialize_entry("mode", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.owner_uid {
-            __map.serialize_entry("ownerUid", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map.serialize_entry("owner_uid", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.owner_gid {
-            __map.serialize_entry("ownerGid", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map.serialize_entry("owner_gid", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.symlink_target {
-            __map.serialize_entry("symlinkTarget", __v)?;
+            __map.serialize_entry("symlink_target", __v)?;
         }
         __map.end()
     }
@@ -32324,31 +32334,34 @@ impl<'__a> ::serde::Serialize for ReadPathRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path {
             __map.serialize_entry("path", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.entry_limit {
             __map
-                .serialize_entry("entryLimit", &::buffa::json_helpers::ProtoJson(&__v))?;
+                .serialize_entry(
+                    "entry_limit",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
         }
         if let ::core::option::Option::Some(__v) = self.offset_bytes {
             __map
                 .serialize_entry(
-                    "offsetBytes",
+                    "offset_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.length_bytes {
             __map
                 .serialize_entry(
-                    "lengthBytes",
+                    "length_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.entry_page_token {
-            __map.serialize_entry("entryPageToken", __v)?;
+            __map.serialize_entry("entry_page_token", __v)?;
         }
         if let ::core::option::Option::Some(ref __ov) = self.root {
             match __ov {
@@ -32896,10 +32909,13 @@ impl<'__a> ::serde::Serialize for ReadPathResponseView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.entry_count {
             __map
-                .serialize_entry("entryCount", &::buffa::json_helpers::ProtoJson(&__v))?;
+                .serialize_entry(
+                    "entry_count",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
         }
         if let ::core::option::Option::Some(__v) = self.next_entry_page_token {
-            __map.serialize_entry("nextEntryPageToken", __v)?;
+            __map.serialize_entry("next_entry_page_token", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.text {
             __map.serialize_entry("text", __v)?;
@@ -32910,12 +32926,12 @@ impl<'__a> ::serde::Serialize for ReadPathResponseView<'__a> {
         if let ::core::option::Option::Some(__v) = self.next_offset_bytes {
             __map
                 .serialize_entry(
-                    "nextOffsetBytes",
+                    "next_offset_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.deploy_id {
-            __map.serialize_entry("deployId", __v)?;
+            __map.serialize_entry("deploy_id", __v)?;
         }
         __map.end()
     }
@@ -33429,12 +33445,12 @@ impl<'__a> ::serde::Serialize for CreateTransferRequestView<'__a> {
                 super::super::__buffa::view::oneof::create_transfer_request::Transfer::UploadArchive(
                     v,
                 ) => {
-                    __map.serialize_entry("uploadArchive", v)?;
+                    __map.serialize_entry("upload_archive", v)?;
                 }
                 super::super::__buffa::view::oneof::create_transfer_request::Transfer::UploadFile(
                     v,
                 ) => {
-                    __map.serialize_entry("uploadFile", v)?;
+                    __map.serialize_entry("upload_file", v)?;
                 }
                 super::super::__buffa::view::oneof::create_transfer_request::Transfer::Download(
                     v,
@@ -33699,7 +33715,7 @@ impl<'__a> ::serde::Serialize for ArchiveUploadView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.file_name {
-            __map.serialize_entry("fileName", __v)?;
+            __map.serialize_entry("file_name", __v)?;
         }
         __map.end()
     }
@@ -34024,7 +34040,7 @@ impl<'__a> ::serde::Serialize for FileUploadView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path {
             __map.serialize_entry("path", __v)?;
@@ -34381,7 +34397,7 @@ impl<'__a> ::serde::Serialize for PathDownloadView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.path {
             __map.serialize_entry("path", __v)?;
@@ -34577,6 +34593,11 @@ pub struct CreateTransferResponseView<'a> {
     ///
     /// Field 7: `file_name`
     pub file_name: ::core::option::Option<&'a str>,
+    /// upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+    /// directory. A program that packs the directory itself leaves out the same.
+    ///
+    /// Field 8: `exclude_names`
+    pub exclude_names: ::buffa::RepeatedView<'a, &'a str>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for CreateTransferResponseView<'a> {
@@ -34672,6 +34693,17 @@ impl<'a> ::buffa::MessageView<'a> for CreateTransferResponseView<'a> {
                 )?;
                 view.file_name = Some(::buffa::types::borrow_str(&mut cur)?);
             }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::borrow_str(&mut cur)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                view.exclude_names.push(__elem);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -34715,6 +34747,7 @@ impl<'a> ::buffa::MessageView<'a> for CreateTransferResponseView<'a> {
             upload_id: self.upload_id.map(|s| s.to_string()),
             replaces: self.replaces,
             file_name: self.file_name.map(|s| s.to_string()),
+            exclude_names: self.exclude_names.iter().map(|s| s.to_string()).collect(),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -34750,6 +34783,9 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateTransferResponseView<'a> {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
         if let Some(ref v) = self.file_name {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        for v in &self.exclude_names {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -34789,6 +34825,9 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateTransferResponseView<'a> {
         if let Some(ref v) = self.file_name {
             ::buffa::types::put_string_field(7u32, v, buf);
         }
+        for v in &self.exclude_names {
+            ::buffa::types::put_string_field(8u32, v, buf);
+        }
         self.__buffa_unknown_fields.write_to(buf);
     }
 }
@@ -34814,24 +34853,27 @@ impl<'__a> ::serde::Serialize for CreateTransferResponseView<'__a> {
             __map.serialize_entry("url", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.http_method {
-            __map.serialize_entry("httpMethod", __v)?;
+            __map.serialize_entry("http_method", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.expire_time.as_option() {
-                __map.serialize_entry("expireTime", __v)?;
+                __map.serialize_entry("expire_time", __v)?;
             }
         }
         if let ::core::option::Option::Some(__v) = self.command {
             __map.serialize_entry("command", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.upload_id {
-            __map.serialize_entry("uploadId", __v)?;
+            __map.serialize_entry("upload_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.replaces {
             __map.serialize_entry("replaces", &__v)?;
         }
         if let ::core::option::Option::Some(__v) = self.file_name {
-            __map.serialize_entry("fileName", __v)?;
+            __map.serialize_entry("file_name", __v)?;
+        }
+        if !self.exclude_names.is_empty() {
+            __map.serialize_entry("exclude_names", &*self.exclude_names)?;
         }
         __map.end()
     }
@@ -34987,6 +35029,14 @@ impl CreateTransferResponseOwnedView {
     pub fn file_name(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().file_name
     }
+    /// upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+    /// directory. A program that packs the directory itself leaves out the same.
+    ///
+    /// Field 8: `exclude_names`
+    #[must_use]
+    pub fn exclude_names(&self) -> &::buffa::RepeatedView<'_, &'_ str> {
+        &self.0.reborrow().exclude_names
+    }
 }
 impl ::core::convert::From<::buffa::OwnedView<CreateTransferResponseView<'static>>>
 for CreateTransferResponseOwnedView {
@@ -35136,7 +35186,7 @@ impl<'__a> ::serde::Serialize for GetUploadRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.upload_id {
-            __map.serialize_entry("uploadId", __v)?;
+            __map.serialize_entry("upload_id", __v)?;
         }
         __map.end()
     }
@@ -35510,23 +35560,24 @@ impl<'__a> ::serde::Serialize for GetUploadResponseView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.file_name {
-            __map.serialize_entry("fileName", __v)?;
+            __map.serialize_entry("file_name", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.file_count {
-            __map.serialize_entry("fileCount", &::buffa::json_helpers::ProtoJson(&__v))?;
+            __map
+                .serialize_entry("file_count", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.unpacked_bytes {
             __map
                 .serialize_entry(
-                    "unpackedBytes",
+                    "unpacked_bytes",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
         if let ::core::option::Option::Some(__v) = self.compose_source {
-            __map.serialize_entry("composeSource", __v)?;
+            __map.serialize_entry("compose_source", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.env_file {
-            __map.serialize_entry("envFile", __v)?;
+            __map.serialize_entry("env_file", __v)?;
         }
         if !self.violations.is_empty() {
             __map.serialize_entry("violations", &*self.violations)?;
@@ -35900,14 +35951,14 @@ impl<'__a> ::serde::Serialize for ProjectBusyView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.kind {
             __map.serialize_entry("kind", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.start_time.as_option() {
-                __map.serialize_entry("startTime", __v)?;
+                __map.serialize_entry("start_time", __v)?;
             }
         }
         __map.end()
@@ -36934,10 +36985,10 @@ impl<'__a> ::serde::Serialize for WatchOperationRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.operation_id {
-            __map.serialize_entry("operationId", __v)?;
+            __map.serialize_entry("operation_id", __v)?;
         }
         __map.end()
     }
@@ -37332,7 +37383,7 @@ impl<'__a> ::serde::Serialize for WatchOperationResponseView<'__a> {
                 super::super::__buffa::view::oneof::watch_operation_response::Message::FinishedOperation(
                     v,
                 ) => {
-                    __map.serialize_entry("finishedOperation", v)?;
+                    __map.serialize_entry("finished_operation", v)?;
                 }
             }
         }
@@ -37661,7 +37712,7 @@ impl<'__a> ::serde::Serialize for TailContainerLogsRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.filter.as_option() {
@@ -37669,7 +37720,7 @@ impl<'__a> ::serde::Serialize for TailContainerLogsRequestView<'__a> {
             }
         }
         if let ::core::option::Option::Some(__v) = self.after_cursor {
-            __map.serialize_entry("afterCursor", __v)?;
+            __map.serialize_entry("after_cursor", __v)?;
         }
         __map.end()
     }
@@ -38327,7 +38378,7 @@ impl<'__a> ::serde::Serialize for TailHttpTrafficRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.filter.as_option() {
@@ -38337,7 +38388,7 @@ impl<'__a> ::serde::Serialize for TailHttpTrafficRequestView<'__a> {
         if let ::core::option::Option::Some(__v) = self.after_sequence {
             __map
                 .serialize_entry(
-                    "afterSequence",
+                    "after_sequence",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -39029,7 +39080,7 @@ impl<'__a> ::serde::Serialize for OpenTerminalRequestView<'__a> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if let ::core::option::Option::Some(__v) = self.project_id {
-            __map.serialize_entry("projectId", __v)?;
+            __map.serialize_entry("project_id", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.service {
             __map.serialize_entry("service", __v)?;
@@ -39043,10 +39094,10 @@ impl<'__a> ::serde::Serialize for OpenTerminalRequestView<'__a> {
             __map.serialize_entry("command", &*self.command)?;
         }
         if let ::core::option::Option::Some(__v) = self.run_as_user {
-            __map.serialize_entry("runAsUser", __v)?;
+            __map.serialize_entry("run_as_user", __v)?;
         }
         if let ::core::option::Option::Some(__v) = self.working_directory {
-            __map.serialize_entry("workingDirectory", __v)?;
+            __map.serialize_entry("working_directory", __v)?;
         }
         __map.end()
     }
@@ -39663,7 +39714,7 @@ impl<'__a> ::serde::Serialize for OpenTerminalResponseView<'__a> {
         }
         {
             if let ::core::option::Option::Some(__v) = self.expire_time.as_option() {
-                __map.serialize_entry("expireTime", __v)?;
+                __map.serialize_entry("expire_time", __v)?;
             }
         }
         __map.end()

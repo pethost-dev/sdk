@@ -3,7 +3,8 @@ edition = "2024";
 // The header below is the MCP server's instructions; an RPC marked `(mcp_tool)` is also an MCP
 // tool of the same name: its request is the input, its response the output, its comment the
 // description. Some agents see only the instructions' first 500 characters: the first paragraph
-// stands alone. The other RPCs serve the web panel; an agent uses what is named beside each.
+// stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
+// too, as methods of every SDK; an agent uses what is named beside each.
 
 // Pethost is the user's own hosting: their account rents one dedicated Linux machine that runs
 // Docker Compose projects. Use it whenever the user wants to deploy, host, publish or put online
@@ -65,6 +66,7 @@ package pethost.panel.v1;
 import "google/protobuf/timestamp.proto";
 import option "v1/mcp.proto";
 import option "v1/optional.proto";
+import option "v1/sdk.proto";
 
 service PanelService {
   // ── Machine ──────────────────────────────────────────────────────────────
@@ -282,21 +284,29 @@ service PanelService {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
 
-  // ── Streams, for the web panel ───────────────────────────────────────────
+  // ── Streams, for the web panel and the SDKs ──────────────────────────────
+
+  // A stream with nothing to send sends an empty message every 30 s, a pulse, so that no proxy
+  // on the way ends it as dead: its reader passes over it, as an SDK does.
 
   // Streams an operation's log from its start, then follows it; the last message is the
-  // finished operation. Agents: GetOperation.
-  rpc WatchOperation(WatchOperationRequest) returns (stream WatchOperationResponse);
+  // finished operation. Without a stream: GetOperation.
+  rpc WatchOperation(WatchOperationRequest) returns (stream WatchOperationResponse) {
+    option (sdk_method) = {title: "Watch an operation"};
+  }
 
   // Streams container output after a cursor, then new lines as they are written. OUT_OF_RANGE =
   // the machine no longer keeps the cursor's line, so lines after it may be gone too: start over
-  // with QueryContainerLogs and tail after its tail_cursor. Agents: QueryContainerLogs.
-  rpc TailContainerLogs(TailContainerLogsRequest) returns (stream TailContainerLogsResponse);
+  // with QueryContainerLogs and tail after its tail_cursor. Without a stream: QueryContainerLogs.
+  rpc TailContainerLogs(TailContainerLogsRequest) returns (stream TailContainerLogsResponse) {
+    option (sdk_method) = {title: "Follow container logs"};
+  }
 
-  // Streams HTTP requests after a sequence number, then new ones as they finish.
-  // Agents: QueryHttpTraffic.
-  rpc TailHttpTraffic(TailHttpTrafficRequest) returns (stream TailHttpTrafficResponse);
-
+  // Streams HTTP requests after a sequence number, then new ones as they finish. Without a
+  // stream: QueryHttpTraffic.
+  rpc TailHttpTraffic(TailHttpTrafficRequest) returns (stream TailHttpTrafficResponse) {
+    option (sdk_method) = {title: "Follow HTTP traffic"};
+  }
 }
 
 // ── Machine ────────────────────────────────────────────────────────────────
@@ -1525,6 +1535,9 @@ message CreateTransferResponse {
   // download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
   // after the project and its service or volume. Empty for an upload.
   string file_name = 7;
+  // upload_archive: the names `command` leaves out of the archive, wherever they lie in the
+  // directory. A program that packs the directory itself leaves out the same.
+  repeated string exclude_names = 8;
 }
 
 message GetUploadRequest {
