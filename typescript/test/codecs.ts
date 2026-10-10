@@ -407,7 +407,6 @@ import * as p from "pethost";
   m.converts("PublishedPort.machine_port", { machinePort: 1001 }, { ...empty.PublishedPort(), machinePort: 1001 });
   m.converts("PublishedPort.container_port", { containerPort: 1002 }, { ...empty.PublishedPort(), containerPort: 1002 });
   m.converts("PublishedPort.protocol", { protocol: "protocol" }, { ...empty.PublishedPort(), protocol: "protocol" });
-  m.converts("PublishedPort.machine_only", { machineOnly: true }, { ...empty.PublishedPort(), machineOnly: true });
 }
 
 {

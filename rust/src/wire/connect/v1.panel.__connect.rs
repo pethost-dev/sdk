@@ -1041,8 +1041,8 @@ pub trait PanelService: Send + Sync + 'static {
     /// named volume per VOLUME of its last stage).
     ///
     /// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
-    /// is recreated. Project files are bind-mounted read-only. Public traffic comes only through
-    /// the proxy, set in `x-pethost`, the one extension read, in the file or as `x_pethost`:
+    /// is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
+    /// host of a route in `x-pethost`, the one extension read, in the file or as `x_pethost`:
     ///
     ///   x-pethost:
     /// ```text
@@ -1052,7 +1052,18 @@ pub trait PanelService: Send + Sync + 'static {
     ///   - {host: recipes.sam.pethost.app, path: /api, service: api, port: 8000, strip_path: true}
     /// ```
     ///
-    /// A service without a route is private: the project's services reach it at `<service>:<port>`.
+    /// `ports:` stays as the file has it, and is never refused. A TCP port it publishes that
+    /// answers HTTP gets its route by itself and is not opened on the machine: at
+    /// `<project>.<Machine.apps_domain>`, or `<project>-<service>.<apps_domain>` each when the
+    /// project has several; `Project.url` has it when the call answers. Any other published port
+    /// opens on the machine as written, at `<Machine.hostname>:<port>`, and one that is taken there
+    /// fails the deploy; so does a web port once its route is removed. Never opened: a port bound
+    /// to 127.0.0.1 (`ssh_command` tunnels to it), a machine port of the machine's own (80, 443,
+    /// 22), and one nothing listens on within a minute of its start, until a later deploy finds it
+    /// listening (`Service.published_ports` lists what is open). With `x_pethost.routes` the routes
+    /// are yours and the machine names none. A project that publishes no port gets
+    /// `<project>.<apps_domain>` in its first deploy, for the one port it listens on.
+    /// A service with neither is private: the project's services reach it at `<service>:<port>`.
     /// A password for visitors goes only as `x_pethost.password`, never into the file: every route
     /// then answers 401 with a password page, over HTTPS only; nothing returns it
     /// (`Project.password_protected` says it is set); and `files` that write /compose.yaml keep the
@@ -1063,8 +1074,6 @@ pub trait PanelService: Send + Sync + 'static {
     /// Refused, each violation saying what to write instead:
     /// - `container_name`, `profiles`; `name`, `driver`, `driver_opts`, `external` or `ipam` of a
     ///   volume or network: remove them.
-    /// - `ports:` with a port a route sends to (remove the entry: the proxy serves it), or with a
-    ///   machine port the machine keeps, such as 22, 80, 443 (publish another, or use a route).
     /// - a writable bind mount (`.:/app`, `./data:/data`): project files take `:ro`, data a named
     ///   volume (`data:/data`, with `data:` under `volumes:`).
     /// - a volume with no name (`- /data`): name it. Below a bind mount it is allowed, as scratch
@@ -1113,7 +1122,8 @@ pub trait PanelService: Send + Sync + 'static {
     /// SERVICE_PORT_CLOSED problem, its route answering 502, not a failed deploy). So it also starts
     /// stopped services, reruns jobs, recreates changed services and those bind-mounting project
     /// files, and fails on an unhealthy service. While Project.x_pethost_applies_at_once, a version
-    /// differing only in `x-pethost` (or not at all) applies at once, restarting nothing. Any other
+    /// differing only in `x-pethost` (or not at all) applies at once, restarting nothing but a
+    /// service whose published port a route takes or leaves. Any other
     /// deploy applies its routes and password as it ends: to hide new content from its first second,
     /// set the password first, in a call of its own, then deploy the content.
     ///

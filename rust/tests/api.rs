@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.1.1"),
+    ("user-agent", "pethost-rust/0.2.0"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -948,7 +948,6 @@ mod samples {
             message.machine_port = states::plain(k, states::number(1, k));
             message.container_port = states::plain(k, states::number(2, k));
             message.protocol = states::plain(k, states::text("protocol", k));
-            message.machine_only = states::flag(1, k);
         })
     }
 
@@ -2474,7 +2473,6 @@ mod on_wire {
             machine_port: states::present(states::plain(k, states::number(1, k))),
             container_port: states::present(states::plain(k, states::number(2, k))),
             protocol: states::present(states::plain(k, states::text("protocol", k))),
-            machine_only: states::present(states::flag(1, k)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -6135,7 +6133,7 @@ fn service_is_json() {
 
 #[test]
 fn published_port_is_json() {
-    let names = ["machine_port", "container_port", "protocol", "machine_only"];
+    let names = ["machine_port", "container_port", "protocol"];
     a_message_is_json(2, &names, samples::published_port, on_wire::published_port);
 }
 

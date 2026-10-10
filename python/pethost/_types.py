@@ -468,8 +468,9 @@ class Machine:
         apps_domain: The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
             Pethost domain" means this one unless they name another. A route's host
             `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-            to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-            host is a domain the person owns.
+            to make, and a web port a project publishes gets such a host by itself (create_project). Only
+            the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+            the person owns, and published ports all open on the machine.
         restart_required_time: When an update started to need a machine restart. Absent = none is needed.
         scheduled_restart_time: When run_machine_action(restart_machine=) will restart it; later while what it waits for is still
             going on (RestartMachineAction.interrupt_operations). Absent = not scheduled.
@@ -553,8 +554,9 @@ class Machine:
     """The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
     Pethost domain" means this one unless they name another. A route's host
     `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-    to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-    host is a domain the person owns.
+    to make, and a web port a project publishes gets such a host by itself (create_project). Only
+    the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+    the person owns, and published ports all open on the machine.
     """
 
     daemon_version: str = ""
@@ -1217,8 +1219,8 @@ class Project:
         deploy_time: When the current deploy made its files the project's. Absent = no deploy yet, or one that
             failed or was cancelled leaving no service with a container: nothing runs.
         x_pethost_applies_at_once: True = the current deploy succeeded and every service has a container, so a deploy whose
-            files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-            restart. False = the next deploy runs in full (see deploy_project).
+            files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+            and no restart but the one deploy_project names. False = the next deploy runs in full.
         services: By name.
         volumes: Every one the machine holds for the project, by name.
         routes: x-pethost.routes as the machine holds them, in order: the list x_pethost.routes replaces, so
@@ -1271,8 +1273,8 @@ class Project:
 
     x_pethost_applies_at_once: bool = False
     """True = the current deploy succeeded and every service has a container, so a deploy whose
-    files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-    restart. False = the next deploy runs in full (see deploy_project).
+    files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+    and no restart but the one deploy_project names. False = the next deploy runs in full.
     """
 
     services: Sequence[Service] = ()
@@ -1600,6 +1602,8 @@ class Service:
             `<service>:<port>`.
         listening_ports: The TCP ports its processes listen on now, at an address the proxy and the other services
             reach: a route's port must be one of them. Empty = it does not run, or listens on none.
+        published_ports: The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+            127.0.0.1.
         health_check: Absent = no healthcheck.
         environment: What the container is configured with, not what its image sets.
         env_files: The files its `env_file:` names, as compose.yaml writes them, e.g. "./.env": relative to the
@@ -1681,6 +1685,9 @@ class Service:
     """
 
     published_ports: Sequence[PublishedPort] = ()
+    """The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+    127.0.0.1.
+    """
 
     volume_mounts: Sequence[VolumeMount] = ()
 
@@ -1728,12 +1735,11 @@ class Service:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PublishedPort:
-    """A port that `ports:` opens on the machine directly, bypassing the proxy.
+    """A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
 
     Attributes:
         machine_port: 0 = Docker picks one when the container starts.
         protocol: "tcp", "udp" or "sctp".
-        machine_only: True = bound to 127.0.0.1: reachable only through an SSH tunnel.
     """
 
     machine_port: int = 0
@@ -1743,9 +1749,6 @@ class PublishedPort:
 
     protocol: str = ""
     """"tcp", "udp" or "sctp"."""
-
-    machine_only: bool = False
-    """True = bound to 127.0.0.1: reachable only through an SSH tunnel."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an

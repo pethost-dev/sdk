@@ -1727,8 +1727,9 @@ type Machine_builder struct {
 	// The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
 	// Pethost domain" means this one unless they name another. A route's host
 	// `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-	// to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-	// host is a domain the person owns.
+	// to make, and a web port a project publishes gets such a host by itself (CreateProject). Only
+	// the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+	// the person owns, and published ports all open on the machine.
 	AppsDomain    *string
 	DaemonVersion *string
 	DockerVersion *string
@@ -5196,8 +5197,8 @@ type Project_builder struct {
 	// failed or was cancelled leaving no service with a container: nothing runs.
 	DeployTime *timestamppb.Timestamp
 	// True = the current deploy succeeded and every service has a container, so a deploy whose
-	// files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-	// restart. False = the next deploy runs in full (see DeployProject).
+	// files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+	// and no restart but the one DeployProject names. False = the next deploy runs in full.
 	XPethostAppliesAtOnce *bool
 	Services              []*Service
 	Volumes               []*Volume
@@ -6712,6 +6713,8 @@ type Service_builder struct {
 	// The TCP ports its processes listen on now, at an address the proxy and the other services
 	// reach: a route's port must be one of them. Empty = it does not run, or listens on none.
 	ListeningPorts []uint32
+	// The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+	// 127.0.0.1.
 	PublishedPorts []*PublishedPort
 	VolumeMounts   []*VolumeMount
 	RestartPolicy  *RestartPolicy
@@ -6816,13 +6819,12 @@ func (b0 Service_builder) Build() *Service {
 	return m0
 }
 
-// A port that `ports:` opens on the machine directly, bypassing the proxy.
+// A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
 type PublishedPort struct {
 	state                    protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_MachinePort   uint32                 `protobuf:"varint,1,opt,name=machine_port,json=machinePort"`
 	xxx_hidden_ContainerPort uint32                 `protobuf:"varint,2,opt,name=container_port,json=containerPort"`
 	xxx_hidden_Protocol      *string                `protobuf:"bytes,3,opt,name=protocol"`
-	xxx_hidden_MachineOnly   bool                   `protobuf:"varint,4,opt,name=machine_only,json=machineOnly"`
 	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
 	XXX_presence             [1]uint32
 	unknownFields            protoimpl.UnknownFields
@@ -6878,31 +6880,19 @@ func (x *PublishedPort) GetProtocol() string {
 	return ""
 }
 
-func (x *PublishedPort) GetMachineOnly() bool {
-	if x != nil {
-		return x.xxx_hidden_MachineOnly
-	}
-	return false
-}
-
 func (x *PublishedPort) SetMachinePort(v uint32) {
 	x.xxx_hidden_MachinePort = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
 }
 
 func (x *PublishedPort) SetContainerPort(v uint32) {
 	x.xxx_hidden_ContainerPort = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
 }
 
 func (x *PublishedPort) SetProtocol(v string) {
 	x.xxx_hidden_Protocol = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
-}
-
-func (x *PublishedPort) SetMachineOnly(v bool) {
-	x.xxx_hidden_MachineOnly = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
 }
 
 func (x *PublishedPort) HasMachinePort() bool {
@@ -6926,13 +6916,6 @@ func (x *PublishedPort) HasProtocol() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
-func (x *PublishedPort) HasMachineOnly() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
-}
-
 func (x *PublishedPort) ClearMachinePort() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_MachinePort = 0
@@ -6948,18 +6931,12 @@ func (x *PublishedPort) ClearProtocol() {
 	x.xxx_hidden_Protocol = nil
 }
 
-func (x *PublishedPort) ClearMachineOnly() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
-	x.xxx_hidden_MachineOnly = false
-}
-
 type PublishedPort_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	MachinePort   *uint32
 	ContainerPort *uint32
 	Protocol      *string
-	MachineOnly   *bool
 }
 
 func (b0 PublishedPort_builder) Build() *PublishedPort {
@@ -6967,20 +6944,16 @@ func (b0 PublishedPort_builder) Build() *PublishedPort {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.MachinePort != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
 		x.xxx_hidden_MachinePort = *b.MachinePort
 	}
 	if b.ContainerPort != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
 		x.xxx_hidden_ContainerPort = *b.ContainerPort
 	}
 	if b.Protocol != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
 		x.xxx_hidden_Protocol = b.Protocol
-	}
-	if b.MachineOnly != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
-		x.xxx_hidden_MachineOnly = *b.MachineOnly
 	}
 	return m0
 }
@@ -20100,12 +20073,11 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\venvironment\x18\x18 \x03(\v2%.pethost.panel.v1.EnvironmentVariableR\venvironment\x12\x1b\n" +
 	"\tenv_files\x18\x1a \x03(\tR\benvFiles\x12\x1f\n" +
 	"\vssh_command\x18\x1b \x01(\tR\n" +
-	"sshCommand\"\x98\x01\n" +
+	"sshCommand\"\x89\x01\n" +
 	"\rPublishedPort\x12!\n" +
 	"\fmachine_port\x18\x01 \x01(\rR\vmachinePort\x12%\n" +
 	"\x0econtainer_port\x18\x02 \x01(\rR\rcontainerPort\x12\x1a\n" +
-	"\bprotocol\x18\x03 \x01(\tR\bprotocol\x12!\n" +
-	"\fmachine_only\x18\x04 \x01(\bR\vmachineOnly\"L\n" +
+	"\bprotocol\x18\x03 \x01(\tR\bprotocolJ\x04\b\x04\x10\x05R\fmachine_only\"L\n" +
 	"\vVolumeMount\x12\x16\n" +
 	"\x06volume\x18\x01 \x01(\tR\x06volume\x12%\n" +
 	"\x0econtainer_path\x18\x02 \x01(\tR\rcontainerPath\"\xaa\x02\n" +

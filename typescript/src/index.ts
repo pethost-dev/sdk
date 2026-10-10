@@ -470,9 +470,10 @@ export interface Machine {
   /**
    * The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
    * Pethost domain" means this one unless they name another. A route's host `<name>.<apps_domain>`,
-   * or appsDomain itself, works at once over HTTPS, with no DNS record to make. Only the person
-   * changes it, in the panel's settings. Empty = there is none: every host is a domain the person
-   * owns.
+   * or appsDomain itself, works at once over HTTPS, with no DNS record to make, and a web port a
+   * project publishes gets such a host by itself ({@link Pethost.createProject | createProject}).
+   * Only the person changes it, in the panel's settings. Empty = there is none: every host is a
+   * domain the person owns, and published ports all open on the machine.
    */
   appsDomain: string;
   daemonVersion: string;
@@ -897,8 +898,9 @@ export interface Project {
   deployTime?: Date;
   /**
    * True = the current deploy succeeded and every service has a container, so a deploy whose files
-   * differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or restart.
-   * False = the next deploy runs in full (see {@link Pethost.deployProject | deployProject}).
+   * differ only inside `x-pethost` (or not at all) applies at once, with no build or pull, and no
+   * restart but the one {@link Pethost.deployProject | deployProject} names. False = the next deploy
+   * runs in full.
    */
   xPethostAppliesAtOnce: boolean;
   /** By name. */
@@ -1168,6 +1170,7 @@ export interface Service {
    * a route's port must be one of them. Empty = it does not run, or listens on none.
    */
   listeningPorts: number[];
+  /** The ports `ports:` opens on the machine now: not one a route serves, nor one bound to 127.0.0.1. */
   publishedPorts: PublishedPort[];
   volumeMounts: VolumeMount[];
   restartPolicy?: RestartPolicy | number;
@@ -1194,15 +1197,13 @@ export const Service: JsonCodec<Service, Service> = {
   fromJson: (json) => convert.fromService(readJson(wire.ServiceSchema, json)),
 };
 
-/** A port that `ports:` opens on the machine directly, bypassing the proxy. */
+/** A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy. */
 export interface PublishedPort {
   /** 0 = Docker picks one when the container starts. */
   machinePort: number;
   containerPort: number;
   /** "tcp", "udp" or "sctp". */
   protocol: string;
-  /** True = bound to 127.0.0.1: reachable only through an SSH tunnel. */
-  machineOnly: boolean;
 }
 
 /** {@link PublishedPort} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3103,7 +3104,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.1.1");
+      request.header.set("User-Agent", "pethost-typescript/0.2.0");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3197,8 +3198,8 @@ export class Pethost {
    * (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
    *
    * compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is
-   * recreated. Project files are bind-mounted read-only. Public traffic comes only through the
-   * proxy, set in `x-pethost`, the one extension read, in the file or as `xPethost`:
+   * recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of
+   * a route in `x-pethost`, the one extension read, in the file or as `xPethost`:
    *
    * ```
    * x-pethost:
@@ -3208,20 +3209,28 @@ export class Pethost {
    *     - {host: recipes.sam.pethost.app, path: /api, service: api, port: 8000, strip_path: true}
    * ```
    *
-   * A service without a route is private: the project's services reach it at `<service>:<port>`. A
-   * password for visitors goes only as `xPethost.password`, never into the file: every route then
-   * answers 401 with a password page, over HTTPS only; nothing returns it
-   * (`Project.passwordProtected` says it is set); and `files` that write /compose.yaml keep the
-   * `password_hash` line the machine put in its `x-pethost`. All of compose.yaml is interpolated: $$
-   * for $.
+   * `ports:` stays as the file has it, and is never refused. A TCP port it publishes that answers
+   * HTTP gets its route by itself and is not opened on the machine: at
+   * `<project>.<Machine.appsDomain>`, or `<project>-<service>.<apps_domain>` each when the project
+   * has several; `Project.url` has it when the call answers. Any other published port opens on the
+   * machine as written, at `<Machine.hostname>:<port>`, and one that is taken there fails the
+   * deploy; so does a web port once its route is removed. Never opened: a port bound to 127.0.0.1
+   * (`sshCommand` tunnels to it), a machine port of the machine's own (80, 443, 22), and one nothing
+   * listens on within a minute of its start, until a later deploy finds it listening
+   * (`Service.publishedPorts` lists what is open). With `xPethost.routes` the routes are yours and
+   * the machine names none. A project that publishes no port gets `<project>.<apps_domain>` in its
+   * first deploy, for the one port it listens on. A service with neither is private: the project's
+   * services reach it at `<service>:<port>`. A password for visitors goes only as
+   * `xPethost.password`, never into the file: every route then answers 401 with a password page,
+   * over HTTPS only; nothing returns it (`Project.passwordProtected` says it is set); and `files`
+   * that write /compose.yaml keep the `password_hash` line the machine put in its `x-pethost`. All
+   * of compose.yaml is interpolated: $$ for $.
    *
    * The file runs as written, or is refused: the machine corrects nothing in it, in any version.
    * Refused, each violation saying what to write instead:
    *
    * - `container_name`, `profiles`; `name`, `driver`, `driver_opts`, `external` or `ipam` of a
    *   volume or network: remove them.
-   * - `ports:` with a port a route sends to (remove the entry: the proxy serves it), or with a
-   *   machine port the machine keeps, such as 22, 80, 443 (publish another, or use a route).
    * - a writable bind mount (`.:/app`, `./data:/data`): project files take `:ro`, data a named
    *   volume (`data:/data`, with `data:` under `volumes:`).
    * - a volume with no name (`- /data`): name it. Below a bind mount it is allowed, as scratch space
@@ -3265,9 +3274,10 @@ export class Pethost {
    * SERVICE_PORT_CLOSED problem, its route answering 502, not a failed deploy). So it also starts
    * stopped services, reruns jobs, recreates changed services and those bind-mounting project files,
    * and fails on an unhealthy service. While Project.xPethostAppliesAtOnce, a version differing only
-   * in `x-pethost` (or not at all) applies at once, restarting nothing. Any other deploy applies its
-   * routes and password as it ends: to hide new content from its first second, set the password
-   * first, in a call of its own, then deploy the content.
+   * in `x-pethost` (or not at all) applies at once, restarting nothing but a service whose published
+   * port a route takes or leaves. Any other deploy applies its routes and password as it ends: to
+   * hide new content from its first second, set the password first, in a call of its own, then
+   * deploy the content.
    *
    * A commit other than GithubSource.newestCommit turns autoDeploy off (pinned), even if it fails;
    * only setSource turns it back on.

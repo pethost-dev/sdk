@@ -87,8 +87,8 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // its last stage).
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
-// is recreated. Project files are bind-mounted read-only. Public traffic comes only through
-// the proxy, set in `x-pethost`, the one extension read, in the file or as XPethost:
+// is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
+// host of a route in `x-pethost`, the one extension read, in the file or as XPethost:
 //
 //	x-pethost:
 //	  metadata: {name: Recipe Box, emoji: "🥗", description: One line, notes: Free text}
@@ -96,20 +96,28 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 //	    - {host: recipes.sam.pethost.app, service: web, port: 3000}
 //	    - {host: recipes.sam.pethost.app, path: /api, service: api, port: 8000, strip_path: true}
 //
-// A service without a route is private: the project's services reach it at `<service>:<port>`.
-// A password for visitors goes only as XPethost.Password, never into the file: every route
-// then answers 401 with a password page, over HTTPS only; nothing returns it
-// ([Project.PasswordProtected] says it is set); and Files that write /compose.yaml keep the
-// `password_hash` line the machine put in its `x-pethost`. All of compose.yaml is
-// interpolated: $$ for $.
+// `ports:` stays as the file has it, and is never refused. A TCP port it publishes that
+// answers HTTP gets its route by itself and is not opened on the machine: at
+// `<project>.<Machine.apps_domain>`, or `<project>-<service>.<apps_domain>` each when the
+// project has several; [Project.URL] has it when the call answers. Any other published port
+// opens on the machine as written, at `<Machine.hostname>:<port>`, and one that is taken there
+// fails the deploy; so does a web port once its route is removed. Never opened: a port bound
+// to 127.0.0.1 ([Service.SSHCommand] tunnels to it), a machine port of the machine's own (80,
+// 443, 22), and one nothing listens on within a minute of its start, until a later deploy
+// finds it listening ([Service.PublishedPorts] lists what is open). With XPethost.Routes the
+// routes are yours and the machine names none. A project that publishes no port gets
+// `<project>.<apps_domain>` in its first deploy, for the one port it listens on. A service
+// with neither is private: the project's services reach it at `<service>:<port>`. A password
+// for visitors goes only as XPethost.Password, never into the file: every route then answers
+// 401 with a password page, over HTTPS only; nothing returns it ([Project.PasswordProtected]
+// says it is set); and Files that write /compose.yaml keep the `password_hash` line the
+// machine put in its `x-pethost`. All of compose.yaml is interpolated: $$ for $.
 //
 // The file runs as written, or is refused: the machine corrects nothing in it, in any version.
 // Refused, each violation saying what to write instead:
 //
 //   - `container_name`, `profiles`; `name`, `driver`, `driver_opts`, `external` or `ipam` of a
 //     volume or network: remove them.
-//   - `ports:` with a port a route sends to (remove the entry: the proxy serves it), or with a
-//     machine port the machine keeps, such as 22, 80, 443 (publish another, or use a route).
 //   - a writable bind mount (`.:/app`, `./data:/data`): project files take `:ro`, data a named
 //     volume (`data:/data`, with `data:` under `volumes:`).
 //   - a volume with no name (`- /data`): name it. Below a bind mount it is allowed, as scratch
@@ -149,9 +157,10 @@ func (c *Client) CreateProject(ctx context.Context, request *CreateProjectReques
 // also starts stopped services, reruns jobs, recreates changed services and those
 // bind-mounting project files, and fails on an unhealthy service. While
 // [Project.XPethostAppliesAtOnce], a version differing only in `x-pethost` (or not at all)
-// applies at once, restarting nothing. Any other deploy applies its routes and password as it
-// ends: to hide new content from its first second, set the password first, in a call of its
-// own, then deploy the content.
+// applies at once, restarting nothing but a service whose published port a route takes or
+// leaves. Any other deploy applies its routes and password as it ends: to hide new content
+// from its first second, set the password first, in a call of its own, then deploy the
+// content.
 //
 // A commit other than [GithubSource.NewestCommit] turns [GithubSource.AutoDeploy] off
 // (pinned), even if it fails; only [RunProjectActionSetSource] turns it back on.

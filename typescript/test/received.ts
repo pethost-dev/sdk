@@ -38,7 +38,7 @@ export const empty = {
   GithubSource: () => ({ pinned: false, autoDeployPending: false }),
   GithubCommit: () => ({ sha: "", title: "", url: "" }),
   Service: () => ({ service: "", containerRunning: false, image: "", buildsImage: false, imageDigest: "", imageSizeBytes: 0n, command: [], runAsUser: "", outOfMemory: false, restartCount: 0, cpuUsedCores: 0, memoryUsedBytes: 0n, memoryLimitBytes: 0n, cpuLimitCores: 0, writableLayerBytes: 0n, ports: [], listeningPorts: [], publishedPorts: [], volumeMounts: [], environment: [], envFiles: [], sshCommand: "" }),
-  PublishedPort: () => ({ machinePort: 0, containerPort: 0, protocol: "", machineOnly: false }),
+  PublishedPort: () => ({ machinePort: 0, containerPort: 0, protocol: "" }),
   VolumeMount: () => ({ volume: "", containerPath: "" }),
   HealthCheck: () => ({ command: [], intervalSeconds: 0, consecutiveFailureCount: 0, recentResultsPassed: [], lastFailureOutput: "" }),
   EnvironmentVariable: () => ({ name: "", value: "", secret: false, sourceFile: "", fromEnvFileVariables: [], valueLeftOut: false }),
@@ -435,7 +435,6 @@ export const empty = {
   m.reads("PublishedPort.machine_port", { machinePort: 1001 }, { ...empty.PublishedPort(), machinePort: 1001 });
   m.reads("PublishedPort.container_port", { containerPort: 1002 }, { ...empty.PublishedPort(), containerPort: 1002 });
   m.reads("PublishedPort.protocol", { protocol: "protocol" }, { ...empty.PublishedPort(), protocol: "protocol" });
-  m.reads("PublishedPort.machine_only", { machineOnly: true }, { ...empty.PublishedPort(), machineOnly: true });
 }
 
 {

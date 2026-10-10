@@ -1734,14 +1734,12 @@ impl From<types::PublishedPort> for wire::PublishedPort {
             machine_port,
             container_port,
             protocol,
-            machine_only,
         } = message;
 
         Self {
             machine_port: self::present(machine_port),
             container_port: self::present(container_port),
             protocol: self::present(protocol),
-            machine_only: self::present(machine_only),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1753,7 +1751,6 @@ impl From<wire::PublishedPort> for types::PublishedPort {
             machine_port,
             container_port,
             protocol,
-            machine_only,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1761,7 +1758,6 @@ impl From<wire::PublishedPort> for types::PublishedPort {
             machine_port: machine_port.unwrap_or_default(),
             container_port: container_port.unwrap_or_default(),
             protocol: protocol.unwrap_or_default(),
-            machine_only: machine_only.unwrap_or_default(),
         }
     }
 }

@@ -833,7 +833,6 @@ def published_port_from_wire(_w: _pb.PublishedPort) -> _t.PublishedPort:
         machine_port=_w.machine_port,
         container_port=_w.container_port,
         protocol=_w.protocol,
-        machine_only=_w.machine_only,
     )
 
 
@@ -842,7 +841,6 @@ def published_port_to_wire(_v: _t.PublishedPort) -> _pb.PublishedPort:
         machine_port=_v.machine_port or None,
         container_port=_v.container_port or None,
         protocol=_v.protocol or None,
-        machine_only=_v.machine_only or None,
     )
 
 

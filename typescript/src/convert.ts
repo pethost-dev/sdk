@@ -882,7 +882,6 @@ export function fromPublishedPort(m: w.PublishedPort): p.PublishedPort {
     machinePort: m.machinePort,
     containerPort: m.containerPort,
     protocol: m.protocol,
-    machineOnly: m.machineOnly,
   });
 }
 
@@ -891,7 +890,6 @@ export function toPublishedPort(m: p.PublishedPort): MessageInitShape<typeof w.P
     machinePort: m.machinePort || undefined,
     containerPort: m.containerPort || undefined,
     protocol: m.protocol || undefined,
-    machineOnly: m.machineOnly || undefined,
   } satisfies Fields<w.PublishedPort>;
 }
 

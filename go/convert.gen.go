@@ -668,7 +668,6 @@ func fromWirePublishedPort(w *panelv1.PublishedPort) PublishedPort {
 		w.GetMachinePort(),
 		w.GetContainerPort(),
 		w.GetProtocol(),
-		w.GetMachineOnly(),
 	}
 }
 
@@ -677,7 +676,6 @@ func toWirePublishedPort(v PublishedPort) *panelv1.PublishedPort {
 		MachinePort:   nonZero(v.MachinePort),
 		ContainerPort: nonZero(v.ContainerPort),
 		Protocol:      nonZero(v.Protocol),
-		MachineOnly:   nonZero(v.MachineOnly),
 	}
 	return b.Build()
 }

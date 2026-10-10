@@ -543,7 +543,6 @@ func samplePublishedPort(s seed) PublishedPort {
 		MachinePort:   plain[uint32](s.at("pethost.panel.v1.PublishedPort.machine_port")),
 		ContainerPort: plain[uint32](s.at("pethost.panel.v1.PublishedPort.container_port")),
 		Protocol:      plain[string](s.at("pethost.panel.v1.PublishedPort.protocol")),
-		MachineOnly:   plain[bool](s.at("pethost.panel.v1.PublishedPort.machine_only")),
 	}
 }
 

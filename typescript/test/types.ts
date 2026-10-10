@@ -59,7 +59,7 @@ accepts<p.GithubCommitInput>(a<p.GithubCommit>());
 optional<p.GithubCommit>({ sha: false, title: false, url: false });
 optional<p.GithubCommitInput>({ sha: true, title: true, url: true });
 optional<p.Service>({ service: false, state: true, containerRunning: false, image: false, buildsImage: false, imageDigest: false, imageSizeBytes: false, command: false, runAsUser: false, startTime: true, finishTime: true, exitCode: true, outOfMemory: false, restartCount: false, cpuUsedCores: false, memoryUsedBytes: false, memoryLimitBytes: false, cpuLimitCores: false, writableLayerBytes: false, ports: false, listeningPorts: false, publishedPorts: false, volumeMounts: false, restartPolicy: true, healthCheck: true, environment: false, envFiles: false, sshCommand: false });
-optional<p.PublishedPort>({ machinePort: false, containerPort: false, protocol: false, machineOnly: false });
+optional<p.PublishedPort>({ machinePort: false, containerPort: false, protocol: false });
 optional<p.VolumeMount>({ volume: false, containerPath: false });
 optional<p.HealthCheck>({ command: false, intervalSeconds: false, status: true, consecutiveFailureCount: false, recentResultsPassed: false, lastFailureOutput: false });
 optional<p.EnvironmentVariable>({ name: false, value: false, secret: false, sourceFile: false, fromEnvFileVariables: false, valueLeftOut: false });

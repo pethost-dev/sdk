@@ -798,8 +798,9 @@ pub struct MachineView<'a> {
     /// The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
     /// Pethost domain" means this one unless they name another. A route's host
     /// `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-    /// to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-    /// host is a domain the person owns.
+    /// to make, and a web port a project publishes gets such a host by itself (CreateProject). Only
+    /// the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+    /// the person owns, and published ports all open on the machine.
     ///
     /// Field 25: `apps_domain`
     pub apps_domain: ::core::option::Option<&'a str>,
@@ -1894,8 +1895,9 @@ impl MachineOwnedView {
     /// The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
     /// Pethost domain" means this one unless they name another. A route's host
     /// `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-    /// to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-    /// host is a domain the person owns.
+    /// to make, and a web port a project publishes gets such a host by itself (CreateProject). Only
+    /// the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+    /// the person owns, and published ports all open on the machine.
     ///
     /// Field 25: `apps_domain`
     #[must_use]
@@ -8039,8 +8041,8 @@ pub struct ProjectView<'a> {
         ::buffa_types::google::protobuf::__buffa::view::TimestampView<'a>,
     >,
     /// True = the current deploy succeeded and every service has a container, so a deploy whose
-    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-    /// restart. False = the next deploy runs in full (see DeployProject).
+    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+    /// and no restart but the one DeployProject names. False = the next deploy runs in full.
     ///
     /// Field 19: `x_pethost_applies_at_once`
     pub x_pethost_applies_at_once: ::core::option::Option<bool>,
@@ -9155,8 +9157,8 @@ impl ProjectOwnedView {
         &self.0.reborrow().deploy_time
     }
     /// True = the current deploy succeeded and every service has a container, so a deploy whose
-    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-    /// restart. False = the next deploy runs in full (see DeployProject).
+    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+    /// and no restart but the one DeployProject names. False = the next deploy runs in full.
     ///
     /// Field 19: `x_pethost_applies_at_once`
     #[must_use]
@@ -10931,6 +10933,9 @@ pub struct ServiceView<'a> {
     ///
     /// Field 28: `listening_ports`
     pub listening_ports: ::buffa::RepeatedView<'a, u32>,
+    /// The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+    /// 127.0.0.1.
+    ///
     /// Field 20: `published_ports`
     pub published_ports: ::buffa::RepeatedView<
         'a,
@@ -12067,6 +12072,9 @@ impl ServiceOwnedView {
     pub fn listening_ports(&self) -> &::buffa::RepeatedView<'_, u32> {
         &self.0.reborrow().listening_ports
     }
+    /// The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+    /// 127.0.0.1.
+    ///
     /// Field 20: `published_ports`
     #[must_use]
     pub fn published_ports(
@@ -12157,7 +12165,7 @@ impl ::serde::Serialize for ServiceOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-/// A port that `ports:` opens on the machine directly, bypassing the proxy.
+/// A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
 #[derive(Clone, Debug, Default)]
 pub struct PublishedPortView<'a> {
     /// 0 = Docker picks one when the container starts.
@@ -12170,10 +12178,6 @@ pub struct PublishedPortView<'a> {
     ///
     /// Field 3: `protocol`
     pub protocol: ::core::option::Option<&'a str>,
-    /// True = bound to 127.0.0.1: reachable only through an SSH tunnel.
-    ///
-    /// Field 4: `machine_only`
-    pub machine_only: ::core::option::Option<bool>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for PublishedPortView<'a> {
@@ -12227,13 +12231,6 @@ impl<'a> ::buffa::MessageView<'a> for PublishedPortView<'a> {
                 )?;
                 view.protocol = Some(::buffa::types::borrow_str(&mut cur)?);
             }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.machine_only = Some(::buffa::types::decode_bool(&mut cur)?);
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -12259,7 +12256,6 @@ impl<'a> ::buffa::MessageView<'a> for PublishedPortView<'a> {
             machine_port: self.machine_port,
             container_port: self.container_port,
             protocol: self.protocol.map(|s| s.to_string()),
-            machine_only: self.machine_only,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -12280,9 +12276,6 @@ impl<'a> ::buffa::ViewEncode<'a> for PublishedPortView<'a> {
         if let Some(ref v) = self.protocol {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.machine_only.is_some() {
-            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -12302,9 +12295,6 @@ impl<'a> ::buffa::ViewEncode<'a> for PublishedPortView<'a> {
         }
         if let Some(ref v) = self.protocol {
             ::buffa::types::put_string_field(3u32, v, buf);
-        }
-        if let Some(v) = self.machine_only {
-            ::buffa::types::put_bool_field(4u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -12343,9 +12333,6 @@ impl<'__a> ::serde::Serialize for PublishedPortView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.protocol {
             __map.serialize_entry("protocol", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.machine_only {
-            __map.serialize_entry("machine_only", &__v)?;
         }
         __map.end()
     }
@@ -12456,13 +12443,6 @@ impl PublishedPortOwnedView {
     #[must_use]
     pub fn protocol(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().protocol
-    }
-    /// True = bound to 127.0.0.1: reachable only through an SSH tunnel.
-    ///
-    /// Field 4: `machine_only`
-    #[must_use]
-    pub fn machine_only(&self) -> ::core::option::Option<bool> {
-        self.0.reborrow().machine_only
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<PublishedPortView<'static>>>

@@ -98,7 +98,7 @@ pub struct Machine {
     pub backup_retention_hours: u32,
     /// True = a host that no certificate installed on the machine covers gets one from Let's Encrypt once it resolves to the machine. False, always written = such a host serves plain HTTP only.
     pub acme_enabled: bool,
-    /// The person's domain on Pethost, e.g. \"sam.pethost.app\": theirs alone, so \"my domain\" or \"my Pethost domain\" means this one unless they name another. A route's host `<name>.<apps_domain>`, or `apps_domain` itself, works at once over HTTPS, with no DNS record to make. Only the person changes it, in the panel's settings. Empty = there is none: every host is a domain the person owns.
+    /// The person's domain on Pethost, e.g. \"sam.pethost.app\": theirs alone, so \"my domain\" or \"my Pethost domain\" means this one unless they name another. A route's host `<name>.<apps_domain>`, or `apps_domain` itself, works at once over HTTPS, with no DNS record to make, and a web port a project publishes gets such a host by itself ([`Client::create_project`](crate::Client::create_project)). Only the person changes it, in the panel's settings. Empty = there is none: every host is a domain the person owns, and published ports all open on the machine.
     pub apps_domain: ::std::string::String,
     pub daemon_version: ::std::string::String,
     pub docker_version: ::std::string::String,
@@ -380,7 +380,7 @@ pub struct Project {
     pub deploy_status: OperationStatus,
     /// When the current deploy made its files the project's. Absent = no deploy yet, or one that failed or was cancelled leaving no service with a container: nothing runs.
     pub deploy_time: ::core::option::Option<crate::Timestamp>,
-    /// True = the current deploy succeeded and every service has a container, so a deploy whose files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or restart. False = the next deploy runs in full (see [`Client::deploy_project`](crate::Client::deploy_project)).
+    /// True = the current deploy succeeded and every service has a container, so a deploy whose files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull, and no restart but the one [`Client::deploy_project`](crate::Client::deploy_project) names. False = the next deploy runs in full.
     pub x_pethost_applies_at_once: bool,
     /// By name.
     pub services: ::std::vec::Vec<Service>,
@@ -518,6 +518,7 @@ pub struct Service {
     pub ports: ::std::vec::Vec<u32>,
     /// The TCP ports its processes listen on now, at an address the proxy and the other services reach: a route's port must be one of them. Empty = it does not run, or listens on none.
     pub listening_ports: ::std::vec::Vec<u32>,
+    /// The ports `ports:` opens on the machine now: not one a route serves, nor one bound to 127.0.0.1.
     pub published_ports: ::std::vec::Vec<PublishedPort>,
     pub volume_mounts: ::std::vec::Vec<VolumeMount>,
     pub restart_policy: RestartPolicy,
@@ -557,7 +558,7 @@ pub enum ServiceState {
     Unrecognized(i32),
 }
 
-/// A port that `ports:` opens on the machine directly, bypassing the proxy.
+/// A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct PublishedPort {
@@ -566,8 +567,6 @@ pub struct PublishedPort {
     pub container_port: u32,
     /// \"tcp\", \"udp\" or \"sctp\".
     pub protocol: ::std::string::String,
-    /// True = bound to 127.0.0.1: reachable only through an SSH tunnel.
-    pub machine_only: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]

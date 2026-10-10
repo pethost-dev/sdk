@@ -36,7 +36,7 @@ type Config struct {
 const defaultBaseURL = "https://console.pethost.dev"
 
 // userAgent says which client calls, and of which release.
-const userAgent = "pethost-go/0.1.1"
+const userAgent = "pethost-go/0.2.0"
 
 // newTransport is the wire layer's client for config: the Connect protocol over HTTP, by POST
 // with binary protobuf, a stream's responses in the one answer.

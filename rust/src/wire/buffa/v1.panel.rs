@@ -3242,8 +3242,9 @@ pub struct Machine {
     /// The person's domain on Pethost, e.g. "sam.pethost.app": theirs alone, so "my domain" or "my
     /// Pethost domain" means this one unless they name another. A route's host
     /// `<name>.<apps_domain>`, or apps_domain itself, works at once over HTTPS, with no DNS record
-    /// to make. Only the person changes it, in the panel's settings. Empty = there is none: every
-    /// host is a domain the person owns.
+    /// to make, and a web port a project publishes gets such a host by itself (CreateProject). Only
+    /// the person changes it, in the panel's settings. Empty = there is none: every host is a domain
+    /// the person owns, and published ports all open on the machine.
     ///
     /// Field 25: `apps_domain`
     #[serde(
@@ -8329,8 +8330,8 @@ pub struct Project {
         ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
     >,
     /// True = the current deploy succeeded and every service has a container, so a deploy whose
-    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build, pull or
-    /// restart. False = the next deploy runs in full (see DeployProject).
+    /// files differ only inside `x-pethost` (or not at all) applies at once, with no build or pull,
+    /// and no restart but the one DeployProject names. False = the next deploy runs in full.
     ///
     /// Field 19: `x_pethost_applies_at_once`
     #[serde(
@@ -10411,6 +10412,9 @@ pub struct Service {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub listening_ports: ::buffa::alloc::vec::Vec<u32>,
+    /// The ports `ports:` opens on the machine now: not one a route serves, nor one bound to
+    /// 127.0.0.1.
+    ///
     /// Field 20: `published_ports`
     #[serde(
         rename = "published_ports",
@@ -11372,7 +11376,7 @@ pub const __SERVICE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
     from_json: ::buffa::type_registry::any_from_json::<Service>,
     is_wkt: false,
 };
-/// A port that `ports:` opens on the machine directly, bypassing the proxy.
+/// A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -11401,14 +11405,6 @@ pub struct PublishedPort {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub protocol: ::core::option::Option<::buffa::alloc::string::String>,
-    /// True = bound to 127.0.0.1: reachable only through an SSH tunnel.
-    ///
-    /// Field 4: `machine_only`
-    #[serde(
-        rename = "machine_only",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub machine_only: ::core::option::Option<bool>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -11419,7 +11415,6 @@ impl ::core::fmt::Debug for PublishedPort {
             .field("machine_port", &self.machine_port)
             .field("container_port", &self.container_port)
             .field("protocol", &self.protocol)
-            .field("machine_only", &self.machine_only)
             .finish()
     }
 }
@@ -11455,13 +11450,6 @@ impl PublishedPort {
         self.protocol = Some(value.into());
         self
     }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::machine_only`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_machine_only(mut self, value: bool) -> Self {
-        self.machine_only = Some(value);
-        self
-    }
 }
 ::buffa::impl_default_instance!(PublishedPort);
 impl ::buffa::MessageName for PublishedPort {
@@ -11492,9 +11480,6 @@ impl ::buffa::Message for PublishedPort {
         if let Some(ref v) = self.protocol {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.machine_only.is_some() {
-            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -11513,9 +11498,6 @@ impl ::buffa::Message for PublishedPort {
         }
         if let Some(ref v) = self.protocol {
             ::buffa::types::put_string_field(3u32, v, buf);
-        }
-        if let Some(v) = self.machine_only {
-            ::buffa::types::put_bool_field(4u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -11560,15 +11542,6 @@ impl ::buffa::Message for PublishedPort {
                     buf,
                 )?;
             }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.machine_only = ::core::option::Option::Some(
-                    ::buffa::types::decode_bool(buf)?,
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -11580,7 +11553,6 @@ impl ::buffa::Message for PublishedPort {
         self.machine_port = ::core::option::Option::None;
         self.container_port = ::core::option::Option::None;
         self.protocol = ::core::option::Option::None;
-        self.machine_only = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
