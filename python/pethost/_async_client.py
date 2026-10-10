@@ -418,17 +418,21 @@ class AsyncPethost:
 
         The file runs as written, or is refused: the machine corrects nothing in it, in any version.
         Refused, each violation saying what to write instead:
-        - `container_name`, `profiles`; `name`, `driver`, `driver_opts`, `external` or `ipam` of a
-          volume or network: remove them.
+        - a volume's `name`; `driver` (but Docker's default, `local` or `bridge`), `driver_opts`,
+          `external` or `ipam` of a volume or network: remove them.
         - a writable bind mount (`.:/app`, `./data:/data`): project files take `:ro`, data a named
           volume (`data:/data`, with `data:` under `volumes:`).
         - a volume with no name (`- /data`): name it. Below a bind mount it is allowed, as scratch
           space (`/app/node_modules`).
         - `env_file` naming a file the files lack: write it, empty if it sets nothing, or give the
           entry `required: false`.
-        - `privileged`, `cap_add`, `security_opt`, `devices`, host namespaces, the Docker socket, a
-          path outside the directory; more than one replica; `include` or `extends` from a URL; a
-          git URL as a build context.
+        - `privileged`, `cap_add`, `security_opt` (but `no-new-privileges`), `devices`, host
+          namespaces, the Docker socket, a path outside the directory; more than one replica;
+          `include` or `extends` from a URL; a git URL as a build context.
+        Not refused, and read the machine's way: a `container_name` and a network's `name` name
+        nothing on the machine, so two projects may write the same (the project's services still
+        reach the container by it); a service with `profiles` runs only while `COMPOSE_PROFILES`
+        in /.env names one of them, and is no service of the project until then.
         An image's VOLUME that no mount covers fails the deploy (UNCOVERED_IMAGE_VOLUME): mount a
         named volume or a tmpfs there.
 
