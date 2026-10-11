@@ -3104,7 +3104,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.1");
+      request.header.set("User-Agent", "pethost-typescript/0.2.2");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3231,8 +3231,7 @@ export class Pethost {
    *
    * - a volume's `name`; `driver` (but Docker's default, `local` or `bridge`), `driver_opts`,
    *   `external` or `ipam` of a volume or network: remove them.
-   * - a writable bind mount (`.:/app`, `./data:/data`): project files take `:ro`, data a named
-   *   volume (`data:/data`, with `data:` under `volumes:`).
+   * - a writable bind mount of the whole project (`.:/app`): add `:ro`.
    * - a volume with no name (`- /data`): name it. Below a bind mount it is allowed, as scratch space
    *   (`/app/node_modules`).
    * - `env_file` naming a file the files lack: write it, empty if it sets nothing, or give the entry
@@ -3244,8 +3243,12 @@ export class Pethost {
    * Not refused, and read the machine's way: a `container_name` and a network's `name` name nothing
    * on the machine, so two projects may write the same (the project's services still reach the
    * container by it); a service with `profiles` runs only while `COMPOSE_PROFILES` in /.env names
-   * one of them, and is no service of the project until then. An image's VOLUME that no mount covers
-   * fails the deploy (UNCOVERED_IMAGE_VOLUME): mount a named volume or a tmpfs there.
+   * one of them, and is no service of the project until then; a bind mount of a folder without `:ro`
+   * (`./data:/data`) mounts the project's volume named after the path (`data`), which deploys keep
+   * and backups hold, with none of the version's files in it, so project files take `:ro`, and data
+   * is plainer in a named volume (`data:/data`, with `data:` under `volumes:`); a bind mount of a
+   * file without `:ro` mounts it read-only. An image's VOLUME that no mount covers fails the deploy
+   * (UNCOVERED_IMAGE_VOLUME): mount a named volume or a tmpfs there.
    *
    * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation).
    * FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachineResponse.github),
