@@ -11,6 +11,26 @@ from ._runtime import OpenEnum
 from ._runtime import one_of as _one_of
 
 
+class AlertChannelKind(OpenEnum):
+    """
+    Attributes:
+        EMAIL: The account's email.
+        TELEGRAM: A Telegram chat or group.
+        SLACK: A Slack channel.
+    """
+
+    UNSPECIFIED = 0
+
+    EMAIL = 1
+    """The account's email."""
+
+    TELEGRAM = 2
+    """A Telegram chat or group."""
+
+    SLACK = 3
+    """A Slack channel."""
+
+
 class MachineSessionKind(OpenEnum):
     """
     Attributes:
@@ -67,6 +87,9 @@ class ProjectProblemKind(OpenEnum):
         SERVICE_PORT_CLOSED: It runs and does not listen on the port a route sends to (or only at 127.0.0.1, which the
             proxy cannot reach): the route answers 502. The message names the ports it does listen on
             (Service.listening_ports): change the route's port with deploy_project(x_pethost=), or the app.
+        SITE_DOWN: A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to.
+        HTTP_ERRORS: A traffic rule on 5xx holds.
+        HTTP_SLOW: A traffic rule on p95 holds.
     """
 
     UNSPECIFIED = 0
@@ -123,6 +146,15 @@ class ProjectProblemKind(OpenEnum):
     proxy cannot reach): the route answers 502. The message names the ports it does listen on
     (Service.listening_ports): change the route's port with deploy_project(x_pethost=), or the app.
     """
+
+    SITE_DOWN = 11
+    """A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to."""
+
+    HTTP_ERRORS = 12
+    """A traffic rule on 5xx holds."""
+
+    HTTP_SLOW = 13
+    """A traffic rule on p95 holds."""
 
 
 class ServicesActionKind(OpenEnum):
@@ -312,6 +344,75 @@ class DeployFailureReason(OpenEnum):
     """The running projects leave too little memory for a build; the message says how much."""
 
 
+class TrafficMetric(OpenEnum):
+    """
+    Attributes:
+        SERVER_ERRORS: 5xx responses in the window.
+        SERVER_ERROR_PERCENT: 5xx, of the window's requests (WebSockets too).
+    """
+
+    UNSPECIFIED = 0
+
+    SERVER_ERRORS = 1
+    """5xx responses in the window."""
+
+    SERVER_ERROR_PERCENT = 2
+    """5xx, of the window's requests (WebSockets too)."""
+
+    LATENCY_P95_MS = 3
+
+
+class AlertStatus(OpenEnum):
+    """
+    Attributes:
+        PENDING: It holds or cleared, not confirmed yet.
+        FIRING: An incident is open.
+        PAUSED: Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route
+            has the check's host.
+        NO_DATA: Not evaluated yet, or too few requests.
+    """
+
+    UNSPECIFIED = 0
+
+    OK = 1
+
+    PENDING = 2
+    """It holds or cleared, not confirmed yet."""
+
+    FIRING = 3
+    """An incident is open."""
+
+    PAUSED = 4
+    """Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route
+    has the check's host.
+    """
+
+    NO_DATA = 5
+    """Not evaluated yet, or too few requests."""
+
+
+class IncidentQuietReason(OpenEnum):
+    """
+    Attributes:
+        UNSPECIFIED: Told.
+        FIRST_EVALUATION: Already so when the machine first watched it, as after the update that brought alerts.
+        MANUAL_DEPLOY: A deploy someone ran failed: they watch it.
+    """
+
+    UNSPECIFIED = 0
+    """Told."""
+
+    MUTED = 1
+
+    OFF = 2
+
+    FIRST_EVALUATION = 3
+    """Already so when the machine first watched it, as after the update that brought alerts."""
+
+    MANUAL_DEPLOY = 4
+    """A deploy someone ran failed: they watch it."""
+
+
 class OutputStream(OpenEnum):
     UNSPECIFIED = 0
 
@@ -476,6 +577,9 @@ class Machine:
             going on (RestartMachineAction.interrupt_operations). Absent = not scheduled.
         sessions: What people have open in the containers now, oldest first: at most 100, the most the machine
             holds at once.
+        alert_channels: Where Pethost tells the person of incidents: the account's channels that are on, email first,
+            then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
+            alerts reach nobody.
     """
 
     name: str = ""
@@ -578,6 +682,12 @@ class Machine:
     holds at once.
     """
 
+    alert_channels: Sequence[AlertDestination] = ()
+    """Where Pethost tells the person of incidents: the account's channels that are on, email first,
+    then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
+    alerts reach nobody.
+    """
+
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
         enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
@@ -598,6 +708,42 @@ class Machine:
         from . import _convert
 
         return _convert.machine_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AlertDestination:
+    """A channel Pethost tells the person of incidents on (Machine.alert_channels).
+
+    Attributes:
+        label: The chat's title, or "#ops · Acme". Empty for email.
+    """
+
+    kind: AlertChannelKind = AlertChannelKind.UNSPECIFIED
+
+    label: str = ""
+    """The chat's title, or "#ops · Acme". Empty for email."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.alert_destination_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AlertDestination:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.alert_destination_from_dict(data)
 
 
 @final
@@ -1133,6 +1279,7 @@ class ProjectProblem:
         problem_message: One sentence for people, without a time of day (since_time has it), e.g. "bot fails its
             healthcheck: 11 failures in a row". A failed or cancelled deploy's also says whether it
             changed the project.
+        incident_id: The open incident that records it (Project.incidents). Empty = none yet.
     """
 
     kind: ProjectProblemKind = ProjectProblemKind.UNSPECIFIED
@@ -1157,6 +1304,9 @@ class ProjectProblem:
     healthcheck: 11 failures in a row". A failed or cancelled deploy's also says whether it
     changed the project.
     """
+
+    incident_id: str = ""
+    """The open incident that records it (Project.incidents). Empty = none yet."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1243,6 +1393,13 @@ class Project:
         running_services_action: The start_services, stop_services or restart_services that runs now, whoever called it
             (run_project_action waits for its end). Until then the project takes no other action or
             deploy, and Service.state is still what it was before. Absent = none.
+        alerts: What Pethost watches and how each part stands. Absent = the machine's software predates
+            alerts: they come with its next update.
+        incidents: The newest 5 that get_project(incidents_before=) selects, newest first: an open one in
+            full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+            after_operation_id, quiet_reason and flapping.
+        more_incidents: True = older ones remain: page with incidents_before and incidents_before_id.
+        uptime_days: Oldest first, get_project(uptime_day_count=) of them, today's last.
     """
 
     project_id: str = ""
@@ -1328,6 +1485,23 @@ class Project:
     (run_project_action waits for its end). Until then the project takes no other action or
     deploy, and Service.state is still what it was before. Absent = none.
     """
+
+    alerts: ProjectAlerts | None = None
+    """What Pethost watches and how each part stands. Absent = the machine's software predates
+    alerts: they come with its next update.
+    """
+
+    incidents: Sequence[Incident] = ()
+    """The newest 5 that get_project(incidents_before=) selects, newest first: an open one in
+    full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+    after_operation_id, quiet_reason and flapping.
+    """
+
+    more_incidents: bool = False
+    """True = older ones remain: page with incidents_before and incidents_before_id."""
+
+    uptime_days: Sequence[UptimeDay] = ()
+    """Oldest first, get_project(uptime_day_count=) of them, today's last."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -2175,6 +2349,9 @@ class Operation:
             deploy_project(rollback_deploy_id=) puts them back. It keeps the 3 newest versions of the files
             before the current one; of deploys that changed only /.env or x-pethost, whose files are the
             same, the newest has it.
+        files_operation_id: DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+            files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
+            that changed only /.env or x-pethost.
     """
 
     operation_id: str = ""
@@ -2249,6 +2426,12 @@ class Operation:
     deploy_project(rollback_deploy_id=) puts them back. It keeps the 3 newest versions of the files
     before the current one; of deploys that changed only /.env or x-pethost, whose files are the
     same, the newest has it.
+    """
+
+    files_operation_id: str = ""
+    """DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+    files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
+    that changed only /.env or x-pethost.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -3125,6 +3308,523 @@ class RunProjectActionResponse:
         from . import _convert
 
         return _convert.run_project_action_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SetProjectAlertsResponse:
+    """
+    Attributes:
+        alerts: As changed.
+    """
+
+    alerts: ProjectAlerts | None = None
+    """As changed."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.set_project_alerts_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SetProjectAlertsResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.set_project_alerts_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SiteCheck:
+    """An address of the project the machine opens every minute through its proxy, from inside the
+    machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+    must_contain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+
+    Attributes:
+        host: A Host.host of the project.
+        path: "/…", ≤200 chars, a query allowed. Empty = "/".
+        expect_status: 100-599. 0 = any status below 500 is up: 401, 404 and redirects too.
+        must_contain: ≤100 chars, in the body's first 64 KiB. Empty = not looked for.
+    """
+
+    host: str = ""
+    """A Host.host of the project."""
+
+    path: str = ""
+    """"/…", ≤200 chars, a query allowed. Empty = "/"."""
+
+    expect_status: int = 0
+    """100-599. 0 = any status below 500 is up: 401, 404 and redirects too."""
+
+    must_contain: str = ""
+    """≤100 chars, in the body's first 64 KiB. Empty = not looked for."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.site_check_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SiteCheck:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.site_check_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TrafficRule:
+    """Fires when `metric`, over the last window_minutes of the requests `filter` selects, reaches
+    `threshold` 2 minutes in a row; clears after 3 below.
+
+    Attributes:
+        filter: status_class not taken.
+        threshold: A count, a percent (0-100) or ms.
+        window_minutes: 1-60. 0 = 5.
+        min_requests: Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20.
+    """
+
+    metric: TrafficMetric = TrafficMetric.UNSPECIFIED
+
+    filter: HttpTrafficFilter | None = None
+    """status_class not taken."""
+
+    threshold: float = 0.0
+    """A count, a percent (0-100) or ms."""
+
+    window_minutes: int = 0
+    """1-60. 0 = 5."""
+
+    min_requests: int = 0
+    """Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.traffic_rule_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TrafficRule:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.traffic_rule_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ProjectAlerts:
+    """What Pethost watches on a project (set_project_alerts), and how each part stands now. Service
+    crashes, running out of memory, failed healthchecks, and failed backups, restores and
+    auto-deploys are always watched.
+
+    Attributes:
+        checks: Until set: the project's URL at "/" (machine_default); none without a route.
+        traffic_rules: Until set: 10 or more 5xx in 5 minutes, of every request (machine_default).
+        off: True = incidents are recorded, nothing is sent.
+        mute_end_time: Absent = not muted.
+        uptime_percent: Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
+            no check ran.
+    """
+
+    checks: Sequence[SiteCheckState] = ()
+    """Until set: the project's URL at "/" (machine_default); none without a route."""
+
+    traffic_rules: Sequence[TrafficRuleState] = ()
+    """Until set: 10 or more 5xx in 5 minutes, of every request (machine_default)."""
+
+    off: bool = False
+    """True = incidents are recorded, nothing is sent."""
+
+    mute_end_time: datetime | None = None
+    """Absent = not muted."""
+
+    uptime_percent: float | None = None
+    """Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
+    no check ran.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_alerts_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectAlerts:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_alerts_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SiteCheckState:
+    """
+    Attributes:
+        machine_default: The default check, as no list was set.
+        last_result: Absent = not run yet.
+        incident_id: The open incident. Empty = none.
+    """
+
+    check: SiteCheck | None = None
+
+    machine_default: bool = False
+    """The default check, as no list was set."""
+
+    status: AlertStatus = AlertStatus.UNSPECIFIED
+
+    last_result: SiteCheckResult | None = None
+    """Absent = not run yet."""
+
+    incident_id: str = ""
+    """The open incident. Empty = none."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.site_check_state_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SiteCheckState:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.site_check_state_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SiteCheckResult:
+    """
+    Attributes:
+        status: 0 = no HTTP answer: failure_message says why.
+        failure_message: E.g. "connection refused", "status 502", "the text is missing". Empty = up.
+    """
+
+    check_time: datetime | None = None
+
+    status: int = 0
+    """0 = no HTTP answer: failure_message says why."""
+
+    duration_ms: int = 0
+
+    failure_message: str = ""
+    """E.g. "connection refused", "status 502", "the text is missing". Empty = up."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.site_check_result_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SiteCheckResult:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.site_check_result_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TrafficRuleState:
+    """
+    Attributes:
+        machine_default: The default rule, as no list was set.
+        value: The metric at the last evaluation.
+        request_count: In the window then.
+        incident_id: The open incident. Empty = none.
+    """
+
+    rule: TrafficRule | None = None
+
+    machine_default: bool = False
+    """The default rule, as no list was set."""
+
+    status: AlertStatus = AlertStatus.UNSPECIFIED
+
+    value: float = 0.0
+    """The metric at the last evaluation."""
+
+    request_count: int = 0
+    """In the window then."""
+
+    incident_id: str = ""
+    """The open incident. Empty = none."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.traffic_rule_state_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TrafficRuleState:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.traffic_rule_state_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Incident:
+    """A period during which something of a project needed attention, from its confirmation to its
+    end.
+
+    Attributes:
+        kind: DEPLOY_CANCELLED opens none.
+        service: As in its ProjectProblem.
+        check: SITE_DOWN.
+        traffic_rule: HTTP_ERRORS, HTTP_SLOW.
+        operation_id: DEPLOY_FAILED, BACKUP_FAILED, RESTORE_FAILED.
+        resolve_time: When it and every incident joined to it cleared. Absent = open.
+        value: HTTP_ERRORS, HTTP_SLOW: the metric at open.
+        request_count: HTTP_ERRORS, HTTP_SLOW: the window's requests at open.
+        after_operation_id: A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely
+            cause, undone with deploy_project(rollback_deploy_id=) or an older commit. Empty = none.
+        after_operation_end_time: Absent = it was running.
+        joined_incident_id: The incident this one is part of: it is told with that one, not on its own. Empty = none.
+        quiet_reason: Set = nobody is told of it.
+        flapping: True = it went down and up 3 times within an hour; it stands for them all and clears after
+            15 clean minutes.
+        incident_message: One sentence for people, without a time of day.
+        evidence: GetIncident only.
+    """
+
+    incident_id: str = ""
+
+    kind: ProjectProblemKind = ProjectProblemKind.UNSPECIFIED
+    """DEPLOY_CANCELLED opens none."""
+
+    service: str = ""
+    """As in its ProjectProblem."""
+
+    check: SiteCheck | None = None
+    """SITE_DOWN."""
+
+    traffic_rule: TrafficRule | None = None
+    """HTTP_ERRORS, HTTP_SLOW."""
+
+    operation_id: str = ""
+    """DEPLOY_FAILED, BACKUP_FAILED, RESTORE_FAILED."""
+
+    open_time: datetime | None = None
+
+    resolve_time: datetime | None = None
+    """When it and every incident joined to it cleared. Absent = open."""
+
+    value: float = 0.0
+    """HTTP_ERRORS, HTTP_SLOW: the metric at open."""
+
+    request_count: int = 0
+    """HTTP_ERRORS, HTTP_SLOW: the window's requests at open."""
+
+    after_operation_id: str = ""
+    """A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely
+    cause, undone with deploy_project(rollback_deploy_id=) or an older commit. Empty = none.
+    """
+
+    after_operation_end_time: datetime | None = None
+    """Absent = it was running."""
+
+    joined_incident_id: str = ""
+    """The incident this one is part of: it is told with that one, not on its own. Empty = none."""
+
+    quiet_reason: IncidentQuietReason = IncidentQuietReason.UNSPECIFIED
+    """Set = nobody is told of it."""
+
+    flapping: bool = False
+    """True = it went down and up 3 times within an hour; it stands for them all and clears after
+    15 clean minutes.
+    """
+
+    incident_message: str = ""
+    """One sentence for people, without a time of day."""
+
+    evidence: IncidentEvidence | None = None
+    """GetIncident only."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.incident_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Incident:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.incident_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class IncidentEvidence:
+    """What the machine saw when an incident opened, kept with it. Untrusted.
+
+    Attributes:
+        check_result: SITE_DOWN: the third failure.
+        exit_code: The service's container: SERVICE_* kinds, and SITE_DOWN's service.
+        restart_count: In the 10 minutes before.
+        health_output: The last healthcheck's, ≤1 KiB.
+        log_lines: The service's last ≤20 before it opened, oldest first.
+        top_path: HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest.
+    """
+
+    check_result: SiteCheckResult | None = None
+    """SITE_DOWN: the third failure."""
+
+    exit_code: int = 0
+    """The service's container: SERVICE_* kinds, and SITE_DOWN's service."""
+
+    oom_killed: bool = False
+
+    restart_count: int = 0
+    """In the 10 minutes before."""
+
+    health_output: str = ""
+    """The last healthcheck's, ≤1 KiB."""
+
+    log_lines: Sequence[LogLine] = ()
+    """The service's last ≤20 before it opened, oldest first."""
+
+    top_path: HttpPathTraffic | None = None
+    """HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.incident_evidence_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> IncidentEvidence:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.incident_evidence_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class UptimeDay:
+    """One UTC day of a project's site checks.
+
+    Attributes:
+        start_time: Midnight UTC.
+        uptime_percent: Absent = no check ran.
+    """
+
+    start_time: datetime | None = None
+    """Midnight UTC."""
+
+    uptime_percent: float | None = None
+    """Absent = no check ran."""
+
+    down_seconds: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.uptime_day_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> UptimeDay:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.uptime_day_from_dict(data)
 
 
 @final
@@ -4183,6 +4883,15 @@ class ProjectChanged:
 class MachineUnreachable:
     """Detail of an UnavailableError error: the machine does not answer now, as while it restarts. Call
     again later.
+
+    Attributes:
+        since_time: Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+            (Machine.alert_channels). Absent = not known yet.
+    """
+
+    since_time: datetime | None = None
+    """Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+    (Machine.alert_channels). Absent = not known yet.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -4205,6 +4914,35 @@ class MachineUnreachable:
         from . import _convert
 
         return _convert.machine_unreachable_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MachineUpdatePending:
+    """Detail of a FailedPreconditionError error: the machine's software predates what was asked. It comes
+    with the machine's next update, which Pethost runs; nothing for the caller to do.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.machine_update_pending_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MachineUpdatePending:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.machine_update_pending_from_dict(data)
 
 
 @final

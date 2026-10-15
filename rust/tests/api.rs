@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.2.2"),
+    ("user-agent", "pethost-rust/0.2.3"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -403,6 +403,16 @@ mod states {
 mod samples {
     use super::*;
 
+    pub fn alert_channel_kind(k: usize) -> types::AlertChannelKind {
+        match k % 5 {
+            0 => types::AlertChannelKind::Unspecified,
+            1 => types::AlertChannelKind::Email,
+            2 => types::AlertChannelKind::Telegram,
+            3 => types::AlertChannelKind::Slack,
+            _ => types::AlertChannelKind::Unrecognized(4),
+        }
+    }
+
     pub fn machine_session_kind(k: usize) -> types::MachineSessionKind {
         match k % 7 {
             0 => types::MachineSessionKind::Unspecified,
@@ -416,7 +426,7 @@ mod samples {
     }
 
     pub fn project_problem_kind(k: usize) -> types::ProjectProblemKind {
-        match k % 12 {
+        match k % 15 {
             0 => types::ProjectProblemKind::Unspecified,
             1 => types::ProjectProblemKind::DeployFailed,
             2 => types::ProjectProblemKind::ServiceUnhealthy,
@@ -428,7 +438,10 @@ mod samples {
             8 => types::ProjectProblemKind::RestoreFailed,
             9 => types::ProjectProblemKind::AutoDeployRefused,
             10 => types::ProjectProblemKind::ServicePortClosed,
-            _ => types::ProjectProblemKind::Unrecognized(11),
+            11 => types::ProjectProblemKind::SiteDown,
+            12 => types::ProjectProblemKind::HttpErrors,
+            13 => types::ProjectProblemKind::HttpSlow,
+            _ => types::ProjectProblemKind::Unrecognized(14),
         }
     }
 
@@ -529,6 +542,39 @@ mod samples {
         }
     }
 
+    pub fn traffic_metric(k: usize) -> types::TrafficMetric {
+        match k % 5 {
+            0 => types::TrafficMetric::Unspecified,
+            1 => types::TrafficMetric::ServerErrors,
+            2 => types::TrafficMetric::ServerErrorPercent,
+            3 => types::TrafficMetric::LatencyP95Ms,
+            _ => types::TrafficMetric::Unrecognized(4),
+        }
+    }
+
+    pub fn alert_status(k: usize) -> types::AlertStatus {
+        match k % 7 {
+            0 => types::AlertStatus::Unspecified,
+            1 => types::AlertStatus::Ok,
+            2 => types::AlertStatus::Pending,
+            3 => types::AlertStatus::Firing,
+            4 => types::AlertStatus::Paused,
+            5 => types::AlertStatus::NoData,
+            _ => types::AlertStatus::Unrecognized(6),
+        }
+    }
+
+    pub fn incident_quiet_reason(k: usize) -> types::IncidentQuietReason {
+        match k % 6 {
+            0 => types::IncidentQuietReason::Unspecified,
+            1 => types::IncidentQuietReason::Muted,
+            2 => types::IncidentQuietReason::Off,
+            3 => types::IncidentQuietReason::FirstEvaluation,
+            4 => types::IncidentQuietReason::ManualDeploy,
+            _ => types::IncidentQuietReason::Unrecognized(5),
+        }
+    }
+
     pub fn output_stream(k: usize) -> types::OutputStream {
         match k % 4 {
             0 => types::OutputStream::Unspecified,
@@ -626,6 +672,20 @@ mod samples {
                     samples::machine_session(k + 25, later),
                 ],
             );
+            message.alert_channels = states::many(
+                k,
+                [
+                    samples::alert_destination(k + 25, later),
+                    samples::alert_destination(k + 26, later),
+                ],
+            );
+        })
+    }
+
+    pub fn alert_destination(k: usize, later: bool) -> types::AlertDestination {
+        states::make(|message: &mut types::AlertDestination| {
+            message.kind = samples::alert_channel_kind(k);
+            message.label = states::plain(k, states::text("label", k));
         })
     }
 
@@ -796,6 +856,7 @@ mod samples {
             message.operation_id = states::plain(k, states::text("operation_id", k));
             message.since_time = states::maybe(k, states::time(states::number(4, k + 3)));
             message.problem_message = states::plain(k, states::text("problem_message", k));
+            message.incident_id = states::plain(k, states::text("incident_id", k));
         })
     }
 
@@ -805,6 +866,9 @@ mod samples {
             include_secret_values: states::flag(1, k),
             snapshots_before: states::maybe(k, states::time(states::number(3, k + 2))),
             snapshots_volume: states::plain(k, states::text("snapshots_volume", k)),
+            incidents_before: states::maybe(k, states::time(states::number(5, k + 4))),
+            uptime_day_count: states::plain(k, states::number(6, k)),
+            incidents_before_id: states::plain(k, states::text("incidents_before_id", k)),
         }
     }
 
@@ -847,6 +911,13 @@ mod samples {
             message.http_traffic_last_day = states::maybe(k, samples::http_traffic_summary(k + 19, later));
             message.source = states::maybe(k, samples::project_source(k + 20, later));
             message.running_services_action = states::maybe(k, samples::running_services_action(k + 21, later));
+            message.alerts = states::maybe(k, samples::project_alerts(k + 22, later));
+            message.incidents = states::many(k, [samples::incident(k + 23, later), samples::incident(k + 24, later)]);
+            message.more_incidents = states::flag(3, k);
+            message.uptime_days = states::many(
+                k,
+                [samples::uptime_day(k + 25, later), samples::uptime_day(k + 26, later)],
+            );
         })
     }
 
@@ -1060,6 +1131,7 @@ mod samples {
             );
             message.changed_path_count = states::plain(k, states::number(18, k));
             message.files_kept = states::flag(2, k);
+            message.files_operation_id = states::plain(k, states::text("files_operation_id", k));
         })
     }
 
@@ -1352,6 +1424,143 @@ mod samples {
                     samples::operation_log_line(k + 3, later),
                 ],
             );
+        })
+    }
+
+    pub fn set_project_alerts_request(k: usize, later: bool) -> types::SetProjectAlertsRequest {
+        types::SetProjectAlertsRequest {
+            project_id: states::plain(k, states::text("project_id", k)),
+            checks: states::many(
+                k,
+                [samples::site_check(k + 1, later), samples::site_check(k + 2, later)],
+            ),
+            remove_checks: states::flag(1, k),
+            traffic_rules: states::many(
+                k,
+                [samples::traffic_rule(k + 3, later), samples::traffic_rule(k + 4, later)],
+            ),
+            remove_traffic_rules: states::flag(2, k),
+            off: states::marked(k, true),
+            mute_minutes: states::marked(k, states::number(7, k)),
+        }
+    }
+
+    pub fn set_project_alerts_response(k: usize, later: bool) -> types::SetProjectAlertsResponse {
+        states::make(|message: &mut types::SetProjectAlertsResponse| {
+            message.alerts = states::maybe(k, samples::project_alerts(k, later));
+        })
+    }
+
+    pub fn site_check(k: usize, later: bool) -> types::SiteCheck {
+        types::SiteCheck {
+            host: states::plain(k, states::text("host", k)),
+            path: states::plain(k, states::text("path", k)),
+            expect_status: states::plain(k, states::number(3, k)),
+            must_contain: states::plain(k, states::text("must_contain", k)),
+        }
+    }
+
+    pub fn traffic_rule(k: usize, later: bool) -> types::TrafficRule {
+        types::TrafficRule {
+            metric: samples::traffic_metric(k),
+            filter: states::maybe(k, samples::http_traffic_filter(k + 1, later)),
+            threshold: states::plain(k, f64::from(states::number(3, k)) + 0.5),
+            window_minutes: states::plain(k, states::number(4, k)),
+            min_requests: states::plain(k, states::number(5, k)),
+        }
+    }
+
+    pub fn project_alerts(k: usize, later: bool) -> types::ProjectAlerts {
+        states::make(|message: &mut types::ProjectAlerts| {
+            message.checks = states::many(
+                k,
+                [
+                    samples::site_check_state(k, later),
+                    samples::site_check_state(k + 1, later),
+                ],
+            );
+            message.traffic_rules = states::many(
+                k,
+                [
+                    samples::traffic_rule_state(k + 1, later),
+                    samples::traffic_rule_state(k + 2, later),
+                ],
+            );
+            message.off = states::flag(1, k);
+            message.mute_end_time = states::maybe(k, states::time(states::number(4, k + 3)));
+            message.uptime_percent = states::marked(k, f64::from(states::number(5, k)) + 0.5);
+        })
+    }
+
+    pub fn site_check_state(k: usize, later: bool) -> types::SiteCheckState {
+        states::make(|message: &mut types::SiteCheckState| {
+            message.check = states::maybe(k, samples::site_check(k, later));
+            message.machine_default = states::flag(1, k);
+            message.status = samples::alert_status(k + 2);
+            message.last_result = states::maybe(k, samples::site_check_result(k + 3, later));
+            message.incident_id = states::plain(k, states::text("incident_id", k));
+        })
+    }
+
+    pub fn site_check_result(k: usize, later: bool) -> types::SiteCheckResult {
+        states::make(|message: &mut types::SiteCheckResult| {
+            message.check_time = states::maybe(k, states::time(states::number(1, k)));
+            message.status = states::plain(k, states::number(2, k));
+            message.duration_ms = states::plain(k, states::number(3, k));
+            message.failure_message = states::plain(k, states::text("failure_message", k));
+        })
+    }
+
+    pub fn traffic_rule_state(k: usize, later: bool) -> types::TrafficRuleState {
+        states::make(|message: &mut types::TrafficRuleState| {
+            message.rule = states::maybe(k, samples::traffic_rule(k, later));
+            message.machine_default = states::flag(1, k);
+            message.status = samples::alert_status(k + 2);
+            message.value = states::plain(k, f64::from(states::number(4, k)) + 0.5);
+            message.request_count = states::plain(k, u64::from(states::number(5, k)) << 44);
+            message.incident_id = states::plain(k, states::text("incident_id", k));
+        })
+    }
+
+    pub fn incident(k: usize, later: bool) -> types::Incident {
+        states::make(|message: &mut types::Incident| {
+            message.incident_id = states::plain(k, states::text("incident_id", k));
+            message.kind = samples::project_problem_kind(k + 1);
+            message.service = states::plain(k, states::text("service", k));
+            message.check = states::maybe(k, samples::site_check(k + 3, later));
+            message.traffic_rule = states::maybe(k, samples::traffic_rule(k + 4, later));
+            message.operation_id = states::plain(k, states::text("operation_id", k));
+            message.open_time = states::maybe(k, states::time(states::number(7, k + 6)));
+            message.resolve_time = states::maybe(k, states::time(states::number(8, k + 7)));
+            message.value = states::plain(k, f64::from(states::number(9, k)) + 0.5);
+            message.request_count = states::plain(k, u64::from(states::number(10, k)) << 44);
+            message.after_operation_id = states::plain(k, states::text("after_operation_id", k));
+            message.after_operation_end_time = states::maybe(k, states::time(states::number(12, k + 11)));
+            message.joined_incident_id = states::plain(k, states::text("joined_incident_id", k));
+            message.quiet_reason = samples::incident_quiet_reason(k + 13);
+            message.flapping = states::flag(1, k);
+            message.incident_message = states::plain(k, states::text("incident_message", k));
+            message.evidence = states::maybe(k, samples::incident_evidence(k + 16, later));
+        })
+    }
+
+    pub fn incident_evidence(k: usize, later: bool) -> types::IncidentEvidence {
+        states::make(|message: &mut types::IncidentEvidence| {
+            message.check_result = states::maybe(k, samples::site_check_result(k, later));
+            message.exit_code = states::plain(k, -(states::number(2, k) as i32));
+            message.oom_killed = states::flag(1, k);
+            message.restart_count = states::plain(k, states::number(4, k));
+            message.health_output = states::plain(k, states::text("health_output", k));
+            message.log_lines = states::many(k, [samples::log_line(k + 5, later), samples::log_line(k + 6, later)]);
+            message.top_path = states::maybe(k, samples::http_path_traffic(k + 6, later));
+        })
+    }
+
+    pub fn uptime_day(k: usize, later: bool) -> types::UptimeDay {
+        states::make(|message: &mut types::UptimeDay| {
+            message.start_time = states::maybe(k, states::time(states::number(1, k)));
+            message.uptime_percent = states::marked(k, f64::from(states::number(2, k)) + 0.5);
+            message.down_seconds = states::plain(k, states::number(3, k));
         })
     }
 
@@ -1674,8 +1883,14 @@ mod samples {
         types::ProjectChanged::default()
     }
 
-    pub fn machine_unreachable(_k: usize, later: bool) -> types::MachineUnreachable {
-        types::MachineUnreachable::default()
+    pub fn machine_unreachable(k: usize, later: bool) -> types::MachineUnreachable {
+        states::make(|message: &mut types::MachineUnreachable| {
+            message.since_time = states::maybe(k, states::time(states::number(1, k)));
+        })
+    }
+
+    pub fn machine_update_pending(_k: usize, later: bool) -> types::MachineUpdatePending {
+        types::MachineUpdatePending::default()
     }
 
     pub fn no_machine(k: usize, later: bool) -> types::NoMachine {
@@ -1746,6 +1961,18 @@ mod samples {
 mod on_wire {
     use super::*;
 
+    pub fn alert_channel_kind(k: usize) -> buffa::EnumValue<wire::AlertChannelKind> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 5 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            _ => 4,
+        };
+        buffa::EnumValue::from(number)
+    }
+
     pub fn machine_session_kind(k: usize) -> buffa::EnumValue<wire::MachineSessionKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
         let number = match k % 7 {
@@ -1762,7 +1989,7 @@ mod on_wire {
 
     pub fn project_problem_kind(k: usize) -> buffa::EnumValue<wire::ProjectProblemKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 12 {
+        let number = match k % 15 {
             0 => 0,
             1 => 1,
             2 => 2,
@@ -1774,7 +2001,10 @@ mod on_wire {
             8 => 8,
             9 => 9,
             10 => 10,
-            _ => 11,
+            11 => 11,
+            12 => 12,
+            13 => 13,
+            _ => 14,
         };
         buffa::EnumValue::from(number)
     }
@@ -1888,6 +2118,45 @@ mod on_wire {
             10 => 10,
             11 => 11,
             _ => 12,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn traffic_metric(k: usize) -> buffa::EnumValue<wire::TrafficMetric> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 5 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            _ => 4,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn alert_status(k: usize) -> buffa::EnumValue<wire::AlertStatus> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 7 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            _ => 6,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn incident_quiet_reason(k: usize) -> buffa::EnumValue<wire::IncidentQuietReason> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 6 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            _ => 5,
         };
         buffa::EnumValue::from(number)
     }
@@ -2012,6 +2281,25 @@ mod on_wire {
                     on_wire::machine_session(k + 25, received),
                 ],
             ),
+            alert_channels: states::many(
+                k,
+                [
+                    on_wire::alert_destination(k + 25, received),
+                    on_wire::alert_destination(k + 26, received),
+                ],
+            ),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn alert_destination(k: usize, received: bool) -> wire::AlertDestination {
+        let mut message = wire::AlertDestination {
+            kind: states::set(on_wire::alert_channel_kind(k)),
+            label: states::present(states::plain(k, states::text("label", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2263,6 +2551,7 @@ mod on_wire {
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             since_time: states::maybe(k, states::time_on_wire(states::number(4, k + 3))).into(),
             problem_message: states::present(states::plain(k, states::text("problem_message", k))),
+            incident_id: states::present(states::plain(k, states::text("incident_id", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2277,6 +2566,9 @@ mod on_wire {
             include_secret_values: states::present(states::flag(1, k)),
             snapshots_before: states::maybe(k, states::time_on_wire(states::number(3, k + 2))).into(),
             snapshots_volume: states::present(states::plain(k, states::text("snapshots_volume", k))),
+            incidents_before: states::maybe(k, states::time_on_wire(states::number(5, k + 4))).into(),
+            uptime_day_count: states::present(states::plain(k, states::number(6, k))),
+            incidents_before_id: states::present(states::plain(k, states::text("incidents_before_id", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2341,6 +2633,19 @@ mod on_wire {
             http_traffic_last_day: states::maybe(k, on_wire::http_traffic_summary(k + 19, received)).into(),
             source: states::maybe(k, on_wire::project_source(k + 20, received)).into(),
             running_services_action: states::maybe(k, on_wire::running_services_action(k + 21, received)).into(),
+            alerts: states::maybe(k, on_wire::project_alerts(k + 22, received)).into(),
+            incidents: states::many(
+                k,
+                [on_wire::incident(k + 23, received), on_wire::incident(k + 24, received)],
+            ),
+            more_incidents: states::present(states::flag(3, k)),
+            uptime_days: states::many(
+                k,
+                [
+                    on_wire::uptime_day(k + 25, received),
+                    on_wire::uptime_day(k + 26, received),
+                ],
+            ),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2625,6 +2930,7 @@ mod on_wire {
             ),
             changed_path_count: states::present(states::plain(k, states::number(18, k))),
             files_kept: states::present(states::flag(2, k)),
+            files_operation_id: states::present(states::plain(k, states::text("files_operation_id", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3071,6 +3377,207 @@ mod on_wire {
                     on_wire::operation_log_line(k + 3, received),
                 ],
             ),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn set_project_alerts_request(k: usize, received: bool) -> wire::SetProjectAlertsRequest {
+        let mut message = wire::SetProjectAlertsRequest {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            checks: states::many(
+                k,
+                [
+                    on_wire::site_check(k + 1, received),
+                    on_wire::site_check(k + 2, received),
+                ],
+            ),
+            remove_checks: states::present(states::flag(1, k)),
+            traffic_rules: states::many(
+                k,
+                [
+                    on_wire::traffic_rule(k + 3, received),
+                    on_wire::traffic_rule(k + 4, received),
+                ],
+            ),
+            remove_traffic_rules: states::present(states::flag(2, k)),
+            off: states::marked(k, true),
+            mute_minutes: states::marked(k, states::number(7, k)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn set_project_alerts_response(k: usize, received: bool) -> wire::SetProjectAlertsResponse {
+        let mut message = wire::SetProjectAlertsResponse {
+            alerts: states::maybe(k, on_wire::project_alerts(k, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn site_check(k: usize, received: bool) -> wire::SiteCheck {
+        let mut message = wire::SiteCheck {
+            host: states::present(states::plain(k, states::text("host", k))),
+            path: states::present(states::plain(k, states::text("path", k))),
+            expect_status: states::present(states::plain(k, states::number(3, k))),
+            must_contain: states::present(states::plain(k, states::text("must_contain", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn traffic_rule(k: usize, received: bool) -> wire::TrafficRule {
+        let mut message = wire::TrafficRule {
+            metric: states::set(on_wire::traffic_metric(k)),
+            filter: states::maybe(k, on_wire::http_traffic_filter(k + 1, received)).into(),
+            threshold: states::present(states::plain(k, f64::from(states::number(3, k)) + 0.5)),
+            window_minutes: states::present(states::plain(k, states::number(4, k))),
+            min_requests: states::present(states::plain(k, states::number(5, k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn project_alerts(k: usize, received: bool) -> wire::ProjectAlerts {
+        let mut message = wire::ProjectAlerts {
+            checks: states::many(
+                k,
+                [
+                    on_wire::site_check_state(k, received),
+                    on_wire::site_check_state(k + 1, received),
+                ],
+            ),
+            traffic_rules: states::many(
+                k,
+                [
+                    on_wire::traffic_rule_state(k + 1, received),
+                    on_wire::traffic_rule_state(k + 2, received),
+                ],
+            ),
+            off: states::present(states::flag(1, k)),
+            mute_end_time: states::maybe(k, states::time_on_wire(states::number(4, k + 3))).into(),
+            uptime_percent: states::marked(k, f64::from(states::number(5, k)) + 0.5),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn site_check_state(k: usize, received: bool) -> wire::SiteCheckState {
+        let mut message = wire::SiteCheckState {
+            check: states::maybe(k, on_wire::site_check(k, received)).into(),
+            machine_default: states::present(states::flag(1, k)),
+            status: states::set(on_wire::alert_status(k + 2)),
+            last_result: states::maybe(k, on_wire::site_check_result(k + 3, received)).into(),
+            incident_id: states::present(states::plain(k, states::text("incident_id", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn site_check_result(k: usize, received: bool) -> wire::SiteCheckResult {
+        let mut message = wire::SiteCheckResult {
+            check_time: states::maybe(k, states::time_on_wire(states::number(1, k))).into(),
+            status: states::present(states::plain(k, states::number(2, k))),
+            duration_ms: states::present(states::plain(k, states::number(3, k))),
+            failure_message: states::present(states::plain(k, states::text("failure_message", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn traffic_rule_state(k: usize, received: bool) -> wire::TrafficRuleState {
+        let mut message = wire::TrafficRuleState {
+            rule: states::maybe(k, on_wire::traffic_rule(k, received)).into(),
+            machine_default: states::present(states::flag(1, k)),
+            status: states::set(on_wire::alert_status(k + 2)),
+            value: states::present(states::plain(k, f64::from(states::number(4, k)) + 0.5)),
+            request_count: states::present(states::plain(k, u64::from(states::number(5, k)) << 44)),
+            incident_id: states::present(states::plain(k, states::text("incident_id", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn incident(k: usize, received: bool) -> wire::Incident {
+        let mut message = wire::Incident {
+            incident_id: states::present(states::plain(k, states::text("incident_id", k))),
+            kind: states::set(on_wire::project_problem_kind(k + 1)),
+            service: states::present(states::plain(k, states::text("service", k))),
+            check: states::maybe(k, on_wire::site_check(k + 3, received)).into(),
+            traffic_rule: states::maybe(k, on_wire::traffic_rule(k + 4, received)).into(),
+            operation_id: states::present(states::plain(k, states::text("operation_id", k))),
+            open_time: states::maybe(k, states::time_on_wire(states::number(7, k + 6))).into(),
+            resolve_time: states::maybe(k, states::time_on_wire(states::number(8, k + 7))).into(),
+            value: states::present(states::plain(k, f64::from(states::number(9, k)) + 0.5)),
+            request_count: states::present(states::plain(k, u64::from(states::number(10, k)) << 44)),
+            after_operation_id: states::present(states::plain(k, states::text("after_operation_id", k))),
+            after_operation_end_time: states::maybe(k, states::time_on_wire(states::number(12, k + 11))).into(),
+            joined_incident_id: states::present(states::plain(k, states::text("joined_incident_id", k))),
+            quiet_reason: states::set(on_wire::incident_quiet_reason(k + 13)),
+            flapping: states::present(states::flag(1, k)),
+            incident_message: states::present(states::plain(k, states::text("incident_message", k))),
+            evidence: states::maybe(k, on_wire::incident_evidence(k + 16, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn incident_evidence(k: usize, received: bool) -> wire::IncidentEvidence {
+        let mut message = wire::IncidentEvidence {
+            check_result: states::maybe(k, on_wire::site_check_result(k, received)).into(),
+            exit_code: states::present(states::plain(k, -(states::number(2, k) as i32))),
+            oom_killed: states::present(states::flag(1, k)),
+            restart_count: states::present(states::plain(k, states::number(4, k))),
+            health_output: states::present(states::plain(k, states::text("health_output", k))),
+            log_lines: states::many(
+                k,
+                [on_wire::log_line(k + 5, received), on_wire::log_line(k + 6, received)],
+            ),
+            top_path: states::maybe(k, on_wire::http_path_traffic(k + 6, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn uptime_day(k: usize, received: bool) -> wire::UptimeDay {
+        let mut message = wire::UptimeDay {
+            start_time: states::maybe(k, states::time_on_wire(states::number(1, k))).into(),
+            uptime_percent: states::marked(k, f64::from(states::number(2, k)) + 0.5),
+            down_seconds: states::present(states::plain(k, states::number(3, k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3548,7 +4055,18 @@ mod on_wire {
     }
 
     pub fn machine_unreachable(k: usize, received: bool) -> wire::MachineUnreachable {
-        let mut message = wire::MachineUnreachable { ..Default::default() };
+        let mut message = wire::MachineUnreachable {
+            since_time: states::maybe(k, states::time_on_wire(states::number(1, k))).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn machine_update_pending(k: usize, received: bool) -> wire::MachineUpdatePending {
+        let mut message = wire::MachineUpdatePending { ..Default::default() };
         if received && k % 2 == 1 {
             message.__buffa_unknown_fields.push(states::later_field());
         }
@@ -3766,6 +4284,25 @@ async fn run_project_action_request_is_sent() {
         assert_eq!(
             response.unwrap(),
             types::RunProjectActionResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn set_project_alerts_request_is_sent() {
+    for k in 0..3 {
+        let request = samples::set_project_alerts_request(k, true);
+        let expected = on_wire::set_project_alerts_request(k, false);
+
+        let answer = ok(&wire::SetProjectAlertsResponse::default());
+        let call = |client: Client| async move { client.set_project_alerts(request).await };
+        let (sent, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::SetProjectAlertsResponse::default(),
             "at k = {k}"
         );
     }
@@ -4235,6 +4772,52 @@ async fn delete_project_action_is_sent() {
 }
 
 #[tokio::test]
+async fn site_check_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::SetProjectAlertsRequest| {
+            message.checks = vec![samples::site_check(k, true)]
+        });
+        let expected = states::make(|message: &mut wire::SetProjectAlertsRequest| {
+            message.checks = vec![on_wire::site_check(k, false)]
+        });
+
+        let answer = ok(&wire::SetProjectAlertsResponse::default());
+        let call = |client: Client| async move { client.set_project_alerts(request).await };
+        let (sent, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::SetProjectAlertsResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn traffic_rule_is_sent() {
+    for k in 0..5 {
+        let request = states::make(|message: &mut types::SetProjectAlertsRequest| {
+            message.traffic_rules = vec![samples::traffic_rule(k, true)]
+        });
+        let expected = states::make(|message: &mut wire::SetProjectAlertsRequest| {
+            message.traffic_rules = vec![on_wire::traffic_rule(k, false)]
+        });
+
+        let answer = ok(&wire::SetProjectAlertsResponse::default());
+        let call = |client: Client| async move { client.set_project_alerts(request).await };
+        let (sent, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::SetProjectAlertsResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn http_traffic_filter_is_sent() {
     for k in 0..2 {
         let request = states::make(|message: &mut types::QueryHttpTrafficRequest| {
@@ -4565,6 +5148,23 @@ async fn run_project_action_response_is_received() {
 }
 
 #[tokio::test]
+async fn set_project_alerts_response_is_received() {
+    for k in 0..2 {
+        let answer = ok(&on_wire::set_project_alerts_response(k, true));
+        let expected = samples::set_project_alerts_response(k, true);
+
+        let call = |client: Client| async move {
+            client
+                .set_project_alerts(types::SetProjectAlertsRequest::default())
+                .await
+        };
+        let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn get_operation_response_is_received() {
     for k in 0..2 {
         let answer = ok(&on_wire::get_operation_response(k, true));
@@ -4758,6 +5358,25 @@ async fn machine_unreachable_is_received() {
 }
 
 #[tokio::test]
+async fn machine_update_pending_is_received() {
+    for k in 0..2 {
+        let detail = on_wire::machine_update_pending(k, true).encode_to_vec();
+        let expected = ErrorDetail::MachineUpdatePending(samples::machine_update_pending(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.MachineUpdatePending", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn no_machine_is_received() {
     for k in 0..4 {
         let detail = on_wire::no_machine(k, true).encode_to_vec();
@@ -4922,6 +5541,27 @@ async fn branch_commit_is_received() {
 
         let call = |client: Client| async move { client.list_commits(types::ListCommitsRequest::default()).await };
         let (_, response): (wire::ListCommitsRequest, _) = exchange("ListCommits", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn project_alerts_is_received() {
+    for k in 0..3 {
+        let answer = ok(&states::make(|message: &mut wire::SetProjectAlertsResponse| {
+            message.alerts = Some(on_wire::project_alerts(k, true)).into()
+        }));
+        let expected = states::make(|message: &mut types::SetProjectAlertsResponse| {
+            message.alerts = Some(samples::project_alerts(k, true))
+        });
+
+        let call = |client: Client| async move {
+            client
+                .set_project_alerts(types::SetProjectAlertsRequest::default())
+                .await
+        };
+        let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -5115,6 +5755,28 @@ async fn machine_session_is_received() {
 }
 
 #[tokio::test]
+async fn alert_destination_is_received() {
+    for k in 0..5 {
+        let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut wire::Machine| {
+                message.alert_channels = vec![on_wire::alert_destination(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut types::Machine| {
+                message.alert_channels = vec![samples::alert_destination(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn project_metadata_is_received() {
     for k in 0..3 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
@@ -5137,7 +5799,7 @@ async fn project_metadata_is_received() {
 
 #[tokio::test]
 async fn project_problem_is_received() {
-    for k in 0..12 {
+    for k in 0..15 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
             message.projects = vec![states::make(|message: &mut wire::ProjectSummary| {
                 message.problems = vec![on_wire::project_problem(k, true)]
@@ -5353,6 +6015,50 @@ async fn running_services_action_is_received() {
 }
 
 #[tokio::test]
+async fn incident_is_received() {
+    for k in 0..15 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.incidents = vec![on_wire::incident(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.incidents = vec![samples::incident(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn uptime_day_is_received() {
+    for k in 0..3 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.uptime_days = vec![on_wire::uptime_day(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.uptime_days = vec![samples::uptime_day(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn github_commit_is_received() {
     for k in 0..2 {
         let answer = ok(&states::make(|message: &mut wire::CreateProjectResponse| {
@@ -5369,6 +6075,58 @@ async fn github_commit_is_received() {
 
         let call = |client: Client| async move { client.create_project(types::CreateProjectRequest::default()).await };
         let (_, response): (wire::CreateProjectRequest, _) = exchange("CreateProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn site_check_state_is_received() {
+    for k in 0..7 {
+        let answer = ok(&states::make(|message: &mut wire::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut wire::ProjectAlerts| {
+                message.checks = vec![on_wire::site_check_state(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut types::ProjectAlerts| {
+                message.checks = vec![samples::site_check_state(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move {
+            client
+                .set_project_alerts(types::SetProjectAlertsRequest::default())
+                .await
+        };
+        let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn traffic_rule_state_is_received() {
+    for k in 0..7 {
+        let answer = ok(&states::make(|message: &mut wire::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut wire::ProjectAlerts| {
+                message.traffic_rules = vec![on_wire::traffic_rule_state(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut types::ProjectAlerts| {
+                message.traffic_rules = vec![samples::traffic_rule_state(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move {
+            client
+                .set_project_alerts(types::SetProjectAlertsRequest::default())
+                .await
+        };
+        let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -5533,6 +6291,145 @@ async fn github_source_is_received() {
     }
 }
 
+#[tokio::test]
+async fn site_check_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.incidents = vec![states::make(|message: &mut wire::Incident| {
+                    message.check = Some(on_wire::site_check(k, true)).into()
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.incidents = vec![states::make(|message: &mut types::Incident| {
+                    message.check = Some(samples::site_check(k, true))
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn traffic_rule_is_received() {
+    for k in 0..5 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.incidents = vec![states::make(|message: &mut wire::Incident| {
+                    message.traffic_rule = Some(on_wire::traffic_rule(k, true)).into()
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.incidents = vec![states::make(|message: &mut types::Incident| {
+                    message.traffic_rule = Some(samples::traffic_rule(k, true))
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn incident_evidence_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.incidents = vec![states::make(|message: &mut wire::Incident| {
+                    message.evidence = Some(on_wire::incident_evidence(k, true)).into()
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.incidents = vec![states::make(|message: &mut types::Incident| {
+                    message.evidence = Some(samples::incident_evidence(k, true))
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn site_check_result_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut wire::ProjectAlerts| {
+                message.checks = vec![states::make(|message: &mut wire::SiteCheckState| {
+                    message.last_result = Some(on_wire::site_check_result(k, true)).into()
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::SetProjectAlertsResponse| {
+            message.alerts = Some(states::make(|message: &mut types::ProjectAlerts| {
+                message.checks = vec![states::make(|message: &mut types::SiteCheckState| {
+                    message.last_result = Some(samples::site_check_result(k, true))
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move {
+            client
+                .set_project_alerts(types::SetProjectAlertsRequest::default())
+                .await
+        };
+        let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn http_traffic_filter_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.incidents = vec![states::make(|message: &mut wire::Incident| {
+                    message.traffic_rule = Some(states::make(|message: &mut wire::TrafficRule| {
+                        message.filter = Some(on_wire::http_traffic_filter(k, true)).into()
+                    }))
+                    .into()
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.incidents = vec![states::make(|message: &mut types::Incident| {
+                    message.traffic_rule = Some(states::make(|message: &mut types::TrafficRule| {
+                        message.filter = Some(samples::http_traffic_filter(k, true))
+                    }))
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
 /// A field no message of the API has, and an enum's name no enum of it has.
@@ -5653,6 +6550,17 @@ where
 }
 
 #[test]
+fn alert_channel_kind_is_json() {
+    let names = [
+        "ALERT_CHANNEL_KIND_UNSPECIFIED",
+        "ALERT_CHANNEL_KIND_EMAIL",
+        "ALERT_CHANNEL_KIND_TELEGRAM",
+        "ALERT_CHANNEL_KIND_SLACK",
+    ];
+    an_enum_is_json(&names, 4, samples::alert_channel_kind);
+}
+
+#[test]
 fn machine_session_kind_is_json() {
     let names = [
         "MACHINE_SESSION_KIND_UNSPECIFIED",
@@ -5679,8 +6587,11 @@ fn project_problem_kind_is_json() {
         "PROJECT_PROBLEM_KIND_RESTORE_FAILED",
         "PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED",
         "PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED",
+        "PROJECT_PROBLEM_KIND_SITE_DOWN",
+        "PROJECT_PROBLEM_KIND_HTTP_ERRORS",
+        "PROJECT_PROBLEM_KIND_HTTP_SLOW",
     ];
-    an_enum_is_json(&names, 11, samples::project_problem_kind);
+    an_enum_is_json(&names, 14, samples::project_problem_kind);
 }
 
 #[test]
@@ -5789,6 +6700,42 @@ fn deploy_failure_reason_is_json() {
 }
 
 #[test]
+fn traffic_metric_is_json() {
+    let names = [
+        "TRAFFIC_METRIC_UNSPECIFIED",
+        "TRAFFIC_METRIC_SERVER_ERRORS",
+        "TRAFFIC_METRIC_SERVER_ERROR_PERCENT",
+        "TRAFFIC_METRIC_LATENCY_P95_MS",
+    ];
+    an_enum_is_json(&names, 4, samples::traffic_metric);
+}
+
+#[test]
+fn alert_status_is_json() {
+    let names = [
+        "ALERT_STATUS_UNSPECIFIED",
+        "ALERT_STATUS_OK",
+        "ALERT_STATUS_PENDING",
+        "ALERT_STATUS_FIRING",
+        "ALERT_STATUS_PAUSED",
+        "ALERT_STATUS_NO_DATA",
+    ];
+    an_enum_is_json(&names, 6, samples::alert_status);
+}
+
+#[test]
+fn incident_quiet_reason_is_json() {
+    let names = [
+        "INCIDENT_QUIET_REASON_UNSPECIFIED",
+        "INCIDENT_QUIET_REASON_MUTED",
+        "INCIDENT_QUIET_REASON_OFF",
+        "INCIDENT_QUIET_REASON_FIRST_EVALUATION",
+        "INCIDENT_QUIET_REASON_MANUAL_DEPLOY",
+    ];
+    an_enum_is_json(&names, 5, samples::incident_quiet_reason);
+}
+
+#[test]
 fn output_stream_is_json() {
     let names = [
         "OUTPUT_STREAM_UNSPECIFIED",
@@ -5871,8 +6818,15 @@ fn machine_is_json() {
         "restart_required_time",
         "scheduled_restart_time",
         "sessions",
+        "alert_channels",
     ];
     a_message_is_json(2, &names, samples::machine, on_wire::machine);
+}
+
+#[test]
+fn alert_destination_is_json() {
+    let names = ["kind", "label"];
+    a_message_is_json(5, &names, samples::alert_destination, on_wire::alert_destination);
 }
 
 #[test]
@@ -6008,8 +6962,15 @@ fn service_summary_is_json() {
 
 #[test]
 fn project_problem_is_json() {
-    let names = ["kind", "service", "operation_id", "since_time", "problem_message"];
-    a_message_is_json(12, &names, samples::project_problem, on_wire::project_problem);
+    let names = [
+        "kind",
+        "service",
+        "operation_id",
+        "since_time",
+        "problem_message",
+        "incident_id",
+    ];
+    a_message_is_json(15, &names, samples::project_problem, on_wire::project_problem);
 }
 
 #[test]
@@ -6019,6 +6980,9 @@ fn get_project_request_is_json() {
         "include_secret_values",
         "snapshots_before",
         "snapshots_volume",
+        "incidents_before",
+        "uptime_day_count",
+        "incidents_before_id",
     ];
     a_message_is_json(2, &names, samples::get_project_request, on_wire::get_project_request);
 }
@@ -6054,6 +7018,10 @@ fn project_is_json() {
         "http_traffic_last_day",
         "source",
         "running_services_action",
+        "alerts",
+        "incidents",
+        "more_incidents",
+        "uptime_days",
     ];
     a_message_is_json(6, &names, samples::project, on_wire::project);
 }
@@ -6228,6 +7196,7 @@ fn operation_is_json() {
         "changed_paths",
         "changed_path_count",
         "files_kept",
+        "files_operation_id",
     ];
     a_message_is_json(13, &names, samples::operation, on_wire::operation);
 }
@@ -6461,6 +7430,123 @@ fn run_project_action_response_is_json() {
         samples::run_project_action_response,
         on_wire::run_project_action_response,
     );
+}
+
+#[test]
+fn set_project_alerts_request_is_json() {
+    let names = [
+        "project_id",
+        "checks",
+        "remove_checks",
+        "traffic_rules",
+        "remove_traffic_rules",
+        "off",
+        "mute_minutes",
+    ];
+    a_message_is_json(
+        3,
+        &names,
+        samples::set_project_alerts_request,
+        on_wire::set_project_alerts_request,
+    );
+}
+
+#[test]
+fn set_project_alerts_response_is_json() {
+    let names = ["alerts"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::set_project_alerts_response,
+        on_wire::set_project_alerts_response,
+    );
+}
+
+#[test]
+fn site_check_is_json() {
+    let names = ["host", "path", "expect_status", "must_contain"];
+    a_message_is_json(2, &names, samples::site_check, on_wire::site_check);
+}
+
+#[test]
+fn traffic_rule_is_json() {
+    let names = ["metric", "filter", "threshold", "window_minutes", "min_requests"];
+    a_message_is_json(5, &names, samples::traffic_rule, on_wire::traffic_rule);
+}
+
+#[test]
+fn project_alerts_is_json() {
+    let names = ["checks", "traffic_rules", "off", "mute_end_time", "uptime_percent"];
+    a_message_is_json(3, &names, samples::project_alerts, on_wire::project_alerts);
+}
+
+#[test]
+fn site_check_state_is_json() {
+    let names = ["check", "machine_default", "status", "last_result", "incident_id"];
+    a_message_is_json(7, &names, samples::site_check_state, on_wire::site_check_state);
+}
+
+#[test]
+fn site_check_result_is_json() {
+    let names = ["check_time", "status", "duration_ms", "failure_message"];
+    a_message_is_json(2, &names, samples::site_check_result, on_wire::site_check_result);
+}
+
+#[test]
+fn traffic_rule_state_is_json() {
+    let names = [
+        "rule",
+        "machine_default",
+        "status",
+        "value",
+        "request_count",
+        "incident_id",
+    ];
+    a_message_is_json(7, &names, samples::traffic_rule_state, on_wire::traffic_rule_state);
+}
+
+#[test]
+fn incident_is_json() {
+    let names = [
+        "incident_id",
+        "kind",
+        "service",
+        "check",
+        "traffic_rule",
+        "operation_id",
+        "open_time",
+        "resolve_time",
+        "value",
+        "request_count",
+        "after_operation_id",
+        "after_operation_end_time",
+        "joined_incident_id",
+        "quiet_reason",
+        "flapping",
+        "incident_message",
+        "evidence",
+    ];
+    a_message_is_json(15, &names, samples::incident, on_wire::incident);
+}
+
+#[test]
+fn incident_evidence_is_json() {
+    let names = [
+        "check_result",
+        "exit_code",
+        "oom_killed",
+        "restart_count",
+        "health_output",
+        "log_lines",
+        "top_path",
+    ];
+    a_message_is_json(2, &names, samples::incident_evidence, on_wire::incident_evidence);
+}
+
+#[test]
+fn uptime_day_is_json() {
+    let names = ["start_time", "uptime_percent", "down_seconds"];
+    a_message_is_json(3, &names, samples::uptime_day, on_wire::uptime_day);
 }
 
 #[test]
@@ -6769,8 +7855,19 @@ fn project_changed_is_json() {
 
 #[test]
 fn machine_unreachable_is_json() {
-    let names = [];
+    let names = ["since_time"];
     a_message_is_json(2, &names, samples::machine_unreachable, on_wire::machine_unreachable);
+}
+
+#[test]
+fn machine_update_pending_is_json() {
+    let names = [];
+    a_message_is_json(
+        2,
+        &names,
+        samples::machine_update_pending,
+        on_wire::machine_update_pending,
+    );
 }
 
 #[test]

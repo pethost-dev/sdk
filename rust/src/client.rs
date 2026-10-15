@@ -186,6 +186,21 @@ impl Client {
         Ok(response.into_owned().into())
     }
 
+    /// Set a project's alerts.
+    ///
+    /// Changes what Pethost watches on a project and when it tells the person: site checks (an address the machine opens every minute) and traffic rules (5xx or p95 over a window), off, mute. A list given replaces the project's (send [`Project::alerts`](crate::types::Project::alerts)\' with your change); `remove_`\* empties it; a scalar left out stays. Service crashes and failed backups are always watched. Answers with [`Project::alerts`](crate::types::Project::alerts). Where alerts go is the person's choice in the panel's Settings → Alerts ([`Machine::alert_channels`](crate::types::Machine::alert_channels)): no tool sets it. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) + [`MachineUpdatePending`](crate::types::MachineUpdatePending) = the machine's software predates alerts.
+    pub async fn set_project_alerts(
+        &self,
+        request: types::SetProjectAlertsRequest,
+    ) -> Result<types::SetProjectAlertsResponse, Error> {
+        let response = self
+            .wire
+            .set_project_alerts(request.into())
+            .await
+            .map_err(Error::from_wire)?;
+        Ok(response.into_owned().into())
+    }
+
     /// Get an operation.
     ///
     /// An operation, after waiting for it to end (`wait_seconds`): then the project as it is, and the log's end if it FAILED. Call again while it is `IN_PROGRESS`. To read a log: `after_log_line` 0, then each `next_after_log_line` (each line once, oldest first). One a [`ProjectBusy`](crate::types::ProjectBusy) names may still be starting: it is waited for too; still starting at the end = [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) with that [`ProjectBusy`](crate::types::ProjectBusy).

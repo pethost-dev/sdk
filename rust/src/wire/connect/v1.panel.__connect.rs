@@ -58,6 +58,24 @@ pub type OwnedRunProjectActionResponseView = ::buffa::view::OwnedView<
         'static,
     >,
 >;
+///Shorthand for `OwnedView<SetProjectAlertsRequestView<'static>>`.
+pub type OwnedSetProjectAlertsRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsRequestView<'static>,
+>;
+///Shorthand for `OwnedView<SetProjectAlertsResponseView<'static>>`.
+pub type OwnedSetProjectAlertsResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsResponseView<
+        'static,
+    >,
+>;
+///Shorthand for `OwnedView<GetIncidentRequestView<'static>>`.
+pub type OwnedGetIncidentRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetIncidentRequestView<'static>,
+>;
+///Shorthand for `OwnedView<GetIncidentResponseView<'static>>`.
+pub type OwnedGetIncidentResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetIncidentResponseView<'static>,
+>;
 ///Shorthand for `OwnedView<GetOperationRequestView<'static>>`.
 pub type OwnedGetOperationRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::GetOperationRequestView<'static>,
@@ -380,6 +398,76 @@ for ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::RunProjectActionResponseView<
         'static,
     >,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::SetProjectAlertsResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::SetProjectAlertsResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsResponseView<
+        'static,
+    >,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetIncidentResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::GetIncidentResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetIncidentResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetIncidentResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -832,6 +920,18 @@ pub const PANEL_SERVICE_RUN_PROJECT_ACTION_SPEC: ::connectrpc::Spec = ::connectr
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `SetProjectAlerts` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_SET_PROJECT_ALERTS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/SetProjectAlerts",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
+/// Static [`Spec`](::connectrpc::Spec) for the `GetIncident` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_GET_INCIDENT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/GetIncident",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
 /// Static [`Spec`](::connectrpc::Spec) for the `GetOperation` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_GET_OPERATION_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/GetOperation",
@@ -1214,6 +1314,59 @@ pub trait PanelService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::panel::v1::RunProjectActionResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Changes what Pethost watches on a project and when it tells the person: site checks (an
+    /// address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+    /// mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+    /// empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+    /// Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+    /// Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+    /// = the machine's software predates alerts.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn set_project_alerts<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::SetProjectAlertsResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// One incident in full, with the incidents joined to it and what the machine saw when it opened
+    /// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn get_incident<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::GetIncidentRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::GetIncidentResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1748,6 +1901,64 @@ impl<S: PanelService> PanelServiceExt for S {
                 },
             )
             .with_spec(PANEL_SERVICE_RUN_PROJECT_ACTION_SPEC)
+            .route_view(
+                PANEL_SERVICE_SERVICE_NAME,
+                "SetProjectAlerts",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.set_project_alerts(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::SetProjectAlertsResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_SET_PROJECT_ALERTS_SPEC)
+            .route_view_idempotent(
+                PANEL_SERVICE_SERVICE_NAME,
+                "GetIncident",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::GetIncidentRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::GetIncidentRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.get_incident(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::GetIncidentResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_GET_INCIDENT_SPEC)
             .route_view_idempotent(
                 PANEL_SERVICE_SERVICE_NAME,
                 "GetOperation",
@@ -2160,6 +2371,18 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .with_spec(PANEL_SERVICE_RUN_PROJECT_ACTION_SPEC),
                 )
             }
+            "SetProjectAlerts" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(PANEL_SERVICE_SET_PROJECT_ALERTS_SPEC),
+                )
+            }
+            "GetIncident" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
+                        .with_spec(PANEL_SERVICE_GET_INCIDENT_SPEC),
+                )
+            }
             "GetOperation" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
@@ -2392,6 +2615,50 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::pethost::panel::v1::RunProjectActionResponse,
+                        >(format)
+                })
+            }
+            "SetProjectAlerts" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+                    >::from_parts(&req, &body);
+                    svc.set_project_alerts(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::SetProjectAlertsResponse,
+                        >(format)
+                })
+            }
+            "GetIncident" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::GetIncidentRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::GetIncidentRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::GetIncidentRequest,
+                    >::from_parts(&req, &body);
+                    svc.get_incident(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::GetIncidentResponse,
                         >(format)
                 })
             }
@@ -3086,6 +3353,96 @@ where
                 &self.transport,
                 &self.config,
                 PANEL_SERVICE_RUN_PROJECT_ACTION_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the SetProjectAlerts RPC. Sends a request to /pethost.panel.v1.PanelService/SetProjectAlerts.
+    pub async fn set_project_alerts(
+        &self,
+        request: crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.set_project_alerts_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the SetProjectAlerts RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn set_project_alerts_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::SetProjectAlertsRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::SetProjectAlertsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_SET_PROJECT_ALERTS_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the GetIncident RPC. Sends a request to /pethost.panel.v1.PanelService/GetIncident.
+    pub async fn get_incident(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetIncidentRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetIncidentResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.get_incident_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the GetIncident RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_incident_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetIncidentRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetIncidentResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_GET_INCIDENT_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

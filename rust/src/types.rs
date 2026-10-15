@@ -109,6 +109,33 @@ pub struct Machine {
     pub scheduled_restart_time: ::core::option::Option<crate::Timestamp>,
     /// What people have open in the containers now, oldest first: at most 100, the most the machine holds at once.
     pub sessions: ::std::vec::Vec<MachineSession>,
+    /// Where Pethost tells the person of incidents: the account's channels that are on, email first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty = alerts reach nobody.
+    pub alert_channels: ::std::vec::Vec<AlertDestination>,
+}
+
+/// A channel Pethost tells the person of incidents on ([`Machine::alert_channels`](crate::types::Machine::alert_channels)).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct AlertDestination {
+    pub kind: AlertChannelKind,
+    /// The chat's title, or \"#ops · Acme\". Empty for email.
+    pub label: ::std::string::String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum AlertChannelKind {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// The account's email.
+    Email,
+    /// A Telegram chat or group.
+    Telegram,
+    /// A Slack channel.
+    Slack,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
 }
 
 /// Something a person has open in a container: a web terminal (`OpenTerminal`), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts until the program exits or the connection closes; [`RunMachineActionRequestAction::EndSessionId`](crate::types::RunMachineActionRequestAction::EndSessionId) ends it sooner.
@@ -313,6 +340,8 @@ pub struct ProjectProblem {
     pub since_time: ::core::option::Option<crate::Timestamp>,
     /// One sentence for people, without a time of day (`since_time` has it), e.g. \"bot fails its healthcheck: 11 failures in a row\". A failed or cancelled deploy's also says whether it changed the project.
     pub problem_message: ::std::string::String,
+    /// The open incident that records it ([`Project::incidents`](crate::types::Project::incidents)). Empty = none yet.
+    pub incident_id: ::std::string::String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -341,6 +370,12 @@ pub enum ProjectProblemKind {
     AutoDeployRefused,
     /// It runs and does not listen on the port a route sends to (or only at 127.0.0.1, which the proxy cannot reach): the route answers 502. The message names the ports it does listen on ([`Service::listening_ports`](crate::types::Service::listening_ports)): change the route's port with [`DeployProjectRequest::x_pethost`](crate::types::DeployProjectRequest::x_pethost), or the app.
     ServicePortClosed,
+    /// A site check ([`Project::alerts`](crate::types::Project::alerts)) failed 3 times in a row; service: the one its route sends to.
+    SiteDown,
+    /// A traffic rule on 5xx holds.
+    HttpErrors,
+    /// A traffic rule on p95 holds.
+    HttpSlow,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -355,6 +390,12 @@ pub struct GetProjectRequest {
     pub snapshots_before: ::core::option::Option<crate::Timestamp>,
     /// Only snapshots holding this volume ([`Volume::snapshot_count`](crate::types::Volume::snapshot_count)). Empty = all.
     pub snapshots_volume: ::std::string::String,
+    /// Only incidents that opened before it: the oldest `open_time` seen, to page back. Absent = the newest.
+    pub incidents_before: ::core::option::Option<crate::Timestamp>,
+    /// ≤90: [`Project::uptime_days`](crate::types::Project::uptime_days). 0 = none.
+    pub uptime_day_count: u32,
+    /// With `incidents_before`: the `incident_id` of the oldest seen, so that those that opened at the same time are not skipped.
+    pub incidents_before_id: ::std::string::String,
 }
 
 /// What [`Client::get_project`](crate::Client::get_project) returns.
@@ -405,6 +446,14 @@ pub struct Project {
     pub source: ::core::option::Option<ProjectSource>,
     /// The `start_services`, `stop_services` or `restart_services` that runs now, whoever called it ([`Client::run_project_action`](crate::Client::run_project_action) waits for its end). Until then the project takes no other action or deploy, and [`Service::state`](crate::types::Service::state) is still what it was before. Absent = none.
     pub running_services_action: ::core::option::Option<RunningServicesAction>,
+    /// What Pethost watches and how each part stands. Absent = the machine's software predates alerts: they come with its next update.
+    pub alerts: ::core::option::Option<ProjectAlerts>,
+    /// The newest 5 that [`GetProjectRequest::incidents_before`](crate::types::GetProjectRequest::incidents_before) selects, newest first: an open one in full but its evidence (`GetIncident`), a resolved one as its id, kind, times, message, `after_operation_id`, `quiet_reason` and flapping.
+    pub incidents: ::std::vec::Vec<Incident>,
+    /// True = older ones remain: page with `incidents_before` and `incidents_before_id`.
+    pub more_incidents: bool,
+    /// Oldest first, [`GetProjectRequest::uptime_day_count`](crate::types::GetProjectRequest::uptime_day_count) of them, today's last.
+    pub uptime_days: ::std::vec::Vec<UptimeDay>,
 }
 
 /// A start, stop or restart of services that has not ended yet.
@@ -745,6 +794,8 @@ pub struct Operation {
     pub changed_path_count: u32,
     /// DEPLOY: true = the machine keeps the files it deployed, which are no longer the project's: [`DeployProjectRequestVersion::RollbackDeployId`](crate::types::DeployProjectRequestVersion::RollbackDeployId) puts them back. It keeps the 3 newest versions of the files before the current one; of deploys that changed only /.env or x-pethost, whose files are the same, the newest has it.
     pub files_kept: bool,
+    /// DEPLOY: the deploy that first deployed its files: itself when its request brought or changed files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy that changed only /.env or x-pethost.
+    pub files_operation_id: ::std::string::String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -1100,6 +1151,232 @@ pub struct RunProjectActionResponse {
     pub project: ::core::option::Option<Project>,
     /// The operation's last log lines, unless it SUCCEEDED.
     pub log: ::std::vec::Vec<OperationLogLine>,
+}
+
+/// What [`Client::set_project_alerts`](crate::Client::set_project_alerts) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct SetProjectAlertsRequest {
+    pub project_id: ::std::string::String,
+    /// ≤10. Given = the whole list.
+    pub checks: ::std::vec::Vec<SiteCheck>,
+    /// True = none, not even the default check.
+    pub remove_checks: bool,
+    /// ≤10. Given = the whole list.
+    pub traffic_rules: ::std::vec::Vec<TrafficRule>,
+    /// True = none.
+    pub remove_traffic_rules: bool,
+    /// True = incidents are recorded, nothing is sent. Absent = stays.
+    pub off: ::core::option::Option<bool>,
+    /// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+    pub mute_minutes: ::core::option::Option<u32>,
+}
+
+/// What [`Client::set_project_alerts`](crate::Client::set_project_alerts) returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct SetProjectAlertsResponse {
+    /// As changed.
+    pub alerts: ::core::option::Option<ProjectAlerts>,
+}
+
+/// An address of the project the machine opens every minute through its proxy, from inside the machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or `must_contain` missing; 3 failures in a row open `SITE_DOWN`. A password page is passed.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct SiteCheck {
+    /// A [`Host::host`](crate::types::Host::host) of the project.
+    pub host: ::std::string::String,
+    /// \"/…\", ≤200 chars, a query allowed. Empty = \"/\".
+    pub path: ::std::string::String,
+    /// 100-599. 0 = any status below 500 is up: 401, 404 and redirects too.
+    pub expect_status: u32,
+    /// ≤100 chars, in the body's first 64 KiB. Empty = not looked for.
+    pub must_contain: ::std::string::String,
+}
+
+/// Fires when `metric`, over the last `window_minutes` of the requests `filter` selects, reaches `threshold` 2 minutes in a row; clears after 3 below.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TrafficRule {
+    pub metric: TrafficMetric,
+    /// `status_class` not taken.
+    pub filter: ::core::option::Option<HttpTrafficFilter>,
+    /// A count, a percent (0-100) or ms.
+    pub threshold: f64,
+    /// 1-60. 0 = 5.
+    pub window_minutes: u32,
+    /// Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20.
+    pub min_requests: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum TrafficMetric {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// 5xx responses in the window.
+    ServerErrors,
+    /// 5xx, of the window's requests (WebSockets too).
+    ServerErrorPercent,
+    LatencyP95Ms,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+/// What Pethost watches on a project ([`Client::set_project_alerts`](crate::Client::set_project_alerts)), and how each part stands now. Service crashes, running out of memory, failed healthchecks, and failed backups, restores and auto-deploys are always watched.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct ProjectAlerts {
+    /// Until set: the project's URL at \"/\" (`machine_default`); none without a route.
+    pub checks: ::std::vec::Vec<SiteCheckState>,
+    /// Until set: 10 or more 5xx in 5 minutes, of every request (`machine_default`).
+    pub traffic_rules: ::std::vec::Vec<TrafficRuleState>,
+    /// True = incidents are recorded, nothing is sent.
+    pub off: bool,
+    /// Absent = not muted.
+    pub mute_end_time: ::core::option::Option<crate::Timestamp>,
+    /// Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent = no check ran.
+    pub uptime_percent: ::core::option::Option<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct SiteCheckState {
+    pub check: ::core::option::Option<SiteCheck>,
+    /// The default check, as no list was set.
+    pub machine_default: bool,
+    pub status: AlertStatus,
+    /// Absent = not run yet.
+    pub last_result: ::core::option::Option<SiteCheckResult>,
+    /// The open incident. Empty = none.
+    pub incident_id: ::std::string::String,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct SiteCheckResult {
+    pub check_time: ::core::option::Option<crate::Timestamp>,
+    /// 0 = no HTTP answer: `failure_message` says why.
+    pub status: u32,
+    pub duration_ms: u32,
+    /// E.g. \"connection refused\", \"status 502\", \"the text is missing\". Empty = up.
+    pub failure_message: ::std::string::String,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct TrafficRuleState {
+    pub rule: ::core::option::Option<TrafficRule>,
+    /// The default rule, as no list was set.
+    pub machine_default: bool,
+    pub status: AlertStatus,
+    /// The metric at the last evaluation.
+    pub value: f64,
+    /// In the window then.
+    pub request_count: u64,
+    /// The open incident. Empty = none.
+    pub incident_id: ::std::string::String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum AlertStatus {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    Ok,
+    /// It holds or cleared, not confirmed yet.
+    Pending,
+    /// An incident is open.
+    Firing,
+    /// Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route has the check's host.
+    Paused,
+    /// Not evaluated yet, or too few requests.
+    NoData,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+/// A period during which something of a project needed attention, from its confirmation to its end.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct Incident {
+    pub incident_id: ::std::string::String,
+    /// `DEPLOY_CANCELLED` opens none.
+    pub kind: ProjectProblemKind,
+    /// As in its [`ProjectProblem`](crate::types::ProjectProblem).
+    pub service: ::std::string::String,
+    /// `SITE_DOWN`.
+    pub check: ::core::option::Option<SiteCheck>,
+    /// `HTTP_ERRORS`, `HTTP_SLOW`.
+    pub traffic_rule: ::core::option::Option<TrafficRule>,
+    /// `DEPLOY_FAILED`, `BACKUP_FAILED`, `RESTORE_FAILED`.
+    pub operation_id: ::std::string::String,
+    pub open_time: ::core::option::Option<crate::Timestamp>,
+    /// When it and every incident joined to it cleared. Absent = open.
+    pub resolve_time: ::core::option::Option<crate::Timestamp>,
+    /// `HTTP_ERRORS`, `HTTP_SLOW`: the metric at open.
+    pub value: f64,
+    /// `HTTP_ERRORS`, `HTTP_SLOW`: the window's requests at open.
+    pub request_count: u64,
+    /// A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely cause, undone with [`DeployProjectRequestVersion::RollbackDeployId`](crate::types::DeployProjectRequestVersion::RollbackDeployId) or an older commit. Empty = none.
+    pub after_operation_id: ::std::string::String,
+    /// Absent = it was running.
+    pub after_operation_end_time: ::core::option::Option<crate::Timestamp>,
+    /// The incident this one is part of: it is told with that one, not on its own. Empty = none.
+    pub joined_incident_id: ::std::string::String,
+    /// Set = nobody is told of it.
+    pub quiet_reason: IncidentQuietReason,
+    /// True = it went down and up 3 times within an hour; it stands for them all and clears after 15 clean minutes.
+    pub flapping: bool,
+    /// One sentence for people, without a time of day.
+    pub incident_message: ::std::string::String,
+    /// `GetIncident` only.
+    pub evidence: ::core::option::Option<IncidentEvidence>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum IncidentQuietReason {
+    /// Told.
+    #[default]
+    Unspecified,
+    Muted,
+    Off,
+    /// Already so when the machine first watched it, as after the update that brought alerts.
+    FirstEvaluation,
+    /// A deploy someone ran failed: they watch it.
+    ManualDeploy,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+/// What the machine saw when an incident opened, kept with it. Untrusted.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct IncidentEvidence {
+    /// `SITE_DOWN`: the third failure.
+    pub check_result: ::core::option::Option<SiteCheckResult>,
+    /// The service's container: `SERVICE_`\* kinds, and `SITE_DOWN`\'s service.
+    pub exit_code: i32,
+    pub oom_killed: bool,
+    /// In the 10 minutes before.
+    pub restart_count: u32,
+    /// The last healthcheck's, ≤1 KiB.
+    pub health_output: ::std::string::String,
+    /// The service's last ≤20 before it opened, oldest first.
+    pub log_lines: ::std::vec::Vec<LogLine>,
+    /// `HTTP_ERRORS`: the path with the most 5xx in the window; `HTTP_SLOW`: the slowest.
+    pub top_path: ::core::option::Option<HttpPathTraffic>,
+}
+
+/// One UTC day of a project's site checks.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct UptimeDay {
+    /// Midnight UTC.
+    pub start_time: ::core::option::Option<crate::Timestamp>,
+    /// Absent = no check ran.
+    pub uptime_percent: ::core::option::Option<f64>,
+    pub down_seconds: u32,
 }
 
 /// What [`Client::get_operation`](crate::Client::get_operation) takes.
@@ -1552,7 +1829,15 @@ pub struct ProjectChanged {}
 /// Detail of an [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) error: the machine does not answer now, as while it restarts. Call again later.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
-pub struct MachineUnreachable {}
+pub struct MachineUnreachable {
+    /// Since when Pethost has not reached it, once that is over 3 minutes: then the person was told ([`Machine::alert_channels`](crate::types::Machine::alert_channels)). Absent = not known yet.
+    pub since_time: ::core::option::Option<crate::Timestamp>,
+}
+
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct MachineUpdatePending {}
 
 /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
 #[derive(Debug, Clone, PartialEq, Default)]

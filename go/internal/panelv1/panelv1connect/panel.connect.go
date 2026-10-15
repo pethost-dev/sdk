@@ -103,6 +103,11 @@ const (
 	// PanelServiceRunProjectActionProcedure is the procedure name of the PanelService's
 	// RunProjectAction RPC.
 	PanelServiceRunProjectActionProcedure = "/pethost.panel.v1.PanelService/RunProjectAction"
+	// PanelServiceSetProjectAlertsProcedure is the procedure name of the PanelService's
+	// SetProjectAlerts RPC.
+	PanelServiceSetProjectAlertsProcedure = "/pethost.panel.v1.PanelService/SetProjectAlerts"
+	// PanelServiceGetIncidentProcedure is the procedure name of the PanelService's GetIncident RPC.
+	PanelServiceGetIncidentProcedure = "/pethost.panel.v1.PanelService/GetIncident"
 	// PanelServiceGetOperationProcedure is the procedure name of the PanelService's GetOperation RPC.
 	PanelServiceGetOperationProcedure = "/pethost.panel.v1.PanelService/GetOperation"
 	// PanelServiceQueryHttpTrafficProcedure is the procedure name of the PanelService's
@@ -185,6 +190,22 @@ var (
 			StreamType: connect.StreamTypeUnary,
 			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("RunProjectAction"),
 			Procedure:  PanelServiceRunProjectActionProcedure,
+		}
+	})
+	panelServiceSetProjectAlertsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("SetProjectAlerts"),
+			Procedure:        PanelServiceSetProjectAlertsProcedure,
+			IdempotencyLevel: connect.IdempotencyIdempotent,
+		}
+	})
+	panelServiceGetIncidentSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("GetIncident"),
+			Procedure:        PanelServiceGetIncidentProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
 		}
 	})
 	panelServiceGetOperationSpec = sync.OnceValue(func() connect.Spec {
@@ -392,6 +413,17 @@ type PanelServiceClient interface {
 	// the end of a cancelled one; the others are done on return. Answers with the project as it
 	// then is.
 	RunProjectAction(context.Context, *panelv1.RunProjectActionRequest) (*panelv1.RunProjectActionResponse, error)
+	// Changes what Pethost watches on a project and when it tells the person: site checks (an
+	// address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+	// mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+	// empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+	// Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+	// Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+	// = the machine's software predates alerts.
+	SetProjectAlerts(context.Context, *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error)
+	// One incident in full, with the incidents joined to it and what the machine saw when it opened
+	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+	GetIncident(context.Context, *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error)
 	// An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
 	// log's end if it FAILED. Call again while it is IN_PROGRESS. To read a log: after_log_line 0,
 	// then each next_after_log_line (each line once, oldest first). One a ProjectBusy names may
@@ -649,6 +681,17 @@ type PanelServiceHandler interface {
 	// the end of a cancelled one; the others are done on return. Answers with the project as it
 	// then is.
 	RunProjectAction(context.Context, *panelv1.RunProjectActionRequest) (*panelv1.RunProjectActionResponse, error)
+	// Changes what Pethost watches on a project and when it tells the person: site checks (an
+	// address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+	// mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+	// empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+	// Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+	// Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+	// = the machine's software predates alerts.
+	SetProjectAlerts(context.Context, *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error)
+	// One incident in full, with the incidents joined to it and what the machine saw when it opened
+	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+	GetIncident(context.Context, *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error)
 	// An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
 	// log's end if it FAILED. Call again while it is IN_PROGRESS. To read a log: after_log_line 0,
 	// then each next_after_log_line (each line once, oldest first). One a ProjectBusy names may
@@ -728,6 +771,8 @@ func RegisterPanelServiceHandler(server *connect.Server, svc PanelServiceHandler
 		connect.Method{Spec: panelServiceDeployProjectSpec(), Handler: adapter.deployProject},
 		connect.Method{Spec: panelServiceListCommitsSpec(), Handler: adapter.listCommits},
 		connect.Method{Spec: panelServiceRunProjectActionSpec(), Handler: adapter.runProjectAction},
+		connect.Method{Spec: panelServiceSetProjectAlertsSpec(), Handler: adapter.setProjectAlerts},
+		connect.Method{Spec: panelServiceGetIncidentSpec(), Handler: adapter.getIncident},
 		connect.Method{Spec: panelServiceGetOperationSpec(), Handler: adapter.getOperation},
 		connect.Method{Spec: panelServiceQueryHttpTrafficSpec(), Handler: adapter.queryHttpTraffic},
 		connect.Method{Spec: panelServiceQueryContainerLogsSpec(), Handler: adapter.queryContainerLogs},
@@ -819,6 +864,14 @@ func (UnimplementedPanelServiceHandler) ListCommits(context.Context, *panelv1.Li
 
 func (UnimplementedPanelServiceHandler) RunProjectAction(context.Context, *panelv1.RunProjectActionRequest) (*panelv1.RunProjectActionResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.RunProjectAction is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) SetProjectAlerts(context.Context, *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.SetProjectAlerts is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) GetIncident(context.Context, *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.GetIncident is not implemented")
 }
 
 func (UnimplementedPanelServiceHandler) GetOperation(context.Context, *panelv1.GetOperationRequest) (*panelv1.GetOperationResponse, error) {
@@ -920,6 +973,22 @@ func (c *panelServiceClient) ListCommits(ctx context.Context, req *panelv1.ListC
 func (c *panelServiceClient) RunProjectAction(ctx context.Context, req *panelv1.RunProjectActionRequest) (*panelv1.RunProjectActionResponse, error) {
 	var res panelv1.RunProjectActionResponse
 	if err := c.client.CallUnary(ctx, panelServiceRunProjectActionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) SetProjectAlerts(ctx context.Context, req *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error) {
+	var res panelv1.SetProjectAlertsResponse
+	if err := c.client.CallUnary(ctx, panelServiceSetProjectAlertsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) GetIncident(ctx context.Context, req *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error) {
+	var res panelv1.GetIncidentResponse
+	if err := c.client.CallUnary(ctx, panelServiceGetIncidentSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1093,6 +1162,30 @@ func (h panelServiceHandler) runProjectAction(ctx context.Context, _ connect.Spe
 		return err
 	}
 	res, err := h.svc.RunProjectAction(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) setProjectAlerts(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.SetProjectAlertsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SetProjectAlerts(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) getIncident(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.GetIncidentRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetIncident(ctx, &req)
 	if err != nil {
 		return err
 	}

@@ -83,6 +83,53 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type AlertChannelKind int32
+
+const (
+	AlertChannelKind_ALERT_CHANNEL_KIND_UNSPECIFIED AlertChannelKind = 0
+	AlertChannelKind_ALERT_CHANNEL_KIND_EMAIL       AlertChannelKind = 1 // The account's email.
+	AlertChannelKind_ALERT_CHANNEL_KIND_TELEGRAM    AlertChannelKind = 2 // A Telegram chat or group.
+	AlertChannelKind_ALERT_CHANNEL_KIND_SLACK       AlertChannelKind = 3 // A Slack channel.
+)
+
+// Enum value maps for AlertChannelKind.
+var (
+	AlertChannelKind_name = map[int32]string{
+		0: "ALERT_CHANNEL_KIND_UNSPECIFIED",
+		1: "ALERT_CHANNEL_KIND_EMAIL",
+		2: "ALERT_CHANNEL_KIND_TELEGRAM",
+		3: "ALERT_CHANNEL_KIND_SLACK",
+	}
+	AlertChannelKind_value = map[string]int32{
+		"ALERT_CHANNEL_KIND_UNSPECIFIED": 0,
+		"ALERT_CHANNEL_KIND_EMAIL":       1,
+		"ALERT_CHANNEL_KIND_TELEGRAM":    2,
+		"ALERT_CHANNEL_KIND_SLACK":       3,
+	}
+)
+
+func (x AlertChannelKind) Enum() *AlertChannelKind {
+	p := new(AlertChannelKind)
+	*p = x
+	return p
+}
+
+func (x AlertChannelKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AlertChannelKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[0].Descriptor()
+}
+
+func (AlertChannelKind) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[0]
+}
+
+func (x AlertChannelKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
 type MachineSessionKind int32
 
 const (
@@ -126,11 +173,11 @@ func (x MachineSessionKind) String() string {
 }
 
 func (MachineSessionKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[0].Descriptor()
+	return file_v1_panel_proto_enumTypes[1].Descriptor()
 }
 
 func (MachineSessionKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[0]
+	return &file_v1_panel_proto_enumTypes[1]
 }
 
 func (x MachineSessionKind) Number() protoreflect.EnumNumber {
@@ -174,6 +221,10 @@ const (
 	// proxy cannot reach): the route answers 502. The message names the ports it does listen on
 	// (Service.listening_ports): change the route's port with DeployProject.x_pethost, or the app.
 	ProjectProblemKind_PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED ProjectProblemKind = 10
+	// A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to.
+	ProjectProblemKind_PROJECT_PROBLEM_KIND_SITE_DOWN   ProjectProblemKind = 11
+	ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_ERRORS ProjectProblemKind = 12 // A traffic rule on 5xx holds.
+	ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_SLOW   ProjectProblemKind = 13 // A traffic rule on p95 holds.
 )
 
 // Enum value maps for ProjectProblemKind.
@@ -190,6 +241,9 @@ var (
 		8:  "PROJECT_PROBLEM_KIND_RESTORE_FAILED",
 		9:  "PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED",
 		10: "PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED",
+		11: "PROJECT_PROBLEM_KIND_SITE_DOWN",
+		12: "PROJECT_PROBLEM_KIND_HTTP_ERRORS",
+		13: "PROJECT_PROBLEM_KIND_HTTP_SLOW",
 	}
 	ProjectProblemKind_value = map[string]int32{
 		"PROJECT_PROBLEM_KIND_UNSPECIFIED":           0,
@@ -203,6 +257,9 @@ var (
 		"PROJECT_PROBLEM_KIND_RESTORE_FAILED":        8,
 		"PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED":   9,
 		"PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED":   10,
+		"PROJECT_PROBLEM_KIND_SITE_DOWN":             11,
+		"PROJECT_PROBLEM_KIND_HTTP_ERRORS":           12,
+		"PROJECT_PROBLEM_KIND_HTTP_SLOW":             13,
 	}
 )
 
@@ -217,11 +274,11 @@ func (x ProjectProblemKind) String() string {
 }
 
 func (ProjectProblemKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[1].Descriptor()
+	return file_v1_panel_proto_enumTypes[2].Descriptor()
 }
 
 func (ProjectProblemKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[1]
+	return &file_v1_panel_proto_enumTypes[2]
 }
 
 func (x ProjectProblemKind) Number() protoreflect.EnumNumber {
@@ -264,11 +321,11 @@ func (x ServicesActionKind) String() string {
 }
 
 func (ServicesActionKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[2].Descriptor()
+	return file_v1_panel_proto_enumTypes[3].Descriptor()
 }
 
 func (ServicesActionKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[2]
+	return &file_v1_panel_proto_enumTypes[3]
 }
 
 func (x ServicesActionKind) Number() protoreflect.EnumNumber {
@@ -330,11 +387,11 @@ func (x ServiceState) String() string {
 }
 
 func (ServiceState) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[3].Descriptor()
+	return file_v1_panel_proto_enumTypes[4].Descriptor()
 }
 
 func (ServiceState) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[3]
+	return &file_v1_panel_proto_enumTypes[4]
 }
 
 func (x ServiceState) Number() protoreflect.EnumNumber {
@@ -385,11 +442,11 @@ func (x RestartPolicy) String() string {
 }
 
 func (RestartPolicy) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[4].Descriptor()
+	return file_v1_panel_proto_enumTypes[5].Descriptor()
 }
 
 func (RestartPolicy) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[4]
+	return &file_v1_panel_proto_enumTypes[5]
 }
 
 func (x RestartPolicy) Number() protoreflect.EnumNumber {
@@ -432,11 +489,11 @@ func (x HealthStatus) String() string {
 }
 
 func (HealthStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[5].Descriptor()
+	return file_v1_panel_proto_enumTypes[6].Descriptor()
 }
 
 func (HealthStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[5]
+	return &file_v1_panel_proto_enumTypes[6]
 }
 
 func (x HealthStatus) Number() protoreflect.EnumNumber {
@@ -481,11 +538,11 @@ func (x CertificateSource) String() string {
 }
 
 func (CertificateSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[6].Descriptor()
+	return file_v1_panel_proto_enumTypes[7].Descriptor()
 }
 
 func (CertificateSource) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[6]
+	return &file_v1_panel_proto_enumTypes[7]
 }
 
 func (x CertificateSource) Number() protoreflect.EnumNumber {
@@ -534,11 +591,11 @@ func (x OperationKind) String() string {
 }
 
 func (OperationKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[7].Descriptor()
+	return file_v1_panel_proto_enumTypes[8].Descriptor()
 }
 
 func (OperationKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[7]
+	return &file_v1_panel_proto_enumTypes[8]
 }
 
 func (x OperationKind) Number() protoreflect.EnumNumber {
@@ -584,11 +641,11 @@ func (x OperationStatus) String() string {
 }
 
 func (OperationStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[8].Descriptor()
+	return file_v1_panel_proto_enumTypes[9].Descriptor()
 }
 
 func (OperationStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[8]
+	return &file_v1_panel_proto_enumTypes[9]
 }
 
 func (x OperationStatus) Number() protoreflect.EnumNumber {
@@ -658,14 +715,167 @@ func (x DeployFailureReason) String() string {
 }
 
 func (DeployFailureReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[9].Descriptor()
+	return file_v1_panel_proto_enumTypes[10].Descriptor()
 }
 
 func (DeployFailureReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[9]
+	return &file_v1_panel_proto_enumTypes[10]
 }
 
 func (x DeployFailureReason) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type TrafficMetric int32
+
+const (
+	TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED          TrafficMetric = 0
+	TrafficMetric_TRAFFIC_METRIC_SERVER_ERRORS        TrafficMetric = 1 // 5xx responses in the window.
+	TrafficMetric_TRAFFIC_METRIC_SERVER_ERROR_PERCENT TrafficMetric = 2 // 5xx, of the window's requests (WebSockets too).
+	TrafficMetric_TRAFFIC_METRIC_LATENCY_P95_MS       TrafficMetric = 3
+)
+
+// Enum value maps for TrafficMetric.
+var (
+	TrafficMetric_name = map[int32]string{
+		0: "TRAFFIC_METRIC_UNSPECIFIED",
+		1: "TRAFFIC_METRIC_SERVER_ERRORS",
+		2: "TRAFFIC_METRIC_SERVER_ERROR_PERCENT",
+		3: "TRAFFIC_METRIC_LATENCY_P95_MS",
+	}
+	TrafficMetric_value = map[string]int32{
+		"TRAFFIC_METRIC_UNSPECIFIED":          0,
+		"TRAFFIC_METRIC_SERVER_ERRORS":        1,
+		"TRAFFIC_METRIC_SERVER_ERROR_PERCENT": 2,
+		"TRAFFIC_METRIC_LATENCY_P95_MS":       3,
+	}
+)
+
+func (x TrafficMetric) Enum() *TrafficMetric {
+	p := new(TrafficMetric)
+	*p = x
+	return p
+}
+
+func (x TrafficMetric) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TrafficMetric) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[11].Descriptor()
+}
+
+func (TrafficMetric) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[11]
+}
+
+func (x TrafficMetric) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type AlertStatus int32
+
+const (
+	AlertStatus_ALERT_STATUS_UNSPECIFIED AlertStatus = 0
+	AlertStatus_ALERT_STATUS_OK          AlertStatus = 1
+	AlertStatus_ALERT_STATUS_PENDING     AlertStatus = 2 // It holds or cleared, not confirmed yet.
+	AlertStatus_ALERT_STATUS_FIRING      AlertStatus = 3 // An incident is open.
+	// Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route
+	// has the check's host.
+	AlertStatus_ALERT_STATUS_PAUSED  AlertStatus = 4
+	AlertStatus_ALERT_STATUS_NO_DATA AlertStatus = 5 // Not evaluated yet, or too few requests.
+)
+
+// Enum value maps for AlertStatus.
+var (
+	AlertStatus_name = map[int32]string{
+		0: "ALERT_STATUS_UNSPECIFIED",
+		1: "ALERT_STATUS_OK",
+		2: "ALERT_STATUS_PENDING",
+		3: "ALERT_STATUS_FIRING",
+		4: "ALERT_STATUS_PAUSED",
+		5: "ALERT_STATUS_NO_DATA",
+	}
+	AlertStatus_value = map[string]int32{
+		"ALERT_STATUS_UNSPECIFIED": 0,
+		"ALERT_STATUS_OK":          1,
+		"ALERT_STATUS_PENDING":     2,
+		"ALERT_STATUS_FIRING":      3,
+		"ALERT_STATUS_PAUSED":      4,
+		"ALERT_STATUS_NO_DATA":     5,
+	}
+)
+
+func (x AlertStatus) Enum() *AlertStatus {
+	p := new(AlertStatus)
+	*p = x
+	return p
+}
+
+func (x AlertStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AlertStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[12].Descriptor()
+}
+
+func (AlertStatus) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[12]
+}
+
+func (x AlertStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type IncidentQuietReason int32
+
+const (
+	IncidentQuietReason_INCIDENT_QUIET_REASON_UNSPECIFIED IncidentQuietReason = 0 // Told.
+	IncidentQuietReason_INCIDENT_QUIET_REASON_MUTED       IncidentQuietReason = 1
+	IncidentQuietReason_INCIDENT_QUIET_REASON_OFF         IncidentQuietReason = 2
+	// Already so when the machine first watched it, as after the update that brought alerts.
+	IncidentQuietReason_INCIDENT_QUIET_REASON_FIRST_EVALUATION IncidentQuietReason = 3
+	IncidentQuietReason_INCIDENT_QUIET_REASON_MANUAL_DEPLOY    IncidentQuietReason = 4 // A deploy someone ran failed: they watch it.
+)
+
+// Enum value maps for IncidentQuietReason.
+var (
+	IncidentQuietReason_name = map[int32]string{
+		0: "INCIDENT_QUIET_REASON_UNSPECIFIED",
+		1: "INCIDENT_QUIET_REASON_MUTED",
+		2: "INCIDENT_QUIET_REASON_OFF",
+		3: "INCIDENT_QUIET_REASON_FIRST_EVALUATION",
+		4: "INCIDENT_QUIET_REASON_MANUAL_DEPLOY",
+	}
+	IncidentQuietReason_value = map[string]int32{
+		"INCIDENT_QUIET_REASON_UNSPECIFIED":      0,
+		"INCIDENT_QUIET_REASON_MUTED":            1,
+		"INCIDENT_QUIET_REASON_OFF":              2,
+		"INCIDENT_QUIET_REASON_FIRST_EVALUATION": 3,
+		"INCIDENT_QUIET_REASON_MANUAL_DEPLOY":    4,
+	}
+)
+
+func (x IncidentQuietReason) Enum() *IncidentQuietReason {
+	p := new(IncidentQuietReason)
+	*p = x
+	return p
+}
+
+func (x IncidentQuietReason) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (IncidentQuietReason) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[13].Descriptor()
+}
+
+func (IncidentQuietReason) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[13]
+}
+
+func (x IncidentQuietReason) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
@@ -702,11 +912,11 @@ func (x OutputStream) String() string {
 }
 
 func (OutputStream) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[10].Descriptor()
+	return file_v1_panel_proto_enumTypes[14].Descriptor()
 }
 
 func (OutputStream) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[10]
+	return &file_v1_panel_proto_enumTypes[14]
 }
 
 func (x OutputStream) Number() protoreflect.EnumNumber {
@@ -752,11 +962,11 @@ func (x FileType) String() string {
 }
 
 func (FileType) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[11].Descriptor()
+	return file_v1_panel_proto_enumTypes[15].Descriptor()
 }
 
 func (FileType) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[11]
+	return &file_v1_panel_proto_enumTypes[15]
 }
 
 func (x FileType) Number() protoreflect.EnumNumber {
@@ -805,11 +1015,11 @@ func (x FileLocation) String() string {
 }
 
 func (FileLocation) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[12].Descriptor()
+	return file_v1_panel_proto_enumTypes[16].Descriptor()
 }
 
 func (FileLocation) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[12]
+	return &file_v1_panel_proto_enumTypes[16]
 }
 
 func (x FileLocation) Number() protoreflect.EnumNumber {
@@ -851,11 +1061,11 @@ func (x NoMachineReason) String() string {
 }
 
 func (NoMachineReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[13].Descriptor()
+	return file_v1_panel_proto_enumTypes[17].Descriptor()
 }
 
 func (NoMachineReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[13]
+	return &file_v1_panel_proto_enumTypes[17]
 }
 
 func (x NoMachineReason) Number() protoreflect.EnumNumber {
@@ -1061,6 +1271,7 @@ type Machine struct {
 	xxx_hidden_RestartRequiredTime        *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=restart_required_time,json=restartRequiredTime"`
 	xxx_hidden_ScheduledRestartTime       *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=scheduled_restart_time,json=scheduledRestartTime"`
 	xxx_hidden_Sessions                   *[]*MachineSession     `protobuf:"bytes,24,rep,name=sessions"`
+	xxx_hidden_AlertChannels              *[]*AlertDestination   `protobuf:"bytes,26,rep,name=alert_channels,json=alertChannels"`
 	XXX_raceDetectHookData                protoimpl.RaceDetectHookData
 	XXX_presence                          [1]uint32
 	unknownFields                         protoimpl.UnknownFields
@@ -1295,14 +1506,23 @@ func (x *Machine) GetSessions() []*MachineSession {
 	return nil
 }
 
+func (x *Machine) GetAlertChannels() []*AlertDestination {
+	if x != nil {
+		if x.xxx_hidden_AlertChannels != nil {
+			return *x.xxx_hidden_AlertChannels
+		}
+	}
+	return nil
+}
+
 func (x *Machine) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 26)
 }
 
 func (x *Machine) SetLocation(v string) {
 	x.xxx_hidden_Location = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 26)
 }
 
 func (x *Machine) SetSampleTime(v *timestamppb.Timestamp) {
@@ -1311,32 +1531,32 @@ func (x *Machine) SetSampleTime(v *timestamppb.Timestamp) {
 
 func (x *Machine) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 26)
 }
 
 func (x *Machine) SetCpuTotalCores(v float64) {
 	x.xxx_hidden_CpuTotalCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 26)
 }
 
 func (x *Machine) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 26)
 }
 
 func (x *Machine) SetMemoryTotalBytes(v uint64) {
 	x.xxx_hidden_MemoryTotalBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 26)
 }
 
 func (x *Machine) SetDiskUsedBytes(v uint64) {
 	x.xxx_hidden_DiskUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 26)
 }
 
 func (x *Machine) SetDiskTotalBytes(v uint64) {
 	x.xxx_hidden_DiskTotalBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 26)
 }
 
 func (x *Machine) SetDiskUsage(v *DiskUsage) {
@@ -1345,12 +1565,12 @@ func (x *Machine) SetDiskUsage(v *DiskUsage) {
 
 func (x *Machine) SetHostname(v string) {
 	x.xxx_hidden_Hostname = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 26)
 }
 
 func (x *Machine) SetSshHostKeyFingerprint(v string) {
 	x.xxx_hidden_SshHostKeyFingerprint = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 26)
 }
 
 func (x *Machine) SetSshKeys(v []*SshKey) {
@@ -1359,7 +1579,7 @@ func (x *Machine) SetSshKeys(v []*SshKey) {
 
 func (x *Machine) SetBackupsEnabled(v bool) {
 	x.xxx_hidden_BackupsEnabled = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 26)
 }
 
 func (x *Machine) SetSnapshotListTime(v *timestamppb.Timestamp) {
@@ -1368,32 +1588,32 @@ func (x *Machine) SetSnapshotListTime(v *timestamppb.Timestamp) {
 
 func (x *Machine) SetSnapshotListFailureMessage(v string) {
 	x.xxx_hidden_SnapshotListFailureMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 26)
 }
 
 func (x *Machine) SetBackupRetentionHours(v uint32) {
 	x.xxx_hidden_BackupRetentionHours = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 26)
 }
 
 func (x *Machine) SetAcmeEnabled(v bool) {
 	x.xxx_hidden_AcmeEnabled = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 26)
 }
 
 func (x *Machine) SetAppsDomain(v string) {
 	x.xxx_hidden_AppsDomain = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 26)
 }
 
 func (x *Machine) SetDaemonVersion(v string) {
 	x.xxx_hidden_DaemonVersion = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 26)
 }
 
 func (x *Machine) SetDockerVersion(v string) {
 	x.xxx_hidden_DockerVersion = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 25)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 26)
 }
 
 func (x *Machine) SetBootTime(v *timestamppb.Timestamp) {
@@ -1410,6 +1630,10 @@ func (x *Machine) SetScheduledRestartTime(v *timestamppb.Timestamp) {
 
 func (x *Machine) SetSessions(v []*MachineSession) {
 	x.xxx_hidden_Sessions = &v
+}
+
+func (x *Machine) SetAlertChannels(v []*AlertDestination) {
+	x.xxx_hidden_AlertChannels = &v
 }
 
 func (x *Machine) HasName() bool {
@@ -1742,6 +1966,10 @@ type Machine_builder struct {
 	// What people have open in the containers now, oldest first: at most 100, the most the machine
 	// holds at once.
 	Sessions []*MachineSession
+	// Where Pethost tells the person of incidents: the account's channels that are on, email first,
+	// then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
+	// alerts reach nobody.
+	AlertChannels []*AlertDestination
 }
 
 func (b0 Machine_builder) Build() *Machine {
@@ -1749,81 +1977,193 @@ func (b0 Machine_builder) Build() *Machine {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 26)
 		x.xxx_hidden_Name = b.Name
 	}
 	if b.Location != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 26)
 		x.xxx_hidden_Location = b.Location
 	}
 	x.xxx_hidden_SampleTime = b.SampleTime
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 26)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.CpuTotalCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 26)
 		x.xxx_hidden_CpuTotalCores = *b.CpuTotalCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 26)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	if b.MemoryTotalBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 26)
 		x.xxx_hidden_MemoryTotalBytes = *b.MemoryTotalBytes
 	}
 	if b.DiskUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 26)
 		x.xxx_hidden_DiskUsedBytes = *b.DiskUsedBytes
 	}
 	if b.DiskTotalBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 26)
 		x.xxx_hidden_DiskTotalBytes = *b.DiskTotalBytes
 	}
 	x.xxx_hidden_DiskUsage = b.DiskUsage
 	if b.Hostname != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 26)
 		x.xxx_hidden_Hostname = b.Hostname
 	}
 	if b.SshHostKeyFingerprint != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 26)
 		x.xxx_hidden_SshHostKeyFingerprint = b.SshHostKeyFingerprint
 	}
 	x.xxx_hidden_SshKeys = &b.SshKeys
 	if b.BackupsEnabled != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 26)
 		x.xxx_hidden_BackupsEnabled = *b.BackupsEnabled
 	}
 	x.xxx_hidden_SnapshotListTime = b.SnapshotListTime
 	if b.SnapshotListFailureMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 26)
 		x.xxx_hidden_SnapshotListFailureMessage = b.SnapshotListFailureMessage
 	}
 	if b.BackupRetentionHours != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 26)
 		x.xxx_hidden_BackupRetentionHours = *b.BackupRetentionHours
 	}
 	if b.AcmeEnabled != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 26)
 		x.xxx_hidden_AcmeEnabled = *b.AcmeEnabled
 	}
 	if b.AppsDomain != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 26)
 		x.xxx_hidden_AppsDomain = b.AppsDomain
 	}
 	if b.DaemonVersion != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 26)
 		x.xxx_hidden_DaemonVersion = b.DaemonVersion
 	}
 	if b.DockerVersion != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 25)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 26)
 		x.xxx_hidden_DockerVersion = b.DockerVersion
 	}
 	x.xxx_hidden_BootTime = b.BootTime
 	x.xxx_hidden_RestartRequiredTime = b.RestartRequiredTime
 	x.xxx_hidden_ScheduledRestartTime = b.ScheduledRestartTime
 	x.xxx_hidden_Sessions = &b.Sessions
+	x.xxx_hidden_AlertChannels = &b.AlertChannels
+	return m0
+}
+
+// A channel Pethost tells the person of incidents on (Machine.alert_channels).
+type AlertDestination struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Kind        AlertChannelKind       `protobuf:"varint,1,opt,name=kind,enum=pethost.panel.v1.AlertChannelKind"`
+	xxx_hidden_Label       *string                `protobuf:"bytes,2,opt,name=label"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *AlertDestination) Reset() {
+	*x = AlertDestination{}
+	mi := &file_v1_panel_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AlertDestination) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AlertDestination) ProtoMessage() {}
+
+func (x *AlertDestination) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *AlertDestination) GetKind() AlertChannelKind {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 0) {
+			return x.xxx_hidden_Kind
+		}
+	}
+	return AlertChannelKind_ALERT_CHANNEL_KIND_UNSPECIFIED
+}
+
+func (x *AlertDestination) GetLabel() string {
+	if x != nil {
+		if x.xxx_hidden_Label != nil {
+			return *x.xxx_hidden_Label
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *AlertDestination) SetKind(v AlertChannelKind) {
+	x.xxx_hidden_Kind = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *AlertDestination) SetLabel(v string) {
+	x.xxx_hidden_Label = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *AlertDestination) HasKind() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *AlertDestination) HasLabel() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *AlertDestination) ClearKind() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Kind = AlertChannelKind_ALERT_CHANNEL_KIND_UNSPECIFIED
+}
+
+func (x *AlertDestination) ClearLabel() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Label = nil
+}
+
+type AlertDestination_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Kind  *AlertChannelKind
+	Label *string
+}
+
+func (b0 AlertDestination_builder) Build() *AlertDestination {
+	m0 := &AlertDestination{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Kind != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		x.xxx_hidden_Kind = *b.Kind
+	}
+	if b.Label != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Label = b.Label
+	}
 	return m0
 }
 
@@ -1849,7 +2189,7 @@ type MachineSession struct {
 
 func (x *MachineSession) Reset() {
 	*x = MachineSession{}
-	mi := &file_v1_panel_proto_msgTypes[3]
+	mi := &file_v1_panel_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1861,7 +2201,7 @@ func (x *MachineSession) String() string {
 func (*MachineSession) ProtoMessage() {}
 
 func (x *MachineSession) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[3]
+	mi := &file_v1_panel_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2180,7 +2520,7 @@ type DiskUsage struct {
 
 func (x *DiskUsage) Reset() {
 	*x = DiskUsage{}
-	mi := &file_v1_panel_proto_msgTypes[4]
+	mi := &file_v1_panel_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2192,7 +2532,7 @@ func (x *DiskUsage) String() string {
 func (*DiskUsage) ProtoMessage() {}
 
 func (x *DiskUsage) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[4]
+	mi := &file_v1_panel_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2434,7 +2774,7 @@ type SshKey struct {
 
 func (x *SshKey) Reset() {
 	*x = SshKey{}
-	mi := &file_v1_panel_proto_msgTypes[5]
+	mi := &file_v1_panel_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2446,7 +2786,7 @@ func (x *SshKey) String() string {
 func (*SshKey) ProtoMessage() {}
 
 func (x *SshKey) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[5]
+	mi := &file_v1_panel_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2583,7 +2923,7 @@ type GithubConnection struct {
 
 func (x *GithubConnection) Reset() {
 	*x = GithubConnection{}
-	mi := &file_v1_panel_proto_msgTypes[6]
+	mi := &file_v1_panel_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2595,7 +2935,7 @@ func (x *GithubConnection) String() string {
 func (*GithubConnection) ProtoMessage() {}
 
 func (x *GithubConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[6]
+	mi := &file_v1_panel_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2773,7 +3113,7 @@ type GithubRepository struct {
 
 func (x *GithubRepository) Reset() {
 	*x = GithubRepository{}
-	mi := &file_v1_panel_proto_msgTypes[7]
+	mi := &file_v1_panel_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2785,7 +3125,7 @@ func (x *GithubRepository) String() string {
 func (*GithubRepository) ProtoMessage() {}
 
 func (x *GithubRepository) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[7]
+	mi := &file_v1_panel_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2938,7 +3278,7 @@ type DeletedProject struct {
 
 func (x *DeletedProject) Reset() {
 	*x = DeletedProject{}
-	mi := &file_v1_panel_proto_msgTypes[8]
+	mi := &file_v1_panel_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2950,7 +3290,7 @@ func (x *DeletedProject) String() string {
 func (*DeletedProject) ProtoMessage() {}
 
 func (x *DeletedProject) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[8]
+	mi := &file_v1_panel_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3069,7 +3409,7 @@ type RunMachineActionRequest struct {
 
 func (x *RunMachineActionRequest) Reset() {
 	*x = RunMachineActionRequest{}
-	mi := &file_v1_panel_proto_msgTypes[9]
+	mi := &file_v1_panel_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3081,7 +3421,7 @@ func (x *RunMachineActionRequest) String() string {
 func (*RunMachineActionRequest) ProtoMessage() {}
 
 func (x *RunMachineActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[9]
+	mi := &file_v1_panel_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3316,7 +3656,7 @@ func (b0 RunMachineActionRequest_builder) Build() *RunMachineActionRequest {
 type case_RunMachineActionRequest_Action protoreflect.FieldNumber
 
 func (x case_RunMachineActionRequest_Action) String() string {
-	md := file_v1_panel_proto_msgTypes[9].Descriptor()
+	md := file_v1_panel_proto_msgTypes[10].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -3376,7 +3716,7 @@ type RestartMachineAction struct {
 
 func (x *RestartMachineAction) Reset() {
 	*x = RestartMachineAction{}
-	mi := &file_v1_panel_proto_msgTypes[10]
+	mi := &file_v1_panel_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3388,7 +3728,7 @@ func (x *RestartMachineAction) String() string {
 func (*RestartMachineAction) ProtoMessage() {}
 
 func (x *RestartMachineAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[10]
+	mi := &file_v1_panel_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3505,7 +3845,7 @@ type RunMachineActionResponse struct {
 
 func (x *RunMachineActionResponse) Reset() {
 	*x = RunMachineActionResponse{}
-	mi := &file_v1_panel_proto_msgTypes[11]
+	mi := &file_v1_panel_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3517,7 +3857,7 @@ func (x *RunMachineActionResponse) String() string {
 func (*RunMachineActionResponse) ProtoMessage() {}
 
 func (x *RunMachineActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[11]
+	mi := &file_v1_panel_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3578,7 +3918,7 @@ type ProjectMetadata struct {
 
 func (x *ProjectMetadata) Reset() {
 	*x = ProjectMetadata{}
-	mi := &file_v1_panel_proto_msgTypes[12]
+	mi := &file_v1_panel_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3590,7 +3930,7 @@ func (x *ProjectMetadata) String() string {
 func (*ProjectMetadata) ProtoMessage() {}
 
 func (x *ProjectMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[12]
+	mi := &file_v1_panel_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3764,7 +4104,7 @@ type ProjectSummary struct {
 
 func (x *ProjectSummary) Reset() {
 	*x = ProjectSummary{}
-	mi := &file_v1_panel_proto_msgTypes[13]
+	mi := &file_v1_panel_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3776,7 +4116,7 @@ func (x *ProjectSummary) String() string {
 func (*ProjectSummary) ProtoMessage() {}
 
 func (x *ProjectSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[13]
+	mi := &file_v1_panel_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4127,7 +4467,7 @@ type ServiceSummary struct {
 
 func (x *ServiceSummary) Reset() {
 	*x = ServiceSummary{}
-	mi := &file_v1_panel_proto_msgTypes[14]
+	mi := &file_v1_panel_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4139,7 +4479,7 @@ func (x *ServiceSummary) String() string {
 func (*ServiceSummary) ProtoMessage() {}
 
 func (x *ServiceSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[14]
+	mi := &file_v1_panel_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4233,6 +4573,7 @@ type ProjectProblem struct {
 	xxx_hidden_OperationId    *string                `protobuf:"bytes,3,opt,name=operation_id,json=operationId"`
 	xxx_hidden_SinceTime      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=since_time,json=sinceTime"`
 	xxx_hidden_ProblemMessage *string                `protobuf:"bytes,5,opt,name=problem_message,json=problemMessage"`
+	xxx_hidden_IncidentId     *string                `protobuf:"bytes,6,opt,name=incident_id,json=incidentId"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -4241,7 +4582,7 @@ type ProjectProblem struct {
 
 func (x *ProjectProblem) Reset() {
 	*x = ProjectProblem{}
-	mi := &file_v1_panel_proto_msgTypes[15]
+	mi := &file_v1_panel_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4253,7 +4594,7 @@ func (x *ProjectProblem) String() string {
 func (*ProjectProblem) ProtoMessage() {}
 
 func (x *ProjectProblem) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[15]
+	mi := &file_v1_panel_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4310,19 +4651,29 @@ func (x *ProjectProblem) GetProblemMessage() string {
 	return ""
 }
 
+func (x *ProjectProblem) GetIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentId != nil {
+			return *x.xxx_hidden_IncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *ProjectProblem) SetKind(v ProjectProblemKind) {
 	x.xxx_hidden_Kind = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
 }
 
 func (x *ProjectProblem) SetService(v string) {
 	x.xxx_hidden_Service = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
 }
 
 func (x *ProjectProblem) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
 }
 
 func (x *ProjectProblem) SetSinceTime(v *timestamppb.Timestamp) {
@@ -4331,7 +4682,12 @@ func (x *ProjectProblem) SetSinceTime(v *timestamppb.Timestamp) {
 
 func (x *ProjectProblem) SetProblemMessage(v string) {
 	x.xxx_hidden_ProblemMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *ProjectProblem) SetIncidentId(v string) {
+	x.xxx_hidden_IncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
 }
 
 func (x *ProjectProblem) HasKind() bool {
@@ -4369,6 +4725,13 @@ func (x *ProjectProblem) HasProblemMessage() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
+func (x *ProjectProblem) HasIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
 func (x *ProjectProblem) ClearKind() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_Kind = ProjectProblemKind_PROJECT_PROBLEM_KIND_UNSPECIFIED
@@ -4393,6 +4756,11 @@ func (x *ProjectProblem) ClearProblemMessage() {
 	x.xxx_hidden_ProblemMessage = nil
 }
 
+func (x *ProjectProblem) ClearIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_IncidentId = nil
+}
+
 type ProjectProblem_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -4411,6 +4779,8 @@ type ProjectProblem_builder struct {
 	// healthcheck: 11 failures in a row". A failed or cancelled deploy's also says whether it
 	// changed the project.
 	ProblemMessage *string
+	// The open incident that records it (Project.incidents). Empty = none yet.
+	IncidentId *string
 }
 
 func (b0 ProjectProblem_builder) Build() *ProjectProblem {
@@ -4418,21 +4788,25 @@ func (b0 ProjectProblem_builder) Build() *ProjectProblem {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Kind != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
 		x.xxx_hidden_Kind = *b.Kind
 	}
 	if b.Service != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
 		x.xxx_hidden_Service = b.Service
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	x.xxx_hidden_SinceTime = b.SinceTime
 	if b.ProblemMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
 		x.xxx_hidden_ProblemMessage = b.ProblemMessage
+	}
+	if b.IncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_IncidentId = b.IncidentId
 	}
 	return m0
 }
@@ -4443,6 +4817,9 @@ type GetProjectRequest struct {
 	xxx_hidden_IncludeSecretValues bool                   `protobuf:"varint,2,opt,name=include_secret_values,json=includeSecretValues"`
 	xxx_hidden_SnapshotsBefore     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=snapshots_before,json=snapshotsBefore"`
 	xxx_hidden_SnapshotsVolume     *string                `protobuf:"bytes,4,opt,name=snapshots_volume,json=snapshotsVolume"`
+	xxx_hidden_IncidentsBefore     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=incidents_before,json=incidentsBefore"`
+	xxx_hidden_UptimeDayCount      uint32                 `protobuf:"varint,6,opt,name=uptime_day_count,json=uptimeDayCount"`
+	xxx_hidden_IncidentsBeforeId   *string                `protobuf:"bytes,7,opt,name=incidents_before_id,json=incidentsBeforeId"`
 	XXX_raceDetectHookData         protoimpl.RaceDetectHookData
 	XXX_presence                   [1]uint32
 	unknownFields                  protoimpl.UnknownFields
@@ -4451,7 +4828,7 @@ type GetProjectRequest struct {
 
 func (x *GetProjectRequest) Reset() {
 	*x = GetProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[16]
+	mi := &file_v1_panel_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4463,7 +4840,7 @@ func (x *GetProjectRequest) String() string {
 func (*GetProjectRequest) ProtoMessage() {}
 
 func (x *GetProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[16]
+	mi := &file_v1_panel_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4508,14 +4885,38 @@ func (x *GetProjectRequest) GetSnapshotsVolume() string {
 	return ""
 }
 
+func (x *GetProjectRequest) GetIncidentsBefore() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_IncidentsBefore
+	}
+	return nil
+}
+
+func (x *GetProjectRequest) GetUptimeDayCount() uint32 {
+	if x != nil {
+		return x.xxx_hidden_UptimeDayCount
+	}
+	return 0
+}
+
+func (x *GetProjectRequest) GetIncidentsBeforeId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentsBeforeId != nil {
+			return *x.xxx_hidden_IncidentsBeforeId
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetProjectRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
 }
 
 func (x *GetProjectRequest) SetIncludeSecretValues(v bool) {
 	x.xxx_hidden_IncludeSecretValues = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
 }
 
 func (x *GetProjectRequest) SetSnapshotsBefore(v *timestamppb.Timestamp) {
@@ -4524,7 +4925,21 @@ func (x *GetProjectRequest) SetSnapshotsBefore(v *timestamppb.Timestamp) {
 
 func (x *GetProjectRequest) SetSnapshotsVolume(v string) {
 	x.xxx_hidden_SnapshotsVolume = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+}
+
+func (x *GetProjectRequest) SetIncidentsBefore(v *timestamppb.Timestamp) {
+	x.xxx_hidden_IncidentsBefore = v
+}
+
+func (x *GetProjectRequest) SetUptimeDayCount(v uint32) {
+	x.xxx_hidden_UptimeDayCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *GetProjectRequest) SetIncidentsBeforeId(v string) {
+	x.xxx_hidden_IncidentsBeforeId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
 }
 
 func (x *GetProjectRequest) HasProjectId() bool {
@@ -4555,6 +4970,27 @@ func (x *GetProjectRequest) HasSnapshotsVolume() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
+func (x *GetProjectRequest) HasIncidentsBefore() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_IncidentsBefore != nil
+}
+
+func (x *GetProjectRequest) HasUptimeDayCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *GetProjectRequest) HasIncidentsBeforeId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
 func (x *GetProjectRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -4574,6 +5010,20 @@ func (x *GetProjectRequest) ClearSnapshotsVolume() {
 	x.xxx_hidden_SnapshotsVolume = nil
 }
 
+func (x *GetProjectRequest) ClearIncidentsBefore() {
+	x.xxx_hidden_IncidentsBefore = nil
+}
+
+func (x *GetProjectRequest) ClearUptimeDayCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_UptimeDayCount = 0
+}
+
+func (x *GetProjectRequest) ClearIncidentsBeforeId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_IncidentsBeforeId = nil
+}
+
 type GetProjectRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -4584,6 +5034,13 @@ type GetProjectRequest_builder struct {
 	SnapshotsBefore *timestamppb.Timestamp
 	// Only snapshots holding this volume (Volume.snapshot_count). Empty = all.
 	SnapshotsVolume *string
+	// Only incidents that opened before it: the oldest open_time seen, to page back. Absent = the
+	// newest.
+	IncidentsBefore *timestamppb.Timestamp
+	UptimeDayCount  *uint32
+	// With incidents_before: the incident_id of the oldest seen, so that those that opened at the
+	// same time are not skipped.
+	IncidentsBeforeId *string
 }
 
 func (b0 GetProjectRequest_builder) Build() *GetProjectRequest {
@@ -4591,17 +5048,26 @@ func (b0 GetProjectRequest_builder) Build() *GetProjectRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.IncludeSecretValues != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
 		x.xxx_hidden_IncludeSecretValues = *b.IncludeSecretValues
 	}
 	x.xxx_hidden_SnapshotsBefore = b.SnapshotsBefore
 	if b.SnapshotsVolume != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
 		x.xxx_hidden_SnapshotsVolume = b.SnapshotsVolume
+	}
+	x.xxx_hidden_IncidentsBefore = b.IncidentsBefore
+	if b.UptimeDayCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		x.xxx_hidden_UptimeDayCount = *b.UptimeDayCount
+	}
+	if b.IncidentsBeforeId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		x.xxx_hidden_IncidentsBeforeId = b.IncidentsBeforeId
 	}
 	return m0
 }
@@ -4615,7 +5081,7 @@ type GetProjectResponse struct {
 
 func (x *GetProjectResponse) Reset() {
 	*x = GetProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[17]
+	mi := &file_v1_panel_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4627,7 +5093,7 @@ func (x *GetProjectResponse) String() string {
 func (*GetProjectResponse) ProtoMessage() {}
 
 func (x *GetProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[17]
+	mi := &file_v1_panel_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4698,6 +5164,10 @@ type Project struct {
 	xxx_hidden_HttpTrafficLastDay    *HttpTrafficSummary    `protobuf:"bytes,16,opt,name=http_traffic_last_day,json=httpTrafficLastDay"`
 	xxx_hidden_Source                *ProjectSource         `protobuf:"bytes,17,opt,name=source"`
 	xxx_hidden_RunningServicesAction *RunningServicesAction `protobuf:"bytes,21,opt,name=running_services_action,json=runningServicesAction"`
+	xxx_hidden_Alerts                *ProjectAlerts         `protobuf:"bytes,23,opt,name=alerts"`
+	xxx_hidden_Incidents             *[]*Incident           `protobuf:"bytes,24,rep,name=incidents"`
+	xxx_hidden_MoreIncidents         bool                   `protobuf:"varint,25,opt,name=more_incidents,json=moreIncidents"`
+	xxx_hidden_UptimeDays            *[]*UptimeDay          `protobuf:"bytes,26,rep,name=uptime_days,json=uptimeDays"`
 	XXX_raceDetectHookData           protoimpl.RaceDetectHookData
 	XXX_presence                     [1]uint32
 	unknownFields                    protoimpl.UnknownFields
@@ -4706,7 +5176,7 @@ type Project struct {
 
 func (x *Project) Reset() {
 	*x = Project{}
-	mi := &file_v1_panel_proto_msgTypes[18]
+	mi := &file_v1_panel_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4718,7 +5188,7 @@ func (x *Project) String() string {
 func (*Project) ProtoMessage() {}
 
 func (x *Project) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[18]
+	mi := &file_v1_panel_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4908,9 +5378,41 @@ func (x *Project) GetRunningServicesAction() *RunningServicesAction {
 	return nil
 }
 
+func (x *Project) GetAlerts() *ProjectAlerts {
+	if x != nil {
+		return x.xxx_hidden_Alerts
+	}
+	return nil
+}
+
+func (x *Project) GetIncidents() []*Incident {
+	if x != nil {
+		if x.xxx_hidden_Incidents != nil {
+			return *x.xxx_hidden_Incidents
+		}
+	}
+	return nil
+}
+
+func (x *Project) GetMoreIncidents() bool {
+	if x != nil {
+		return x.xxx_hidden_MoreIncidents
+	}
+	return false
+}
+
+func (x *Project) GetUptimeDays() []*UptimeDay {
+	if x != nil {
+		if x.xxx_hidden_UptimeDays != nil {
+			return *x.xxx_hidden_UptimeDays
+		}
+	}
+	return nil
+}
+
 func (x *Project) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 26)
 }
 
 func (x *Project) SetMetadata(v *ProjectMetadata) {
@@ -4923,27 +5425,27 @@ func (x *Project) SetProblems(v []*ProjectProblem) {
 
 func (x *Project) SetUrl(v string) {
 	x.xxx_hidden_Url = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 26)
 }
 
 func (x *Project) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 26)
 }
 
 func (x *Project) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 26)
 }
 
 func (x *Project) SetDeployId(v string) {
 	x.xxx_hidden_DeployId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 26)
 }
 
 func (x *Project) SetDeployStatus(v OperationStatus) {
 	x.xxx_hidden_DeployStatus = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 26)
 }
 
 func (x *Project) SetDeployTime(v *timestamppb.Timestamp) {
@@ -4952,7 +5454,7 @@ func (x *Project) SetDeployTime(v *timestamppb.Timestamp) {
 
 func (x *Project) SetXPethostAppliesAtOnce(v bool) {
 	x.xxx_hidden_XPethostAppliesAtOnce = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 26)
 }
 
 func (x *Project) SetServices(v []*Service) {
@@ -4973,7 +5475,7 @@ func (x *Project) SetHosts(v []*Host) {
 
 func (x *Project) SetPasswordProtected(v bool) {
 	x.xxx_hidden_PasswordProtected = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 26)
 }
 
 func (x *Project) SetOperations(v []*Operation) {
@@ -4986,7 +5488,7 @@ func (x *Project) SetSnapshots(v []*Snapshot) {
 
 func (x *Project) SetSnapshotCount(v uint32) {
 	x.xxx_hidden_SnapshotCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 26)
 }
 
 func (x *Project) SetSnapshotListTime(v *timestamppb.Timestamp) {
@@ -5003,6 +5505,23 @@ func (x *Project) SetSource(v *ProjectSource) {
 
 func (x *Project) SetRunningServicesAction(v *RunningServicesAction) {
 	x.xxx_hidden_RunningServicesAction = v
+}
+
+func (x *Project) SetAlerts(v *ProjectAlerts) {
+	x.xxx_hidden_Alerts = v
+}
+
+func (x *Project) SetIncidents(v []*Incident) {
+	x.xxx_hidden_Incidents = &v
+}
+
+func (x *Project) SetMoreIncidents(v bool) {
+	x.xxx_hidden_MoreIncidents = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 24, 26)
+}
+
+func (x *Project) SetUptimeDays(v []*UptimeDay) {
+	x.xxx_hidden_UptimeDays = &v
 }
 
 func (x *Project) HasProjectId() bool {
@@ -5110,6 +5629,20 @@ func (x *Project) HasRunningServicesAction() bool {
 	return x.xxx_hidden_RunningServicesAction != nil
 }
 
+func (x *Project) HasAlerts() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Alerts != nil
+}
+
+func (x *Project) HasMoreIncidents() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 24)
+}
+
 func (x *Project) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -5179,6 +5712,15 @@ func (x *Project) ClearRunningServicesAction() {
 	x.xxx_hidden_RunningServicesAction = nil
 }
 
+func (x *Project) ClearAlerts() {
+	x.xxx_hidden_Alerts = nil
+}
+
+func (x *Project) ClearMoreIncidents() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 24)
+	x.xxx_hidden_MoreIncidents = false
+}
+
 type Project_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -5229,6 +5771,17 @@ type Project_builder struct {
 	// (RunProjectAction waits for its end). Until then the project takes no other action or
 	// deploy, and Service.state is still what it was before. Absent = none.
 	RunningServicesAction *RunningServicesAction
+	// What Pethost watches and how each part stands. Absent = the machine's software predates
+	// alerts: they come with its next update.
+	Alerts *ProjectAlerts
+	// The newest 5 that GetProjectRequest.incidents_before selects, newest first: an open one in
+	// full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+	// after_operation_id, quiet_reason and flapping.
+	Incidents []*Incident
+	// True = older ones remain: page with incidents_before and incidents_before_id.
+	MoreIncidents *bool
+	// Oldest first, GetProjectRequest.uptime_day_count of them, today's last.
+	UptimeDays []*UptimeDay
 }
 
 func (b0 Project_builder) Build() *Project {
@@ -5236,34 +5789,34 @@ func (b0 Project_builder) Build() *Project {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 26)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Metadata = b.Metadata
 	x.xxx_hidden_Problems = &b.Problems
 	if b.Url != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 26)
 		x.xxx_hidden_Url = b.Url
 	}
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 26)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 26)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	if b.DeployId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 26)
 		x.xxx_hidden_DeployId = b.DeployId
 	}
 	if b.DeployStatus != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 26)
 		x.xxx_hidden_DeployStatus = *b.DeployStatus
 	}
 	x.xxx_hidden_DeployTime = b.DeployTime
 	if b.XPethostAppliesAtOnce != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 26)
 		x.xxx_hidden_XPethostAppliesAtOnce = *b.XPethostAppliesAtOnce
 	}
 	x.xxx_hidden_Services = &b.Services
@@ -5271,19 +5824,26 @@ func (b0 Project_builder) Build() *Project {
 	x.xxx_hidden_Routes = &b.Routes
 	x.xxx_hidden_Hosts = &b.Hosts
 	if b.PasswordProtected != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 26)
 		x.xxx_hidden_PasswordProtected = *b.PasswordProtected
 	}
 	x.xxx_hidden_Operations = &b.Operations
 	x.xxx_hidden_Snapshots = &b.Snapshots
 	if b.SnapshotCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 26)
 		x.xxx_hidden_SnapshotCount = *b.SnapshotCount
 	}
 	x.xxx_hidden_SnapshotListTime = b.SnapshotListTime
 	x.xxx_hidden_HttpTrafficLastDay = b.HttpTrafficLastDay
 	x.xxx_hidden_Source = b.Source
 	x.xxx_hidden_RunningServicesAction = b.RunningServicesAction
+	x.xxx_hidden_Alerts = b.Alerts
+	x.xxx_hidden_Incidents = &b.Incidents
+	if b.MoreIncidents != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 24, 26)
+		x.xxx_hidden_MoreIncidents = *b.MoreIncidents
+	}
+	x.xxx_hidden_UptimeDays = &b.UptimeDays
 	return m0
 }
 
@@ -5301,7 +5861,7 @@ type RunningServicesAction struct {
 
 func (x *RunningServicesAction) Reset() {
 	*x = RunningServicesAction{}
-	mi := &file_v1_panel_proto_msgTypes[19]
+	mi := &file_v1_panel_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5313,7 +5873,7 @@ func (x *RunningServicesAction) String() string {
 func (*RunningServicesAction) ProtoMessage() {}
 
 func (x *RunningServicesAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[19]
+	mi := &file_v1_panel_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5414,7 +5974,7 @@ type ProjectSource struct {
 
 func (x *ProjectSource) Reset() {
 	*x = ProjectSource{}
-	mi := &file_v1_panel_proto_msgTypes[20]
+	mi := &file_v1_panel_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5426,7 +5986,7 @@ func (x *ProjectSource) String() string {
 func (*ProjectSource) ProtoMessage() {}
 
 func (x *ProjectSource) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[20]
+	mi := &file_v1_panel_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5549,7 +6109,7 @@ func (b0 ProjectSource_builder) Build() *ProjectSource {
 type case_ProjectSource_Kind protoreflect.FieldNumber
 
 func (x case_ProjectSource_Kind) String() string {
-	md := file_v1_panel_proto_msgTypes[20].Descriptor()
+	md := file_v1_panel_proto_msgTypes[21].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -5591,7 +6151,7 @@ type GithubSource struct {
 
 func (x *GithubSource) Reset() {
 	*x = GithubSource{}
-	mi := &file_v1_panel_proto_msgTypes[21]
+	mi := &file_v1_panel_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5603,7 +6163,7 @@ func (x *GithubSource) String() string {
 func (*GithubSource) ProtoMessage() {}
 
 func (x *GithubSource) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[21]
+	mi := &file_v1_panel_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5879,7 +6439,7 @@ type GithubCommit struct {
 
 func (x *GithubCommit) Reset() {
 	*x = GithubCommit{}
-	mi := &file_v1_panel_proto_msgTypes[22]
+	mi := &file_v1_panel_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5891,7 +6451,7 @@ func (x *GithubCommit) String() string {
 func (*GithubCommit) ProtoMessage() {}
 
 func (x *GithubCommit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[22]
+	mi := &file_v1_panel_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6048,7 +6608,7 @@ type Service struct {
 
 func (x *Service) Reset() {
 	*x = Service{}
-	mi := &file_v1_panel_proto_msgTypes[23]
+	mi := &file_v1_panel_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6060,7 +6620,7 @@ func (x *Service) String() string {
 func (*Service) ProtoMessage() {}
 
 func (x *Service) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[23]
+	mi := &file_v1_panel_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6833,7 +7393,7 @@ type PublishedPort struct {
 
 func (x *PublishedPort) Reset() {
 	*x = PublishedPort{}
-	mi := &file_v1_panel_proto_msgTypes[24]
+	mi := &file_v1_panel_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6845,7 +7405,7 @@ func (x *PublishedPort) String() string {
 func (*PublishedPort) ProtoMessage() {}
 
 func (x *PublishedPort) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[24]
+	mi := &file_v1_panel_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6970,7 +7530,7 @@ type VolumeMount struct {
 
 func (x *VolumeMount) Reset() {
 	*x = VolumeMount{}
-	mi := &file_v1_panel_proto_msgTypes[25]
+	mi := &file_v1_panel_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6982,7 +7542,7 @@ func (x *VolumeMount) String() string {
 func (*VolumeMount) ProtoMessage() {}
 
 func (x *VolumeMount) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[25]
+	mi := &file_v1_panel_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7086,7 +7646,7 @@ type HealthCheck struct {
 
 func (x *HealthCheck) Reset() {
 	*x = HealthCheck{}
-	mi := &file_v1_panel_proto_msgTypes[26]
+	mi := &file_v1_panel_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7098,7 +7658,7 @@ func (x *HealthCheck) String() string {
 func (*HealthCheck) ProtoMessage() {}
 
 func (x *HealthCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[26]
+	mi := &file_v1_panel_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7287,7 +7847,7 @@ type EnvironmentVariable struct {
 
 func (x *EnvironmentVariable) Reset() {
 	*x = EnvironmentVariable{}
-	mi := &file_v1_panel_proto_msgTypes[27]
+	mi := &file_v1_panel_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7299,7 +7859,7 @@ func (x *EnvironmentVariable) String() string {
 func (*EnvironmentVariable) ProtoMessage() {}
 
 func (x *EnvironmentVariable) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[27]
+	mi := &file_v1_panel_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7517,7 +8077,7 @@ type Volume struct {
 
 func (x *Volume) Reset() {
 	*x = Volume{}
-	mi := &file_v1_panel_proto_msgTypes[28]
+	mi := &file_v1_panel_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7529,7 +8089,7 @@ func (x *Volume) String() string {
 func (*Volume) ProtoMessage() {}
 
 func (x *Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[28]
+	mi := &file_v1_panel_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7731,7 +8291,7 @@ type VolumeMountedBy struct {
 
 func (x *VolumeMountedBy) Reset() {
 	*x = VolumeMountedBy{}
-	mi := &file_v1_panel_proto_msgTypes[29]
+	mi := &file_v1_panel_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7743,7 +8303,7 @@ func (x *VolumeMountedBy) String() string {
 func (*VolumeMountedBy) ProtoMessage() {}
 
 func (x *VolumeMountedBy) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[29]
+	mi := &file_v1_panel_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7846,7 +8406,7 @@ type Host struct {
 
 func (x *Host) Reset() {
 	*x = Host{}
-	mi := &file_v1_panel_proto_msgTypes[30]
+	mi := &file_v1_panel_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7858,7 +8418,7 @@ func (x *Host) String() string {
 func (*Host) ProtoMessage() {}
 
 func (x *Host) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[30]
+	mi := &file_v1_panel_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8057,7 +8617,7 @@ type Route struct {
 
 func (x *Route) Reset() {
 	*x = Route{}
-	mi := &file_v1_panel_proto_msgTypes[31]
+	mi := &file_v1_panel_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8069,7 +8629,7 @@ func (x *Route) String() string {
 func (*Route) ProtoMessage() {}
 
 func (x *Route) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[31]
+	mi := &file_v1_panel_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8270,6 +8830,7 @@ type Operation struct {
 	xxx_hidden_ChangedPaths        []string               `protobuf:"bytes,17,rep,name=changed_paths,json=changedPaths"`
 	xxx_hidden_ChangedPathCount    uint32                 `protobuf:"varint,18,opt,name=changed_path_count,json=changedPathCount"`
 	xxx_hidden_FilesKept           bool                   `protobuf:"varint,19,opt,name=files_kept,json=filesKept"`
+	xxx_hidden_FilesOperationId    *string                `protobuf:"bytes,20,opt,name=files_operation_id,json=filesOperationId"`
 	XXX_raceDetectHookData         protoimpl.RaceDetectHookData
 	XXX_presence                   [1]uint32
 	unknownFields                  protoimpl.UnknownFields
@@ -8278,7 +8839,7 @@ type Operation struct {
 
 func (x *Operation) Reset() {
 	*x = Operation{}
-	mi := &file_v1_panel_proto_msgTypes[32]
+	mi := &file_v1_panel_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8290,7 +8851,7 @@ func (x *Operation) String() string {
 func (*Operation) ProtoMessage() {}
 
 func (x *Operation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[32]
+	mi := &file_v1_panel_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8458,19 +9019,29 @@ func (x *Operation) GetFilesKept() bool {
 	return false
 }
 
+func (x *Operation) GetFilesOperationId() string {
+	if x != nil {
+		if x.xxx_hidden_FilesOperationId != nil {
+			return *x.xxx_hidden_FilesOperationId
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *Operation) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 20)
 }
 
 func (x *Operation) SetKind(v OperationKind) {
 	x.xxx_hidden_Kind = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 20)
 }
 
 func (x *Operation) SetStatus(v OperationStatus) {
 	x.xxx_hidden_Status = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 20)
 }
 
 func (x *Operation) SetStartTime(v *timestamppb.Timestamp) {
@@ -8483,32 +9054,32 @@ func (x *Operation) SetFinishTime(v *timestamppb.Timestamp) {
 
 func (x *Operation) SetFailureMessage(v string) {
 	x.xxx_hidden_FailureMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 20)
 }
 
 func (x *Operation) SetDeployFailureReason(v DeployFailureReason) {
 	x.xxx_hidden_DeployFailureReason = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 20)
 }
 
 func (x *Operation) SetMadeCurrent(v bool) {
 	x.xxx_hidden_MadeCurrent = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 20)
 }
 
 func (x *Operation) SetService(v string) {
 	x.xxx_hidden_Service = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 20)
 }
 
 func (x *Operation) SetFailedExitCode(v int32) {
 	x.xxx_hidden_FailedExitCode = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 20)
 }
 
 func (x *Operation) SetSnapshotId(v string) {
 	x.xxx_hidden_SnapshotId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 20)
 }
 
 func (x *Operation) SetRestoredVolumes(v []string) {
@@ -8517,7 +9088,7 @@ func (x *Operation) SetRestoredVolumes(v []string) {
 
 func (x *Operation) SetUndoSnapshotId(v string) {
 	x.xxx_hidden_UndoSnapshotId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 20)
 }
 
 func (x *Operation) SetGithubCommit(v *GithubCommit) {
@@ -8526,7 +9097,7 @@ func (x *Operation) SetGithubCommit(v *GithubCommit) {
 
 func (x *Operation) SetArchiveName(v string) {
 	x.xxx_hidden_ArchiveName = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 20)
 }
 
 func (x *Operation) SetAdjustments(v []string) {
@@ -8539,12 +9110,17 @@ func (x *Operation) SetChangedPaths(v []string) {
 
 func (x *Operation) SetChangedPathCount(v uint32) {
 	x.xxx_hidden_ChangedPathCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 20)
 }
 
 func (x *Operation) SetFilesKept(v bool) {
 	x.xxx_hidden_FilesKept = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 19)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 20)
+}
+
+func (x *Operation) SetFilesOperationId(v string) {
+	x.xxx_hidden_FilesOperationId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 20)
 }
 
 func (x *Operation) HasOperationId() bool {
@@ -8659,6 +9235,13 @@ func (x *Operation) HasFilesKept() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 18)
 }
 
+func (x *Operation) HasFilesOperationId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 19)
+}
+
 func (x *Operation) ClearOperationId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_OperationId = nil
@@ -8736,6 +9319,11 @@ func (x *Operation) ClearFilesKept() {
 	x.xxx_hidden_FilesKept = false
 }
 
+func (x *Operation) ClearFilesOperationId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 19)
+	x.xxx_hidden_FilesOperationId = nil
+}
+
 type Operation_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -8782,6 +9370,10 @@ type Operation_builder struct {
 	// before the current one; of deploys that changed only /.env or x-pethost, whose files are the
 	// same, the newest has it.
 	FilesKept *bool
+	// DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+	// files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
+	// that changed only /.env or x-pethost.
+	FilesOperationId *string
 }
 
 func (b0 Operation_builder) Build() *Operation {
@@ -8789,62 +9381,66 @@ func (b0 Operation_builder) Build() *Operation {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 20)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.Kind != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 20)
 		x.xxx_hidden_Kind = *b.Kind
 	}
 	if b.Status != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 20)
 		x.xxx_hidden_Status = *b.Status
 	}
 	x.xxx_hidden_StartTime = b.StartTime
 	x.xxx_hidden_FinishTime = b.FinishTime
 	if b.FailureMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 20)
 		x.xxx_hidden_FailureMessage = b.FailureMessage
 	}
 	if b.DeployFailureReason != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 20)
 		x.xxx_hidden_DeployFailureReason = *b.DeployFailureReason
 	}
 	if b.MadeCurrent != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 20)
 		x.xxx_hidden_MadeCurrent = *b.MadeCurrent
 	}
 	if b.Service != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 20)
 		x.xxx_hidden_Service = b.Service
 	}
 	if b.FailedExitCode != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 20)
 		x.xxx_hidden_FailedExitCode = *b.FailedExitCode
 	}
 	if b.SnapshotId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 20)
 		x.xxx_hidden_SnapshotId = b.SnapshotId
 	}
 	x.xxx_hidden_RestoredVolumes = b.RestoredVolumes
 	if b.UndoSnapshotId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 20)
 		x.xxx_hidden_UndoSnapshotId = b.UndoSnapshotId
 	}
 	x.xxx_hidden_GithubCommit = b.GithubCommit
 	if b.ArchiveName != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 20)
 		x.xxx_hidden_ArchiveName = b.ArchiveName
 	}
 	x.xxx_hidden_Adjustments = b.Adjustments
 	x.xxx_hidden_ChangedPaths = b.ChangedPaths
 	if b.ChangedPathCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 20)
 		x.xxx_hidden_ChangedPathCount = *b.ChangedPathCount
 	}
 	if b.FilesKept != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 19)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 20)
 		x.xxx_hidden_FilesKept = *b.FilesKept
+	}
+	if b.FilesOperationId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 20)
+		x.xxx_hidden_FilesOperationId = b.FilesOperationId
 	}
 	return m0
 }
@@ -8863,7 +9459,7 @@ type Snapshot struct {
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_v1_panel_proto_msgTypes[33]
+	mi := &file_v1_panel_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8875,7 +9471,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[33]
+	mi := &file_v1_panel_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9010,7 +9606,7 @@ type HttpTrafficSummary struct {
 
 func (x *HttpTrafficSummary) Reset() {
 	*x = HttpTrafficSummary{}
-	mi := &file_v1_panel_proto_msgTypes[34]
+	mi := &file_v1_panel_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9022,7 +9618,7 @@ func (x *HttpTrafficSummary) String() string {
 func (*HttpTrafficSummary) ProtoMessage() {}
 
 func (x *HttpTrafficSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[34]
+	mi := &file_v1_panel_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9180,7 +9776,7 @@ type CreateProjectRequest struct {
 
 func (x *CreateProjectRequest) Reset() {
 	*x = CreateProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[35]
+	mi := &file_v1_panel_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9192,7 +9788,7 @@ func (x *CreateProjectRequest) String() string {
 func (*CreateProjectRequest) ProtoMessage() {}
 
 func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[35]
+	mi := &file_v1_panel_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9452,7 +10048,7 @@ type CreateProjectResponse struct {
 
 func (x *CreateProjectResponse) Reset() {
 	*x = CreateProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[36]
+	mi := &file_v1_panel_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9464,7 +10060,7 @@ func (x *CreateProjectResponse) String() string {
 func (*CreateProjectResponse) ProtoMessage() {}
 
 func (x *CreateProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[36]
+	mi := &file_v1_panel_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9603,7 +10199,7 @@ type DeployProjectRequest struct {
 
 func (x *DeployProjectRequest) Reset() {
 	*x = DeployProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[37]
+	mi := &file_v1_panel_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9615,7 +10211,7 @@ func (x *DeployProjectRequest) String() string {
 func (*DeployProjectRequest) ProtoMessage() {}
 
 func (x *DeployProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[37]
+	mi := &file_v1_panel_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10034,7 +10630,7 @@ func (b0 DeployProjectRequest_builder) Build() *DeployProjectRequest {
 type case_DeployProjectRequest_Version protoreflect.FieldNumber
 
 func (x case_DeployProjectRequest_Version) String() string {
-	md := file_v1_panel_proto_msgTypes[37].Descriptor()
+	md := file_v1_panel_proto_msgTypes[38].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -10086,7 +10682,7 @@ type MountVolume struct {
 
 func (x *MountVolume) Reset() {
 	*x = MountVolume{}
-	mi := &file_v1_panel_proto_msgTypes[38]
+	mi := &file_v1_panel_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10098,7 +10694,7 @@ func (x *MountVolume) String() string {
 func (*MountVolume) ProtoMessage() {}
 
 func (x *MountVolume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[38]
+	mi := &file_v1_panel_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10233,7 +10829,7 @@ type ProjectExtension struct {
 
 func (x *ProjectExtension) Reset() {
 	*x = ProjectExtension{}
-	mi := &file_v1_panel_proto_msgTypes[39]
+	mi := &file_v1_panel_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10245,7 +10841,7 @@ func (x *ProjectExtension) String() string {
 func (*ProjectExtension) ProtoMessage() {}
 
 func (x *ProjectExtension) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[39]
+	mi := &file_v1_panel_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10413,7 +11009,7 @@ type FileChange struct {
 
 func (x *FileChange) Reset() {
 	*x = FileChange{}
-	mi := &file_v1_panel_proto_msgTypes[40]
+	mi := &file_v1_panel_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10425,7 +11021,7 @@ func (x *FileChange) String() string {
 func (*FileChange) ProtoMessage() {}
 
 func (x *FileChange) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[40]
+	mi := &file_v1_panel_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10744,7 +11340,7 @@ func (b0 FileChange_builder) Build() *FileChange {
 type case_FileChange_Change protoreflect.FieldNumber
 
 func (x case_FileChange_Change) String() string {
-	md := file_v1_panel_proto_msgTypes[40].Descriptor()
+	md := file_v1_panel_proto_msgTypes[41].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -10804,7 +11400,7 @@ type DeployProjectResponse struct {
 
 func (x *DeployProjectResponse) Reset() {
 	*x = DeployProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[41]
+	mi := &file_v1_panel_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10816,7 +11412,7 @@ func (x *DeployProjectResponse) String() string {
 func (*DeployProjectResponse) ProtoMessage() {}
 
 func (x *DeployProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[41]
+	mi := &file_v1_panel_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10948,7 +11544,7 @@ type SpecViolation struct {
 
 func (x *SpecViolation) Reset() {
 	*x = SpecViolation{}
-	mi := &file_v1_panel_proto_msgTypes[42]
+	mi := &file_v1_panel_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10960,7 +11556,7 @@ func (x *SpecViolation) String() string {
 func (*SpecViolation) ProtoMessage() {}
 
 func (x *SpecViolation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[42]
+	mi := &file_v1_panel_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11093,7 +11689,7 @@ type ListCommitsRequest struct {
 
 func (x *ListCommitsRequest) Reset() {
 	*x = ListCommitsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[43]
+	mi := &file_v1_panel_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11105,7 +11701,7 @@ func (x *ListCommitsRequest) String() string {
 func (*ListCommitsRequest) ProtoMessage() {}
 
 func (x *ListCommitsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[43]
+	mi := &file_v1_panel_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11204,7 +11800,7 @@ type ListCommitsResponse struct {
 
 func (x *ListCommitsResponse) Reset() {
 	*x = ListCommitsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[44]
+	mi := &file_v1_panel_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11216,7 +11812,7 @@ func (x *ListCommitsResponse) String() string {
 func (*ListCommitsResponse) ProtoMessage() {}
 
 func (x *ListCommitsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[44]
+	mi := &file_v1_panel_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11299,7 +11895,7 @@ type BranchCommit struct {
 
 func (x *BranchCommit) Reset() {
 	*x = BranchCommit{}
-	mi := &file_v1_panel_proto_msgTypes[45]
+	mi := &file_v1_panel_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11311,7 +11907,7 @@ func (x *BranchCommit) String() string {
 func (*BranchCommit) ProtoMessage() {}
 
 func (x *BranchCommit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[45]
+	mi := &file_v1_panel_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11514,7 +12110,7 @@ type RunProjectActionRequest struct {
 
 func (x *RunProjectActionRequest) Reset() {
 	*x = RunProjectActionRequest{}
-	mi := &file_v1_panel_proto_msgTypes[46]
+	mi := &file_v1_panel_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11526,7 +12122,7 @@ func (x *RunProjectActionRequest) String() string {
 func (*RunProjectActionRequest) ProtoMessage() {}
 
 func (x *RunProjectActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[46]
+	mi := &file_v1_panel_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12067,7 +12663,7 @@ func (b0 RunProjectActionRequest_builder) Build() *RunProjectActionRequest {
 type case_RunProjectActionRequest_Action protoreflect.FieldNumber
 
 func (x case_RunProjectActionRequest_Action) String() string {
-	md := file_v1_panel_proto_msgTypes[46].Descriptor()
+	md := file_v1_panel_proto_msgTypes[47].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -12167,7 +12763,7 @@ type ServicesAction struct {
 
 func (x *ServicesAction) Reset() {
 	*x = ServicesAction{}
-	mi := &file_v1_panel_proto_msgTypes[47]
+	mi := &file_v1_panel_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12179,7 +12775,7 @@ func (x *ServicesAction) String() string {
 func (*ServicesAction) ProtoMessage() {}
 
 func (x *ServicesAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[47]
+	mi := &file_v1_panel_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12228,7 +12824,7 @@ type RecreateServiceAction struct {
 
 func (x *RecreateServiceAction) Reset() {
 	*x = RecreateServiceAction{}
-	mi := &file_v1_panel_proto_msgTypes[48]
+	mi := &file_v1_panel_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12240,7 +12836,7 @@ func (x *RecreateServiceAction) String() string {
 func (*RecreateServiceAction) ProtoMessage() {}
 
 func (x *RecreateServiceAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[48]
+	mi := &file_v1_panel_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12333,7 +12929,7 @@ type BackUpAction struct {
 
 func (x *BackUpAction) Reset() {
 	*x = BackUpAction{}
-	mi := &file_v1_panel_proto_msgTypes[49]
+	mi := &file_v1_panel_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12345,7 +12941,7 @@ func (x *BackUpAction) String() string {
 func (*BackUpAction) ProtoMessage() {}
 
 func (x *BackUpAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[49]
+	mi := &file_v1_panel_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12380,7 +12976,7 @@ type RestoreSnapshotAction struct {
 
 func (x *RestoreSnapshotAction) Reset() {
 	*x = RestoreSnapshotAction{}
-	mi := &file_v1_panel_proto_msgTypes[50]
+	mi := &file_v1_panel_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12392,7 +12988,7 @@ func (x *RestoreSnapshotAction) String() string {
 func (*RestoreSnapshotAction) ProtoMessage() {}
 
 func (x *RestoreSnapshotAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[50]
+	mi := &file_v1_panel_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12474,7 +13070,7 @@ type CancelOperationAction struct {
 
 func (x *CancelOperationAction) Reset() {
 	*x = CancelOperationAction{}
-	mi := &file_v1_panel_proto_msgTypes[51]
+	mi := &file_v1_panel_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12486,7 +13082,7 @@ func (x *CancelOperationAction) String() string {
 func (*CancelOperationAction) ProtoMessage() {}
 
 func (x *CancelOperationAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[51]
+	mi := &file_v1_panel_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12552,7 +13148,7 @@ type DeleteProjectAction struct {
 
 func (x *DeleteProjectAction) Reset() {
 	*x = DeleteProjectAction{}
-	mi := &file_v1_panel_proto_msgTypes[52]
+	mi := &file_v1_panel_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12564,7 +13160,7 @@ func (x *DeleteProjectAction) String() string {
 func (*DeleteProjectAction) ProtoMessage() {}
 
 func (x *DeleteProjectAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[52]
+	mi := &file_v1_panel_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12628,7 +13224,7 @@ type RunProjectActionResponse struct {
 
 func (x *RunProjectActionResponse) Reset() {
 	*x = RunProjectActionResponse{}
-	mi := &file_v1_panel_proto_msgTypes[53]
+	mi := &file_v1_panel_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12640,7 +13236,7 @@ func (x *RunProjectActionResponse) String() string {
 func (*RunProjectActionResponse) ProtoMessage() {}
 
 func (x *RunProjectActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[53]
+	mi := &file_v1_panel_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12733,6 +13329,2545 @@ func (b0 RunProjectActionResponse_builder) Build() *RunProjectActionResponse {
 	return m0
 }
 
+type SetProjectAlertsRequest struct {
+	state                         protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId          *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_Checks             *[]*SiteCheck          `protobuf:"bytes,2,rep,name=checks"`
+	xxx_hidden_RemoveChecks       bool                   `protobuf:"varint,3,opt,name=remove_checks,json=removeChecks"`
+	xxx_hidden_TrafficRules       *[]*TrafficRule        `protobuf:"bytes,4,rep,name=traffic_rules,json=trafficRules"`
+	xxx_hidden_RemoveTrafficRules bool                   `protobuf:"varint,5,opt,name=remove_traffic_rules,json=removeTrafficRules"`
+	xxx_hidden_Off                bool                   `protobuf:"varint,6,opt,name=off"`
+	xxx_hidden_MuteMinutes        uint32                 `protobuf:"varint,7,opt,name=mute_minutes,json=muteMinutes"`
+	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
+	XXX_presence                  [1]uint32
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *SetProjectAlertsRequest) Reset() {
+	*x = SetProjectAlertsRequest{}
+	mi := &file_v1_panel_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetProjectAlertsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetProjectAlertsRequest) ProtoMessage() {}
+
+func (x *SetProjectAlertsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SetProjectAlertsRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SetProjectAlertsRequest) GetChecks() []*SiteCheck {
+	if x != nil {
+		if x.xxx_hidden_Checks != nil {
+			return *x.xxx_hidden_Checks
+		}
+	}
+	return nil
+}
+
+func (x *SetProjectAlertsRequest) GetRemoveChecks() bool {
+	if x != nil {
+		return x.xxx_hidden_RemoveChecks
+	}
+	return false
+}
+
+func (x *SetProjectAlertsRequest) GetTrafficRules() []*TrafficRule {
+	if x != nil {
+		if x.xxx_hidden_TrafficRules != nil {
+			return *x.xxx_hidden_TrafficRules
+		}
+	}
+	return nil
+}
+
+func (x *SetProjectAlertsRequest) GetRemoveTrafficRules() bool {
+	if x != nil {
+		return x.xxx_hidden_RemoveTrafficRules
+	}
+	return false
+}
+
+func (x *SetProjectAlertsRequest) GetOff() bool {
+	if x != nil {
+		return x.xxx_hidden_Off
+	}
+	return false
+}
+
+func (x *SetProjectAlertsRequest) GetMuteMinutes() uint32 {
+	if x != nil {
+		return x.xxx_hidden_MuteMinutes
+	}
+	return 0
+}
+
+func (x *SetProjectAlertsRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+}
+
+func (x *SetProjectAlertsRequest) SetChecks(v []*SiteCheck) {
+	x.xxx_hidden_Checks = &v
+}
+
+func (x *SetProjectAlertsRequest) SetRemoveChecks(v bool) {
+	x.xxx_hidden_RemoveChecks = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+}
+
+func (x *SetProjectAlertsRequest) SetTrafficRules(v []*TrafficRule) {
+	x.xxx_hidden_TrafficRules = &v
+}
+
+func (x *SetProjectAlertsRequest) SetRemoveTrafficRules(v bool) {
+	x.xxx_hidden_RemoveTrafficRules = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+}
+
+func (x *SetProjectAlertsRequest) SetOff(v bool) {
+	x.xxx_hidden_Off = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *SetProjectAlertsRequest) SetMuteMinutes(v uint32) {
+	x.xxx_hidden_MuteMinutes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+}
+
+func (x *SetProjectAlertsRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *SetProjectAlertsRequest) HasRemoveChecks() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *SetProjectAlertsRequest) HasRemoveTrafficRules() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *SetProjectAlertsRequest) HasOff() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *SetProjectAlertsRequest) HasMuteMinutes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *SetProjectAlertsRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *SetProjectAlertsRequest) ClearRemoveChecks() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_RemoveChecks = false
+}
+
+func (x *SetProjectAlertsRequest) ClearRemoveTrafficRules() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_RemoveTrafficRules = false
+}
+
+func (x *SetProjectAlertsRequest) ClearOff() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_Off = false
+}
+
+func (x *SetProjectAlertsRequest) ClearMuteMinutes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_MuteMinutes = 0
+}
+
+type SetProjectAlertsRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId          *string
+	Checks             []*SiteCheck
+	RemoveChecks       *bool
+	TrafficRules       []*TrafficRule
+	RemoveTrafficRules *bool
+	// True = incidents are recorded, nothing is sent. Absent = stays.
+	Off *bool
+	// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+	MuteMinutes *uint32
+}
+
+func (b0 SetProjectAlertsRequest_builder) Build() *SetProjectAlertsRequest {
+	m0 := &SetProjectAlertsRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	x.xxx_hidden_Checks = &b.Checks
+	if b.RemoveChecks != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		x.xxx_hidden_RemoveChecks = *b.RemoveChecks
+	}
+	x.xxx_hidden_TrafficRules = &b.TrafficRules
+	if b.RemoveTrafficRules != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		x.xxx_hidden_RemoveTrafficRules = *b.RemoveTrafficRules
+	}
+	if b.Off != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		x.xxx_hidden_Off = *b.Off
+	}
+	if b.MuteMinutes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		x.xxx_hidden_MuteMinutes = *b.MuteMinutes
+	}
+	return m0
+}
+
+type SetProjectAlertsResponse struct {
+	state             protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Alerts *ProjectAlerts         `protobuf:"bytes,1,opt,name=alerts"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *SetProjectAlertsResponse) Reset() {
+	*x = SetProjectAlertsResponse{}
+	mi := &file_v1_panel_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetProjectAlertsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetProjectAlertsResponse) ProtoMessage() {}
+
+func (x *SetProjectAlertsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SetProjectAlertsResponse) GetAlerts() *ProjectAlerts {
+	if x != nil {
+		return x.xxx_hidden_Alerts
+	}
+	return nil
+}
+
+func (x *SetProjectAlertsResponse) SetAlerts(v *ProjectAlerts) {
+	x.xxx_hidden_Alerts = v
+}
+
+func (x *SetProjectAlertsResponse) HasAlerts() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Alerts != nil
+}
+
+func (x *SetProjectAlertsResponse) ClearAlerts() {
+	x.xxx_hidden_Alerts = nil
+}
+
+type SetProjectAlertsResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Alerts *ProjectAlerts
+}
+
+func (b0 SetProjectAlertsResponse_builder) Build() *SetProjectAlertsResponse {
+	m0 := &SetProjectAlertsResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Alerts = b.Alerts
+	return m0
+}
+
+// An address of the project the machine opens every minute through its proxy, from inside the
+// machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+// must_contain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+type SiteCheck struct {
+	state                   protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Host         *string                `protobuf:"bytes,1,opt,name=host"`
+	xxx_hidden_Path         *string                `protobuf:"bytes,2,opt,name=path"`
+	xxx_hidden_ExpectStatus uint32                 `protobuf:"varint,3,opt,name=expect_status,json=expectStatus"`
+	xxx_hidden_MustContain  *string                `protobuf:"bytes,4,opt,name=must_contain,json=mustContain"`
+	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
+	XXX_presence            [1]uint32
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *SiteCheck) Reset() {
+	*x = SiteCheck{}
+	mi := &file_v1_panel_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SiteCheck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SiteCheck) ProtoMessage() {}
+
+func (x *SiteCheck) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SiteCheck) GetHost() string {
+	if x != nil {
+		if x.xxx_hidden_Host != nil {
+			return *x.xxx_hidden_Host
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SiteCheck) GetPath() string {
+	if x != nil {
+		if x.xxx_hidden_Path != nil {
+			return *x.xxx_hidden_Path
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SiteCheck) GetExpectStatus() uint32 {
+	if x != nil {
+		return x.xxx_hidden_ExpectStatus
+	}
+	return 0
+}
+
+func (x *SiteCheck) GetMustContain() string {
+	if x != nil {
+		if x.xxx_hidden_MustContain != nil {
+			return *x.xxx_hidden_MustContain
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SiteCheck) SetHost(v string) {
+	x.xxx_hidden_Host = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+}
+
+func (x *SiteCheck) SetPath(v string) {
+	x.xxx_hidden_Path = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *SiteCheck) SetExpectStatus(v uint32) {
+	x.xxx_hidden_ExpectStatus = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *SiteCheck) SetMustContain(v string) {
+	x.xxx_hidden_MustContain = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+}
+
+func (x *SiteCheck) HasHost() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *SiteCheck) HasPath() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *SiteCheck) HasExpectStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *SiteCheck) HasMustContain() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *SiteCheck) ClearHost() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Host = nil
+}
+
+func (x *SiteCheck) ClearPath() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Path = nil
+}
+
+func (x *SiteCheck) ClearExpectStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_ExpectStatus = 0
+}
+
+func (x *SiteCheck) ClearMustContain() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_MustContain = nil
+}
+
+type SiteCheck_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Host *string
+	Path *string
+	// 100-599. 0 = any status below 500 is up: 401, 404 and redirects too.
+	ExpectStatus *uint32
+	MustContain  *string
+}
+
+func (b0 SiteCheck_builder) Build() *SiteCheck {
+	m0 := &SiteCheck{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Host != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		x.xxx_hidden_Host = b.Host
+	}
+	if b.Path != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_Path = b.Path
+	}
+	if b.ExpectStatus != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_ExpectStatus = *b.ExpectStatus
+	}
+	if b.MustContain != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_MustContain = b.MustContain
+	}
+	return m0
+}
+
+// Fires when `metric`, over the last window_minutes of the requests `filter` selects, reaches
+// `threshold` 2 minutes in a row; clears after 3 below.
+type TrafficRule struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Metric        TrafficMetric          `protobuf:"varint,1,opt,name=metric,enum=pethost.panel.v1.TrafficMetric"`
+	xxx_hidden_Filter        *HttpTrafficFilter     `protobuf:"bytes,2,opt,name=filter"`
+	xxx_hidden_Threshold     float64                `protobuf:"fixed64,3,opt,name=threshold"`
+	xxx_hidden_WindowMinutes uint32                 `protobuf:"varint,4,opt,name=window_minutes,json=windowMinutes"`
+	xxx_hidden_MinRequests   uint32                 `protobuf:"varint,5,opt,name=min_requests,json=minRequests"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *TrafficRule) Reset() {
+	*x = TrafficRule{}
+	mi := &file_v1_panel_proto_msgTypes[58]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrafficRule) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrafficRule) ProtoMessage() {}
+
+func (x *TrafficRule) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[58]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *TrafficRule) GetMetric() TrafficMetric {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 0) {
+			return x.xxx_hidden_Metric
+		}
+	}
+	return TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED
+}
+
+func (x *TrafficRule) GetFilter() *HttpTrafficFilter {
+	if x != nil {
+		return x.xxx_hidden_Filter
+	}
+	return nil
+}
+
+func (x *TrafficRule) GetThreshold() float64 {
+	if x != nil {
+		return x.xxx_hidden_Threshold
+	}
+	return 0
+}
+
+func (x *TrafficRule) GetWindowMinutes() uint32 {
+	if x != nil {
+		return x.xxx_hidden_WindowMinutes
+	}
+	return 0
+}
+
+func (x *TrafficRule) GetMinRequests() uint32 {
+	if x != nil {
+		return x.xxx_hidden_MinRequests
+	}
+	return 0
+}
+
+func (x *TrafficRule) SetMetric(v TrafficMetric) {
+	x.xxx_hidden_Metric = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
+}
+
+func (x *TrafficRule) SetFilter(v *HttpTrafficFilter) {
+	x.xxx_hidden_Filter = v
+}
+
+func (x *TrafficRule) SetThreshold(v float64) {
+	x.xxx_hidden_Threshold = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+}
+
+func (x *TrafficRule) SetWindowMinutes(v uint32) {
+	x.xxx_hidden_WindowMinutes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+}
+
+func (x *TrafficRule) SetMinRequests(v uint32) {
+	x.xxx_hidden_MinRequests = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+}
+
+func (x *TrafficRule) HasMetric() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *TrafficRule) HasFilter() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Filter != nil
+}
+
+func (x *TrafficRule) HasThreshold() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *TrafficRule) HasWindowMinutes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *TrafficRule) HasMinRequests() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *TrafficRule) ClearMetric() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Metric = TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED
+}
+
+func (x *TrafficRule) ClearFilter() {
+	x.xxx_hidden_Filter = nil
+}
+
+func (x *TrafficRule) ClearThreshold() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Threshold = 0
+}
+
+func (x *TrafficRule) ClearWindowMinutes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_WindowMinutes = 0
+}
+
+func (x *TrafficRule) ClearMinRequests() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_MinRequests = 0
+}
+
+type TrafficRule_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Metric        *TrafficMetric
+	Filter        *HttpTrafficFilter
+	Threshold     *float64
+	WindowMinutes *uint32
+	// Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20.
+	MinRequests *uint32
+}
+
+func (b0 TrafficRule_builder) Build() *TrafficRule {
+	m0 := &TrafficRule{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Metric != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
+		x.xxx_hidden_Metric = *b.Metric
+	}
+	x.xxx_hidden_Filter = b.Filter
+	if b.Threshold != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		x.xxx_hidden_Threshold = *b.Threshold
+	}
+	if b.WindowMinutes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
+		x.xxx_hidden_WindowMinutes = *b.WindowMinutes
+	}
+	if b.MinRequests != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_MinRequests = *b.MinRequests
+	}
+	return m0
+}
+
+// What Pethost watches on a project (SetProjectAlerts), and how each part stands now. Service
+// crashes, running out of memory, failed healthchecks, and failed backups, restores and
+// auto-deploys are always watched.
+type ProjectAlerts struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Checks        *[]*SiteCheckState     `protobuf:"bytes,1,rep,name=checks"`
+	xxx_hidden_TrafficRules  *[]*TrafficRuleState   `protobuf:"bytes,2,rep,name=traffic_rules,json=trafficRules"`
+	xxx_hidden_Off           bool                   `protobuf:"varint,3,opt,name=off"`
+	xxx_hidden_MuteEndTime   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=mute_end_time,json=muteEndTime"`
+	xxx_hidden_UptimePercent float64                `protobuf:"fixed64,5,opt,name=uptime_percent,json=uptimePercent"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *ProjectAlerts) Reset() {
+	*x = ProjectAlerts{}
+	mi := &file_v1_panel_proto_msgTypes[59]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectAlerts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectAlerts) ProtoMessage() {}
+
+func (x *ProjectAlerts) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[59]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ProjectAlerts) GetChecks() []*SiteCheckState {
+	if x != nil {
+		if x.xxx_hidden_Checks != nil {
+			return *x.xxx_hidden_Checks
+		}
+	}
+	return nil
+}
+
+func (x *ProjectAlerts) GetTrafficRules() []*TrafficRuleState {
+	if x != nil {
+		if x.xxx_hidden_TrafficRules != nil {
+			return *x.xxx_hidden_TrafficRules
+		}
+	}
+	return nil
+}
+
+func (x *ProjectAlerts) GetOff() bool {
+	if x != nil {
+		return x.xxx_hidden_Off
+	}
+	return false
+}
+
+func (x *ProjectAlerts) GetMuteEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_MuteEndTime
+	}
+	return nil
+}
+
+func (x *ProjectAlerts) GetUptimePercent() float64 {
+	if x != nil {
+		return x.xxx_hidden_UptimePercent
+	}
+	return 0
+}
+
+func (x *ProjectAlerts) SetChecks(v []*SiteCheckState) {
+	x.xxx_hidden_Checks = &v
+}
+
+func (x *ProjectAlerts) SetTrafficRules(v []*TrafficRuleState) {
+	x.xxx_hidden_TrafficRules = &v
+}
+
+func (x *ProjectAlerts) SetOff(v bool) {
+	x.xxx_hidden_Off = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+}
+
+func (x *ProjectAlerts) SetMuteEndTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_MuteEndTime = v
+}
+
+func (x *ProjectAlerts) SetUptimePercent(v float64) {
+	x.xxx_hidden_UptimePercent = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+}
+
+func (x *ProjectAlerts) HasOff() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ProjectAlerts) HasMuteEndTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_MuteEndTime != nil
+}
+
+func (x *ProjectAlerts) HasUptimePercent() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *ProjectAlerts) ClearOff() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Off = false
+}
+
+func (x *ProjectAlerts) ClearMuteEndTime() {
+	x.xxx_hidden_MuteEndTime = nil
+}
+
+func (x *ProjectAlerts) ClearUptimePercent() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_UptimePercent = 0
+}
+
+type ProjectAlerts_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// Until set: the project's URL at "/" (machine_default); none without a route.
+	Checks []*SiteCheckState
+	// Until set: 10 or more 5xx in 5 minutes, of every request (machine_default).
+	TrafficRules []*TrafficRuleState
+	Off          *bool
+	MuteEndTime  *timestamppb.Timestamp
+	// Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
+	// no check ran.
+	UptimePercent *float64
+}
+
+func (b0 ProjectAlerts_builder) Build() *ProjectAlerts {
+	m0 := &ProjectAlerts{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Checks = &b.Checks
+	x.xxx_hidden_TrafficRules = &b.TrafficRules
+	if b.Off != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		x.xxx_hidden_Off = *b.Off
+	}
+	x.xxx_hidden_MuteEndTime = b.MuteEndTime
+	if b.UptimePercent != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_UptimePercent = *b.UptimePercent
+	}
+	return m0
+}
+
+type SiteCheckState struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Check          *SiteCheck             `protobuf:"bytes,1,opt,name=check"`
+	xxx_hidden_MachineDefault bool                   `protobuf:"varint,2,opt,name=machine_default,json=machineDefault"`
+	xxx_hidden_Status         AlertStatus            `protobuf:"varint,3,opt,name=status,enum=pethost.panel.v1.AlertStatus"`
+	xxx_hidden_LastResult     *SiteCheckResult       `protobuf:"bytes,4,opt,name=last_result,json=lastResult"`
+	xxx_hidden_IncidentId     *string                `protobuf:"bytes,5,opt,name=incident_id,json=incidentId"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *SiteCheckState) Reset() {
+	*x = SiteCheckState{}
+	mi := &file_v1_panel_proto_msgTypes[60]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SiteCheckState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SiteCheckState) ProtoMessage() {}
+
+func (x *SiteCheckState) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[60]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SiteCheckState) GetCheck() *SiteCheck {
+	if x != nil {
+		return x.xxx_hidden_Check
+	}
+	return nil
+}
+
+func (x *SiteCheckState) GetMachineDefault() bool {
+	if x != nil {
+		return x.xxx_hidden_MachineDefault
+	}
+	return false
+}
+
+func (x *SiteCheckState) GetStatus() AlertStatus {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 2) {
+			return x.xxx_hidden_Status
+		}
+	}
+	return AlertStatus_ALERT_STATUS_UNSPECIFIED
+}
+
+func (x *SiteCheckState) GetLastResult() *SiteCheckResult {
+	if x != nil {
+		return x.xxx_hidden_LastResult
+	}
+	return nil
+}
+
+func (x *SiteCheckState) GetIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentId != nil {
+			return *x.xxx_hidden_IncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SiteCheckState) SetCheck(v *SiteCheck) {
+	x.xxx_hidden_Check = v
+}
+
+func (x *SiteCheckState) SetMachineDefault(v bool) {
+	x.xxx_hidden_MachineDefault = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
+}
+
+func (x *SiteCheckState) SetStatus(v AlertStatus) {
+	x.xxx_hidden_Status = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+}
+
+func (x *SiteCheckState) SetLastResult(v *SiteCheckResult) {
+	x.xxx_hidden_LastResult = v
+}
+
+func (x *SiteCheckState) SetIncidentId(v string) {
+	x.xxx_hidden_IncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+}
+
+func (x *SiteCheckState) HasCheck() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Check != nil
+}
+
+func (x *SiteCheckState) HasMachineDefault() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *SiteCheckState) HasStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *SiteCheckState) HasLastResult() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_LastResult != nil
+}
+
+func (x *SiteCheckState) HasIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *SiteCheckState) ClearCheck() {
+	x.xxx_hidden_Check = nil
+}
+
+func (x *SiteCheckState) ClearMachineDefault() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_MachineDefault = false
+}
+
+func (x *SiteCheckState) ClearStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Status = AlertStatus_ALERT_STATUS_UNSPECIFIED
+}
+
+func (x *SiteCheckState) ClearLastResult() {
+	x.xxx_hidden_LastResult = nil
+}
+
+func (x *SiteCheckState) ClearIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_IncidentId = nil
+}
+
+type SiteCheckState_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Check          *SiteCheck
+	MachineDefault *bool
+	Status         *AlertStatus
+	LastResult     *SiteCheckResult
+	IncidentId     *string
+}
+
+func (b0 SiteCheckState_builder) Build() *SiteCheckState {
+	m0 := &SiteCheckState{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Check = b.Check
+	if b.MachineDefault != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		x.xxx_hidden_MachineDefault = *b.MachineDefault
+	}
+	if b.Status != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		x.xxx_hidden_Status = *b.Status
+	}
+	x.xxx_hidden_LastResult = b.LastResult
+	if b.IncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_IncidentId = b.IncidentId
+	}
+	return m0
+}
+
+type SiteCheckResult struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_CheckTime      *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=check_time,json=checkTime"`
+	xxx_hidden_Status         uint32                 `protobuf:"varint,2,opt,name=status"`
+	xxx_hidden_DurationMs     uint32                 `protobuf:"varint,3,opt,name=duration_ms,json=durationMs"`
+	xxx_hidden_FailureMessage *string                `protobuf:"bytes,4,opt,name=failure_message,json=failureMessage"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *SiteCheckResult) Reset() {
+	*x = SiteCheckResult{}
+	mi := &file_v1_panel_proto_msgTypes[61]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SiteCheckResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SiteCheckResult) ProtoMessage() {}
+
+func (x *SiteCheckResult) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[61]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SiteCheckResult) GetCheckTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_CheckTime
+	}
+	return nil
+}
+
+func (x *SiteCheckResult) GetStatus() uint32 {
+	if x != nil {
+		return x.xxx_hidden_Status
+	}
+	return 0
+}
+
+func (x *SiteCheckResult) GetDurationMs() uint32 {
+	if x != nil {
+		return x.xxx_hidden_DurationMs
+	}
+	return 0
+}
+
+func (x *SiteCheckResult) GetFailureMessage() string {
+	if x != nil {
+		if x.xxx_hidden_FailureMessage != nil {
+			return *x.xxx_hidden_FailureMessage
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *SiteCheckResult) SetCheckTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_CheckTime = v
+}
+
+func (x *SiteCheckResult) SetStatus(v uint32) {
+	x.xxx_hidden_Status = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *SiteCheckResult) SetDurationMs(v uint32) {
+	x.xxx_hidden_DurationMs = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *SiteCheckResult) SetFailureMessage(v string) {
+	x.xxx_hidden_FailureMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+}
+
+func (x *SiteCheckResult) HasCheckTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_CheckTime != nil
+}
+
+func (x *SiteCheckResult) HasStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *SiteCheckResult) HasDurationMs() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *SiteCheckResult) HasFailureMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *SiteCheckResult) ClearCheckTime() {
+	x.xxx_hidden_CheckTime = nil
+}
+
+func (x *SiteCheckResult) ClearStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Status = 0
+}
+
+func (x *SiteCheckResult) ClearDurationMs() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_DurationMs = 0
+}
+
+func (x *SiteCheckResult) ClearFailureMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_FailureMessage = nil
+}
+
+type SiteCheckResult_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	CheckTime  *timestamppb.Timestamp
+	Status     *uint32
+	DurationMs *uint32
+	// E.g. "connection refused", "status 502", "the text is missing". Empty = up.
+	FailureMessage *string
+}
+
+func (b0 SiteCheckResult_builder) Build() *SiteCheckResult {
+	m0 := &SiteCheckResult{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_CheckTime = b.CheckTime
+	if b.Status != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_Status = *b.Status
+	}
+	if b.DurationMs != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_DurationMs = *b.DurationMs
+	}
+	if b.FailureMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_FailureMessage = b.FailureMessage
+	}
+	return m0
+}
+
+type TrafficRuleState struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Rule           *TrafficRule           `protobuf:"bytes,1,opt,name=rule"`
+	xxx_hidden_MachineDefault bool                   `protobuf:"varint,2,opt,name=machine_default,json=machineDefault"`
+	xxx_hidden_Status         AlertStatus            `protobuf:"varint,3,opt,name=status,enum=pethost.panel.v1.AlertStatus"`
+	xxx_hidden_Value          float64                `protobuf:"fixed64,4,opt,name=value"`
+	xxx_hidden_RequestCount   uint64                 `protobuf:"varint,5,opt,name=request_count,json=requestCount"`
+	xxx_hidden_IncidentId     *string                `protobuf:"bytes,6,opt,name=incident_id,json=incidentId"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *TrafficRuleState) Reset() {
+	*x = TrafficRuleState{}
+	mi := &file_v1_panel_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrafficRuleState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrafficRuleState) ProtoMessage() {}
+
+func (x *TrafficRuleState) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *TrafficRuleState) GetRule() *TrafficRule {
+	if x != nil {
+		return x.xxx_hidden_Rule
+	}
+	return nil
+}
+
+func (x *TrafficRuleState) GetMachineDefault() bool {
+	if x != nil {
+		return x.xxx_hidden_MachineDefault
+	}
+	return false
+}
+
+func (x *TrafficRuleState) GetStatus() AlertStatus {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 2) {
+			return x.xxx_hidden_Status
+		}
+	}
+	return AlertStatus_ALERT_STATUS_UNSPECIFIED
+}
+
+func (x *TrafficRuleState) GetValue() float64 {
+	if x != nil {
+		return x.xxx_hidden_Value
+	}
+	return 0
+}
+
+func (x *TrafficRuleState) GetRequestCount() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RequestCount
+	}
+	return 0
+}
+
+func (x *TrafficRuleState) GetIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentId != nil {
+			return *x.xxx_hidden_IncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *TrafficRuleState) SetRule(v *TrafficRule) {
+	x.xxx_hidden_Rule = v
+}
+
+func (x *TrafficRuleState) SetMachineDefault(v bool) {
+	x.xxx_hidden_MachineDefault = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+}
+
+func (x *TrafficRuleState) SetStatus(v AlertStatus) {
+	x.xxx_hidden_Status = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+}
+
+func (x *TrafficRuleState) SetValue(v float64) {
+	x.xxx_hidden_Value = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+}
+
+func (x *TrafficRuleState) SetRequestCount(v uint64) {
+	x.xxx_hidden_RequestCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *TrafficRuleState) SetIncidentId(v string) {
+	x.xxx_hidden_IncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+}
+
+func (x *TrafficRuleState) HasRule() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Rule != nil
+}
+
+func (x *TrafficRuleState) HasMachineDefault() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *TrafficRuleState) HasStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *TrafficRuleState) HasValue() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *TrafficRuleState) HasRequestCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *TrafficRuleState) HasIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *TrafficRuleState) ClearRule() {
+	x.xxx_hidden_Rule = nil
+}
+
+func (x *TrafficRuleState) ClearMachineDefault() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_MachineDefault = false
+}
+
+func (x *TrafficRuleState) ClearStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Status = AlertStatus_ALERT_STATUS_UNSPECIFIED
+}
+
+func (x *TrafficRuleState) ClearValue() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Value = 0
+}
+
+func (x *TrafficRuleState) ClearRequestCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_RequestCount = 0
+}
+
+func (x *TrafficRuleState) ClearIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_IncidentId = nil
+}
+
+type TrafficRuleState_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Rule           *TrafficRule
+	MachineDefault *bool
+	Status         *AlertStatus
+	Value          *float64
+	RequestCount   *uint64
+	IncidentId     *string
+}
+
+func (b0 TrafficRuleState_builder) Build() *TrafficRuleState {
+	m0 := &TrafficRuleState{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Rule = b.Rule
+	if b.MachineDefault != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		x.xxx_hidden_MachineDefault = *b.MachineDefault
+	}
+	if b.Status != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
+		x.xxx_hidden_Status = *b.Status
+	}
+	if b.Value != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		x.xxx_hidden_Value = *b.Value
+	}
+	if b.RequestCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		x.xxx_hidden_RequestCount = *b.RequestCount
+	}
+	if b.IncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_IncidentId = b.IncidentId
+	}
+	return m0
+}
+
+// A period during which something of a project needed attention, from its confirmation to its
+// end.
+type Incident struct {
+	state                            protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_IncidentId            *string                `protobuf:"bytes,1,opt,name=incident_id,json=incidentId"`
+	xxx_hidden_Kind                  ProjectProblemKind     `protobuf:"varint,2,opt,name=kind,enum=pethost.panel.v1.ProjectProblemKind"`
+	xxx_hidden_Service               *string                `protobuf:"bytes,3,opt,name=service"`
+	xxx_hidden_Check                 *SiteCheck             `protobuf:"bytes,4,opt,name=check"`
+	xxx_hidden_TrafficRule           *TrafficRule           `protobuf:"bytes,5,opt,name=traffic_rule,json=trafficRule"`
+	xxx_hidden_OperationId           *string                `protobuf:"bytes,6,opt,name=operation_id,json=operationId"`
+	xxx_hidden_OpenTime              *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=open_time,json=openTime"`
+	xxx_hidden_ResolveTime           *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=resolve_time,json=resolveTime"`
+	xxx_hidden_Value                 float64                `protobuf:"fixed64,9,opt,name=value"`
+	xxx_hidden_RequestCount          uint64                 `protobuf:"varint,10,opt,name=request_count,json=requestCount"`
+	xxx_hidden_AfterOperationId      *string                `protobuf:"bytes,11,opt,name=after_operation_id,json=afterOperationId"`
+	xxx_hidden_AfterOperationEndTime *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=after_operation_end_time,json=afterOperationEndTime"`
+	xxx_hidden_JoinedIncidentId      *string                `protobuf:"bytes,13,opt,name=joined_incident_id,json=joinedIncidentId"`
+	xxx_hidden_QuietReason           IncidentQuietReason    `protobuf:"varint,14,opt,name=quiet_reason,json=quietReason,enum=pethost.panel.v1.IncidentQuietReason"`
+	xxx_hidden_Flapping              bool                   `protobuf:"varint,15,opt,name=flapping"`
+	xxx_hidden_IncidentMessage       *string                `protobuf:"bytes,16,opt,name=incident_message,json=incidentMessage"`
+	xxx_hidden_Evidence              *IncidentEvidence      `protobuf:"bytes,17,opt,name=evidence"`
+	XXX_raceDetectHookData           protoimpl.RaceDetectHookData
+	XXX_presence                     [1]uint32
+	unknownFields                    protoimpl.UnknownFields
+	sizeCache                        protoimpl.SizeCache
+}
+
+func (x *Incident) Reset() {
+	*x = Incident{}
+	mi := &file_v1_panel_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Incident) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Incident) ProtoMessage() {}
+
+func (x *Incident) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *Incident) GetIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentId != nil {
+			return *x.xxx_hidden_IncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetKind() ProjectProblemKind {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 1) {
+			return x.xxx_hidden_Kind
+		}
+	}
+	return ProjectProblemKind_PROJECT_PROBLEM_KIND_UNSPECIFIED
+}
+
+func (x *Incident) GetService() string {
+	if x != nil {
+		if x.xxx_hidden_Service != nil {
+			return *x.xxx_hidden_Service
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetCheck() *SiteCheck {
+	if x != nil {
+		return x.xxx_hidden_Check
+	}
+	return nil
+}
+
+func (x *Incident) GetTrafficRule() *TrafficRule {
+	if x != nil {
+		return x.xxx_hidden_TrafficRule
+	}
+	return nil
+}
+
+func (x *Incident) GetOperationId() string {
+	if x != nil {
+		if x.xxx_hidden_OperationId != nil {
+			return *x.xxx_hidden_OperationId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetOpenTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_OpenTime
+	}
+	return nil
+}
+
+func (x *Incident) GetResolveTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_ResolveTime
+	}
+	return nil
+}
+
+func (x *Incident) GetValue() float64 {
+	if x != nil {
+		return x.xxx_hidden_Value
+	}
+	return 0
+}
+
+func (x *Incident) GetRequestCount() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RequestCount
+	}
+	return 0
+}
+
+func (x *Incident) GetAfterOperationId() string {
+	if x != nil {
+		if x.xxx_hidden_AfterOperationId != nil {
+			return *x.xxx_hidden_AfterOperationId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetAfterOperationEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_AfterOperationEndTime
+	}
+	return nil
+}
+
+func (x *Incident) GetJoinedIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_JoinedIncidentId != nil {
+			return *x.xxx_hidden_JoinedIncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetQuietReason() IncidentQuietReason {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 13) {
+			return x.xxx_hidden_QuietReason
+		}
+	}
+	return IncidentQuietReason_INCIDENT_QUIET_REASON_UNSPECIFIED
+}
+
+func (x *Incident) GetFlapping() bool {
+	if x != nil {
+		return x.xxx_hidden_Flapping
+	}
+	return false
+}
+
+func (x *Incident) GetIncidentMessage() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentMessage != nil {
+			return *x.xxx_hidden_IncidentMessage
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Incident) GetEvidence() *IncidentEvidence {
+	if x != nil {
+		return x.xxx_hidden_Evidence
+	}
+	return nil
+}
+
+func (x *Incident) SetIncidentId(v string) {
+	x.xxx_hidden_IncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 17)
+}
+
+func (x *Incident) SetKind(v ProjectProblemKind) {
+	x.xxx_hidden_Kind = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 17)
+}
+
+func (x *Incident) SetService(v string) {
+	x.xxx_hidden_Service = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 17)
+}
+
+func (x *Incident) SetCheck(v *SiteCheck) {
+	x.xxx_hidden_Check = v
+}
+
+func (x *Incident) SetTrafficRule(v *TrafficRule) {
+	x.xxx_hidden_TrafficRule = v
+}
+
+func (x *Incident) SetOperationId(v string) {
+	x.xxx_hidden_OperationId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 17)
+}
+
+func (x *Incident) SetOpenTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_OpenTime = v
+}
+
+func (x *Incident) SetResolveTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_ResolveTime = v
+}
+
+func (x *Incident) SetValue(v float64) {
+	x.xxx_hidden_Value = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 17)
+}
+
+func (x *Incident) SetRequestCount(v uint64) {
+	x.xxx_hidden_RequestCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 17)
+}
+
+func (x *Incident) SetAfterOperationId(v string) {
+	x.xxx_hidden_AfterOperationId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 17)
+}
+
+func (x *Incident) SetAfterOperationEndTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_AfterOperationEndTime = v
+}
+
+func (x *Incident) SetJoinedIncidentId(v string) {
+	x.xxx_hidden_JoinedIncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 17)
+}
+
+func (x *Incident) SetQuietReason(v IncidentQuietReason) {
+	x.xxx_hidden_QuietReason = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 17)
+}
+
+func (x *Incident) SetFlapping(v bool) {
+	x.xxx_hidden_Flapping = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 17)
+}
+
+func (x *Incident) SetIncidentMessage(v string) {
+	x.xxx_hidden_IncidentMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 17)
+}
+
+func (x *Incident) SetEvidence(v *IncidentEvidence) {
+	x.xxx_hidden_Evidence = v
+}
+
+func (x *Incident) HasIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *Incident) HasKind() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *Incident) HasService() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *Incident) HasCheck() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Check != nil
+}
+
+func (x *Incident) HasTrafficRule() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_TrafficRule != nil
+}
+
+func (x *Incident) HasOperationId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *Incident) HasOpenTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_OpenTime != nil
+}
+
+func (x *Incident) HasResolveTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_ResolveTime != nil
+}
+
+func (x *Incident) HasValue() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
+func (x *Incident) HasRequestCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
+func (x *Incident) HasAfterOperationId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+}
+
+func (x *Incident) HasAfterOperationEndTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_AfterOperationEndTime != nil
+}
+
+func (x *Incident) HasJoinedIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+}
+
+func (x *Incident) HasQuietReason() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
+}
+
+func (x *Incident) HasFlapping() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
+}
+
+func (x *Incident) HasIncidentMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 15)
+}
+
+func (x *Incident) HasEvidence() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Evidence != nil
+}
+
+func (x *Incident) ClearIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_IncidentId = nil
+}
+
+func (x *Incident) ClearKind() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Kind = ProjectProblemKind_PROJECT_PROBLEM_KIND_UNSPECIFIED
+}
+
+func (x *Incident) ClearService() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Service = nil
+}
+
+func (x *Incident) ClearCheck() {
+	x.xxx_hidden_Check = nil
+}
+
+func (x *Incident) ClearTrafficRule() {
+	x.xxx_hidden_TrafficRule = nil
+}
+
+func (x *Incident) ClearOperationId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_OperationId = nil
+}
+
+func (x *Incident) ClearOpenTime() {
+	x.xxx_hidden_OpenTime = nil
+}
+
+func (x *Incident) ClearResolveTime() {
+	x.xxx_hidden_ResolveTime = nil
+}
+
+func (x *Incident) ClearValue() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_Value = 0
+}
+
+func (x *Incident) ClearRequestCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_RequestCount = 0
+}
+
+func (x *Incident) ClearAfterOperationId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	x.xxx_hidden_AfterOperationId = nil
+}
+
+func (x *Incident) ClearAfterOperationEndTime() {
+	x.xxx_hidden_AfterOperationEndTime = nil
+}
+
+func (x *Incident) ClearJoinedIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
+	x.xxx_hidden_JoinedIncidentId = nil
+}
+
+func (x *Incident) ClearQuietReason() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
+	x.xxx_hidden_QuietReason = IncidentQuietReason_INCIDENT_QUIET_REASON_UNSPECIFIED
+}
+
+func (x *Incident) ClearFlapping() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
+	x.xxx_hidden_Flapping = false
+}
+
+func (x *Incident) ClearIncidentMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 15)
+	x.xxx_hidden_IncidentMessage = nil
+}
+
+func (x *Incident) ClearEvidence() {
+	x.xxx_hidden_Evidence = nil
+}
+
+type Incident_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	IncidentId  *string
+	Kind        *ProjectProblemKind
+	Service     *string
+	Check       *SiteCheck
+	TrafficRule *TrafficRule
+	OperationId *string
+	OpenTime    *timestamppb.Timestamp
+	// When it and every incident joined to it cleared. Absent = open.
+	ResolveTime  *timestamppb.Timestamp
+	Value        *float64
+	RequestCount *uint64
+	// A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely
+	// cause, undone with DeployProject.rollback_deploy_id or an older commit. Empty = none.
+	AfterOperationId      *string
+	AfterOperationEndTime *timestamppb.Timestamp
+	// The incident this one is part of: it is told with that one, not on its own. Empty = none.
+	JoinedIncidentId *string
+	QuietReason      *IncidentQuietReason
+	// True = it went down and up 3 times within an hour; it stands for them all and clears after
+	// 15 clean minutes.
+	Flapping        *bool
+	IncidentMessage *string
+	Evidence        *IncidentEvidence
+}
+
+func (b0 Incident_builder) Build() *Incident {
+	m0 := &Incident{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.IncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 17)
+		x.xxx_hidden_IncidentId = b.IncidentId
+	}
+	if b.Kind != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 17)
+		x.xxx_hidden_Kind = *b.Kind
+	}
+	if b.Service != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 17)
+		x.xxx_hidden_Service = b.Service
+	}
+	x.xxx_hidden_Check = b.Check
+	x.xxx_hidden_TrafficRule = b.TrafficRule
+	if b.OperationId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 17)
+		x.xxx_hidden_OperationId = b.OperationId
+	}
+	x.xxx_hidden_OpenTime = b.OpenTime
+	x.xxx_hidden_ResolveTime = b.ResolveTime
+	if b.Value != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 17)
+		x.xxx_hidden_Value = *b.Value
+	}
+	if b.RequestCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 17)
+		x.xxx_hidden_RequestCount = *b.RequestCount
+	}
+	if b.AfterOperationId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 17)
+		x.xxx_hidden_AfterOperationId = b.AfterOperationId
+	}
+	x.xxx_hidden_AfterOperationEndTime = b.AfterOperationEndTime
+	if b.JoinedIncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 17)
+		x.xxx_hidden_JoinedIncidentId = b.JoinedIncidentId
+	}
+	if b.QuietReason != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 17)
+		x.xxx_hidden_QuietReason = *b.QuietReason
+	}
+	if b.Flapping != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 17)
+		x.xxx_hidden_Flapping = *b.Flapping
+	}
+	if b.IncidentMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 17)
+		x.xxx_hidden_IncidentMessage = b.IncidentMessage
+	}
+	x.xxx_hidden_Evidence = b.Evidence
+	return m0
+}
+
+// What the machine saw when an incident opened, kept with it. Untrusted.
+type IncidentEvidence struct {
+	state                   protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_CheckResult  *SiteCheckResult       `protobuf:"bytes,1,opt,name=check_result,json=checkResult"`
+	xxx_hidden_ExitCode     int32                  `protobuf:"varint,2,opt,name=exit_code,json=exitCode"`
+	xxx_hidden_OomKilled    bool                   `protobuf:"varint,3,opt,name=oom_killed,json=oomKilled"`
+	xxx_hidden_RestartCount uint32                 `protobuf:"varint,4,opt,name=restart_count,json=restartCount"`
+	xxx_hidden_HealthOutput *string                `protobuf:"bytes,5,opt,name=health_output,json=healthOutput"`
+	xxx_hidden_LogLines     *[]*LogLine            `protobuf:"bytes,6,rep,name=log_lines,json=logLines"`
+	xxx_hidden_TopPath      *HttpPathTraffic       `protobuf:"bytes,7,opt,name=top_path,json=topPath"`
+	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
+	XXX_presence            [1]uint32
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *IncidentEvidence) Reset() {
+	*x = IncidentEvidence{}
+	mi := &file_v1_panel_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncidentEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncidentEvidence) ProtoMessage() {}
+
+func (x *IncidentEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *IncidentEvidence) GetCheckResult() *SiteCheckResult {
+	if x != nil {
+		return x.xxx_hidden_CheckResult
+	}
+	return nil
+}
+
+func (x *IncidentEvidence) GetExitCode() int32 {
+	if x != nil {
+		return x.xxx_hidden_ExitCode
+	}
+	return 0
+}
+
+func (x *IncidentEvidence) GetOomKilled() bool {
+	if x != nil {
+		return x.xxx_hidden_OomKilled
+	}
+	return false
+}
+
+func (x *IncidentEvidence) GetRestartCount() uint32 {
+	if x != nil {
+		return x.xxx_hidden_RestartCount
+	}
+	return 0
+}
+
+func (x *IncidentEvidence) GetHealthOutput() string {
+	if x != nil {
+		if x.xxx_hidden_HealthOutput != nil {
+			return *x.xxx_hidden_HealthOutput
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *IncidentEvidence) GetLogLines() []*LogLine {
+	if x != nil {
+		if x.xxx_hidden_LogLines != nil {
+			return *x.xxx_hidden_LogLines
+		}
+	}
+	return nil
+}
+
+func (x *IncidentEvidence) GetTopPath() *HttpPathTraffic {
+	if x != nil {
+		return x.xxx_hidden_TopPath
+	}
+	return nil
+}
+
+func (x *IncidentEvidence) SetCheckResult(v *SiteCheckResult) {
+	x.xxx_hidden_CheckResult = v
+}
+
+func (x *IncidentEvidence) SetExitCode(v int32) {
+	x.xxx_hidden_ExitCode = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+}
+
+func (x *IncidentEvidence) SetOomKilled(v bool) {
+	x.xxx_hidden_OomKilled = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+}
+
+func (x *IncidentEvidence) SetRestartCount(v uint32) {
+	x.xxx_hidden_RestartCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+}
+
+func (x *IncidentEvidence) SetHealthOutput(v string) {
+	x.xxx_hidden_HealthOutput = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+}
+
+func (x *IncidentEvidence) SetLogLines(v []*LogLine) {
+	x.xxx_hidden_LogLines = &v
+}
+
+func (x *IncidentEvidence) SetTopPath(v *HttpPathTraffic) {
+	x.xxx_hidden_TopPath = v
+}
+
+func (x *IncidentEvidence) HasCheckResult() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_CheckResult != nil
+}
+
+func (x *IncidentEvidence) HasExitCode() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *IncidentEvidence) HasOomKilled() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *IncidentEvidence) HasRestartCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *IncidentEvidence) HasHealthOutput() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *IncidentEvidence) HasTopPath() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_TopPath != nil
+}
+
+func (x *IncidentEvidence) ClearCheckResult() {
+	x.xxx_hidden_CheckResult = nil
+}
+
+func (x *IncidentEvidence) ClearExitCode() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_ExitCode = 0
+}
+
+func (x *IncidentEvidence) ClearOomKilled() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_OomKilled = false
+}
+
+func (x *IncidentEvidence) ClearRestartCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_RestartCount = 0
+}
+
+func (x *IncidentEvidence) ClearHealthOutput() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_HealthOutput = nil
+}
+
+func (x *IncidentEvidence) ClearTopPath() {
+	x.xxx_hidden_TopPath = nil
+}
+
+type IncidentEvidence_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	CheckResult *SiteCheckResult
+	// The service's container: SERVICE_* kinds, and SITE_DOWN's service.
+	ExitCode     *int32
+	OomKilled    *bool
+	RestartCount *uint32
+	HealthOutput *string
+	LogLines     []*LogLine
+	// HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest.
+	TopPath *HttpPathTraffic
+}
+
+func (b0 IncidentEvidence_builder) Build() *IncidentEvidence {
+	m0 := &IncidentEvidence{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_CheckResult = b.CheckResult
+	if b.ExitCode != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		x.xxx_hidden_ExitCode = *b.ExitCode
+	}
+	if b.OomKilled != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		x.xxx_hidden_OomKilled = *b.OomKilled
+	}
+	if b.RestartCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		x.xxx_hidden_RestartCount = *b.RestartCount
+	}
+	if b.HealthOutput != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		x.xxx_hidden_HealthOutput = b.HealthOutput
+	}
+	x.xxx_hidden_LogLines = &b.LogLines
+	x.xxx_hidden_TopPath = b.TopPath
+	return m0
+}
+
+// One UTC day of a project's site checks.
+type UptimeDay struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_StartTime     *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=start_time,json=startTime"`
+	xxx_hidden_UptimePercent float64                `protobuf:"fixed64,2,opt,name=uptime_percent,json=uptimePercent"`
+	xxx_hidden_DownSeconds   uint32                 `protobuf:"varint,3,opt,name=down_seconds,json=downSeconds"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *UptimeDay) Reset() {
+	*x = UptimeDay{}
+	mi := &file_v1_panel_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UptimeDay) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UptimeDay) ProtoMessage() {}
+
+func (x *UptimeDay) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *UptimeDay) GetStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_StartTime
+	}
+	return nil
+}
+
+func (x *UptimeDay) GetUptimePercent() float64 {
+	if x != nil {
+		return x.xxx_hidden_UptimePercent
+	}
+	return 0
+}
+
+func (x *UptimeDay) GetDownSeconds() uint32 {
+	if x != nil {
+		return x.xxx_hidden_DownSeconds
+	}
+	return 0
+}
+
+func (x *UptimeDay) SetStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_StartTime = v
+}
+
+func (x *UptimeDay) SetUptimePercent(v float64) {
+	x.xxx_hidden_UptimePercent = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *UptimeDay) SetDownSeconds(v uint32) {
+	x.xxx_hidden_DownSeconds = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *UptimeDay) HasStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_StartTime != nil
+}
+
+func (x *UptimeDay) HasUptimePercent() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *UptimeDay) HasDownSeconds() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *UptimeDay) ClearStartTime() {
+	x.xxx_hidden_StartTime = nil
+}
+
+func (x *UptimeDay) ClearUptimePercent() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_UptimePercent = 0
+}
+
+func (x *UptimeDay) ClearDownSeconds() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_DownSeconds = 0
+}
+
+type UptimeDay_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	StartTime     *timestamppb.Timestamp
+	UptimePercent *float64
+	DownSeconds   *uint32
+}
+
+func (b0 UptimeDay_builder) Build() *UptimeDay {
+	m0 := &UptimeDay{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_StartTime = b.StartTime
+	if b.UptimePercent != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_UptimePercent = *b.UptimePercent
+	}
+	if b.DownSeconds != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_DownSeconds = *b.DownSeconds
+	}
+	return m0
+}
+
+type GetIncidentRequest struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_IncidentId  *string                `protobuf:"bytes,2,opt,name=incident_id,json=incidentId"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *GetIncidentRequest) Reset() {
+	*x = GetIncidentRequest{}
+	mi := &file_v1_panel_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIncidentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIncidentRequest) ProtoMessage() {}
+
+func (x *GetIncidentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetIncidentRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetIncidentRequest) GetIncidentId() string {
+	if x != nil {
+		if x.xxx_hidden_IncidentId != nil {
+			return *x.xxx_hidden_IncidentId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetIncidentRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *GetIncidentRequest) SetIncidentId(v string) {
+	x.xxx_hidden_IncidentId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *GetIncidentRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *GetIncidentRequest) HasIncidentId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *GetIncidentRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *GetIncidentRequest) ClearIncidentId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_IncidentId = nil
+}
+
+type GetIncidentRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId  *string
+	IncidentId *string
+}
+
+func (b0 GetIncidentRequest_builder) Build() *GetIncidentRequest {
+	m0 := &GetIncidentRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.IncidentId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_IncidentId = b.IncidentId
+	}
+	return m0
+}
+
+type GetIncidentResponse struct {
+	state               protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Incident *Incident              `protobuf:"bytes,1,opt,name=incident"`
+	xxx_hidden_Joined   *[]*Incident           `protobuf:"bytes,2,rep,name=joined"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *GetIncidentResponse) Reset() {
+	*x = GetIncidentResponse{}
+	mi := &file_v1_panel_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIncidentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIncidentResponse) ProtoMessage() {}
+
+func (x *GetIncidentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetIncidentResponse) GetIncident() *Incident {
+	if x != nil {
+		return x.xxx_hidden_Incident
+	}
+	return nil
+}
+
+func (x *GetIncidentResponse) GetJoined() []*Incident {
+	if x != nil {
+		if x.xxx_hidden_Joined != nil {
+			return *x.xxx_hidden_Joined
+		}
+	}
+	return nil
+}
+
+func (x *GetIncidentResponse) SetIncident(v *Incident) {
+	x.xxx_hidden_Incident = v
+}
+
+func (x *GetIncidentResponse) SetJoined(v []*Incident) {
+	x.xxx_hidden_Joined = &v
+}
+
+func (x *GetIncidentResponse) HasIncident() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Incident != nil
+}
+
+func (x *GetIncidentResponse) ClearIncident() {
+	x.xxx_hidden_Incident = nil
+}
+
+type GetIncidentResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Incident *Incident
+	Joined   []*Incident
+}
+
+func (b0 GetIncidentResponse_builder) Build() *GetIncidentResponse {
+	m0 := &GetIncidentResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Incident = b.Incident
+	x.xxx_hidden_Joined = &b.Joined
+	return m0
+}
+
 type GetOperationRequest struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId    *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
@@ -12748,7 +15883,7 @@ type GetOperationRequest struct {
 
 func (x *GetOperationRequest) Reset() {
 	*x = GetOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[54]
+	mi := &file_v1_panel_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12760,7 +15895,7 @@ func (x *GetOperationRequest) String() string {
 func (*GetOperationRequest) ProtoMessage() {}
 
 func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[54]
+	mi := &file_v1_panel_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12952,7 +16087,7 @@ type GetOperationResponse struct {
 
 func (x *GetOperationResponse) Reset() {
 	*x = GetOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[55]
+	mi := &file_v1_panel_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12964,7 +16099,7 @@ func (x *GetOperationResponse) String() string {
 func (*GetOperationResponse) ProtoMessage() {}
 
 func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[55]
+	mi := &file_v1_panel_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13126,7 +16261,7 @@ type OperationLogLine struct {
 
 func (x *OperationLogLine) Reset() {
 	*x = OperationLogLine{}
-	mi := &file_v1_panel_proto_msgTypes[56]
+	mi := &file_v1_panel_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13138,7 +16273,7 @@ func (x *OperationLogLine) String() string {
 func (*OperationLogLine) ProtoMessage() {}
 
 func (x *OperationLogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[56]
+	mi := &file_v1_panel_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13234,7 +16369,7 @@ type HttpTrafficFilter struct {
 
 func (x *HttpTrafficFilter) Reset() {
 	*x = HttpTrafficFilter{}
-	mi := &file_v1_panel_proto_msgTypes[57]
+	mi := &file_v1_panel_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13246,7 +16381,7 @@ func (x *HttpTrafficFilter) String() string {
 func (*HttpTrafficFilter) ProtoMessage() {}
 
 func (x *HttpTrafficFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[57]
+	mi := &file_v1_panel_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13444,7 +16579,7 @@ type QueryHttpTrafficRequest struct {
 
 func (x *QueryHttpTrafficRequest) Reset() {
 	*x = QueryHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[58]
+	mi := &file_v1_panel_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13456,7 +16591,7 @@ func (x *QueryHttpTrafficRequest) String() string {
 func (*QueryHttpTrafficRequest) ProtoMessage() {}
 
 func (x *QueryHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[58]
+	mi := &file_v1_panel_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13724,7 +16859,7 @@ type QueryHttpTrafficResponse struct {
 
 func (x *QueryHttpTrafficResponse) Reset() {
 	*x = QueryHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[59]
+	mi := &file_v1_panel_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13736,7 +16871,7 @@ func (x *QueryHttpTrafficResponse) String() string {
 func (*QueryHttpTrafficResponse) ProtoMessage() {}
 
 func (x *QueryHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[59]
+	mi := &file_v1_panel_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14008,7 +17143,7 @@ type HttpTrafficBucket struct {
 
 func (x *HttpTrafficBucket) Reset() {
 	*x = HttpTrafficBucket{}
-	mi := &file_v1_panel_proto_msgTypes[60]
+	mi := &file_v1_panel_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14020,7 +17155,7 @@ func (x *HttpTrafficBucket) String() string {
 func (*HttpTrafficBucket) ProtoMessage() {}
 
 func (x *HttpTrafficBucket) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[60]
+	mi := &file_v1_panel_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14104,7 +17239,7 @@ type HttpPathTraffic struct {
 
 func (x *HttpPathTraffic) Reset() {
 	*x = HttpPathTraffic{}
-	mi := &file_v1_panel_proto_msgTypes[61]
+	mi := &file_v1_panel_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14116,7 +17251,7 @@ func (x *HttpPathTraffic) String() string {
 func (*HttpPathTraffic) ProtoMessage() {}
 
 func (x *HttpPathTraffic) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[61]
+	mi := &file_v1_panel_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14253,7 +17388,7 @@ type HttpRequest struct {
 
 func (x *HttpRequest) Reset() {
 	*x = HttpRequest{}
-	mi := &file_v1_panel_proto_msgTypes[62]
+	mi := &file_v1_panel_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14265,7 +17400,7 @@ func (x *HttpRequest) String() string {
 func (*HttpRequest) ProtoMessage() {}
 
 func (x *HttpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[62]
+	mi := &file_v1_panel_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14758,7 +17893,7 @@ type ContainerLogFilter struct {
 
 func (x *ContainerLogFilter) Reset() {
 	*x = ContainerLogFilter{}
-	mi := &file_v1_panel_proto_msgTypes[63]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14770,7 +17905,7 @@ func (x *ContainerLogFilter) String() string {
 func (*ContainerLogFilter) ProtoMessage() {}
 
 func (x *ContainerLogFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[63]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14907,7 +18042,7 @@ type QueryContainerLogsRequest struct {
 
 func (x *QueryContainerLogsRequest) Reset() {
 	*x = QueryContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14919,7 +18054,7 @@ func (x *QueryContainerLogsRequest) String() string {
 func (*QueryContainerLogsRequest) ProtoMessage() {}
 
 func (x *QueryContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15181,7 +18316,7 @@ type QueryContainerLogsResponse struct {
 
 func (x *QueryContainerLogsResponse) Reset() {
 	*x = QueryContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15193,7 +18328,7 @@ func (x *QueryContainerLogsResponse) String() string {
 func (*QueryContainerLogsResponse) ProtoMessage() {}
 
 func (x *QueryContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15386,7 +18521,7 @@ type LogLine struct {
 
 func (x *LogLine) Reset() {
 	*x = LogLine{}
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15398,7 +18533,7 @@ func (x *LogLine) String() string {
 func (*LogLine) ProtoMessage() {}
 
 func (x *LogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15560,7 +18695,7 @@ type RunServiceCommandRequest struct {
 
 func (x *RunServiceCommandRequest) Reset() {
 	*x = RunServiceCommandRequest{}
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15572,7 +18707,7 @@ func (x *RunServiceCommandRequest) String() string {
 func (*RunServiceCommandRequest) ProtoMessage() {}
 
 func (x *RunServiceCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15815,7 +18950,7 @@ type RunServiceCommandResponse struct {
 
 func (x *RunServiceCommandResponse) Reset() {
 	*x = RunServiceCommandResponse{}
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15827,7 +18962,7 @@ func (x *RunServiceCommandResponse) String() string {
 func (*RunServiceCommandResponse) ProtoMessage() {}
 
 func (x *RunServiceCommandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16022,7 +19157,7 @@ type FileEntry struct {
 
 func (x *FileEntry) Reset() {
 	*x = FileEntry{}
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16034,7 +19169,7 @@ func (x *FileEntry) String() string {
 func (*FileEntry) ProtoMessage() {}
 
 func (x *FileEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16312,7 +19447,7 @@ type ReadPathRequest struct {
 
 func (x *ReadPathRequest) Reset() {
 	*x = ReadPathRequest{}
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16324,7 +19459,7 @@ func (x *ReadPathRequest) String() string {
 func (*ReadPathRequest) ProtoMessage() {}
 
 func (x *ReadPathRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16630,7 +19765,7 @@ func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
 type case_ReadPathRequest_Root protoreflect.FieldNumber
 
 func (x case_ReadPathRequest_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[70].Descriptor()
+	md := file_v1_panel_proto_msgTypes[84].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -16673,7 +19808,7 @@ type ReadPathResponse struct {
 
 func (x *ReadPathResponse) Reset() {
 	*x = ReadPathResponse{}
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16685,7 +19820,7 @@ func (x *ReadPathResponse) String() string {
 func (*ReadPathResponse) ProtoMessage() {}
 
 func (x *ReadPathResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17013,7 +20148,7 @@ type CreateTransferRequest struct {
 
 func (x *CreateTransferRequest) Reset() {
 	*x = CreateTransferRequest{}
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17025,7 +20160,7 @@ func (x *CreateTransferRequest) String() string {
 func (*CreateTransferRequest) ProtoMessage() {}
 
 func (x *CreateTransferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17190,7 +20325,7 @@ func (b0 CreateTransferRequest_builder) Build() *CreateTransferRequest {
 type case_CreateTransferRequest_Transfer protoreflect.FieldNumber
 
 func (x case_CreateTransferRequest_Transfer) String() string {
-	md := file_v1_panel_proto_msgTypes[72].Descriptor()
+	md := file_v1_panel_proto_msgTypes[86].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -17233,7 +20368,7 @@ type ArchiveUpload struct {
 
 func (x *ArchiveUpload) Reset() {
 	*x = ArchiveUpload{}
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17245,7 +20380,7 @@ func (x *ArchiveUpload) String() string {
 func (*ArchiveUpload) ProtoMessage() {}
 
 func (x *ArchiveUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17314,7 +20449,7 @@ type FileUpload struct {
 
 func (x *FileUpload) Reset() {
 	*x = FileUpload{}
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17326,7 +20461,7 @@ func (x *FileUpload) String() string {
 func (*FileUpload) ProtoMessage() {}
 
 func (x *FileUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17509,7 +20644,7 @@ func (b0 FileUpload_builder) Build() *FileUpload {
 type case_FileUpload_Root protoreflect.FieldNumber
 
 func (x case_FileUpload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[74].Descriptor()
+	md := file_v1_panel_proto_msgTypes[88].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -17546,7 +20681,7 @@ type PathDownload struct {
 
 func (x *PathDownload) Reset() {
 	*x = PathDownload{}
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17558,7 +20693,7 @@ func (x *PathDownload) String() string {
 func (*PathDownload) ProtoMessage() {}
 
 func (x *PathDownload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17743,7 +20878,7 @@ func (b0 PathDownload_builder) Build() *PathDownload {
 type case_PathDownload_Root protoreflect.FieldNumber
 
 func (x case_PathDownload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[75].Descriptor()
+	md := file_v1_panel_proto_msgTypes[89].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -17784,7 +20919,7 @@ type CreateTransferResponse struct {
 
 func (x *CreateTransferResponse) Reset() {
 	*x = CreateTransferResponse{}
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17796,7 +20931,7 @@ func (x *CreateTransferResponse) String() string {
 func (*CreateTransferResponse) ProtoMessage() {}
 
 func (x *CreateTransferResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18067,7 +21202,7 @@ type GetUploadRequest struct {
 
 func (x *GetUploadRequest) Reset() {
 	*x = GetUploadRequest{}
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18079,7 +21214,7 @@ func (x *GetUploadRequest) String() string {
 func (*GetUploadRequest) ProtoMessage() {}
 
 func (x *GetUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18150,7 +21285,7 @@ type GetUploadResponse struct {
 
 func (x *GetUploadResponse) Reset() {
 	*x = GetUploadResponse{}
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18162,7 +21297,7 @@ func (x *GetUploadResponse) String() string {
 func (*GetUploadResponse) ProtoMessage() {}
 
 func (x *GetUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18375,7 +21510,7 @@ type ProjectBusy struct {
 
 func (x *ProjectBusy) Reset() {
 	*x = ProjectBusy{}
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18387,7 +21522,7 @@ func (x *ProjectBusy) String() string {
 func (*ProjectBusy) ProtoMessage() {}
 
 func (x *ProjectBusy) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18510,7 +21645,7 @@ type ProjectChanged struct {
 
 func (x *ProjectChanged) Reset() {
 	*x = ProjectChanged{}
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18522,7 +21657,7 @@ func (x *ProjectChanged) String() string {
 func (*ProjectChanged) ProtoMessage() {}
 
 func (x *ProjectChanged) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18548,14 +21683,15 @@ func (b0 ProjectChanged_builder) Build() *ProjectChanged {
 // Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call
 // again later.
 type MachineUnreachable struct {
-	state         protoimpl.MessageState `protogen:"opaque.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_SinceTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=since_time,json=sinceTime"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *MachineUnreachable) Reset() {
 	*x = MachineUnreachable{}
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18567,7 +21703,7 @@ func (x *MachineUnreachable) String() string {
 func (*MachineUnreachable) ProtoMessage() {}
 
 func (x *MachineUnreachable) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18578,13 +21714,84 @@ func (x *MachineUnreachable) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
+func (x *MachineUnreachable) GetSinceTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_SinceTime
+	}
+	return nil
+}
+
+func (x *MachineUnreachable) SetSinceTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_SinceTime = v
+}
+
+func (x *MachineUnreachable) HasSinceTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_SinceTime != nil
+}
+
+func (x *MachineUnreachable) ClearSinceTime() {
+	x.xxx_hidden_SinceTime = nil
+}
+
 type MachineUnreachable_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
+	// Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+	// (Machine.alert_channels). Absent = not known yet.
+	SinceTime *timestamppb.Timestamp
 }
 
 func (b0 MachineUnreachable_builder) Build() *MachineUnreachable {
 	m0 := &MachineUnreachable{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_SinceTime = b.SinceTime
+	return m0
+}
+
+// Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
+// with the machine's next update, which Pethost runs; nothing for the caller to do.
+type MachineUpdatePending struct {
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MachineUpdatePending) Reset() {
+	*x = MachineUpdatePending{}
+	mi := &file_v1_panel_proto_msgTypes[96]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MachineUpdatePending) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MachineUpdatePending) ProtoMessage() {}
+
+func (x *MachineUpdatePending) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[96]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+type MachineUpdatePending_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 MachineUpdatePending_builder) Build() *MachineUpdatePending {
+	m0 := &MachineUpdatePending{}
 	b, x := &b0, m0
 	_, _ = b, x
 	return m0
@@ -18603,7 +21810,7 @@ type NoMachine struct {
 
 func (x *NoMachine) Reset() {
 	*x = NoMachine{}
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18615,7 +21822,7 @@ func (x *NoMachine) String() string {
 func (*NoMachine) ProtoMessage() {}
 
 func (x *NoMachine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18713,7 +21920,7 @@ type WatchOperationRequest struct {
 
 func (x *WatchOperationRequest) Reset() {
 	*x = WatchOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18725,7 +21932,7 @@ func (x *WatchOperationRequest) String() string {
 func (*WatchOperationRequest) ProtoMessage() {}
 
 func (x *WatchOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18821,7 +22028,7 @@ type WatchOperationResponse struct {
 
 func (x *WatchOperationResponse) Reset() {
 	*x = WatchOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18833,7 +22040,7 @@ func (x *WatchOperationResponse) String() string {
 func (*WatchOperationResponse) ProtoMessage() {}
 
 func (x *WatchOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18960,7 +22167,7 @@ func (b0 WatchOperationResponse_builder) Build() *WatchOperationResponse {
 type case_WatchOperationResponse_Message protoreflect.FieldNumber
 
 func (x case_WatchOperationResponse_Message) String() string {
-	md := file_v1_panel_proto_msgTypes[84].Descriptor()
+	md := file_v1_panel_proto_msgTypes[99].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -18996,7 +22203,7 @@ type TailContainerLogsRequest struct {
 
 func (x *TailContainerLogsRequest) Reset() {
 	*x = TailContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19008,7 +22215,7 @@ func (x *TailContainerLogsRequest) String() string {
 func (*TailContainerLogsRequest) ProtoMessage() {}
 
 func (x *TailContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19131,7 +22338,7 @@ type TailContainerLogsResponse struct {
 
 func (x *TailContainerLogsResponse) Reset() {
 	*x = TailContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19143,7 +22350,7 @@ func (x *TailContainerLogsResponse) String() string {
 func (*TailContainerLogsResponse) ProtoMessage() {}
 
 func (x *TailContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19235,7 +22442,7 @@ type TailHttpTrafficRequest struct {
 
 func (x *TailHttpTrafficRequest) Reset() {
 	*x = TailHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19247,7 +22454,7 @@ func (x *TailHttpTrafficRequest) String() string {
 func (*TailHttpTrafficRequest) ProtoMessage() {}
 
 func (x *TailHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19364,7 +22571,7 @@ type TailHttpTrafficResponse struct {
 
 func (x *TailHttpTrafficResponse) Reset() {
 	*x = TailHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19376,7 +22583,7 @@ func (x *TailHttpTrafficResponse) String() string {
 func (*TailHttpTrafficResponse) ProtoMessage() {}
 
 func (x *TailHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19439,7 +22646,7 @@ type OpenTerminalRequest struct {
 
 func (x *OpenTerminalRequest) Reset() {
 	*x = OpenTerminalRequest{}
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19451,7 +22658,7 @@ func (x *OpenTerminalRequest) String() string {
 func (*OpenTerminalRequest) ProtoMessage() {}
 
 func (x *OpenTerminalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19652,7 +22859,7 @@ type TerminalSize struct {
 
 func (x *TerminalSize) Reset() {
 	*x = TerminalSize{}
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19664,7 +22871,7 @@ func (x *TerminalSize) String() string {
 func (*TerminalSize) ProtoMessage() {}
 
 func (x *TerminalSize) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19757,7 +22964,7 @@ type OpenTerminalResponse struct {
 
 func (x *OpenTerminalResponse) Reset() {
 	*x = OpenTerminalResponse{}
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19769,7 +22976,7 @@ func (x *OpenTerminalResponse) String() string {
 func (*OpenTerminalResponse) ProtoMessage() {}
 
 func (x *OpenTerminalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19859,7 +23066,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\amachine\x18\x01 \x01(\v2\x19.pethost.panel.v1.MachineR\amachine\x12<\n" +
 	"\bprojects\x18\x02 \x03(\v2 .pethost.panel.v1.ProjectSummaryR\bprojects\x12K\n" +
 	"\x10deleted_projects\x18\x03 \x03(\v2 .pethost.panel.v1.DeletedProjectR\x0fdeletedProjects\x12:\n" +
-	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\"\xcd\t\n" +
+	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\"\x98\n" +
+	"\n" +
 	"\aMachine\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12;\n" +
@@ -19889,7 +23097,11 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\tboot_time\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\bbootTime\x12N\n" +
 	"\x15restart_required_time\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\x13restartRequiredTime\x12P\n" +
 	"\x16scheduled_restart_time\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x14scheduledRestartTime\x12<\n" +
-	"\bsessions\x18\x18 \x03(\v2 .pethost.panel.v1.MachineSessionR\bsessions\"\xec\x02\n" +
+	"\bsessions\x18\x18 \x03(\v2 .pethost.panel.v1.MachineSessionR\bsessions\x12I\n" +
+	"\x0ealert_channels\x18\x1a \x03(\v2\".pethost.panel.v1.AlertDestinationR\ralertChannels\"`\n" +
+	"\x10AlertDestination\x126\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\".pethost.panel.v1.AlertChannelKindR\x04kind\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\"\xec\x02\n" +
 	"\x0eMachineSession\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x128\n" +
@@ -19972,22 +23184,27 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fdisk_used_bytes\x18\r \x01(\x04R\rdiskUsedBytes\"`\n" +
 	"\x0eServiceSummary\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x124\n" +
-	"\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\"\xeb\x01\n" +
+	"\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\"\x8c\x02\n" +
 	"\x0eProjectProblem\x128\n" +
 	"\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x12!\n" +
 	"\foperation_id\x18\x03 \x01(\tR\voperationId\x129\n" +
 	"\n" +
 	"since_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tsinceTime\x12'\n" +
-	"\x0fproblem_message\x18\x05 \x01(\tR\x0eproblemMessage\"\xd8\x01\n" +
+	"\x0fproblem_message\x18\x05 \x01(\tR\x0eproblemMessage\x12\x1f\n" +
+	"\vincident_id\x18\x06 \x01(\tR\n" +
+	"incidentId\"\xf9\x02\n" +
 	"\x11GetProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x122\n" +
 	"\x15include_secret_values\x18\x02 \x01(\bR\x13includeSecretValues\x12E\n" +
 	"\x10snapshots_before\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x0fsnapshotsBefore\x12)\n" +
-	"\x10snapshots_volume\x18\x04 \x01(\tR\x0fsnapshotsVolume\"I\n" +
+	"\x10snapshots_volume\x18\x04 \x01(\tR\x0fsnapshotsVolume\x12E\n" +
+	"\x10incidents_before\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0fincidentsBefore\x12(\n" +
+	"\x10uptime_day_count\x18\x06 \x01(\rR\x0euptimeDayCount\x12.\n" +
+	"\x13incidents_before_id\x18\a \x01(\tR\x11incidentsBeforeId\"I\n" +
 	"\x12GetProjectResponse\x123\n" +
-	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xb9\t\n" +
+	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\x91\v\n" +
 	"\aProject\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12=\n" +
@@ -20015,7 +23232,12 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x12snapshot_list_time\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x10snapshotListTime\x12W\n" +
 	"\x15http_traffic_last_day\x18\x10 \x01(\v2$.pethost.panel.v1.HttpTrafficSummaryR\x12httpTrafficLastDay\x127\n" +
 	"\x06source\x18\x11 \x01(\v2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12_\n" +
-	"\x17running_services_action\x18\x15 \x01(\v2'.pethost.panel.v1.RunningServicesActionR\x15runningServicesAction\"\xa8\x01\n" +
+	"\x17running_services_action\x18\x15 \x01(\v2'.pethost.panel.v1.RunningServicesActionR\x15runningServicesAction\x127\n" +
+	"\x06alerts\x18\x17 \x01(\v2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts\x128\n" +
+	"\tincidents\x18\x18 \x03(\v2\x1a.pethost.panel.v1.IncidentR\tincidents\x12%\n" +
+	"\x0emore_incidents\x18\x19 \x01(\bR\rmoreIncidents\x12<\n" +
+	"\vuptime_days\x18\x1a \x03(\v2\x1b.pethost.panel.v1.UptimeDayR\n" +
+	"uptimeDays\"\xa8\x01\n" +
 	"\x15RunningServicesAction\x128\n" +
 	"\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ServicesActionKindR\x04kind\x12\x1a\n" +
 	"\bservices\x18\x02 \x03(\tR\bservices\x129\n" +
@@ -20120,7 +23342,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\aservice\x18\x03 \x01(\tR\aservice\x12\x12\n" +
 	"\x04port\x18\x04 \x01(\rR\x04port\x12\x1d\n" +
 	"\n" +
-	"strip_path\x18\x05 \x01(\bR\tstripPath\"\xf3\x06\n" +
+	"strip_path\x18\x05 \x01(\bR\tstripPath\"\xa1\a\n" +
 	"\tOperation\x12!\n" +
 	"\foperation_id\x18\x01 \x01(\tR\voperationId\x123\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n" +
@@ -20145,7 +23367,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rchanged_paths\x18\x11 \x03(\tR\fchangedPaths\x12,\n" +
 	"\x12changed_path_count\x18\x12 \x01(\rR\x10changedPathCount\x12\x1d\n" +
 	"\n" +
-	"files_kept\x18\x13 \x01(\bR\tfilesKept\"\xa1\x01\n" +
+	"files_kept\x18\x13 \x01(\bR\tfilesKept\x12,\n" +
+	"\x12files_operation_id\x18\x14 \x01(\tR\x10filesOperationId\"\xa1\x01\n" +
 	"\bSnapshot\x12\x1f\n" +
 	"\vsnapshot_id\x18\x01 \x01(\tR\n" +
 	"snapshotId\x12;\n" +
@@ -20280,7 +23503,100 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x18RunProjectActionResponse\x129\n" +
 	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x123\n" +
 	"\aproject\x18\x03 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
-	"\x03log\x18\x04 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xd8\x01\n" +
+	"\x03log\x18\x04 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xc9\x02\n" +
+	"\x17SetProjectAlertsRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x123\n" +
+	"\x06checks\x18\x02 \x03(\v2\x1b.pethost.panel.v1.SiteCheckR\x06checks\x12#\n" +
+	"\rremove_checks\x18\x03 \x01(\bR\fremoveChecks\x12B\n" +
+	"\rtraffic_rules\x18\x04 \x03(\v2\x1d.pethost.panel.v1.TrafficRuleR\ftrafficRules\x120\n" +
+	"\x14remove_traffic_rules\x18\x05 \x01(\bR\x12removeTrafficRules\x12\x16\n" +
+	"\x03off\x18\x06 \x01(\bB\x04\x90\xb5\x18\x01R\x03off\x12'\n" +
+	"\fmute_minutes\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vmuteMinutes\"S\n" +
+	"\x18SetProjectAlertsResponse\x127\n" +
+	"\x06alerts\x18\x01 \x01(\v2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts\"{\n" +
+	"\tSiteCheck\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12#\n" +
+	"\rexpect_status\x18\x03 \x01(\rR\fexpectStatus\x12!\n" +
+	"\fmust_contain\x18\x04 \x01(\tR\vmustContain\"\xeb\x01\n" +
+	"\vTrafficRule\x127\n" +
+	"\x06metric\x18\x01 \x01(\x0e2\x1f.pethost.panel.v1.TrafficMetricR\x06metric\x12;\n" +
+	"\x06filter\x18\x02 \x01(\v2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12\x1c\n" +
+	"\tthreshold\x18\x03 \x01(\x01R\tthreshold\x12%\n" +
+	"\x0ewindow_minutes\x18\x04 \x01(\rR\rwindowMinutes\x12!\n" +
+	"\fmin_requests\x18\x05 \x01(\rR\vminRequests\"\x91\x02\n" +
+	"\rProjectAlerts\x128\n" +
+	"\x06checks\x18\x01 \x03(\v2 .pethost.panel.v1.SiteCheckStateR\x06checks\x12G\n" +
+	"\rtraffic_rules\x18\x02 \x03(\v2\".pethost.panel.v1.TrafficRuleStateR\ftrafficRules\x12\x10\n" +
+	"\x03off\x18\x03 \x01(\bR\x03off\x12>\n" +
+	"\rmute_end_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vmuteEndTime\x12+\n" +
+	"\x0euptime_percent\x18\x05 \x01(\x01B\x04\x90\xb5\x18\x01R\ruptimePercent\"\x88\x02\n" +
+	"\x0eSiteCheckState\x121\n" +
+	"\x05check\x18\x01 \x01(\v2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12'\n" +
+	"\x0fmachine_default\x18\x02 \x01(\bR\x0emachineDefault\x125\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12B\n" +
+	"\vlast_result\x18\x04 \x01(\v2!.pethost.panel.v1.SiteCheckResultR\n" +
+	"lastResult\x12\x1f\n" +
+	"\vincident_id\x18\x05 \x01(\tR\n" +
+	"incidentId\"\xae\x01\n" +
+	"\x0fSiteCheckResult\x129\n" +
+	"\n" +
+	"check_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcheckTime\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\rR\x06status\x12\x1f\n" +
+	"\vduration_ms\x18\x03 \x01(\rR\n" +
+	"durationMs\x12'\n" +
+	"\x0ffailure_message\x18\x04 \x01(\tR\x0efailureMessage\"\x81\x02\n" +
+	"\x10TrafficRuleState\x121\n" +
+	"\x04rule\x18\x01 \x01(\v2\x1d.pethost.panel.v1.TrafficRuleR\x04rule\x12'\n" +
+	"\x0fmachine_default\x18\x02 \x01(\bR\x0emachineDefault\x125\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\x01R\x05value\x12#\n" +
+	"\rrequest_count\x18\x05 \x01(\x04R\frequestCount\x12\x1f\n" +
+	"\vincident_id\x18\x06 \x01(\tR\n" +
+	"incidentId\"\xcc\x06\n" +
+	"\bIncident\x12\x1f\n" +
+	"\vincident_id\x18\x01 \x01(\tR\n" +
+	"incidentId\x128\n" +
+	"\x04kind\x18\x02 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n" +
+	"\aservice\x18\x03 \x01(\tR\aservice\x121\n" +
+	"\x05check\x18\x04 \x01(\v2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12@\n" +
+	"\ftraffic_rule\x18\x05 \x01(\v2\x1d.pethost.panel.v1.TrafficRuleR\vtrafficRule\x12!\n" +
+	"\foperation_id\x18\x06 \x01(\tR\voperationId\x127\n" +
+	"\topen_time\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\bopenTime\x12=\n" +
+	"\fresolve_time\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vresolveTime\x12\x14\n" +
+	"\x05value\x18\t \x01(\x01R\x05value\x12#\n" +
+	"\rrequest_count\x18\n" +
+	" \x01(\x04R\frequestCount\x12,\n" +
+	"\x12after_operation_id\x18\v \x01(\tR\x10afterOperationId\x12S\n" +
+	"\x18after_operation_end_time\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\x15afterOperationEndTime\x12,\n" +
+	"\x12joined_incident_id\x18\r \x01(\tR\x10joinedIncidentId\x12H\n" +
+	"\fquiet_reason\x18\x0e \x01(\x0e2%.pethost.panel.v1.IncidentQuietReasonR\vquietReason\x12\x1a\n" +
+	"\bflapping\x18\x0f \x01(\bR\bflapping\x12)\n" +
+	"\x10incident_message\x18\x10 \x01(\tR\x0fincidentMessage\x12>\n" +
+	"\bevidence\x18\x11 \x01(\v2\".pethost.panel.v1.IncidentEvidenceR\bevidence\"\xd4\x02\n" +
+	"\x10IncidentEvidence\x12D\n" +
+	"\fcheck_result\x18\x01 \x01(\v2!.pethost.panel.v1.SiteCheckResultR\vcheckResult\x12\x1b\n" +
+	"\texit_code\x18\x02 \x01(\x05R\bexitCode\x12\x1d\n" +
+	"\n" +
+	"oom_killed\x18\x03 \x01(\bR\toomKilled\x12#\n" +
+	"\rrestart_count\x18\x04 \x01(\rR\frestartCount\x12#\n" +
+	"\rhealth_output\x18\x05 \x01(\tR\fhealthOutput\x126\n" +
+	"\tlog_lines\x18\x06 \x03(\v2\x19.pethost.panel.v1.LogLineR\blogLines\x12<\n" +
+	"\btop_path\x18\a \x01(\v2!.pethost.panel.v1.HttpPathTrafficR\atopPath\"\x96\x01\n" +
+	"\tUptimeDay\x129\n" +
+	"\n" +
+	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x12+\n" +
+	"\x0euptime_percent\x18\x02 \x01(\x01B\x04\x90\xb5\x18\x01R\ruptimePercent\x12!\n" +
+	"\fdown_seconds\x18\x03 \x01(\rR\vdownSeconds\"T\n" +
+	"\x12GetIncidentRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1f\n" +
+	"\vincident_id\x18\x02 \x01(\tR\n" +
+	"incidentId\"\x81\x01\n" +
+	"\x13GetIncidentResponse\x126\n" +
+	"\bincident\x18\x01 \x01(\v2\x1a.pethost.panel.v1.IncidentR\bincident\x122\n" +
+	"\x06joined\x18\x02 \x03(\v2\x1a.pethost.panel.v1.IncidentR\x06joined\"\xd8\x01\n" +
 	"\x13GetOperationRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
@@ -20492,8 +23808,11 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n" +
 	"\n" +
 	"start_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\"\x10\n" +
-	"\x0eProjectChanged\"\x14\n" +
-	"\x12MachineUnreachable\"X\n" +
+	"\x0eProjectChanged\"O\n" +
+	"\x12MachineUnreachable\x129\n" +
+	"\n" +
+	"since_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tsinceTime\"\x16\n" +
+	"\x14MachineUpdatePending\"X\n" +
 	"\tNoMachine\x129\n" +
 	"\x06reason\x18\x01 \x01(\x0e2!.pethost.panel.v1.NoMachineReasonR\x06reason\x12\x10\n" +
 	"\x03url\x18\x02 \x01(\tR\x03url\"Y\n" +
@@ -20534,14 +23853,19 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x14OpenTerminalResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12;\n" +
 	"\vexpire_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"expireTime*\xee\x01\n" +
+	"expireTime*\x93\x01\n" +
+	"\x10AlertChannelKind\x12\"\n" +
+	"\x1eALERT_CHANNEL_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18ALERT_CHANNEL_KIND_EMAIL\x10\x01\x12\x1f\n" +
+	"\x1bALERT_CHANNEL_KIND_TELEGRAM\x10\x02\x12\x1c\n" +
+	"\x18ALERT_CHANNEL_KIND_SLACK\x10\x03*\xee\x01\n" +
 	"\x12MachineSessionKind\x12$\n" +
 	" MACHINE_SESSION_KIND_UNSPECIFIED\x10\x00\x12%\n" +
 	"!MACHINE_SESSION_KIND_WEB_TERMINAL\x10\x01\x12%\n" +
 	"!MACHINE_SESSION_KIND_SSH_TERMINAL\x10\x02\x12$\n" +
 	" MACHINE_SESSION_KIND_SSH_COMMAND\x10\x03\x12\x1d\n" +
 	"\x19MACHINE_SESSION_KIND_SFTP\x10\x04\x12\x1f\n" +
-	"\x1bMACHINE_SESSION_KIND_TUNNEL\x10\x05*\xec\x03\n" +
+	"\x1bMACHINE_SESSION_KIND_TUNNEL\x10\x05*\xda\x04\n" +
 	"\x12ProjectProblemKind\x12$\n" +
 	" PROJECT_PROBLEM_KIND_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"PROJECT_PROBLEM_KIND_DEPLOY_FAILED\x10\x01\x12*\n" +
@@ -20554,7 +23878,10 @@ const file_v1_panel_proto_rawDesc = "" +
 	"#PROJECT_PROBLEM_KIND_RESTORE_FAILED\x10\b\x12,\n" +
 	"(PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED\x10\t\x12,\n" +
 	"(PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED\x10\n" +
-	"*\x9b\x01\n" +
+	"\x12\"\n" +
+	"\x1ePROJECT_PROBLEM_KIND_SITE_DOWN\x10\v\x12$\n" +
+	" PROJECT_PROBLEM_KIND_HTTP_ERRORS\x10\f\x12\"\n" +
+	"\x1ePROJECT_PROBLEM_KIND_HTTP_SLOW\x10\r*\x9b\x01\n" +
 	"\x12ServicesActionKind\x12$\n" +
 	" SERVICES_ACTION_KIND_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSERVICES_ACTION_KIND_START\x10\x01\x12\x1d\n" +
@@ -20612,7 +23939,25 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x1fDEPLOY_FAILURE_REASON_TIMED_OUT\x10\t\x120\n" +
 	",DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME\x10\n" +
 	"\x122\n" +
-	".DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE\x10\v*a\n" +
+	".DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE\x10\v*\x9d\x01\n" +
+	"\rTrafficMetric\x12\x1e\n" +
+	"\x1aTRAFFIC_METRIC_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cTRAFFIC_METRIC_SERVER_ERRORS\x10\x01\x12'\n" +
+	"#TRAFFIC_METRIC_SERVER_ERROR_PERCENT\x10\x02\x12!\n" +
+	"\x1dTRAFFIC_METRIC_LATENCY_P95_MS\x10\x03*\xa6\x01\n" +
+	"\vAlertStatus\x12\x1c\n" +
+	"\x18ALERT_STATUS_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fALERT_STATUS_OK\x10\x01\x12\x18\n" +
+	"\x14ALERT_STATUS_PENDING\x10\x02\x12\x17\n" +
+	"\x13ALERT_STATUS_FIRING\x10\x03\x12\x17\n" +
+	"\x13ALERT_STATUS_PAUSED\x10\x04\x12\x18\n" +
+	"\x14ALERT_STATUS_NO_DATA\x10\x05*\xd1\x01\n" +
+	"\x13IncidentQuietReason\x12%\n" +
+	"!INCIDENT_QUIET_REASON_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bINCIDENT_QUIET_REASON_MUTED\x10\x01\x12\x1d\n" +
+	"\x19INCIDENT_QUIET_REASON_OFF\x10\x02\x12*\n" +
+	"&INCIDENT_QUIET_REASON_FIRST_EVALUATION\x10\x03\x12'\n" +
+	"#INCIDENT_QUIET_REASON_MANUAL_DEPLOY\x10\x04*a\n" +
 	"\fOutputStream\x12\x1d\n" +
 	"\x19OUTPUT_STREAM_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14OUTPUT_STREAM_STDOUT\x10\x01\x12\x18\n" +
@@ -20631,7 +23976,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xf0\x11\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xde\x13\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
@@ -20641,7 +23986,9 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a'.pethost.panel.v1.CreateProjectResponse\"\x16\x8a\xb5\x18\x12\x12\x10Create a project\x12z\n" +
 	"\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a'.pethost.panel.v1.DeployProjectResponse\"\x18\x8a\xb5\x18\x14\b\x01\x12\x10Deploy a project\x12}\n" +
 	"\vListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project's commits\x12\x87\x01\n" +
-	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\x12x\n" +
+	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\x12\x8a\x01\n" +
+	"\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse\"\x1f\x90\x02\x02\x8a\xb5\x18\x18\x12\x16Set a project's alerts\x12_\n" +
+	"\vGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse\"\x03\x90\x02\x01\x12x\n" +
 	"\fGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse\"\x19\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\x12\x86\x01\n" +
 	"\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n" +
 	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x90\x01\n" +
@@ -20659,311 +24006,369 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x14com.pethost.panel.v1B\n" +
 	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
-var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
-var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 92)
+var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 18)
+var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
 var file_v1_panel_proto_goTypes = []any{
-	(MachineSessionKind)(0),            // 0: pethost.panel.v1.MachineSessionKind
-	(ProjectProblemKind)(0),            // 1: pethost.panel.v1.ProjectProblemKind
-	(ServicesActionKind)(0),            // 2: pethost.panel.v1.ServicesActionKind
-	(ServiceState)(0),                  // 3: pethost.panel.v1.ServiceState
-	(RestartPolicy)(0),                 // 4: pethost.panel.v1.RestartPolicy
-	(HealthStatus)(0),                  // 5: pethost.panel.v1.HealthStatus
-	(CertificateSource)(0),             // 6: pethost.panel.v1.CertificateSource
-	(OperationKind)(0),                 // 7: pethost.panel.v1.OperationKind
-	(OperationStatus)(0),               // 8: pethost.panel.v1.OperationStatus
-	(DeployFailureReason)(0),           // 9: pethost.panel.v1.DeployFailureReason
-	(OutputStream)(0),                  // 10: pethost.panel.v1.OutputStream
-	(FileType)(0),                      // 11: pethost.panel.v1.FileType
-	(FileLocation)(0),                  // 12: pethost.panel.v1.FileLocation
-	(NoMachineReason)(0),               // 13: pethost.panel.v1.NoMachineReason
-	(*GetMachineRequest)(nil),          // 14: pethost.panel.v1.GetMachineRequest
-	(*GetMachineResponse)(nil),         // 15: pethost.panel.v1.GetMachineResponse
-	(*Machine)(nil),                    // 16: pethost.panel.v1.Machine
-	(*MachineSession)(nil),             // 17: pethost.panel.v1.MachineSession
-	(*DiskUsage)(nil),                  // 18: pethost.panel.v1.DiskUsage
-	(*SshKey)(nil),                     // 19: pethost.panel.v1.SshKey
-	(*GithubConnection)(nil),           // 20: pethost.panel.v1.GithubConnection
-	(*GithubRepository)(nil),           // 21: pethost.panel.v1.GithubRepository
-	(*DeletedProject)(nil),             // 22: pethost.panel.v1.DeletedProject
-	(*RunMachineActionRequest)(nil),    // 23: pethost.panel.v1.RunMachineActionRequest
-	(*RestartMachineAction)(nil),       // 24: pethost.panel.v1.RestartMachineAction
-	(*RunMachineActionResponse)(nil),   // 25: pethost.panel.v1.RunMachineActionResponse
-	(*ProjectMetadata)(nil),            // 26: pethost.panel.v1.ProjectMetadata
-	(*ProjectSummary)(nil),             // 27: pethost.panel.v1.ProjectSummary
-	(*ServiceSummary)(nil),             // 28: pethost.panel.v1.ServiceSummary
-	(*ProjectProblem)(nil),             // 29: pethost.panel.v1.ProjectProblem
-	(*GetProjectRequest)(nil),          // 30: pethost.panel.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),         // 31: pethost.panel.v1.GetProjectResponse
-	(*Project)(nil),                    // 32: pethost.panel.v1.Project
-	(*RunningServicesAction)(nil),      // 33: pethost.panel.v1.RunningServicesAction
-	(*ProjectSource)(nil),              // 34: pethost.panel.v1.ProjectSource
-	(*GithubSource)(nil),               // 35: pethost.panel.v1.GithubSource
-	(*GithubCommit)(nil),               // 36: pethost.panel.v1.GithubCommit
-	(*Service)(nil),                    // 37: pethost.panel.v1.Service
-	(*PublishedPort)(nil),              // 38: pethost.panel.v1.PublishedPort
-	(*VolumeMount)(nil),                // 39: pethost.panel.v1.VolumeMount
-	(*HealthCheck)(nil),                // 40: pethost.panel.v1.HealthCheck
-	(*EnvironmentVariable)(nil),        // 41: pethost.panel.v1.EnvironmentVariable
-	(*Volume)(nil),                     // 42: pethost.panel.v1.Volume
-	(*VolumeMountedBy)(nil),            // 43: pethost.panel.v1.VolumeMountedBy
-	(*Host)(nil),                       // 44: pethost.panel.v1.Host
-	(*Route)(nil),                      // 45: pethost.panel.v1.Route
-	(*Operation)(nil),                  // 46: pethost.panel.v1.Operation
-	(*Snapshot)(nil),                   // 47: pethost.panel.v1.Snapshot
-	(*HttpTrafficSummary)(nil),         // 48: pethost.panel.v1.HttpTrafficSummary
-	(*CreateProjectRequest)(nil),       // 49: pethost.panel.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil),      // 50: pethost.panel.v1.CreateProjectResponse
-	(*DeployProjectRequest)(nil),       // 51: pethost.panel.v1.DeployProjectRequest
-	(*MountVolume)(nil),                // 52: pethost.panel.v1.MountVolume
-	(*ProjectExtension)(nil),           // 53: pethost.panel.v1.ProjectExtension
-	(*FileChange)(nil),                 // 54: pethost.panel.v1.FileChange
-	(*DeployProjectResponse)(nil),      // 55: pethost.panel.v1.DeployProjectResponse
-	(*SpecViolation)(nil),              // 56: pethost.panel.v1.SpecViolation
-	(*ListCommitsRequest)(nil),         // 57: pethost.panel.v1.ListCommitsRequest
-	(*ListCommitsResponse)(nil),        // 58: pethost.panel.v1.ListCommitsResponse
-	(*BranchCommit)(nil),               // 59: pethost.panel.v1.BranchCommit
-	(*RunProjectActionRequest)(nil),    // 60: pethost.panel.v1.RunProjectActionRequest
-	(*ServicesAction)(nil),             // 61: pethost.panel.v1.ServicesAction
-	(*RecreateServiceAction)(nil),      // 62: pethost.panel.v1.RecreateServiceAction
-	(*BackUpAction)(nil),               // 63: pethost.panel.v1.BackUpAction
-	(*RestoreSnapshotAction)(nil),      // 64: pethost.panel.v1.RestoreSnapshotAction
-	(*CancelOperationAction)(nil),      // 65: pethost.panel.v1.CancelOperationAction
-	(*DeleteProjectAction)(nil),        // 66: pethost.panel.v1.DeleteProjectAction
-	(*RunProjectActionResponse)(nil),   // 67: pethost.panel.v1.RunProjectActionResponse
-	(*GetOperationRequest)(nil),        // 68: pethost.panel.v1.GetOperationRequest
-	(*GetOperationResponse)(nil),       // 69: pethost.panel.v1.GetOperationResponse
-	(*OperationLogLine)(nil),           // 70: pethost.panel.v1.OperationLogLine
-	(*HttpTrafficFilter)(nil),          // 71: pethost.panel.v1.HttpTrafficFilter
-	(*QueryHttpTrafficRequest)(nil),    // 72: pethost.panel.v1.QueryHttpTrafficRequest
-	(*QueryHttpTrafficResponse)(nil),   // 73: pethost.panel.v1.QueryHttpTrafficResponse
-	(*HttpTrafficBucket)(nil),          // 74: pethost.panel.v1.HttpTrafficBucket
-	(*HttpPathTraffic)(nil),            // 75: pethost.panel.v1.HttpPathTraffic
-	(*HttpRequest)(nil),                // 76: pethost.panel.v1.HttpRequest
-	(*ContainerLogFilter)(nil),         // 77: pethost.panel.v1.ContainerLogFilter
-	(*QueryContainerLogsRequest)(nil),  // 78: pethost.panel.v1.QueryContainerLogsRequest
-	(*QueryContainerLogsResponse)(nil), // 79: pethost.panel.v1.QueryContainerLogsResponse
-	(*LogLine)(nil),                    // 80: pethost.panel.v1.LogLine
-	(*RunServiceCommandRequest)(nil),   // 81: pethost.panel.v1.RunServiceCommandRequest
-	(*RunServiceCommandResponse)(nil),  // 82: pethost.panel.v1.RunServiceCommandResponse
-	(*FileEntry)(nil),                  // 83: pethost.panel.v1.FileEntry
-	(*ReadPathRequest)(nil),            // 84: pethost.panel.v1.ReadPathRequest
-	(*ReadPathResponse)(nil),           // 85: pethost.panel.v1.ReadPathResponse
-	(*CreateTransferRequest)(nil),      // 86: pethost.panel.v1.CreateTransferRequest
-	(*ArchiveUpload)(nil),              // 87: pethost.panel.v1.ArchiveUpload
-	(*FileUpload)(nil),                 // 88: pethost.panel.v1.FileUpload
-	(*PathDownload)(nil),               // 89: pethost.panel.v1.PathDownload
-	(*CreateTransferResponse)(nil),     // 90: pethost.panel.v1.CreateTransferResponse
-	(*GetUploadRequest)(nil),           // 91: pethost.panel.v1.GetUploadRequest
-	(*GetUploadResponse)(nil),          // 92: pethost.panel.v1.GetUploadResponse
-	(*ProjectBusy)(nil),                // 93: pethost.panel.v1.ProjectBusy
-	(*ProjectChanged)(nil),             // 94: pethost.panel.v1.ProjectChanged
-	(*MachineUnreachable)(nil),         // 95: pethost.panel.v1.MachineUnreachable
-	(*NoMachine)(nil),                  // 96: pethost.panel.v1.NoMachine
-	(*WatchOperationRequest)(nil),      // 97: pethost.panel.v1.WatchOperationRequest
-	(*WatchOperationResponse)(nil),     // 98: pethost.panel.v1.WatchOperationResponse
-	(*TailContainerLogsRequest)(nil),   // 99: pethost.panel.v1.TailContainerLogsRequest
-	(*TailContainerLogsResponse)(nil),  // 100: pethost.panel.v1.TailContainerLogsResponse
-	(*TailHttpTrafficRequest)(nil),     // 101: pethost.panel.v1.TailHttpTrafficRequest
-	(*TailHttpTrafficResponse)(nil),    // 102: pethost.panel.v1.TailHttpTrafficResponse
-	(*OpenTerminalRequest)(nil),        // 103: pethost.panel.v1.OpenTerminalRequest
-	(*TerminalSize)(nil),               // 104: pethost.panel.v1.TerminalSize
-	(*OpenTerminalResponse)(nil),       // 105: pethost.panel.v1.OpenTerminalResponse
-	(*timestamppb.Timestamp)(nil),      // 106: google.protobuf.Timestamp
+	(AlertChannelKind)(0),              // 0: pethost.panel.v1.AlertChannelKind
+	(MachineSessionKind)(0),            // 1: pethost.panel.v1.MachineSessionKind
+	(ProjectProblemKind)(0),            // 2: pethost.panel.v1.ProjectProblemKind
+	(ServicesActionKind)(0),            // 3: pethost.panel.v1.ServicesActionKind
+	(ServiceState)(0),                  // 4: pethost.panel.v1.ServiceState
+	(RestartPolicy)(0),                 // 5: pethost.panel.v1.RestartPolicy
+	(HealthStatus)(0),                  // 6: pethost.panel.v1.HealthStatus
+	(CertificateSource)(0),             // 7: pethost.panel.v1.CertificateSource
+	(OperationKind)(0),                 // 8: pethost.panel.v1.OperationKind
+	(OperationStatus)(0),               // 9: pethost.panel.v1.OperationStatus
+	(DeployFailureReason)(0),           // 10: pethost.panel.v1.DeployFailureReason
+	(TrafficMetric)(0),                 // 11: pethost.panel.v1.TrafficMetric
+	(AlertStatus)(0),                   // 12: pethost.panel.v1.AlertStatus
+	(IncidentQuietReason)(0),           // 13: pethost.panel.v1.IncidentQuietReason
+	(OutputStream)(0),                  // 14: pethost.panel.v1.OutputStream
+	(FileType)(0),                      // 15: pethost.panel.v1.FileType
+	(FileLocation)(0),                  // 16: pethost.panel.v1.FileLocation
+	(NoMachineReason)(0),               // 17: pethost.panel.v1.NoMachineReason
+	(*GetMachineRequest)(nil),          // 18: pethost.panel.v1.GetMachineRequest
+	(*GetMachineResponse)(nil),         // 19: pethost.panel.v1.GetMachineResponse
+	(*Machine)(nil),                    // 20: pethost.panel.v1.Machine
+	(*AlertDestination)(nil),           // 21: pethost.panel.v1.AlertDestination
+	(*MachineSession)(nil),             // 22: pethost.panel.v1.MachineSession
+	(*DiskUsage)(nil),                  // 23: pethost.panel.v1.DiskUsage
+	(*SshKey)(nil),                     // 24: pethost.panel.v1.SshKey
+	(*GithubConnection)(nil),           // 25: pethost.panel.v1.GithubConnection
+	(*GithubRepository)(nil),           // 26: pethost.panel.v1.GithubRepository
+	(*DeletedProject)(nil),             // 27: pethost.panel.v1.DeletedProject
+	(*RunMachineActionRequest)(nil),    // 28: pethost.panel.v1.RunMachineActionRequest
+	(*RestartMachineAction)(nil),       // 29: pethost.panel.v1.RestartMachineAction
+	(*RunMachineActionResponse)(nil),   // 30: pethost.panel.v1.RunMachineActionResponse
+	(*ProjectMetadata)(nil),            // 31: pethost.panel.v1.ProjectMetadata
+	(*ProjectSummary)(nil),             // 32: pethost.panel.v1.ProjectSummary
+	(*ServiceSummary)(nil),             // 33: pethost.panel.v1.ServiceSummary
+	(*ProjectProblem)(nil),             // 34: pethost.panel.v1.ProjectProblem
+	(*GetProjectRequest)(nil),          // 35: pethost.panel.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),         // 36: pethost.panel.v1.GetProjectResponse
+	(*Project)(nil),                    // 37: pethost.panel.v1.Project
+	(*RunningServicesAction)(nil),      // 38: pethost.panel.v1.RunningServicesAction
+	(*ProjectSource)(nil),              // 39: pethost.panel.v1.ProjectSource
+	(*GithubSource)(nil),               // 40: pethost.panel.v1.GithubSource
+	(*GithubCommit)(nil),               // 41: pethost.panel.v1.GithubCommit
+	(*Service)(nil),                    // 42: pethost.panel.v1.Service
+	(*PublishedPort)(nil),              // 43: pethost.panel.v1.PublishedPort
+	(*VolumeMount)(nil),                // 44: pethost.panel.v1.VolumeMount
+	(*HealthCheck)(nil),                // 45: pethost.panel.v1.HealthCheck
+	(*EnvironmentVariable)(nil),        // 46: pethost.panel.v1.EnvironmentVariable
+	(*Volume)(nil),                     // 47: pethost.panel.v1.Volume
+	(*VolumeMountedBy)(nil),            // 48: pethost.panel.v1.VolumeMountedBy
+	(*Host)(nil),                       // 49: pethost.panel.v1.Host
+	(*Route)(nil),                      // 50: pethost.panel.v1.Route
+	(*Operation)(nil),                  // 51: pethost.panel.v1.Operation
+	(*Snapshot)(nil),                   // 52: pethost.panel.v1.Snapshot
+	(*HttpTrafficSummary)(nil),         // 53: pethost.panel.v1.HttpTrafficSummary
+	(*CreateProjectRequest)(nil),       // 54: pethost.panel.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),      // 55: pethost.panel.v1.CreateProjectResponse
+	(*DeployProjectRequest)(nil),       // 56: pethost.panel.v1.DeployProjectRequest
+	(*MountVolume)(nil),                // 57: pethost.panel.v1.MountVolume
+	(*ProjectExtension)(nil),           // 58: pethost.panel.v1.ProjectExtension
+	(*FileChange)(nil),                 // 59: pethost.panel.v1.FileChange
+	(*DeployProjectResponse)(nil),      // 60: pethost.panel.v1.DeployProjectResponse
+	(*SpecViolation)(nil),              // 61: pethost.panel.v1.SpecViolation
+	(*ListCommitsRequest)(nil),         // 62: pethost.panel.v1.ListCommitsRequest
+	(*ListCommitsResponse)(nil),        // 63: pethost.panel.v1.ListCommitsResponse
+	(*BranchCommit)(nil),               // 64: pethost.panel.v1.BranchCommit
+	(*RunProjectActionRequest)(nil),    // 65: pethost.panel.v1.RunProjectActionRequest
+	(*ServicesAction)(nil),             // 66: pethost.panel.v1.ServicesAction
+	(*RecreateServiceAction)(nil),      // 67: pethost.panel.v1.RecreateServiceAction
+	(*BackUpAction)(nil),               // 68: pethost.panel.v1.BackUpAction
+	(*RestoreSnapshotAction)(nil),      // 69: pethost.panel.v1.RestoreSnapshotAction
+	(*CancelOperationAction)(nil),      // 70: pethost.panel.v1.CancelOperationAction
+	(*DeleteProjectAction)(nil),        // 71: pethost.panel.v1.DeleteProjectAction
+	(*RunProjectActionResponse)(nil),   // 72: pethost.panel.v1.RunProjectActionResponse
+	(*SetProjectAlertsRequest)(nil),    // 73: pethost.panel.v1.SetProjectAlertsRequest
+	(*SetProjectAlertsResponse)(nil),   // 74: pethost.panel.v1.SetProjectAlertsResponse
+	(*SiteCheck)(nil),                  // 75: pethost.panel.v1.SiteCheck
+	(*TrafficRule)(nil),                // 76: pethost.panel.v1.TrafficRule
+	(*ProjectAlerts)(nil),              // 77: pethost.panel.v1.ProjectAlerts
+	(*SiteCheckState)(nil),             // 78: pethost.panel.v1.SiteCheckState
+	(*SiteCheckResult)(nil),            // 79: pethost.panel.v1.SiteCheckResult
+	(*TrafficRuleState)(nil),           // 80: pethost.panel.v1.TrafficRuleState
+	(*Incident)(nil),                   // 81: pethost.panel.v1.Incident
+	(*IncidentEvidence)(nil),           // 82: pethost.panel.v1.IncidentEvidence
+	(*UptimeDay)(nil),                  // 83: pethost.panel.v1.UptimeDay
+	(*GetIncidentRequest)(nil),         // 84: pethost.panel.v1.GetIncidentRequest
+	(*GetIncidentResponse)(nil),        // 85: pethost.panel.v1.GetIncidentResponse
+	(*GetOperationRequest)(nil),        // 86: pethost.panel.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),       // 87: pethost.panel.v1.GetOperationResponse
+	(*OperationLogLine)(nil),           // 88: pethost.panel.v1.OperationLogLine
+	(*HttpTrafficFilter)(nil),          // 89: pethost.panel.v1.HttpTrafficFilter
+	(*QueryHttpTrafficRequest)(nil),    // 90: pethost.panel.v1.QueryHttpTrafficRequest
+	(*QueryHttpTrafficResponse)(nil),   // 91: pethost.panel.v1.QueryHttpTrafficResponse
+	(*HttpTrafficBucket)(nil),          // 92: pethost.panel.v1.HttpTrafficBucket
+	(*HttpPathTraffic)(nil),            // 93: pethost.panel.v1.HttpPathTraffic
+	(*HttpRequest)(nil),                // 94: pethost.panel.v1.HttpRequest
+	(*ContainerLogFilter)(nil),         // 95: pethost.panel.v1.ContainerLogFilter
+	(*QueryContainerLogsRequest)(nil),  // 96: pethost.panel.v1.QueryContainerLogsRequest
+	(*QueryContainerLogsResponse)(nil), // 97: pethost.panel.v1.QueryContainerLogsResponse
+	(*LogLine)(nil),                    // 98: pethost.panel.v1.LogLine
+	(*RunServiceCommandRequest)(nil),   // 99: pethost.panel.v1.RunServiceCommandRequest
+	(*RunServiceCommandResponse)(nil),  // 100: pethost.panel.v1.RunServiceCommandResponse
+	(*FileEntry)(nil),                  // 101: pethost.panel.v1.FileEntry
+	(*ReadPathRequest)(nil),            // 102: pethost.panel.v1.ReadPathRequest
+	(*ReadPathResponse)(nil),           // 103: pethost.panel.v1.ReadPathResponse
+	(*CreateTransferRequest)(nil),      // 104: pethost.panel.v1.CreateTransferRequest
+	(*ArchiveUpload)(nil),              // 105: pethost.panel.v1.ArchiveUpload
+	(*FileUpload)(nil),                 // 106: pethost.panel.v1.FileUpload
+	(*PathDownload)(nil),               // 107: pethost.panel.v1.PathDownload
+	(*CreateTransferResponse)(nil),     // 108: pethost.panel.v1.CreateTransferResponse
+	(*GetUploadRequest)(nil),           // 109: pethost.panel.v1.GetUploadRequest
+	(*GetUploadResponse)(nil),          // 110: pethost.panel.v1.GetUploadResponse
+	(*ProjectBusy)(nil),                // 111: pethost.panel.v1.ProjectBusy
+	(*ProjectChanged)(nil),             // 112: pethost.panel.v1.ProjectChanged
+	(*MachineUnreachable)(nil),         // 113: pethost.panel.v1.MachineUnreachable
+	(*MachineUpdatePending)(nil),       // 114: pethost.panel.v1.MachineUpdatePending
+	(*NoMachine)(nil),                  // 115: pethost.panel.v1.NoMachine
+	(*WatchOperationRequest)(nil),      // 116: pethost.panel.v1.WatchOperationRequest
+	(*WatchOperationResponse)(nil),     // 117: pethost.panel.v1.WatchOperationResponse
+	(*TailContainerLogsRequest)(nil),   // 118: pethost.panel.v1.TailContainerLogsRequest
+	(*TailContainerLogsResponse)(nil),  // 119: pethost.panel.v1.TailContainerLogsResponse
+	(*TailHttpTrafficRequest)(nil),     // 120: pethost.panel.v1.TailHttpTrafficRequest
+	(*TailHttpTrafficResponse)(nil),    // 121: pethost.panel.v1.TailHttpTrafficResponse
+	(*OpenTerminalRequest)(nil),        // 122: pethost.panel.v1.OpenTerminalRequest
+	(*TerminalSize)(nil),               // 123: pethost.panel.v1.TerminalSize
+	(*OpenTerminalResponse)(nil),       // 124: pethost.panel.v1.OpenTerminalResponse
+	(*timestamppb.Timestamp)(nil),      // 125: google.protobuf.Timestamp
 }
 var file_v1_panel_proto_depIdxs = []int32{
-	16,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
-	27,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
-	22,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
-	20,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
-	106, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
-	18,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
-	19,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
-	106, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	106, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
-	106, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
-	106, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
-	17,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
-	0,   // 12: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
-	106, // 13: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
-	21,  // 14: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
-	106, // 15: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
-	47,  // 16: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
-	19,  // 17: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
-	24,  // 18: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
-	106, // 19: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
-	16,  // 20: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
-	26,  // 21: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	29,  // 22: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
-	28,  // 23: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
-	48,  // 24: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	106, // 25: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
-	46,  // 26: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
-	3,   // 27: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
-	1,   // 28: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	106, // 29: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
-	106, // 30: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
-	32,  // 31: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
-	26,  // 32: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	29,  // 33: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
-	8,   // 34: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
-	106, // 35: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
-	37,  // 36: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
-	42,  // 37: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
-	45,  // 38: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
-	44,  // 39: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
-	46,  // 40: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
-	47,  // 41: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
-	106, // 42: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	48,  // 43: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	34,  // 44: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
-	33,  // 45: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
-	2,   // 46: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
-	106, // 47: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
-	35,  // 48: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
-	36,  // 49: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
-	36,  // 50: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
-	3,   // 51: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
-	106, // 52: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
-	106, // 53: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
-	38,  // 54: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
-	39,  // 55: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
-	4,   // 56: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
-	40,  // 57: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
-	41,  // 58: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
-	5,   // 59: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
-	43,  // 60: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
-	106, // 61: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
-	6,   // 62: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
-	106, // 63: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
-	7,   // 64: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
-	8,   // 65: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
-	106, // 66: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
-	106, // 67: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
-	9,   // 68: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
-	36,  // 69: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
-	106, // 70: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
-	34,  // 71: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
-	54,  // 72: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	53,  // 73: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	46,  // 74: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	56,  // 75: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	32,  // 76: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
-	70,  // 77: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	54,  // 78: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	53,  // 79: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	52,  // 80: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
-	26,  // 81: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	45,  // 82: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
-	46,  // 83: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	56,  // 84: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	32,  // 85: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
-	70,  // 86: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	59,  // 87: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
-	36,  // 88: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
-	106, // 89: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
-	46,  // 90: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
-	61,  // 91: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
-	61,  // 92: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
-	61,  // 93: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
-	62,  // 94: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
-	63,  // 95: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
-	64,  // 96: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
-	65,  // 97: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
-	66,  // 98: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
-	34,  // 99: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
-	46,  // 100: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
-	32,  // 101: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
-	70,  // 102: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	46,  // 103: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
-	32,  // 104: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
-	70,  // 105: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	106, // 106: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
-	71,  // 107: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	106, // 108: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
-	106, // 109: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
-	106, // 110: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
-	106, // 111: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
-	106, // 112: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	48,  // 113: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	74,  // 114: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
-	75,  // 115: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
-	76,  // 116: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
-	106, // 117: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
-	48,  // 118: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	48,  // 119: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	106, // 120: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
-	10,  // 121: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
-	77,  // 122: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	106, // 123: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	106, // 124: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	106, // 125: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
-	106, // 126: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
-	106, // 127: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	80,  // 128: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
-	106, // 129: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
-	10,  // 130: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
-	11,  // 131: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
-	106, // 132: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
-	83,  // 133: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
-	12,  // 134: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
-	83,  // 135: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
-	87,  // 136: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
-	88,  // 137: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
-	89,  // 138: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
-	106, // 139: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
-	56,  // 140: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	7,   // 141: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
-	106, // 142: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
-	13,  // 143: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
-	70,  // 144: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	46,  // 145: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
-	77,  // 146: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	80,  // 147: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
-	71,  // 148: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	76,  // 149: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
-	104, // 150: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
-	106, // 151: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
-	14,  // 152: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
-	23,  // 153: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
-	30,  // 154: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
-	49,  // 155: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
-	51,  // 156: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
-	57,  // 157: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
-	60,  // 158: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
-	68,  // 159: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
-	72,  // 160: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
-	78,  // 161: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
-	81,  // 162: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
-	103, // 163: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
-	84,  // 164: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
-	86,  // 165: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
-	91,  // 166: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
-	97,  // 167: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
-	99,  // 168: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
-	101, // 169: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
-	15,  // 170: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
-	25,  // 171: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
-	31,  // 172: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
-	50,  // 173: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
-	55,  // 174: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
-	58,  // 175: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
-	67,  // 176: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
-	69,  // 177: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
-	73,  // 178: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
-	79,  // 179: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
-	82,  // 180: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
-	105, // 181: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
-	85,  // 182: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
-	90,  // 183: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
-	92,  // 184: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
-	98,  // 185: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
-	100, // 186: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
-	102, // 187: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
-	170, // [170:188] is the sub-list for method output_type
-	152, // [152:170] is the sub-list for method input_type
-	152, // [152:152] is the sub-list for extension type_name
-	152, // [152:152] is the sub-list for extension extendee
-	0,   // [0:152] is the sub-list for field type_name
+	20,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
+	32,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
+	27,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
+	25,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
+	125, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
+	23,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
+	24,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
+	125, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	125, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
+	125, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
+	125, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
+	22,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
+	21,  // 12: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
+	0,   // 13: pethost.panel.v1.AlertDestination.kind:type_name -> pethost.panel.v1.AlertChannelKind
+	1,   // 14: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
+	125, // 15: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
+	26,  // 16: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
+	125, // 17: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
+	52,  // 18: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
+	24,  // 19: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
+	29,  // 20: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
+	125, // 21: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
+	20,  // 22: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
+	31,  // 23: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	34,  // 24: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
+	33,  // 25: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
+	53,  // 26: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	125, // 27: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
+	51,  // 28: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
+	4,   // 29: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
+	2,   // 30: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	125, // 31: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
+	125, // 32: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
+	125, // 33: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
+	37,  // 34: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
+	31,  // 35: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	34,  // 36: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
+	9,   // 37: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
+	125, // 38: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
+	42,  // 39: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
+	47,  // 40: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
+	50,  // 41: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
+	49,  // 42: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
+	51,  // 43: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
+	52,  // 44: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
+	125, // 45: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	53,  // 46: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	39,  // 47: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
+	38,  // 48: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
+	77,  // 49: pethost.panel.v1.Project.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	81,  // 50: pethost.panel.v1.Project.incidents:type_name -> pethost.panel.v1.Incident
+	83,  // 51: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
+	3,   // 52: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
+	125, // 53: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
+	40,  // 54: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
+	41,  // 55: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
+	41,  // 56: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
+	4,   // 57: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
+	125, // 58: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
+	125, // 59: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
+	43,  // 60: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
+	44,  // 61: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
+	5,   // 62: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
+	45,  // 63: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
+	46,  // 64: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
+	6,   // 65: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
+	48,  // 66: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
+	125, // 67: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
+	7,   // 68: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
+	125, // 69: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
+	8,   // 70: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
+	9,   // 71: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
+	125, // 72: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
+	125, // 73: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
+	10,  // 74: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
+	41,  // 75: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
+	125, // 76: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
+	39,  // 77: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
+	59,  // 78: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	58,  // 79: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	51,  // 80: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	61,  // 81: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	37,  // 82: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
+	88,  // 83: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	59,  // 84: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	58,  // 85: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	57,  // 86: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
+	31,  // 87: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	50,  // 88: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
+	51,  // 89: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	61,  // 90: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	37,  // 91: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
+	88,  // 92: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	64,  // 93: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
+	41,  // 94: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
+	125, // 95: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
+	51,  // 96: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
+	66,  // 97: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
+	66,  // 98: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
+	66,  // 99: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
+	67,  // 100: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
+	68,  // 101: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
+	69,  // 102: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
+	70,  // 103: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
+	71,  // 104: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
+	39,  // 105: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
+	51,  // 106: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
+	37,  // 107: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
+	88,  // 108: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	75,  // 109: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
+	76,  // 110: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
+	77,  // 111: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	11,  // 112: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
+	89,  // 113: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	78,  // 114: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
+	80,  // 115: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
+	125, // 116: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
+	75,  // 117: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
+	12,  // 118: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
+	79,  // 119: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
+	125, // 120: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
+	76,  // 121: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
+	12,  // 122: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
+	2,   // 123: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	75,  // 124: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
+	76,  // 125: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
+	125, // 126: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
+	125, // 127: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
+	125, // 128: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
+	13,  // 129: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
+	82,  // 130: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
+	79,  // 131: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
+	98,  // 132: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
+	93,  // 133: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
+	125, // 134: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
+	81,  // 135: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
+	81,  // 136: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
+	51,  // 137: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
+	37,  // 138: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
+	88,  // 139: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	125, // 140: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
+	89,  // 141: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	125, // 142: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
+	125, // 143: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
+	125, // 144: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
+	125, // 145: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
+	125, // 146: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	53,  // 147: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	92,  // 148: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
+	93,  // 149: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
+	94,  // 150: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
+	125, // 151: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
+	53,  // 152: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	53,  // 153: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	125, // 154: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
+	14,  // 155: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
+	95,  // 156: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	125, // 157: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	125, // 158: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	125, // 159: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
+	125, // 160: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
+	125, // 161: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	98,  // 162: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
+	125, // 163: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
+	14,  // 164: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
+	15,  // 165: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
+	125, // 166: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
+	101, // 167: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
+	16,  // 168: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
+	101, // 169: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
+	105, // 170: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
+	106, // 171: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
+	107, // 172: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
+	125, // 173: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
+	61,  // 174: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	8,   // 175: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
+	125, // 176: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
+	125, // 177: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
+	17,  // 178: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
+	88,  // 179: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	51,  // 180: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
+	95,  // 181: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	98,  // 182: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
+	89,  // 183: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	94,  // 184: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
+	123, // 185: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
+	125, // 186: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
+	18,  // 187: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
+	28,  // 188: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
+	35,  // 189: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
+	54,  // 190: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
+	56,  // 191: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
+	62,  // 192: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
+	65,  // 193: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
+	73,  // 194: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
+	84,  // 195: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
+	86,  // 196: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
+	90,  // 197: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
+	96,  // 198: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
+	99,  // 199: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
+	122, // 200: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
+	102, // 201: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
+	104, // 202: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
+	109, // 203: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
+	116, // 204: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
+	118, // 205: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
+	120, // 206: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
+	19,  // 207: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
+	30,  // 208: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
+	36,  // 209: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
+	55,  // 210: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
+	60,  // 211: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
+	63,  // 212: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
+	72,  // 213: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
+	74,  // 214: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
+	85,  // 215: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
+	87,  // 216: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
+	91,  // 217: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
+	97,  // 218: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
+	100, // 219: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
+	124, // 220: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
+	103, // 221: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
+	108, // 222: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
+	110, // 223: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
+	117, // 224: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
+	119, // 225: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
+	121, // 226: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
+	207, // [207:227] is the sub-list for method output_type
+	187, // [187:207] is the sub-list for method input_type
+	187, // [187:187] is the sub-list for extension type_name
+	187, // [187:187] is the sub-list for extension extendee
+	0,   // [0:187] is the sub-list for field type_name
 }
 
 func init() { file_v1_panel_proto_init() }
@@ -20971,24 +24376,24 @@ func file_v1_panel_proto_init() {
 	if File_v1_panel_proto != nil {
 		return
 	}
-	file_v1_panel_proto_msgTypes[9].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[10].OneofWrappers = []any{
 		(*runMachineActionRequest_AddSshKey)(nil),
 		(*runMachineActionRequest_RemoveSshKeyFingerprint)(nil),
 		(*runMachineActionRequest_RestartMachine)(nil),
 		(*runMachineActionRequest_CancelRestart)(nil),
 		(*runMachineActionRequest_EndSessionId)(nil),
 	}
-	file_v1_panel_proto_msgTypes[20].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[21].OneofWrappers = []any{
 		(*projectSource_Files)(nil),
 		(*projectSource_Github)(nil),
 	}
-	file_v1_panel_proto_msgTypes[37].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[38].OneofWrappers = []any{
 		(*deployProjectRequest_UploadId)(nil),
 		(*deployProjectRequest_Commit)(nil),
 		(*deployProjectRequest_NewestCommit)(nil),
 		(*deployProjectRequest_RollbackDeployId)(nil),
 	}
-	file_v1_panel_proto_msgTypes[40].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[41].OneofWrappers = []any{
 		(*fileChange_Text)(nil),
 		(*fileChange_Data)(nil),
 		(*fileChange_MakeDirectory)(nil),
@@ -20996,7 +24401,7 @@ func file_v1_panel_proto_init() {
 		(*fileChange_DeleteTree)(nil),
 		(*fileChange_RenameTo)(nil),
 	}
-	file_v1_panel_proto_msgTypes[46].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[47].OneofWrappers = []any{
 		(*runProjectActionRequest_StartServices)(nil),
 		(*runProjectActionRequest_StopServices)(nil),
 		(*runProjectActionRequest_RestartServices)(nil),
@@ -21008,24 +24413,24 @@ func file_v1_panel_proto_init() {
 		(*runProjectActionRequest_SetSource)(nil),
 		(*runProjectActionRequest_DeleteVolume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[70].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[84].OneofWrappers = []any{
 		(*readPathRequest_Service)(nil),
 		(*readPathRequest_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[72].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[86].OneofWrappers = []any{
 		(*createTransferRequest_UploadArchive)(nil),
 		(*createTransferRequest_UploadFile)(nil),
 		(*createTransferRequest_Download)(nil),
 	}
-	file_v1_panel_proto_msgTypes[74].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[88].OneofWrappers = []any{
 		(*fileUpload_Service)(nil),
 		(*fileUpload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[75].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[89].OneofWrappers = []any{
 		(*pathDownload_Service)(nil),
 		(*pathDownload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[84].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[99].OneofWrappers = []any{
 		(*watchOperationResponse_Log)(nil),
 		(*watchOperationResponse_FinishedOperation)(nil),
 	}
@@ -21034,8 +24439,8 @@ func file_v1_panel_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_panel_proto_rawDesc), len(file_v1_panel_proto_rawDesc)),
-			NumEnums:      14,
-			NumMessages:   92,
+			NumEnums:      18,
+			NumMessages:   107,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

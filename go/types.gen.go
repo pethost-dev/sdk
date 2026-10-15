@@ -92,6 +92,17 @@ type Machine struct {
 	// What people have open in the containers now, oldest first: at most 100, the most the machine
 	// holds at once.
 	Sessions []MachineSession
+	// Where Pethost tells the person of incidents: the account's channels that are on, email
+	// first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool
+	// does. Empty = alerts reach nobody.
+	AlertChannels []AlertDestination
+}
+
+// A channel Pethost tells the person of incidents on ([Machine.AlertChannels]).
+type AlertDestination struct {
+	Kind AlertChannelKind
+	// The chat's title, or "#ops · Acme". Empty for email.
+	Label string
 }
 
 // Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH,
@@ -303,6 +314,8 @@ type ProjectProblem struct {
 	// healthcheck: 11 failures in a row". A failed or cancelled deploy's also says whether it
 	// changed the project.
 	ProblemMessage string
+	// The open incident that records it ([Project.Incidents]). Empty = none yet.
+	IncidentID string
 }
 
 // GetProjectRequest is the request of [Client.GetProject].
@@ -316,6 +329,14 @@ type GetProjectRequest struct {
 	SnapshotsBefore time.Time
 	// Only snapshots holding this volume ([Volume.SnapshotCount]). Empty = all.
 	SnapshotsVolume string
+	// Only incidents that opened before it: the oldest [Incident.OpenTime] seen, to page back.
+	// Absent = the newest.
+	IncidentsBefore time.Time
+	// ≤90: [Project.UptimeDays]. 0 = none.
+	UptimeDayCount uint32
+	// With IncidentsBefore: the IncidentID of the oldest seen, so that those that opened at the
+	// same time are not skipped.
+	IncidentsBeforeID string
 }
 
 // GetProjectResponse is the response of [Client.GetProject].
@@ -379,6 +400,18 @@ type Project struct {
 	// ([Client.RunProjectAction] waits for its end). Until then the project takes no other action
 	// or deploy, and [Service.State] is still what it was before. Absent = none.
 	RunningServicesAction *RunningServicesAction
+	// What Pethost watches and how each part stands. Absent = the machine's software predates
+	// alerts: they come with its next update.
+	Alerts *ProjectAlerts
+	// The newest 5 that [GetProjectRequest.IncidentsBefore] selects, newest first: an open one in
+	// full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+	// [Incident.AfterOperationID], [Incident.QuietReason] and flapping.
+	Incidents []Incident
+	// True = older ones remain: page with [GetProjectRequest.IncidentsBefore] and
+	// [GetProjectRequest.IncidentsBeforeID].
+	MoreIncidents bool
+	// Oldest first, [GetProjectRequest.UptimeDayCount] of them, today's last.
+	UptimeDays []UptimeDay
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -689,6 +722,10 @@ type Operation struct {
 	// before the current one; of deploys that changed only /.env or x-pethost, whose files are the
 	// same, the newest has it.
 	FilesKept bool
+	// DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+	// files (a commit, an archive, a file other than /.env); else an earlier one, as after a
+	// deploy that changed only /.env or x-pethost.
+	FilesOperationID string
 }
 
 type Snapshot struct {
@@ -1086,6 +1123,180 @@ type RunProjectActionResponse struct {
 	Log []OperationLogLine
 }
 
+// SetProjectAlertsRequest is the request of [Client.SetProjectAlerts].
+type SetProjectAlertsRequest struct {
+	ProjectID string
+	// ≤10. Given = the whole list.
+	Checks []SiteCheck
+	// True = none, not even the default check.
+	RemoveChecks bool
+	// ≤10. Given = the whole list.
+	TrafficRules []TrafficRule
+	// True = none.
+	RemoveTrafficRules bool
+	// True = incidents are recorded, nothing is sent. Absent = stays.
+	Off *bool
+	// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+	MuteMinutes *uint32
+}
+
+// SetProjectAlertsResponse is the response of [Client.SetProjectAlerts].
+type SetProjectAlertsResponse struct {
+	// As changed.
+	Alerts *ProjectAlerts
+}
+
+// An address of the project the machine opens every minute through its proxy, from inside the
+// machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+// MustContain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+type SiteCheck struct {
+	// A [Host.Host] of the project.
+	Host string
+	// "/…", ≤200 chars, a query allowed. Empty = "/".
+	Path string
+	// 100-599. 0 = any status below 500 is up: 401, 404 and redirects too.
+	ExpectStatus uint32
+	// ≤100 chars, in the body's first 64 KiB. Empty = not looked for.
+	MustContain string
+
+	// What a newer API sent in this message that this version of the package has no field
+	// for. It goes back as it came when the message is sent.
+	unknown string
+}
+
+// Fires when Metric, over the last WindowMinutes of the requests Filter selects, reaches
+// Threshold 2 minutes in a row; clears after 3 below.
+type TrafficRule struct {
+	Metric TrafficMetric
+	// [HTTPTrafficFilter.StatusClass] not taken.
+	Filter *HTTPTrafficFilter
+	// A count, a percent (0-100) or ms.
+	Threshold float64
+	// 1-60. 0 = 5.
+	WindowMinutes uint32
+	// Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20.
+	MinRequests uint32
+
+	// What a newer API sent in this message that this version of the package has no field
+	// for. It goes back as it came when the message is sent.
+	unknown string
+}
+
+// What Pethost watches on a project ([Client.SetProjectAlerts]), and how each part stands now.
+// Service crashes, running out of memory, failed healthchecks, and failed backups, restores
+// and auto-deploys are always watched.
+type ProjectAlerts struct {
+	// Until set: the project's URL at "/" (MachineDefault); none without a route.
+	Checks []SiteCheckState
+	// Until set: 10 or more 5xx in 5 minutes, of every request (MachineDefault).
+	TrafficRules []TrafficRuleState
+	// True = incidents are recorded, nothing is sent.
+	Off bool
+	// Absent = not muted.
+	MuteEndTime time.Time
+	// Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
+	// no check ran.
+	UptimePercent *float64
+}
+
+type SiteCheckState struct {
+	Check *SiteCheck
+	// The default check, as no list was set.
+	MachineDefault bool
+	Status         AlertStatus
+	// Absent = not run yet.
+	LastResult *SiteCheckResult
+	// The open incident. Empty = none.
+	IncidentID string
+}
+
+type SiteCheckResult struct {
+	CheckTime time.Time
+	// 0 = no HTTP answer: FailureMessage says why.
+	Status     uint32
+	DurationMs uint32
+	// E.g. "connection refused", "status 502", "the text is missing". Empty = up.
+	FailureMessage string
+}
+
+type TrafficRuleState struct {
+	Rule *TrafficRule
+	// The default rule, as no list was set.
+	MachineDefault bool
+	Status         AlertStatus
+	// The metric at the last evaluation.
+	Value float64
+	// In the window then.
+	RequestCount uint64
+	// The open incident. Empty = none.
+	IncidentID string
+}
+
+// A period during which something of a project needed attention, from its confirmation to its
+// end.
+type Incident struct {
+	IncidentID string
+	// DEPLOY_CANCELLED opens none.
+	Kind ProjectProblemKind
+	// As in its [ProjectProblem].
+	Service string
+	// SITE_DOWN.
+	Check *SiteCheck
+	// HTTP_ERRORS, HTTP_SLOW.
+	TrafficRule *TrafficRule
+	// DEPLOY_FAILED, BACKUP_FAILED, RESTORE_FAILED.
+	OperationID string
+	OpenTime    time.Time
+	// When it and every incident joined to it cleared. Absent = open.
+	ResolveTime time.Time
+	// HTTP_ERRORS, HTTP_SLOW: the metric at open.
+	Value float64
+	// HTTP_ERRORS, HTTP_SLOW: the window's requests at open.
+	RequestCount uint64
+	// A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a
+	// likely cause, undone with [DeployProjectRollbackDeployID] or an older commit. Empty = none.
+	AfterOperationID string
+	// Absent = it was running.
+	AfterOperationEndTime time.Time
+	// The incident this one is part of: it is told with that one, not on its own. Empty = none.
+	JoinedIncidentID string
+	// Set = nobody is told of it.
+	QuietReason IncidentQuietReason
+	// True = it went down and up 3 times within an hour; it stands for them all and clears after
+	// 15 clean minutes.
+	Flapping bool
+	// One sentence for people, without a time of day.
+	IncidentMessage string
+	// GetIncident only.
+	Evidence *IncidentEvidence
+}
+
+// What the machine saw when an incident opened, kept with it. Untrusted.
+type IncidentEvidence struct {
+	// SITE_DOWN: the third failure.
+	CheckResult *SiteCheckResult
+	// The service's container: SERVICE_* kinds, and SITE_DOWN's service.
+	ExitCode  int32
+	OomKilled bool
+	// In the 10 minutes before.
+	RestartCount uint32
+	// The last healthcheck's, ≤1 KiB.
+	HealthOutput string
+	// The service's last ≤20 before it opened, oldest first.
+	LogLines []LogLine
+	// HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest.
+	TopPath *HTTPPathTraffic
+}
+
+// One UTC day of a project's site checks.
+type UptimeDay struct {
+	// Midnight UTC.
+	StartTime time.Time
+	// Absent = no check ran.
+	UptimePercent *float64
+	DownSeconds   uint32
+}
+
 // GetOperationRequest is the request of [Client.GetOperation].
 type GetOperationRequest struct {
 	ProjectID string
@@ -1135,6 +1346,10 @@ type HTTPTrafficFilter struct {
 	PathPattern string
 	// 1-5: 5 = 5xx.
 	StatusClass uint32
+
+	// What a newer API sent in this message that this version of the package has no field
+	// for. It goes back as it came when the message is sent.
+	unknown string
 }
 
 // QueryHTTPTrafficRequest is the request of [Client.QueryHTTPTraffic].
@@ -1537,7 +1752,17 @@ type ProjectChanged struct{}
 //
 // Detail of a [CodeUnavailable] error: the machine does not answer now, as while it restarts.
 // Call again later.
-type MachineUnreachable struct{}
+type MachineUnreachable struct {
+	// Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+	// ([Machine.AlertChannels]). Absent = not known yet.
+	SinceTime time.Time
+}
+
+// MachineUpdatePending is a detail of an [Error]: [Error.MachineUpdatePending].
+//
+// Detail of a [CodeFailedPrecondition] error: the machine's software predates what was asked.
+// It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
+type MachineUpdatePending struct{}
 
 // NoMachine is a detail of an [Error]: [Error.NoMachine].
 //
@@ -1610,6 +1835,36 @@ type TailHTTPTrafficResponse struct {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
+// and prints as "AlertChannelKind(4)".
+type AlertChannelKind int32
+
+const (
+	AlertChannelKindUnspecified AlertChannelKind = 0
+	// The account's email.
+	AlertChannelKindEmail AlertChannelKind = 1
+	// A Telegram chat or group.
+	AlertChannelKindTelegram AlertChannelKind = 2
+	// A Slack channel.
+	AlertChannelKindSlack AlertChannelKind = 3
+)
+
+// String is the value's name as the API's documentation writes it: "SLACK" for
+// [AlertChannelKindSlack].
+func (v AlertChannelKind) String() string {
+	switch v {
+	case AlertChannelKindUnspecified:
+		return "UNSPECIFIED"
+	case AlertChannelKindEmail:
+		return "EMAIL"
+	case AlertChannelKindTelegram:
+		return "TELEGRAM"
+	case AlertChannelKindSlack:
+		return "SLACK"
+	}
+	return "AlertChannelKind(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
 // and prints as "MachineSessionKind(6)".
 type MachineSessionKind int32
 
@@ -1648,7 +1903,7 @@ func (v MachineSessionKind) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "ProjectProblemKind(11)".
+// and prints as "ProjectProblemKind(14)".
 type ProjectProblemKind int32
 
 const (
@@ -1688,10 +1943,17 @@ const (
 	// ([Service.ListeningPorts]): change the route's port with [DeployProjectRequest.XPethost], or
 	// the app.
 	ProjectProblemKindServicePortClosed ProjectProblemKind = 10
+	// A site check ([Project.Alerts]) failed 3 times in a row; service: the one its route sends
+	// to.
+	ProjectProblemKindSiteDown ProjectProblemKind = 11
+	// A traffic rule on 5xx holds.
+	ProjectProblemKindHTTPErrors ProjectProblemKind = 12
+	// A traffic rule on p95 holds.
+	ProjectProblemKindHTTPSlow ProjectProblemKind = 13
 )
 
-// String is the value's name as the API's documentation writes it: "SERVICE_PORT_CLOSED" for
-// [ProjectProblemKindServicePortClosed].
+// String is the value's name as the API's documentation writes it: "HTTP_SLOW" for
+// [ProjectProblemKindHTTPSlow].
 func (v ProjectProblemKind) String() string {
 	switch v {
 	case ProjectProblemKindUnspecified:
@@ -1716,6 +1978,12 @@ func (v ProjectProblemKind) String() string {
 		return "AUTO_DEPLOY_REFUSED"
 	case ProjectProblemKindServicePortClosed:
 		return "SERVICE_PORT_CLOSED"
+	case ProjectProblemKindSiteDown:
+		return "SITE_DOWN"
+	case ProjectProblemKindHTTPErrors:
+		return "HTTP_ERRORS"
+	case ProjectProblemKindHTTPSlow:
+		return "HTTP_SLOW"
 	}
 	return "ProjectProblemKind(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2014,6 +2282,106 @@ func (v DeployFailureReason) String() string {
 		return "BUILD_MEMORY_UNAVAILABLE"
 	}
 	return "DeployFailureReason(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "TrafficMetric(4)".
+type TrafficMetric int32
+
+const (
+	TrafficMetricUnspecified TrafficMetric = 0
+	// 5xx responses in the window.
+	TrafficMetricServerErrors TrafficMetric = 1
+	// 5xx, of the window's requests (WebSockets too).
+	TrafficMetricServerErrorPercent TrafficMetric = 2
+	TrafficMetricLatencyP95Ms       TrafficMetric = 3
+)
+
+// String is the value's name as the API's documentation writes it: "LATENCY_P95_MS" for
+// [TrafficMetricLatencyP95Ms].
+func (v TrafficMetric) String() string {
+	switch v {
+	case TrafficMetricUnspecified:
+		return "UNSPECIFIED"
+	case TrafficMetricServerErrors:
+		return "SERVER_ERRORS"
+	case TrafficMetricServerErrorPercent:
+		return "SERVER_ERROR_PERCENT"
+	case TrafficMetricLatencyP95Ms:
+		return "LATENCY_P95_MS"
+	}
+	return "TrafficMetric(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "AlertStatus(6)".
+type AlertStatus int32
+
+const (
+	AlertStatusUnspecified AlertStatus = 0
+	AlertStatusOk          AlertStatus = 1
+	// It holds or cleared, not confirmed yet.
+	AlertStatusPending AlertStatus = 2
+	// An incident is open.
+	AlertStatusFiring AlertStatus = 3
+	// Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route
+	// has the check's host.
+	AlertStatusPaused AlertStatus = 4
+	// Not evaluated yet, or too few requests.
+	AlertStatusNoData AlertStatus = 5
+)
+
+// String is the value's name as the API's documentation writes it: "NO_DATA" for
+// [AlertStatusNoData].
+func (v AlertStatus) String() string {
+	switch v {
+	case AlertStatusUnspecified:
+		return "UNSPECIFIED"
+	case AlertStatusOk:
+		return "OK"
+	case AlertStatusPending:
+		return "PENDING"
+	case AlertStatusFiring:
+		return "FIRING"
+	case AlertStatusPaused:
+		return "PAUSED"
+	case AlertStatusNoData:
+		return "NO_DATA"
+	}
+	return "AlertStatus(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "IncidentQuietReason(5)".
+type IncidentQuietReason int32
+
+const (
+	// Told.
+	IncidentQuietReasonUnspecified IncidentQuietReason = 0
+	IncidentQuietReasonMuted       IncidentQuietReason = 1
+	IncidentQuietReasonOff         IncidentQuietReason = 2
+	// Already so when the machine first watched it, as after the update that brought alerts.
+	IncidentQuietReasonFirstEvaluation IncidentQuietReason = 3
+	// A deploy someone ran failed: they watch it.
+	IncidentQuietReasonManualDeploy IncidentQuietReason = 4
+)
+
+// String is the value's name as the API's documentation writes it: "MANUAL_DEPLOY" for
+// [IncidentQuietReasonManualDeploy].
+func (v IncidentQuietReason) String() string {
+	switch v {
+	case IncidentQuietReasonUnspecified:
+		return "UNSPECIFIED"
+	case IncidentQuietReasonMuted:
+		return "MUTED"
+	case IncidentQuietReasonOff:
+		return "OFF"
+	case IncidentQuietReasonFirstEvaluation:
+		return "FIRST_EVALUATION"
+	case IncidentQuietReasonManualDeploy:
+		return "MANUAL_DEPLOY"
+	}
+	return "IncidentQuietReason(" + strconv.Itoa(int(v)) + ")"
 }
 
 // The API may add values: one that this version of the package does not know keeps its number

@@ -60,6 +60,19 @@ import * as p from "pethost";
   m.converts("Machine.restart_required_time", { restartRequiredTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Machine(), restartRequiredTime: new Date(1790000000123) });
   m.converts("Machine.scheduled_restart_time", { scheduledRestartTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Machine(), scheduledRestartTime: new Date(1790000000123) });
   m.converts("Machine.sessions", { sessions: [{}] }, { ...empty.Machine(), sessions: [empty.MachineSession()] });
+  m.converts("Machine.alert_channels", { alertChannels: [{}] }, { ...empty.Machine(), alertChannels: [empty.AlertDestination()] });
+}
+
+{
+  const m = json(p.AlertDestination, w.AlertDestinationSchema);
+  m.converts("AlertDestination: nothing set", {}, empty.AlertDestination());
+  m.refuses("AlertDestination: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("AlertDestination.kind: EMAIL", { kind: w.AlertChannelKind.EMAIL }, { ...empty.AlertDestination(), kind: "EMAIL" });
+  m.converts("AlertDestination.kind: TELEGRAM", { kind: w.AlertChannelKind.TELEGRAM }, { ...empty.AlertDestination(), kind: "TELEGRAM" });
+  m.converts("AlertDestination.kind: SLACK", { kind: w.AlertChannelKind.SLACK }, { ...empty.AlertDestination(), kind: "SLACK" });
+  m.converts("AlertDestination.kind: a value newer than the SDK", { kind: 9999 as w.AlertChannelKind }, { ...empty.AlertDestination(), kind: 9999 });
+  m.refuses("AlertDestination.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("AlertDestination.label", { label: "label" }, { ...empty.AlertDestination(), label: "label" });
 }
 
 {
@@ -239,12 +252,16 @@ import * as p from "pethost";
   m.converts("ProjectProblem.kind: RESTORE_FAILED", { kind: w.ProjectProblemKind.RESTORE_FAILED }, { ...empty.ProjectProblem(), kind: "RESTORE_FAILED" });
   m.converts("ProjectProblem.kind: AUTO_DEPLOY_REFUSED", { kind: w.ProjectProblemKind.AUTO_DEPLOY_REFUSED }, { ...empty.ProjectProblem(), kind: "AUTO_DEPLOY_REFUSED" });
   m.converts("ProjectProblem.kind: SERVICE_PORT_CLOSED", { kind: w.ProjectProblemKind.SERVICE_PORT_CLOSED }, { ...empty.ProjectProblem(), kind: "SERVICE_PORT_CLOSED" });
+  m.converts("ProjectProblem.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.ProjectProblem(), kind: "SITE_DOWN" });
+  m.converts("ProjectProblem.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.ProjectProblem(), kind: "HTTP_ERRORS" });
+  m.converts("ProjectProblem.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.ProjectProblem(), kind: "HTTP_SLOW" });
   m.converts("ProjectProblem.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.ProjectProblem(), kind: 9999 });
   m.refuses("ProjectProblem.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("ProjectProblem.service", { service: "service" }, { ...empty.ProjectProblem(), service: "service" });
   m.converts("ProjectProblem.operation_id", { operationId: "operation_id" }, { ...empty.ProjectProblem(), operationId: "operation_id" });
   m.converts("ProjectProblem.since_time", { sinceTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.ProjectProblem(), sinceTime: new Date(1790000000123) });
   m.converts("ProjectProblem.problem_message", { problemMessage: "problem_message" }, { ...empty.ProjectProblem(), problemMessage: "problem_message" });
+  m.converts("ProjectProblem.incident_id", { incidentId: "incident_id" }, { ...empty.ProjectProblem(), incidentId: "incident_id" });
 }
 
 {
@@ -255,6 +272,9 @@ import * as p from "pethost";
   m.converts("GetProjectRequest.include_secret_values", { includeSecretValues: true }, { ...empty.GetProjectRequest(), includeSecretValues: true });
   m.converts("GetProjectRequest.snapshots_before", { snapshotsBefore: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.GetProjectRequest(), snapshotsBefore: new Date(1790000000123) });
   m.converts("GetProjectRequest.snapshots_volume", { snapshotsVolume: "snapshots_volume" }, { ...empty.GetProjectRequest(), snapshotsVolume: "snapshots_volume" });
+  m.converts("GetProjectRequest.incidents_before", { incidentsBefore: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.GetProjectRequest(), incidentsBefore: new Date(1790000000123) });
+  m.converts("GetProjectRequest.uptime_day_count", { uptimeDayCount: 1006 }, { ...empty.GetProjectRequest(), uptimeDayCount: 1006 });
+  m.converts("GetProjectRequest.incidents_before_id", { incidentsBeforeId: "incidents_before_id" }, { ...empty.GetProjectRequest(), incidentsBeforeId: "incidents_before_id" });
 }
 
 {
@@ -296,6 +316,10 @@ import * as p from "pethost";
   m.converts("Project.http_traffic_last_day", { httpTrafficLastDay: {} }, { ...empty.Project(), httpTrafficLastDay: empty.HttpTrafficSummary() });
   m.converts("Project.source", { source: {} }, { ...empty.Project(), source: empty.ProjectSource() });
   m.converts("Project.running_services_action", { runningServicesAction: {} }, { ...empty.Project(), runningServicesAction: empty.RunningServicesAction() });
+  m.converts("Project.alerts", { alerts: {} }, { ...empty.Project(), alerts: empty.ProjectAlerts() });
+  m.converts("Project.incidents", { incidents: [{}] }, { ...empty.Project(), incidents: [empty.Incident()] });
+  m.converts("Project.more_incidents", { moreIncidents: true }, { ...empty.Project(), moreIncidents: true });
+  m.converts("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
 }
 
 {
@@ -538,6 +562,7 @@ import * as p from "pethost";
   m.converts("Operation.changed_paths", { changedPaths: ["changed_paths", ""] }, { ...empty.Operation(), changedPaths: ["changed_paths", ""] });
   m.converts("Operation.changed_path_count", { changedPathCount: 1018 }, { ...empty.Operation(), changedPathCount: 1018 });
   m.converts("Operation.files_kept", { filesKept: true }, { ...empty.Operation(), filesKept: true });
+  m.converts("Operation.files_operation_id", { filesOperationId: "files_operation_id" }, { ...empty.Operation(), filesOperationId: "files_operation_id" });
 }
 
 {
@@ -771,6 +796,176 @@ import * as p from "pethost";
   m.converts("RunProjectActionResponse.operation", { operation: {} }, { ...empty.RunProjectActionResponse(), operation: empty.Operation() });
   m.converts("RunProjectActionResponse.project", { project: {} }, { ...empty.RunProjectActionResponse(), project: empty.Project() });
   m.converts("RunProjectActionResponse.log", { log: [{}] }, { ...empty.RunProjectActionResponse(), log: [empty.OperationLogLine()] });
+}
+
+{
+  const m = json(p.SetProjectAlertsRequest, w.SetProjectAlertsRequestSchema);
+  m.converts("SetProjectAlertsRequest: nothing set", {}, empty.SetProjectAlertsRequest());
+  m.refuses("SetProjectAlertsRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SetProjectAlertsRequest.project_id", { projectId: "project_id" }, { ...empty.SetProjectAlertsRequest(), projectId: "project_id" });
+  m.converts("SetProjectAlertsRequest.checks", { checks: [{}] }, { ...empty.SetProjectAlertsRequest(), checks: [empty.SiteCheck()] });
+  m.converts("SetProjectAlertsRequest.remove_checks", { removeChecks: true }, { ...empty.SetProjectAlertsRequest(), removeChecks: true });
+  m.converts("SetProjectAlertsRequest.traffic_rules", { trafficRules: [{}] }, { ...empty.SetProjectAlertsRequest(), trafficRules: [empty.TrafficRule()] });
+  m.converts("SetProjectAlertsRequest.remove_traffic_rules", { removeTrafficRules: true }, { ...empty.SetProjectAlertsRequest(), removeTrafficRules: true });
+  m.converts("SetProjectAlertsRequest.off", { off: true }, { ...empty.SetProjectAlertsRequest(), off: true });
+  m.converts("SetProjectAlertsRequest.off: zero", { off: false }, { ...empty.SetProjectAlertsRequest(), off: false });
+  m.converts("SetProjectAlertsRequest.mute_minutes", { muteMinutes: 1007 }, { ...empty.SetProjectAlertsRequest(), muteMinutes: 1007 });
+  m.converts("SetProjectAlertsRequest.mute_minutes: zero", { muteMinutes: 0 }, { ...empty.SetProjectAlertsRequest(), muteMinutes: 0 });
+}
+
+{
+  const m = json(p.SetProjectAlertsResponse, w.SetProjectAlertsResponseSchema);
+  m.converts("SetProjectAlertsResponse: nothing set", {}, empty.SetProjectAlertsResponse());
+  m.refuses("SetProjectAlertsResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SetProjectAlertsResponse.alerts", { alerts: {} }, { ...empty.SetProjectAlertsResponse(), alerts: empty.ProjectAlerts() });
+}
+
+{
+  const m = json(p.SiteCheck, w.SiteCheckSchema);
+  m.converts("SiteCheck: nothing set", {}, empty.SiteCheck());
+  m.refuses("SiteCheck: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SiteCheck.host", { host: "host" }, { ...empty.SiteCheck(), host: "host" });
+  m.converts("SiteCheck.path", { path: "path" }, { ...empty.SiteCheck(), path: "path" });
+  m.converts("SiteCheck.expect_status", { expectStatus: 1003 }, { ...empty.SiteCheck(), expectStatus: 1003 });
+  m.converts("SiteCheck.must_contain", { mustContain: "must_contain" }, { ...empty.SiteCheck(), mustContain: "must_contain" });
+}
+
+{
+  const m = json(p.TrafficRule, w.TrafficRuleSchema);
+  m.converts("TrafficRule: nothing set", {}, empty.TrafficRule());
+  m.refuses("TrafficRule: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("TrafficRule.metric: SERVER_ERRORS", { metric: w.TrafficMetric.SERVER_ERRORS }, { ...empty.TrafficRule(), metric: "SERVER_ERRORS" });
+  m.converts("TrafficRule.metric: SERVER_ERROR_PERCENT", { metric: w.TrafficMetric.SERVER_ERROR_PERCENT }, { ...empty.TrafficRule(), metric: "SERVER_ERROR_PERCENT" });
+  m.converts("TrafficRule.metric: LATENCY_P95_MS", { metric: w.TrafficMetric.LATENCY_P95_MS }, { ...empty.TrafficRule(), metric: "LATENCY_P95_MS" });
+  m.refuses("TrafficRule.metric: a name newer than the SDK", { metric: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("TrafficRule.filter", { filter: {} }, { ...empty.TrafficRule(), filter: empty.HttpTrafficFilter() });
+  m.converts("TrafficRule.threshold", { threshold: 1003.5 }, { ...empty.TrafficRule(), threshold: 1003.5 });
+  m.converts("TrafficRule.window_minutes", { windowMinutes: 1004 }, { ...empty.TrafficRule(), windowMinutes: 1004 });
+  m.converts("TrafficRule.min_requests", { minRequests: 1005 }, { ...empty.TrafficRule(), minRequests: 1005 });
+}
+
+{
+  const m = json(p.ProjectAlerts, w.ProjectAlertsSchema);
+  m.converts("ProjectAlerts: nothing set", {}, empty.ProjectAlerts());
+  m.refuses("ProjectAlerts: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ProjectAlerts.checks", { checks: [{}] }, { ...empty.ProjectAlerts(), checks: [empty.SiteCheckState()] });
+  m.converts("ProjectAlerts.traffic_rules", { trafficRules: [{}] }, { ...empty.ProjectAlerts(), trafficRules: [empty.TrafficRuleState()] });
+  m.converts("ProjectAlerts.off", { off: true }, { ...empty.ProjectAlerts(), off: true });
+  m.converts("ProjectAlerts.mute_end_time", { muteEndTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.ProjectAlerts(), muteEndTime: new Date(1790000000123) });
+  m.converts("ProjectAlerts.uptime_percent", { uptimePercent: 1005.5 }, { ...empty.ProjectAlerts(), uptimePercent: 1005.5 });
+  m.converts("ProjectAlerts.uptime_percent: zero", { uptimePercent: 0 }, { ...empty.ProjectAlerts(), uptimePercent: 0 });
+}
+
+{
+  const m = json(p.SiteCheckState, w.SiteCheckStateSchema);
+  m.converts("SiteCheckState: nothing set", {}, empty.SiteCheckState());
+  m.refuses("SiteCheckState: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SiteCheckState.check", { check: {} }, { ...empty.SiteCheckState(), check: empty.SiteCheck() });
+  m.converts("SiteCheckState.machine_default", { machineDefault: true }, { ...empty.SiteCheckState(), machineDefault: true });
+  m.converts("SiteCheckState.status: OK", { status: w.AlertStatus.OK }, { ...empty.SiteCheckState(), status: "OK" });
+  m.converts("SiteCheckState.status: PENDING", { status: w.AlertStatus.PENDING }, { ...empty.SiteCheckState(), status: "PENDING" });
+  m.converts("SiteCheckState.status: FIRING", { status: w.AlertStatus.FIRING }, { ...empty.SiteCheckState(), status: "FIRING" });
+  m.converts("SiteCheckState.status: PAUSED", { status: w.AlertStatus.PAUSED }, { ...empty.SiteCheckState(), status: "PAUSED" });
+  m.converts("SiteCheckState.status: NO_DATA", { status: w.AlertStatus.NO_DATA }, { ...empty.SiteCheckState(), status: "NO_DATA" });
+  m.converts("SiteCheckState.status: a value newer than the SDK", { status: 9999 as w.AlertStatus }, { ...empty.SiteCheckState(), status: 9999 });
+  m.refuses("SiteCheckState.status: a name newer than the SDK", { status: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("SiteCheckState.last_result", { lastResult: {} }, { ...empty.SiteCheckState(), lastResult: empty.SiteCheckResult() });
+  m.converts("SiteCheckState.incident_id", { incidentId: "incident_id" }, { ...empty.SiteCheckState(), incidentId: "incident_id" });
+}
+
+{
+  const m = json(p.SiteCheckResult, w.SiteCheckResultSchema);
+  m.converts("SiteCheckResult: nothing set", {}, empty.SiteCheckResult());
+  m.refuses("SiteCheckResult: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SiteCheckResult.check_time", { checkTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.SiteCheckResult(), checkTime: new Date(1790000000123) });
+  m.converts("SiteCheckResult.status", { status: 1002 }, { ...empty.SiteCheckResult(), status: 1002 });
+  m.converts("SiteCheckResult.duration_ms", { durationMs: 1003 }, { ...empty.SiteCheckResult(), durationMs: 1003 });
+  m.converts("SiteCheckResult.failure_message", { failureMessage: "failure_message" }, { ...empty.SiteCheckResult(), failureMessage: "failure_message" });
+}
+
+{
+  const m = json(p.TrafficRuleState, w.TrafficRuleStateSchema);
+  m.converts("TrafficRuleState: nothing set", {}, empty.TrafficRuleState());
+  m.refuses("TrafficRuleState: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("TrafficRuleState.rule", { rule: {} }, { ...empty.TrafficRuleState(), rule: empty.TrafficRule() });
+  m.converts("TrafficRuleState.machine_default", { machineDefault: true }, { ...empty.TrafficRuleState(), machineDefault: true });
+  m.converts("TrafficRuleState.status: OK", { status: w.AlertStatus.OK }, { ...empty.TrafficRuleState(), status: "OK" });
+  m.converts("TrafficRuleState.status: PENDING", { status: w.AlertStatus.PENDING }, { ...empty.TrafficRuleState(), status: "PENDING" });
+  m.converts("TrafficRuleState.status: FIRING", { status: w.AlertStatus.FIRING }, { ...empty.TrafficRuleState(), status: "FIRING" });
+  m.converts("TrafficRuleState.status: PAUSED", { status: w.AlertStatus.PAUSED }, { ...empty.TrafficRuleState(), status: "PAUSED" });
+  m.converts("TrafficRuleState.status: NO_DATA", { status: w.AlertStatus.NO_DATA }, { ...empty.TrafficRuleState(), status: "NO_DATA" });
+  m.converts("TrafficRuleState.status: a value newer than the SDK", { status: 9999 as w.AlertStatus }, { ...empty.TrafficRuleState(), status: 9999 });
+  m.refuses("TrafficRuleState.status: a name newer than the SDK", { status: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("TrafficRuleState.value", { value: 1004.5 }, { ...empty.TrafficRuleState(), value: 1004.5 });
+  m.converts("TrafficRuleState.request_count", { requestCount: 9007199254740993n }, { ...empty.TrafficRuleState(), requestCount: 9007199254740993n });
+  m.reads("TrafficRuleState.request_count: as a number", { request_count: 1005 }, { ...empty.TrafficRuleState(), requestCount: 1005n });
+  m.converts("TrafficRuleState.incident_id", { incidentId: "incident_id" }, { ...empty.TrafficRuleState(), incidentId: "incident_id" });
+}
+
+{
+  const m = json(p.Incident, w.IncidentSchema);
+  m.converts("Incident: nothing set", {}, empty.Incident());
+  m.refuses("Incident: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("Incident.incident_id", { incidentId: "incident_id" }, { ...empty.Incident(), incidentId: "incident_id" });
+  m.converts("Incident.kind: DEPLOY_FAILED", { kind: w.ProjectProblemKind.DEPLOY_FAILED }, { ...empty.Incident(), kind: "DEPLOY_FAILED" });
+  m.converts("Incident.kind: SERVICE_UNHEALTHY", { kind: w.ProjectProblemKind.SERVICE_UNHEALTHY }, { ...empty.Incident(), kind: "SERVICE_UNHEALTHY" });
+  m.converts("Incident.kind: SERVICE_RESTARTING", { kind: w.ProjectProblemKind.SERVICE_RESTARTING }, { ...empty.Incident(), kind: "SERVICE_RESTARTING" });
+  m.converts("Incident.kind: SERVICE_OUT_OF_MEMORY", { kind: w.ProjectProblemKind.SERVICE_OUT_OF_MEMORY }, { ...empty.Incident(), kind: "SERVICE_OUT_OF_MEMORY" });
+  m.converts("Incident.kind: BACKUP_FAILED", { kind: w.ProjectProblemKind.BACKUP_FAILED }, { ...empty.Incident(), kind: "BACKUP_FAILED" });
+  m.converts("Incident.kind: DEPLOY_CANCELLED", { kind: w.ProjectProblemKind.DEPLOY_CANCELLED }, { ...empty.Incident(), kind: "DEPLOY_CANCELLED" });
+  m.converts("Incident.kind: SERVICE_EXITED", { kind: w.ProjectProblemKind.SERVICE_EXITED }, { ...empty.Incident(), kind: "SERVICE_EXITED" });
+  m.converts("Incident.kind: RESTORE_FAILED", { kind: w.ProjectProblemKind.RESTORE_FAILED }, { ...empty.Incident(), kind: "RESTORE_FAILED" });
+  m.converts("Incident.kind: AUTO_DEPLOY_REFUSED", { kind: w.ProjectProblemKind.AUTO_DEPLOY_REFUSED }, { ...empty.Incident(), kind: "AUTO_DEPLOY_REFUSED" });
+  m.converts("Incident.kind: SERVICE_PORT_CLOSED", { kind: w.ProjectProblemKind.SERVICE_PORT_CLOSED }, { ...empty.Incident(), kind: "SERVICE_PORT_CLOSED" });
+  m.converts("Incident.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.Incident(), kind: "SITE_DOWN" });
+  m.converts("Incident.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.Incident(), kind: "HTTP_ERRORS" });
+  m.converts("Incident.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.Incident(), kind: "HTTP_SLOW" });
+  m.converts("Incident.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.Incident(), kind: 9999 });
+  m.refuses("Incident.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("Incident.service", { service: "service" }, { ...empty.Incident(), service: "service" });
+  m.converts("Incident.check", { check: {} }, { ...empty.Incident(), check: empty.SiteCheck() });
+  m.converts("Incident.traffic_rule", { trafficRule: {} }, { ...empty.Incident(), trafficRule: empty.TrafficRule() });
+  m.converts("Incident.operation_id", { operationId: "operation_id" }, { ...empty.Incident(), operationId: "operation_id" });
+  m.converts("Incident.open_time", { openTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Incident(), openTime: new Date(1790000000123) });
+  m.converts("Incident.resolve_time", { resolveTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Incident(), resolveTime: new Date(1790000000123) });
+  m.converts("Incident.value", { value: 1009.5 }, { ...empty.Incident(), value: 1009.5 });
+  m.converts("Incident.request_count", { requestCount: 9007199254740993n }, { ...empty.Incident(), requestCount: 9007199254740993n });
+  m.reads("Incident.request_count: as a number", { request_count: 1010 }, { ...empty.Incident(), requestCount: 1010n });
+  m.converts("Incident.after_operation_id", { afterOperationId: "after_operation_id" }, { ...empty.Incident(), afterOperationId: "after_operation_id" });
+  m.converts("Incident.after_operation_end_time", { afterOperationEndTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Incident(), afterOperationEndTime: new Date(1790000000123) });
+  m.converts("Incident.joined_incident_id", { joinedIncidentId: "joined_incident_id" }, { ...empty.Incident(), joinedIncidentId: "joined_incident_id" });
+  m.converts("Incident.quiet_reason: MUTED", { quietReason: w.IncidentQuietReason.MUTED }, { ...empty.Incident(), quietReason: "MUTED" });
+  m.converts("Incident.quiet_reason: OFF", { quietReason: w.IncidentQuietReason.OFF }, { ...empty.Incident(), quietReason: "OFF" });
+  m.converts("Incident.quiet_reason: FIRST_EVALUATION", { quietReason: w.IncidentQuietReason.FIRST_EVALUATION }, { ...empty.Incident(), quietReason: "FIRST_EVALUATION" });
+  m.converts("Incident.quiet_reason: MANUAL_DEPLOY", { quietReason: w.IncidentQuietReason.MANUAL_DEPLOY }, { ...empty.Incident(), quietReason: "MANUAL_DEPLOY" });
+  m.converts("Incident.quiet_reason: a value newer than the SDK", { quietReason: 9999 as w.IncidentQuietReason }, { ...empty.Incident(), quietReason: 9999 });
+  m.refuses("Incident.quiet_reason: a name newer than the SDK", { quiet_reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("Incident.flapping", { flapping: true }, { ...empty.Incident(), flapping: true });
+  m.converts("Incident.incident_message", { incidentMessage: "incident_message" }, { ...empty.Incident(), incidentMessage: "incident_message" });
+  m.converts("Incident.evidence", { evidence: {} }, { ...empty.Incident(), evidence: empty.IncidentEvidence() });
+}
+
+{
+  const m = json(p.IncidentEvidence, w.IncidentEvidenceSchema);
+  m.converts("IncidentEvidence: nothing set", {}, empty.IncidentEvidence());
+  m.refuses("IncidentEvidence: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("IncidentEvidence.check_result", { checkResult: {} }, { ...empty.IncidentEvidence(), checkResult: empty.SiteCheckResult() });
+  m.converts("IncidentEvidence.exit_code", { exitCode: -1002 }, { ...empty.IncidentEvidence(), exitCode: -1002 });
+  m.converts("IncidentEvidence.oom_killed", { oomKilled: true }, { ...empty.IncidentEvidence(), oomKilled: true });
+  m.converts("IncidentEvidence.restart_count", { restartCount: 1004 }, { ...empty.IncidentEvidence(), restartCount: 1004 });
+  m.converts("IncidentEvidence.health_output", { healthOutput: "health_output" }, { ...empty.IncidentEvidence(), healthOutput: "health_output" });
+  m.converts("IncidentEvidence.log_lines", { logLines: [{}] }, { ...empty.IncidentEvidence(), logLines: [empty.LogLine()] });
+  m.converts("IncidentEvidence.top_path", { topPath: {} }, { ...empty.IncidentEvidence(), topPath: empty.HttpPathTraffic() });
+}
+
+{
+  const m = json(p.UptimeDay, w.UptimeDaySchema);
+  m.converts("UptimeDay: nothing set", {}, empty.UptimeDay());
+  m.refuses("UptimeDay: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("UptimeDay.start_time", { startTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.UptimeDay(), startTime: new Date(1790000000123) });
+  m.converts("UptimeDay.uptime_percent", { uptimePercent: 1002.5 }, { ...empty.UptimeDay(), uptimePercent: 1002.5 });
+  m.converts("UptimeDay.uptime_percent: zero", { uptimePercent: 0 }, { ...empty.UptimeDay(), uptimePercent: 0 });
+  m.converts("UptimeDay.down_seconds", { downSeconds: 1003 }, { ...empty.UptimeDay(), downSeconds: 1003 });
 }
 
 {
@@ -1101,6 +1296,13 @@ import * as p from "pethost";
   const m = json(p.MachineUnreachable, w.MachineUnreachableSchema);
   m.converts("MachineUnreachable: nothing set", {}, empty.MachineUnreachable());
   m.refuses("MachineUnreachable: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("MachineUnreachable.since_time", { sinceTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.MachineUnreachable(), sinceTime: new Date(1790000000123) });
+}
+
+{
+  const m = json(p.MachineUpdatePending, w.MachineUpdatePendingSchema);
+  m.converts("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
+  m.refuses("MachineUpdatePending: a field the API does not have", { no_such_field: true }, "no_such_field");
 }
 
 {

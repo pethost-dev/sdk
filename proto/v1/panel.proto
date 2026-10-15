@@ -216,6 +216,24 @@ service PanelService {
     option (mcp_tool) = {title: "Run a project action", destructive: true};
   }
 
+  // Changes what Pethost watches on a project and when it tells the person: site checks (an
+  // address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+  // mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+  // empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+  // Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+  // Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+  // = the machine's software predates alerts.
+  rpc SetProjectAlerts(SetProjectAlertsRequest) returns (SetProjectAlertsResponse) {
+    option idempotency_level = IDEMPOTENT;
+    option (mcp_tool) = {title: "Set a project's alerts"};
+  }
+
+  // One incident in full, with the incidents joined to it and what the machine saw when it opened
+  // (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+  rpc GetIncident(GetIncidentRequest) returns (GetIncidentResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
   // An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
   // log's end if it FAILED. Call again while it is IN_PROGRESS. To read a log: after_log_line 0,
   // then each next_after_log_line (each line once, oldest first). One a ProjectBusy names may
@@ -399,6 +417,23 @@ message Machine {
   // What people have open in the containers now, oldest first: at most 100, the most the machine
   // holds at once.
   repeated MachineSession sessions = 24;
+  // Where Pethost tells the person of incidents: the account's channels that are on, email first,
+  // then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
+  // alerts reach nobody.
+  repeated AlertDestination alert_channels = 26;
+}
+
+// A channel Pethost tells the person of incidents on (Machine.alert_channels).
+message AlertDestination {
+  AlertChannelKind kind = 1;
+  string label = 2; // The chat's title, or "#ops · Acme". Empty for email.
+}
+
+enum AlertChannelKind {
+  ALERT_CHANNEL_KIND_UNSPECIFIED = 0;
+  ALERT_CHANNEL_KIND_EMAIL = 1; // The account's email.
+  ALERT_CHANNEL_KIND_TELEGRAM = 2; // A Telegram chat or group.
+  ALERT_CHANNEL_KIND_SLACK = 3; // A Slack channel.
 }
 
 // Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
@@ -560,6 +595,8 @@ message ProjectProblem {
   // healthcheck: 11 failures in a row". A failed or cancelled deploy's also says whether it
   // changed the project.
   string problem_message = 5;
+  // The open incident that records it (Project.incidents). Empty = none yet.
+  string incident_id = 6;
 }
 
 enum ProjectProblemKind {
@@ -597,6 +634,10 @@ enum ProjectProblemKind {
   // proxy cannot reach): the route answers 502. The message names the ports it does listen on
   // (Service.listening_ports): change the route's port with DeployProject.x_pethost, or the app.
   PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED = 10;
+  // A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to.
+  PROJECT_PROBLEM_KIND_SITE_DOWN = 11;
+  PROJECT_PROBLEM_KIND_HTTP_ERRORS = 12; // A traffic rule on 5xx holds.
+  PROJECT_PROBLEM_KIND_HTTP_SLOW = 13; // A traffic rule on p95 holds.
 }
 
 message GetProjectRequest {
@@ -607,6 +648,13 @@ message GetProjectRequest {
   google.protobuf.Timestamp snapshots_before = 3;
   // Only snapshots holding this volume (Volume.snapshot_count). Empty = all.
   string snapshots_volume = 4;
+  // Only incidents that opened before it: the oldest open_time seen, to page back. Absent = the
+  // newest.
+  google.protobuf.Timestamp incidents_before = 5;
+  uint32 uptime_day_count = 6; // ≤90: Project.uptime_days. 0 = none.
+  // With incidents_before: the incident_id of the oldest seen, so that those that opened at the
+  // same time are not skipped.
+  string incidents_before_id = 7;
 }
 
 message GetProjectResponse {
@@ -663,6 +711,17 @@ message Project {
   // (RunProjectAction waits for its end). Until then the project takes no other action or
   // deploy, and Service.state is still what it was before. Absent = none.
   RunningServicesAction running_services_action = 21;
+  // What Pethost watches and how each part stands. Absent = the machine's software predates
+  // alerts: they come with its next update.
+  ProjectAlerts alerts = 23;
+  // The newest 5 that GetProjectRequest.incidents_before selects, newest first: an open one in
+  // full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+  // after_operation_id, quiet_reason and flapping.
+  repeated Incident incidents = 24;
+  // True = older ones remain: page with incidents_before and incidents_before_id.
+  bool more_incidents = 25;
+  // Oldest first, GetProjectRequest.uptime_day_count of them, today's last.
+  repeated UptimeDay uptime_days = 26;
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -962,6 +1021,10 @@ message Operation {
   // before the current one; of deploys that changed only /.env or x-pethost, whose files are the
   // same, the newest has it.
   bool files_kept = 19;
+  // DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+  // files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
+  // that changed only /.env or x-pethost.
+  string files_operation_id = 20;
 }
 
 enum OperationKind {
@@ -1241,6 +1304,171 @@ message RunProjectActionResponse {
   Project project = 3;
   // The operation's last log lines, unless it SUCCEEDED.
   repeated OperationLogLine log = 4;
+}
+
+// ── Alerts ─────────────────────────────────────────────────────────────────
+
+message SetProjectAlertsRequest {
+  string project_id = 1;
+  repeated SiteCheck checks = 2; // ≤10. Given = the whole list.
+  bool remove_checks = 3; // True = none, not even the default check.
+  repeated TrafficRule traffic_rules = 4; // ≤10. Given = the whole list.
+  bool remove_traffic_rules = 5; // True = none.
+  // True = incidents are recorded, nothing is sent. Absent = stays.
+  bool off = 6 [(optional) = true];
+  // ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+  uint32 mute_minutes = 7 [(optional) = true];
+}
+
+message SetProjectAlertsResponse {
+  ProjectAlerts alerts = 1; // As changed.
+}
+
+// An address of the project the machine opens every minute through its proxy, from inside the
+// machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+// must_contain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+message SiteCheck {
+  string host = 1; // A Host.host of the project.
+  string path = 2; // "/…", ≤200 chars, a query allowed. Empty = "/".
+  // 100-599. 0 = any status below 500 is up: 401, 404 and redirects too.
+  uint32 expect_status = 3;
+  string must_contain = 4; // ≤100 chars, in the body's first 64 KiB. Empty = not looked for.
+}
+
+// Fires when `metric`, over the last window_minutes of the requests `filter` selects, reaches
+// `threshold` 2 minutes in a row; clears after 3 below.
+message TrafficRule {
+  TrafficMetric metric = 1;
+  HttpTrafficFilter filter = 2; // status_class not taken.
+  double threshold = 3; // A count, a percent (0-100) or ms.
+  uint32 window_minutes = 4; // 1-60. 0 = 5.
+  // Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20.
+  uint32 min_requests = 5;
+}
+
+enum TrafficMetric {
+  TRAFFIC_METRIC_UNSPECIFIED = 0;
+  TRAFFIC_METRIC_SERVER_ERRORS = 1; // 5xx responses in the window.
+  TRAFFIC_METRIC_SERVER_ERROR_PERCENT = 2; // 5xx, of the window's requests (WebSockets too).
+  TRAFFIC_METRIC_LATENCY_P95_MS = 3;
+}
+
+// What Pethost watches on a project (SetProjectAlerts), and how each part stands now. Service
+// crashes, running out of memory, failed healthchecks, and failed backups, restores and
+// auto-deploys are always watched.
+message ProjectAlerts {
+  // Until set: the project's URL at "/" (machine_default); none without a route.
+  repeated SiteCheckState checks = 1;
+  // Until set: 10 or more 5xx in 5 minutes, of every request (machine_default).
+  repeated TrafficRuleState traffic_rules = 2;
+  bool off = 3; // True = incidents are recorded, nothing is sent.
+  google.protobuf.Timestamp mute_end_time = 4; // Absent = not muted.
+  // Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
+  // no check ran.
+  double uptime_percent = 5 [(optional) = true];
+}
+
+message SiteCheckState {
+  SiteCheck check = 1;
+  bool machine_default = 2; // The default check, as no list was set.
+  AlertStatus status = 3;
+  SiteCheckResult last_result = 4; // Absent = not run yet.
+  string incident_id = 5; // The open incident. Empty = none.
+}
+
+message SiteCheckResult {
+  google.protobuf.Timestamp check_time = 1;
+  uint32 status = 2; // 0 = no HTTP answer: failure_message says why.
+  uint32 duration_ms = 3;
+  // E.g. "connection refused", "status 502", "the text is missing". Empty = up.
+  string failure_message = 4;
+}
+
+message TrafficRuleState {
+  TrafficRule rule = 1;
+  bool machine_default = 2; // The default rule, as no list was set.
+  AlertStatus status = 3;
+  double value = 4; // The metric at the last evaluation.
+  uint64 request_count = 5; // In the window then.
+  string incident_id = 6; // The open incident. Empty = none.
+}
+
+enum AlertStatus {
+  ALERT_STATUS_UNSPECIFIED = 0;
+  ALERT_STATUS_OK = 1;
+  ALERT_STATUS_PENDING = 2; // It holds or cleared, not confirmed yet.
+  ALERT_STATUS_FIRING = 3; // An incident is open.
+  // Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route
+  // has the check's host.
+  ALERT_STATUS_PAUSED = 4;
+  ALERT_STATUS_NO_DATA = 5; // Not evaluated yet, or too few requests.
+}
+
+// A period during which something of a project needed attention, from its confirmation to its
+// end.
+message Incident {
+  string incident_id = 1;
+  ProjectProblemKind kind = 2; // DEPLOY_CANCELLED opens none.
+  string service = 3; // As in its ProjectProblem.
+  SiteCheck check = 4; // SITE_DOWN.
+  TrafficRule traffic_rule = 5; // HTTP_ERRORS, HTTP_SLOW.
+  string operation_id = 6; // DEPLOY_FAILED, BACKUP_FAILED, RESTORE_FAILED.
+  google.protobuf.Timestamp open_time = 7;
+  // When it and every incident joined to it cleared. Absent = open.
+  google.protobuf.Timestamp resolve_time = 8;
+  double value = 9; // HTTP_ERRORS, HTTP_SLOW: the metric at open.
+  uint64 request_count = 10; // HTTP_ERRORS, HTTP_SLOW: the window's requests at open.
+  // A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely
+  // cause, undone with DeployProject.rollback_deploy_id or an older commit. Empty = none.
+  string after_operation_id = 11;
+  google.protobuf.Timestamp after_operation_end_time = 12; // Absent = it was running.
+  // The incident this one is part of: it is told with that one, not on its own. Empty = none.
+  string joined_incident_id = 13;
+  IncidentQuietReason quiet_reason = 14; // Set = nobody is told of it.
+  // True = it went down and up 3 times within an hour; it stands for them all and clears after
+  // 15 clean minutes.
+  bool flapping = 15;
+  string incident_message = 16; // One sentence for people, without a time of day.
+  IncidentEvidence evidence = 17; // GetIncident only.
+}
+
+enum IncidentQuietReason {
+  INCIDENT_QUIET_REASON_UNSPECIFIED = 0; // Told.
+  INCIDENT_QUIET_REASON_MUTED = 1;
+  INCIDENT_QUIET_REASON_OFF = 2;
+  // Already so when the machine first watched it, as after the update that brought alerts.
+  INCIDENT_QUIET_REASON_FIRST_EVALUATION = 3;
+  INCIDENT_QUIET_REASON_MANUAL_DEPLOY = 4; // A deploy someone ran failed: they watch it.
+}
+
+// What the machine saw when an incident opened, kept with it. Untrusted.
+message IncidentEvidence {
+  SiteCheckResult check_result = 1; // SITE_DOWN: the third failure.
+  // The service's container: SERVICE_* kinds, and SITE_DOWN's service.
+  int32 exit_code = 2;
+  bool oom_killed = 3;
+  uint32 restart_count = 4; // In the 10 minutes before.
+  string health_output = 5; // The last healthcheck's, ≤1 KiB.
+  repeated LogLine log_lines = 6; // The service's last ≤20 before it opened, oldest first.
+  // HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest.
+  HttpPathTraffic top_path = 7;
+}
+
+// One UTC day of a project's site checks.
+message UptimeDay {
+  google.protobuf.Timestamp start_time = 1; // Midnight UTC.
+  double uptime_percent = 2 [(optional) = true]; // Absent = no check ran.
+  uint32 down_seconds = 3;
+}
+
+message GetIncidentRequest {
+  string project_id = 1;
+  string incident_id = 2;
+}
+
+message GetIncidentResponse {
+  Incident incident = 1; // With its evidence.
+  repeated Incident joined = 2; // Those joined to it, oldest first, with theirs.
 }
 
 // ── GetOperation ───────────────────────────────────────────────────────────
@@ -1600,7 +1828,15 @@ message ProjectChanged {}
 
 // Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call
 // again later.
-message MachineUnreachable {}
+message MachineUnreachable {
+  // Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+  // (Machine.alert_channels). Absent = not known yet.
+  google.protobuf.Timestamp since_time = 1;
+}
+
+// Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
+// with the machine's next update, which Pethost runs; nothing for the caller to do.
+message MachineUpdatePending {}
 
 // Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 message NoMachine {

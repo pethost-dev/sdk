@@ -16,7 +16,8 @@ const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
 export const empty = {
   GetMachineRequest: () => ({}),
   GetMachineResponse: () => ({ projects: [], deletedProjects: [] }),
-  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [] }),
+  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [] }),
+  AlertDestination: () => ({ label: "" }),
   MachineSession: () => ({ sessionId: "", projectId: "", service: "", port: 0, clientAddress: "", sshKeyLabel: "", sshKeyFingerprint: "" }),
   DiskUsage: () => ({ imagesBytes: 0n, volumesBytes: 0n, containerLayersBytes: 0n, projectFilesBytes: 0n, containerLogsBytes: 0n, httpTrafficBytes: 0n }),
   SshKey: () => ({ publicKey: "", label: "", fingerprint: "" }),
@@ -29,10 +30,10 @@ export const empty = {
   ProjectMetadata: () => ({}),
   ProjectSummary: () => ({ projectId: "", problems: [], services: [], url: "", hosts: [], cpuUsedCores: 0, memoryUsedBytes: 0n, runningOperations: [], pinned: false, diskUsedBytes: 0n }),
   ServiceSummary: () => ({ service: "" }),
-  ProjectProblem: () => ({ service: "", operationId: "", problemMessage: "" }),
-  GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "" }),
+  ProjectProblem: () => ({ service: "", operationId: "", problemMessage: "", incidentId: "" }),
+  GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "", uptimeDayCount: 0, incidentsBeforeId: "" }),
   GetProjectResponse: () => ({}),
-  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0 }),
+  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0, incidents: [], moreIncidents: false, uptimeDays: [] }),
   RunningServicesAction: () => ({ services: [] }),
   ProjectSource: () => ({}),
   GithubSource: () => ({ pinned: false, autoDeployPending: false }),
@@ -46,7 +47,7 @@ export const empty = {
   VolumeMountedBy: () => ({ service: "", containerPath: "" }),
   Host: () => ({ host: "", url: "", unavailableMessage: "" }),
   Route: () => ({ host: "", path: "", service: "", port: 0, stripPath: false }),
-  Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false }),
+  Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false, filesOperationId: "" }),
   Snapshot: () => ({ snapshotId: "", sizeBytes: 0n, volumes: [] }),
   HttpTrafficSummary: () => ({ requestCount: 0n, serverErrorCount: 0n, latencyP50Ms: 0, latencyP95Ms: 0 }),
   CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "" }),
@@ -68,6 +69,17 @@ export const empty = {
   CancelOperationAction: () => ({ operationId: "" }),
   DeleteProjectAction: () => ({ skipFinalBackup: false }),
   RunProjectActionResponse: () => ({ log: [] }),
+  SetProjectAlertsRequest: () => ({ projectId: "", checks: [], removeChecks: false, trafficRules: [], removeTrafficRules: false }),
+  SetProjectAlertsResponse: () => ({}),
+  SiteCheck: () => ({ host: "", path: "", expectStatus: 0, mustContain: "" }),
+  TrafficRule: () => ({ threshold: 0, windowMinutes: 0, minRequests: 0 }),
+  ProjectAlerts: () => ({ checks: [], trafficRules: [], off: false }),
+  SiteCheckState: () => ({ machineDefault: false, incidentId: "" }),
+  SiteCheckResult: () => ({ status: 0, durationMs: 0, failureMessage: "" }),
+  TrafficRuleState: () => ({ machineDefault: false, value: 0, requestCount: 0n, incidentId: "" }),
+  Incident: () => ({ incidentId: "", service: "", operationId: "", value: 0, requestCount: 0n, afterOperationId: "", joinedIncidentId: "", flapping: false, incidentMessage: "" }),
+  IncidentEvidence: () => ({ exitCode: 0, oomKilled: false, restartCount: 0, healthOutput: "", logLines: [] }),
+  UptimeDay: () => ({ downSeconds: 0 }),
   GetOperationRequest: () => ({ projectId: "", operationId: "" }),
   GetOperationResponse: () => ({ log: [], logLineCount: 0, nextAfterLogLine: 0 }),
   OperationLogLine: () => ({ text: "" }),
@@ -94,6 +106,7 @@ export const empty = {
   ProjectBusy: () => ({ operationId: "" }),
   ProjectChanged: () => ({}),
   MachineUnreachable: () => ({}),
+  MachineUpdatePending: () => ({}),
   NoMachine: () => ({ url: "" }),
   WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
   WatchOperationResponse: () => ({}),
@@ -142,6 +155,18 @@ export const empty = {
   m.reads("Machine.restart_required_time", { restartRequiredTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Machine(), restartRequiredTime: new Date(1790000000999) });
   m.reads("Machine.scheduled_restart_time", { scheduledRestartTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Machine(), scheduledRestartTime: new Date(1790000000999) });
   m.reads("Machine.sessions", { sessions: [{}] }, { ...empty.Machine(), sessions: [empty.MachineSession()] });
+  m.reads("Machine.alert_channels", { alertChannels: [{}] }, { ...empty.Machine(), alertChannels: [empty.AlertDestination()] });
+}
+
+{
+  const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.AlertDestinationSchema>): Init<typeof w.GetMachineResponseSchema> => ({ machine: { alertChannels: [leaf] } }), async (api) => (await api.getMachine({}))?.machine?.alertChannels?.[0]);
+  m.reads("AlertDestination: nothing set", {}, empty.AlertDestination());
+  m.reads("AlertDestination: a field newer than the SDK", newer(w.AlertDestinationSchema), empty.AlertDestination());
+  m.reads("AlertDestination.kind: EMAIL", { kind: w.AlertChannelKind.EMAIL }, { ...empty.AlertDestination(), kind: "EMAIL" });
+  m.reads("AlertDestination.kind: TELEGRAM", { kind: w.AlertChannelKind.TELEGRAM }, { ...empty.AlertDestination(), kind: "TELEGRAM" });
+  m.reads("AlertDestination.kind: SLACK", { kind: w.AlertChannelKind.SLACK }, { ...empty.AlertDestination(), kind: "SLACK" });
+  m.reads("AlertDestination.kind: a value newer than the SDK", { kind: 9999 as w.AlertChannelKind }, { ...empty.AlertDestination(), kind: 9999 });
+  m.reads("AlertDestination.label", { label: "label" }, { ...empty.AlertDestination(), label: "label" });
 }
 
 {
@@ -287,11 +312,15 @@ export const empty = {
   m.reads("ProjectProblem.kind: RESTORE_FAILED", { kind: w.ProjectProblemKind.RESTORE_FAILED }, { ...empty.ProjectProblem(), kind: "RESTORE_FAILED" });
   m.reads("ProjectProblem.kind: AUTO_DEPLOY_REFUSED", { kind: w.ProjectProblemKind.AUTO_DEPLOY_REFUSED }, { ...empty.ProjectProblem(), kind: "AUTO_DEPLOY_REFUSED" });
   m.reads("ProjectProblem.kind: SERVICE_PORT_CLOSED", { kind: w.ProjectProblemKind.SERVICE_PORT_CLOSED }, { ...empty.ProjectProblem(), kind: "SERVICE_PORT_CLOSED" });
+  m.reads("ProjectProblem.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.ProjectProblem(), kind: "SITE_DOWN" });
+  m.reads("ProjectProblem.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.ProjectProblem(), kind: "HTTP_ERRORS" });
+  m.reads("ProjectProblem.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.ProjectProblem(), kind: "HTTP_SLOW" });
   m.reads("ProjectProblem.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.ProjectProblem(), kind: 9999 });
   m.reads("ProjectProblem.service", { service: "service" }, { ...empty.ProjectProblem(), service: "service" });
   m.reads("ProjectProblem.operation_id", { operationId: "operation_id" }, { ...empty.ProjectProblem(), operationId: "operation_id" });
   m.reads("ProjectProblem.since_time", { sinceTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.ProjectProblem(), sinceTime: new Date(1790000000999) });
   m.reads("ProjectProblem.problem_message", { problemMessage: "problem_message" }, { ...empty.ProjectProblem(), problemMessage: "problem_message" });
+  m.reads("ProjectProblem.incident_id", { incidentId: "incident_id" }, { ...empty.ProjectProblem(), incidentId: "incident_id" });
 }
 
 {
@@ -331,6 +360,10 @@ export const empty = {
   m.reads("Project.http_traffic_last_day", { httpTrafficLastDay: {} }, { ...empty.Project(), httpTrafficLastDay: empty.HttpTrafficSummary() });
   m.reads("Project.source", { source: {} }, { ...empty.Project(), source: empty.ProjectSource() });
   m.reads("Project.running_services_action", { runningServicesAction: {} }, { ...empty.Project(), runningServicesAction: empty.RunningServicesAction() });
+  m.reads("Project.alerts", { alerts: {} }, { ...empty.Project(), alerts: empty.ProjectAlerts() });
+  m.reads("Project.incidents", { incidents: [{}] }, { ...empty.Project(), incidents: [empty.Incident()] });
+  m.reads("Project.more_incidents", { moreIncidents: true }, { ...empty.Project(), moreIncidents: true });
+  m.reads("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
 }
 
 {
@@ -560,6 +593,7 @@ export const empty = {
   m.reads("Operation.changed_paths", { changedPaths: ["changed_paths", ""] }, { ...empty.Operation(), changedPaths: ["changed_paths", ""] });
   m.reads("Operation.changed_path_count", { changedPathCount: 1018 }, { ...empty.Operation(), changedPathCount: 1018 });
   m.reads("Operation.files_kept", { filesKept: true }, { ...empty.Operation(), filesKept: true });
+  m.reads("Operation.files_operation_id", { filesOperationId: "files_operation_id" }, { ...empty.Operation(), filesOperationId: "files_operation_id" });
 }
 
 {
@@ -643,6 +677,155 @@ export const empty = {
 }
 
 {
+  const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.SetProjectAlertsResponseSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => (leaf), async (api) => (await api.setProjectAlerts({})));
+  m.reads("SetProjectAlertsResponse: nothing set", {}, empty.SetProjectAlertsResponse());
+  m.reads("SetProjectAlertsResponse: a field newer than the SDK", newer(w.SetProjectAlertsResponseSchema), empty.SetProjectAlertsResponse());
+  m.reads("SetProjectAlertsResponse.alerts", { alerts: {} }, { ...empty.SetProjectAlertsResponse(), alerts: empty.ProjectAlerts() });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.SiteCheckSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { incidents: [{ check: leaf }] } }), async (api) => (await api.getProject({}))?.project?.incidents?.[0]?.check);
+  m.reads("SiteCheck: nothing set", {}, empty.SiteCheck());
+  m.reads("SiteCheck: a field newer than the SDK", newer(w.SiteCheckSchema), empty.SiteCheck());
+  m.reads("SiteCheck.host", { host: "host" }, { ...empty.SiteCheck(), host: "host" });
+  m.reads("SiteCheck.path", { path: "path" }, { ...empty.SiteCheck(), path: "path" });
+  m.reads("SiteCheck.expect_status", { expectStatus: 1003 }, { ...empty.SiteCheck(), expectStatus: 1003 });
+  m.reads("SiteCheck.must_contain", { mustContain: "must_contain" }, { ...empty.SiteCheck(), mustContain: "must_contain" });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.TrafficRuleSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { incidents: [{ trafficRule: leaf }] } }), async (api) => (await api.getProject({}))?.project?.incidents?.[0]?.trafficRule);
+  m.reads("TrafficRule: nothing set", {}, empty.TrafficRule());
+  m.reads("TrafficRule: a field newer than the SDK", newer(w.TrafficRuleSchema), empty.TrafficRule());
+  m.reads("TrafficRule.metric: SERVER_ERRORS", { metric: w.TrafficMetric.SERVER_ERRORS }, { ...empty.TrafficRule(), metric: "SERVER_ERRORS" });
+  m.reads("TrafficRule.metric: SERVER_ERROR_PERCENT", { metric: w.TrafficMetric.SERVER_ERROR_PERCENT }, { ...empty.TrafficRule(), metric: "SERVER_ERROR_PERCENT" });
+  m.reads("TrafficRule.metric: LATENCY_P95_MS", { metric: w.TrafficMetric.LATENCY_P95_MS }, { ...empty.TrafficRule(), metric: "LATENCY_P95_MS" });
+  m.reads("TrafficRule.metric: a value newer than the SDK", { metric: 9999 as w.TrafficMetric }, { ...empty.TrafficRule(), metric: 9999 });
+  m.reads("TrafficRule.filter", { filter: {} }, { ...empty.TrafficRule(), filter: empty.HttpTrafficFilter() });
+  m.reads("TrafficRule.threshold", { threshold: 1003.5 }, { ...empty.TrafficRule(), threshold: 1003.5 });
+  m.reads("TrafficRule.window_minutes", { windowMinutes: 1004 }, { ...empty.TrafficRule(), windowMinutes: 1004 });
+  m.reads("TrafficRule.min_requests", { minRequests: 1005 }, { ...empty.TrafficRule(), minRequests: 1005 });
+}
+
+{
+  const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.ProjectAlertsSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => ({ alerts: leaf }), async (api) => (await api.setProjectAlerts({}))?.alerts);
+  m.reads("ProjectAlerts: nothing set", {}, empty.ProjectAlerts());
+  m.reads("ProjectAlerts: a field newer than the SDK", newer(w.ProjectAlertsSchema), empty.ProjectAlerts());
+  m.reads("ProjectAlerts.checks", { checks: [{}] }, { ...empty.ProjectAlerts(), checks: [empty.SiteCheckState()] });
+  m.reads("ProjectAlerts.traffic_rules", { trafficRules: [{}] }, { ...empty.ProjectAlerts(), trafficRules: [empty.TrafficRuleState()] });
+  m.reads("ProjectAlerts.off", { off: true }, { ...empty.ProjectAlerts(), off: true });
+  m.reads("ProjectAlerts.mute_end_time", { muteEndTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.ProjectAlerts(), muteEndTime: new Date(1790000000999) });
+  m.reads("ProjectAlerts.uptime_percent", { uptimePercent: 1005.5 }, { ...empty.ProjectAlerts(), uptimePercent: 1005.5 });
+  m.reads("ProjectAlerts.uptime_percent: zero", { uptimePercent: 0 }, { ...empty.ProjectAlerts(), uptimePercent: 0 });
+}
+
+{
+  const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.SiteCheckStateSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => ({ alerts: { checks: [leaf] } }), async (api) => (await api.setProjectAlerts({}))?.alerts?.checks?.[0]);
+  m.reads("SiteCheckState: nothing set", {}, empty.SiteCheckState());
+  m.reads("SiteCheckState: a field newer than the SDK", newer(w.SiteCheckStateSchema), empty.SiteCheckState());
+  m.reads("SiteCheckState.check", { check: {} }, { ...empty.SiteCheckState(), check: empty.SiteCheck() });
+  m.reads("SiteCheckState.machine_default", { machineDefault: true }, { ...empty.SiteCheckState(), machineDefault: true });
+  m.reads("SiteCheckState.status: OK", { status: w.AlertStatus.OK }, { ...empty.SiteCheckState(), status: "OK" });
+  m.reads("SiteCheckState.status: PENDING", { status: w.AlertStatus.PENDING }, { ...empty.SiteCheckState(), status: "PENDING" });
+  m.reads("SiteCheckState.status: FIRING", { status: w.AlertStatus.FIRING }, { ...empty.SiteCheckState(), status: "FIRING" });
+  m.reads("SiteCheckState.status: PAUSED", { status: w.AlertStatus.PAUSED }, { ...empty.SiteCheckState(), status: "PAUSED" });
+  m.reads("SiteCheckState.status: NO_DATA", { status: w.AlertStatus.NO_DATA }, { ...empty.SiteCheckState(), status: "NO_DATA" });
+  m.reads("SiteCheckState.status: a value newer than the SDK", { status: 9999 as w.AlertStatus }, { ...empty.SiteCheckState(), status: 9999 });
+  m.reads("SiteCheckState.last_result", { lastResult: {} }, { ...empty.SiteCheckState(), lastResult: empty.SiteCheckResult() });
+  m.reads("SiteCheckState.incident_id", { incidentId: "incident_id" }, { ...empty.SiteCheckState(), incidentId: "incident_id" });
+}
+
+{
+  const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.SiteCheckResultSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => ({ alerts: { checks: [{ lastResult: leaf }] } }), async (api) => (await api.setProjectAlerts({}))?.alerts?.checks?.[0]?.lastResult);
+  m.reads("SiteCheckResult: nothing set", {}, empty.SiteCheckResult());
+  m.reads("SiteCheckResult: a field newer than the SDK", newer(w.SiteCheckResultSchema), empty.SiteCheckResult());
+  m.reads("SiteCheckResult.check_time", { checkTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.SiteCheckResult(), checkTime: new Date(1790000000999) });
+  m.reads("SiteCheckResult.status", { status: 1002 }, { ...empty.SiteCheckResult(), status: 1002 });
+  m.reads("SiteCheckResult.duration_ms", { durationMs: 1003 }, { ...empty.SiteCheckResult(), durationMs: 1003 });
+  m.reads("SiteCheckResult.failure_message", { failureMessage: "failure_message" }, { ...empty.SiteCheckResult(), failureMessage: "failure_message" });
+}
+
+{
+  const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.TrafficRuleStateSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => ({ alerts: { trafficRules: [leaf] } }), async (api) => (await api.setProjectAlerts({}))?.alerts?.trafficRules?.[0]);
+  m.reads("TrafficRuleState: nothing set", {}, empty.TrafficRuleState());
+  m.reads("TrafficRuleState: a field newer than the SDK", newer(w.TrafficRuleStateSchema), empty.TrafficRuleState());
+  m.reads("TrafficRuleState.rule", { rule: {} }, { ...empty.TrafficRuleState(), rule: empty.TrafficRule() });
+  m.reads("TrafficRuleState.machine_default", { machineDefault: true }, { ...empty.TrafficRuleState(), machineDefault: true });
+  m.reads("TrafficRuleState.status: OK", { status: w.AlertStatus.OK }, { ...empty.TrafficRuleState(), status: "OK" });
+  m.reads("TrafficRuleState.status: PENDING", { status: w.AlertStatus.PENDING }, { ...empty.TrafficRuleState(), status: "PENDING" });
+  m.reads("TrafficRuleState.status: FIRING", { status: w.AlertStatus.FIRING }, { ...empty.TrafficRuleState(), status: "FIRING" });
+  m.reads("TrafficRuleState.status: PAUSED", { status: w.AlertStatus.PAUSED }, { ...empty.TrafficRuleState(), status: "PAUSED" });
+  m.reads("TrafficRuleState.status: NO_DATA", { status: w.AlertStatus.NO_DATA }, { ...empty.TrafficRuleState(), status: "NO_DATA" });
+  m.reads("TrafficRuleState.status: a value newer than the SDK", { status: 9999 as w.AlertStatus }, { ...empty.TrafficRuleState(), status: 9999 });
+  m.reads("TrafficRuleState.value", { value: 1004.5 }, { ...empty.TrafficRuleState(), value: 1004.5 });
+  m.reads("TrafficRuleState.request_count", { requestCount: 9007199254740993n }, { ...empty.TrafficRuleState(), requestCount: 9007199254740993n });
+  m.reads("TrafficRuleState.incident_id", { incidentId: "incident_id" }, { ...empty.TrafficRuleState(), incidentId: "incident_id" });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.IncidentSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { incidents: [leaf] } }), async (api) => (await api.getProject({}))?.project?.incidents?.[0]);
+  m.reads("Incident: nothing set", {}, empty.Incident());
+  m.reads("Incident: a field newer than the SDK", newer(w.IncidentSchema), empty.Incident());
+  m.reads("Incident.incident_id", { incidentId: "incident_id" }, { ...empty.Incident(), incidentId: "incident_id" });
+  m.reads("Incident.kind: DEPLOY_FAILED", { kind: w.ProjectProblemKind.DEPLOY_FAILED }, { ...empty.Incident(), kind: "DEPLOY_FAILED" });
+  m.reads("Incident.kind: SERVICE_UNHEALTHY", { kind: w.ProjectProblemKind.SERVICE_UNHEALTHY }, { ...empty.Incident(), kind: "SERVICE_UNHEALTHY" });
+  m.reads("Incident.kind: SERVICE_RESTARTING", { kind: w.ProjectProblemKind.SERVICE_RESTARTING }, { ...empty.Incident(), kind: "SERVICE_RESTARTING" });
+  m.reads("Incident.kind: SERVICE_OUT_OF_MEMORY", { kind: w.ProjectProblemKind.SERVICE_OUT_OF_MEMORY }, { ...empty.Incident(), kind: "SERVICE_OUT_OF_MEMORY" });
+  m.reads("Incident.kind: BACKUP_FAILED", { kind: w.ProjectProblemKind.BACKUP_FAILED }, { ...empty.Incident(), kind: "BACKUP_FAILED" });
+  m.reads("Incident.kind: DEPLOY_CANCELLED", { kind: w.ProjectProblemKind.DEPLOY_CANCELLED }, { ...empty.Incident(), kind: "DEPLOY_CANCELLED" });
+  m.reads("Incident.kind: SERVICE_EXITED", { kind: w.ProjectProblemKind.SERVICE_EXITED }, { ...empty.Incident(), kind: "SERVICE_EXITED" });
+  m.reads("Incident.kind: RESTORE_FAILED", { kind: w.ProjectProblemKind.RESTORE_FAILED }, { ...empty.Incident(), kind: "RESTORE_FAILED" });
+  m.reads("Incident.kind: AUTO_DEPLOY_REFUSED", { kind: w.ProjectProblemKind.AUTO_DEPLOY_REFUSED }, { ...empty.Incident(), kind: "AUTO_DEPLOY_REFUSED" });
+  m.reads("Incident.kind: SERVICE_PORT_CLOSED", { kind: w.ProjectProblemKind.SERVICE_PORT_CLOSED }, { ...empty.Incident(), kind: "SERVICE_PORT_CLOSED" });
+  m.reads("Incident.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.Incident(), kind: "SITE_DOWN" });
+  m.reads("Incident.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.Incident(), kind: "HTTP_ERRORS" });
+  m.reads("Incident.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.Incident(), kind: "HTTP_SLOW" });
+  m.reads("Incident.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.Incident(), kind: 9999 });
+  m.reads("Incident.service", { service: "service" }, { ...empty.Incident(), service: "service" });
+  m.reads("Incident.check", { check: {} }, { ...empty.Incident(), check: empty.SiteCheck() });
+  m.reads("Incident.traffic_rule", { trafficRule: {} }, { ...empty.Incident(), trafficRule: empty.TrafficRule() });
+  m.reads("Incident.operation_id", { operationId: "operation_id" }, { ...empty.Incident(), operationId: "operation_id" });
+  m.reads("Incident.open_time", { openTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Incident(), openTime: new Date(1790000000999) });
+  m.reads("Incident.resolve_time", { resolveTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Incident(), resolveTime: new Date(1790000000999) });
+  m.reads("Incident.value", { value: 1009.5 }, { ...empty.Incident(), value: 1009.5 });
+  m.reads("Incident.request_count", { requestCount: 9007199254740993n }, { ...empty.Incident(), requestCount: 9007199254740993n });
+  m.reads("Incident.after_operation_id", { afterOperationId: "after_operation_id" }, { ...empty.Incident(), afterOperationId: "after_operation_id" });
+  m.reads("Incident.after_operation_end_time", { afterOperationEndTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Incident(), afterOperationEndTime: new Date(1790000000999) });
+  m.reads("Incident.joined_incident_id", { joinedIncidentId: "joined_incident_id" }, { ...empty.Incident(), joinedIncidentId: "joined_incident_id" });
+  m.reads("Incident.quiet_reason: MUTED", { quietReason: w.IncidentQuietReason.MUTED }, { ...empty.Incident(), quietReason: "MUTED" });
+  m.reads("Incident.quiet_reason: OFF", { quietReason: w.IncidentQuietReason.OFF }, { ...empty.Incident(), quietReason: "OFF" });
+  m.reads("Incident.quiet_reason: FIRST_EVALUATION", { quietReason: w.IncidentQuietReason.FIRST_EVALUATION }, { ...empty.Incident(), quietReason: "FIRST_EVALUATION" });
+  m.reads("Incident.quiet_reason: MANUAL_DEPLOY", { quietReason: w.IncidentQuietReason.MANUAL_DEPLOY }, { ...empty.Incident(), quietReason: "MANUAL_DEPLOY" });
+  m.reads("Incident.quiet_reason: a value newer than the SDK", { quietReason: 9999 as w.IncidentQuietReason }, { ...empty.Incident(), quietReason: 9999 });
+  m.reads("Incident.flapping", { flapping: true }, { ...empty.Incident(), flapping: true });
+  m.reads("Incident.incident_message", { incidentMessage: "incident_message" }, { ...empty.Incident(), incidentMessage: "incident_message" });
+  m.reads("Incident.evidence", { evidence: {} }, { ...empty.Incident(), evidence: empty.IncidentEvidence() });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.IncidentEvidenceSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { incidents: [{ evidence: leaf }] } }), async (api) => (await api.getProject({}))?.project?.incidents?.[0]?.evidence);
+  m.reads("IncidentEvidence: nothing set", {}, empty.IncidentEvidence());
+  m.reads("IncidentEvidence: a field newer than the SDK", newer(w.IncidentEvidenceSchema), empty.IncidentEvidence());
+  m.reads("IncidentEvidence.check_result", { checkResult: {} }, { ...empty.IncidentEvidence(), checkResult: empty.SiteCheckResult() });
+  m.reads("IncidentEvidence.exit_code", { exitCode: -1002 }, { ...empty.IncidentEvidence(), exitCode: -1002 });
+  m.reads("IncidentEvidence.oom_killed", { oomKilled: true }, { ...empty.IncidentEvidence(), oomKilled: true });
+  m.reads("IncidentEvidence.restart_count", { restartCount: 1004 }, { ...empty.IncidentEvidence(), restartCount: 1004 });
+  m.reads("IncidentEvidence.health_output", { healthOutput: "health_output" }, { ...empty.IncidentEvidence(), healthOutput: "health_output" });
+  m.reads("IncidentEvidence.log_lines", { logLines: [{}] }, { ...empty.IncidentEvidence(), logLines: [empty.LogLine()] });
+  m.reads("IncidentEvidence.top_path", { topPath: {} }, { ...empty.IncidentEvidence(), topPath: empty.HttpPathTraffic() });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.UptimeDaySchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { uptimeDays: [leaf] } }), async (api) => (await api.getProject({}))?.project?.uptimeDays?.[0]);
+  m.reads("UptimeDay: nothing set", {}, empty.UptimeDay());
+  m.reads("UptimeDay: a field newer than the SDK", newer(w.UptimeDaySchema), empty.UptimeDay());
+  m.reads("UptimeDay.start_time", { startTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.UptimeDay(), startTime: new Date(1790000000999) });
+  m.reads("UptimeDay.uptime_percent", { uptimePercent: 1002.5 }, { ...empty.UptimeDay(), uptimePercent: 1002.5 });
+  m.reads("UptimeDay.uptime_percent: zero", { uptimePercent: 0 }, { ...empty.UptimeDay(), uptimePercent: 0 });
+  m.reads("UptimeDay.down_seconds", { downSeconds: 1003 }, { ...empty.UptimeDay(), downSeconds: 1003 });
+}
+
+{
   const m = reading(w.GetOperationResponseSchema, (leaf: Init<typeof w.GetOperationResponseSchema>): Init<typeof w.GetOperationResponseSchema> => (leaf), async (api) => (await api.getOperation({})));
   m.reads("GetOperationResponse: nothing set", {}, empty.GetOperationResponse());
   m.reads("GetOperationResponse: a field newer than the SDK", newer(w.GetOperationResponseSchema), empty.GetOperationResponse());
@@ -659,6 +842,17 @@ export const empty = {
   m.reads("OperationLogLine: a field newer than the SDK", newer(w.OperationLogLineSchema), empty.OperationLogLine());
   m.reads("OperationLogLine.time", { time: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.OperationLogLine(), time: new Date(1790000000999) });
   m.reads("OperationLogLine.text", { text: "text" }, { ...empty.OperationLogLine(), text: "text" });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.HttpTrafficFilterSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { incidents: [{ trafficRule: { filter: leaf } }] } }), async (api) => (await api.getProject({}))?.project?.incidents?.[0]?.trafficRule?.filter);
+  m.reads("HttpTrafficFilter: nothing set", {}, empty.HttpTrafficFilter());
+  m.reads("HttpTrafficFilter: a field newer than the SDK", newer(w.HttpTrafficFilterSchema), empty.HttpTrafficFilter());
+  m.reads("HttpTrafficFilter.host", { host: "host" }, { ...empty.HttpTrafficFilter(), host: "host" });
+  m.reads("HttpTrafficFilter.method", { method: "method" }, { ...empty.HttpTrafficFilter(), method: "method" });
+  m.reads("HttpTrafficFilter.path_contains", { pathContains: "path_contains" }, { ...empty.HttpTrafficFilter(), pathContains: "path_contains" });
+  m.reads("HttpTrafficFilter.path_pattern", { pathPattern: "path_pattern" }, { ...empty.HttpTrafficFilter(), pathPattern: "path_pattern" });
+  m.reads("HttpTrafficFilter.status_class", { statusClass: 1005 }, { ...empty.HttpTrafficFilter(), statusClass: 1005 });
 }
 
 {
@@ -825,6 +1019,13 @@ export const empty = {
   const m = readingDetail(w.MachineUnreachableSchema, (leaf: Init<typeof w.MachineUnreachableSchema>): Init<typeof w.MachineUnreachableSchema> => (leaf), anyCall, (error) => error.machineUnreachable);
   m.reads("MachineUnreachable: nothing set", {}, empty.MachineUnreachable());
   m.reads("MachineUnreachable: a field newer than the SDK", newer(w.MachineUnreachableSchema), empty.MachineUnreachable());
+  m.reads("MachineUnreachable.since_time", { sinceTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.MachineUnreachable(), sinceTime: new Date(1790000000999) });
+}
+
+{
+  const m = readingDetail(w.MachineUpdatePendingSchema, (leaf: Init<typeof w.MachineUpdatePendingSchema>): Init<typeof w.MachineUpdatePendingSchema> => (leaf), anyCall, (error) => error.machineUpdatePending);
+  m.reads("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
+  m.reads("MachineUpdatePending: a field newer than the SDK", newer(w.MachineUpdatePendingSchema), empty.MachineUpdatePending());
 }
 
 {

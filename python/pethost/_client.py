@@ -41,9 +41,12 @@ from pethost._types import (
     RunProjectActionResponse,
     RunServiceCommandResponse,
     ServicesAction,
+    SetProjectAlertsResponse,
+    SiteCheck,
     SshKey,
     TailContainerLogsResponse,
     TailHttpTrafficResponse,
+    TrafficRule,
     WatchOperationResponse,
 )
 from pethost._wire.v1.panel_connect import PanelServiceClientSync as _Wire
@@ -338,6 +341,9 @@ class Pethost:
         include_secret_values: bool = False,
         snapshots_before: datetime | None = None,
         snapshots_volume: str = "",
+        incidents_before: datetime | None = None,
+        uptime_day_count: int = 0,
+        incidents_before_id: str = "",
     ) -> GetProjectResponse:
         """Get a project.
 
@@ -352,8 +358,11 @@ class Pethost:
             include_secret_values: True = include env-file values (EnvironmentVariable.secret). To edit .env: read_path /.env.
             snapshots_before: Only older snapshots: the oldest create_time seen, to page back. Absent = the newest.
             snapshots_volume: Only snapshots holding this volume (Volume.snapshot_count). Empty = all.
+            incidents_before: Only incidents that opened before it: the oldest open_time seen, to page back. Absent = the newest.
+            uptime_day_count: ≤90: Project.uptime_days. 0 = none.
+            incidents_before_id: With incidents_before: the incident_id of the oldest seen, so that those that opened at the same time are not skipped.
         """
-        return _convert.get_project_response_from_wire(self._call(self._wire.get_project, _convert.get_project_request(project_id=project_id, include_secret_values=include_secret_values, snapshots_before=snapshots_before, snapshots_volume=snapshots_volume)))
+        return _convert.get_project_response_from_wire(self._call(self._wire.get_project, _convert.get_project_request(project_id=project_id, include_secret_values=include_secret_values, snapshots_before=snapshots_before, snapshots_volume=snapshots_volume, incidents_before=incidents_before, uptime_day_count=uptime_day_count, incidents_before_id=incidents_before_id)))
 
     def create_project(
         self,
@@ -1404,6 +1413,37 @@ class Pethost:
             wait_seconds: As deploy_project's, for the actions that run as operations.
         """
         return _convert.run_project_action_response_from_wire(self._call(self._wire.run_project_action, _convert.run_project_action_request(project_id=project_id, start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, operation_id=operation_id, wait_seconds=wait_seconds)))
+
+    def set_project_alerts(
+        self,
+        project_id: str,
+        *,
+        checks: Sequence[SiteCheck] = (),
+        remove_checks: bool = False,
+        traffic_rules: Sequence[TrafficRule] = (),
+        remove_traffic_rules: bool = False,
+        off: bool | None = None,
+        mute_minutes: int | None = None,
+    ) -> SetProjectAlertsResponse:
+        """Set a project's alerts.
+
+        Changes what Pethost watches on a project and when it tells the person: site checks (an
+        address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+        mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+        empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+        Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+        Alerts (Machine.alert_channels): no tool sets it. FailedPreconditionError + MachineUpdatePending
+        = the machine's software predates alerts.
+
+        Args:
+            checks: ≤10. Given = the whole list.
+            remove_checks: True = none, not even the default check.
+            traffic_rules: ≤10. Given = the whole list.
+            remove_traffic_rules: True = none.
+            off: True = incidents are recorded, nothing is sent. Absent = stays.
+            mute_minutes: ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+        """
+        return _convert.set_project_alerts_response_from_wire(self._call(self._wire.set_project_alerts, _convert.set_project_alerts_request(project_id=project_id, checks=checks, remove_checks=remove_checks, traffic_rules=traffic_rules, remove_traffic_rules=remove_traffic_rules, off=off, mute_minutes=mute_minutes)))
 
     def get_operation(
         self,

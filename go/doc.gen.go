@@ -28,7 +28,7 @@
 //     [ProjectSourceKind] with [ProjectSourceFiles] and [ProjectSourceGithub]: set the field
 //     to a value of a member's type, and read it with a type switch. nil = none.
 //   - An enum is an integer type with a constant for each value, which prints as the API's
-//     comments write it: "TUNNEL".
+//     comments write it: "SLACK".
 //
 // # JSON
 //
@@ -47,8 +47,8 @@
 //
 // The API grows, and a program built with this version goes on working:
 //
-//   - An enum's value without a constant keeps its number and prints as
-//     "MachineSessionKind(6)": give a switch on an enum a default.
+//   - An enum's value without a constant keeps its number and prints as "AlertChannelKind(4)":
+//     give a switch on an enum a default.
 //   - A member of a choice without a type reads as nil, as when none is set: give a type
 //     switch a default too.
 //   - A field without a struct field is not shown. In a message that requests take as well,

@@ -36,6 +36,17 @@ func (v Machine) MarshalJSON() ([]byte, error) { return marshalJSON(toWireMachin
 func (v *Machine) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireMachine) }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v AlertDestination) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireAlertDestination(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *AlertDestination) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireAlertDestination)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v MachineSession) MarshalJSON() ([]byte, error) { return marshalJSON(toWireMachineSession(v)) }
 
 // UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
@@ -641,6 +652,111 @@ func (v *RunProjectActionResponse) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SetProjectAlertsRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireSetProjectAlertsRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SetProjectAlertsRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSetProjectAlertsRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SetProjectAlertsResponse) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireSetProjectAlertsResponse(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SetProjectAlertsResponse) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSetProjectAlertsResponse)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SiteCheck) MarshalJSON() ([]byte, error) { return marshalJSON(toWireSiteCheck(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SiteCheck) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSiteCheck)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v TrafficRule) MarshalJSON() ([]byte, error) { return marshalJSON(toWireTrafficRule(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *TrafficRule) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireTrafficRule)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ProjectAlerts) MarshalJSON() ([]byte, error) { return marshalJSON(toWireProjectAlerts(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ProjectAlerts) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireProjectAlerts)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SiteCheckState) MarshalJSON() ([]byte, error) { return marshalJSON(toWireSiteCheckState(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SiteCheckState) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSiteCheckState)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SiteCheckResult) MarshalJSON() ([]byte, error) { return marshalJSON(toWireSiteCheckResult(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SiteCheckResult) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSiteCheckResult)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v TrafficRuleState) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireTrafficRuleState(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *TrafficRuleState) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireTrafficRuleState)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v Incident) MarshalJSON() ([]byte, error) { return marshalJSON(toWireIncident(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *Incident) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireIncident) }
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v IncidentEvidence) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireIncidentEvidence(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *IncidentEvidence) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireIncidentEvidence)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v UptimeDay) MarshalJSON() ([]byte, error) { return marshalJSON(toWireUptimeDay(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *UptimeDay) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireUptimeDay)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v GetOperationRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireGetOperationRequest(v))
 }
@@ -931,6 +1047,17 @@ func (v *MachineUnreachable) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v MachineUpdatePending) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireMachineUpdatePending(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *MachineUpdatePending) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireMachineUpdatePending)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v NoMachine) MarshalJSON() ([]byte, error) { return marshalJSON(toWireNoMachine(v)) }
 
 // UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
@@ -1026,6 +1153,18 @@ func (v *TailHTTPTrafficResponse) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "ALERT_CHANNEL_KIND_SLACK" for [AlertChannelKindSlack], or its number when the package has
+// no name for it.
+func (v AlertChannelKind) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireAlertChannelKind(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *AlertChannelKind) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.AlertChannelKind(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
 // "MACHINE_SESSION_KIND_TUNNEL" for [MachineSessionKindTunnel], or its number when the package
 // has no name for it.
 func (v MachineSessionKind) MarshalJSON() ([]byte, error) {
@@ -1038,8 +1177,8 @@ func (v *MachineSessionKind) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED" for [ProjectProblemKindServicePortClosed], or its
-// number when the package has no name for it.
+// "PROJECT_PROBLEM_KIND_HTTP_SLOW" for [ProjectProblemKindHTTPSlow], or its number when the
+// package has no name for it.
 func (v ProjectProblemKind) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireProjectProblemKind(v))
 }
@@ -1136,6 +1275,38 @@ func (v DeployFailureReason) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
 func (v *DeployFailureReason) UnmarshalJSON(data []byte) error {
 	return unmarshalEnumJSON(data, v, panelv1.DeployFailureReason(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "TRAFFIC_METRIC_LATENCY_P95_MS" for [TrafficMetricLatencyP95Ms], or its number when the
+// package has no name for it.
+func (v TrafficMetric) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireTrafficMetric(v)) }
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *TrafficMetric) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.TrafficMetric(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "ALERT_STATUS_NO_DATA" for [AlertStatusNoData], or its number when the package has no name
+// for it.
+func (v AlertStatus) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireAlertStatus(v)) }
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *AlertStatus) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.AlertStatus(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "INCIDENT_QUIET_REASON_MANUAL_DEPLOY" for [IncidentQuietReasonManualDeploy], or its number
+// when the package has no name for it.
+func (v IncidentQuietReason) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireIncidentQuietReason(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *IncidentQuietReason) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.IncidentQuietReason(0).Descriptor())
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,

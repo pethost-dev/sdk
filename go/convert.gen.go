@@ -61,6 +61,7 @@ func fromWireMachine(w *panelv1.Machine) Machine {
 		timeFromWire(w.GetRestartRequiredTime()),
 		timeFromWire(w.GetScheduledRestartTime()),
 		sliceFromWire(w.GetSessions(), fromWireMachineSession),
+		sliceFromWire(w.GetAlertChannels(), fromWireAlertDestination),
 	}
 }
 
@@ -91,6 +92,22 @@ func toWireMachine(v Machine) *panelv1.Machine {
 		RestartRequiredTime:        timeToWire(v.RestartRequiredTime),
 		ScheduledRestartTime:       timeToWire(v.ScheduledRestartTime),
 		Sessions:                   sliceToWire(v.Sessions, toWireMachineSession),
+		AlertChannels:              sliceToWire(v.AlertChannels, toWireAlertDestination),
+	}
+	return b.Build()
+}
+
+func fromWireAlertDestination(w *panelv1.AlertDestination) AlertDestination {
+	return AlertDestination{
+		fromWireAlertChannelKind(w.GetKind()),
+		w.GetLabel(),
+	}
+}
+
+func toWireAlertDestination(v AlertDestination) *panelv1.AlertDestination {
+	b := panelv1.AlertDestination_builder{
+		Kind:  nonZero(toWireAlertChannelKind(v.Kind)),
+		Label: nonZero(v.Label),
 	}
 	return b.Build()
 }
@@ -391,6 +408,7 @@ func fromWireProjectProblem(w *panelv1.ProjectProblem) ProjectProblem {
 		w.GetOperationId(),
 		timeFromWire(w.GetSinceTime()),
 		w.GetProblemMessage(),
+		w.GetIncidentId(),
 	}
 }
 
@@ -401,6 +419,7 @@ func toWireProjectProblem(v ProjectProblem) *panelv1.ProjectProblem {
 		OperationId:    nonZero(v.OperationID),
 		SinceTime:      timeToWire(v.SinceTime),
 		ProblemMessage: nonZero(v.ProblemMessage),
+		IncidentId:     nonZero(v.IncidentID),
 	}
 	return b.Build()
 }
@@ -411,6 +430,9 @@ func fromWireGetProjectRequest(w *panelv1.GetProjectRequest) GetProjectRequest {
 		w.GetIncludeSecretValues(),
 		timeFromWire(w.GetSnapshotsBefore()),
 		w.GetSnapshotsVolume(),
+		timeFromWire(w.GetIncidentsBefore()),
+		w.GetUptimeDayCount(),
+		w.GetIncidentsBeforeId(),
 	}
 }
 
@@ -420,6 +442,9 @@ func toWireGetProjectRequest(v GetProjectRequest) *panelv1.GetProjectRequest {
 		IncludeSecretValues: nonZero(v.IncludeSecretValues),
 		SnapshotsBefore:     timeToWire(v.SnapshotsBefore),
 		SnapshotsVolume:     nonZero(v.SnapshotsVolume),
+		IncidentsBefore:     timeToWire(v.IncidentsBefore),
+		UptimeDayCount:      nonZero(v.UptimeDayCount),
+		IncidentsBeforeId:   nonZero(v.IncidentsBeforeID),
 	}
 	return b.Build()
 }
@@ -461,6 +486,10 @@ func fromWireProject(w *panelv1.Project) Project {
 		pointerFromWire(w.GetHttpTrafficLastDay(), fromWireHTTPTrafficSummary),
 		pointerFromWire(w.GetSource(), fromWireProjectSource),
 		pointerFromWire(w.GetRunningServicesAction(), fromWireRunningServicesAction),
+		pointerFromWire(w.GetAlerts(), fromWireProjectAlerts),
+		sliceFromWire(w.GetIncidents(), fromWireIncident),
+		w.GetMoreIncidents(),
+		sliceFromWire(w.GetUptimeDays(), fromWireUptimeDay),
 	}
 }
 
@@ -488,6 +517,10 @@ func toWireProject(v Project) *panelv1.Project {
 		HttpTrafficLastDay:    pointerToWire(v.HTTPTrafficLastDay, toWireHTTPTrafficSummary),
 		Source:                pointerToWire(v.Source, toWireProjectSource),
 		RunningServicesAction: pointerToWire(v.RunningServicesAction, toWireRunningServicesAction),
+		Alerts:                pointerToWire(v.Alerts, toWireProjectAlerts),
+		Incidents:             sliceToWire(v.Incidents, toWireIncident),
+		MoreIncidents:         nonZero(v.MoreIncidents),
+		UptimeDays:            sliceToWire(v.UptimeDays, toWireUptimeDay),
 	}
 	return b.Build()
 }
@@ -843,6 +876,7 @@ func fromWireOperation(w *panelv1.Operation) Operation {
 		w.GetChangedPaths(),
 		w.GetChangedPathCount(),
 		w.GetFilesKept(),
+		w.GetFilesOperationId(),
 	}
 }
 
@@ -867,6 +901,7 @@ func toWireOperation(v Operation) *panelv1.Operation {
 		ChangedPaths:        v.ChangedPaths,
 		ChangedPathCount:    nonZero(v.ChangedPathCount),
 		FilesKept:           nonZero(v.FilesKept),
+		FilesOperationId:    nonZero(v.FilesOperationID),
 	}
 	return b.Build()
 }
@@ -1419,6 +1454,257 @@ func toWireRunProjectActionResponse(v RunProjectActionResponse) *panelv1.RunProj
 	return b.Build()
 }
 
+func fromWireSetProjectAlertsRequest(w *panelv1.SetProjectAlertsRequest) SetProjectAlertsRequest {
+	return SetProjectAlertsRequest{
+		w.GetProjectId(),
+		sliceFromWire(w.GetChecks(), fromWireSiteCheck),
+		w.GetRemoveChecks(),
+		sliceFromWire(w.GetTrafficRules(), fromWireTrafficRule),
+		w.GetRemoveTrafficRules(),
+		optional(w.HasOff(), w.GetOff()),
+		optional(w.HasMuteMinutes(), w.GetMuteMinutes()),
+	}
+}
+
+func toWireSetProjectAlertsRequest(v SetProjectAlertsRequest) *panelv1.SetProjectAlertsRequest {
+	b := panelv1.SetProjectAlertsRequest_builder{
+		ProjectId:          nonZero(v.ProjectID),
+		Checks:             sliceToWire(v.Checks, toWireSiteCheck),
+		RemoveChecks:       nonZero(v.RemoveChecks),
+		TrafficRules:       sliceToWire(v.TrafficRules, toWireTrafficRule),
+		RemoveTrafficRules: nonZero(v.RemoveTrafficRules),
+		Off:                v.Off,
+		MuteMinutes:        v.MuteMinutes,
+	}
+	return b.Build()
+}
+
+func fromWireSetProjectAlertsResponse(w *panelv1.SetProjectAlertsResponse) SetProjectAlertsResponse {
+	return SetProjectAlertsResponse{
+		pointerFromWire(w.GetAlerts(), fromWireProjectAlerts),
+	}
+}
+
+func toWireSetProjectAlertsResponse(v SetProjectAlertsResponse) *panelv1.SetProjectAlertsResponse {
+	b := panelv1.SetProjectAlertsResponse_builder{
+		Alerts: pointerToWire(v.Alerts, toWireProjectAlerts),
+	}
+	return b.Build()
+}
+
+func fromWireSiteCheck(w *panelv1.SiteCheck) SiteCheck {
+	return SiteCheck{
+		w.GetHost(),
+		w.GetPath(),
+		w.GetExpectStatus(),
+		w.GetMustContain(),
+		unknownOf(w),
+	}
+}
+
+func toWireSiteCheck(v SiteCheck) *panelv1.SiteCheck {
+	b := panelv1.SiteCheck_builder{
+		Host:         nonZero(v.Host),
+		Path:         nonZero(v.Path),
+		ExpectStatus: nonZero(v.ExpectStatus),
+		MustContain:  nonZero(v.MustContain),
+	}
+	return withUnknown(b.Build(), v.unknown)
+}
+
+func fromWireTrafficRule(w *panelv1.TrafficRule) TrafficRule {
+	return TrafficRule{
+		fromWireTrafficMetric(w.GetMetric()),
+		pointerFromWire(w.GetFilter(), fromWireHTTPTrafficFilter),
+		w.GetThreshold(),
+		w.GetWindowMinutes(),
+		w.GetMinRequests(),
+		unknownOf(w),
+	}
+}
+
+func toWireTrafficRule(v TrafficRule) *panelv1.TrafficRule {
+	b := panelv1.TrafficRule_builder{
+		Metric:        nonZero(toWireTrafficMetric(v.Metric)),
+		Filter:        pointerToWire(v.Filter, toWireHTTPTrafficFilter),
+		Threshold:     nonZero(v.Threshold),
+		WindowMinutes: nonZero(v.WindowMinutes),
+		MinRequests:   nonZero(v.MinRequests),
+	}
+	return withUnknown(b.Build(), v.unknown)
+}
+
+func fromWireProjectAlerts(w *panelv1.ProjectAlerts) ProjectAlerts {
+	return ProjectAlerts{
+		sliceFromWire(w.GetChecks(), fromWireSiteCheckState),
+		sliceFromWire(w.GetTrafficRules(), fromWireTrafficRuleState),
+		w.GetOff(),
+		timeFromWire(w.GetMuteEndTime()),
+		optional(w.HasUptimePercent(), w.GetUptimePercent()),
+	}
+}
+
+func toWireProjectAlerts(v ProjectAlerts) *panelv1.ProjectAlerts {
+	b := panelv1.ProjectAlerts_builder{
+		Checks:        sliceToWire(v.Checks, toWireSiteCheckState),
+		TrafficRules:  sliceToWire(v.TrafficRules, toWireTrafficRuleState),
+		Off:           nonZero(v.Off),
+		MuteEndTime:   timeToWire(v.MuteEndTime),
+		UptimePercent: v.UptimePercent,
+	}
+	return b.Build()
+}
+
+func fromWireSiteCheckState(w *panelv1.SiteCheckState) SiteCheckState {
+	return SiteCheckState{
+		pointerFromWire(w.GetCheck(), fromWireSiteCheck),
+		w.GetMachineDefault(),
+		fromWireAlertStatus(w.GetStatus()),
+		pointerFromWire(w.GetLastResult(), fromWireSiteCheckResult),
+		w.GetIncidentId(),
+	}
+}
+
+func toWireSiteCheckState(v SiteCheckState) *panelv1.SiteCheckState {
+	b := panelv1.SiteCheckState_builder{
+		Check:          pointerToWire(v.Check, toWireSiteCheck),
+		MachineDefault: nonZero(v.MachineDefault),
+		Status:         nonZero(toWireAlertStatus(v.Status)),
+		LastResult:     pointerToWire(v.LastResult, toWireSiteCheckResult),
+		IncidentId:     nonZero(v.IncidentID),
+	}
+	return b.Build()
+}
+
+func fromWireSiteCheckResult(w *panelv1.SiteCheckResult) SiteCheckResult {
+	return SiteCheckResult{
+		timeFromWire(w.GetCheckTime()),
+		w.GetStatus(),
+		w.GetDurationMs(),
+		w.GetFailureMessage(),
+	}
+}
+
+func toWireSiteCheckResult(v SiteCheckResult) *panelv1.SiteCheckResult {
+	b := panelv1.SiteCheckResult_builder{
+		CheckTime:      timeToWire(v.CheckTime),
+		Status:         nonZero(v.Status),
+		DurationMs:     nonZero(v.DurationMs),
+		FailureMessage: nonZero(v.FailureMessage),
+	}
+	return b.Build()
+}
+
+func fromWireTrafficRuleState(w *panelv1.TrafficRuleState) TrafficRuleState {
+	return TrafficRuleState{
+		pointerFromWire(w.GetRule(), fromWireTrafficRule),
+		w.GetMachineDefault(),
+		fromWireAlertStatus(w.GetStatus()),
+		w.GetValue(),
+		w.GetRequestCount(),
+		w.GetIncidentId(),
+	}
+}
+
+func toWireTrafficRuleState(v TrafficRuleState) *panelv1.TrafficRuleState {
+	b := panelv1.TrafficRuleState_builder{
+		Rule:           pointerToWire(v.Rule, toWireTrafficRule),
+		MachineDefault: nonZero(v.MachineDefault),
+		Status:         nonZero(toWireAlertStatus(v.Status)),
+		Value:          nonZero(v.Value),
+		RequestCount:   nonZero(v.RequestCount),
+		IncidentId:     nonZero(v.IncidentID),
+	}
+	return b.Build()
+}
+
+func fromWireIncident(w *panelv1.Incident) Incident {
+	return Incident{
+		w.GetIncidentId(),
+		fromWireProjectProblemKind(w.GetKind()),
+		w.GetService(),
+		pointerFromWire(w.GetCheck(), fromWireSiteCheck),
+		pointerFromWire(w.GetTrafficRule(), fromWireTrafficRule),
+		w.GetOperationId(),
+		timeFromWire(w.GetOpenTime()),
+		timeFromWire(w.GetResolveTime()),
+		w.GetValue(),
+		w.GetRequestCount(),
+		w.GetAfterOperationId(),
+		timeFromWire(w.GetAfterOperationEndTime()),
+		w.GetJoinedIncidentId(),
+		fromWireIncidentQuietReason(w.GetQuietReason()),
+		w.GetFlapping(),
+		w.GetIncidentMessage(),
+		pointerFromWire(w.GetEvidence(), fromWireIncidentEvidence),
+	}
+}
+
+func toWireIncident(v Incident) *panelv1.Incident {
+	b := panelv1.Incident_builder{
+		IncidentId:            nonZero(v.IncidentID),
+		Kind:                  nonZero(toWireProjectProblemKind(v.Kind)),
+		Service:               nonZero(v.Service),
+		Check:                 pointerToWire(v.Check, toWireSiteCheck),
+		TrafficRule:           pointerToWire(v.TrafficRule, toWireTrafficRule),
+		OperationId:           nonZero(v.OperationID),
+		OpenTime:              timeToWire(v.OpenTime),
+		ResolveTime:           timeToWire(v.ResolveTime),
+		Value:                 nonZero(v.Value),
+		RequestCount:          nonZero(v.RequestCount),
+		AfterOperationId:      nonZero(v.AfterOperationID),
+		AfterOperationEndTime: timeToWire(v.AfterOperationEndTime),
+		JoinedIncidentId:      nonZero(v.JoinedIncidentID),
+		QuietReason:           nonZero(toWireIncidentQuietReason(v.QuietReason)),
+		Flapping:              nonZero(v.Flapping),
+		IncidentMessage:       nonZero(v.IncidentMessage),
+		Evidence:              pointerToWire(v.Evidence, toWireIncidentEvidence),
+	}
+	return b.Build()
+}
+
+func fromWireIncidentEvidence(w *panelv1.IncidentEvidence) IncidentEvidence {
+	return IncidentEvidence{
+		pointerFromWire(w.GetCheckResult(), fromWireSiteCheckResult),
+		w.GetExitCode(),
+		w.GetOomKilled(),
+		w.GetRestartCount(),
+		w.GetHealthOutput(),
+		sliceFromWire(w.GetLogLines(), fromWireLogLine),
+		pointerFromWire(w.GetTopPath(), fromWireHTTPPathTraffic),
+	}
+}
+
+func toWireIncidentEvidence(v IncidentEvidence) *panelv1.IncidentEvidence {
+	b := panelv1.IncidentEvidence_builder{
+		CheckResult:  pointerToWire(v.CheckResult, toWireSiteCheckResult),
+		ExitCode:     nonZero(v.ExitCode),
+		OomKilled:    nonZero(v.OomKilled),
+		RestartCount: nonZero(v.RestartCount),
+		HealthOutput: nonZero(v.HealthOutput),
+		LogLines:     sliceToWire(v.LogLines, toWireLogLine),
+		TopPath:      pointerToWire(v.TopPath, toWireHTTPPathTraffic),
+	}
+	return b.Build()
+}
+
+func fromWireUptimeDay(w *panelv1.UptimeDay) UptimeDay {
+	return UptimeDay{
+		timeFromWire(w.GetStartTime()),
+		optional(w.HasUptimePercent(), w.GetUptimePercent()),
+		w.GetDownSeconds(),
+	}
+}
+
+func toWireUptimeDay(v UptimeDay) *panelv1.UptimeDay {
+	b := panelv1.UptimeDay_builder{
+		StartTime:     timeToWire(v.StartTime),
+		UptimePercent: v.UptimePercent,
+		DownSeconds:   nonZero(v.DownSeconds),
+	}
+	return b.Build()
+}
+
 func fromWireGetOperationRequest(w *panelv1.GetOperationRequest) GetOperationRequest {
 	return GetOperationRequest{
 		w.GetProjectId(),
@@ -1483,6 +1769,7 @@ func fromWireHTTPTrafficFilter(w *panelv1.HttpTrafficFilter) HTTPTrafficFilter {
 		w.GetPathContains(),
 		w.GetPathPattern(),
 		w.GetStatusClass(),
+		unknownOf(w),
 	}
 }
 
@@ -1494,7 +1781,7 @@ func toWireHTTPTrafficFilter(v HTTPTrafficFilter) *panelv1.HttpTrafficFilter {
 		PathPattern:  nonZero(v.PathPattern),
 		StatusClass:  nonZero(v.StatusClass),
 	}
-	return b.Build()
+	return withUnknown(b.Build(), v.unknown)
 }
 
 func fromWireQueryHTTPTrafficRequest(w *panelv1.QueryHttpTrafficRequest) QueryHTTPTrafficRequest {
@@ -2063,11 +2350,24 @@ func toWireProjectChanged(v ProjectChanged) *panelv1.ProjectChanged {
 }
 
 func fromWireMachineUnreachable(w *panelv1.MachineUnreachable) MachineUnreachable {
-	return MachineUnreachable{}
+	return MachineUnreachable{
+		timeFromWire(w.GetSinceTime()),
+	}
 }
 
 func toWireMachineUnreachable(v MachineUnreachable) *panelv1.MachineUnreachable {
-	b := panelv1.MachineUnreachable_builder{}
+	b := panelv1.MachineUnreachable_builder{
+		SinceTime: timeToWire(v.SinceTime),
+	}
+	return b.Build()
+}
+
+func fromWireMachineUpdatePending(w *panelv1.MachineUpdatePending) MachineUpdatePending {
+	return MachineUpdatePending{}
+}
+
+func toWireMachineUpdatePending(v MachineUpdatePending) *panelv1.MachineUpdatePending {
+	b := panelv1.MachineUpdatePending_builder{}
 	return b.Build()
 }
 
@@ -2200,6 +2500,14 @@ func toWireTailHTTPTrafficResponse(v TailHTTPTrafficResponse) *panelv1.TailHttpT
 	return b.Build()
 }
 
+func fromWireAlertChannelKind(w panelv1.AlertChannelKind) AlertChannelKind {
+	return AlertChannelKind(w)
+}
+
+func toWireAlertChannelKind(v AlertChannelKind) panelv1.AlertChannelKind {
+	return panelv1.AlertChannelKind(v)
+}
+
 func fromWireMachineSessionKind(w panelv1.MachineSessionKind) MachineSessionKind {
 	return MachineSessionKind(w)
 }
@@ -2262,6 +2570,22 @@ func toWireDeployFailureReason(v DeployFailureReason) panelv1.DeployFailureReaso
 	return panelv1.DeployFailureReason(v)
 }
 
+func fromWireTrafficMetric(w panelv1.TrafficMetric) TrafficMetric { return TrafficMetric(w) }
+
+func toWireTrafficMetric(v TrafficMetric) panelv1.TrafficMetric { return panelv1.TrafficMetric(v) }
+
+func fromWireAlertStatus(w panelv1.AlertStatus) AlertStatus { return AlertStatus(w) }
+
+func toWireAlertStatus(v AlertStatus) panelv1.AlertStatus { return panelv1.AlertStatus(v) }
+
+func fromWireIncidentQuietReason(w panelv1.IncidentQuietReason) IncidentQuietReason {
+	return IncidentQuietReason(w)
+}
+
+func toWireIncidentQuietReason(v IncidentQuietReason) panelv1.IncidentQuietReason {
+	return panelv1.IncidentQuietReason(v)
+}
+
 func fromWireOutputStream(w panelv1.OutputStream) OutputStream { return OutputStream(w) }
 
 func toWireOutputStream(v OutputStream) panelv1.OutputStream { return panelv1.OutputStream(v) }
@@ -2283,6 +2607,10 @@ func toWireNoMachineReason(v NoMachineReason) panelv1.NoMachineReason {
 // Each constant of the package is the wire layer's number: one that differs does not compile.
 func _() {
 	var same [1]struct{}
+	_ = same[AlertChannelKindUnspecified-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_UNSPECIFIED)]
+	_ = same[AlertChannelKindEmail-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_EMAIL)]
+	_ = same[AlertChannelKindTelegram-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_TELEGRAM)]
+	_ = same[AlertChannelKindSlack-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_SLACK)]
 	_ = same[MachineSessionKindUnspecified-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_UNSPECIFIED)]
 	_ = same[MachineSessionKindWebTerminal-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_WEB_TERMINAL)]
 	_ = same[MachineSessionKindSSHTerminal-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_SSH_TERMINAL)]
@@ -2300,6 +2628,9 @@ func _() {
 	_ = same[ProjectProblemKindRestoreFailed-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_RESTORE_FAILED)]
 	_ = same[ProjectProblemKindAutoDeployRefused-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED)]
 	_ = same[ProjectProblemKindServicePortClosed-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED)]
+	_ = same[ProjectProblemKindSiteDown-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_SITE_DOWN)]
+	_ = same[ProjectProblemKindHTTPErrors-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_ERRORS)]
+	_ = same[ProjectProblemKindHTTPSlow-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_SLOW)]
 	_ = same[ServicesActionKindUnspecified-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_UNSPECIFIED)]
 	_ = same[ServicesActionKindStart-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_START)]
 	_ = same[ServicesActionKindStop-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_STOP)]
@@ -2349,6 +2680,21 @@ func _() {
 	_ = same[DeployFailureReasonTimedOut-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_TIMED_OUT)]
 	_ = same[DeployFailureReasonUncoveredImageVolume-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME)]
 	_ = same[DeployFailureReasonBuildMemoryUnavailable-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE)]
+	_ = same[TrafficMetricUnspecified-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED)]
+	_ = same[TrafficMetricServerErrors-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERRORS)]
+	_ = same[TrafficMetricServerErrorPercent-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERROR_PERCENT)]
+	_ = same[TrafficMetricLatencyP95Ms-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_LATENCY_P95_MS)]
+	_ = same[AlertStatusUnspecified-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_UNSPECIFIED)]
+	_ = same[AlertStatusOk-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_OK)]
+	_ = same[AlertStatusPending-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_PENDING)]
+	_ = same[AlertStatusFiring-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_FIRING)]
+	_ = same[AlertStatusPaused-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_PAUSED)]
+	_ = same[AlertStatusNoData-AlertStatus(panelv1.AlertStatus_ALERT_STATUS_NO_DATA)]
+	_ = same[IncidentQuietReasonUnspecified-IncidentQuietReason(panelv1.IncidentQuietReason_INCIDENT_QUIET_REASON_UNSPECIFIED)]
+	_ = same[IncidentQuietReasonMuted-IncidentQuietReason(panelv1.IncidentQuietReason_INCIDENT_QUIET_REASON_MUTED)]
+	_ = same[IncidentQuietReasonOff-IncidentQuietReason(panelv1.IncidentQuietReason_INCIDENT_QUIET_REASON_OFF)]
+	_ = same[IncidentQuietReasonFirstEvaluation-IncidentQuietReason(panelv1.IncidentQuietReason_INCIDENT_QUIET_REASON_FIRST_EVALUATION)]
+	_ = same[IncidentQuietReasonManualDeploy-IncidentQuietReason(panelv1.IncidentQuietReason_INCIDENT_QUIET_REASON_MANUAL_DEPLOY)]
 	_ = same[OutputStreamUnspecified-OutputStream(panelv1.OutputStream_OUTPUT_STREAM_UNSPECIFIED)]
 	_ = same[OutputStreamStdout-OutputStream(panelv1.OutputStream_OUTPUT_STREAM_STDOUT)]
 	_ = same[OutputStreamStderr-OutputStream(panelv1.OutputStream_OUTPUT_STREAM_STDERR)]

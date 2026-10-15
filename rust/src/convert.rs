@@ -15,6 +15,34 @@ fn present<T: Default + PartialEq>(value: T) -> Option<T> {
     (value != T::default()).then_some(value)
 }
 
+pub(crate) fn alert_channel_kind_from_wire(value: buffa::EnumValue<wire::AlertChannelKind>) -> types::AlertChannelKind {
+    match value {
+        buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_UNSPECIFIED) => {
+            types::AlertChannelKind::Unspecified
+        }
+        buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_EMAIL) => types::AlertChannelKind::Email,
+        buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_TELEGRAM) => {
+            types::AlertChannelKind::Telegram
+        }
+        buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_SLACK) => types::AlertChannelKind::Slack,
+        buffa::EnumValue::Unknown(number) => types::AlertChannelKind::Unrecognized(number),
+    }
+}
+
+pub(crate) fn alert_channel_kind_to_wire(value: types::AlertChannelKind) -> buffa::EnumValue<wire::AlertChannelKind> {
+    match value {
+        types::AlertChannelKind::Unspecified => {
+            buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_UNSPECIFIED)
+        }
+        types::AlertChannelKind::Email => buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_EMAIL),
+        types::AlertChannelKind::Telegram => {
+            buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_TELEGRAM)
+        }
+        types::AlertChannelKind::Slack => buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_SLACK),
+        types::AlertChannelKind::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
 pub(crate) fn machine_session_kind_from_wire(
     value: buffa::EnumValue<wire::MachineSessionKind>,
 ) -> types::MachineSessionKind {
@@ -100,6 +128,15 @@ pub(crate) fn project_problem_kind_from_wire(
         buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED) => {
             types::ProjectProblemKind::ServicePortClosed
         }
+        buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_SITE_DOWN) => {
+            types::ProjectProblemKind::SiteDown
+        }
+        buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_ERRORS) => {
+            types::ProjectProblemKind::HttpErrors
+        }
+        buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_SLOW) => {
+            types::ProjectProblemKind::HttpSlow
+        }
         buffa::EnumValue::Unknown(number) => types::ProjectProblemKind::Unrecognized(number),
     }
 }
@@ -140,6 +177,15 @@ pub(crate) fn project_problem_kind_to_wire(
         }
         types::ProjectProblemKind::ServicePortClosed => {
             buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED)
+        }
+        types::ProjectProblemKind::SiteDown => {
+            buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_SITE_DOWN)
+        }
+        types::ProjectProblemKind::HttpErrors => {
+            buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_ERRORS)
+        }
+        types::ProjectProblemKind::HttpSlow => {
+            buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_SLOW)
         }
         types::ProjectProblemKind::Unrecognized(number) => buffa::EnumValue::from(number),
     }
@@ -437,6 +483,108 @@ pub(crate) fn deploy_failure_reason_to_wire(
     }
 }
 
+pub(crate) fn traffic_metric_from_wire(value: buffa::EnumValue<wire::TrafficMetric>) -> types::TrafficMetric {
+    match value {
+        buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_UNSPECIFIED) => types::TrafficMetric::Unspecified,
+        buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_SERVER_ERRORS) => {
+            types::TrafficMetric::ServerErrors
+        }
+        buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_SERVER_ERROR_PERCENT) => {
+            types::TrafficMetric::ServerErrorPercent
+        }
+        buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_LATENCY_P95_MS) => {
+            types::TrafficMetric::LatencyP95Ms
+        }
+        buffa::EnumValue::Unknown(number) => types::TrafficMetric::Unrecognized(number),
+    }
+}
+
+pub(crate) fn traffic_metric_to_wire(value: types::TrafficMetric) -> buffa::EnumValue<wire::TrafficMetric> {
+    match value {
+        types::TrafficMetric::Unspecified => buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_UNSPECIFIED),
+        types::TrafficMetric::ServerErrors => {
+            buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_SERVER_ERRORS)
+        }
+        types::TrafficMetric::ServerErrorPercent => {
+            buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_SERVER_ERROR_PERCENT)
+        }
+        types::TrafficMetric::LatencyP95Ms => {
+            buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_LATENCY_P95_MS)
+        }
+        types::TrafficMetric::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
+pub(crate) fn alert_status_from_wire(value: buffa::EnumValue<wire::AlertStatus>) -> types::AlertStatus {
+    match value {
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_UNSPECIFIED) => types::AlertStatus::Unspecified,
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_OK) => types::AlertStatus::Ok,
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_PENDING) => types::AlertStatus::Pending,
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_FIRING) => types::AlertStatus::Firing,
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_PAUSED) => types::AlertStatus::Paused,
+        buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_NO_DATA) => types::AlertStatus::NoData,
+        buffa::EnumValue::Unknown(number) => types::AlertStatus::Unrecognized(number),
+    }
+}
+
+pub(crate) fn alert_status_to_wire(value: types::AlertStatus) -> buffa::EnumValue<wire::AlertStatus> {
+    match value {
+        types::AlertStatus::Unspecified => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_UNSPECIFIED),
+        types::AlertStatus::Ok => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_OK),
+        types::AlertStatus::Pending => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_PENDING),
+        types::AlertStatus::Firing => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_FIRING),
+        types::AlertStatus::Paused => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_PAUSED),
+        types::AlertStatus::NoData => buffa::EnumValue::Known(wire::AlertStatus::ALERT_STATUS_NO_DATA),
+        types::AlertStatus::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
+pub(crate) fn incident_quiet_reason_from_wire(
+    value: buffa::EnumValue<wire::IncidentQuietReason>,
+) -> types::IncidentQuietReason {
+    match value {
+        buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_UNSPECIFIED) => {
+            types::IncidentQuietReason::Unspecified
+        }
+        buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_MUTED) => {
+            types::IncidentQuietReason::Muted
+        }
+        buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_OFF) => {
+            types::IncidentQuietReason::Off
+        }
+        buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_FIRST_EVALUATION) => {
+            types::IncidentQuietReason::FirstEvaluation
+        }
+        buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_MANUAL_DEPLOY) => {
+            types::IncidentQuietReason::ManualDeploy
+        }
+        buffa::EnumValue::Unknown(number) => types::IncidentQuietReason::Unrecognized(number),
+    }
+}
+
+pub(crate) fn incident_quiet_reason_to_wire(
+    value: types::IncidentQuietReason,
+) -> buffa::EnumValue<wire::IncidentQuietReason> {
+    match value {
+        types::IncidentQuietReason::Unspecified => {
+            buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_UNSPECIFIED)
+        }
+        types::IncidentQuietReason::Muted => {
+            buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_MUTED)
+        }
+        types::IncidentQuietReason::Off => {
+            buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_OFF)
+        }
+        types::IncidentQuietReason::FirstEvaluation => {
+            buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_FIRST_EVALUATION)
+        }
+        types::IncidentQuietReason::ManualDeploy => {
+            buffa::EnumValue::Known(wire::IncidentQuietReason::INCIDENT_QUIET_REASON_MANUAL_DEPLOY)
+        }
+        types::IncidentQuietReason::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
 pub(crate) fn output_stream_from_wire(value: buffa::EnumValue<wire::OutputStream>) -> types::OutputStream {
     match value {
         buffa::EnumValue::Known(wire::OutputStream::OUTPUT_STREAM_UNSPECIFIED) => types::OutputStream::Unspecified,
@@ -609,6 +757,7 @@ impl From<types::Machine> for wire::Machine {
             restart_required_time,
             scheduled_restart_time,
             sessions,
+            alert_channels,
         } = message;
 
         Self {
@@ -637,6 +786,7 @@ impl From<types::Machine> for wire::Machine {
             restart_required_time: restart_required_time.map(crate::timestamp::to_wire).into(),
             scheduled_restart_time: scheduled_restart_time.map(crate::timestamp::to_wire).into(),
             sessions: sessions.into_iter().map(wire::MachineSession::from).collect(),
+            alert_channels: alert_channels.into_iter().map(wire::AlertDestination::from).collect(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -670,6 +820,7 @@ impl From<wire::Machine> for types::Machine {
             restart_required_time,
             scheduled_restart_time,
             sessions,
+            alert_channels,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -699,6 +850,34 @@ impl From<wire::Machine> for types::Machine {
             restart_required_time: restart_required_time.into_option().map(crate::timestamp::from_wire),
             scheduled_restart_time: scheduled_restart_time.into_option().map(crate::timestamp::from_wire),
             sessions: sessions.into_iter().map(types::MachineSession::from).collect(),
+            alert_channels: alert_channels.into_iter().map(types::AlertDestination::from).collect(),
+        }
+    }
+}
+
+impl From<types::AlertDestination> for wire::AlertDestination {
+    fn from(message: types::AlertDestination) -> Self {
+        let types::AlertDestination { kind, label } = message;
+
+        Self {
+            kind: self::present(kind).map(alert_channel_kind_to_wire),
+            label: self::present(label),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::AlertDestination> for types::AlertDestination {
+    fn from(message: wire::AlertDestination) -> Self {
+        let wire::AlertDestination {
+            kind,
+            label,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            kind: kind.map(alert_channel_kind_from_wire).unwrap_or_default(),
+            label: label.unwrap_or_default(),
         }
     }
 }
@@ -1226,6 +1405,7 @@ impl From<types::ProjectProblem> for wire::ProjectProblem {
             operation_id,
             since_time,
             problem_message,
+            incident_id,
         } = message;
 
         Self {
@@ -1234,6 +1414,7 @@ impl From<types::ProjectProblem> for wire::ProjectProblem {
             operation_id: self::present(operation_id),
             since_time: since_time.map(crate::timestamp::to_wire).into(),
             problem_message: self::present(problem_message),
+            incident_id: self::present(incident_id),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1247,6 +1428,7 @@ impl From<wire::ProjectProblem> for types::ProjectProblem {
             operation_id,
             since_time,
             problem_message,
+            incident_id,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1256,6 +1438,7 @@ impl From<wire::ProjectProblem> for types::ProjectProblem {
             operation_id: operation_id.unwrap_or_default(),
             since_time: since_time.into_option().map(crate::timestamp::from_wire),
             problem_message: problem_message.unwrap_or_default(),
+            incident_id: incident_id.unwrap_or_default(),
         }
     }
 }
@@ -1267,6 +1450,9 @@ impl From<types::GetProjectRequest> for wire::GetProjectRequest {
             include_secret_values,
             snapshots_before,
             snapshots_volume,
+            incidents_before,
+            uptime_day_count,
+            incidents_before_id,
         } = message;
 
         Self {
@@ -1274,6 +1460,9 @@ impl From<types::GetProjectRequest> for wire::GetProjectRequest {
             include_secret_values: self::present(include_secret_values),
             snapshots_before: snapshots_before.map(crate::timestamp::to_wire).into(),
             snapshots_volume: self::present(snapshots_volume),
+            incidents_before: incidents_before.map(crate::timestamp::to_wire).into(),
+            uptime_day_count: self::present(uptime_day_count),
+            incidents_before_id: self::present(incidents_before_id),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1286,6 +1475,9 @@ impl From<wire::GetProjectRequest> for types::GetProjectRequest {
             include_secret_values,
             snapshots_before,
             snapshots_volume,
+            incidents_before,
+            uptime_day_count,
+            incidents_before_id,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1294,6 +1486,9 @@ impl From<wire::GetProjectRequest> for types::GetProjectRequest {
             include_secret_values: include_secret_values.unwrap_or_default(),
             snapshots_before: snapshots_before.into_option().map(crate::timestamp::from_wire),
             snapshots_volume: snapshots_volume.unwrap_or_default(),
+            incidents_before: incidents_before.into_option().map(crate::timestamp::from_wire),
+            uptime_day_count: uptime_day_count.unwrap_or_default(),
+            incidents_before_id: incidents_before_id.unwrap_or_default(),
         }
     }
 }
@@ -1347,6 +1542,10 @@ impl From<types::Project> for wire::Project {
             http_traffic_last_day,
             source,
             running_services_action,
+            alerts,
+            incidents,
+            more_incidents,
+            uptime_days,
         } = message;
 
         Self {
@@ -1372,6 +1571,10 @@ impl From<types::Project> for wire::Project {
             http_traffic_last_day: http_traffic_last_day.map(wire::HttpTrafficSummary::from).into(),
             source: source.map(wire::ProjectSource::from).into(),
             running_services_action: running_services_action.map(wire::RunningServicesAction::from).into(),
+            alerts: alerts.map(wire::ProjectAlerts::from).into(),
+            incidents: incidents.into_iter().map(wire::Incident::from).collect(),
+            more_incidents: self::present(more_incidents),
+            uptime_days: uptime_days.into_iter().map(wire::UptimeDay::from).collect(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1402,6 +1605,10 @@ impl From<wire::Project> for types::Project {
             http_traffic_last_day,
             source,
             running_services_action,
+            alerts,
+            incidents,
+            more_incidents,
+            uptime_days,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1430,6 +1637,10 @@ impl From<wire::Project> for types::Project {
             running_services_action: running_services_action
                 .into_option()
                 .map(types::RunningServicesAction::from),
+            alerts: alerts.into_option().map(types::ProjectAlerts::from),
+            incidents: incidents.into_iter().map(types::Incident::from).collect(),
+            more_incidents: more_incidents.unwrap_or_default(),
+            uptime_days: uptime_days.into_iter().map(types::UptimeDay::from).collect(),
         }
     }
 }
@@ -2063,6 +2274,7 @@ impl From<types::Operation> for wire::Operation {
             changed_paths,
             changed_path_count,
             files_kept,
+            files_operation_id,
         } = message;
 
         Self {
@@ -2085,6 +2297,7 @@ impl From<types::Operation> for wire::Operation {
             changed_paths,
             changed_path_count: self::present(changed_path_count),
             files_kept: self::present(files_kept),
+            files_operation_id: self::present(files_operation_id),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2112,6 +2325,7 @@ impl From<wire::Operation> for types::Operation {
             changed_paths,
             changed_path_count,
             files_kept,
+            files_operation_id,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2137,6 +2351,7 @@ impl From<wire::Operation> for types::Operation {
             changed_paths,
             changed_path_count: changed_path_count.unwrap_or_default(),
             files_kept: files_kept.unwrap_or_default(),
+            files_operation_id: files_operation_id.unwrap_or_default(),
         }
     }
 }
@@ -3025,6 +3240,502 @@ impl From<wire::RunProjectActionResponse> for types::RunProjectActionResponse {
             operation: operation.into_option().map(types::Operation::from),
             project: project.into_option().map(types::Project::from),
             log: log.into_iter().map(types::OperationLogLine::from).collect(),
+        }
+    }
+}
+
+impl From<types::SetProjectAlertsRequest> for wire::SetProjectAlertsRequest {
+    fn from(message: types::SetProjectAlertsRequest) -> Self {
+        let types::SetProjectAlertsRequest {
+            project_id,
+            checks,
+            remove_checks,
+            traffic_rules,
+            remove_traffic_rules,
+            off,
+            mute_minutes,
+        } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            checks: checks.into_iter().map(wire::SiteCheck::from).collect(),
+            remove_checks: self::present(remove_checks),
+            traffic_rules: traffic_rules.into_iter().map(wire::TrafficRule::from).collect(),
+            remove_traffic_rules: self::present(remove_traffic_rules),
+            off,
+            mute_minutes,
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SetProjectAlertsRequest> for types::SetProjectAlertsRequest {
+    fn from(message: wire::SetProjectAlertsRequest) -> Self {
+        let wire::SetProjectAlertsRequest {
+            project_id,
+            checks,
+            remove_checks,
+            traffic_rules,
+            remove_traffic_rules,
+            off,
+            mute_minutes,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            checks: checks.into_iter().map(types::SiteCheck::from).collect(),
+            remove_checks: remove_checks.unwrap_or_default(),
+            traffic_rules: traffic_rules.into_iter().map(types::TrafficRule::from).collect(),
+            remove_traffic_rules: remove_traffic_rules.unwrap_or_default(),
+            off,
+            mute_minutes,
+        }
+    }
+}
+
+impl From<types::SetProjectAlertsResponse> for wire::SetProjectAlertsResponse {
+    fn from(message: types::SetProjectAlertsResponse) -> Self {
+        let types::SetProjectAlertsResponse { alerts } = message;
+
+        Self {
+            alerts: alerts.map(wire::ProjectAlerts::from).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SetProjectAlertsResponse> for types::SetProjectAlertsResponse {
+    fn from(message: wire::SetProjectAlertsResponse) -> Self {
+        let wire::SetProjectAlertsResponse {
+            alerts,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            alerts: alerts.into_option().map(types::ProjectAlerts::from),
+        }
+    }
+}
+
+impl From<types::SiteCheck> for wire::SiteCheck {
+    fn from(message: types::SiteCheck) -> Self {
+        let types::SiteCheck {
+            host,
+            path,
+            expect_status,
+            must_contain,
+        } = message;
+
+        Self {
+            host: self::present(host),
+            path: self::present(path),
+            expect_status: self::present(expect_status),
+            must_contain: self::present(must_contain),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SiteCheck> for types::SiteCheck {
+    fn from(message: wire::SiteCheck) -> Self {
+        let wire::SiteCheck {
+            host,
+            path,
+            expect_status,
+            must_contain,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            host: host.unwrap_or_default(),
+            path: path.unwrap_or_default(),
+            expect_status: expect_status.unwrap_or_default(),
+            must_contain: must_contain.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::TrafficRule> for wire::TrafficRule {
+    fn from(message: types::TrafficRule) -> Self {
+        let types::TrafficRule {
+            metric,
+            filter,
+            threshold,
+            window_minutes,
+            min_requests,
+        } = message;
+
+        Self {
+            metric: self::present(metric).map(traffic_metric_to_wire),
+            filter: filter.map(wire::HttpTrafficFilter::from).into(),
+            threshold: self::present(threshold),
+            window_minutes: self::present(window_minutes),
+            min_requests: self::present(min_requests),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::TrafficRule> for types::TrafficRule {
+    fn from(message: wire::TrafficRule) -> Self {
+        let wire::TrafficRule {
+            metric,
+            filter,
+            threshold,
+            window_minutes,
+            min_requests,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            metric: metric.map(traffic_metric_from_wire).unwrap_or_default(),
+            filter: filter.into_option().map(types::HttpTrafficFilter::from),
+            threshold: threshold.unwrap_or_default(),
+            window_minutes: window_minutes.unwrap_or_default(),
+            min_requests: min_requests.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::ProjectAlerts> for wire::ProjectAlerts {
+    fn from(message: types::ProjectAlerts) -> Self {
+        let types::ProjectAlerts {
+            checks,
+            traffic_rules,
+            off,
+            mute_end_time,
+            uptime_percent,
+        } = message;
+
+        Self {
+            checks: checks.into_iter().map(wire::SiteCheckState::from).collect(),
+            traffic_rules: traffic_rules.into_iter().map(wire::TrafficRuleState::from).collect(),
+            off: self::present(off),
+            mute_end_time: mute_end_time.map(crate::timestamp::to_wire).into(),
+            uptime_percent,
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ProjectAlerts> for types::ProjectAlerts {
+    fn from(message: wire::ProjectAlerts) -> Self {
+        let wire::ProjectAlerts {
+            checks,
+            traffic_rules,
+            off,
+            mute_end_time,
+            uptime_percent,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            checks: checks.into_iter().map(types::SiteCheckState::from).collect(),
+            traffic_rules: traffic_rules.into_iter().map(types::TrafficRuleState::from).collect(),
+            off: off.unwrap_or_default(),
+            mute_end_time: mute_end_time.into_option().map(crate::timestamp::from_wire),
+            uptime_percent,
+        }
+    }
+}
+
+impl From<types::SiteCheckState> for wire::SiteCheckState {
+    fn from(message: types::SiteCheckState) -> Self {
+        let types::SiteCheckState {
+            check,
+            machine_default,
+            status,
+            last_result,
+            incident_id,
+        } = message;
+
+        Self {
+            check: check.map(wire::SiteCheck::from).into(),
+            machine_default: self::present(machine_default),
+            status: self::present(status).map(alert_status_to_wire),
+            last_result: last_result.map(wire::SiteCheckResult::from).into(),
+            incident_id: self::present(incident_id),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SiteCheckState> for types::SiteCheckState {
+    fn from(message: wire::SiteCheckState) -> Self {
+        let wire::SiteCheckState {
+            check,
+            machine_default,
+            status,
+            last_result,
+            incident_id,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            check: check.into_option().map(types::SiteCheck::from),
+            machine_default: machine_default.unwrap_or_default(),
+            status: status.map(alert_status_from_wire).unwrap_or_default(),
+            last_result: last_result.into_option().map(types::SiteCheckResult::from),
+            incident_id: incident_id.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::SiteCheckResult> for wire::SiteCheckResult {
+    fn from(message: types::SiteCheckResult) -> Self {
+        let types::SiteCheckResult {
+            check_time,
+            status,
+            duration_ms,
+            failure_message,
+        } = message;
+
+        Self {
+            check_time: check_time.map(crate::timestamp::to_wire).into(),
+            status: self::present(status),
+            duration_ms: self::present(duration_ms),
+            failure_message: self::present(failure_message),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SiteCheckResult> for types::SiteCheckResult {
+    fn from(message: wire::SiteCheckResult) -> Self {
+        let wire::SiteCheckResult {
+            check_time,
+            status,
+            duration_ms,
+            failure_message,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            check_time: check_time.into_option().map(crate::timestamp::from_wire),
+            status: status.unwrap_or_default(),
+            duration_ms: duration_ms.unwrap_or_default(),
+            failure_message: failure_message.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::TrafficRuleState> for wire::TrafficRuleState {
+    fn from(message: types::TrafficRuleState) -> Self {
+        let types::TrafficRuleState {
+            rule,
+            machine_default,
+            status,
+            value,
+            request_count,
+            incident_id,
+        } = message;
+
+        Self {
+            rule: rule.map(wire::TrafficRule::from).into(),
+            machine_default: self::present(machine_default),
+            status: self::present(status).map(alert_status_to_wire),
+            value: self::present(value),
+            request_count: self::present(request_count),
+            incident_id: self::present(incident_id),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::TrafficRuleState> for types::TrafficRuleState {
+    fn from(message: wire::TrafficRuleState) -> Self {
+        let wire::TrafficRuleState {
+            rule,
+            machine_default,
+            status,
+            value,
+            request_count,
+            incident_id,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            rule: rule.into_option().map(types::TrafficRule::from),
+            machine_default: machine_default.unwrap_or_default(),
+            status: status.map(alert_status_from_wire).unwrap_or_default(),
+            value: value.unwrap_or_default(),
+            request_count: request_count.unwrap_or_default(),
+            incident_id: incident_id.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::Incident> for wire::Incident {
+    fn from(message: types::Incident) -> Self {
+        let types::Incident {
+            incident_id,
+            kind,
+            service,
+            check,
+            traffic_rule,
+            operation_id,
+            open_time,
+            resolve_time,
+            value,
+            request_count,
+            after_operation_id,
+            after_operation_end_time,
+            joined_incident_id,
+            quiet_reason,
+            flapping,
+            incident_message,
+            evidence,
+        } = message;
+
+        Self {
+            incident_id: self::present(incident_id),
+            kind: self::present(kind).map(project_problem_kind_to_wire),
+            service: self::present(service),
+            check: check.map(wire::SiteCheck::from).into(),
+            traffic_rule: traffic_rule.map(wire::TrafficRule::from).into(),
+            operation_id: self::present(operation_id),
+            open_time: open_time.map(crate::timestamp::to_wire).into(),
+            resolve_time: resolve_time.map(crate::timestamp::to_wire).into(),
+            value: self::present(value),
+            request_count: self::present(request_count),
+            after_operation_id: self::present(after_operation_id),
+            after_operation_end_time: after_operation_end_time.map(crate::timestamp::to_wire).into(),
+            joined_incident_id: self::present(joined_incident_id),
+            quiet_reason: self::present(quiet_reason).map(incident_quiet_reason_to_wire),
+            flapping: self::present(flapping),
+            incident_message: self::present(incident_message),
+            evidence: evidence.map(wire::IncidentEvidence::from).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::Incident> for types::Incident {
+    fn from(message: wire::Incident) -> Self {
+        let wire::Incident {
+            incident_id,
+            kind,
+            service,
+            check,
+            traffic_rule,
+            operation_id,
+            open_time,
+            resolve_time,
+            value,
+            request_count,
+            after_operation_id,
+            after_operation_end_time,
+            joined_incident_id,
+            quiet_reason,
+            flapping,
+            incident_message,
+            evidence,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            incident_id: incident_id.unwrap_or_default(),
+            kind: kind.map(project_problem_kind_from_wire).unwrap_or_default(),
+            service: service.unwrap_or_default(),
+            check: check.into_option().map(types::SiteCheck::from),
+            traffic_rule: traffic_rule.into_option().map(types::TrafficRule::from),
+            operation_id: operation_id.unwrap_or_default(),
+            open_time: open_time.into_option().map(crate::timestamp::from_wire),
+            resolve_time: resolve_time.into_option().map(crate::timestamp::from_wire),
+            value: value.unwrap_or_default(),
+            request_count: request_count.unwrap_or_default(),
+            after_operation_id: after_operation_id.unwrap_or_default(),
+            after_operation_end_time: after_operation_end_time.into_option().map(crate::timestamp::from_wire),
+            joined_incident_id: joined_incident_id.unwrap_or_default(),
+            quiet_reason: quiet_reason.map(incident_quiet_reason_from_wire).unwrap_or_default(),
+            flapping: flapping.unwrap_or_default(),
+            incident_message: incident_message.unwrap_or_default(),
+            evidence: evidence.into_option().map(types::IncidentEvidence::from),
+        }
+    }
+}
+
+impl From<types::IncidentEvidence> for wire::IncidentEvidence {
+    fn from(message: types::IncidentEvidence) -> Self {
+        let types::IncidentEvidence {
+            check_result,
+            exit_code,
+            oom_killed,
+            restart_count,
+            health_output,
+            log_lines,
+            top_path,
+        } = message;
+
+        Self {
+            check_result: check_result.map(wire::SiteCheckResult::from).into(),
+            exit_code: self::present(exit_code),
+            oom_killed: self::present(oom_killed),
+            restart_count: self::present(restart_count),
+            health_output: self::present(health_output),
+            log_lines: log_lines.into_iter().map(wire::LogLine::from).collect(),
+            top_path: top_path.map(wire::HttpPathTraffic::from).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::IncidentEvidence> for types::IncidentEvidence {
+    fn from(message: wire::IncidentEvidence) -> Self {
+        let wire::IncidentEvidence {
+            check_result,
+            exit_code,
+            oom_killed,
+            restart_count,
+            health_output,
+            log_lines,
+            top_path,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            check_result: check_result.into_option().map(types::SiteCheckResult::from),
+            exit_code: exit_code.unwrap_or_default(),
+            oom_killed: oom_killed.unwrap_or_default(),
+            restart_count: restart_count.unwrap_or_default(),
+            health_output: health_output.unwrap_or_default(),
+            log_lines: log_lines.into_iter().map(types::LogLine::from).collect(),
+            top_path: top_path.into_option().map(types::HttpPathTraffic::from),
+        }
+    }
+}
+
+impl From<types::UptimeDay> for wire::UptimeDay {
+    fn from(message: types::UptimeDay) -> Self {
+        let types::UptimeDay {
+            start_time,
+            uptime_percent,
+            down_seconds,
+        } = message;
+
+        Self {
+            start_time: start_time.map(crate::timestamp::to_wire).into(),
+            uptime_percent,
+            down_seconds: self::present(down_seconds),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::UptimeDay> for types::UptimeDay {
+    fn from(message: wire::UptimeDay) -> Self {
+        let wire::UptimeDay {
+            start_time,
+            uptime_percent,
+            down_seconds,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            start_time: start_time.into_option().map(crate::timestamp::from_wire),
+            uptime_percent,
+            down_seconds: down_seconds.unwrap_or_default(),
         }
     }
 }
@@ -4165,9 +4876,10 @@ impl From<wire::ProjectChanged> for types::ProjectChanged {
 
 impl From<types::MachineUnreachable> for wire::MachineUnreachable {
     fn from(message: types::MachineUnreachable) -> Self {
-        let types::MachineUnreachable {} = message;
+        let types::MachineUnreachable { since_time } = message;
 
         Self {
+            since_time: since_time.map(crate::timestamp::to_wire).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -4176,6 +4888,29 @@ impl From<types::MachineUnreachable> for wire::MachineUnreachable {
 impl From<wire::MachineUnreachable> for types::MachineUnreachable {
     fn from(message: wire::MachineUnreachable) -> Self {
         let wire::MachineUnreachable {
+            since_time,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            since_time: since_time.into_option().map(crate::timestamp::from_wire),
+        }
+    }
+}
+
+impl From<types::MachineUpdatePending> for wire::MachineUpdatePending {
+    fn from(message: types::MachineUpdatePending) -> Self {
+        let types::MachineUpdatePending {} = message;
+
+        Self {
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::MachineUpdatePending> for types::MachineUpdatePending {
+    fn from(message: wire::MachineUpdatePending) -> Self {
+        let wire::MachineUpdatePending {
             __buffa_unknown_fields: _,
         } = message;
 

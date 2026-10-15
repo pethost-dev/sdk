@@ -18,6 +18,14 @@ import pethost._types as _t
 import pethost._wire.v1.panel_pb as _pb
 
 
+def alert_channel_kind_from_wire(_w: _pb.AlertChannelKind) -> _t.AlertChannelKind:
+    return _t.AlertChannelKind(_w.value)
+
+
+def alert_channel_kind_to_wire(_v: _t.AlertChannelKind) -> _pb.AlertChannelKind:
+    return _pb.AlertChannelKind(_v.value)
+
+
 def machine_session_kind_from_wire(_w: _pb.MachineSessionKind) -> _t.MachineSessionKind:
     return _t.MachineSessionKind(_w.value)
 
@@ -96,6 +104,30 @@ def deploy_failure_reason_from_wire(_w: _pb.DeployFailureReason) -> _t.DeployFai
 
 def deploy_failure_reason_to_wire(_v: _t.DeployFailureReason) -> _pb.DeployFailureReason:
     return _pb.DeployFailureReason(_v.value)
+
+
+def traffic_metric_from_wire(_w: _pb.TrafficMetric) -> _t.TrafficMetric:
+    return _t.TrafficMetric(_w.value)
+
+
+def traffic_metric_to_wire(_v: _t.TrafficMetric) -> _pb.TrafficMetric:
+    return _pb.TrafficMetric(_v.value)
+
+
+def alert_status_from_wire(_w: _pb.AlertStatus) -> _t.AlertStatus:
+    return _t.AlertStatus(_w.value)
+
+
+def alert_status_to_wire(_v: _t.AlertStatus) -> _pb.AlertStatus:
+    return _pb.AlertStatus(_v.value)
+
+
+def incident_quiet_reason_from_wire(_w: _pb.IncidentQuietReason) -> _t.IncidentQuietReason:
+    return _t.IncidentQuietReason(_w.value)
+
+
+def incident_quiet_reason_to_wire(_v: _t.IncidentQuietReason) -> _pb.IncidentQuietReason:
+    return _pb.IncidentQuietReason(_v.value)
 
 
 def output_stream_from_wire(_w: _pb.OutputStream) -> _t.OutputStream:
@@ -183,6 +215,7 @@ def machine_from_wire(_w: _pb.Machine) -> _t.Machine:
         restart_required_time=_rt.time_from_wire(_w.restart_required_time) if _w.restart_required_time is not None else None,
         scheduled_restart_time=_rt.time_from_wire(_w.scheduled_restart_time) if _w.scheduled_restart_time is not None else None,
         sessions=tuple(machine_session_from_wire(_x) for _x in _w.sessions),
+        alert_channels=tuple(alert_destination_from_wire(_x) for _x in _w.alert_channels),
     )
 
 
@@ -213,6 +246,7 @@ def machine_to_wire(_v: _t.Machine) -> _pb.Machine:
         restart_required_time=_rt.time_to_wire(_v.restart_required_time) if _v.restart_required_time is not None else None,
         scheduled_restart_time=_rt.time_to_wire(_v.scheduled_restart_time) if _v.scheduled_restart_time is not None else None,
         sessions=[machine_session_to_wire(_x) for _x in _v.sessions],
+        alert_channels=[alert_destination_to_wire(_x) for _x in _v.alert_channels],
     )
 
 
@@ -222,6 +256,28 @@ def machine_to_dict(_v: _t.Machine) -> dict[str, _Any]:
 
 def machine_from_dict(_j: dict[str, _Any]) -> _t.Machine:
     return machine_from_wire(_rt.from_dict(_pb.Machine, _j))
+
+
+def alert_destination_from_wire(_w: _pb.AlertDestination) -> _t.AlertDestination:
+    return _t.AlertDestination(
+        kind=alert_channel_kind_from_wire(_w.kind),
+        label=_w.label,
+    )
+
+
+def alert_destination_to_wire(_v: _t.AlertDestination) -> _pb.AlertDestination:
+    return _pb.AlertDestination(
+        kind=alert_channel_kind_to_wire(_v.kind) if _v.kind.value else None,
+        label=_v.label or None,
+    )
+
+
+def alert_destination_to_dict(_v: _t.AlertDestination) -> dict[str, _Any]:
+    return _rt.to_dict(alert_destination_to_wire(_v))
+
+
+def alert_destination_from_dict(_j: dict[str, _Any]) -> _t.AlertDestination:
+    return alert_destination_from_wire(_rt.from_dict(_pb.AlertDestination, _j))
 
 
 def machine_session_from_wire(_w: _pb.MachineSession) -> _t.MachineSession:
@@ -537,6 +593,7 @@ def project_problem_from_wire(_w: _pb.ProjectProblem) -> _t.ProjectProblem:
         operation_id=_w.operation_id,
         since_time=_rt.time_from_wire(_w.since_time) if _w.since_time is not None else None,
         problem_message=_w.problem_message,
+        incident_id=_w.incident_id,
     )
 
 
@@ -547,6 +604,7 @@ def project_problem_to_wire(_v: _t.ProjectProblem) -> _pb.ProjectProblem:
         operation_id=_v.operation_id or None,
         since_time=_rt.time_to_wire(_v.since_time) if _v.since_time is not None else None,
         problem_message=_v.problem_message or None,
+        incident_id=_v.incident_id or None,
     )
 
 
@@ -602,6 +660,10 @@ def project_from_wire(_w: _pb.Project) -> _t.Project:
         http_traffic_last_day=http_traffic_summary_from_wire(_w.http_traffic_last_day) if _w.http_traffic_last_day is not None else None,
         source=project_source_from_wire(_w.source) if _w.source is not None else None,
         running_services_action=running_services_action_from_wire(_w.running_services_action) if _w.running_services_action is not None else None,
+        alerts=project_alerts_from_wire(_w.alerts) if _w.alerts is not None else None,
+        incidents=tuple(incident_from_wire(_x) for _x in _w.incidents),
+        more_incidents=_w.more_incidents,
+        uptime_days=tuple(uptime_day_from_wire(_x) for _x in _w.uptime_days),
     )
 
 
@@ -629,6 +691,10 @@ def project_to_wire(_v: _t.Project) -> _pb.Project:
         http_traffic_last_day=http_traffic_summary_to_wire(_v.http_traffic_last_day) if _v.http_traffic_last_day is not None else None,
         source=project_source_to_wire(_v.source) if _v.source is not None else None,
         running_services_action=running_services_action_to_wire(_v.running_services_action) if _v.running_services_action is not None else None,
+        alerts=project_alerts_to_wire(_v.alerts) if _v.alerts is not None else None,
+        incidents=[incident_to_wire(_x) for _x in _v.incidents],
+        more_incidents=_v.more_incidents or None,
+        uptime_days=[uptime_day_to_wire(_x) for _x in _v.uptime_days],
     )
 
 
@@ -1063,6 +1129,7 @@ def operation_from_wire(_w: _pb.Operation) -> _t.Operation:
         changed_paths=tuple(_w.changed_paths),
         changed_path_count=_w.changed_path_count,
         files_kept=_w.files_kept,
+        files_operation_id=_w.files_operation_id,
     )
 
 
@@ -1087,6 +1154,7 @@ def operation_to_wire(_v: _t.Operation) -> _pb.Operation:
         changed_paths=_rt.strings("Operation.changed_paths", _v.changed_paths),
         changed_path_count=_v.changed_path_count or None,
         files_kept=_v.files_kept or None,
+        files_operation_id=_v.files_operation_id or None,
     )
 
 
@@ -1550,6 +1618,300 @@ def run_project_action_response_to_dict(_v: _t.RunProjectActionResponse) -> dict
 
 def run_project_action_response_from_dict(_j: dict[str, _Any]) -> _t.RunProjectActionResponse:
     return run_project_action_response_from_wire(_rt.from_dict(_pb.RunProjectActionResponse, _j))
+
+
+def set_project_alerts_response_from_wire(_w: _pb.SetProjectAlertsResponse) -> _t.SetProjectAlertsResponse:
+    return _t.SetProjectAlertsResponse(
+        alerts=project_alerts_from_wire(_w.alerts) if _w.alerts is not None else None,
+    )
+
+
+def set_project_alerts_response_to_wire(_v: _t.SetProjectAlertsResponse) -> _pb.SetProjectAlertsResponse:
+    return _pb.SetProjectAlertsResponse(
+        alerts=project_alerts_to_wire(_v.alerts) if _v.alerts is not None else None,
+    )
+
+
+def set_project_alerts_response_to_dict(_v: _t.SetProjectAlertsResponse) -> dict[str, _Any]:
+    return _rt.to_dict(set_project_alerts_response_to_wire(_v))
+
+
+def set_project_alerts_response_from_dict(_j: dict[str, _Any]) -> _t.SetProjectAlertsResponse:
+    return set_project_alerts_response_from_wire(_rt.from_dict(_pb.SetProjectAlertsResponse, _j))
+
+
+def site_check_from_wire(_w: _pb.SiteCheck) -> _t.SiteCheck:
+    return _t.SiteCheck(
+        host=_w.host,
+        path=_w.path,
+        expect_status=_w.expect_status,
+        must_contain=_w.must_contain,
+    )
+
+
+def site_check_to_wire(_v: _t.SiteCheck) -> _pb.SiteCheck:
+    return _pb.SiteCheck(
+        host=_v.host or None,
+        path=_v.path or None,
+        expect_status=_v.expect_status or None,
+        must_contain=_v.must_contain or None,
+    )
+
+
+def site_check_to_dict(_v: _t.SiteCheck) -> dict[str, _Any]:
+    return _rt.to_dict(site_check_to_wire(_v))
+
+
+def site_check_from_dict(_j: dict[str, _Any]) -> _t.SiteCheck:
+    return site_check_from_wire(_rt.from_dict(_pb.SiteCheck, _j))
+
+
+def traffic_rule_from_wire(_w: _pb.TrafficRule) -> _t.TrafficRule:
+    return _t.TrafficRule(
+        metric=traffic_metric_from_wire(_w.metric),
+        filter=http_traffic_filter_from_wire(_w.filter) if _w.filter is not None else None,
+        threshold=_w.threshold,
+        window_minutes=_w.window_minutes,
+        min_requests=_w.min_requests,
+    )
+
+
+def traffic_rule_to_wire(_v: _t.TrafficRule) -> _pb.TrafficRule:
+    return _pb.TrafficRule(
+        metric=traffic_metric_to_wire(_v.metric) if _v.metric.value else None,
+        filter=http_traffic_filter_to_wire(_v.filter) if _v.filter is not None else None,
+        threshold=_v.threshold or None,
+        window_minutes=_v.window_minutes or None,
+        min_requests=_v.min_requests or None,
+    )
+
+
+def traffic_rule_to_dict(_v: _t.TrafficRule) -> dict[str, _Any]:
+    return _rt.to_dict(traffic_rule_to_wire(_v))
+
+
+def traffic_rule_from_dict(_j: dict[str, _Any]) -> _t.TrafficRule:
+    return traffic_rule_from_wire(_rt.from_dict(_pb.TrafficRule, _j))
+
+
+def project_alerts_from_wire(_w: _pb.ProjectAlerts) -> _t.ProjectAlerts:
+    return _t.ProjectAlerts(
+        checks=tuple(site_check_state_from_wire(_x) for _x in _w.checks),
+        traffic_rules=tuple(traffic_rule_state_from_wire(_x) for _x in _w.traffic_rules),
+        off=_w.off,
+        mute_end_time=_rt.time_from_wire(_w.mute_end_time) if _w.mute_end_time is not None else None,
+        uptime_percent=_w.uptime_percent if _w.has_field("uptime_percent") else None,
+    )
+
+
+def project_alerts_to_wire(_v: _t.ProjectAlerts) -> _pb.ProjectAlerts:
+    return _pb.ProjectAlerts(
+        checks=[site_check_state_to_wire(_x) for _x in _v.checks],
+        traffic_rules=[traffic_rule_state_to_wire(_x) for _x in _v.traffic_rules],
+        off=_v.off or None,
+        mute_end_time=_rt.time_to_wire(_v.mute_end_time) if _v.mute_end_time is not None else None,
+        uptime_percent=_v.uptime_percent,
+    )
+
+
+def project_alerts_to_dict(_v: _t.ProjectAlerts) -> dict[str, _Any]:
+    return _rt.to_dict(project_alerts_to_wire(_v))
+
+
+def project_alerts_from_dict(_j: dict[str, _Any]) -> _t.ProjectAlerts:
+    return project_alerts_from_wire(_rt.from_dict(_pb.ProjectAlerts, _j))
+
+
+def site_check_state_from_wire(_w: _pb.SiteCheckState) -> _t.SiteCheckState:
+    return _t.SiteCheckState(
+        check=site_check_from_wire(_w.check) if _w.check is not None else None,
+        machine_default=_w.machine_default,
+        status=alert_status_from_wire(_w.status),
+        last_result=site_check_result_from_wire(_w.last_result) if _w.last_result is not None else None,
+        incident_id=_w.incident_id,
+    )
+
+
+def site_check_state_to_wire(_v: _t.SiteCheckState) -> _pb.SiteCheckState:
+    return _pb.SiteCheckState(
+        check=site_check_to_wire(_v.check) if _v.check is not None else None,
+        machine_default=_v.machine_default or None,
+        status=alert_status_to_wire(_v.status) if _v.status.value else None,
+        last_result=site_check_result_to_wire(_v.last_result) if _v.last_result is not None else None,
+        incident_id=_v.incident_id or None,
+    )
+
+
+def site_check_state_to_dict(_v: _t.SiteCheckState) -> dict[str, _Any]:
+    return _rt.to_dict(site_check_state_to_wire(_v))
+
+
+def site_check_state_from_dict(_j: dict[str, _Any]) -> _t.SiteCheckState:
+    return site_check_state_from_wire(_rt.from_dict(_pb.SiteCheckState, _j))
+
+
+def site_check_result_from_wire(_w: _pb.SiteCheckResult) -> _t.SiteCheckResult:
+    return _t.SiteCheckResult(
+        check_time=_rt.time_from_wire(_w.check_time) if _w.check_time is not None else None,
+        status=_w.status,
+        duration_ms=_w.duration_ms,
+        failure_message=_w.failure_message,
+    )
+
+
+def site_check_result_to_wire(_v: _t.SiteCheckResult) -> _pb.SiteCheckResult:
+    return _pb.SiteCheckResult(
+        check_time=_rt.time_to_wire(_v.check_time) if _v.check_time is not None else None,
+        status=_v.status or None,
+        duration_ms=_v.duration_ms or None,
+        failure_message=_v.failure_message or None,
+    )
+
+
+def site_check_result_to_dict(_v: _t.SiteCheckResult) -> dict[str, _Any]:
+    return _rt.to_dict(site_check_result_to_wire(_v))
+
+
+def site_check_result_from_dict(_j: dict[str, _Any]) -> _t.SiteCheckResult:
+    return site_check_result_from_wire(_rt.from_dict(_pb.SiteCheckResult, _j))
+
+
+def traffic_rule_state_from_wire(_w: _pb.TrafficRuleState) -> _t.TrafficRuleState:
+    return _t.TrafficRuleState(
+        rule=traffic_rule_from_wire(_w.rule) if _w.rule is not None else None,
+        machine_default=_w.machine_default,
+        status=alert_status_from_wire(_w.status),
+        value=_w.value,
+        request_count=_w.request_count,
+        incident_id=_w.incident_id,
+    )
+
+
+def traffic_rule_state_to_wire(_v: _t.TrafficRuleState) -> _pb.TrafficRuleState:
+    return _pb.TrafficRuleState(
+        rule=traffic_rule_to_wire(_v.rule) if _v.rule is not None else None,
+        machine_default=_v.machine_default or None,
+        status=alert_status_to_wire(_v.status) if _v.status.value else None,
+        value=_v.value or None,
+        request_count=_v.request_count or None,
+        incident_id=_v.incident_id or None,
+    )
+
+
+def traffic_rule_state_to_dict(_v: _t.TrafficRuleState) -> dict[str, _Any]:
+    return _rt.to_dict(traffic_rule_state_to_wire(_v))
+
+
+def traffic_rule_state_from_dict(_j: dict[str, _Any]) -> _t.TrafficRuleState:
+    return traffic_rule_state_from_wire(_rt.from_dict(_pb.TrafficRuleState, _j))
+
+
+def incident_from_wire(_w: _pb.Incident) -> _t.Incident:
+    return _t.Incident(
+        incident_id=_w.incident_id,
+        kind=project_problem_kind_from_wire(_w.kind),
+        service=_w.service,
+        check=site_check_from_wire(_w.check) if _w.check is not None else None,
+        traffic_rule=traffic_rule_from_wire(_w.traffic_rule) if _w.traffic_rule is not None else None,
+        operation_id=_w.operation_id,
+        open_time=_rt.time_from_wire(_w.open_time) if _w.open_time is not None else None,
+        resolve_time=_rt.time_from_wire(_w.resolve_time) if _w.resolve_time is not None else None,
+        value=_w.value,
+        request_count=_w.request_count,
+        after_operation_id=_w.after_operation_id,
+        after_operation_end_time=_rt.time_from_wire(_w.after_operation_end_time) if _w.after_operation_end_time is not None else None,
+        joined_incident_id=_w.joined_incident_id,
+        quiet_reason=incident_quiet_reason_from_wire(_w.quiet_reason),
+        flapping=_w.flapping,
+        incident_message=_w.incident_message,
+        evidence=incident_evidence_from_wire(_w.evidence) if _w.evidence is not None else None,
+    )
+
+
+def incident_to_wire(_v: _t.Incident) -> _pb.Incident:
+    return _pb.Incident(
+        incident_id=_v.incident_id or None,
+        kind=project_problem_kind_to_wire(_v.kind) if _v.kind.value else None,
+        service=_v.service or None,
+        check=site_check_to_wire(_v.check) if _v.check is not None else None,
+        traffic_rule=traffic_rule_to_wire(_v.traffic_rule) if _v.traffic_rule is not None else None,
+        operation_id=_v.operation_id or None,
+        open_time=_rt.time_to_wire(_v.open_time) if _v.open_time is not None else None,
+        resolve_time=_rt.time_to_wire(_v.resolve_time) if _v.resolve_time is not None else None,
+        value=_v.value or None,
+        request_count=_v.request_count or None,
+        after_operation_id=_v.after_operation_id or None,
+        after_operation_end_time=_rt.time_to_wire(_v.after_operation_end_time) if _v.after_operation_end_time is not None else None,
+        joined_incident_id=_v.joined_incident_id or None,
+        quiet_reason=incident_quiet_reason_to_wire(_v.quiet_reason) if _v.quiet_reason.value else None,
+        flapping=_v.flapping or None,
+        incident_message=_v.incident_message or None,
+        evidence=incident_evidence_to_wire(_v.evidence) if _v.evidence is not None else None,
+    )
+
+
+def incident_to_dict(_v: _t.Incident) -> dict[str, _Any]:
+    return _rt.to_dict(incident_to_wire(_v))
+
+
+def incident_from_dict(_j: dict[str, _Any]) -> _t.Incident:
+    return incident_from_wire(_rt.from_dict(_pb.Incident, _j))
+
+
+def incident_evidence_from_wire(_w: _pb.IncidentEvidence) -> _t.IncidentEvidence:
+    return _t.IncidentEvidence(
+        check_result=site_check_result_from_wire(_w.check_result) if _w.check_result is not None else None,
+        exit_code=_w.exit_code,
+        oom_killed=_w.oom_killed,
+        restart_count=_w.restart_count,
+        health_output=_w.health_output,
+        log_lines=tuple(log_line_from_wire(_x) for _x in _w.log_lines),
+        top_path=http_path_traffic_from_wire(_w.top_path) if _w.top_path is not None else None,
+    )
+
+
+def incident_evidence_to_wire(_v: _t.IncidentEvidence) -> _pb.IncidentEvidence:
+    return _pb.IncidentEvidence(
+        check_result=site_check_result_to_wire(_v.check_result) if _v.check_result is not None else None,
+        exit_code=_v.exit_code or None,
+        oom_killed=_v.oom_killed or None,
+        restart_count=_v.restart_count or None,
+        health_output=_v.health_output or None,
+        log_lines=[log_line_to_wire(_x) for _x in _v.log_lines],
+        top_path=http_path_traffic_to_wire(_v.top_path) if _v.top_path is not None else None,
+    )
+
+
+def incident_evidence_to_dict(_v: _t.IncidentEvidence) -> dict[str, _Any]:
+    return _rt.to_dict(incident_evidence_to_wire(_v))
+
+
+def incident_evidence_from_dict(_j: dict[str, _Any]) -> _t.IncidentEvidence:
+    return incident_evidence_from_wire(_rt.from_dict(_pb.IncidentEvidence, _j))
+
+
+def uptime_day_from_wire(_w: _pb.UptimeDay) -> _t.UptimeDay:
+    return _t.UptimeDay(
+        start_time=_rt.time_from_wire(_w.start_time) if _w.start_time is not None else None,
+        uptime_percent=_w.uptime_percent if _w.has_field("uptime_percent") else None,
+        down_seconds=_w.down_seconds,
+    )
+
+
+def uptime_day_to_wire(_v: _t.UptimeDay) -> _pb.UptimeDay:
+    return _pb.UptimeDay(
+        start_time=_rt.time_to_wire(_v.start_time) if _v.start_time is not None else None,
+        uptime_percent=_v.uptime_percent,
+        down_seconds=_v.down_seconds or None,
+    )
+
+
+def uptime_day_to_dict(_v: _t.UptimeDay) -> dict[str, _Any]:
+    return _rt.to_dict(uptime_day_to_wire(_v))
+
+
+def uptime_day_from_dict(_j: dict[str, _Any]) -> _t.UptimeDay:
+    return uptime_day_from_wire(_rt.from_dict(_pb.UptimeDay, _j))
 
 
 def get_operation_response_from_wire(_w: _pb.GetOperationResponse) -> _t.GetOperationResponse:
@@ -2121,11 +2483,15 @@ def project_changed_from_dict(_j: dict[str, _Any]) -> _t.ProjectChanged:
 
 
 def machine_unreachable_from_wire(_w: _pb.MachineUnreachable) -> _t.MachineUnreachable:
-    return _t.MachineUnreachable()
+    return _t.MachineUnreachable(
+        since_time=_rt.time_from_wire(_w.since_time) if _w.since_time is not None else None,
+    )
 
 
 def machine_unreachable_to_wire(_v: _t.MachineUnreachable) -> _pb.MachineUnreachable:
-    return _pb.MachineUnreachable()
+    return _pb.MachineUnreachable(
+        since_time=_rt.time_to_wire(_v.since_time) if _v.since_time is not None else None,
+    )
 
 
 def machine_unreachable_to_dict(_v: _t.MachineUnreachable) -> dict[str, _Any]:
@@ -2134,6 +2500,22 @@ def machine_unreachable_to_dict(_v: _t.MachineUnreachable) -> dict[str, _Any]:
 
 def machine_unreachable_from_dict(_j: dict[str, _Any]) -> _t.MachineUnreachable:
     return machine_unreachable_from_wire(_rt.from_dict(_pb.MachineUnreachable, _j))
+
+
+def machine_update_pending_from_wire(_w: _pb.MachineUpdatePending) -> _t.MachineUpdatePending:
+    return _t.MachineUpdatePending()
+
+
+def machine_update_pending_to_wire(_v: _t.MachineUpdatePending) -> _pb.MachineUpdatePending:
+    return _pb.MachineUpdatePending()
+
+
+def machine_update_pending_to_dict(_v: _t.MachineUpdatePending) -> dict[str, _Any]:
+    return _rt.to_dict(machine_update_pending_to_wire(_v))
+
+
+def machine_update_pending_from_dict(_j: dict[str, _Any]) -> _t.MachineUpdatePending:
+    return machine_update_pending_from_wire(_rt.from_dict(_pb.MachineUpdatePending, _j))
 
 
 def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
@@ -2267,12 +2649,18 @@ def get_project_request(
     include_secret_values: bool,
     snapshots_before: datetime | None,
     snapshots_volume: str,
+    incidents_before: datetime | None,
+    uptime_day_count: int,
+    incidents_before_id: str,
 ) -> _pb.GetProjectRequest:
     _w = _pb.GetProjectRequest(
         project_id=project_id or None,
         include_secret_values=include_secret_values or None,
         snapshots_before=_rt.time_to_wire(snapshots_before) if snapshots_before is not None else None,
         snapshots_volume=snapshots_volume or None,
+        incidents_before=_rt.time_to_wire(incidents_before) if incidents_before is not None else None,
+        uptime_day_count=uptime_day_count or None,
+        incidents_before_id=incidents_before_id or None,
     )
     return _rt.checked(_w)
 
@@ -2392,6 +2780,28 @@ def run_project_action_request(
         _w.action = _Oneof[_Literal["set_source"], _pb.ProjectSource]("set_source", project_source_to_wire(set_source))
     elif delete_volume is not None:
         _w.action = _Oneof[_Literal["delete_volume"], str]("delete_volume", delete_volume)
+    return _rt.checked(_w)
+
+
+def set_project_alerts_request(
+    *,
+    project_id: str,
+    checks: Sequence[_t.SiteCheck],
+    remove_checks: bool,
+    traffic_rules: Sequence[_t.TrafficRule],
+    remove_traffic_rules: bool,
+    off: bool | None,
+    mute_minutes: int | None,
+) -> _pb.SetProjectAlertsRequest:
+    _w = _pb.SetProjectAlertsRequest(
+        project_id=project_id or None,
+        checks=[site_check_to_wire(_x) for _x in checks],
+        remove_checks=remove_checks or None,
+        traffic_rules=[traffic_rule_to_wire(_x) for _x in traffic_rules],
+        remove_traffic_rules=remove_traffic_rules or None,
+        off=off,
+        mute_minutes=mute_minutes,
+    )
     return _rt.checked(_w)
 
 
@@ -2604,6 +3014,10 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wMachineUnreachable = _d.value(_pb.MachineUnreachable)
                 if _wMachineUnreachable is not None:
                     return machine_unreachable_from_wire(_wMachineUnreachable)
+            if _d.type_name == "pethost.panel.v1.MachineUpdatePending":
+                _wMachineUpdatePending = _d.value(_pb.MachineUpdatePending)
+                if _wMachineUpdatePending is not None:
+                    return machine_update_pending_from_wire(_wMachineUpdatePending)
             if _d.type_name == "pethost.panel.v1.NoMachine":
                 _wNoMachine = _d.value(_pb.NoMachine)
                 if _wNoMachine is not None:

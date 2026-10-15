@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import panel_pb
-from .panel_pb import CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, ListCommitsRequest, ListCommitsResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
+from .panel_pb import CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, ListCommitsRequest, ListCommitsResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -175,6 +175,25 @@ class PanelService(Protocol):
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
         then is.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def set_project_alerts(self, request: SetProjectAlertsRequest, ctx: RequestContext[SetProjectAlertsRequest, SetProjectAlertsResponse], /) -> SetProjectAlertsResponse:
+        """
+        Changes what Pethost watches on a project and when it tells the person: site checks (an
+        address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+        mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+        empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+        Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+        Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+        = the machine's software predates alerts.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def get_incident(self, request: GetIncidentRequest, ctx: RequestContext[GetIncidentRequest, GetIncidentResponse], /) -> GetIncidentResponse:
+        """
+        One incident in full, with the incidents joined to it and what the machine saw when it opened
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -374,6 +393,26 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=svc.run_project_action,
+                ),
+                "/pethost.panel.v1.PanelService/SetProjectAlerts": Endpoint.unary(
+                    method=MethodInfo(
+                        name="SetProjectAlerts",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=SetProjectAlertsRequest,
+                        output=SetProjectAlertsResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=svc.set_project_alerts,
+                ),
+                "/pethost.panel.v1.PanelService/GetIncident": Endpoint.unary(
+                    method=MethodInfo(
+                        name="GetIncident",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetIncidentRequest,
+                        output=GetIncidentResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=svc.get_incident,
                 ),
                 "/pethost.panel.v1.PanelService/GetOperation": Endpoint.unary(
                     method=MethodInfo(
@@ -772,6 +811,61 @@ class PanelServiceClient(ConnectClient):
             ),
             headers=headers,
             timeout_ms=timeout_ms,
+        )
+
+    async def set_project_alerts(
+        self,
+        request: SetProjectAlertsRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> SetProjectAlertsResponse:
+        """
+        Changes what Pethost watches on a project and when it tells the person: site checks (an
+        address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+        mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+        empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+        Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+        Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+        = the machine's software predates alerts.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="SetProjectAlerts",
+                service_name="pethost.panel.v1.PanelService",
+                input=SetProjectAlertsRequest,
+                output=SetProjectAlertsResponse,
+                idempotency_level=IdempotencyLevel.IDEMPOTENT,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
+    async def get_incident(
+        self,
+        request: GetIncidentRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetIncidentResponse:
+        """
+        One incident in full, with the incidents joined to it and what the machine saw when it opened
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetIncident",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetIncidentRequest,
+                output=GetIncidentResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
         )
 
     async def get_operation(
@@ -1231,6 +1325,25 @@ class PanelServiceSync(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    def set_project_alerts(self, request: SetProjectAlertsRequest, ctx: RequestContext[SetProjectAlertsRequest, SetProjectAlertsResponse], /) -> SetProjectAlertsResponse:
+        """
+        Changes what Pethost watches on a project and when it tells the person: site checks (an
+        address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+        mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+        empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+        Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+        Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+        = the machine's software predates alerts.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def get_incident(self, request: GetIncidentRequest, ctx: RequestContext[GetIncidentRequest, GetIncidentResponse], /) -> GetIncidentResponse:
+        """
+        One incident in full, with the incidents joined to it and what the machine saw when it opened
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     def get_operation(self, request: GetOperationRequest, ctx: RequestContext[GetOperationRequest, GetOperationResponse], /) -> GetOperationResponse:
         """
         An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
@@ -1425,6 +1538,26 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=service.run_project_action,
+                ),
+                "/pethost.panel.v1.PanelService/SetProjectAlerts": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="SetProjectAlerts",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=SetProjectAlertsRequest,
+                        output=SetProjectAlertsResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=service.set_project_alerts,
+                ),
+                "/pethost.panel.v1.PanelService/GetIncident": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="GetIncident",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetIncidentRequest,
+                        output=GetIncidentResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=service.get_incident,
                 ),
                 "/pethost.panel.v1.PanelService/GetOperation": EndpointSync.unary(
                     method=MethodInfo(
@@ -1817,6 +1950,59 @@ class PanelServiceClientSync(ConnectClientSync):
             ),
             headers=headers,
             timeout_ms=timeout_ms,
+        )
+    def set_project_alerts(
+        self,
+        request: SetProjectAlertsRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> SetProjectAlertsResponse:
+        """
+        Changes what Pethost watches on a project and when it tells the person: site checks (an
+        address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+        mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
+        empties it; a scalar left out stays. Service crashes and failed backups are always watched.
+        Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
+        Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
+        = the machine's software predates alerts.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="SetProjectAlerts",
+                service_name="pethost.panel.v1.PanelService",
+                input=SetProjectAlertsRequest,
+                output=SetProjectAlertsResponse,
+                idempotency_level=IdempotencyLevel.IDEMPOTENT,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+    def get_incident(
+        self,
+        request: GetIncidentRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetIncidentResponse:
+        """
+        One incident in full, with the incidents joined to it and what the machine saw when it opened
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetIncident",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetIncidentRequest,
+                output=GetIncidentResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
         )
     def get_operation(
         self,

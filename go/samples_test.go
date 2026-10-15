@@ -56,6 +56,10 @@ func (f *fake) RunProjectAction(_ context.Context, request *panelv1.RunProjectAc
 	return answer[*panelv1.RunProjectActionResponse](&f.exchange, request)
 }
 
+func (f *fake) SetProjectAlerts(_ context.Context, request *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error) {
+	return answer[*panelv1.SetProjectAlertsResponse](&f.exchange, request)
+}
+
 func (f *fake) GetOperation(_ context.Context, request *panelv1.GetOperationRequest) (*panelv1.GetOperationResponse, error) {
 	return answer[*panelv1.GetOperationResponse](&f.exchange, request)
 }
@@ -101,6 +105,7 @@ var calls = []call{
 	callOf("DeployProject", (*Client).DeployProject, sampleDeployProjectRequest, sampleDeployProjectResponse, &panelv1.DeployProjectRequest{}, &panelv1.DeployProjectResponse{}),
 	callOf("ListCommits", (*Client).ListCommits, sampleListCommitsRequest, sampleListCommitsResponse, &panelv1.ListCommitsRequest{}, &panelv1.ListCommitsResponse{}),
 	callOf("RunProjectAction", (*Client).RunProjectAction, sampleRunProjectActionRequest, sampleRunProjectActionResponse, &panelv1.RunProjectActionRequest{}, &panelv1.RunProjectActionResponse{}),
+	callOf("SetProjectAlerts", (*Client).SetProjectAlerts, sampleSetProjectAlertsRequest, sampleSetProjectAlertsResponse, &panelv1.SetProjectAlertsRequest{}, &panelv1.SetProjectAlertsResponse{}),
 	callOf("GetOperation", (*Client).GetOperation, sampleGetOperationRequest, sampleGetOperationResponse, &panelv1.GetOperationRequest{}, &panelv1.GetOperationResponse{}),
 	callOf("QueryHTTPTraffic", (*Client).QueryHTTPTraffic, sampleQueryHTTPTrafficRequest, sampleQueryHTTPTrafficResponse, &panelv1.QueryHttpTrafficRequest{}, &panelv1.QueryHttpTrafficResponse{}),
 	callOf("QueryContainerLogs", (*Client).QueryContainerLogs, sampleQueryContainerLogsRequest, sampleQueryContainerLogsResponse, &panelv1.QueryContainerLogsRequest{}, &panelv1.QueryContainerLogsResponse{}),
@@ -117,6 +122,7 @@ var details = []detail{
 	{&panelv1.ProjectBusy{}, func(s seed) Error { return Error{ProjectBusy: new(sampleProjectBusy(s))} }},
 	{&panelv1.ProjectChanged{}, func(s seed) Error { return Error{ProjectChanged: new(sampleProjectChanged(s))} }},
 	{&panelv1.MachineUnreachable{}, func(s seed) Error { return Error{MachineUnreachable: new(sampleMachineUnreachable(s))} }},
+	{&panelv1.MachineUpdatePending{}, func(s seed) Error { return Error{MachineUpdatePending: new(sampleMachineUpdatePending(s))} }},
 	{&panelv1.NoMachine{}, func(s seed) Error { return Error{NoMachine: new(sampleNoMachine(s))} }},
 }
 
@@ -125,6 +131,7 @@ var shapes = []shape{
 	shapeOf(sampleGetMachineRequest, &panelv1.GetMachineRequest{}),
 	shapeOf(sampleGetMachineResponse, &panelv1.GetMachineResponse{}),
 	shapeOf(sampleMachine, &panelv1.Machine{}),
+	shapeOf(sampleAlertDestination, &panelv1.AlertDestination{}),
 	shapeOf(sampleMachineSession, &panelv1.MachineSession{}),
 	shapeOf(sampleDiskUsage, &panelv1.DiskUsage{}),
 	shapeOf(sampleSSHKey, &panelv1.SshKey{}),
@@ -176,6 +183,17 @@ var shapes = []shape{
 	shapeOf(sampleCancelOperationAction, &panelv1.CancelOperationAction{}),
 	shapeOf(sampleDeleteProjectAction, &panelv1.DeleteProjectAction{}),
 	shapeOf(sampleRunProjectActionResponse, &panelv1.RunProjectActionResponse{}),
+	shapeOf(sampleSetProjectAlertsRequest, &panelv1.SetProjectAlertsRequest{}),
+	shapeOf(sampleSetProjectAlertsResponse, &panelv1.SetProjectAlertsResponse{}),
+	shapeOf(sampleSiteCheck, &panelv1.SiteCheck{}),
+	shapeOf(sampleTrafficRule, &panelv1.TrafficRule{}),
+	shapeOf(sampleProjectAlerts, &panelv1.ProjectAlerts{}),
+	shapeOf(sampleSiteCheckState, &panelv1.SiteCheckState{}),
+	shapeOf(sampleSiteCheckResult, &panelv1.SiteCheckResult{}),
+	shapeOf(sampleTrafficRuleState, &panelv1.TrafficRuleState{}),
+	shapeOf(sampleIncident, &panelv1.Incident{}),
+	shapeOf(sampleIncidentEvidence, &panelv1.IncidentEvidence{}),
+	shapeOf(sampleUptimeDay, &panelv1.UptimeDay{}),
 	shapeOf(sampleGetOperationRequest, &panelv1.GetOperationRequest{}),
 	shapeOf(sampleGetOperationResponse, &panelv1.GetOperationResponse{}),
 	shapeOf(sampleOperationLogLine, &panelv1.OperationLogLine{}),
@@ -202,6 +220,7 @@ var shapes = []shape{
 	shapeOf(sampleProjectBusy, &panelv1.ProjectBusy{}),
 	shapeOf(sampleProjectChanged, &panelv1.ProjectChanged{}),
 	shapeOf(sampleMachineUnreachable, &panelv1.MachineUnreachable{}),
+	shapeOf(sampleMachineUpdatePending, &panelv1.MachineUpdatePending{}),
 	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
 	shapeOf(sampleWatchOperationRequest, &panelv1.WatchOperationRequest{}),
 	shapeOf(sampleWatchOperationResponse, &panelv1.WatchOperationResponse{}),
@@ -213,6 +232,7 @@ var shapes = []shape{
 
 // enums are the package's enums, each beside the wire layer's.
 var enums = []enum{
+	enumOf[AlertChannelKind, panelv1.AlertChannelKind]("AlertChannelKind"),
 	enumOf[MachineSessionKind, panelv1.MachineSessionKind]("MachineSessionKind"),
 	enumOf[ProjectProblemKind, panelv1.ProjectProblemKind]("ProjectProblemKind"),
 	enumOf[ServicesActionKind, panelv1.ServicesActionKind]("ServicesActionKind"),
@@ -223,6 +243,9 @@ var enums = []enum{
 	enumOf[OperationKind, panelv1.OperationKind]("OperationKind"),
 	enumOf[OperationStatus, panelv1.OperationStatus]("OperationStatus"),
 	enumOf[DeployFailureReason, panelv1.DeployFailureReason]("DeployFailureReason"),
+	enumOf[TrafficMetric, panelv1.TrafficMetric]("TrafficMetric"),
+	enumOf[AlertStatus, panelv1.AlertStatus]("AlertStatus"),
+	enumOf[IncidentQuietReason, panelv1.IncidentQuietReason]("IncidentQuietReason"),
 	enumOf[OutputStream, panelv1.OutputStream]("OutputStream"),
 	enumOf[FileType, panelv1.FileType]("FileType"),
 	enumOf[FileLocation, panelv1.FileLocation]("FileLocation"),
@@ -269,6 +292,14 @@ func sampleMachine(s seed) Machine {
 		RestartRequiredTime:        instant(s.at("pethost.panel.v1.Machine.restart_required_time")),
 		ScheduledRestartTime:       instant(s.at("pethost.panel.v1.Machine.scheduled_restart_time")),
 		Sessions:                   list(s.at("pethost.panel.v1.Machine.sessions"), sampleMachineSession),
+		AlertChannels:              list(s.at("pethost.panel.v1.Machine.alert_channels"), sampleAlertDestination),
+	}
+}
+
+func sampleAlertDestination(s seed) AlertDestination {
+	return AlertDestination{
+		Kind:  plain[AlertChannelKind](s.at("pethost.panel.v1.AlertDestination.kind")),
+		Label: plain[string](s.at("pethost.panel.v1.AlertDestination.label")),
 	}
 }
 
@@ -412,6 +443,7 @@ func sampleProjectProblem(s seed) ProjectProblem {
 		OperationID:    plain[string](s.at("pethost.panel.v1.ProjectProblem.operation_id")),
 		SinceTime:      instant(s.at("pethost.panel.v1.ProjectProblem.since_time")),
 		ProblemMessage: plain[string](s.at("pethost.panel.v1.ProjectProblem.problem_message")),
+		IncidentID:     plain[string](s.at("pethost.panel.v1.ProjectProblem.incident_id")),
 	}
 }
 
@@ -421,6 +453,9 @@ func sampleGetProjectRequest(s seed) GetProjectRequest {
 		IncludeSecretValues: plain[bool](s.at("pethost.panel.v1.GetProjectRequest.include_secret_values")),
 		SnapshotsBefore:     instant(s.at("pethost.panel.v1.GetProjectRequest.snapshots_before")),
 		SnapshotsVolume:     plain[string](s.at("pethost.panel.v1.GetProjectRequest.snapshots_volume")),
+		IncidentsBefore:     instant(s.at("pethost.panel.v1.GetProjectRequest.incidents_before")),
+		UptimeDayCount:      plain[uint32](s.at("pethost.panel.v1.GetProjectRequest.uptime_day_count")),
+		IncidentsBeforeID:   plain[string](s.at("pethost.panel.v1.GetProjectRequest.incidents_before_id")),
 	}
 }
 
@@ -454,6 +489,10 @@ func sampleProject(s seed) Project {
 		HTTPTrafficLastDay:    pointer(s.at("pethost.panel.v1.Project.http_traffic_last_day"), sampleHTTPTrafficSummary),
 		Source:                pointer(s.at("pethost.panel.v1.Project.source"), sampleProjectSource),
 		RunningServicesAction: pointer(s.at("pethost.panel.v1.Project.running_services_action"), sampleRunningServicesAction),
+		Alerts:                pointer(s.at("pethost.panel.v1.Project.alerts"), sampleProjectAlerts),
+		Incidents:             list(s.at("pethost.panel.v1.Project.incidents"), sampleIncident),
+		MoreIncidents:         plain[bool](s.at("pethost.panel.v1.Project.more_incidents")),
+		UptimeDays:            list(s.at("pethost.panel.v1.Project.uptime_days"), sampleUptimeDay),
 	}
 }
 
@@ -635,6 +674,7 @@ func sampleOperation(s seed) Operation {
 		ChangedPaths:        list(s.at("pethost.panel.v1.Operation.changed_paths"), scalar[string]),
 		ChangedPathCount:    plain[uint32](s.at("pethost.panel.v1.Operation.changed_path_count")),
 		FilesKept:           plain[bool](s.at("pethost.panel.v1.Operation.files_kept")),
+		FilesOperationID:    plain[string](s.at("pethost.panel.v1.Operation.files_operation_id")),
 	}
 }
 
@@ -873,6 +913,127 @@ func sampleRunProjectActionResponse(s seed) RunProjectActionResponse {
 	}
 }
 
+func sampleSetProjectAlertsRequest(s seed) SetProjectAlertsRequest {
+	return SetProjectAlertsRequest{
+		ProjectID:          plain[string](s.at("pethost.panel.v1.SetProjectAlertsRequest.project_id")),
+		Checks:             list(s.at("pethost.panel.v1.SetProjectAlertsRequest.checks"), sampleSiteCheck),
+		RemoveChecks:       plain[bool](s.at("pethost.panel.v1.SetProjectAlertsRequest.remove_checks")),
+		TrafficRules:       list(s.at("pethost.panel.v1.SetProjectAlertsRequest.traffic_rules"), sampleTrafficRule),
+		RemoveTrafficRules: plain[bool](s.at("pethost.panel.v1.SetProjectAlertsRequest.remove_traffic_rules")),
+		Off:                marked[bool](s.at("pethost.panel.v1.SetProjectAlertsRequest.off")),
+		MuteMinutes:        marked[uint32](s.at("pethost.panel.v1.SetProjectAlertsRequest.mute_minutes")),
+	}
+}
+
+func sampleSetProjectAlertsResponse(s seed) SetProjectAlertsResponse {
+	return SetProjectAlertsResponse{
+		Alerts: pointer(s.at("pethost.panel.v1.SetProjectAlertsResponse.alerts"), sampleProjectAlerts),
+	}
+}
+
+func sampleSiteCheck(s seed) SiteCheck {
+	return SiteCheck{
+		Host:         plain[string](s.at("pethost.panel.v1.SiteCheck.host")),
+		Path:         plain[string](s.at("pethost.panel.v1.SiteCheck.path")),
+		ExpectStatus: plain[uint32](s.at("pethost.panel.v1.SiteCheck.expect_status")),
+		MustContain:  plain[string](s.at("pethost.panel.v1.SiteCheck.must_contain")),
+		unknown:      later(s),
+	}
+}
+
+func sampleTrafficRule(s seed) TrafficRule {
+	return TrafficRule{
+		Metric:        plain[TrafficMetric](s.at("pethost.panel.v1.TrafficRule.metric")),
+		Filter:        pointer(s.at("pethost.panel.v1.TrafficRule.filter"), sampleHTTPTrafficFilter),
+		Threshold:     plain[float64](s.at("pethost.panel.v1.TrafficRule.threshold")),
+		WindowMinutes: plain[uint32](s.at("pethost.panel.v1.TrafficRule.window_minutes")),
+		MinRequests:   plain[uint32](s.at("pethost.panel.v1.TrafficRule.min_requests")),
+		unknown:       later(s),
+	}
+}
+
+func sampleProjectAlerts(s seed) ProjectAlerts {
+	return ProjectAlerts{
+		Checks:        list(s.at("pethost.panel.v1.ProjectAlerts.checks"), sampleSiteCheckState),
+		TrafficRules:  list(s.at("pethost.panel.v1.ProjectAlerts.traffic_rules"), sampleTrafficRuleState),
+		Off:           plain[bool](s.at("pethost.panel.v1.ProjectAlerts.off")),
+		MuteEndTime:   instant(s.at("pethost.panel.v1.ProjectAlerts.mute_end_time")),
+		UptimePercent: marked[float64](s.at("pethost.panel.v1.ProjectAlerts.uptime_percent")),
+	}
+}
+
+func sampleSiteCheckState(s seed) SiteCheckState {
+	return SiteCheckState{
+		Check:          pointer(s.at("pethost.panel.v1.SiteCheckState.check"), sampleSiteCheck),
+		MachineDefault: plain[bool](s.at("pethost.panel.v1.SiteCheckState.machine_default")),
+		Status:         plain[AlertStatus](s.at("pethost.panel.v1.SiteCheckState.status")),
+		LastResult:     pointer(s.at("pethost.panel.v1.SiteCheckState.last_result"), sampleSiteCheckResult),
+		IncidentID:     plain[string](s.at("pethost.panel.v1.SiteCheckState.incident_id")),
+	}
+}
+
+func sampleSiteCheckResult(s seed) SiteCheckResult {
+	return SiteCheckResult{
+		CheckTime:      instant(s.at("pethost.panel.v1.SiteCheckResult.check_time")),
+		Status:         plain[uint32](s.at("pethost.panel.v1.SiteCheckResult.status")),
+		DurationMs:     plain[uint32](s.at("pethost.panel.v1.SiteCheckResult.duration_ms")),
+		FailureMessage: plain[string](s.at("pethost.panel.v1.SiteCheckResult.failure_message")),
+	}
+}
+
+func sampleTrafficRuleState(s seed) TrafficRuleState {
+	return TrafficRuleState{
+		Rule:           pointer(s.at("pethost.panel.v1.TrafficRuleState.rule"), sampleTrafficRule),
+		MachineDefault: plain[bool](s.at("pethost.panel.v1.TrafficRuleState.machine_default")),
+		Status:         plain[AlertStatus](s.at("pethost.panel.v1.TrafficRuleState.status")),
+		Value:          plain[float64](s.at("pethost.panel.v1.TrafficRuleState.value")),
+		RequestCount:   plain[uint64](s.at("pethost.panel.v1.TrafficRuleState.request_count")),
+		IncidentID:     plain[string](s.at("pethost.panel.v1.TrafficRuleState.incident_id")),
+	}
+}
+
+func sampleIncident(s seed) Incident {
+	return Incident{
+		IncidentID:            plain[string](s.at("pethost.panel.v1.Incident.incident_id")),
+		Kind:                  plain[ProjectProblemKind](s.at("pethost.panel.v1.Incident.kind")),
+		Service:               plain[string](s.at("pethost.panel.v1.Incident.service")),
+		Check:                 pointer(s.at("pethost.panel.v1.Incident.check"), sampleSiteCheck),
+		TrafficRule:           pointer(s.at("pethost.panel.v1.Incident.traffic_rule"), sampleTrafficRule),
+		OperationID:           plain[string](s.at("pethost.panel.v1.Incident.operation_id")),
+		OpenTime:              instant(s.at("pethost.panel.v1.Incident.open_time")),
+		ResolveTime:           instant(s.at("pethost.panel.v1.Incident.resolve_time")),
+		Value:                 plain[float64](s.at("pethost.panel.v1.Incident.value")),
+		RequestCount:          plain[uint64](s.at("pethost.panel.v1.Incident.request_count")),
+		AfterOperationID:      plain[string](s.at("pethost.panel.v1.Incident.after_operation_id")),
+		AfterOperationEndTime: instant(s.at("pethost.panel.v1.Incident.after_operation_end_time")),
+		JoinedIncidentID:      plain[string](s.at("pethost.panel.v1.Incident.joined_incident_id")),
+		QuietReason:           plain[IncidentQuietReason](s.at("pethost.panel.v1.Incident.quiet_reason")),
+		Flapping:              plain[bool](s.at("pethost.panel.v1.Incident.flapping")),
+		IncidentMessage:       plain[string](s.at("pethost.panel.v1.Incident.incident_message")),
+		Evidence:              pointer(s.at("pethost.panel.v1.Incident.evidence"), sampleIncidentEvidence),
+	}
+}
+
+func sampleIncidentEvidence(s seed) IncidentEvidence {
+	return IncidentEvidence{
+		CheckResult:  pointer(s.at("pethost.panel.v1.IncidentEvidence.check_result"), sampleSiteCheckResult),
+		ExitCode:     plain[int32](s.at("pethost.panel.v1.IncidentEvidence.exit_code")),
+		OomKilled:    plain[bool](s.at("pethost.panel.v1.IncidentEvidence.oom_killed")),
+		RestartCount: plain[uint32](s.at("pethost.panel.v1.IncidentEvidence.restart_count")),
+		HealthOutput: plain[string](s.at("pethost.panel.v1.IncidentEvidence.health_output")),
+		LogLines:     list(s.at("pethost.panel.v1.IncidentEvidence.log_lines"), sampleLogLine),
+		TopPath:      pointer(s.at("pethost.panel.v1.IncidentEvidence.top_path"), sampleHTTPPathTraffic),
+	}
+}
+
+func sampleUptimeDay(s seed) UptimeDay {
+	return UptimeDay{
+		StartTime:     instant(s.at("pethost.panel.v1.UptimeDay.start_time")),
+		UptimePercent: marked[float64](s.at("pethost.panel.v1.UptimeDay.uptime_percent")),
+		DownSeconds:   plain[uint32](s.at("pethost.panel.v1.UptimeDay.down_seconds")),
+	}
+}
+
 func sampleGetOperationRequest(s seed) GetOperationRequest {
 	return GetOperationRequest{
 		ProjectID:    plain[string](s.at("pethost.panel.v1.GetOperationRequest.project_id")),
@@ -907,6 +1068,7 @@ func sampleHTTPTrafficFilter(s seed) HTTPTrafficFilter {
 		PathContains: plain[string](s.at("pethost.panel.v1.HttpTrafficFilter.path_contains")),
 		PathPattern:  plain[string](s.at("pethost.panel.v1.HttpTrafficFilter.path_pattern")),
 		StatusClass:  plain[uint32](s.at("pethost.panel.v1.HttpTrafficFilter.status_class")),
+		unknown:      later(s),
 	}
 }
 
@@ -1172,7 +1334,13 @@ func sampleProjectChanged(s seed) ProjectChanged {
 }
 
 func sampleMachineUnreachable(s seed) MachineUnreachable {
-	return MachineUnreachable{}
+	return MachineUnreachable{
+		SinceTime: instant(s.at("pethost.panel.v1.MachineUnreachable.since_time")),
+	}
+}
+
+func sampleMachineUpdatePending(s seed) MachineUpdatePending {
+	return MachineUpdatePending{}
 }
 
 func sampleNoMachine(s seed) NoMachine {

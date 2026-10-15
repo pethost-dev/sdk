@@ -10,6 +10,23 @@ import * as convert from "./convert.ts";
 import * as wire from "./wire/v1/panel_pb.ts";
 
 /**
+ * - `EMAIL`: The account's email.
+ * - `TELEGRAM`: A Telegram chat or group.
+ * - `SLACK`: A Slack channel.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type AlertChannelKind = (typeof AlertChannelKind)[keyof typeof AlertChannelKind];
+export const AlertChannelKind = {
+  /** The account's email. */
+  EMAIL: "EMAIL",
+  /** A Telegram chat or group. */
+  TELEGRAM: "TELEGRAM",
+  /** A Slack channel. */
+  SLACK: "SLACK",
+} as const;
+
+/**
  * - `WEB_TERMINAL`: The web panel's terminal.
  * - `SSH_TERMINAL`: A program in a terminal, such as `ssh`'s shell.
  * - `SSH_COMMAND`: A program without a terminal, such as `ssh ... <command>` or rsync.
@@ -59,6 +76,10 @@ export const MachineSessionKind = {
  *   127.0.0.1, which the proxy cannot reach): the route answers 502. The message names the ports
  *   it does listen on (Service.listeningPorts): change the route's port with
  *   DeployProjectRequest.xPethost, or the app.
+ * - `SITE_DOWN`: A site check (Project.alerts) failed 3 times in a row; service: the one its route
+ *   sends to.
+ * - `HTTP_ERRORS`: A traffic rule on 5xx holds.
+ * - `HTTP_SLOW`: A traffic rule on p95 holds.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -113,6 +134,12 @@ export const ProjectProblemKind = {
    * app.
    */
   SERVICE_PORT_CLOSED: "SERVICE_PORT_CLOSED",
+  /** A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to. */
+  SITE_DOWN: "SITE_DOWN",
+  /** A traffic rule on 5xx holds. */
+  HTTP_ERRORS: "HTTP_ERRORS",
+  /** A traffic rule on p95 holds. */
+  HTTP_SLOW: "HTTP_SLOW",
 } as const;
 
 /**
@@ -304,6 +331,67 @@ export const DeployFailureReason = {
 } as const;
 
 /**
+ * - `SERVER_ERRORS`: 5xx responses in the window.
+ * - `SERVER_ERROR_PERCENT`: 5xx, of the window's requests (WebSockets too).
+ * - `LATENCY_P95_MS`
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type TrafficMetric = (typeof TrafficMetric)[keyof typeof TrafficMetric];
+export const TrafficMetric = {
+  /** 5xx responses in the window. */
+  SERVER_ERRORS: "SERVER_ERRORS",
+  /** 5xx, of the window's requests (WebSockets too). */
+  SERVER_ERROR_PERCENT: "SERVER_ERROR_PERCENT",
+  LATENCY_P95_MS: "LATENCY_P95_MS",
+} as const;
+
+/**
+ * - `OK`
+ * - `PENDING`: It holds or cleared, not confirmed yet.
+ * - `FIRING`: An incident is open.
+ * - `PAUSED`: Not checked now: a deploy or restore runs or just ended, the project is stopped, or
+ *   no route has the check's host.
+ * - `NO_DATA`: Not evaluated yet, or too few requests.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type AlertStatus = (typeof AlertStatus)[keyof typeof AlertStatus];
+export const AlertStatus = {
+  OK: "OK",
+  /** It holds or cleared, not confirmed yet. */
+  PENDING: "PENDING",
+  /** An incident is open. */
+  FIRING: "FIRING",
+  /**
+   * Not checked now: a deploy or restore runs or just ended, the project is stopped, or no route has
+   * the check's host.
+   */
+  PAUSED: "PAUSED",
+  /** Not evaluated yet, or too few requests. */
+  NO_DATA: "NO_DATA",
+} as const;
+
+/**
+ * - `MUTED`
+ * - `OFF`
+ * - `FIRST_EVALUATION`: Already so when the machine first watched it, as after the update that
+ *   brought alerts.
+ * - `MANUAL_DEPLOY`: A deploy someone ran failed: they watch it.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type IncidentQuietReason = (typeof IncidentQuietReason)[keyof typeof IncidentQuietReason];
+export const IncidentQuietReason = {
+  MUTED: "MUTED",
+  OFF: "OFF",
+  /** Already so when the machine first watched it, as after the update that brought alerts. */
+  FIRST_EVALUATION: "FIRST_EVALUATION",
+  /** A deploy someone ran failed: they watch it. */
+  MANUAL_DEPLOY: "MANUAL_DEPLOY",
+} as const;
+
+/**
  * - `STDOUT`
  * - `STDERR`
  *
@@ -491,12 +579,31 @@ export interface Machine {
    * holds at once.
    */
   sessions: MachineSession[];
+  /**
+   * Where Pethost tells the person of incidents: the account's channels that are on, email first,
+   * then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
+   * alerts reach nobody.
+   */
+  alertChannels: AlertDestination[];
 }
 
 /** {@link Machine} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const Machine: JsonCodec<Machine, Machine> = {
   toJson: (value) => writeJson(wire.MachineSchema, convert.toMachine(value)),
   fromJson: (json) => convert.fromMachine(readJson(wire.MachineSchema, json)),
+};
+
+/** A channel Pethost tells the person of incidents on (Machine.alertChannels). */
+export interface AlertDestination {
+  kind?: AlertChannelKind | number;
+  /** The chat's title, or "#ops · Acme". Empty for email. */
+  label: string;
+}
+
+/** {@link AlertDestination} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const AlertDestination: JsonCodec<AlertDestination, AlertDestination> = {
+  toJson: (value) => writeJson(wire.AlertDestinationSchema, convert.toAlertDestination(value)),
+  fromJson: (json) => convert.fromAlertDestination(readJson(wire.AlertDestinationSchema, json)),
 };
 
 /**
@@ -839,6 +946,8 @@ export interface ProjectProblem {
    * the project.
    */
   problemMessage: string;
+  /** The open incident that records it (Project.incidents). Empty = none yet. */
+  incidentId: string;
 }
 
 /** {@link ProjectProblem} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -858,6 +967,18 @@ export interface GetProjectRequest {
   snapshotsBefore?: Date | undefined;
   /** Only snapshots holding this volume (Volume.snapshotCount). Empty = all. */
   snapshotsVolume?: string | undefined;
+  /**
+   * Only incidents that opened before it: the oldest openTime seen, to page back. Absent = the
+   * newest.
+   */
+  incidentsBefore?: Date | undefined;
+  /** ≤90: Project.uptimeDays. 0 = none. */
+  uptimeDayCount?: number | undefined;
+  /**
+   * With incidentsBefore: the incidentId of the oldest seen, so that those that opened at the same
+   * time are not skipped.
+   */
+  incidentsBeforeId?: string | undefined;
 }
 
 /** {@link GetProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -949,6 +1070,21 @@ export interface Project {
    * takes no other action or deploy, and Service.state is still what it was before. Absent = none.
    */
   runningServicesAction?: RunningServicesAction;
+  /**
+   * What Pethost watches and how each part stands. Absent = the machine's software predates alerts:
+   * they come with its next update.
+   */
+  alerts?: ProjectAlerts;
+  /**
+   * The newest 5 that GetProjectRequest.incidentsBefore selects, newest first: an open one in full
+   * but its evidence (GetIncident), a resolved one as its id, kind, times, message,
+   * afterOperationId, quietReason and flapping.
+   */
+  incidents: Incident[];
+  /** True = older ones remain: page with incidentsBefore and incidentsBeforeId. */
+  moreIncidents: boolean;
+  /** Oldest first, GetProjectRequest.uptimeDayCount of them, today's last. */
+  uptimeDays: UptimeDay[];
 }
 
 /** {@link Project} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1463,6 +1599,12 @@ export interface Operation {
    * the same, the newest has it.
    */
   filesKept: boolean;
+  /**
+   * DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
+   * files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
+   * that changed only /.env or x-pethost.
+   */
+  filesOperationId: string;
 }
 
 /** {@link Operation} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2172,6 +2314,285 @@ export const RunProjectActionResponse: JsonCodec<RunProjectActionResponse, RunPr
   fromJson: (json) => convert.fromRunProjectActionResponse(readJson(wire.RunProjectActionResponseSchema, json)),
 };
 
+export interface SetProjectAlertsRequest {
+  projectId?: string | undefined;
+  /** ≤10. Given = the whole list. */
+  checks?: readonly SiteCheckInput[] | undefined;
+  /** True = none, not even the default check. */
+  removeChecks?: boolean | undefined;
+  /** ≤10. Given = the whole list. */
+  trafficRules?: readonly TrafficRuleInput[] | undefined;
+  /** True = none. */
+  removeTrafficRules?: boolean | undefined;
+  /** True = incidents are recorded, nothing is sent. Absent = stays. */
+  off?: boolean | undefined;
+  /** ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays. */
+  muteMinutes?: number | undefined;
+}
+
+/** {@link SetProjectAlertsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SetProjectAlertsRequest: JsonCodec<SetProjectAlertsRequest, SetProjectAlertsRequest> = {
+  toJson: (value) => writeJson(wire.SetProjectAlertsRequestSchema, convert.toSetProjectAlertsRequest(value)),
+  fromJson: (json) => convert.fromSetProjectAlertsRequest(readJson(wire.SetProjectAlertsRequestSchema, json)),
+};
+
+export interface SetProjectAlertsResponse {
+  /** As changed. */
+  alerts?: ProjectAlerts;
+}
+
+/** {@link SetProjectAlertsResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SetProjectAlertsResponse: JsonCodec<SetProjectAlertsResponse, SetProjectAlertsResponse> = {
+  toJson: (value) => writeJson(wire.SetProjectAlertsResponseSchema, convert.toSetProjectAlertsResponse(value)),
+  fromJson: (json) => convert.fromSetProjectAlertsResponse(readJson(wire.SetProjectAlertsResponseSchema, json)),
+};
+
+/**
+ * An address of the project the machine opens every minute through its proxy, from inside the
+ * machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+ * mustContain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+ */
+export interface SiteCheck {
+  /** A Host.host of the project. */
+  host: string;
+  /** "/…", ≤200 chars, a query allowed. Empty = "/". */
+  path: string;
+  /** 100-599. 0 = any status below 500 is up: 401, 404 and redirects too. */
+  expectStatus: number;
+  /** ≤100 chars, in the body's first 64 KiB. Empty = not looked for. */
+  mustContain: string;
+}
+
+/**
+ * An address of the project the machine opens every minute through its proxy, from inside the
+ * machine. Down = no connection, a bad certificate, no answer in 10 s, the wrong status, or
+ * mustContain missing; 3 failures in a row open SITE_DOWN. A password page is passed.
+ */
+export interface SiteCheckInput {
+  /** A Host.host of the project. */
+  host?: string | undefined;
+  /** "/…", ≤200 chars, a query allowed. Empty = "/". */
+  path?: string | undefined;
+  /** 100-599. 0 = any status below 500 is up: 401, 404 and redirects too. */
+  expectStatus?: number | undefined;
+  /** ≤100 chars, in the body's first 64 KiB. Empty = not looked for. */
+  mustContain?: string | undefined;
+}
+
+/**
+ * {@link SiteCheckInput} as the API's JSON, and the API's JSON as {@link SiteCheck}:
+ * {@link JsonCodec} says how.
+ */
+export const SiteCheck: JsonCodec<SiteCheckInput, SiteCheck> = {
+  toJson: (value) => writeJson(wire.SiteCheckSchema, convert.toSiteCheck(value)),
+  fromJson: (json) => convert.fromSiteCheck(readJson(wire.SiteCheckSchema, json)),
+};
+
+/**
+ * Fires when `metric`, over the last windowMinutes of the requests `filter` selects, reaches
+ * `threshold` 2 minutes in a row; clears after 3 below.
+ */
+export interface TrafficRule {
+  metric?: TrafficMetric | number;
+  /** statusClass not taken. */
+  filter?: HttpTrafficFilter;
+  /** A count, a percent (0-100) or ms. */
+  threshold: number;
+  /** 1-60. 0 = 5. */
+  windowMinutes: number;
+  /** Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20. */
+  minRequests: number;
+}
+
+/**
+ * Fires when `metric`, over the last windowMinutes of the requests `filter` selects, reaches
+ * `threshold` 2 minutes in a row; clears after 3 below.
+ */
+export interface TrafficRuleInput {
+  metric?: TrafficMetric | number | undefined;
+  /** statusClass not taken. */
+  filter?: HttpTrafficFilterInput | undefined;
+  /** A count, a percent (0-100) or ms. */
+  threshold?: number | undefined;
+  /** 1-60. 0 = 5. */
+  windowMinutes?: number | undefined;
+  /** Percent and p95: fewer requests in the window leave the rule as it was. ≤10000. 0 = 20. */
+  minRequests?: number | undefined;
+}
+
+/**
+ * {@link TrafficRuleInput} as the API's JSON, and the API's JSON as {@link TrafficRule}:
+ * {@link JsonCodec} says how.
+ */
+export const TrafficRule: JsonCodec<TrafficRuleInput, TrafficRule> = {
+  toJson: (value) => writeJson(wire.TrafficRuleSchema, convert.toTrafficRule(value)),
+  fromJson: (json) => convert.fromTrafficRule(readJson(wire.TrafficRuleSchema, json)),
+};
+
+/**
+ * What Pethost watches on a project ({@link Pethost.setProjectAlerts | setProjectAlerts}), and how
+ * each part stands now. Service crashes, running out of memory, failed healthchecks, and failed
+ * backups, restores and auto-deploys are always watched.
+ */
+export interface ProjectAlerts {
+  /** Until set: the project's URL at "/" (machineDefault); none without a route. */
+  checks: SiteCheckState[];
+  /** Until set: 10 or more 5xx in 5 minutes, of every request (machineDefault). */
+  trafficRules: TrafficRuleState[];
+  /** True = incidents are recorded, nothing is sent. */
+  off: boolean;
+  /** Absent = not muted. */
+  muteEndTime?: Date;
+  /**
+   * Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent = no
+   * check ran.
+   */
+  uptimePercent?: number;
+}
+
+/** {@link ProjectAlerts} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectAlerts: JsonCodec<ProjectAlerts, ProjectAlerts> = {
+  toJson: (value) => writeJson(wire.ProjectAlertsSchema, convert.toProjectAlerts(value)),
+  fromJson: (json) => convert.fromProjectAlerts(readJson(wire.ProjectAlertsSchema, json)),
+};
+
+export interface SiteCheckState {
+  check?: SiteCheck;
+  /** The default check, as no list was set. */
+  machineDefault: boolean;
+  status?: AlertStatus | number;
+  /** Absent = not run yet. */
+  lastResult?: SiteCheckResult;
+  /** The open incident. Empty = none. */
+  incidentId: string;
+}
+
+/** {@link SiteCheckState} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SiteCheckState: JsonCodec<SiteCheckState, SiteCheckState> = {
+  toJson: (value) => writeJson(wire.SiteCheckStateSchema, convert.toSiteCheckState(value)),
+  fromJson: (json) => convert.fromSiteCheckState(readJson(wire.SiteCheckStateSchema, json)),
+};
+
+export interface SiteCheckResult {
+  checkTime?: Date;
+  /** 0 = no HTTP answer: failureMessage says why. */
+  status: number;
+  durationMs: number;
+  /** E.g. "connection refused", "status 502", "the text is missing". Empty = up. */
+  failureMessage: string;
+}
+
+/** {@link SiteCheckResult} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SiteCheckResult: JsonCodec<SiteCheckResult, SiteCheckResult> = {
+  toJson: (value) => writeJson(wire.SiteCheckResultSchema, convert.toSiteCheckResult(value)),
+  fromJson: (json) => convert.fromSiteCheckResult(readJson(wire.SiteCheckResultSchema, json)),
+};
+
+export interface TrafficRuleState {
+  rule?: TrafficRule;
+  /** The default rule, as no list was set. */
+  machineDefault: boolean;
+  status?: AlertStatus | number;
+  /** The metric at the last evaluation. */
+  value: number;
+  /** In the window then. */
+  requestCount: bigint;
+  /** The open incident. Empty = none. */
+  incidentId: string;
+}
+
+/** {@link TrafficRuleState} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const TrafficRuleState: JsonCodec<TrafficRuleState, TrafficRuleState> = {
+  toJson: (value) => writeJson(wire.TrafficRuleStateSchema, convert.toTrafficRuleState(value)),
+  fromJson: (json) => convert.fromTrafficRuleState(readJson(wire.TrafficRuleStateSchema, json)),
+};
+
+/** A period during which something of a project needed attention, from its confirmation to its end. */
+export interface Incident {
+  incidentId: string;
+  /** DEPLOY_CANCELLED opens none. */
+  kind?: ProjectProblemKind | number;
+  /** As in its {@link ProjectProblem}. */
+  service: string;
+  /** SITE_DOWN. */
+  check?: SiteCheck;
+  /** HTTP_ERRORS, HTTP_SLOW. */
+  trafficRule?: TrafficRule;
+  /** DEPLOY_FAILED, BACKUP_FAILED, RESTORE_FAILED. */
+  operationId: string;
+  openTime?: Date;
+  /** When it and every incident joined to it cleared. Absent = open. */
+  resolveTime?: Date;
+  /** HTTP_ERRORS, HTTP_SLOW: the metric at open. */
+  value: number;
+  /** HTTP_ERRORS, HTTP_SLOW: the window's requests at open. */
+  requestCount: bigint;
+  /**
+   * A deploy, recreate or restore that ran when it opened, or ended ≤30 minutes before: a likely
+   * cause, undone with DeployProjectRequest.rollbackDeployId or an older commit. Empty = none.
+   */
+  afterOperationId: string;
+  /** Absent = it was running. */
+  afterOperationEndTime?: Date;
+  /** The incident this one is part of: it is told with that one, not on its own. Empty = none. */
+  joinedIncidentId: string;
+  /** Set = nobody is told of it. */
+  quietReason?: IncidentQuietReason | number;
+  /**
+   * True = it went down and up 3 times within an hour; it stands for them all and clears after 15
+   * clean minutes.
+   */
+  flapping: boolean;
+  /** One sentence for people, without a time of day. */
+  incidentMessage: string;
+  /** GetIncident only. */
+  evidence?: IncidentEvidence;
+}
+
+/** {@link Incident} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Incident: JsonCodec<Incident, Incident> = {
+  toJson: (value) => writeJson(wire.IncidentSchema, convert.toIncident(value)),
+  fromJson: (json) => convert.fromIncident(readJson(wire.IncidentSchema, json)),
+};
+
+/** What the machine saw when an incident opened, kept with it. Untrusted. */
+export interface IncidentEvidence {
+  /** SITE_DOWN: the third failure. */
+  checkResult?: SiteCheckResult;
+  /** The service's container: SERVICE_* kinds, and SITE_DOWN's service. */
+  exitCode: number;
+  oomKilled: boolean;
+  /** In the 10 minutes before. */
+  restartCount: number;
+  /** The last healthcheck's, ≤1 KiB. */
+  healthOutput: string;
+  /** The service's last ≤20 before it opened, oldest first. */
+  logLines: LogLine[];
+  /** HTTP_ERRORS: the path with the most 5xx in the window; HTTP_SLOW: the slowest. */
+  topPath?: HttpPathTraffic;
+}
+
+/** {@link IncidentEvidence} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const IncidentEvidence: JsonCodec<IncidentEvidence, IncidentEvidence> = {
+  toJson: (value) => writeJson(wire.IncidentEvidenceSchema, convert.toIncidentEvidence(value)),
+  fromJson: (json) => convert.fromIncidentEvidence(readJson(wire.IncidentEvidenceSchema, json)),
+};
+
+/** One UTC day of a project's site checks. */
+export interface UptimeDay {
+  /** Midnight UTC. */
+  startTime?: Date;
+  /** Absent = no check ran. */
+  uptimePercent?: number;
+  downSeconds: number;
+}
+
+/** {@link UptimeDay} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const UptimeDay: JsonCodec<UptimeDay, UptimeDay> = {
+  toJson: (value) => writeJson(wire.UptimeDaySchema, convert.toUptimeDay(value)),
+  fromJson: (json) => convert.fromUptimeDay(readJson(wire.UptimeDaySchema, json)),
+};
+
 export interface GetOperationRequest {
   projectId?: string | undefined;
   /** Empty = the latest. */
@@ -2232,6 +2653,19 @@ export const OperationLogLine: JsonCodec<OperationLogLine, OperationLogLine> = {
   fromJson: (json) => convert.fromOperationLogLine(readJson(wire.OperationLogLineSchema, json)),
 };
 
+export interface HttpTrafficFilter {
+  /** As Host.host; a removed host still matches. */
+  host: string;
+  /** E.g. "GET". */
+  method: string;
+  /** Without the query; any case. */
+  pathContains: string;
+  /** As HttpPathTraffic.pathPattern, e.g. "/recipes/*". */
+  pathPattern: string;
+  /** 1-5: 5 = 5xx. */
+  statusClass: number;
+}
+
 export interface HttpTrafficFilterInput {
   /** As Host.host; a removed host still matches. */
   host?: string | undefined;
@@ -2245,8 +2679,11 @@ export interface HttpTrafficFilterInput {
   statusClass?: number | undefined;
 }
 
-/** {@link HttpTrafficFilterInput} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const HttpTrafficFilter: JsonCodec<HttpTrafficFilterInput, HttpTrafficFilterInput> = {
+/**
+ * {@link HttpTrafficFilterInput} as the API's JSON, and the API's JSON as
+ * {@link HttpTrafficFilter}: {@link JsonCodec} says how.
+ */
+export const HttpTrafficFilter: JsonCodec<HttpTrafficFilterInput, HttpTrafficFilter> = {
   toJson: (value) => writeJson(wire.HttpTrafficFilterSchema, convert.toHttpTrafficFilter(value)),
   fromJson: (json) => convert.fromHttpTrafficFilter(readJson(wire.HttpTrafficFilterSchema, json)),
 };
@@ -2787,12 +3224,30 @@ export const ProjectChanged: JsonCodec<ProjectChanged, ProjectChanged> = {
  * Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call
  * again later.
  */
-export type MachineUnreachable = Record<string, never>;
+export interface MachineUnreachable {
+  /**
+   * Since when Pethost has not reached it, once that is over 3 minutes: then the person was told
+   * (Machine.alertChannels). Absent = not known yet.
+   */
+  sinceTime?: Date;
+}
 
 /** {@link MachineUnreachable} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const MachineUnreachable: JsonCodec<MachineUnreachable, MachineUnreachable> = {
   toJson: (value) => writeJson(wire.MachineUnreachableSchema, convert.toMachineUnreachable(value)),
   fromJson: (json) => convert.fromMachineUnreachable(readJson(wire.MachineUnreachableSchema, json)),
+};
+
+/**
+ * Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
+ * with the machine's next update, which Pethost runs; nothing for the caller to do.
+ */
+export type MachineUpdatePending = Record<string, never>;
+
+/** {@link MachineUpdatePending} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MachineUpdatePending: JsonCodec<MachineUpdatePending, MachineUpdatePending> = {
+  toJson: (value) => writeJson(wire.MachineUpdatePendingSchema, convert.toMachineUpdatePending(value)),
+  fromJson: (json) => convert.fromMachineUpdatePending(readJson(wire.MachineUpdatePendingSchema, json)),
 };
 
 /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
@@ -2995,13 +3450,18 @@ export class PethostError extends Error {
    * again later.
    */
   declare readonly machineUnreachable?: MachineUnreachable;
+  /**
+   * Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
+   * with the machine's next update, which Pethost runs; nothing for the caller to do.
+   */
+  declare readonly machineUpdatePending?: MachineUpdatePending;
   /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
   declare readonly noMachine?: NoMachine;
 
   constructor(
     code: ErrorCode,
     message: string,
-    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly noMachine?: NoMachine | undefined; } = {},
+    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly machineUpdatePending?: MachineUpdatePending | undefined; readonly noMachine?: NoMachine | undefined; } = {},
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -3009,6 +3469,7 @@ export class PethostError extends Error {
     if (details.projectBusy) this.projectBusy = details.projectBusy;
     if (details.projectChanged) this.projectChanged = details.projectChanged;
     if (details.machineUnreachable) this.machineUnreachable = details.machineUnreachable;
+    if (details.machineUpdatePending) this.machineUpdatePending = details.machineUpdatePending;
     if (details.noMachine) this.noMachine = details.noMachine;
   }
 }
@@ -3104,7 +3565,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.2");
+      request.header.set("User-Agent", "pethost-typescript/0.2.3");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3346,6 +3807,28 @@ export class Pethost {
     const wireRequest = convert.toRunProjectActionRequest(request);
     try {
       return convert.fromRunProjectActionResponse(await this.#wire.runProjectAction(wireRequest, { signal: options?.signal }));
+    } catch (error) {
+      throw toError(error);
+    }
+  }
+
+  /**
+   * Set a project's alerts.
+   *
+   * Changes what Pethost watches on a project and when it tells the person: site checks (an address
+   * the machine opens every minute) and traffic rules (5xx or p95 over a window), off, mute. A list
+   * given replaces the project's (send Project.alerts' with your change); remove_* empties it; a
+   * scalar left out stays. Service crashes and failed backups are always watched. Answers with
+   * Project.alerts. Where alerts go is the person's choice in the panel's Settings → Alerts
+   * (Machine.alertChannels): no tool sets it. FAILED_PRECONDITION + {@link MachineUpdatePending} =
+   * the machine's software predates alerts.
+   *
+   * @throws {@link PethostError} when the call fails.
+   */
+  async setProjectAlerts(request: SetProjectAlertsRequest, options?: CallOptions): Promise<SetProjectAlertsResponse> {
+    const wireRequest = convert.toSetProjectAlertsRequest(request);
+    try {
+      return convert.fromSetProjectAlertsResponse(await this.#wire.setProjectAlerts(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -3653,6 +4136,7 @@ function toError(error: unknown): PethostError {
       projectBusy: failed.findDetails(wire.ProjectBusySchema).map(convert.fromProjectBusy)[0],
       projectChanged: failed.findDetails(wire.ProjectChangedSchema).map(convert.fromProjectChanged)[0],
       machineUnreachable: failed.findDetails(wire.MachineUnreachableSchema).map(convert.fromMachineUnreachable)[0],
+      machineUpdatePending: failed.findDetails(wire.MachineUpdatePendingSchema).map(convert.fromMachineUpdatePending)[0],
       noMachine: failed.findDetails(wire.NoMachineSchema).map(convert.fromNoMachine)[0],
     },
     { cause: failed.cause ?? failed },

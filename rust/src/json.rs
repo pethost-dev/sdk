@@ -46,6 +46,12 @@ json!(
 );
 
 json!(
+    types::AlertChannelKind,
+    buffa::EnumValue<wire::AlertChannelKind>,
+    convert::alert_channel_kind_to_wire,
+    convert::alert_channel_kind_from_wire
+);
+json!(
     types::MachineSessionKind,
     buffa::EnumValue<wire::MachineSessionKind>,
     convert::machine_session_kind_to_wire,
@@ -106,6 +112,24 @@ json!(
     convert::deploy_failure_reason_from_wire
 );
 json!(
+    types::TrafficMetric,
+    buffa::EnumValue<wire::TrafficMetric>,
+    convert::traffic_metric_to_wire,
+    convert::traffic_metric_from_wire
+);
+json!(
+    types::AlertStatus,
+    buffa::EnumValue<wire::AlertStatus>,
+    convert::alert_status_to_wire,
+    convert::alert_status_from_wire
+);
+json!(
+    types::IncidentQuietReason,
+    buffa::EnumValue<wire::IncidentQuietReason>,
+    convert::incident_quiet_reason_to_wire,
+    convert::incident_quiet_reason_from_wire
+);
+json!(
     types::OutputStream,
     buffa::EnumValue<wire::OutputStream>,
     convert::output_stream_to_wire,
@@ -143,6 +167,12 @@ json!(
     types::GetMachineResponse::from
 );
 json!(types::Machine, wire::Machine, wire::Machine::from, types::Machine::from);
+json!(
+    types::AlertDestination,
+    wire::AlertDestination,
+    wire::AlertDestination::from,
+    types::AlertDestination::from
+);
 json!(
     types::MachineSession,
     wire::MachineSession,
@@ -420,6 +450,72 @@ json!(
     types::RunProjectActionResponse::from
 );
 json!(
+    types::SetProjectAlertsRequest,
+    wire::SetProjectAlertsRequest,
+    wire::SetProjectAlertsRequest::from,
+    types::SetProjectAlertsRequest::from
+);
+json!(
+    types::SetProjectAlertsResponse,
+    wire::SetProjectAlertsResponse,
+    wire::SetProjectAlertsResponse::from,
+    types::SetProjectAlertsResponse::from
+);
+json!(
+    types::SiteCheck,
+    wire::SiteCheck,
+    wire::SiteCheck::from,
+    types::SiteCheck::from
+);
+json!(
+    types::TrafficRule,
+    wire::TrafficRule,
+    wire::TrafficRule::from,
+    types::TrafficRule::from
+);
+json!(
+    types::ProjectAlerts,
+    wire::ProjectAlerts,
+    wire::ProjectAlerts::from,
+    types::ProjectAlerts::from
+);
+json!(
+    types::SiteCheckState,
+    wire::SiteCheckState,
+    wire::SiteCheckState::from,
+    types::SiteCheckState::from
+);
+json!(
+    types::SiteCheckResult,
+    wire::SiteCheckResult,
+    wire::SiteCheckResult::from,
+    types::SiteCheckResult::from
+);
+json!(
+    types::TrafficRuleState,
+    wire::TrafficRuleState,
+    wire::TrafficRuleState::from,
+    types::TrafficRuleState::from
+);
+json!(
+    types::Incident,
+    wire::Incident,
+    wire::Incident::from,
+    types::Incident::from
+);
+json!(
+    types::IncidentEvidence,
+    wire::IncidentEvidence,
+    wire::IncidentEvidence::from,
+    types::IncidentEvidence::from
+);
+json!(
+    types::UptimeDay,
+    wire::UptimeDay,
+    wire::UptimeDay::from,
+    types::UptimeDay::from
+);
+json!(
     types::GetOperationRequest,
     wire::GetOperationRequest,
     wire::GetOperationRequest::from,
@@ -569,6 +665,12 @@ json!(
     wire::MachineUnreachable,
     wire::MachineUnreachable::from,
     types::MachineUnreachable::from
+);
+json!(
+    types::MachineUpdatePending,
+    wire::MachineUpdatePending,
+    wire::MachineUpdatePending::from,
+    types::MachineUpdatePending::from
 );
 json!(
     types::NoMachine,

@@ -75,6 +75,11 @@ import type * as p from "pethost";
   m.sends("GetProjectRequest.snapshots_before", { snapshotsBefore: new Date(1790000000123) }, { snapshotsBefore: { seconds: 1790000000n, nanos: 123000000 } });
   m.sends("GetProjectRequest.snapshots_volume", { snapshotsVolume: "snapshots_volume" }, { snapshotsVolume: "snapshots_volume" });
   m.sends("GetProjectRequest.snapshots_volume: zero is not sent", { snapshotsVolume: "" }, {});
+  m.sends("GetProjectRequest.incidents_before", { incidentsBefore: new Date(1790000000123) }, { incidentsBefore: { seconds: 1790000000n, nanos: 123000000 } });
+  m.sends("GetProjectRequest.uptime_day_count", { uptimeDayCount: 1006 }, { uptimeDayCount: 1006 });
+  m.sends("GetProjectRequest.uptime_day_count: zero is not sent", { uptimeDayCount: 0 }, {});
+  m.sends("GetProjectRequest.incidents_before_id", { incidentsBeforeId: "incidents_before_id" }, { incidentsBeforeId: "incidents_before_id" });
+  m.sends("GetProjectRequest.incidents_before_id: zero is not sent", { incidentsBeforeId: "" }, {});
 }
 
 {
@@ -301,6 +306,54 @@ import type * as p from "pethost";
   m.sends("DeleteProjectAction: nothing set", {}, {});
   m.sends("DeleteProjectAction.skip_final_backup", { skipFinalBackup: true }, { skipFinalBackup: true });
   m.sends("DeleteProjectAction.skip_final_backup: zero is not sent", { skipFinalBackup: false }, {});
+}
+
+{
+  const m = sending(w.SetProjectAlertsRequestSchema, (leaf: Init<typeof w.SetProjectAlertsRequestSchema>): Init<typeof w.SetProjectAlertsRequestSchema> => (leaf), async (api, given: p.SetProjectAlertsRequest) => api.setProjectAlerts(given));
+  m.sends("SetProjectAlertsRequest: nothing set", {}, {});
+  m.sends("SetProjectAlertsRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("SetProjectAlertsRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("SetProjectAlertsRequest.checks", { checks: [{}] }, { checks: [{}] });
+  m.sends("SetProjectAlertsRequest.remove_checks", { removeChecks: true }, { removeChecks: true });
+  m.sends("SetProjectAlertsRequest.remove_checks: zero is not sent", { removeChecks: false }, {});
+  m.sends("SetProjectAlertsRequest.traffic_rules", { trafficRules: [{}] }, { trafficRules: [{}] });
+  m.sends("SetProjectAlertsRequest.remove_traffic_rules", { removeTrafficRules: true }, { removeTrafficRules: true });
+  m.sends("SetProjectAlertsRequest.remove_traffic_rules: zero is not sent", { removeTrafficRules: false }, {});
+  m.sends("SetProjectAlertsRequest.off", { off: true }, { off: true });
+  m.sends("SetProjectAlertsRequest.off: zero", { off: false }, { off: false });
+  m.sends("SetProjectAlertsRequest.off: undefined", { off: undefined }, {});
+  m.sends("SetProjectAlertsRequest.mute_minutes", { muteMinutes: 1007 }, { muteMinutes: 1007 });
+  m.sends("SetProjectAlertsRequest.mute_minutes: zero", { muteMinutes: 0 }, { muteMinutes: 0 });
+  m.sends("SetProjectAlertsRequest.mute_minutes: undefined", { muteMinutes: undefined }, {});
+}
+
+{
+  const m = sending(w.SetProjectAlertsRequestSchema, (leaf: Init<typeof w.SiteCheckSchema>): Init<typeof w.SetProjectAlertsRequestSchema> => ({ checks: [leaf] }), async (api, given: p.SiteCheckInput) => api.setProjectAlerts({ checks: [given] }));
+  m.sends("SiteCheck: nothing set", {}, {});
+  m.sends("SiteCheck.host", { host: "host" }, { host: "host" });
+  m.sends("SiteCheck.host: zero is not sent", { host: "" }, {});
+  m.sends("SiteCheck.path", { path: "path" }, { path: "path" });
+  m.sends("SiteCheck.path: zero is not sent", { path: "" }, {});
+  m.sends("SiteCheck.expect_status", { expectStatus: 1003 }, { expectStatus: 1003 });
+  m.sends("SiteCheck.expect_status: zero is not sent", { expectStatus: 0 }, {});
+  m.sends("SiteCheck.must_contain", { mustContain: "must_contain" }, { mustContain: "must_contain" });
+  m.sends("SiteCheck.must_contain: zero is not sent", { mustContain: "" }, {});
+}
+
+{
+  const m = sending(w.SetProjectAlertsRequestSchema, (leaf: Init<typeof w.TrafficRuleSchema>): Init<typeof w.SetProjectAlertsRequestSchema> => ({ trafficRules: [leaf] }), async (api, given: p.TrafficRuleInput) => api.setProjectAlerts({ trafficRules: [given] }));
+  m.sends("TrafficRule: nothing set", {}, {});
+  m.sends("TrafficRule.metric: SERVER_ERRORS", { metric: "SERVER_ERRORS" }, { metric: w.TrafficMetric.SERVER_ERRORS });
+  m.sends("TrafficRule.metric: SERVER_ERROR_PERCENT", { metric: "SERVER_ERROR_PERCENT" }, { metric: w.TrafficMetric.SERVER_ERROR_PERCENT });
+  m.sends("TrafficRule.metric: LATENCY_P95_MS", { metric: "LATENCY_P95_MS" }, { metric: w.TrafficMetric.LATENCY_P95_MS });
+  m.sends("TrafficRule.filter", { filter: {} }, { filter: {} });
+  m.sends("TrafficRule.threshold", { threshold: 1003.5 }, { threshold: 1003.5 });
+  m.sends("TrafficRule.threshold: zero is not sent", { threshold: 0 }, {});
+  m.sends("TrafficRule.threshold: NaN is not zero", { threshold: NaN }, { threshold: NaN });
+  m.sends("TrafficRule.window_minutes", { windowMinutes: 1004 }, { windowMinutes: 1004 });
+  m.sends("TrafficRule.window_minutes: zero is not sent", { windowMinutes: 0 }, {});
+  m.sends("TrafficRule.min_requests", { minRequests: 1005 }, { minRequests: 1005 });
+  m.sends("TrafficRule.min_requests: zero is not sent", { minRequests: 0 }, {});
 }
 
 {

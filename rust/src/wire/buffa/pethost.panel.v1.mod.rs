@@ -35,6 +35,7 @@ pub mod __buffa {
         reg.register_json_any(super::__GET_MACHINE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GET_MACHINE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MACHINE_JSON_ANY);
+        reg.register_json_any(super::__ALERT_DESTINATION_JSON_ANY);
         reg.register_json_any(super::__MACHINE_SESSION_JSON_ANY);
         reg.register_json_any(super::__DISK_USAGE_JSON_ANY);
         reg.register_json_any(super::__SSH_KEY_JSON_ANY);
@@ -86,6 +87,19 @@ pub mod __buffa {
         reg.register_json_any(super::__CANCEL_OPERATION_ACTION_JSON_ANY);
         reg.register_json_any(super::__DELETE_PROJECT_ACTION_JSON_ANY);
         reg.register_json_any(super::__RUN_PROJECT_ACTION_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__SET_PROJECT_ALERTS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__SET_PROJECT_ALERTS_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__SITE_CHECK_JSON_ANY);
+        reg.register_json_any(super::__TRAFFIC_RULE_JSON_ANY);
+        reg.register_json_any(super::__PROJECT_ALERTS_JSON_ANY);
+        reg.register_json_any(super::__SITE_CHECK_STATE_JSON_ANY);
+        reg.register_json_any(super::__SITE_CHECK_RESULT_JSON_ANY);
+        reg.register_json_any(super::__TRAFFIC_RULE_STATE_JSON_ANY);
+        reg.register_json_any(super::__INCIDENT_JSON_ANY);
+        reg.register_json_any(super::__INCIDENT_EVIDENCE_JSON_ANY);
+        reg.register_json_any(super::__UPTIME_DAY_JSON_ANY);
+        reg.register_json_any(super::__GET_INCIDENT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_INCIDENT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__GET_OPERATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GET_OPERATION_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__OPERATION_LOG_LINE_JSON_ANY);
@@ -114,6 +128,7 @@ pub mod __buffa {
         reg.register_json_any(super::__PROJECT_BUSY_JSON_ANY);
         reg.register_json_any(super::__PROJECT_CHANGED_JSON_ANY);
         reg.register_json_any(super::__MACHINE_UNREACHABLE_JSON_ANY);
+        reg.register_json_any(super::__MACHINE_UPDATE_PENDING_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_RESPONSE_JSON_ANY);
@@ -138,6 +153,10 @@ pub use self::__buffa::view::GetMachineResponseOwnedView;
 pub use self::__buffa::view::MachineView;
 #[doc(inline)]
 pub use self::__buffa::view::MachineOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::AlertDestinationView;
+#[doc(inline)]
+pub use self::__buffa::view::AlertDestinationOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::MachineSessionView;
 #[doc(inline)]
@@ -343,6 +362,58 @@ pub use self::__buffa::view::RunProjectActionResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::RunProjectActionResponseOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::SetProjectAlertsRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::SetProjectAlertsRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::SetProjectAlertsResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::SetProjectAlertsResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::TrafficRuleView;
+#[doc(inline)]
+pub use self::__buffa::view::TrafficRuleOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectAlertsView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectAlertsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckStateView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckStateOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckResultView;
+#[doc(inline)]
+pub use self::__buffa::view::SiteCheckResultOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::TrafficRuleStateView;
+#[doc(inline)]
+pub use self::__buffa::view::TrafficRuleStateOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::IncidentView;
+#[doc(inline)]
+pub use self::__buffa::view::IncidentOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::IncidentEvidenceView;
+#[doc(inline)]
+pub use self::__buffa::view::IncidentEvidenceOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::UptimeDayView;
+#[doc(inline)]
+pub use self::__buffa::view::UptimeDayOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetIncidentRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetIncidentRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetIncidentResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetIncidentResponseOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::GetOperationRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::GetOperationRequestOwnedView;
@@ -454,6 +525,10 @@ pub use self::__buffa::view::ProjectChangedOwnedView;
 pub use self::__buffa::view::MachineUnreachableView;
 #[doc(inline)]
 pub use self::__buffa::view::MachineUnreachableOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MachineUpdatePendingView;
+#[doc(inline)]
+pub use self::__buffa::view::MachineUpdatePendingOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::NoMachineView;
 #[doc(inline)]

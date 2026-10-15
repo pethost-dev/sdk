@@ -12,6 +12,7 @@ METHODS = {
     "deploy_project": "DeployProject",
     "list_commits": "ListCommits",
     "run_project_action": "RunProjectAction",
+    "set_project_alerts": "SetProjectAlerts",
     "get_operation": "GetOperation",
     "query_http_traffic": "QueryHttpTraffic",
     "query_container_logs": "QueryContainerLogs",
@@ -37,6 +38,10 @@ OPTIONAL = frozenset({
     "CreateProjectRequest.wait_seconds",
     "DeployProjectRequest.wait_seconds",
     "RunProjectActionRequest.wait_seconds",
+    "SetProjectAlertsRequest.off",
+    "SetProjectAlertsRequest.mute_minutes",
+    "ProjectAlerts.uptime_percent",
+    "UptimeDay.uptime_percent",
     "GetOperationRequest.wait_seconds",
     "GetOperationRequest.after_log_line",
     "GetOperationRequest.log_line_limit",
@@ -46,6 +51,7 @@ DETAILS = (
     "ProjectBusy",
     "ProjectChanged",
     "MachineUnreachable",
+    "MachineUpdatePending",
     "NoMachine",
 )
 

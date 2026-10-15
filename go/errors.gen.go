@@ -42,6 +42,12 @@ type Error struct {
 	// nil = the API sent no such detail.
 	MachineUnreachable *MachineUnreachable
 
+	// Detail of a [CodeFailedPrecondition] error: the machine's software predates what was asked.
+	// It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
+	//
+	// nil = the API sent no such detail.
+	MachineUpdatePending *MachineUpdatePending
+
 	// Detail of a [CodeFailedPrecondition] error: the account has no machine to run projects on
 	// yet.
 	//
@@ -72,6 +78,8 @@ func fromWireError(err error) error {
 			e.ProjectChanged = new(fromWireProjectChanged(w))
 		case *panelv1.MachineUnreachable:
 			e.MachineUnreachable = new(fromWireMachineUnreachable(w))
+		case *panelv1.MachineUpdatePending:
+			e.MachineUpdatePending = new(fromWireMachineUpdatePending(w))
 		case *panelv1.NoMachine:
 			e.NoMachine = new(fromWireNoMachine(w))
 		}

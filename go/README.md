@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.2.2
+go get github.com/pethost-dev/sdk/go@v0.2.3
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -103,6 +103,7 @@ response or an error; a stream returns its responses one by one, as "Streams" be
 | `DeployProject` | Deploy a project | destructive |
 | `ListCommits` | List a project's commits | read-only |
 | `RunProjectAction` | Run a project action | destructive |
+| `SetProjectAlerts` | Set a project's alerts |  |
 | `GetOperation` | Get an operation | read-only |
 | `QueryHTTPTraffic` | Query HTTP traffic | read-only |
 | `QueryContainerLogs` | Query container logs | read-only |
@@ -234,7 +235,7 @@ Every error a method returns is a `*pethost.Error`. Its `Code` says what kind of
 is, under the name the API's documentation uses: `pethost.CodeNotFound` prints as `NOT_FOUND`.
 Its `Message` says what failed and what to do, for people. Some failures carry a detail to act
 on, each a field of the error that is nil when the API sent none:
-`ProjectBusy`, `ProjectChanged`, `MachineUnreachable` and `NoMachine`.
+`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending` and `NoMachine`.
 
 ```go
 response, err := client.GetMachine(ctx, nil)

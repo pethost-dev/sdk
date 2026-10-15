@@ -66,6 +66,7 @@ editor shows. A stream answers with its responses one by one, as "Streams" below
 | `deployProject` | Deploy a project | Destructive |
 | `listCommits` | List a project's commits | Reads only |
 | `runProjectAction` | Run a project action | Destructive |
+| `setProjectAlerts` | Set a project's alerts |  |
 | `getOperation` | Get an operation | Reads only |
 | `queryHttpTraffic` | Query HTTP traffic | Reads only |
 | `queryContainerLogs` | Query container logs | Reads only |
@@ -157,6 +158,7 @@ A call that fails rejects with a `PethostError`:
   - `error.projectBusy`: Detail of an UNAVAILABLE error: an operation, or a short action, holds the project. The message says the same in words.
   - `error.projectChanged`: Detail of an ABORTED error: baseDeployId is not the current deploy: the project was deployed since you read it. Read it again (Project.deployId) and redo your change on its files.
   - `error.machineUnreachable`: Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call again later.
+  - `error.machineUpdatePending`: Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
   - `error.noMachine`: Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 
 ## Links

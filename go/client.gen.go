@@ -216,6 +216,23 @@ func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectAction
 	return new(fromWireRunProjectActionResponse(response)), nil
 }
 
+// SetProjectAlerts: set a project's alerts.
+//
+// Changes what Pethost watches on a project and when it tells the person: site checks (an
+// address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,
+// mute. A list given replaces the project's (send [Project.Alerts]' with your change);
+// remove_* empties it; a scalar left out stays. Service crashes and failed backups are always
+// watched. Answers with [Project.Alerts]. Where alerts go is the person's choice in the
+// panel's Settings → Alerts ([Machine.AlertChannels]): no tool sets it.
+// [CodeFailedPrecondition] + [MachineUpdatePending] = the machine's software predates alerts.
+func (c *Client) SetProjectAlerts(ctx context.Context, request *SetProjectAlertsRequest) (*SetProjectAlertsResponse, error) {
+	response, err := c.wire.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(orZero(request)))
+	if err != nil {
+		return nil, fromWireError(err)
+	}
+	return new(fromWireSetProjectAlertsResponse(response)), nil
+}
+
 // GetOperation: get an operation. It only reads.
 //
 // An operation, after waiting for it to end (WaitSeconds): then the project as it is, and the
