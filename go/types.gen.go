@@ -1770,7 +1770,7 @@ type MachineUpdatePending struct{}
 // yet.
 type NoMachine struct {
 	Reason NoMachineReason
-	// Where the person goes on in the browser.
+	// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
 	URL string
 }
 

@@ -6183,7 +6183,7 @@ class NoMachine(Message[_NoMachineFields]):
             optional pethost.panel.v1.NoMachineReason reason = 1;
             ```
         url:
-            Where the person goes on in the browser.
+            Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
 
             ```proto
             optional string url = 2;

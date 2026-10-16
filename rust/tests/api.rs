@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.2.6"),
+    ("user-agent", "pethost-rust/0.2.7"),
     ("connect-protocol-version", "1"),
 ];
 

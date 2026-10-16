@@ -1844,7 +1844,7 @@ pub struct MachineUpdatePending {}
 #[non_exhaustive]
 pub struct NoMachine {
     pub reason: NoMachineReason,
-    /// Where the person goes on in the browser.
+    /// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
     pub url: ::std::string::String,
 }
 

@@ -43314,7 +43314,7 @@ pub struct NoMachineView<'a> {
     pub reason: ::core::option::Option<
         ::buffa::EnumValue<super::super::NoMachineReason>,
     >,
-    /// Where the person goes on in the browser.
+    /// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
     ///
     /// Field 2: `url`
     pub url: ::core::option::Option<&'a str>,
@@ -43549,7 +43549,7 @@ impl NoMachineOwnedView {
     ) -> ::core::option::Option<::buffa::EnumValue<super::super::NoMachineReason>> {
         self.0.reborrow().reason
     }
-    /// Where the person goes on in the browser.
+    /// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
     ///
     /// Field 2: `url`
     #[must_use]

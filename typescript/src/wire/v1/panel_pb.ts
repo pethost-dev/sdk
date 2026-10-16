@@ -51,10 +51,9 @@
 //     false or empty. *_message fields are prose for people: branch on enums and ids.
 //   - Errors: NOT_FOUND = no such entity (the message lists what exists). INVALID_ARGUMENT = a
 //     bad or unknown field (named, with what it takes). FAILED_PRECONDITION = the container is
-//     not running, or as the RPC says; with NoMachine = no machine yet (the message says how the
-//     person gets one). UNAVAILABLE = retry later: the project is busy (ProjectBusy names the
-//     operation: wait with GetOperation), or the machine (MachineUnreachable), GitHub or backup
-//     storage is down.
+//     not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
+//     do). UNAVAILABLE = retry later: the project is busy (ProjectBusy names the operation: wait
+//     with GetOperation), or the machine (MachineUnreachable), GitHub or backup storage is down.
 //     ABORTED = changed since read (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit
 //     (named). OUT_OF_RANGE = before the oldest record kept. PERMISSION_DENIED = a read-only
 //     path (project files: use DeployProject). UNAUTHENTICATED = sign in again.
@@ -5077,7 +5076,7 @@ export type NoMachine = Message<"pethost.panel.v1.NoMachine"> & {
   reason: NoMachineReason;
 
   /**
-   * Where the person goes on in the browser.
+   * Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
    *
    * @generated from field: string url = 2;
    */

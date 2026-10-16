@@ -62,13 +62,12 @@ Conventions
   false or empty. *_message fields are prose for people: branch on enums and ids.
 - Errors: NotFoundError = no such entity (the message lists what exists). InvalidArgumentError =
   a bad or unknown field (named, with what it takes). FailedPreconditionError = the container is
-  not running, or as the RPC says; with NoMachine = no machine yet (the message says how the
-  person gets one). UnavailableError = retry later: the project is busy (ProjectBusy names the
-  operation: wait with get_operation), or the machine (MachineUnreachable), GitHub or backup
-  storage is down. AbortedError = changed since read (ProjectChanged): reread, redo.
-  ResourceExhaustedError = a limit (named). OutOfRangeError = before the oldest record kept.
-  PermissionDeniedError = a read-only path (project files: use deploy_project).
-  UnauthenticatedError = sign in again.
+  not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
+  do). UnavailableError = retry later: the project is busy (ProjectBusy names the operation:
+  wait with get_operation), or the machine (MachineUnreachable), GitHub or backup storage is
+  down. AbortedError = changed since read (ProjectChanged): reread, redo. ResourceExhaustedError
+  = a limit (named). OutOfRangeError = before the oldest record kept. PermissionDeniedError = a
+  read-only path (project files: use deploy_project). UnauthenticatedError = sign in again.
 - A response holds ~64 KiB at most (read_path(length_bytes=): ≤1 MiB; create_transfer: any
   size); a cut list says so and pages. A limit over its maximum counts as the maximum.
 - An operation runs on after its call returns, even if the caller leaves; a retry with the same

@@ -4951,13 +4951,13 @@ class NoMachine:
     """Detail of a FailedPreconditionError error: the account has no machine to run projects on yet.
 
     Attributes:
-        url: Where the person goes on in the browser.
+        url: Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
     """
 
     reason: NoMachineReason = NoMachineReason.UNSPECIFIED
 
     url: str = ""
-    """Where the person goes on in the browser."""
+    """Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
