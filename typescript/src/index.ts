@@ -3565,7 +3565,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.3");
+      request.header.set("User-Agent", "pethost-typescript/0.2.4");
       return next(request);
     };
     this.#wire = connect.createClient(
