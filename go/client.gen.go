@@ -216,7 +216,7 @@ func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectAction
 	return new(fromWireRunProjectActionResponse(response)), nil
 }
 
-// SetProjectAlerts: set a project's alerts.
+// SetProjectAlerts: set a project's alerts. It may delete or overwrite.
 //
 // Changes what Pethost watches on a project and when it tells the person: site checks (an
 // address the machine opens every minute) and traffic rules (5xx or p95 over a window), off,

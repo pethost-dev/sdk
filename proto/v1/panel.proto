@@ -226,7 +226,7 @@ service PanelService {
   // = the machine's software predates alerts.
   rpc SetProjectAlerts(SetProjectAlertsRequest) returns (SetProjectAlertsResponse) {
     option idempotency_level = IDEMPOTENT;
-    option (mcp_tool) = {title: "Set a project's alerts"};
+    option (mcp_tool) = {title: "Set a project's alerts", destructive: true};
   }
 
   // One incident in full, with the incidents joined to it and what the machine saw when it opened

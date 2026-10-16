@@ -1435,6 +1435,8 @@ class Pethost:
         Alerts (Machine.alert_channels): no tool sets it. FailedPreconditionError + MachineUpdatePending
         = the machine's software predates alerts.
 
+        Destructive: it may delete or overwrite something.
+
         Args:
             checks: ≤10. Given = the whole list.
             remove_checks: True = none, not even the default check.

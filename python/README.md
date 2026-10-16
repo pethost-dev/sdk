@@ -81,7 +81,7 @@ asyncio.run(main())
 | `deploy_project(project_id, ...)` | Deploy a project | destructive |
 | `list_commits(project_id, ...)` | List a project's commits | read-only |
 | `run_project_action(project_id, ...)` | Run a project action | destructive |
-| `set_project_alerts(project_id, ...)` | Set a project's alerts |  |
+| `set_project_alerts(project_id, ...)` | Set a project's alerts | destructive |
 | `get_operation(project_id, ...)` | Get an operation | read-only |
 | `query_http_traffic(project_id, ...)` | Query HTTP traffic | read-only |
 | `query_container_logs(project_id, ...)` | Query container logs | read-only |

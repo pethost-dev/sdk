@@ -66,7 +66,7 @@ editor shows. A stream answers with its responses one by one, as "Streams" below
 | `deployProject` | Deploy a project | Destructive |
 | `listCommits` | List a project's commits | Reads only |
 | `runProjectAction` | Run a project action | Destructive |
-| `setProjectAlerts` | Set a project's alerts |  |
+| `setProjectAlerts` | Set a project's alerts | Destructive |
 | `getOperation` | Get an operation | Reads only |
 | `queryHttpTraffic` | Query HTTP traffic | Reads only |
 | `queryContainerLogs` | Query container logs | Reads only |

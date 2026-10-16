@@ -23977,7 +23977,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xde\x13\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xe0\x13\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
@@ -23987,8 +23987,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a'.pethost.panel.v1.CreateProjectResponse\"\x16\x8a\xb5\x18\x12\x12\x10Create a project\x12z\n" +
 	"\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a'.pethost.panel.v1.DeployProjectResponse\"\x18\x8a\xb5\x18\x14\b\x01\x12\x10Deploy a project\x12}\n" +
 	"\vListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project's commits\x12\x87\x01\n" +
-	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\x12\x8a\x01\n" +
-	"\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse\"\x1f\x90\x02\x02\x8a\xb5\x18\x18\x12\x16Set a project's alerts\x12_\n" +
+	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\x12\x8c\x01\n" +
+	"\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse\"!\x90\x02\x02\x8a\xb5\x18\x1a\b\x01\x12\x16Set a project's alerts\x12_\n" +
 	"\vGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse\"\x03\x90\x02\x01\x12x\n" +
 	"\fGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse\"\x19\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\x12\x86\x01\n" +
 	"\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n" +
