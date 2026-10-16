@@ -103,12 +103,12 @@
 //   - Errors: [CodeNotFound] = no such entity (the message lists what exists).
 //     [CodeInvalidArgument] = a bad or unknown field (named, with what it takes).
 //     [CodeFailedPrecondition] = the container is not running, or as the RPC says; with
-//     [NoMachine] = no machine yet (the message says what to do). [CodeUnavailable] = retry
-//     later: the project is busy ([ProjectBusy] names the operation: wait with
-//     [Client.GetOperation]), or the machine ([MachineUnreachable]), GitHub or backup storage
-//     is down. [CodeAborted] = changed since read ([ProjectChanged]): reread, redo.
-//     [CodeResourceExhausted] = a limit (named). [CodeOutOfRange] = before the oldest record
-//     kept. [CodePermissionDenied] = a read-only path (project files: use
+//     [NoMachine] = no machine yet (the message says how the person gets one).
+//     [CodeUnavailable] = retry later: the project is busy ([ProjectBusy] names the operation:
+//     wait with [Client.GetOperation]), or the machine ([MachineUnreachable]), GitHub or
+//     backup storage is down. [CodeAborted] = changed since read ([ProjectChanged]): reread,
+//     redo. [CodeResourceExhausted] = a limit (named). [CodeOutOfRange] = before the oldest
+//     record kept. [CodePermissionDenied] = a read-only path (project files: use
 //     [Client.DeployProject]). [CodeUnauthenticated] = sign in again.
 //   - A response holds ~64 KiB at most ([ReadPathRequest.LengthBytes]: ≤1 MiB;
 //     [Client.CreateTransfer]: any size); a cut list says so and pages. A limit over its
