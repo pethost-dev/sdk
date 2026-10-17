@@ -77,29 +77,30 @@ PETHOST_TOKEN=pth_... cargo run
 
 ## The calls
 
-Each is a method of [`Client`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html):
+Each is a method of [`Client`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html):
 it takes the request's struct and returns the response's, or an `Error`; a stream returns its
 responses one by one, as "Streams" below shows.
 
 | Method | What it does | Effect |
 |---|---|---|
-| [`get_machine`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
-| [`run_machine_action`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
-| [`get_project`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
-| [`create_project`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.create_project) | Create a project |  |
-| [`deploy_project`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
-| [`list_commits`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
-| [`run_project_action`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
-| [`set_project_alerts`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.set_project_alerts) | Set a project's alerts | destructive |
-| [`get_operation`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
-| [`query_http_traffic`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
-| [`query_container_logs`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
-| [`run_service_command`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
-| [`read_path`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
-| [`create_transfer`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
-| [`watch_operation`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.watch_operation) | Watch an operation | stream |
-| [`tail_container_logs`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.tail_container_logs) | Follow container logs | stream |
-| [`tail_http_traffic`](https://docs.rs/pethost/0.2.7/pethost/struct.Client.html#method.tail_http_traffic) | Follow HTTP traffic | stream |
+| [`get_machine`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
+| [`run_machine_action`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
+| [`get_project`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
+| [`create_project`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.create_project) | Create a project |  |
+| [`deploy_project`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
+| [`list_commits`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
+| [`run_project_action`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
+| [`set_project_alerts`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.set_project_alerts) | Set a project's alerts | destructive |
+| [`get_operation`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
+| [`query_http_traffic`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
+| [`query_container_logs`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
+| [`link_database`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.link_database) | Link projects to a database | destructive |
+| [`run_service_command`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
+| [`read_path`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
+| [`create_transfer`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
+| [`watch_operation`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.watch_operation) | Watch an operation | stream |
+| [`tail_container_logs`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.tail_container_logs) | Follow container logs | stream |
+| [`tail_http_traffic`](https://docs.rs/pethost/0.2.8/pethost/struct.Client.html#method.tail_http_traffic) | Follow HTTP traffic | stream |
 
 Read-only = it changes nothing. Destructive = it may delete or overwrite something. Stream =
 it returns its responses one by one.
@@ -107,7 +108,7 @@ it returns its responses one by one.
 ## Streams
 
 A stream's method returns a
-[`ResponseStream`](https://docs.rs/pethost/0.2.7/pethost/struct.ResponseStream.html) at
+[`ResponseStream`](https://docs.rs/pethost/0.2.8/pethost/struct.ResponseStream.html) at
 once: its `next` is each response as the API sends it, for as long as the program reads. This
 program prints a project's newest log lines, then follows them. The same program is
 `examples/logs.rs`.
@@ -198,7 +199,7 @@ fn main() -> Result<(), serde_json::Error> {
 
 A failed call returns `pethost::Error`. Branch on its `code()`, one of the 16 codes of the
 Connect protocol; `message()` is the API's sentence for people; `details()` is what the API
-attached to say more, each a variant of `ErrorDetail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending`, `NoMachine`.
+attached to say more, each a variant of `ErrorDetail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending`, `DatabaseLinkRefusal`, `NoMachine`.
 
 ```rust
 use pethost::{Error, ErrorCode};
@@ -217,7 +218,7 @@ with the cause as the error's `source()`.
 
 ## Links
 
-- [The crate's documentation](https://docs.rs/pethost/0.2.7): every call and message, with the API's own comments.
+- [The crate's documentation](https://docs.rs/pethost/0.2.8): every call and message, with the API's own comments.
 - [The API's reference](https://pethost.dev/docs/api/): the same API for any language.
 - [The panel](https://console.pethost.dev): where a token is made.
 
@@ -239,7 +240,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 - **Nightly backups:** encrypted, stored off the machine, kept for 14 days.
 - **SSH and SFTP** into any container, and a terminal in the panel.
 - **Docker Compose, as written:** a project is a Compose file, and the same file runs anywhere
-  else Docker does. A database is one more service in it, at no extra cost.
+  else Docker does. A database is one click, Postgres or Valkey, with a page for connecting
+  your apps, at no extra cost.
 - **In the EU:** your data lives on your machine, and requests to your sites go straight to
   it, never through our panel.
 

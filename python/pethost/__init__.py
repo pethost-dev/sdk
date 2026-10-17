@@ -27,6 +27,9 @@ Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 
 - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
   deployed whole. People see metadata.name.
+- Database: a project create_project made with `database` (Postgres or Valkey). The machine
+  wrote its files and knows the engine. Apps reach it at the host <project_id> once
+  link_database links them; Project.database says how to sign in.
 - Service (service): one container. The person opens a shell in it from their terminal with `ssh
   <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
   run_machine_action(add_ssh_key=) added their public key. Nobody logs in to the machine itself.
@@ -110,6 +113,15 @@ from ._types import (
     ContainerLogFilter,
     CreateProjectResponse,
     CreateTransferResponse,
+    Database,
+    DatabaseConnection,
+    DatabaseDump,
+    DatabaseEngine,
+    DatabaseEngineOffer,
+    DatabaseLinkRefusal,
+    DatabaseLinkRefusalReason,
+    DatabaseSizeChoice,
+    DatabaseSummary,
     DeleteProjectAction,
     DeletedProject,
     DeployFailureReason,
@@ -139,6 +151,7 @@ from ._types import (
     Incident,
     IncidentEvidence,
     IncidentQuietReason,
+    LinkDatabaseResponse,
     ListCommitsResponse,
     LogLine,
     Machine,
@@ -219,6 +232,15 @@ __all__ = [
     "CreateProjectResponse",
     "CreateTransferResponse",
     "DataLossError",
+    "Database",
+    "DatabaseConnection",
+    "DatabaseDump",
+    "DatabaseEngine",
+    "DatabaseEngineOffer",
+    "DatabaseLinkRefusal",
+    "DatabaseLinkRefusalReason",
+    "DatabaseSizeChoice",
+    "DatabaseSummary",
     "DeadlineExceededError",
     "DeleteProjectAction",
     "DeletedProject",
@@ -253,6 +275,7 @@ __all__ = [
     "IncidentQuietReason",
     "InternalError",
     "InvalidArgumentError",
+    "LinkDatabaseResponse",
     "ListCommitsResponse",
     "LogLine",
     "Machine",

@@ -106,6 +106,14 @@ def deploy_failure_reason_to_wire(_v: _t.DeployFailureReason) -> _pb.DeployFailu
     return _pb.DeployFailureReason(_v.value)
 
 
+def database_engine_from_wire(_w: _pb.DatabaseEngine) -> _t.DatabaseEngine:
+    return _t.DatabaseEngine(_w.value)
+
+
+def database_engine_to_wire(_v: _t.DatabaseEngine) -> _pb.DatabaseEngine:
+    return _pb.DatabaseEngine(_v.value)
+
+
 def traffic_metric_from_wire(_w: _pb.TrafficMetric) -> _t.TrafficMetric:
     return _t.TrafficMetric(_w.value)
 
@@ -152,6 +160,14 @@ def file_location_from_wire(_w: _pb.FileLocation) -> _t.FileLocation:
 
 def file_location_to_wire(_v: _t.FileLocation) -> _pb.FileLocation:
     return _pb.FileLocation(_v.value)
+
+
+def database_link_refusal_reason_from_wire(_w: _pb.DatabaseLinkRefusalReason) -> _t.DatabaseLinkRefusalReason:
+    return _t.DatabaseLinkRefusalReason(_w.value)
+
+
+def database_link_refusal_reason_to_wire(_v: _t.DatabaseLinkRefusalReason) -> _pb.DatabaseLinkRefusalReason:
+    return _pb.DatabaseLinkRefusalReason(_v.value)
 
 
 def no_machine_reason_from_wire(_w: _pb.NoMachineReason) -> _t.NoMachineReason:
@@ -216,6 +232,8 @@ def machine_from_wire(_w: _pb.Machine) -> _t.Machine:
         scheduled_restart_time=_rt.time_from_wire(_w.scheduled_restart_time) if _w.scheduled_restart_time is not None else None,
         sessions=tuple(machine_session_from_wire(_x) for _x in _w.sessions),
         alert_channels=tuple(alert_destination_from_wire(_x) for _x in _w.alert_channels),
+        database_engines=tuple(database_engine_offer_from_wire(_x) for _x in _w.database_engines),
+        memory_limits_bytes=_w.memory_limits_bytes,
     )
 
 
@@ -247,6 +265,8 @@ def machine_to_wire(_v: _t.Machine) -> _pb.Machine:
         scheduled_restart_time=_rt.time_to_wire(_v.scheduled_restart_time) if _v.scheduled_restart_time is not None else None,
         sessions=[machine_session_to_wire(_x) for _x in _v.sessions],
         alert_channels=[alert_destination_to_wire(_x) for _x in _v.alert_channels],
+        database_engines=[database_engine_offer_to_wire(_x) for _x in _v.database_engines],
+        memory_limits_bytes=_v.memory_limits_bytes or None,
     )
 
 
@@ -535,6 +555,7 @@ def project_summary_from_wire(_w: _pb.ProjectSummary) -> _t.ProjectSummary:
         running_operations=tuple(operation_from_wire(_x) for _x in _w.running_operations),
         pinned=_w.pinned,
         disk_used_bytes=_w.disk_used_bytes,
+        database=database_summary_from_wire(_w.database) if _w.database is not None else None,
     )
 
 
@@ -553,6 +574,7 @@ def project_summary_to_wire(_v: _t.ProjectSummary) -> _pb.ProjectSummary:
         running_operations=[operation_to_wire(_x) for _x in _v.running_operations],
         pinned=_v.pinned or None,
         disk_used_bytes=_v.disk_used_bytes or None,
+        database=database_summary_to_wire(_v.database) if _v.database is not None else None,
     )
 
 
@@ -664,6 +686,8 @@ def project_from_wire(_w: _pb.Project) -> _t.Project:
         incidents=tuple(incident_from_wire(_x) for _x in _w.incidents),
         more_incidents=_w.more_incidents,
         uptime_days=tuple(uptime_day_from_wire(_x) for _x in _w.uptime_days),
+        database=database_from_wire(_w.database) if _w.database is not None else None,
+        linked_databases=tuple(_w.linked_databases),
     )
 
 
@@ -695,6 +719,8 @@ def project_to_wire(_v: _t.Project) -> _pb.Project:
         incidents=[incident_to_wire(_x) for _x in _v.incidents],
         more_incidents=_v.more_incidents or None,
         uptime_days=[uptime_day_to_wire(_x) for _x in _v.uptime_days],
+        database=database_to_wire(_v.database) if _v.database is not None else None,
+        linked_databases=_rt.strings("Project.linked_databases", _v.linked_databases),
     )
 
 
@@ -1620,6 +1646,174 @@ def run_project_action_response_from_dict(_j: dict[str, _Any]) -> _t.RunProjectA
     return run_project_action_response_from_wire(_rt.from_dict(_pb.RunProjectActionResponse, _j))
 
 
+def database_from_wire(_w: _pb.Database) -> _t.Database:
+    return _t.Database(
+        engine=database_engine_from_wire(_w.engine),
+        major_version=_w.major_version,
+        server_version=_w.server_version,
+        memory_limit_bytes=_w.memory_limit_bytes,
+        data_bytes=_w.data_bytes,
+        connections=_w.connections,
+        max_connections=_w.max_connections,
+        linked_projects=tuple(_w.linked_projects),
+        connection=database_connection_from_wire(_w.connection) if _w.connection is not None else None,
+        service=_w.service,
+        volume=_w.volume,
+    )
+
+
+def database_to_wire(_v: _t.Database) -> _pb.Database:
+    return _pb.Database(
+        engine=database_engine_to_wire(_v.engine) if _v.engine.value else None,
+        major_version=_v.major_version or None,
+        server_version=_v.server_version or None,
+        memory_limit_bytes=_v.memory_limit_bytes or None,
+        data_bytes=_v.data_bytes or None,
+        connections=_v.connections or None,
+        max_connections=_v.max_connections or None,
+        linked_projects=_rt.strings("Database.linked_projects", _v.linked_projects),
+        connection=database_connection_to_wire(_v.connection) if _v.connection is not None else None,
+        service=_v.service or None,
+        volume=_v.volume or None,
+    )
+
+
+def database_to_dict(_v: _t.Database) -> dict[str, _Any]:
+    return _rt.to_dict(database_to_wire(_v))
+
+
+def database_from_dict(_j: dict[str, _Any]) -> _t.Database:
+    return database_from_wire(_rt.from_dict(_pb.Database, _j))
+
+
+def database_connection_from_wire(_w: _pb.DatabaseConnection) -> _t.DatabaseConnection:
+    return _t.DatabaseConnection(
+        host=_w.host,
+        port=_w.port,
+        user=_w.user,
+        database=_w.database,
+        password=_w.password,
+        url=_w.url,
+        local_url=_w.local_url,
+    )
+
+
+def database_connection_to_wire(_v: _t.DatabaseConnection) -> _pb.DatabaseConnection:
+    return _pb.DatabaseConnection(
+        host=_v.host or None,
+        port=_v.port or None,
+        user=_v.user or None,
+        database=_v.database or None,
+        password=_v.password or None,
+        url=_v.url or None,
+        local_url=_v.local_url or None,
+    )
+
+
+def database_connection_to_dict(_v: _t.DatabaseConnection) -> dict[str, _Any]:
+    return _rt.to_dict(database_connection_to_wire(_v))
+
+
+def database_connection_from_dict(_j: dict[str, _Any]) -> _t.DatabaseConnection:
+    return database_connection_from_wire(_rt.from_dict(_pb.DatabaseConnection, _j))
+
+
+def database_summary_from_wire(_w: _pb.DatabaseSummary) -> _t.DatabaseSummary:
+    return _t.DatabaseSummary(
+        engine=database_engine_from_wire(_w.engine),
+        major_version=_w.major_version,
+        data_bytes=_w.data_bytes,
+        connections=_w.connections,
+        linked_projects=tuple(_w.linked_projects),
+        server_version=_w.server_version,
+    )
+
+
+def database_summary_to_wire(_v: _t.DatabaseSummary) -> _pb.DatabaseSummary:
+    return _pb.DatabaseSummary(
+        engine=database_engine_to_wire(_v.engine) if _v.engine.value else None,
+        major_version=_v.major_version or None,
+        data_bytes=_v.data_bytes or None,
+        connections=_v.connections or None,
+        linked_projects=_rt.strings("DatabaseSummary.linked_projects", _v.linked_projects),
+        server_version=_v.server_version or None,
+    )
+
+
+def database_summary_to_dict(_v: _t.DatabaseSummary) -> dict[str, _Any]:
+    return _rt.to_dict(database_summary_to_wire(_v))
+
+
+def database_summary_from_dict(_j: dict[str, _Any]) -> _t.DatabaseSummary:
+    return database_summary_from_wire(_rt.from_dict(_pb.DatabaseSummary, _j))
+
+
+def database_engine_offer_from_wire(_w: _pb.DatabaseEngineOffer) -> _t.DatabaseEngineOffer:
+    return _t.DatabaseEngineOffer(
+        engine=database_engine_from_wire(_w.engine),
+        major_version=_w.major_version,
+        sizes=tuple(database_size_choice_from_wire(_x) for _x in _w.sizes),
+        default_memory_limit_bytes=_w.default_memory_limit_bytes,
+    )
+
+
+def database_engine_offer_to_wire(_v: _t.DatabaseEngineOffer) -> _pb.DatabaseEngineOffer:
+    return _pb.DatabaseEngineOffer(
+        engine=database_engine_to_wire(_v.engine) if _v.engine.value else None,
+        major_version=_v.major_version or None,
+        sizes=[database_size_choice_to_wire(_x) for _x in _v.sizes],
+        default_memory_limit_bytes=_v.default_memory_limit_bytes or None,
+    )
+
+
+def database_engine_offer_to_dict(_v: _t.DatabaseEngineOffer) -> dict[str, _Any]:
+    return _rt.to_dict(database_engine_offer_to_wire(_v))
+
+
+def database_engine_offer_from_dict(_j: dict[str, _Any]) -> _t.DatabaseEngineOffer:
+    return database_engine_offer_from_wire(_rt.from_dict(_pb.DatabaseEngineOffer, _j))
+
+
+def database_size_choice_from_wire(_w: _pb.DatabaseSizeChoice) -> _t.DatabaseSizeChoice:
+    return _t.DatabaseSizeChoice(
+        memory_limit_bytes=_w.memory_limit_bytes,
+    )
+
+
+def database_size_choice_to_wire(_v: _t.DatabaseSizeChoice) -> _pb.DatabaseSizeChoice:
+    return _pb.DatabaseSizeChoice(
+        memory_limit_bytes=_v.memory_limit_bytes or None,
+    )
+
+
+def database_size_choice_to_dict(_v: _t.DatabaseSizeChoice) -> dict[str, _Any]:
+    return _rt.to_dict(database_size_choice_to_wire(_v))
+
+
+def database_size_choice_from_dict(_j: dict[str, _Any]) -> _t.DatabaseSizeChoice:
+    return database_size_choice_from_wire(_rt.from_dict(_pb.DatabaseSizeChoice, _j))
+
+
+def link_database_response_from_wire(_w: _pb.LinkDatabaseResponse) -> _t.LinkDatabaseResponse:
+    return _t.LinkDatabaseResponse(
+        project=project_from_wire(_w.project) if _w.project is not None else None,
+    )
+
+
+def link_database_response_to_wire(_v: _t.LinkDatabaseResponse) -> _pb.LinkDatabaseResponse:
+    return _pb.LinkDatabaseResponse(
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+    )
+
+
+def link_database_response_to_dict(_v: _t.LinkDatabaseResponse) -> dict[str, _Any]:
+    return _rt.to_dict(link_database_response_to_wire(_v))
+
+
+def link_database_response_from_dict(_j: dict[str, _Any]) -> _t.LinkDatabaseResponse:
+    return link_database_response_from_wire(_rt.from_dict(_pb.LinkDatabaseResponse, _j))
+
+
 def set_project_alerts_response_from_wire(_w: _pb.SetProjectAlertsResponse) -> _t.SetProjectAlertsResponse:
     return _t.SetProjectAlertsResponse(
         alerts=project_alerts_from_wire(_w.alerts) if _w.alerts is not None else None,
@@ -2408,6 +2602,28 @@ def path_download_from_dict(_j: dict[str, _Any]) -> _t.PathDownload:
     return path_download_from_wire(_rt.from_dict(_pb.PathDownload, _j))
 
 
+def database_dump_from_wire(_w: _pb.DatabaseDump) -> _t.DatabaseDump:
+    return _t.DatabaseDump(
+        project_id=_w.project_id,
+        database=_w.database,
+    )
+
+
+def database_dump_to_wire(_v: _t.DatabaseDump) -> _pb.DatabaseDump:
+    return _pb.DatabaseDump(
+        project_id=_v.project_id or None,
+        database=_v.database or None,
+    )
+
+
+def database_dump_to_dict(_v: _t.DatabaseDump) -> dict[str, _Any]:
+    return _rt.to_dict(database_dump_to_wire(_v))
+
+
+def database_dump_from_dict(_j: dict[str, _Any]) -> _t.DatabaseDump:
+    return database_dump_from_wire(_rt.from_dict(_pb.DatabaseDump, _j))
+
+
 def create_transfer_response_from_wire(_w: _pb.CreateTransferResponse) -> _t.CreateTransferResponse:
     return _t.CreateTransferResponse(
         url=_w.url,
@@ -2516,6 +2732,30 @@ def machine_update_pending_to_dict(_v: _t.MachineUpdatePending) -> dict[str, _An
 
 def machine_update_pending_from_dict(_j: dict[str, _Any]) -> _t.MachineUpdatePending:
     return machine_update_pending_from_wire(_rt.from_dict(_pb.MachineUpdatePending, _j))
+
+
+def database_link_refusal_from_wire(_w: _pb.DatabaseLinkRefusal) -> _t.DatabaseLinkRefusal:
+    return _t.DatabaseLinkRefusal(
+        project_id=_w.project_id,
+        reason=database_link_refusal_reason_from_wire(_w.reason),
+        service=_w.service,
+    )
+
+
+def database_link_refusal_to_wire(_v: _t.DatabaseLinkRefusal) -> _pb.DatabaseLinkRefusal:
+    return _pb.DatabaseLinkRefusal(
+        project_id=_v.project_id or None,
+        reason=database_link_refusal_reason_to_wire(_v.reason) if _v.reason.value else None,
+        service=_v.service or None,
+    )
+
+
+def database_link_refusal_to_dict(_v: _t.DatabaseLinkRefusal) -> dict[str, _Any]:
+    return _rt.to_dict(database_link_refusal_to_wire(_v))
+
+
+def database_link_refusal_from_dict(_j: dict[str, _Any]) -> _t.DatabaseLinkRefusal:
+    return database_link_refusal_from_wire(_rt.from_dict(_pb.DatabaseLinkRefusal, _j))
 
 
 def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
@@ -2675,6 +2915,7 @@ def create_project_request(
     timeout_seconds: int,
     operation_id: str,
     wait_seconds: int | None,
+    database: _t.DatabaseEngine,
 ) -> _pb.CreateProjectRequest:
     _w = _pb.CreateProjectRequest(
         project_id=project_id or None,
@@ -2685,6 +2926,7 @@ def create_project_request(
         timeout_seconds=timeout_seconds or None,
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
+        database=database_engine_to_wire(database) if database.value else None,
     )
     return _rt.checked(_w)
 
@@ -2871,6 +3113,20 @@ def query_container_logs_request(
     return _rt.checked(_w)
 
 
+def link_database_request(
+    *,
+    database_project_id: str,
+    link: Sequence[str],
+    unlink: Sequence[str],
+) -> _pb.LinkDatabaseRequest:
+    _w = _pb.LinkDatabaseRequest(
+        database_project_id=database_project_id or None,
+        link=_rt.strings("link_database(link=)", link),
+        unlink=_rt.strings("link_database(unlink=)", unlink),
+    )
+    return _rt.checked(_w)
+
+
 def run_service_command_request(
     *,
     project_id: str,
@@ -2925,8 +3181,9 @@ def create_transfer_request(
     upload_archive: _t.ArchiveUpload | None,
     upload_file: _t.FileUpload | None,
     download: _t.PathDownload | None,
+    download_database: _t.DatabaseDump | None,
 ) -> _pb.CreateTransferRequest:
-    _rt.one_of("create_transfer", upload_archive=upload_archive, upload_file=upload_file, download=download)
+    _rt.one_of("create_transfer", upload_archive=upload_archive, upload_file=upload_file, download=download, download_database=download_database)
     _w = _pb.CreateTransferRequest()
     if upload_archive is not None:
         _w.transfer = _Oneof[_Literal["upload_archive"], _pb.ArchiveUpload]("upload_archive", archive_upload_to_wire(upload_archive))
@@ -2934,6 +3191,8 @@ def create_transfer_request(
         _w.transfer = _Oneof[_Literal["upload_file"], _pb.FileUpload]("upload_file", file_upload_to_wire(upload_file))
     elif download is not None:
         _w.transfer = _Oneof[_Literal["download"], _pb.PathDownload]("download", path_download_to_wire(download))
+    elif download_database is not None:
+        _w.transfer = _Oneof[_Literal["download_database"], _pb.DatabaseDump]("download_database", database_dump_to_wire(download_database))
     return _rt.checked(_w)
 
 
@@ -3018,6 +3277,10 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wMachineUpdatePending = _d.value(_pb.MachineUpdatePending)
                 if _wMachineUpdatePending is not None:
                     return machine_update_pending_from_wire(_wMachineUpdatePending)
+            if _d.type_name == "pethost.panel.v1.DatabaseLinkRefusal":
+                _wDatabaseLinkRefusal = _d.value(_pb.DatabaseLinkRefusal)
+                if _wDatabaseLinkRefusal is not None:
+                    return database_link_refusal_from_wire(_wDatabaseLinkRefusal)
             if _d.type_name == "pethost.panel.v1.NoMachine":
                 _wNoMachine = _d.value(_pb.NoMachine)
                 if _wNoMachine is not None:

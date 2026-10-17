@@ -137,6 +137,9 @@ pub(crate) fn project_problem_kind_from_wire(
         buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_SLOW) => {
             types::ProjectProblemKind::HttpSlow
         }
+        buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_DATABASE_SETUP) => {
+            types::ProjectProblemKind::DatabaseSetup
+        }
         buffa::EnumValue::Unknown(number) => types::ProjectProblemKind::Unrecognized(number),
     }
 }
@@ -186,6 +189,9 @@ pub(crate) fn project_problem_kind_to_wire(
         }
         types::ProjectProblemKind::HttpSlow => {
             buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_HTTP_SLOW)
+        }
+        types::ProjectProblemKind::DatabaseSetup => {
+            buffa::EnumValue::Known(wire::ProjectProblemKind::PROJECT_PROBLEM_KIND_DATABASE_SETUP)
         }
         types::ProjectProblemKind::Unrecognized(number) => buffa::EnumValue::from(number),
     }
@@ -483,6 +489,28 @@ pub(crate) fn deploy_failure_reason_to_wire(
     }
 }
 
+pub(crate) fn database_engine_from_wire(value: buffa::EnumValue<wire::DatabaseEngine>) -> types::DatabaseEngine {
+    match value {
+        buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_UNSPECIFIED) => {
+            types::DatabaseEngine::Unspecified
+        }
+        buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_POSTGRES) => types::DatabaseEngine::Postgres,
+        buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_VALKEY) => types::DatabaseEngine::Valkey,
+        buffa::EnumValue::Unknown(number) => types::DatabaseEngine::Unrecognized(number),
+    }
+}
+
+pub(crate) fn database_engine_to_wire(value: types::DatabaseEngine) -> buffa::EnumValue<wire::DatabaseEngine> {
+    match value {
+        types::DatabaseEngine::Unspecified => {
+            buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_UNSPECIFIED)
+        }
+        types::DatabaseEngine::Postgres => buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_POSTGRES),
+        types::DatabaseEngine::Valkey => buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_VALKEY),
+        types::DatabaseEngine::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
 pub(crate) fn traffic_metric_from_wire(value: buffa::EnumValue<wire::TrafficMetric>) -> types::TrafficMetric {
     match value {
         buffa::EnumValue::Known(wire::TrafficMetric::TRAFFIC_METRIC_UNSPECIFIED) => types::TrafficMetric::Unspecified,
@@ -645,6 +673,46 @@ pub(crate) fn file_location_to_wire(value: types::FileLocation) -> buffa::EnumVa
     }
 }
 
+pub(crate) fn database_link_refusal_reason_from_wire(
+    value: buffa::EnumValue<wire::DatabaseLinkRefusalReason>,
+) -> types::DatabaseLinkRefusalReason {
+    match value {
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED) => {
+            types::DatabaseLinkRefusalReason::Unspecified
+        }
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE) => {
+            types::DatabaseLinkRefusalReason::AppIsDatabase
+        }
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN) => {
+            types::DatabaseLinkRefusalReason::ServiceNameTaken
+        }
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS) => {
+            types::DatabaseLinkRefusalReason::TooManyLinks
+        }
+        buffa::EnumValue::Unknown(number) => types::DatabaseLinkRefusalReason::Unrecognized(number),
+    }
+}
+
+pub(crate) fn database_link_refusal_reason_to_wire(
+    value: types::DatabaseLinkRefusalReason,
+) -> buffa::EnumValue<wire::DatabaseLinkRefusalReason> {
+    match value {
+        types::DatabaseLinkRefusalReason::Unspecified => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED)
+        }
+        types::DatabaseLinkRefusalReason::AppIsDatabase => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE)
+        }
+        types::DatabaseLinkRefusalReason::ServiceNameTaken => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN)
+        }
+        types::DatabaseLinkRefusalReason::TooManyLinks => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS)
+        }
+        types::DatabaseLinkRefusalReason::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
 pub(crate) fn no_machine_reason_from_wire(value: buffa::EnumValue<wire::NoMachineReason>) -> types::NoMachineReason {
     match value {
         buffa::EnumValue::Known(wire::NoMachineReason::NO_MACHINE_REASON_UNSPECIFIED) => {
@@ -758,6 +826,8 @@ impl From<types::Machine> for wire::Machine {
             scheduled_restart_time,
             sessions,
             alert_channels,
+            database_engines,
+            memory_limits_bytes,
         } = message;
 
         Self {
@@ -787,6 +857,11 @@ impl From<types::Machine> for wire::Machine {
             scheduled_restart_time: scheduled_restart_time.map(crate::timestamp::to_wire).into(),
             sessions: sessions.into_iter().map(wire::MachineSession::from).collect(),
             alert_channels: alert_channels.into_iter().map(wire::AlertDestination::from).collect(),
+            database_engines: database_engines
+                .into_iter()
+                .map(wire::DatabaseEngineOffer::from)
+                .collect(),
+            memory_limits_bytes: self::present(memory_limits_bytes),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -821,6 +896,8 @@ impl From<wire::Machine> for types::Machine {
             scheduled_restart_time,
             sessions,
             alert_channels,
+            database_engines,
+            memory_limits_bytes,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -851,6 +928,11 @@ impl From<wire::Machine> for types::Machine {
             scheduled_restart_time: scheduled_restart_time.into_option().map(crate::timestamp::from_wire),
             sessions: sessions.into_iter().map(types::MachineSession::from).collect(),
             alert_channels: alert_channels.into_iter().map(types::AlertDestination::from).collect(),
+            database_engines: database_engines
+                .into_iter()
+                .map(types::DatabaseEngineOffer::from)
+                .collect(),
+            memory_limits_bytes: memory_limits_bytes.unwrap_or_default(),
         }
     }
 }
@@ -1312,6 +1394,7 @@ impl From<types::ProjectSummary> for wire::ProjectSummary {
             running_operations,
             pinned,
             disk_used_bytes,
+            database,
         } = message;
 
         Self {
@@ -1328,6 +1411,7 @@ impl From<types::ProjectSummary> for wire::ProjectSummary {
             running_operations: running_operations.into_iter().map(wire::Operation::from).collect(),
             pinned: self::present(pinned),
             disk_used_bytes: self::present(disk_used_bytes),
+            database: database.map(wire::DatabaseSummary::from).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1349,6 +1433,7 @@ impl From<wire::ProjectSummary> for types::ProjectSummary {
             running_operations,
             pinned,
             disk_used_bytes,
+            database,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1366,6 +1451,7 @@ impl From<wire::ProjectSummary> for types::ProjectSummary {
             running_operations: running_operations.into_iter().map(types::Operation::from).collect(),
             pinned: pinned.unwrap_or_default(),
             disk_used_bytes: disk_used_bytes.unwrap_or_default(),
+            database: database.into_option().map(types::DatabaseSummary::from),
         }
     }
 }
@@ -1546,6 +1632,8 @@ impl From<types::Project> for wire::Project {
             incidents,
             more_incidents,
             uptime_days,
+            database,
+            linked_databases,
         } = message;
 
         Self {
@@ -1575,6 +1663,8 @@ impl From<types::Project> for wire::Project {
             incidents: incidents.into_iter().map(wire::Incident::from).collect(),
             more_incidents: self::present(more_incidents),
             uptime_days: uptime_days.into_iter().map(wire::UptimeDay::from).collect(),
+            database: database.map(wire::Database::from).into(),
+            linked_databases,
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1609,6 +1699,8 @@ impl From<wire::Project> for types::Project {
             incidents,
             more_incidents,
             uptime_days,
+            database,
+            linked_databases,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1641,6 +1733,8 @@ impl From<wire::Project> for types::Project {
             incidents: incidents.into_iter().map(types::Incident::from).collect(),
             more_incidents: more_incidents.unwrap_or_default(),
             uptime_days: uptime_days.into_iter().map(types::UptimeDay::from).collect(),
+            database: database.into_option().map(types::Database::from),
+            linked_databases,
         }
     }
 }
@@ -2443,6 +2537,7 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
+            database,
         } = message;
 
         Self {
@@ -2454,6 +2549,7 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds: self::present(timeout_seconds),
             operation_id: self::present(operation_id),
             wait_seconds,
+            database: self::present(database).map(database_engine_to_wire),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2470,6 +2566,7 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
+            database,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2482,6 +2579,7 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds: timeout_seconds.unwrap_or_default(),
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
+            database: database.map(database_engine_from_wire).unwrap_or_default(),
         }
     }
 }
@@ -3240,6 +3338,288 @@ impl From<wire::RunProjectActionResponse> for types::RunProjectActionResponse {
             operation: operation.into_option().map(types::Operation::from),
             project: project.into_option().map(types::Project::from),
             log: log.into_iter().map(types::OperationLogLine::from).collect(),
+        }
+    }
+}
+
+impl From<types::Database> for wire::Database {
+    fn from(message: types::Database) -> Self {
+        let types::Database {
+            engine,
+            major_version,
+            server_version,
+            memory_limit_bytes,
+            data_bytes,
+            connections,
+            max_connections,
+            linked_projects,
+            connection,
+            service,
+            volume,
+        } = message;
+
+        Self {
+            engine: self::present(engine).map(database_engine_to_wire),
+            major_version: self::present(major_version),
+            server_version: self::present(server_version),
+            memory_limit_bytes: self::present(memory_limit_bytes),
+            data_bytes: self::present(data_bytes),
+            connections: self::present(connections),
+            max_connections: self::present(max_connections),
+            linked_projects,
+            connection: connection.map(wire::DatabaseConnection::from).into(),
+            service: self::present(service),
+            volume: self::present(volume),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::Database> for types::Database {
+    fn from(message: wire::Database) -> Self {
+        let wire::Database {
+            engine,
+            major_version,
+            server_version,
+            memory_limit_bytes,
+            data_bytes,
+            connections,
+            max_connections,
+            linked_projects,
+            connection,
+            service,
+            volume,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            engine: engine.map(database_engine_from_wire).unwrap_or_default(),
+            major_version: major_version.unwrap_or_default(),
+            server_version: server_version.unwrap_or_default(),
+            memory_limit_bytes: memory_limit_bytes.unwrap_or_default(),
+            data_bytes: data_bytes.unwrap_or_default(),
+            connections: connections.unwrap_or_default(),
+            max_connections: max_connections.unwrap_or_default(),
+            linked_projects,
+            connection: connection.into_option().map(types::DatabaseConnection::from),
+            service: service.unwrap_or_default(),
+            volume: volume.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseConnection> for wire::DatabaseConnection {
+    fn from(message: types::DatabaseConnection) -> Self {
+        let types::DatabaseConnection {
+            host,
+            port,
+            user,
+            database,
+            password,
+            url,
+            local_url,
+        } = message;
+
+        Self {
+            host: self::present(host),
+            port: self::present(port),
+            user: self::present(user),
+            database: self::present(database),
+            password: self::present(password),
+            url: self::present(url),
+            local_url: self::present(local_url),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseConnection> for types::DatabaseConnection {
+    fn from(message: wire::DatabaseConnection) -> Self {
+        let wire::DatabaseConnection {
+            host,
+            port,
+            user,
+            database,
+            password,
+            url,
+            local_url,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            host: host.unwrap_or_default(),
+            port: port.unwrap_or_default(),
+            user: user.unwrap_or_default(),
+            database: database.unwrap_or_default(),
+            password: password.unwrap_or_default(),
+            url: url.unwrap_or_default(),
+            local_url: local_url.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseSummary> for wire::DatabaseSummary {
+    fn from(message: types::DatabaseSummary) -> Self {
+        let types::DatabaseSummary {
+            engine,
+            major_version,
+            data_bytes,
+            connections,
+            linked_projects,
+            server_version,
+        } = message;
+
+        Self {
+            engine: self::present(engine).map(database_engine_to_wire),
+            major_version: self::present(major_version),
+            data_bytes: self::present(data_bytes),
+            connections: self::present(connections),
+            linked_projects,
+            server_version: self::present(server_version),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseSummary> for types::DatabaseSummary {
+    fn from(message: wire::DatabaseSummary) -> Self {
+        let wire::DatabaseSummary {
+            engine,
+            major_version,
+            data_bytes,
+            connections,
+            linked_projects,
+            server_version,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            engine: engine.map(database_engine_from_wire).unwrap_or_default(),
+            major_version: major_version.unwrap_or_default(),
+            data_bytes: data_bytes.unwrap_or_default(),
+            connections: connections.unwrap_or_default(),
+            linked_projects,
+            server_version: server_version.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseEngineOffer> for wire::DatabaseEngineOffer {
+    fn from(message: types::DatabaseEngineOffer) -> Self {
+        let types::DatabaseEngineOffer {
+            engine,
+            major_version,
+            sizes,
+            default_memory_limit_bytes,
+        } = message;
+
+        Self {
+            engine: self::present(engine).map(database_engine_to_wire),
+            major_version: self::present(major_version),
+            sizes: sizes.into_iter().map(wire::DatabaseSizeChoice::from).collect(),
+            default_memory_limit_bytes: self::present(default_memory_limit_bytes),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseEngineOffer> for types::DatabaseEngineOffer {
+    fn from(message: wire::DatabaseEngineOffer) -> Self {
+        let wire::DatabaseEngineOffer {
+            engine,
+            major_version,
+            sizes,
+            default_memory_limit_bytes,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            engine: engine.map(database_engine_from_wire).unwrap_or_default(),
+            major_version: major_version.unwrap_or_default(),
+            sizes: sizes.into_iter().map(types::DatabaseSizeChoice::from).collect(),
+            default_memory_limit_bytes: default_memory_limit_bytes.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseSizeChoice> for wire::DatabaseSizeChoice {
+    fn from(message: types::DatabaseSizeChoice) -> Self {
+        let types::DatabaseSizeChoice { memory_limit_bytes } = message;
+
+        Self {
+            memory_limit_bytes: self::present(memory_limit_bytes),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseSizeChoice> for types::DatabaseSizeChoice {
+    fn from(message: wire::DatabaseSizeChoice) -> Self {
+        let wire::DatabaseSizeChoice {
+            memory_limit_bytes,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            memory_limit_bytes: memory_limit_bytes.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::LinkDatabaseRequest> for wire::LinkDatabaseRequest {
+    fn from(message: types::LinkDatabaseRequest) -> Self {
+        let types::LinkDatabaseRequest {
+            database_project_id,
+            link,
+            unlink,
+        } = message;
+
+        Self {
+            database_project_id: self::present(database_project_id),
+            link,
+            unlink,
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::LinkDatabaseRequest> for types::LinkDatabaseRequest {
+    fn from(message: wire::LinkDatabaseRequest) -> Self {
+        let wire::LinkDatabaseRequest {
+            database_project_id,
+            link,
+            unlink,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            database_project_id: database_project_id.unwrap_or_default(),
+            link,
+            unlink,
+        }
+    }
+}
+
+impl From<types::LinkDatabaseResponse> for wire::LinkDatabaseResponse {
+    fn from(message: types::LinkDatabaseResponse) -> Self {
+        let types::LinkDatabaseResponse { project } = message;
+
+        Self {
+            project: project.map(wire::Project::from).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::LinkDatabaseResponse> for types::LinkDatabaseResponse {
+    fn from(message: wire::LinkDatabaseResponse) -> Self {
+        let wire::LinkDatabaseResponse {
+            project,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project: project.into_option().map(types::Project::from),
         }
     }
 }
@@ -4619,6 +4999,11 @@ impl From<types::CreateTransferRequest> for wire::CreateTransferRequest {
                         Box::new(wire::PathDownload::from(value)),
                     ))
                 }
+                Some(types::CreateTransferRequestTransfer::DownloadDatabase(value)) => Some(
+                    wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(Box::new(
+                        wire::DatabaseDump::from(value),
+                    )),
+                ),
                 None => None,
             },
             __buffa_unknown_fields: Default::default(),
@@ -4643,6 +5028,9 @@ impl From<wire::CreateTransferRequest> for types::CreateTransferRequest {
                 ),
                 Some(wire::__buffa::oneof::create_transfer_request::Transfer::Download(value)) => Some(
                     types::CreateTransferRequestTransfer::Download(types::PathDownload::from(*value)),
+                ),
+                Some(wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(value)) => Some(
+                    types::CreateTransferRequestTransfer::DownloadDatabase(types::DatabaseDump::from(*value)),
                 ),
                 None => None,
             },
@@ -4762,6 +5150,33 @@ impl From<wire::PathDownload> for types::PathDownload {
                 None => None,
             },
             path: path.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseDump> for wire::DatabaseDump {
+    fn from(message: types::DatabaseDump) -> Self {
+        let types::DatabaseDump { project_id, database } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            database: self::present(database),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseDump> for types::DatabaseDump {
+    fn from(message: wire::DatabaseDump) -> Self {
+        let wire::DatabaseDump {
+            project_id,
+            database,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            database: database.unwrap_or_default(),
         }
     }
 }
@@ -4915,6 +5330,40 @@ impl From<wire::MachineUpdatePending> for types::MachineUpdatePending {
         } = message;
 
         Self {}
+    }
+}
+
+impl From<types::DatabaseLinkRefusal> for wire::DatabaseLinkRefusal {
+    fn from(message: types::DatabaseLinkRefusal) -> Self {
+        let types::DatabaseLinkRefusal {
+            project_id,
+            reason,
+            service,
+        } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            reason: self::present(reason).map(database_link_refusal_reason_to_wire),
+            service: self::present(service),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseLinkRefusal> for types::DatabaseLinkRefusal {
+    fn from(message: wire::DatabaseLinkRefusal) -> Self {
+        let wire::DatabaseLinkRefusal {
+            project_id,
+            reason,
+            service,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            reason: reason.map(database_link_refusal_reason_from_wire).unwrap_or_default(),
+            service: service.unwrap_or_default(),
+        }
     }
 }
 

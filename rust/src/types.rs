@@ -111,6 +111,10 @@ pub struct Machine {
     pub sessions: ::std::vec::Vec<MachineSession>,
     /// Where Pethost tells the person of incidents: the account's channels that are on, email first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty = alerts reach nobody.
     pub alert_channels: ::std::vec::Vec<AlertDestination>,
+    /// The databases the machine makes ([`Client::create_project`](crate::Client::create_project)\'s `database`), one per engine, with the sizes they may take. Empty = the machine's software predates databases.
+    pub database_engines: ::std::vec::Vec<DatabaseEngineOffer>,
+    /// The sum of every service's memory limit (`mem_limit`): what the projects may take together, which `memory_total_bytes` does not reserve.
+    pub memory_limits_bytes: u64,
 }
 
 /// A channel Pethost tells the person of incidents on ([`Machine::alert_channels`](crate::types::Machine::alert_channels)).
@@ -318,6 +322,8 @@ pub struct ProjectSummary {
     pub pinned: bool,
     /// Its volumes, files, what its containers wrote outside volumes, and its images: one it shares with another project counts in both. Measured every few minutes.
     pub disk_used_bytes: u64,
+    /// Set = a database project ([`Client::create_project`](crate::Client::create_project) `database`).
+    pub database: ::core::option::Option<DatabaseSummary>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -376,6 +382,8 @@ pub enum ProjectProblemKind {
     HttpErrors,
     /// A traffic rule on p95 holds.
     HttpSlow,
+    /// A database the machine has not set up for 2 minutes since it started, or whose apps\' user is gone: the message says the engine's error.
+    DatabaseSetup,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -384,7 +392,7 @@ pub enum ProjectProblemKind {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct GetProjectRequest {
     pub project_id: ::std::string::String,
-    /// True = include env-file values ([`EnvironmentVariable::secret`](crate::types::EnvironmentVariable::secret)). To edit .env: [`Client::read_path`](crate::Client::read_path) /.env.
+    /// True = include env-file values ([`EnvironmentVariable::secret`](crate::types::EnvironmentVariable::secret)) and a database's password ([`Project::database`](crate::types::Project::database)`.connection`). To edit .env: [`Client::read_path`](crate::Client::read_path) /.env.
     pub include_secret_values: bool,
     /// Only older snapshots: the oldest `create_time` seen, to page back. Absent = the newest.
     pub snapshots_before: ::core::option::Option<crate::Timestamp>,
@@ -454,6 +462,10 @@ pub struct Project {
     pub more_incidents: bool,
     /// Oldest first, [`GetProjectRequest::uptime_day_count`](crate::types::GetProjectRequest::uptime_day_count) of them, today's last.
     pub uptime_days: ::std::vec::Vec<UptimeDay>,
+    /// Set = a database project ([`Client::create_project`](crate::Client::create_project) `database`): its engine, its state and how apps sign in.
+    pub database: ::core::option::Option<Database>,
+    /// The database projects this one reaches ([`Client::link_database`](crate::Client::link_database)), each at the host of its `project_id`.
+    pub linked_databases: ::std::vec::Vec<::std::string::String>,
 }
 
 /// A start, stop or restart of services that has not ended yet.
@@ -896,6 +908,8 @@ pub struct CreateProjectRequest {
     pub operation_id: ::std::string::String,
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
     pub wait_seconds: ::core::option::Option<u32>,
+    /// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, `upload_id`, source, `x_pethost` out.
+    pub database: DatabaseEngine,
 }
 
 /// What [`Client::create_project`](crate::Client::create_project) returns.
@@ -1153,6 +1167,115 @@ pub struct RunProjectActionResponse {
     pub log: ::std::vec::Vec<OperationLogLine>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum DatabaseEngine {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    Postgres,
+    Valkey,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+/// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct Database {
+    pub engine: DatabaseEngine,
+    /// As it was made, e.g. 18.
+    pub major_version: u32,
+    /// What the server says it runs, e.g. \"18.6\". Empty = not answering.
+    pub server_version: ::std::string::String,
+    /// Its size: its service's `mem_limit` in compose.yaml.
+    pub memory_limit_bytes: u64,
+    /// Postgres: its databases\' size; Valkey: its data in memory. On disk: [`Project::volumes`](crate::types::Project::volumes).
+    pub data_bytes: u64,
+    /// Open now.
+    pub connections: u32,
+    /// Valkey: maxclients.
+    pub max_connections: u32,
+    /// The projects that reach it ([`Client::link_database`](crate::Client::link_database)).
+    pub linked_projects: ::std::vec::Vec<::std::string::String>,
+    pub connection: ::core::option::Option<DatabaseConnection>,
+    /// The service of [`Project::services`](crate::types::Project::services) that runs the database.
+    pub service: ::std::string::String,
+    /// The volume of [`Project::volumes`](crate::types::Project::volumes) that holds its data.
+    pub volume: ::std::string::String,
+}
+
+/// How a linked project signs in, as the apps\' user.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseConnection {
+    /// The database's `project_id`.
+    pub host: ::std::string::String,
+    pub port: u32,
+    /// \"app\"; Valkey: \"default\".
+    pub user: ::std::string::String,
+    /// \"app\"; Valkey: \"0\".
+    pub database: ::std::string::String,
+    /// Only with [`Client::get_project`](crate::Client::get_project)\'s `include_secret_values`.
+    pub password: ::std::string::String,
+    /// For the app's .env, e.g. `DATABASE_URL`=\<url\>. Without `include_secret_values`, \*\*\*\* stands for the password.
+    pub url: ::std::string::String,
+    /// As url, at localhost: what the SSH tunnel to its service gives ([`Service::ssh_command`](crate::types::Service::ssh_command)).
+    pub local_url: ::std::string::String,
+}
+
+/// A database project in brief ([`ProjectSummary::database`](crate::types::ProjectSummary::database)).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseSummary {
+    pub engine: DatabaseEngine,
+    pub major_version: u32,
+    /// As in Database.
+    pub data_bytes: u64,
+    pub connections: u32,
+    pub linked_projects: ::std::vec::Vec<::std::string::String>,
+    /// As in Database: empty = not answering, its figures are zero.
+    pub server_version: ::std::string::String,
+}
+
+/// An engine the machine makes databases of ([`Machine::database_engines`](crate::types::Machine::database_engines)).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseEngineOffer {
+    pub engine: DatabaseEngine,
+    /// The major a new database gets, e.g. 18.
+    pub major_version: u32,
+    /// Smallest first.
+    pub sizes: ::std::vec::Vec<DatabaseSizeChoice>,
+    /// The size [`Client::create_project`](crate::Client::create_project)\'s `database` gives.
+    pub default_memory_limit_bytes: u64,
+}
+
+/// A size a database may take.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseSizeChoice {
+    pub memory_limit_bytes: u64,
+}
+
+/// What [`Client::link_database`](crate::Client::link_database) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct LinkDatabaseRequest {
+    pub database_project_id: ::std::string::String,
+    /// App `project_ids` to link.
+    pub link: ::std::vec::Vec<::std::string::String>,
+    /// App `project_ids` to unlink.
+    pub unlink: ::std::vec::Vec<::std::string::String>,
+}
+
+/// What [`Client::link_database`](crate::Client::link_database) returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct LinkDatabaseResponse {
+    /// The database, as [`Client::get_project`](crate::Client::get_project) returns it.
+    pub project: ::core::option::Option<Project>,
+}
+
 /// What [`Client::set_project_alerts`](crate::Client::set_project_alerts) takes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct SetProjectAlertsRequest {
@@ -1227,7 +1350,7 @@ pub enum TrafficMetric {
 pub struct ProjectAlerts {
     /// Until set: the project's URL at \"/\" (`machine_default`); none without a route.
     pub checks: ::std::vec::Vec<SiteCheckState>,
-    /// Until set: 10 or more 5xx in 5 minutes, of every request (`machine_default`).
+    /// Until set: 10 or more 5xx in 5 minutes, of every request (`machine_default`); none without a route.
     pub traffic_rules: ::std::vec::Vec<TrafficRuleState>,
     /// True = incidents are recorded, nothing is sent.
     pub off: bool,
@@ -1736,6 +1859,7 @@ pub enum CreateTransferRequestTransfer {
     UploadArchive(ArchiveUpload),
     UploadFile(FileUpload),
     Download(PathDownload),
+    DownloadDatabase(DatabaseDump),
 }
 
 /// The project's directory as a zip, tar or tar.gz (told by content), for [`Client::create_project`](crate::Client::create_project)\'s or [`Client::deploy_project`](crate::Client::deploy_project)\'s `upload_id`: {} is enough. A single top folder is unwrapped; .git, \_\_MACOSX, .`DS_Store`, .\_\* are dropped. Leave out what the build makes again (`node_modules`, .venv, target).
@@ -1787,6 +1911,14 @@ pub enum PathDownloadRoot {
     Volume(::std::string::String),
 }
 
+/// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct DatabaseDump {
+    pub project_id: ::std::string::String,
+    /// Postgres: the database to dump. Empty = \"app\", the apps\'.
+    pub database: ::std::string::String,
+}
+
 /// What [`Client::create_transfer`](crate::Client::create_transfer) returns.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
@@ -1803,7 +1935,7 @@ pub struct CreateTransferResponse {
     pub upload_id: ::std::string::String,
     /// `upload_file`: a file is at path now; the upload replaces it.
     pub replaces: bool,
-    /// download: the name it saves as: a file's own; a directory's ends in \".tar\", and \"/\" is named after the project and its service or volume. Empty for an upload.
+    /// download: the name it saves as: a file's own; a directory's ends in \".tar\", and \"/\" is named after the project and its service or volume. `download_database`: \"\<`project_id`\>-\<database\>.dump\" or \"\<`project_id`\>.rdb\". Empty for an upload.
     pub file_name: ::std::string::String,
     /// `upload_archive`: the names `command` leaves out of the archive, wherever they lie in the directory. A program that packs the directory itself leaves out the same.
     pub exclude_names: ::std::vec::Vec<::std::string::String>,
@@ -1838,6 +1970,33 @@ pub struct MachineUnreachable {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct MachineUpdatePending {}
+
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or `CreateDatabase`: a project of `link` cannot be linked to the database. Nothing changed.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseLinkRefusal {
+    /// The first one refused.
+    pub project_id: ::std::string::String,
+    pub reason: DatabaseLinkRefusalReason,
+    /// `SERVICE_NAME_TAKEN`: its service.
+    pub service: ::std::string::String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum DatabaseLinkRefusalReason {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// It is a database itself.
+    AppIsDatabase,
+    /// A service of it is named or aliased like the database, whose host it would hide: rename the service or its alias.
+    ServiceNameTaken,
+    /// The database has 20: unlink one first.
+    TooManyLinks,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
 
 /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
 #[derive(Debug, Clone, PartialEq, Default)]

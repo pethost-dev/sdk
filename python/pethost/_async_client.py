@@ -19,6 +19,8 @@ from pethost._types import (
     ContainerLogFilter,
     CreateProjectResponse,
     CreateTransferResponse,
+    DatabaseDump,
+    DatabaseEngine,
     DeleteProjectAction,
     DeployProjectResponse,
     FileChange,
@@ -27,6 +29,7 @@ from pethost._types import (
     GetOperationResponse,
     GetProjectResponse,
     HttpTrafficFilter,
+    LinkDatabaseResponse,
     ListCommitsResponse,
     MountVolume,
     PathDownload,
@@ -353,13 +356,13 @@ class AsyncPethost:
 
         One project in full: services (state, health, image, the ports it listens on, volumes,
         environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-        snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-        files: read_path.
+        snapshots, the last day's HTTP traffic. Env-file values and a database's password
+        (Project.database.connection) only with include_secret_values. Its files: read_path.
 
         Read-only.
 
         Args:
-            include_secret_values: True = include env-file values (EnvironmentVariable.secret). To edit .env: read_path /.env.
+            include_secret_values: True = include env-file values (EnvironmentVariable.secret) and a database's password (Project.database.connection). To edit .env: read_path /.env.
             snapshots_before: Only older snapshots: the oldest create_time seen, to page back. Absent = the newest.
             snapshots_volume: Only snapshots holding this volume (Volume.snapshot_count). Empty = all.
             incidents_before: Only incidents that opened before it: the oldest open_time seen, to page back. Absent = the newest.
@@ -379,6 +382,7 @@ class AsyncPethost:
         timeout_seconds: int = 0,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        database: DatabaseEngine = DatabaseEngine.UNSPECIFIED,
     ) -> CreateProjectResponse:
         """Create a project.
 
@@ -396,6 +400,12 @@ class AsyncPethost:
         docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
+
+        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+        link_database the apps that use it.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -450,7 +460,8 @@ class AsyncPethost:
 
         AlreadyExistsError = the id is taken (a retry with its operation_id returns that operation).
         FailedPreconditionError = the GitHub App cannot read the repository (see GetMachineResponse.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+        predates databases. A deleted project's id inherits its snapshots.
 
         Args:
             project_id: New, [a-z0-9][a-z0-9_-]*, ≤63 chars; immutable.
@@ -461,8 +472,9 @@ class AsyncPethost:
             timeout_seconds: As deploy_project's timeout_seconds.
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
+            database: Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, upload_id, source, x_pethost out.
         """
-        return _convert.create_project_response_from_wire(await self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds)))
+        return _convert.create_project_response_from_wire(await self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds, database=database)))
 
     @overload
     async def deploy_project(
@@ -891,7 +903,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -937,7 +951,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -983,7 +999,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1029,7 +1047,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1075,7 +1095,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1121,7 +1143,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1167,7 +1191,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1213,7 +1239,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1259,7 +1287,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1305,7 +1335,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1351,7 +1383,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1396,7 +1430,9 @@ class AsyncPethost:
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
 
         Destructive: it may delete or overwrite something.
 
@@ -1538,6 +1574,32 @@ class AsyncPethost:
             page_token: The previous next_page_token, other fields unchanged.
         """
         return _convert.query_container_logs_response_from_wire(await self._call(self._wire.query_container_logs, _convert.query_container_logs_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, limit=limit, from_start=from_start, page_token=page_token)))
+
+    async def link_database(
+        self,
+        database_project_id: str,
+        *,
+        link: Sequence[str] = (),
+        unlink: Sequence[str] = (),
+    ) -> LinkDatabaseResponse:
+        """Link projects to a database.
+
+        Lets projects reach a database project: inside each linked project the database is the
+        host `<database_project_id>` at its port, and Project.database says how to sign in (its
+        password with get_project include_secret_values). Takes effect at once and deploys nothing.
+        InvalidArgumentError = a project in both link and unlink. NotFoundError = no such project.
+        FailedPreconditionError = database_project_id is no database; + DatabaseLinkRefusal = the app is
+        a database, has a service named or aliased like the database, or there are 20 links already;
+        + MachineUpdatePending = the machine's software predates databases. Answers with the
+        database's Project.
+
+        Destructive: it may delete or overwrite something.
+
+        Args:
+            link: App project_ids to link.
+            unlink: App project_ids to unlink.
+        """
+        return _convert.link_database_response_from_wire(await self._call(self._wire.link_database, _convert.link_database_request(database_project_id=database_project_id, link=link, unlink=unlink)))
 
     async def run_service_command(
         self,
@@ -1734,6 +1796,7 @@ class AsyncPethost:
         upload_archive: None = None,
         upload_file: None = None,
         download: None = None,
+        download_database: None = None,
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -1744,15 +1807,20 @@ class AsyncPethost:
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as read_path; FailedPreconditionError also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. ResourceExhaustedError = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `upload_archive`, `upload_file`, `download`.
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
         """
         ...
 
@@ -1763,6 +1831,7 @@ class AsyncPethost:
         upload_archive: ArchiveUpload,
         upload_file: None = None,
         download: None = None,
+        download_database: None = None,
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -1773,15 +1842,20 @@ class AsyncPethost:
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as read_path; FailedPreconditionError also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. ResourceExhaustedError = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `upload_archive`, `upload_file`, `download`.
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
         """
         ...
 
@@ -1792,6 +1866,7 @@ class AsyncPethost:
         upload_archive: None = None,
         upload_file: FileUpload,
         download: None = None,
+        download_database: None = None,
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -1802,15 +1877,20 @@ class AsyncPethost:
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as read_path; FailedPreconditionError also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. ResourceExhaustedError = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `upload_archive`, `upload_file`, `download`.
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
         """
         ...
 
@@ -1821,6 +1901,7 @@ class AsyncPethost:
         upload_archive: None = None,
         upload_file: None = None,
         download: PathDownload,
+        download_database: None = None,
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -1831,15 +1912,55 @@ class AsyncPethost:
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as read_path; FailedPreconditionError also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. ResourceExhaustedError = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `upload_archive`, `upload_file`, `download`.
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+        """
+        ...
+
+    @overload
+    async def create_transfer(
+        self,
+        *,
+        upload_archive: None = None,
+        upload_file: None = None,
+        download: None = None,
+        download_database: DatabaseDump,
+    ) -> CreateTransferResponse:
+        """Upload or download a file.
+
+        A one-request URL moving one file straight between you and the machine: run `command` in a
+        shell, or send `http_method` to `url` yourself, before expire_time.
+        - upload_archive: the project's directory, packed, for create_project's or deploy_project's
+          upload_id once the PUT answered 200 with what it holds.
+        - upload_file: one file into a container or volume, replacing any file there (replaces),
+          creating parents.
+        - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
+        Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
+
+        Destructive: it may delete or overwrite something.
+
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
         """
         ...
 
@@ -1849,6 +1970,7 @@ class AsyncPethost:
         upload_archive: ArchiveUpload | None = None,
         upload_file: FileUpload | None = None,
         download: PathDownload | None = None,
+        download_database: DatabaseDump | None = None,
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -1859,17 +1981,22 @@ class AsyncPethost:
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FailedPreconditionError, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as read_path; FailedPreconditionError also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. ResourceExhaustedError = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UnavailableError, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as read_path; FailedPreconditionError also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NotFoundError also = a Postgres database the server lacks (the message lists its
+        databases). ResourceExhaustedError = disk full, or too many transfers. UnavailableError = Postgres
+        runs but does not answer yet: try again shortly.
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `upload_archive`, `upload_file`, `download`.
+        At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
         """
-        return _convert.create_transfer_response_from_wire(await self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download)))
+        return _convert.create_transfer_response_from_wire(await self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download, download_database=download_database)))
 
     def watch_operation(
         self,

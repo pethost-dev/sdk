@@ -1,7 +1,7 @@
 # Pethost for Python
 
 The Python SDK for [Pethost](https://pethost.dev), hosting for Docker Compose projects on a
-machine of your own. It has the 14 calls of Pethost's API, the ones an agent has through its
+machine of your own. It has the 15 calls of Pethost's API, the ones an agent has through its
 MCP server: read the machine and its projects, deploy, read logs and HTTP requests, run
 commands, move files. It has the API's streams too, which follow an operation, the logs
 and the requests as they happen. Everything is typed, there is a synchronous client and an
@@ -85,6 +85,7 @@ asyncio.run(main())
 | `get_operation(project_id, ...)` | Get an operation | read-only |
 | `query_http_traffic(project_id, ...)` | Query HTTP traffic | read-only |
 | `query_container_logs(project_id, ...)` | Query container logs | read-only |
+| `link_database(database_project_id, ...)` | Link projects to a database | destructive |
 | `run_service_command(project_id, ...)` | Run a command in a service | destructive |
 | `read_path(project_id, ...)` | Read a file or directory | read-only |
 | `create_transfer(...)` | Upload or download a file | destructive |
@@ -160,7 +161,7 @@ around it.
 A failed call raises a `PethostError`, and its class is the code:
 `CanceledError`, `UnknownError`, `InvalidArgumentError`, `DeadlineExceededError`, `NotFoundError`, `AlreadyExistsError`, `PermissionDeniedError`, `ResourceExhaustedError`, `FailedPreconditionError`, `AbortedError`, `OutOfRangeError`, `UnimplementedError`, `InternalError`, `UnavailableError`, `DataLossError`, `UnauthenticatedError`.
 `error.message` is prose for people. What a program branches on, beside the class, is
-`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending`, `NoMachine`, or `None`.
+`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending`, `DatabaseLinkRefusal`, `NoMachine`, or `None`.
 
 ```python
 from pethost import NotFoundError, Pethost, PethostError
@@ -230,7 +231,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 - **Nightly backups:** encrypted, stored off the machine, kept for 14 days.
 - **SSH and SFTP** into any container, and a terminal in the panel.
 - **Docker Compose, as written:** a project is a Compose file, and the same file runs anywhere
-  else Docker does. A database is one more service in it, at no extra cost.
+  else Docker does. A database is one click, Postgres or Valkey, with a page for connecting
+  your apps, at no extra cost.
 - **In the EU:** your data lives on your machine, and requests to your sites go straight to
   it, never through our panel.
 

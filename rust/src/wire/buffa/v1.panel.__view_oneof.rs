@@ -140,6 +140,11 @@ pub mod create_transfer_request {
                 super::super::super::super::__buffa::view::PathDownloadView<'a>,
             >,
         ),
+        DownloadDatabase(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::DatabaseDumpView<'a>,
+            >,
+        ),
     }
 }
 pub mod file_upload {

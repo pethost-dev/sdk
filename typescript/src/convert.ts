@@ -109,6 +109,7 @@ const fromProjectProblemKind: Record<w.ProjectProblemKind, p.ProjectProblemKind 
   [w.ProjectProblemKind.SITE_DOWN]: "SITE_DOWN",
   [w.ProjectProblemKind.HTTP_ERRORS]: "HTTP_ERRORS",
   [w.ProjectProblemKind.HTTP_SLOW]: "HTTP_SLOW",
+  [w.ProjectProblemKind.DATABASE_SETUP]: "DATABASE_SETUP",
 };
 const toProjectProblemKind: Record<p.ProjectProblemKind, w.ProjectProblemKind> = {
   DEPLOY_FAILED: w.ProjectProblemKind.DEPLOY_FAILED,
@@ -124,6 +125,7 @@ const toProjectProblemKind: Record<p.ProjectProblemKind, w.ProjectProblemKind> =
   SITE_DOWN: w.ProjectProblemKind.SITE_DOWN,
   HTTP_ERRORS: w.ProjectProblemKind.HTTP_ERRORS,
   HTTP_SLOW: w.ProjectProblemKind.HTTP_SLOW,
+  DATABASE_SETUP: w.ProjectProblemKind.DATABASE_SETUP,
 };
 
 const fromServicesActionKind: Record<w.ServicesActionKind, p.ServicesActionKind | undefined> = {
@@ -256,6 +258,16 @@ const toDeployFailureReason: Record<p.DeployFailureReason, w.DeployFailureReason
   BUILD_MEMORY_UNAVAILABLE: w.DeployFailureReason.BUILD_MEMORY_UNAVAILABLE,
 };
 
+const fromDatabaseEngine: Record<w.DatabaseEngine, p.DatabaseEngine | undefined> = {
+  [w.DatabaseEngine.UNSPECIFIED]: undefined,
+  [w.DatabaseEngine.POSTGRES]: "POSTGRES",
+  [w.DatabaseEngine.VALKEY]: "VALKEY",
+};
+const toDatabaseEngine: Record<p.DatabaseEngine, w.DatabaseEngine> = {
+  POSTGRES: w.DatabaseEngine.POSTGRES,
+  VALKEY: w.DatabaseEngine.VALKEY,
+};
+
 const fromTrafficMetric: Record<w.TrafficMetric, p.TrafficMetric | undefined> = {
   [w.TrafficMetric.UNSPECIFIED]: undefined,
   [w.TrafficMetric.SERVER_ERRORS]: "SERVER_ERRORS",
@@ -334,6 +346,18 @@ const toFileLocation: Record<p.FileLocation, w.FileLocation> = {
   PROJECT_FILES: w.FileLocation.PROJECT_FILES,
 };
 
+const fromDatabaseLinkRefusalReason: Record<w.DatabaseLinkRefusalReason, p.DatabaseLinkRefusalReason | undefined> = {
+  [w.DatabaseLinkRefusalReason.UNSPECIFIED]: undefined,
+  [w.DatabaseLinkRefusalReason.APP_IS_DATABASE]: "APP_IS_DATABASE",
+  [w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN]: "SERVICE_NAME_TAKEN",
+  [w.DatabaseLinkRefusalReason.TOO_MANY_LINKS]: "TOO_MANY_LINKS",
+};
+const toDatabaseLinkRefusalReason: Record<p.DatabaseLinkRefusalReason, w.DatabaseLinkRefusalReason> = {
+  APP_IS_DATABASE: w.DatabaseLinkRefusalReason.APP_IS_DATABASE,
+  SERVICE_NAME_TAKEN: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN,
+  TOO_MANY_LINKS: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS,
+};
+
 const fromNoMachineReason: Record<w.NoMachineReason, p.NoMachineReason | undefined> = {
   [w.NoMachineReason.UNSPECIFIED]: undefined,
   [w.NoMachineReason.NO_PLAN]: "NO_PLAN",
@@ -399,6 +423,8 @@ export function fromMachine(m: w.Machine): p.Machine {
     scheduledRestartTime: m.scheduledRestartTime && toDate(m.scheduledRestartTime),
     sessions: m.sessions.map(fromMachineSession),
     alertChannels: m.alertChannels.map(fromAlertDestination),
+    databaseEngines: m.databaseEngines.map(fromDatabaseEngineOffer),
+    memoryLimitsBytes: m.memoryLimitsBytes,
   });
 }
 
@@ -430,6 +456,8 @@ export function toMachine(m: p.Machine): MessageInitShape<typeof w.MachineSchema
     scheduledRestartTime: m.scheduledRestartTime && toTimestamp(m.scheduledRestartTime),
     sessions: m.sessions?.map(toMachineSession),
     alertChannels: m.alertChannels?.map(toAlertDestination),
+    databaseEngines: m.databaseEngines?.map(toDatabaseEngineOffer),
+    memoryLimitsBytes: m.memoryLimitsBytes || undefined,
   } satisfies Fields<w.Machine>;
 }
 
@@ -663,6 +691,7 @@ export function fromProjectSummary(m: w.ProjectSummary): p.ProjectSummary {
     runningOperations: m.runningOperations.map(fromOperation),
     pinned: m.pinned,
     diskUsedBytes: m.diskUsedBytes,
+    database: m.database && fromDatabaseSummary(m.database),
   });
 }
 
@@ -681,6 +710,7 @@ export function toProjectSummary(m: p.ProjectSummary): MessageInitShape<typeof w
     runningOperations: m.runningOperations?.map(toOperation),
     pinned: m.pinned || undefined,
     diskUsedBytes: m.diskUsedBytes || undefined,
+    database: m.database && toDatabaseSummary(m.database),
   } satisfies Fields<w.ProjectSummary>;
 }
 
@@ -784,6 +814,8 @@ export function fromProject(m: w.Project): p.Project {
     incidents: m.incidents.map(fromIncident),
     moreIncidents: m.moreIncidents,
     uptimeDays: m.uptimeDays.map(fromUptimeDay),
+    database: m.database && fromDatabase(m.database),
+    linkedDatabases: m.linkedDatabases,
   });
 }
 
@@ -815,6 +847,8 @@ export function toProject(m: p.Project): MessageInitShape<typeof w.ProjectSchema
     incidents: m.incidents?.map(toIncident),
     moreIncidents: m.moreIncidents || undefined,
     uptimeDays: m.uptimeDays?.map(toUptimeDay),
+    database: m.database && toDatabase(m.database),
+    linkedDatabases: m.linkedDatabases && [...m.linkedDatabases],
   } satisfies Fields<w.Project>;
 }
 
@@ -1215,6 +1249,7 @@ export function fromCreateProjectRequest(m: w.CreateProjectRequest): p.CreatePro
     timeoutSeconds: m.timeoutSeconds,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    database: named(fromDatabaseEngine, m.database, "CreateProjectRequest.database"),
   });
 }
 
@@ -1228,6 +1263,7 @@ export function toCreateProjectRequest(m: p.CreateProjectRequest): MessageInitSh
     timeoutSeconds: m.timeoutSeconds || undefined,
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
+    database: m.database && toDatabaseEngine[m.database],
   } satisfies Fields<w.CreateProjectRequest>;
 }
 
@@ -1598,6 +1634,142 @@ export function toRunProjectActionResponse(m: p.RunProjectActionResponse): Messa
     project: m.project && toProject(m.project),
     log: m.log?.map(toOperationLogLine),
   } satisfies Fields<w.RunProjectActionResponse>;
+}
+
+export function fromDatabase(m: w.Database): p.Database {
+  return compact<p.Database>({
+    engine: known(fromDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion,
+    serverVersion: m.serverVersion,
+    memoryLimitBytes: m.memoryLimitBytes,
+    dataBytes: m.dataBytes,
+    connections: m.connections,
+    maxConnections: m.maxConnections,
+    linkedProjects: m.linkedProjects,
+    connection: m.connection && fromDatabaseConnection(m.connection),
+    service: m.service,
+    volume: m.volume,
+  });
+}
+
+export function toDatabase(m: p.Database): MessageInitShape<typeof w.DatabaseSchema> {
+  return {
+    engine: numbered(toDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion || undefined,
+    serverVersion: m.serverVersion || undefined,
+    memoryLimitBytes: m.memoryLimitBytes || undefined,
+    dataBytes: m.dataBytes || undefined,
+    connections: m.connections || undefined,
+    maxConnections: m.maxConnections || undefined,
+    linkedProjects: m.linkedProjects && [...m.linkedProjects],
+    connection: m.connection && toDatabaseConnection(m.connection),
+    service: m.service || undefined,
+    volume: m.volume || undefined,
+  } satisfies Fields<w.Database>;
+}
+
+export function fromDatabaseConnection(m: w.DatabaseConnection): p.DatabaseConnection {
+  return compact<p.DatabaseConnection>({
+    host: m.host,
+    port: m.port,
+    user: m.user,
+    database: m.database,
+    password: m.password,
+    url: m.url,
+    localUrl: m.localUrl,
+  });
+}
+
+export function toDatabaseConnection(m: p.DatabaseConnection): MessageInitShape<typeof w.DatabaseConnectionSchema> {
+  return {
+    host: m.host || undefined,
+    port: m.port || undefined,
+    user: m.user || undefined,
+    database: m.database || undefined,
+    password: m.password || undefined,
+    url: m.url || undefined,
+    localUrl: m.localUrl || undefined,
+  } satisfies Fields<w.DatabaseConnection>;
+}
+
+export function fromDatabaseSummary(m: w.DatabaseSummary): p.DatabaseSummary {
+  return compact<p.DatabaseSummary>({
+    engine: known(fromDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion,
+    dataBytes: m.dataBytes,
+    connections: m.connections,
+    linkedProjects: m.linkedProjects,
+    serverVersion: m.serverVersion,
+  });
+}
+
+export function toDatabaseSummary(m: p.DatabaseSummary): MessageInitShape<typeof w.DatabaseSummarySchema> {
+  return {
+    engine: numbered(toDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion || undefined,
+    dataBytes: m.dataBytes || undefined,
+    connections: m.connections || undefined,
+    linkedProjects: m.linkedProjects && [...m.linkedProjects],
+    serverVersion: m.serverVersion || undefined,
+  } satisfies Fields<w.DatabaseSummary>;
+}
+
+export function fromDatabaseEngineOffer(m: w.DatabaseEngineOffer): p.DatabaseEngineOffer {
+  return compact<p.DatabaseEngineOffer>({
+    engine: known(fromDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion,
+    sizes: m.sizes.map(fromDatabaseSizeChoice),
+    defaultMemoryLimitBytes: m.defaultMemoryLimitBytes,
+  });
+}
+
+export function toDatabaseEngineOffer(m: p.DatabaseEngineOffer): MessageInitShape<typeof w.DatabaseEngineOfferSchema> {
+  return {
+    engine: numbered(toDatabaseEngine, m.engine),
+    majorVersion: m.majorVersion || undefined,
+    sizes: m.sizes?.map(toDatabaseSizeChoice),
+    defaultMemoryLimitBytes: m.defaultMemoryLimitBytes || undefined,
+  } satisfies Fields<w.DatabaseEngineOffer>;
+}
+
+export function fromDatabaseSizeChoice(m: w.DatabaseSizeChoice): p.DatabaseSizeChoice {
+  return compact<p.DatabaseSizeChoice>({
+    memoryLimitBytes: m.memoryLimitBytes,
+  });
+}
+
+export function toDatabaseSizeChoice(m: p.DatabaseSizeChoice): MessageInitShape<typeof w.DatabaseSizeChoiceSchema> {
+  return {
+    memoryLimitBytes: m.memoryLimitBytes || undefined,
+  } satisfies Fields<w.DatabaseSizeChoice>;
+}
+
+export function fromLinkDatabaseRequest(m: w.LinkDatabaseRequest): p.LinkDatabaseRequest {
+  return compact<p.LinkDatabaseRequest>({
+    databaseProjectId: m.databaseProjectId,
+    link: m.link,
+    unlink: m.unlink,
+  });
+}
+
+export function toLinkDatabaseRequest(m: p.LinkDatabaseRequest): MessageInitShape<typeof w.LinkDatabaseRequestSchema> {
+  return {
+    databaseProjectId: m.databaseProjectId || undefined,
+    link: m.link && [...m.link],
+    unlink: m.unlink && [...m.unlink],
+  } satisfies Fields<w.LinkDatabaseRequest>;
+}
+
+export function fromLinkDatabaseResponse(m: w.LinkDatabaseResponse): p.LinkDatabaseResponse {
+  return compact<p.LinkDatabaseResponse>({
+    project: m.project && fromProject(m.project),
+  });
+}
+
+export function toLinkDatabaseResponse(m: p.LinkDatabaseResponse): MessageInitShape<typeof w.LinkDatabaseResponseSchema> {
+  return {
+    project: m.project && toProject(m.project),
+  } satisfies Fields<w.LinkDatabaseResponse>;
 }
 
 export function fromSetProjectAlertsRequest(m: w.SetProjectAlertsRequest): p.SetProjectAlertsRequest {
@@ -2264,11 +2436,12 @@ export function fromCreateTransferRequest(m: w.CreateTransferRequest): p.CreateT
   return { ...fromCreateTransferRequest_transfer(m.transfer) };
 }
 
-function fromCreateTransferRequest_transfer(o: w.CreateTransferRequest["transfer"]): Part<p.CreateTransferRequest, "uploadArchive" | "uploadFile" | "download"> {
+function fromCreateTransferRequest_transfer(o: w.CreateTransferRequest["transfer"]): Part<p.CreateTransferRequest, "uploadArchive" | "uploadFile" | "download" | "downloadDatabase"> {
   switch (o.case) {
     case "uploadArchive": return { uploadArchive: fromArchiveUpload(o.value) };
     case "uploadFile": return { uploadFile: fromFileUpload(o.value) };
     case "download": return { download: fromPathDownload(o.value) };
+    case "downloadDatabase": return { downloadDatabase: fromDatabaseDump(o.value) };
     case undefined: return {};
     default: o satisfies never; return {};
   }
@@ -2281,11 +2454,12 @@ export function toCreateTransferRequest(m: p.CreateTransferRequest): MessageInit
 }
 
 function toCreateTransferRequest_transfer(m: p.CreateTransferRequest): MessageInitShape<typeof w.CreateTransferRequestSchema>["transfer"] {
-  written<Unwritten<MessageInitShape<typeof w.CreateTransferRequestSchema>["transfer"], "uploadArchive" | "uploadFile" | "download">>();
+  written<Unwritten<MessageInitShape<typeof w.CreateTransferRequestSchema>["transfer"], "uploadArchive" | "uploadFile" | "download" | "downloadDatabase">>();
   const set: NonNullable<MessageInitShape<typeof w.CreateTransferRequestSchema>["transfer"]>[] = [];
   if (m.uploadArchive !== undefined) set.push({ case: "uploadArchive", value: toArchiveUpload(m.uploadArchive) });
   if (m.uploadFile !== undefined) set.push({ case: "uploadFile", value: toFileUpload(m.uploadFile) });
   if (m.download !== undefined) set.push({ case: "download", value: toPathDownload(m.download) });
+  if (m.downloadDatabase !== undefined) set.push({ case: "downloadDatabase", value: toDatabaseDump(m.downloadDatabase) });
   return only("transfer", set);
 }
 
@@ -2365,6 +2539,20 @@ function toPathDownload_root(m: p.PathDownloadInput): MessageInitShape<typeof w.
   return only("root", set);
 }
 
+export function fromDatabaseDump(m: w.DatabaseDump): p.DatabaseDumpInput {
+  return compact<p.DatabaseDumpInput>({
+    projectId: m.projectId,
+    database: m.database,
+  });
+}
+
+export function toDatabaseDump(m: p.DatabaseDumpInput): MessageInitShape<typeof w.DatabaseDumpSchema> {
+  return {
+    projectId: m.projectId || undefined,
+    database: m.database || undefined,
+  } satisfies Fields<w.DatabaseDump>;
+}
+
 export function fromCreateTransferResponse(m: w.CreateTransferResponse): p.CreateTransferResponse {
   return compact<p.CreateTransferResponse>({
     url: m.url,
@@ -2435,6 +2623,22 @@ export function fromMachineUpdatePending(_: w.MachineUpdatePending): p.MachineUp
 export function toMachineUpdatePending(_: p.MachineUpdatePending): MessageInitShape<typeof w.MachineUpdatePendingSchema> {
   return {
   } satisfies Fields<w.MachineUpdatePending>;
+}
+
+export function fromDatabaseLinkRefusal(m: w.DatabaseLinkRefusal): p.DatabaseLinkRefusal {
+  return compact<p.DatabaseLinkRefusal>({
+    projectId: m.projectId,
+    reason: known(fromDatabaseLinkRefusalReason, m.reason),
+    service: m.service,
+  });
+}
+
+export function toDatabaseLinkRefusal(m: p.DatabaseLinkRefusal): MessageInitShape<typeof w.DatabaseLinkRefusalSchema> {
+  return {
+    projectId: m.projectId || undefined,
+    reason: numbered(toDatabaseLinkRefusalReason, m.reason),
+    service: m.service || undefined,
+  } satisfies Fields<w.DatabaseLinkRefusal>;
 }
 
 export function fromNoMachine(m: w.NoMachine): p.NoMachine {

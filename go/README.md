@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.2.7
+go get github.com/pethost-dev/sdk/go@v0.2.8
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -107,6 +107,7 @@ response or an error; a stream returns its responses one by one, as "Streams" be
 | `GetOperation` | Get an operation | read-only |
 | `QueryHTTPTraffic` | Query HTTP traffic | read-only |
 | `QueryContainerLogs` | Query container logs | read-only |
+| `LinkDatabase` | Link projects to a database | destructive |
 | `RunServiceCommand` | Run a command in a service | destructive |
 | `ReadPath` | Read a file or directory | read-only |
 | `CreateTransfer` | Upload or download a file | destructive |
@@ -235,7 +236,7 @@ Every error a method returns is a `*pethost.Error`. Its `Code` says what kind of
 is, under the name the API's documentation uses: `pethost.CodeNotFound` prints as `NOT_FOUND`.
 Its `Message` says what failed and what to do, for people. Some failures carry a detail to act
 on, each a field of the error that is nil when the API sent none:
-`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending` and `NoMachine`.
+`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `MachineUpdatePending`, `DatabaseLinkRefusal` and `NoMachine`.
 
 ```go
 response, err := client.GetMachine(ctx, nil)
@@ -277,7 +278,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 - **Nightly backups:** encrypted, stored off the machine, kept for 14 days.
 - **SSH and SFTP** into any container, and a terminal in the panel.
 - **Docker Compose, as written:** a project is a Compose file, and the same file runs anywhere
-  else Docker does. A database is one more service in it, at no extra cost.
+  else Docker does. A database is one click, Postgres or Valkey, with a page for connecting
+  your apps, at no extra cost.
 - **In the EU:** your data lives on your machine, and requests to your sites go straight to
   it, never through our panel.
 

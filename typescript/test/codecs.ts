@@ -61,6 +61,9 @@ import * as p from "pethost";
   m.converts("Machine.scheduled_restart_time", { scheduledRestartTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Machine(), scheduledRestartTime: new Date(1790000000123) });
   m.converts("Machine.sessions", { sessions: [{}] }, { ...empty.Machine(), sessions: [empty.MachineSession()] });
   m.converts("Machine.alert_channels", { alertChannels: [{}] }, { ...empty.Machine(), alertChannels: [empty.AlertDestination()] });
+  m.converts("Machine.database_engines", { databaseEngines: [{}] }, { ...empty.Machine(), databaseEngines: [empty.DatabaseEngineOffer()] });
+  m.converts("Machine.memory_limits_bytes", { memoryLimitsBytes: 9007199254740993n }, { ...empty.Machine(), memoryLimitsBytes: 9007199254740993n });
+  m.reads("Machine.memory_limits_bytes: as a number", { memory_limits_bytes: 1028 }, { ...empty.Machine(), memoryLimitsBytes: 1028n });
 }
 
 {
@@ -219,6 +222,7 @@ import * as p from "pethost";
   m.converts("ProjectSummary.pinned", { pinned: true }, { ...empty.ProjectSummary(), pinned: true });
   m.converts("ProjectSummary.disk_used_bytes", { diskUsedBytes: 9007199254740993n }, { ...empty.ProjectSummary(), diskUsedBytes: 9007199254740993n });
   m.reads("ProjectSummary.disk_used_bytes: as a number", { disk_used_bytes: 1013 }, { ...empty.ProjectSummary(), diskUsedBytes: 1013n });
+  m.converts("ProjectSummary.database", { database: {} }, { ...empty.ProjectSummary(), database: empty.DatabaseSummary() });
 }
 
 {
@@ -255,6 +259,7 @@ import * as p from "pethost";
   m.converts("ProjectProblem.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.ProjectProblem(), kind: "SITE_DOWN" });
   m.converts("ProjectProblem.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.ProjectProblem(), kind: "HTTP_ERRORS" });
   m.converts("ProjectProblem.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.ProjectProblem(), kind: "HTTP_SLOW" });
+  m.converts("ProjectProblem.kind: DATABASE_SETUP", { kind: w.ProjectProblemKind.DATABASE_SETUP }, { ...empty.ProjectProblem(), kind: "DATABASE_SETUP" });
   m.converts("ProjectProblem.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.ProjectProblem(), kind: 9999 });
   m.refuses("ProjectProblem.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("ProjectProblem.service", { service: "service" }, { ...empty.ProjectProblem(), service: "service" });
@@ -320,6 +325,8 @@ import * as p from "pethost";
   m.converts("Project.incidents", { incidents: [{}] }, { ...empty.Project(), incidents: [empty.Incident()] });
   m.converts("Project.more_incidents", { moreIncidents: true }, { ...empty.Project(), moreIncidents: true });
   m.converts("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
+  m.converts("Project.database", { database: {} }, { ...empty.Project(), database: empty.Database() });
+  m.converts("Project.linked_databases", { linkedDatabases: ["linked_databases", ""] }, { ...empty.Project(), linkedDatabases: ["linked_databases", ""] });
 }
 
 {
@@ -601,6 +608,10 @@ import * as p from "pethost";
   m.converts("CreateProjectRequest.operation_id", { operationId: "operation_id" }, { ...empty.CreateProjectRequest(), operationId: "operation_id" });
   m.converts("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { ...empty.CreateProjectRequest(), waitSeconds: 1009 });
   m.converts("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateProjectRequest(), waitSeconds: 0 });
+  m.converts("CreateProjectRequest.database: POSTGRES", { database: w.DatabaseEngine.POSTGRES }, { ...empty.CreateProjectRequest(), database: "POSTGRES" });
+  m.converts("CreateProjectRequest.database: VALKEY", { database: w.DatabaseEngine.VALKEY }, { ...empty.CreateProjectRequest(), database: "VALKEY" });
+  m.refuses("CreateProjectRequest.database: a name newer than the SDK", { database: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.refuses("CreateProjectRequest.database: a number newer than the SDK", { database: 9999 }, "9999");
 }
 
 {
@@ -799,6 +810,95 @@ import * as p from "pethost";
 }
 
 {
+  const m = json(p.Database, w.DatabaseSchema);
+  m.converts("Database: nothing set", {}, empty.Database());
+  m.refuses("Database: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("Database.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.Database(), engine: "POSTGRES" });
+  m.converts("Database.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.Database(), engine: "VALKEY" });
+  m.converts("Database.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.Database(), engine: 9999 });
+  m.refuses("Database.engine: a name newer than the SDK", { engine: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("Database.major_version", { majorVersion: 1002 }, { ...empty.Database(), majorVersion: 1002 });
+  m.converts("Database.server_version", { serverVersion: "server_version" }, { ...empty.Database(), serverVersion: "server_version" });
+  m.converts("Database.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.Database(), memoryLimitBytes: 9007199254740993n });
+  m.reads("Database.memory_limit_bytes: as a number", { memory_limit_bytes: 1004 }, { ...empty.Database(), memoryLimitBytes: 1004n });
+  m.converts("Database.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.Database(), dataBytes: 9007199254740993n });
+  m.reads("Database.data_bytes: as a number", { data_bytes: 1005 }, { ...empty.Database(), dataBytes: 1005n });
+  m.converts("Database.connections", { connections: 1006 }, { ...empty.Database(), connections: 1006 });
+  m.converts("Database.max_connections", { maxConnections: 1007 }, { ...empty.Database(), maxConnections: 1007 });
+  m.converts("Database.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.Database(), linkedProjects: ["linked_projects", ""] });
+  m.converts("Database.connection", { connection: {} }, { ...empty.Database(), connection: empty.DatabaseConnection() });
+  m.converts("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
+  m.converts("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
+}
+
+{
+  const m = json(p.DatabaseConnection, w.DatabaseConnectionSchema);
+  m.converts("DatabaseConnection: nothing set", {}, empty.DatabaseConnection());
+  m.refuses("DatabaseConnection: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseConnection.host", { host: "host" }, { ...empty.DatabaseConnection(), host: "host" });
+  m.converts("DatabaseConnection.port", { port: 1002 }, { ...empty.DatabaseConnection(), port: 1002 });
+  m.converts("DatabaseConnection.user", { user: "user" }, { ...empty.DatabaseConnection(), user: "user" });
+  m.converts("DatabaseConnection.database", { database: "database" }, { ...empty.DatabaseConnection(), database: "database" });
+  m.converts("DatabaseConnection.password", { password: "password" }, { ...empty.DatabaseConnection(), password: "password" });
+  m.converts("DatabaseConnection.url", { url: "url" }, { ...empty.DatabaseConnection(), url: "url" });
+  m.converts("DatabaseConnection.local_url", { localUrl: "local_url" }, { ...empty.DatabaseConnection(), localUrl: "local_url" });
+}
+
+{
+  const m = json(p.DatabaseSummary, w.DatabaseSummarySchema);
+  m.converts("DatabaseSummary: nothing set", {}, empty.DatabaseSummary());
+  m.refuses("DatabaseSummary: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseSummary.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseSummary(), engine: "POSTGRES" });
+  m.converts("DatabaseSummary.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseSummary(), engine: "VALKEY" });
+  m.converts("DatabaseSummary.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseSummary(), engine: 9999 });
+  m.refuses("DatabaseSummary.engine: a name newer than the SDK", { engine: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("DatabaseSummary.major_version", { majorVersion: 1002 }, { ...empty.DatabaseSummary(), majorVersion: 1002 });
+  m.converts("DatabaseSummary.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.DatabaseSummary(), dataBytes: 9007199254740993n });
+  m.reads("DatabaseSummary.data_bytes: as a number", { data_bytes: 1003 }, { ...empty.DatabaseSummary(), dataBytes: 1003n });
+  m.converts("DatabaseSummary.connections", { connections: 1004 }, { ...empty.DatabaseSummary(), connections: 1004 });
+  m.converts("DatabaseSummary.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.DatabaseSummary(), linkedProjects: ["linked_projects", ""] });
+  m.converts("DatabaseSummary.server_version", { serverVersion: "server_version" }, { ...empty.DatabaseSummary(), serverVersion: "server_version" });
+}
+
+{
+  const m = json(p.DatabaseEngineOffer, w.DatabaseEngineOfferSchema);
+  m.converts("DatabaseEngineOffer: nothing set", {}, empty.DatabaseEngineOffer());
+  m.refuses("DatabaseEngineOffer: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseEngineOffer.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseEngineOffer(), engine: "POSTGRES" });
+  m.converts("DatabaseEngineOffer.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseEngineOffer(), engine: "VALKEY" });
+  m.converts("DatabaseEngineOffer.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseEngineOffer(), engine: 9999 });
+  m.refuses("DatabaseEngineOffer.engine: a name newer than the SDK", { engine: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("DatabaseEngineOffer.major_version", { majorVersion: 1002 }, { ...empty.DatabaseEngineOffer(), majorVersion: 1002 });
+  m.converts("DatabaseEngineOffer.sizes", { sizes: [{}] }, { ...empty.DatabaseEngineOffer(), sizes: [empty.DatabaseSizeChoice()] });
+  m.converts("DatabaseEngineOffer.default_memory_limit_bytes", { defaultMemoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 9007199254740993n });
+  m.reads("DatabaseEngineOffer.default_memory_limit_bytes: as a number", { default_memory_limit_bytes: 1004 }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 1004n });
+}
+
+{
+  const m = json(p.DatabaseSizeChoice, w.DatabaseSizeChoiceSchema);
+  m.converts("DatabaseSizeChoice: nothing set", {}, empty.DatabaseSizeChoice());
+  m.refuses("DatabaseSizeChoice: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseSizeChoice.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseSizeChoice(), memoryLimitBytes: 9007199254740993n });
+  m.reads("DatabaseSizeChoice.memory_limit_bytes: as a number", { memory_limit_bytes: 1001 }, { ...empty.DatabaseSizeChoice(), memoryLimitBytes: 1001n });
+}
+
+{
+  const m = json(p.LinkDatabaseRequest, w.LinkDatabaseRequestSchema);
+  m.converts("LinkDatabaseRequest: nothing set", {}, empty.LinkDatabaseRequest());
+  m.refuses("LinkDatabaseRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("LinkDatabaseRequest.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.LinkDatabaseRequest(), databaseProjectId: "database_project_id" });
+  m.converts("LinkDatabaseRequest.link", { link: ["link", ""] }, { ...empty.LinkDatabaseRequest(), link: ["link", ""] });
+  m.converts("LinkDatabaseRequest.unlink", { unlink: ["unlink", ""] }, { ...empty.LinkDatabaseRequest(), unlink: ["unlink", ""] });
+}
+
+{
+  const m = json(p.LinkDatabaseResponse, w.LinkDatabaseResponseSchema);
+  m.converts("LinkDatabaseResponse: nothing set", {}, empty.LinkDatabaseResponse());
+  m.refuses("LinkDatabaseResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("LinkDatabaseResponse.project", { project: {} }, { ...empty.LinkDatabaseResponse(), project: empty.Project() });
+}
+
+{
   const m = json(p.SetProjectAlertsRequest, w.SetProjectAlertsRequestSchema);
   m.converts("SetProjectAlertsRequest: nothing set", {}, empty.SetProjectAlertsRequest());
   m.refuses("SetProjectAlertsRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
@@ -920,6 +1020,7 @@ import * as p from "pethost";
   m.converts("Incident.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.Incident(), kind: "SITE_DOWN" });
   m.converts("Incident.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.Incident(), kind: "HTTP_ERRORS" });
   m.converts("Incident.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.Incident(), kind: "HTTP_SLOW" });
+  m.converts("Incident.kind: DATABASE_SETUP", { kind: w.ProjectProblemKind.DATABASE_SETUP }, { ...empty.Incident(), kind: "DATABASE_SETUP" });
   m.converts("Incident.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.Incident(), kind: 9999 });
   m.refuses("Incident.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("Incident.service", { service: "service" }, { ...empty.Incident(), service: "service" });
@@ -1224,6 +1325,7 @@ import * as p from "pethost";
   m.converts("CreateTransferRequest.upload_archive", { transfer: { case: "uploadArchive", value: {} } }, { ...empty.CreateTransferRequest(), uploadArchive: empty.ArchiveUpload() });
   m.converts("CreateTransferRequest.upload_file", { transfer: { case: "uploadFile", value: {} } }, { ...empty.CreateTransferRequest(), uploadFile: empty.FileUpload() });
   m.converts("CreateTransferRequest.download", { transfer: { case: "download", value: {} } }, { ...empty.CreateTransferRequest(), download: empty.PathDownload() });
+  m.converts("CreateTransferRequest.download_database", { transfer: { case: "downloadDatabase", value: {} } }, { ...empty.CreateTransferRequest(), downloadDatabase: empty.DatabaseDump() });
 }
 
 {
@@ -1255,6 +1357,14 @@ import * as p from "pethost";
   m.converts("PathDownload.volume", { root: { case: "volume", value: "volume" } }, { ...empty.PathDownload(), volume: "volume" });
   m.converts("PathDownload.volume: zero", { root: { case: "volume", value: "" } }, { ...empty.PathDownload(), volume: "" });
   m.converts("PathDownload.path", { path: "path" }, { ...empty.PathDownload(), path: "path" });
+}
+
+{
+  const m = json(p.DatabaseDump, w.DatabaseDumpSchema);
+  m.converts("DatabaseDump: nothing set", {}, empty.DatabaseDump());
+  m.refuses("DatabaseDump: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseDump.project_id", { projectId: "project_id" }, { ...empty.DatabaseDump(), projectId: "project_id" });
+  m.converts("DatabaseDump.database", { database: "database" }, { ...empty.DatabaseDump(), database: "database" });
 }
 
 {
@@ -1303,6 +1413,19 @@ import * as p from "pethost";
   const m = json(p.MachineUpdatePending, w.MachineUpdatePendingSchema);
   m.converts("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
   m.refuses("MachineUpdatePending: a field the API does not have", { no_such_field: true }, "no_such_field");
+}
+
+{
+  const m = json(p.DatabaseLinkRefusal, w.DatabaseLinkRefusalSchema);
+  m.converts("DatabaseLinkRefusal: nothing set", {}, empty.DatabaseLinkRefusal());
+  m.refuses("DatabaseLinkRefusal: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseLinkRefusal.project_id", { projectId: "project_id" }, { ...empty.DatabaseLinkRefusal(), projectId: "project_id" });
+  m.converts("DatabaseLinkRefusal.reason: APP_IS_DATABASE", { reason: w.DatabaseLinkRefusalReason.APP_IS_DATABASE }, { ...empty.DatabaseLinkRefusal(), reason: "APP_IS_DATABASE" });
+  m.converts("DatabaseLinkRefusal.reason: SERVICE_NAME_TAKEN", { reason: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN }, { ...empty.DatabaseLinkRefusal(), reason: "SERVICE_NAME_TAKEN" });
+  m.converts("DatabaseLinkRefusal.reason: TOO_MANY_LINKS", { reason: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS }, { ...empty.DatabaseLinkRefusal(), reason: "TOO_MANY_LINKS" });
+  m.converts("DatabaseLinkRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseLinkRefusalReason }, { ...empty.DatabaseLinkRefusal(), reason: 9999 });
+  m.refuses("DatabaseLinkRefusal.reason: a name newer than the SDK", { reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("DatabaseLinkRefusal.service", { service: "service" }, { ...empty.DatabaseLinkRefusal(), service: "service" });
 }
 
 {

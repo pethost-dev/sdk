@@ -353,6 +353,7 @@ pub mod create_transfer_request {
         UploadArchive(::buffa::alloc::boxed::Box<super::super::super::ArchiveUpload>),
         UploadFile(::buffa::alloc::boxed::Box<super::super::super::FileUpload>),
         Download(::buffa::alloc::boxed::Box<super::super::super::PathDownload>),
+        DownloadDatabase(::buffa::alloc::boxed::Box<super::super::super::DatabaseDump>),
     }
     impl ::buffa::Oneof for Transfer {}
     impl From<super::super::super::ArchiveUpload> for Transfer {
@@ -385,6 +386,16 @@ pub mod create_transfer_request {
             Self::Some(Transfer::from(v))
         }
     }
+    impl From<super::super::super::DatabaseDump> for Transfer {
+        fn from(v: super::super::super::DatabaseDump) -> Self {
+            Self::DownloadDatabase(::buffa::alloc::boxed::Box::new(v))
+        }
+    }
+    impl From<super::super::super::DatabaseDump> for ::core::option::Option<Transfer> {
+        fn from(v: super::super::super::DatabaseDump) -> Self {
+            Self::Some(Transfer::from(v))
+        }
+    }
     impl ::serde::Serialize for Transfer {
         fn serialize<S: ::serde::Serializer>(
             &self,
@@ -401,6 +412,9 @@ pub mod create_transfer_request {
                 }
                 Self::Download(v) => {
                     map.serialize_entry("download", &**v)?;
+                }
+                Self::DownloadDatabase(v) => {
+                    map.serialize_entry("download_database", &**v)?;
                 }
             }
             map.end()

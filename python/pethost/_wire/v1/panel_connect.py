@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import panel_pb
-from .panel_pb import CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, ListCommitsRequest, ListCommitsResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
+from .panel_pb import CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -51,8 +51,8 @@ class PanelService(Protocol):
         """
         One project in full: services (state, health, image, the ports it listens on, volumes,
         environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-        snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-        files: ReadPath.
+        snapshots, the last day's HTTP traffic. Env-file values and a database's password
+        (Project.database.connection) only with include_secret_values. Its files: ReadPath.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -72,6 +72,12 @@ class PanelService(Protocol):
         docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
+
+        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+        LinkDatabase the apps that use it.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -126,7 +132,8 @@ class PanelService(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+        predates databases. A deleted project's id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -174,7 +181,9 @@ class PanelService(Protocol):
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -224,6 +233,34 @@ class PanelService(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    async def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
+        """
+        Lets projects reach a database project: inside each linked project the database is the
+        host `<database_project_id>` at its port, and Project.database says how to sign in (its
+        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
+        a database, has a service named or aliased like the database, or there are 20 links already;
+        + MachineUpdatePending = the machine's software predates databases. Answers with the
+        database's Project.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
+        """
+        A database project for the web panel's New database and Restore as a new database: with
+        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
+        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
+        use CreateProject with `database`, then LinkDatabase.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     async def run_service_command(self, request: RunServiceCommandRequest, ctx: RequestContext[RunServiceCommandRequest, RunServiceCommandResponse], /) -> RunServiceCommandResponse:
         """
         Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -267,11 +304,16 @@ class PanelService(Protocol):
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as ReadPath; FAILED_PRECONDITION also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+        databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
+        runs but does not answer yet: try again shortly.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -444,6 +486,26 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                     ),
                     function=svc.query_container_logs,
                 ),
+                "/pethost.panel.v1.PanelService/LinkDatabase": Endpoint.unary(
+                    method=MethodInfo(
+                        name="LinkDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=LinkDatabaseRequest,
+                        output=LinkDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=svc.link_database,
+                ),
+                "/pethost.panel.v1.PanelService/CreateDatabase": Endpoint.unary(
+                    method=MethodInfo(
+                        name="CreateDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=CreateDatabaseRequest,
+                        output=CreateDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=svc.create_database,
+                ),
                 "/pethost.panel.v1.PanelService/RunServiceCommand": Endpoint.unary(
                     method=MethodInfo(
                         name="RunServiceCommand",
@@ -604,8 +666,8 @@ class PanelServiceClient(ConnectClient):
         """
         One project in full: services (state, health, image, the ports it listens on, volumes,
         environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-        snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-        files: ReadPath.
+        snapshots, the last day's HTTP traffic. Env-file values and a database's password
+        (Project.database.connection) only with include_secret_values. Its files: ReadPath.
         """
         return await self.execute_unary(
             request=request,
@@ -643,6 +705,12 @@ class PanelServiceClient(ConnectClient):
         docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
+
+        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+        LinkDatabase the apps that use it.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -697,7 +765,8 @@ class PanelServiceClient(ConnectClient):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+        predates databases. A deleted project's id inherits its snapshots.
         """
         return await self.execute_unary(
             request=request,
@@ -798,7 +867,9 @@ class PanelServiceClient(ConnectClient):
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
         """
         return await self.execute_unary(
             request=request,
@@ -952,6 +1023,68 @@ class PanelServiceClient(ConnectClient):
             use_get=use_get,
         )
 
+    async def link_database(
+        self,
+        request: LinkDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> LinkDatabaseResponse:
+        """
+        Lets projects reach a database project: inside each linked project the database is the
+        host `<database_project_id>` at its port, and Project.database says how to sign in (its
+        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
+        a database, has a service named or aliased like the database, or there are 20 links already;
+        + MachineUpdatePending = the machine's software predates databases. Answers with the
+        database's Project.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="LinkDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=LinkDatabaseRequest,
+                output=LinkDatabaseResponse,
+                idempotency_level=IdempotencyLevel.IDEMPOTENT,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
+    async def create_database(
+        self,
+        request: CreateDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CreateDatabaseResponse:
+        """
+        A database project for the web panel's New database and Restore as a new database: with
+        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
+        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
+        use CreateProject with `database`, then LinkDatabase.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CreateDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=CreateDatabaseRequest,
+                output=CreateDatabaseResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
     async def run_service_command(
         self,
         request: RunServiceCommandRequest,
@@ -1054,11 +1187,16 @@ class PanelServiceClient(ConnectClient):
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as ReadPath; FAILED_PRECONDITION also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+        databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
+        runs but does not answer yet: try again shortly.
         """
         return await self.execute_unary(
             request=request,
@@ -1198,8 +1336,8 @@ class PanelServiceSync(Protocol):
         """
         One project in full: services (state, health, image, the ports it listens on, volumes,
         environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-        snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-        files: ReadPath.
+        snapshots, the last day's HTTP traffic. Env-file values and a database's password
+        (Project.database.connection) only with include_secret_values. Its files: ReadPath.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1219,6 +1357,12 @@ class PanelServiceSync(Protocol):
         docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
+
+        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+        LinkDatabase the apps that use it.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -1273,7 +1417,8 @@ class PanelServiceSync(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+        predates databases. A deleted project's id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1321,7 +1466,9 @@ class PanelServiceSync(Protocol):
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1371,6 +1518,34 @@ class PanelServiceSync(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
+        """
+        Lets projects reach a database project: inside each linked project the database is the
+        host `<database_project_id>` at its port, and Project.database says how to sign in (its
+        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
+        a database, has a service named or aliased like the database, or there are 20 links already;
+        + MachineUpdatePending = the machine's software predates databases. Answers with the
+        database's Project.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
+        """
+        A database project for the web panel's New database and Restore as a new database: with
+        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
+        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
+        use CreateProject with `database`, then LinkDatabase.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     def run_service_command(self, request: RunServiceCommandRequest, ctx: RequestContext[RunServiceCommandRequest, RunServiceCommandResponse], /) -> RunServiceCommandResponse:
         """
         Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -1414,11 +1589,16 @@ class PanelServiceSync(Protocol):
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as ReadPath; FAILED_PRECONDITION also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+        databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
+        runs but does not answer yet: try again shortly.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1589,6 +1769,26 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                     ),
                     function=service.query_container_logs,
                 ),
+                "/pethost.panel.v1.PanelService/LinkDatabase": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="LinkDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=LinkDatabaseRequest,
+                        output=LinkDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=service.link_database,
+                ),
+                "/pethost.panel.v1.PanelService/CreateDatabase": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="CreateDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=CreateDatabaseRequest,
+                        output=CreateDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=service.create_database,
+                ),
                 "/pethost.panel.v1.PanelService/RunServiceCommand": EndpointSync.unary(
                     method=MethodInfo(
                         name="RunServiceCommand",
@@ -1747,8 +1947,8 @@ class PanelServiceClientSync(ConnectClientSync):
         """
         One project in full: services (state, health, image, the ports it listens on, volumes,
         environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-        snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-        files: ReadPath.
+        snapshots, the last day's HTTP traffic. Env-file values and a database's password
+        (Project.database.connection) only with include_secret_values. Its files: ReadPath.
         """
         return self.execute_unary(
             request=request,
@@ -1785,6 +1985,12 @@ class PanelServiceClientSync(ConnectClientSync):
         docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
+
+        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+        LinkDatabase the apps that use it.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -1839,7 +2045,8 @@ class PanelServiceClientSync(ConnectClientSync):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+        predates databases. A deleted project's id inherits its snapshots.
         """
         return self.execute_unary(
             request=request,
@@ -1937,7 +2144,9 @@ class PanelServiceClientSync(ConnectClientSync):
         operation, change the source, delete an undeclared volume or the project. Recreate, back up,
         restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
         the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is.
+        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+        new database): no tool makes one.
         """
         return self.execute_unary(
             request=request,
@@ -2085,6 +2294,66 @@ class PanelServiceClientSync(ConnectClientSync):
             timeout_ms=timeout_ms,
             use_get=use_get,
         )
+    def link_database(
+        self,
+        request: LinkDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> LinkDatabaseResponse:
+        """
+        Lets projects reach a database project: inside each linked project the database is the
+        host `<database_project_id>` at its port, and Project.database says how to sign in (its
+        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
+        a database, has a service named or aliased like the database, or there are 20 links already;
+        + MachineUpdatePending = the machine's software predates databases. Answers with the
+        database's Project.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="LinkDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=LinkDatabaseRequest,
+                output=LinkDatabaseResponse,
+                idempotency_level=IdempotencyLevel.IDEMPOTENT,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+    def create_database(
+        self,
+        request: CreateDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CreateDatabaseResponse:
+        """
+        A database project for the web panel's New database and Restore as a new database: with
+        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
+        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
+        use CreateProject with `database`, then LinkDatabase.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CreateDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=CreateDatabaseRequest,
+                output=CreateDatabaseResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
     def run_service_command(
         self,
         request: RunServiceCommandRequest,
@@ -2184,11 +2453,16 @@ class PanelServiceClientSync(ConnectClientSync):
         - upload_file: one file into a container or volume, replacing any file there (replaces),
           creating parents.
         - download: a file, or a directory as a .tar (file_name).
+        - download_database: a database project's dump, made as it downloads: Postgres's for
+          pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
         Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
-        GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-        get a new URL. Errors as ReadPath; FAILED_PRECONDITION also = downloading neither a file nor
-        a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-        certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+        GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
+        transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
+        downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+        or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+        not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+        databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
+        runs but does not answer yet: try again shortly.
         """
         return self.execute_unary(
             request=request,

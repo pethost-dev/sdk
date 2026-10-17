@@ -48,6 +48,12 @@ type Error struct {
 	// nil = the API sent no such detail.
 	MachineUpdatePending *MachineUpdatePending
 
+	// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or CreateDatabase: a
+	// project of `link` cannot be linked to the database. Nothing changed.
+	//
+	// nil = the API sent no such detail.
+	DatabaseLinkRefusal *DatabaseLinkRefusal
+
 	// Detail of a [CodeFailedPrecondition] error: the account has no machine to run projects on
 	// yet.
 	//
@@ -80,6 +86,8 @@ func fromWireError(err error) error {
 			e.MachineUnreachable = new(fromWireMachineUnreachable(w))
 		case *panelv1.MachineUpdatePending:
 			e.MachineUpdatePending = new(fromWireMachineUpdatePending(w))
+		case *panelv1.DatabaseLinkRefusal:
+			e.DatabaseLinkRefusal = new(fromWireDatabaseLinkRefusal(w))
 		case *panelv1.NoMachine:
 			e.NoMachine = new(fromWireNoMachine(w))
 		}

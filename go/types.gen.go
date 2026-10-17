@@ -96,6 +96,12 @@ type Machine struct {
 	// first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool
 	// does. Empty = alerts reach nobody.
 	AlertChannels []AlertDestination
+	// The databases the machine makes ([Client.CreateProject]'s `database`), one per engine, with
+	// the sizes they may take. Empty = the machine's software predates databases.
+	DatabaseEngines []DatabaseEngineOffer
+	// The sum of every service's memory limit (`mem_limit`): what the projects may take together,
+	// which MemoryTotalBytes does not reserve.
+	MemoryLimitsBytes uint64
 }
 
 // A channel Pethost tells the person of incidents on ([Machine.AlertChannels]).
@@ -290,6 +296,8 @@ type ProjectSummary struct {
 	// Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
 	// with another project counts in both. Measured every few minutes.
 	DiskUsedBytes uint64
+	// Set = a database project ([Client.CreateProject] Database).
+	Database *DatabaseSummary
 }
 
 type ServiceSummary struct {
@@ -321,8 +329,8 @@ type ProjectProblem struct {
 // GetProjectRequest is the request of [Client.GetProject].
 type GetProjectRequest struct {
 	ProjectID string
-	// True = include env-file values ([EnvironmentVariable.Secret]). To edit .env:
-	// [Client.ReadPath] /.env.
+	// True = include env-file values ([EnvironmentVariable.Secret]) and a database's password
+	// ([Project.Database].Connection). To edit .env: [Client.ReadPath] /.env.
 	IncludeSecretValues bool
 	// Only older snapshots: the oldest [Snapshot.CreateTime] seen, to page back. Absent = the
 	// newest.
@@ -412,6 +420,12 @@ type Project struct {
 	MoreIncidents bool
 	// Oldest first, [GetProjectRequest.UptimeDayCount] of them, today's last.
 	UptimeDays []UptimeDay
+	// Set = a database project ([Client.CreateProject] Database): its engine, its state and how
+	// apps sign in.
+	Database *Database
+	// The database projects this one reaches ([Client.LinkDatabase]), each at the host of its
+	// ProjectID.
+	LinkedDatabases []string
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -768,6 +782,9 @@ type CreateProjectRequest struct {
 	OperationID string
 	// As [Client.DeployProject]'s WaitSeconds.
 	WaitSeconds *uint32
+	// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, UploadID,
+	// source, XPethost out.
+	Database DatabaseEngine
 }
 
 // CreateProjectResponse is the response of [Client.CreateProject].
@@ -1123,6 +1140,91 @@ type RunProjectActionResponse struct {
 	Log []OperationLogLine
 }
 
+// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+type Database struct {
+	Engine DatabaseEngine
+	// As it was made, e.g. 18.
+	MajorVersion uint32
+	// What the server says it runs, e.g. "18.6". Empty = not answering.
+	ServerVersion string
+	// Its size: its service's `mem_limit` in compose.yaml.
+	MemoryLimitBytes uint64
+	// Postgres: its databases' size; Valkey: its data in memory. On disk: [Project.Volumes].
+	DataBytes uint64
+	// Open now.
+	Connections uint32
+	// Valkey: maxclients.
+	MaxConnections uint32
+	// The projects that reach it ([Client.LinkDatabase]).
+	LinkedProjects []string
+	Connection     *DatabaseConnection
+	// The service of [Project.Services] that runs the database.
+	Service string
+	// The volume of [Project.Volumes] that holds its data.
+	Volume string
+}
+
+// How a linked project signs in, as the apps' user.
+type DatabaseConnection struct {
+	// The database's ProjectID.
+	Host string
+	Port uint32
+	// "app"; Valkey: "default".
+	User string
+	// "app"; Valkey: "0".
+	Database string
+	// Only with [Client.GetProject]'s [GetProjectRequest.IncludeSecretValues].
+	Password string
+	// For the app's .env, e.g. DATABASE_URL=<url>. Without
+	// [GetProjectRequest.IncludeSecretValues], **** stands for the password.
+	URL string
+	// As url, at localhost: what the SSH tunnel to its service gives ([Service.SSHCommand]).
+	LocalURL string
+}
+
+// A database project in brief ([ProjectSummary.Database]).
+type DatabaseSummary struct {
+	Engine       DatabaseEngine
+	MajorVersion uint32
+	// As in Database.
+	DataBytes      uint64
+	Connections    uint32
+	LinkedProjects []string
+	// As in Database: empty = not answering, its figures are zero.
+	ServerVersion string
+}
+
+// An engine the machine makes databases of ([Machine.DatabaseEngines]).
+type DatabaseEngineOffer struct {
+	Engine DatabaseEngine
+	// The major a new database gets, e.g. 18.
+	MajorVersion uint32
+	// Smallest first.
+	Sizes []DatabaseSizeChoice
+	// The size [Client.CreateProject]'s `database` gives.
+	DefaultMemoryLimitBytes uint64
+}
+
+// A size a database may take.
+type DatabaseSizeChoice struct {
+	MemoryLimitBytes uint64
+}
+
+// LinkDatabaseRequest is the request of [Client.LinkDatabase].
+type LinkDatabaseRequest struct {
+	DatabaseProjectID string
+	// App project_ids to link.
+	Link []string
+	// App project_ids to unlink.
+	Unlink []string
+}
+
+// LinkDatabaseResponse is the response of [Client.LinkDatabase].
+type LinkDatabaseResponse struct {
+	// The database, as [Client.GetProject] returns it.
+	Project *Project
+}
+
 // SetProjectAlertsRequest is the request of [Client.SetProjectAlerts].
 type SetProjectAlertsRequest struct {
 	ProjectID string
@@ -1188,7 +1290,8 @@ type TrafficRule struct {
 type ProjectAlerts struct {
 	// Until set: the project's URL at "/" (MachineDefault); none without a route.
 	Checks []SiteCheckState
-	// Until set: 10 or more 5xx in 5 minutes, of every request (MachineDefault).
+	// Until set: 10 or more 5xx in 5 minutes, of every request (MachineDefault); none without a
+	// route.
 	TrafficRules []TrafficRuleState
 	// True = incidents are recorded, nothing is sent.
 	Off bool
@@ -1607,13 +1710,14 @@ type ReadPathResponse struct {
 
 // CreateTransferRequest is the request of [Client.CreateTransfer].
 type CreateTransferRequest struct {
-	// One of [CreateTransferUploadArchive], [CreateTransferUploadFile] or
-	// [CreateTransferDownload]; nil = none.
+	// One of [CreateTransferUploadArchive], [CreateTransferUploadFile], [CreateTransferDownload]
+	// or [CreateTransferDownloadDatabase]; nil = none.
 	Transfer CreateTransferTransfer
 }
 
 // CreateTransferTransfer is what [CreateTransferRequest.Transfer] holds: one of
-// [CreateTransferUploadArchive], [CreateTransferUploadFile] or [CreateTransferDownload].
+// [CreateTransferUploadArchive], [CreateTransferUploadFile], [CreateTransferDownload] or
+// [CreateTransferDownloadDatabase].
 //
 // nil = none.
 type CreateTransferTransfer interface {
@@ -1631,6 +1735,10 @@ type CreateTransferUploadFile FileUpload
 // CreateTransferDownload is a member of [CreateTransferTransfer], with the fields of
 // [PathDownload].
 type CreateTransferDownload PathDownload
+
+// CreateTransferDownloadDatabase is a member of [CreateTransferTransfer], with the fields of
+// [DatabaseDump].
+type CreateTransferDownloadDatabase DatabaseDump
 
 // The project's directory as a zip, tar or tar.gz (told by content), for
 // [Client.CreateProject]'s or [Client.DeployProject]'s upload_id: {} is enough. A single top
@@ -1698,6 +1806,13 @@ type PathDownloadService string
 // In the volume, from its root.
 type PathDownloadVolume string
 
+// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+type DatabaseDump struct {
+	ProjectID string
+	// Postgres: the database to dump. Empty = "app", the apps'.
+	Database string
+}
+
 // CreateTransferResponse is the response of [Client.CreateTransfer].
 type CreateTransferResponse struct {
 	// On the machine's hostname ([Machine.Hostname]); it works once.
@@ -1719,7 +1834,8 @@ type CreateTransferResponse struct {
 	// [CreateTransferUploadFile]: a file is at path now; the upload replaces it.
 	Replaces bool
 	// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
-	// after the project and its service or volume. Empty for an upload.
+	// after the project and its service or volume. [CreateTransferDownloadDatabase]:
+	// "<ProjectID>-<database>.dump" or "<ProjectID>.rdb". Empty for an upload.
 	FileName string
 	// [CreateTransferUploadArchive]: the names Command leaves out of the archive, wherever they
 	// lie in the directory. A program that packs the directory itself leaves out the same.
@@ -1763,6 +1879,18 @@ type MachineUnreachable struct {
 // Detail of a [CodeFailedPrecondition] error: the machine's software predates what was asked.
 // It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
 type MachineUpdatePending struct{}
+
+// DatabaseLinkRefusal is a detail of an [Error]: [Error.DatabaseLinkRefusal].
+//
+// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or CreateDatabase: a
+// project of `link` cannot be linked to the database. Nothing changed.
+type DatabaseLinkRefusal struct {
+	// The first one refused.
+	ProjectID string
+	Reason    DatabaseLinkRefusalReason
+	// SERVICE_NAME_TAKEN: its service.
+	Service string
+}
 
 // NoMachine is a detail of an [Error]: [Error.NoMachine].
 //
@@ -1903,7 +2031,7 @@ func (v MachineSessionKind) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "ProjectProblemKind(14)".
+// and prints as "ProjectProblemKind(15)".
 type ProjectProblemKind int32
 
 const (
@@ -1950,10 +2078,13 @@ const (
 	ProjectProblemKindHTTPErrors ProjectProblemKind = 12
 	// A traffic rule on p95 holds.
 	ProjectProblemKindHTTPSlow ProjectProblemKind = 13
+	// A database the machine has not set up for 2 minutes since it started, or whose apps' user is
+	// gone: the message says the engine's error.
+	ProjectProblemKindDatabaseSetup ProjectProblemKind = 14
 )
 
-// String is the value's name as the API's documentation writes it: "HTTP_SLOW" for
-// [ProjectProblemKindHTTPSlow].
+// String is the value's name as the API's documentation writes it: "DATABASE_SETUP" for
+// [ProjectProblemKindDatabaseSetup].
 func (v ProjectProblemKind) String() string {
 	switch v {
 	case ProjectProblemKindUnspecified:
@@ -1984,6 +2115,8 @@ func (v ProjectProblemKind) String() string {
 		return "HTTP_ERRORS"
 	case ProjectProblemKindHTTPSlow:
 		return "HTTP_SLOW"
+	case ProjectProblemKindDatabaseSetup:
+		return "DATABASE_SETUP"
 	}
 	return "ProjectProblemKind(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2285,6 +2418,30 @@ func (v DeployFailureReason) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
+// and prints as "DatabaseEngine(3)".
+type DatabaseEngine int32
+
+const (
+	DatabaseEngineUnspecified DatabaseEngine = 0
+	DatabaseEnginePostgres    DatabaseEngine = 1
+	DatabaseEngineValkey      DatabaseEngine = 2
+)
+
+// String is the value's name as the API's documentation writes it: "VALKEY" for
+// [DatabaseEngineValkey].
+func (v DatabaseEngine) String() string {
+	switch v {
+	case DatabaseEngineUnspecified:
+		return "UNSPECIFIED"
+	case DatabaseEnginePostgres:
+		return "POSTGRES"
+	case DatabaseEngineValkey:
+		return "VALKEY"
+	}
+	return "DatabaseEngine(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
 // and prints as "TrafficMetric(4)".
 type TrafficMetric int32
 
@@ -2471,6 +2628,37 @@ func (v FileLocation) String() string {
 		return "PROJECT_FILES"
 	}
 	return "FileLocation(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "DatabaseLinkRefusalReason(4)".
+type DatabaseLinkRefusalReason int32
+
+const (
+	DatabaseLinkRefusalReasonUnspecified DatabaseLinkRefusalReason = 0
+	// It is a database itself.
+	DatabaseLinkRefusalReasonAppIsDatabase DatabaseLinkRefusalReason = 1
+	// A service of it is named or aliased like the database, whose host it would hide: rename the
+	// service or its alias.
+	DatabaseLinkRefusalReasonServiceNameTaken DatabaseLinkRefusalReason = 2
+	// The database has 20: unlink one first.
+	DatabaseLinkRefusalReasonTooManyLinks DatabaseLinkRefusalReason = 3
+)
+
+// String is the value's name as the API's documentation writes it: "TOO_MANY_LINKS" for
+// [DatabaseLinkRefusalReasonTooManyLinks].
+func (v DatabaseLinkRefusalReason) String() string {
+	switch v {
+	case DatabaseLinkRefusalReasonUnspecified:
+		return "UNSPECIFIED"
+	case DatabaseLinkRefusalReasonAppIsDatabase:
+		return "APP_IS_DATABASE"
+	case DatabaseLinkRefusalReasonServiceNameTaken:
+		return "SERVICE_NAME_TAKEN"
+	case DatabaseLinkRefusalReasonTooManyLinks:
+		return "TOO_MANY_LINKS"
+	}
+	return "DatabaseLinkRefusalReason(" + strconv.Itoa(int(v)) + ")"
 }
 
 // The API may add values: one that this version of the package does not know keeps its number

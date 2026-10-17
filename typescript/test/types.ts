@@ -14,7 +14,7 @@ declare function accepts<T>(value: T): void;
 declare function a<T>(): T;
 
 optional<p.GetMachineResponse>({ machine: true, projects: false, deletedProjects: false, github: true });
-optional<p.Machine>({ name: false, location: false, sampleTime: true, cpuUsedCores: false, cpuTotalCores: false, memoryUsedBytes: false, memoryTotalBytes: false, diskUsedBytes: false, diskTotalBytes: false, diskUsage: true, hostname: false, sshHostKeyFingerprint: false, sshKeys: false, backupsEnabled: false, snapshotListTime: true, snapshotListFailureMessage: false, backupRetentionHours: false, acmeEnabled: false, appsDomain: false, daemonVersion: false, dockerVersion: false, bootTime: true, restartRequiredTime: true, scheduledRestartTime: true, sessions: false, alertChannels: false });
+optional<p.Machine>({ name: false, location: false, sampleTime: true, cpuUsedCores: false, cpuTotalCores: false, memoryUsedBytes: false, memoryTotalBytes: false, diskUsedBytes: false, diskTotalBytes: false, diskUsage: true, hostname: false, sshHostKeyFingerprint: false, sshKeys: false, backupsEnabled: false, snapshotListTime: true, snapshotListFailureMessage: false, backupRetentionHours: false, acmeEnabled: false, appsDomain: false, daemonVersion: false, dockerVersion: false, bootTime: true, restartRequiredTime: true, scheduledRestartTime: true, sessions: false, alertChannels: false, databaseEngines: false, memoryLimitsBytes: false });
 optional<p.AlertDestination>({ kind: true, label: false });
 optional<p.MachineSession>({ sessionId: false, kind: true, projectId: false, service: false, port: false, startTime: true, clientAddress: false, sshKeyLabel: false, sshKeyFingerprint: false });
 optional<p.DiskUsage>({ imagesBytes: false, buildCacheBytes: true, volumesBytes: false, containerLayersBytes: false, projectFilesBytes: false, containerLogsBytes: false, httpTrafficBytes: false });
@@ -31,12 +31,12 @@ optional<p.RunMachineActionResponse>({ machine: true });
 accepts<p.ProjectMetadataInput>(a<p.ProjectMetadata>());
 optional<p.ProjectMetadata>({ name: true, emoji: true, description: true, notes: true });
 optional<p.ProjectMetadataInput>({ name: true, emoji: true, description: true, notes: true });
-optional<p.ProjectSummary>({ projectId: false, metadata: true, problems: false, services: false, url: false, hosts: false, httpTrafficLastDay: true, cpuUsedCores: false, memoryUsedBytes: false, deployTime: true, runningOperations: false, pinned: false, diskUsedBytes: false });
+optional<p.ProjectSummary>({ projectId: false, metadata: true, problems: false, services: false, url: false, hosts: false, httpTrafficLastDay: true, cpuUsedCores: false, memoryUsedBytes: false, deployTime: true, runningOperations: false, pinned: false, diskUsedBytes: false, database: true });
 optional<p.ServiceSummary>({ service: false, state: true });
 optional<p.ProjectProblem>({ kind: true, service: false, operationId: false, sinceTime: true, problemMessage: false, incidentId: false });
 optional<p.GetProjectRequest>({ projectId: true, includeSecretValues: true, snapshotsBefore: true, snapshotsVolume: true, incidentsBefore: true, uptimeDayCount: true, incidentsBeforeId: true });
 optional<p.GetProjectResponse>({ project: true });
-optional<p.Project>({ projectId: false, metadata: true, problems: false, url: false, cpuUsedCores: false, memoryUsedBytes: false, deployId: false, deployStatus: true, deployTime: true, xPethostAppliesAtOnce: false, services: false, volumes: false, routes: false, hosts: false, passwordProtected: false, operations: false, snapshots: false, snapshotCount: false, snapshotListTime: true, httpTrafficLastDay: true, source: true, runningServicesAction: true, alerts: true, incidents: false, moreIncidents: false, uptimeDays: false });
+optional<p.Project>({ projectId: false, metadata: true, problems: false, url: false, cpuUsedCores: false, memoryUsedBytes: false, deployId: false, deployStatus: true, deployTime: true, xPethostAppliesAtOnce: false, services: false, volumes: false, routes: false, hosts: false, passwordProtected: false, operations: false, snapshots: false, snapshotCount: false, snapshotListTime: true, httpTrafficLastDay: true, source: true, runningServicesAction: true, alerts: true, incidents: false, moreIncidents: false, uptimeDays: false, database: true, linkedDatabases: false });
 optional<p.RunningServicesAction>({ kind: true, services: false, startTime: true });
 accepts<p.ProjectSourceInput>(a<p.ProjectSource>());
 {
@@ -73,7 +73,7 @@ optional<p.RouteInput>({ host: true, path: true, service: true, port: true, stri
 optional<p.Operation>({ operationId: false, kind: true, status: true, startTime: true, finishTime: true, failureMessage: false, deployFailureReason: true, madeCurrent: false, service: false, failedExitCode: false, snapshotId: false, restoredVolumes: false, undoSnapshotId: false, githubCommit: true, archiveName: false, adjustments: false, changedPaths: false, changedPathCount: false, filesKept: false, filesOperationId: false });
 optional<p.Snapshot>({ snapshotId: false, createTime: true, sizeBytes: false, volumes: false });
 optional<p.HttpTrafficSummary>({ requestCount: false, serverErrorCount: false, latencyP50Ms: false, latencyP95Ms: false });
-optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true });
+optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true, database: true });
 optional<p.CreateProjectResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 // @ts-expect-error two members of pethost.panel.v1.DeployProjectRequest.version
 accepts<p.DeployProjectRequest>({ uploadId: "upload_id", commit: "commit" });
@@ -94,6 +94,13 @@ optional<p.RestoreSnapshotActionInput>({ snapshotId: true, volumes: true });
 optional<p.CancelOperationActionInput>({ operationId: true });
 optional<p.DeleteProjectActionInput>({ skipFinalBackup: true });
 optional<p.RunProjectActionResponse>({ operation: true, project: true, log: false });
+optional<p.Database>({ engine: true, majorVersion: false, serverVersion: false, memoryLimitBytes: false, dataBytes: false, connections: false, maxConnections: false, linkedProjects: false, connection: true, service: false, volume: false });
+optional<p.DatabaseConnection>({ host: false, port: false, user: false, database: false, password: false, url: false, localUrl: false });
+optional<p.DatabaseSummary>({ engine: true, majorVersion: false, dataBytes: false, connections: false, linkedProjects: false, serverVersion: false });
+optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: false, defaultMemoryLimitBytes: false });
+optional<p.DatabaseSizeChoice>({ memoryLimitBytes: false });
+optional<p.LinkDatabaseRequest>({ databaseProjectId: true, link: true, unlink: true });
+optional<p.LinkDatabaseResponse>({ project: true });
 optional<p.SetProjectAlertsRequest>({ projectId: true, checks: true, removeChecks: true, trafficRules: true, removeTrafficRules: true, off: true, muteMinutes: true });
 optional<p.SetProjectAlertsResponse>({ alerts: true });
 accepts<p.SiteCheckInput>(a<p.SiteCheck>());
@@ -137,9 +144,11 @@ optional<p.ArchiveUploadInput>({ fileName: true });
 accepts<p.FileUploadInput>({ service: "service", volume: "volume" });
 // @ts-expect-error two members of pethost.panel.v1.PathDownload.root
 accepts<p.PathDownloadInput>({ service: "service", volume: "volume" });
+optional<p.DatabaseDumpInput>({ projectId: true, database: true });
 optional<p.CreateTransferResponse>({ url: false, httpMethod: false, expireTime: true, command: false, uploadId: false, replaces: false, fileName: false, excludeNames: false });
 optional<p.ProjectBusy>({ operationId: false, kind: true, startTime: true });
 optional<p.MachineUnreachable>({ sinceTime: true });
+optional<p.DatabaseLinkRefusal>({ projectId: false, reason: true, service: false });
 optional<p.NoMachine>({ reason: true, url: false });
 optional<p.WatchOperationRequest>({ projectId: true, operationId: true });
 {

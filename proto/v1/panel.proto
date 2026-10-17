@@ -20,6 +20,9 @@ edition = "2024";
 //   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
+//   - Database: a project CreateProject made with `database` (Postgres or Valkey). The machine
+//     wrote its files and knows the engine. Apps reach it at the host <project_id> once
+//     LinkDatabase links them; Project.database says how to sign in.
 //   - Service (service): one container. The person opens a shell in it from their terminal with
 //     `ssh <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
 //     RunMachineAction.add_ssh_key added their public key. Nobody logs in to the machine itself.
@@ -90,8 +93,8 @@ service PanelService {
 
   // One project in full: services (state, health, image, the ports it listens on, volumes,
   // environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-  // snapshots, the last day's HTTP traffic. Env-file values only with include_secret_values. Its
-  // files: ReadPath.
+  // snapshots, the last day's HTTP traffic. Env-file values and a database's password
+  // (Project.database.connection) only with include_secret_values. Its files: ReadPath.
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
     option (mcp_tool) = {title: "Get a project"};
@@ -111,6 +114,12 @@ service PanelService {
   // docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped.
   // Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
   // named volume per VOLUME of its last stage).
+  //
+  // A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
+  // number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+  // (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+  // writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+  // LinkDatabase the apps that use it.
   //
   // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
   // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -165,7 +174,8 @@ service PanelService {
   //
   // ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
   // FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-  // such branch or directory. A deleted project's id inherits its snapshots.
+  // such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
+  // predates databases. A deleted project's id inherits its snapshots.
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
     option (mcp_tool) = {title: "Create a project"};
   }
@@ -211,7 +221,9 @@ service PanelService {
   // operation, change the source, delete an undeclared volume or the project. Recreate, back up,
   // restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
   // the end of a cancelled one; the others are done on return. Answers with the project as it
-  // then is.
+  // then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
+  // new database is the person's to make, in the panel (the database's Backups tab, Restore as a
+  // new database): no tool makes one.
   rpc RunProjectAction(RunProjectActionRequest) returns (RunProjectActionResponse) {
     option (mcp_tool) = {title: "Run a project action", destructive: true};
   }
@@ -261,6 +273,33 @@ service PanelService {
     option (mcp_tool) = {title: "Query container logs"};
   }
 
+  // ── Database ─────────────────────────────────────────────────────────────
+
+  // Lets projects reach a database project: inside each linked project the database is the
+  // host `<database_project_id>` at its port, and Project.database says how to sign in (its
+  // password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+  // INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+  // FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
+  // a database, has a service named or aliased like the database, or there are 20 links already;
+  // + MachineUpdatePending = the machine's software predates databases. Answers with the
+  // database's Project.
+  rpc LinkDatabase(LinkDatabaseRequest) returns (LinkDatabaseResponse) {
+    option idempotency_level = IDEMPOTENT;
+    option (mcp_tool) = {title: "Link projects to a database", destructive: true};
+  }
+
+  // A database project for the web panel's New database and Restore as a new database: with
+  // the size and the links CreateProject's `database` leaves out, or as a copy of a database's
+  // snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
+  // INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+  // project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+  // host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+  // is of no database of that engine;
+  // + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+  // + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
+  // use CreateProject with `database`, then LinkDatabase.
+  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
+
   // ── Service ──────────────────────────────────────────────────────────────
 
   // Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -302,11 +341,16 @@ service PanelService {
   // - upload_file: one file into a container or volume, replacing any file there (replaces),
   //   creating parents.
   // - download: a file, or a directory as a .tar (file_name).
+  // - download_database: a database project's dump, made as it downloads: Postgres's for
+  //   pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
   // Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
-  // GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing:
-  // get a new URL. Errors as ReadPath; FAILED_PRECONDITION also = downloading neither a file nor
-  // a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet
-  // certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+  // GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
+  // transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
+  // downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
+  // or /sys, the hostname not yet certified, or a dump of a project that is no database or is
+  // not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+  // databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
+  // runs but does not answer yet: try again shortly.
   rpc CreateTransfer(CreateTransferRequest) returns (CreateTransferResponse) {
     option (mcp_tool) = {title: "Upload or download a file", destructive: true};
   }
@@ -421,6 +465,12 @@ message Machine {
   // then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
   // alerts reach nobody.
   repeated AlertDestination alert_channels = 26;
+  // The databases the machine makes (CreateProject's `database`), one per engine, with the sizes
+  // they may take. Empty = the machine's software predates databases.
+  repeated DatabaseEngineOffer database_engines = 27;
+  // The sum of every service's memory limit (`mem_limit`): what the projects may take together,
+  // which memory_total_bytes does not reserve.
+  uint64 memory_limits_bytes = 28;
 }
 
 // A channel Pethost tells the person of incidents on (Machine.alert_channels).
@@ -571,6 +621,7 @@ message ProjectSummary {
   // Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
   // with another project counts in both. Measured every few minutes.
   uint64 disk_used_bytes = 13;
+  DatabaseSummary database = 14; // Set = a database project (CreateProject `database`).
 }
 
 message ServiceSummary {
@@ -638,11 +689,15 @@ enum ProjectProblemKind {
   PROJECT_PROBLEM_KIND_SITE_DOWN = 11;
   PROJECT_PROBLEM_KIND_HTTP_ERRORS = 12; // A traffic rule on 5xx holds.
   PROJECT_PROBLEM_KIND_HTTP_SLOW = 13; // A traffic rule on p95 holds.
+  // A database the machine has not set up for 2 minutes since it started, or whose apps' user is
+  // gone: the message says the engine's error.
+  PROJECT_PROBLEM_KIND_DATABASE_SETUP = 14;
 }
 
 message GetProjectRequest {
   string project_id = 1;
-  // True = include env-file values (EnvironmentVariable.secret). To edit .env: ReadPath /.env.
+  // True = include env-file values (EnvironmentVariable.secret) and a database's password
+  // (Project.database.connection). To edit .env: ReadPath /.env.
   bool include_secret_values = 2;
   // Only older snapshots: the oldest create_time seen, to page back. Absent = the newest.
   google.protobuf.Timestamp snapshots_before = 3;
@@ -722,6 +777,11 @@ message Project {
   bool more_incidents = 25;
   // Oldest first, GetProjectRequest.uptime_day_count of them, today's last.
   repeated UptimeDay uptime_days = 26;
+  // Set = a database project (CreateProject `database`): its engine, its state and how apps sign
+  // in.
+  Database database = 27;
+  // The database projects this one reaches (LinkDatabase), each at the host of its project_id.
+  repeated string linked_databases = 28;
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -1095,6 +1155,9 @@ message CreateProjectRequest {
   uint32 timeout_seconds = 6; // As DeployProject's timeout_seconds.
   string operation_id = 7; // As DeployProject's operation_id.
   uint32 wait_seconds = 9 [(optional) = true]; // As DeployProject's wait_seconds.
+  // Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
+  // upload_id, source, x_pethost out.
+  DatabaseEngine database = 10;
 }
 
 message CreateProjectResponse {
@@ -1306,6 +1369,102 @@ message RunProjectActionResponse {
   repeated OperationLogLine log = 4;
 }
 
+// ── Database ───────────────────────────────────────────────────────────────
+
+enum DatabaseEngine {
+  DATABASE_ENGINE_UNSPECIFIED = 0;
+  DATABASE_ENGINE_POSTGRES = 1;
+  DATABASE_ENGINE_VALKEY = 2;
+}
+
+// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+message Database {
+  DatabaseEngine engine = 1;
+  uint32 major_version = 2; // As it was made, e.g. 18.
+  string server_version = 3; // What the server says it runs, e.g. "18.6". Empty = not answering.
+  uint64 memory_limit_bytes = 4; // Its size: its service's `mem_limit` in compose.yaml.
+  // Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+  uint64 data_bytes = 5;
+  uint32 connections = 6; // Open now.
+  uint32 max_connections = 7; // Valkey: maxclients.
+  repeated string linked_projects = 8; // The projects that reach it (LinkDatabase).
+  DatabaseConnection connection = 9;
+  string service = 10; // The service of Project.services that runs the database.
+  string volume = 11; // The volume of Project.volumes that holds its data.
+}
+
+// How a linked project signs in, as the apps' user.
+message DatabaseConnection {
+  string host = 1; // The database's project_id.
+  uint32 port = 2;
+  string user = 3; // "app"; Valkey: "default".
+  string database = 4; // "app"; Valkey: "0".
+  string password = 5; // Only with GetProject's include_secret_values.
+  // For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
+  // the password.
+  string url = 6;
+  // As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+  string local_url = 7;
+}
+
+// A database project in brief (ProjectSummary.database).
+message DatabaseSummary {
+  DatabaseEngine engine = 1;
+  uint32 major_version = 2;
+  uint64 data_bytes = 3; // As in Database.
+  uint32 connections = 4;
+  repeated string linked_projects = 5;
+  string server_version = 6; // As in Database: empty = not answering, its figures are zero.
+}
+
+// An engine the machine makes databases of (Machine.database_engines).
+message DatabaseEngineOffer {
+  DatabaseEngine engine = 1;
+  uint32 major_version = 2; // The major a new database gets, e.g. 18.
+  repeated DatabaseSizeChoice sizes = 3; // Smallest first.
+  uint64 default_memory_limit_bytes = 4; // The size CreateProject's `database` gives.
+}
+
+// A size a database may take.
+message DatabaseSizeChoice {
+  uint64 memory_limit_bytes = 1;
+}
+
+message LinkDatabaseRequest {
+  string database_project_id = 1;
+  repeated string link = 2; // App project_ids to link.
+  repeated string unlink = 3; // App project_ids to unlink.
+}
+
+message LinkDatabaseResponse {
+  Project project = 1; // The database, as GetProject returns it.
+}
+
+message CreateDatabaseRequest {
+  // As CreateProject's, without "_", not a number and no name of /etc/hosts: it is the host name
+  // apps use.
+  string project_id = 1;
+  DatabaseEngine engine = 2;
+  // One of the engine's DatabaseEngineOffer.sizes. 0 = its default_memory_limit_bytes; a copy
+  // keeps its snapshot's.
+  uint64 memory_limit_bytes = 3;
+  // A snapshot of a database of `engine` (Project.snapshots, GetMachine.deleted_projects): the new
+  // one starts with its data. Empty = an empty database.
+  string from_snapshot_id = 4;
+  repeated string link = 5; // App project_ids, linked before its operation ends.
+  string operation_id = 6; // As DeployProject's operation_id.
+  uint32 wait_seconds = 7 [(optional) = true]; // As DeployProject's wait_seconds.
+}
+
+// As CreateProjectResponse.
+message CreateDatabaseResponse {
+  Operation operation = 1;
+  repeated SpecViolation violations = 2;
+  repeated string adjustments = 3;
+  Project project = 4;
+  repeated OperationLogLine log = 5;
+}
+
 // ── Alerts ─────────────────────────────────────────────────────────────────
 
 message SetProjectAlertsRequest {
@@ -1359,7 +1518,8 @@ enum TrafficMetric {
 message ProjectAlerts {
   // Until set: the project's URL at "/" (machine_default); none without a route.
   repeated SiteCheckState checks = 1;
-  // Until set: 10 or more 5xx in 5 minutes, of every request (machine_default).
+  // Until set: 10 or more 5xx in 5 minutes, of every request (machine_default); none without a
+  // route.
   repeated TrafficRuleState traffic_rules = 2;
   bool off = 3; // True = incidents are recorded, nothing is sent.
   google.protobuf.Timestamp mute_end_time = 4; // Absent = not muted.
@@ -1737,6 +1897,7 @@ message CreateTransferRequest {
     ArchiveUpload upload_archive = 1;
     FileUpload upload_file = 2;
     PathDownload download = 3;
+    DatabaseDump download_database = 4;
   }
 }
 
@@ -1768,6 +1929,12 @@ message PathDownload {
   string path = 5; // From the root. Empty = "/": the whole root.
 }
 
+// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+message DatabaseDump {
+  string project_id = 1;
+  string database = 2; // Postgres: the database to dump. Empty = "app", the apps'.
+}
+
 message CreateTransferResponse {
   string url = 1; // On the machine's hostname (Machine.hostname); it works once.
   string http_method = 2; // "PUT" or "GET".
@@ -1783,7 +1950,8 @@ message CreateTransferResponse {
   string upload_id = 5;
   bool replaces = 6; // upload_file: a file is at path now; the upload replaces it.
   // download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
-  // after the project and its service or volume. Empty for an upload.
+  // after the project and its service or volume. download_database: "<project_id>-<database>.dump"
+  // or "<project_id>.rdb". Empty for an upload.
   string file_name = 7;
   // upload_archive: the names `command` leaves out of the archive, wherever they lie in the
   // directory. A program that packs the directory itself leaves out the same.
@@ -1837,6 +2005,23 @@ message MachineUnreachable {
 // Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
 // with the machine's next update, which Pethost runs; nothing for the caller to do.
 message MachineUpdatePending {}
+
+// Detail of a FAILED_PRECONDITION error from LinkDatabase or CreateDatabase: a project of `link`
+// cannot be linked to the database. Nothing changed.
+message DatabaseLinkRefusal {
+  string project_id = 1; // The first one refused.
+  DatabaseLinkRefusalReason reason = 2;
+  string service = 3; // SERVICE_NAME_TAKEN: its service.
+}
+
+enum DatabaseLinkRefusalReason {
+  DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED = 0;
+  DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE = 1; // It is a database itself.
+  // A service of it is named or aliased like the database, whose host it would hide: rename
+  // the service or its alias.
+  DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN = 2;
+  DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS = 3; // The database has 20: unlink one first.
+}
 
 // Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 message NoMachine {

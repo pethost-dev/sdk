@@ -95,7 +95,7 @@ impl Client {
 
     /// Get a project.
     ///
-    /// One project in full: services (state, health, image, the ports it listens on, volumes, environment, the SSH command), volumes, routes, hosts with certificates, recent operations, snapshots, the last day's HTTP traffic. Env-file values only with `include_secret_values`. Its files: [`Client::read_path`](crate::Client::read_path).
+    /// One project in full: services (state, health, image, the ports it listens on, volumes, environment, the SSH command), volumes, routes, hosts with certificates, recent operations, snapshots, the last day's HTTP traffic. Env-file values and a database's password ([`Project::database`](crate::types::Project::database)`.connection`) only with `include_secret_values`. Its files: [`Client::read_path`](crate::Client::read_path).
     pub async fn get_project(&self, request: types::GetProjectRequest) -> Result<types::GetProjectResponse, Error> {
         let response = self.wire.get_project(request.into()).await.map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
@@ -106,6 +106,8 @@ impl Client {
     /// Creates a project from its files and deploys it. Waits for the deploy (`wait_seconds`) and answers with the operation and, once it ended, the project: its URL, its services\' states, its problems. `violations` instead = nothing was created: change what each says, call again. SUCCEEDED says the containers run and listen, not what a page answers: open the URL once (401 = its password page).
     ///
     /// Files, one of: the directory as it is on your disk, as an archive ([`Client::create_transfer`](crate::Client::create_transfer), then `upload_id`): nothing is retyped; `files`, text you send yourself, when there is no directory or no shell (never a file you have not read); `source.github`. /.env holds the secrets (`env_file: .env`). The compose file is the root's pethost.compose.yaml (so the repository's compose.yaml stays for development), else compose.yaml, compose.yml, docker-compose.yml or docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped. Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
+    ///
+    /// A database (Postgres or Valkey): `database`, no files, and a `project_id` without \"\_\", not a number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts (localhost, ip6-localhost, ip6-loopback, \.\.\.): it is the host name apps use. The machine writes its compose.yaml and /.env and deploys it at its default size, with no address; then [`Client::link_database`](crate::Client::link_database) the apps that use it.
     ///
     /// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of a route in `x-pethost`, the one extension read, in the file or as `x_pethost`:
     ///
@@ -129,7 +131,7 @@ impl Client {
     ///
     /// Not refused, and read the machine's way: a `container_name` and a network's `name` name nothing on the machine, so two projects may write the same (the project's services still reach the container by it); a service with `profiles` runs only while `COMPOSE_PROFILES` in /.env names one of them, and is no service of the project until then; a bind mount of a folder without `:ro` (`./data:/data`) mounts the project's volume named after the path (`data`), which deploys keep and backups hold, with none of the version's files in it, so project files take `:ro`, and data is plainer in a named volume (`data:/data`, with `data:` under `volumes:`); a bind mount of a file without `:ro` mounts it read-only. An image's VOLUME that no mount covers fails the deploy (`UNCOVERED_IMAGE_VOLUME`): mount a named volume or a tmpfs there.
     ///
-    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory. A deleted project's id inherits its snapshots.
+    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory; + [`MachineUpdatePending`](crate::types::MachineUpdatePending) = `database`, on a machine whose software predates databases. A deleted project's id inherits its snapshots.
     pub async fn create_project(
         &self,
         request: types::CreateProjectRequest,
@@ -173,7 +175,7 @@ impl Client {
 
     /// Run a project action.
     ///
-    /// One project action: start, stop or restart services, recreate one, back up, restore, cancel an operation, change the source, delete an undeclared volume or the project. Recreate, back up, restore, delete and `set_source`\'s deploy run as operations, waited for (`wait_seconds`), as is the end of a cancelled one; the others are done on return. Answers with the project as it then is.
+    /// One project action: start, stop or restart services, recreate one, back up, restore, cancel an operation, change the source, delete an undeclared volume or the project. Recreate, back up, restore, delete and `set_source`\'s deploy run as operations, waited for (`wait_seconds`), as is the end of a cancelled one; the others are done on return. Answers with the project as it then is. `restore_snapshot` takes the project's own snapshots only. A database's snapshot as a new database is the person's to make, in the panel (the database's Backups tab, Restore as a new database): no tool makes one.
     pub async fn run_project_action(
         &self,
         request: types::RunProjectActionRequest,
@@ -246,6 +248,21 @@ impl Client {
         Ok(response.into_owned().into())
     }
 
+    /// Link projects to a database.
+    ///
+    /// Lets projects reach a database project: inside each linked project the database is the host `<database_project_id>` at its port, and [`Project::database`](crate::types::Project::database) says how to sign in (its password with [`Client::get_project`](crate::Client::get_project) `include_secret_values`). Takes effect at once and deploys nothing. [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) = a project in both link and unlink. [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) = no such project. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = `database_project_id` is no database; + [`DatabaseLinkRefusal`](crate::types::DatabaseLinkRefusal) = the app is a database, has a service named or aliased like the database, or there are 20 links already; + [`MachineUpdatePending`](crate::types::MachineUpdatePending) = the machine's software predates databases. Answers with the database's Project.
+    pub async fn link_database(
+        &self,
+        request: types::LinkDatabaseRequest,
+    ) -> Result<types::LinkDatabaseResponse, Error> {
+        let response = self
+            .wire
+            .link_database(request.into())
+            .await
+            .map_err(Error::from_wire)?;
+        Ok(response.into_owned().into())
+    }
+
     /// Run a command in a service.
     ///
     /// Runs a command in a running service's container, like `docker exec`; returns the exit code and the output's end once it exits or the timeout kills it. Over a bound on command, stdin or timeout = refused (named). Cannot start = exit 127 or 126, Docker's error in stdout. Untrusted output.
@@ -276,8 +293,9 @@ impl Client {
     /// - `upload_archive`: the project's directory, packed, for [`Client::create_project`](crate::Client::create_project)\'s or [`Client::deploy_project`](crate::Client::deploy_project)\'s `upload_id` once the PUT answered 200 with what it holds.
     /// - `upload_file`: one file into a container or volume, replacing any file there (replaces), creating parents.
     /// - download: a file, or a directory as a .tar (`file_name`).
+    /// - `download_database`: a database project's dump, made as it downloads: Postgres's for `pg_restore` (roles are not in it), Valkey's .rdb. One at a time per database.
     ///
-    /// Plain-text answers: 404 used or expired URL, 409 [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition), 413 archive over 2 GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing: get a new URL. Errors as [`Client::read_path`](crate::Client::read_path); [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) also = downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc or /sys, or the hostname not yet certified. [`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) = disk full, or too many transfers.
+    /// Plain-text answers: 404 used or expired URL, 409 [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition), 413 archive over 2 GiB, 422 unsafe archive (a reason per line), 503 [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable), 507 disk full. A failed transfer keeps nothing: get a new URL. Errors as [`Client::read_path`](crate::Client::read_path); [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) also = downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc or /sys, the hostname not yet certified, or a dump of a project that is no database or is not running. [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) also = a Postgres database the server lacks (the message lists its databases). [`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) = disk full, or too many transfers. [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) = Postgres runs but does not answer yet: try again shortly.
     pub async fn create_transfer(
         &self,
         request: types::CreateTransferRequest,

@@ -16,7 +16,7 @@ const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
 export const empty = {
   GetMachineRequest: () => ({}),
   GetMachineResponse: () => ({ projects: [], deletedProjects: [] }),
-  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [] }),
+  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [], databaseEngines: [], memoryLimitsBytes: 0n }),
   AlertDestination: () => ({ label: "" }),
   MachineSession: () => ({ sessionId: "", projectId: "", service: "", port: 0, clientAddress: "", sshKeyLabel: "", sshKeyFingerprint: "" }),
   DiskUsage: () => ({ imagesBytes: 0n, volumesBytes: 0n, containerLayersBytes: 0n, projectFilesBytes: 0n, containerLogsBytes: 0n, httpTrafficBytes: 0n }),
@@ -33,7 +33,7 @@ export const empty = {
   ProjectProblem: () => ({ service: "", operationId: "", problemMessage: "", incidentId: "" }),
   GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "", uptimeDayCount: 0, incidentsBeforeId: "" }),
   GetProjectResponse: () => ({}),
-  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0, incidents: [], moreIncidents: false, uptimeDays: [] }),
+  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0, incidents: [], moreIncidents: false, uptimeDays: [], linkedDatabases: [] }),
   RunningServicesAction: () => ({ services: [] }),
   ProjectSource: () => ({}),
   GithubSource: () => ({ pinned: false, autoDeployPending: false }),
@@ -69,6 +69,13 @@ export const empty = {
   CancelOperationAction: () => ({ operationId: "" }),
   DeleteProjectAction: () => ({ skipFinalBackup: false }),
   RunProjectActionResponse: () => ({ log: [] }),
+  Database: () => ({ majorVersion: 0, serverVersion: "", memoryLimitBytes: 0n, dataBytes: 0n, connections: 0, maxConnections: 0, linkedProjects: [], service: "", volume: "" }),
+  DatabaseConnection: () => ({ host: "", port: 0, user: "", database: "", password: "", url: "", localUrl: "" }),
+  DatabaseSummary: () => ({ majorVersion: 0, dataBytes: 0n, connections: 0, linkedProjects: [], serverVersion: "" }),
+  DatabaseEngineOffer: () => ({ majorVersion: 0, sizes: [], defaultMemoryLimitBytes: 0n }),
+  DatabaseSizeChoice: () => ({ memoryLimitBytes: 0n }),
+  LinkDatabaseRequest: () => ({ databaseProjectId: "", link: [], unlink: [] }),
+  LinkDatabaseResponse: () => ({}),
   SetProjectAlertsRequest: () => ({ projectId: "", checks: [], removeChecks: false, trafficRules: [], removeTrafficRules: false }),
   SetProjectAlertsResponse: () => ({}),
   SiteCheck: () => ({ host: "", path: "", expectStatus: 0, mustContain: "" }),
@@ -102,11 +109,13 @@ export const empty = {
   ArchiveUpload: () => ({ fileName: "" }),
   FileUpload: () => ({ projectId: "", path: "" }),
   PathDownload: () => ({ projectId: "", path: "" }),
+  DatabaseDump: () => ({ projectId: "", database: "" }),
   CreateTransferResponse: () => ({ url: "", httpMethod: "", command: "", uploadId: "", replaces: false, fileName: "", excludeNames: [] }),
   ProjectBusy: () => ({ operationId: "" }),
   ProjectChanged: () => ({}),
   MachineUnreachable: () => ({}),
   MachineUpdatePending: () => ({}),
+  DatabaseLinkRefusal: () => ({ projectId: "", service: "" }),
   NoMachine: () => ({ url: "" }),
   WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
   WatchOperationResponse: () => ({}),
@@ -156,6 +165,8 @@ export const empty = {
   m.reads("Machine.scheduled_restart_time", { scheduledRestartTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Machine(), scheduledRestartTime: new Date(1790000000999) });
   m.reads("Machine.sessions", { sessions: [{}] }, { ...empty.Machine(), sessions: [empty.MachineSession()] });
   m.reads("Machine.alert_channels", { alertChannels: [{}] }, { ...empty.Machine(), alertChannels: [empty.AlertDestination()] });
+  m.reads("Machine.database_engines", { databaseEngines: [{}] }, { ...empty.Machine(), databaseEngines: [empty.DatabaseEngineOffer()] });
+  m.reads("Machine.memory_limits_bytes", { memoryLimitsBytes: 9007199254740993n }, { ...empty.Machine(), memoryLimitsBytes: 9007199254740993n });
 }
 
 {
@@ -280,6 +291,7 @@ export const empty = {
   m.reads("ProjectSummary.running_operations", { runningOperations: [{}] }, { ...empty.ProjectSummary(), runningOperations: [empty.Operation()] });
   m.reads("ProjectSummary.pinned", { pinned: true }, { ...empty.ProjectSummary(), pinned: true });
   m.reads("ProjectSummary.disk_used_bytes", { diskUsedBytes: 9007199254740993n }, { ...empty.ProjectSummary(), diskUsedBytes: 9007199254740993n });
+  m.reads("ProjectSummary.database", { database: {} }, { ...empty.ProjectSummary(), database: empty.DatabaseSummary() });
 }
 
 {
@@ -315,6 +327,7 @@ export const empty = {
   m.reads("ProjectProblem.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.ProjectProblem(), kind: "SITE_DOWN" });
   m.reads("ProjectProblem.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.ProjectProblem(), kind: "HTTP_ERRORS" });
   m.reads("ProjectProblem.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.ProjectProblem(), kind: "HTTP_SLOW" });
+  m.reads("ProjectProblem.kind: DATABASE_SETUP", { kind: w.ProjectProblemKind.DATABASE_SETUP }, { ...empty.ProjectProblem(), kind: "DATABASE_SETUP" });
   m.reads("ProjectProblem.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.ProjectProblem(), kind: 9999 });
   m.reads("ProjectProblem.service", { service: "service" }, { ...empty.ProjectProblem(), service: "service" });
   m.reads("ProjectProblem.operation_id", { operationId: "operation_id" }, { ...empty.ProjectProblem(), operationId: "operation_id" });
@@ -364,6 +377,8 @@ export const empty = {
   m.reads("Project.incidents", { incidents: [{}] }, { ...empty.Project(), incidents: [empty.Incident()] });
   m.reads("Project.more_incidents", { moreIncidents: true }, { ...empty.Project(), moreIncidents: true });
   m.reads("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
+  m.reads("Project.database", { database: {} }, { ...empty.Project(), database: empty.Database() });
+  m.reads("Project.linked_databases", { linkedDatabases: ["linked_databases", ""] }, { ...empty.Project(), linkedDatabases: ["linked_databases", ""] });
 }
 
 {
@@ -677,6 +692,78 @@ export const empty = {
 }
 
 {
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.DatabaseSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { database: leaf } }), async (api) => (await api.getProject({}))?.project?.database);
+  m.reads("Database: nothing set", {}, empty.Database());
+  m.reads("Database: a field newer than the SDK", newer(w.DatabaseSchema), empty.Database());
+  m.reads("Database.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.Database(), engine: "POSTGRES" });
+  m.reads("Database.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.Database(), engine: "VALKEY" });
+  m.reads("Database.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.Database(), engine: 9999 });
+  m.reads("Database.major_version", { majorVersion: 1002 }, { ...empty.Database(), majorVersion: 1002 });
+  m.reads("Database.server_version", { serverVersion: "server_version" }, { ...empty.Database(), serverVersion: "server_version" });
+  m.reads("Database.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.Database(), memoryLimitBytes: 9007199254740993n });
+  m.reads("Database.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.Database(), dataBytes: 9007199254740993n });
+  m.reads("Database.connections", { connections: 1006 }, { ...empty.Database(), connections: 1006 });
+  m.reads("Database.max_connections", { maxConnections: 1007 }, { ...empty.Database(), maxConnections: 1007 });
+  m.reads("Database.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.Database(), linkedProjects: ["linked_projects", ""] });
+  m.reads("Database.connection", { connection: {} }, { ...empty.Database(), connection: empty.DatabaseConnection() });
+  m.reads("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
+  m.reads("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.DatabaseConnectionSchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { database: { connection: leaf } } }), async (api) => (await api.getProject({}))?.project?.database?.connection);
+  m.reads("DatabaseConnection: nothing set", {}, empty.DatabaseConnection());
+  m.reads("DatabaseConnection: a field newer than the SDK", newer(w.DatabaseConnectionSchema), empty.DatabaseConnection());
+  m.reads("DatabaseConnection.host", { host: "host" }, { ...empty.DatabaseConnection(), host: "host" });
+  m.reads("DatabaseConnection.port", { port: 1002 }, { ...empty.DatabaseConnection(), port: 1002 });
+  m.reads("DatabaseConnection.user", { user: "user" }, { ...empty.DatabaseConnection(), user: "user" });
+  m.reads("DatabaseConnection.database", { database: "database" }, { ...empty.DatabaseConnection(), database: "database" });
+  m.reads("DatabaseConnection.password", { password: "password" }, { ...empty.DatabaseConnection(), password: "password" });
+  m.reads("DatabaseConnection.url", { url: "url" }, { ...empty.DatabaseConnection(), url: "url" });
+  m.reads("DatabaseConnection.local_url", { localUrl: "local_url" }, { ...empty.DatabaseConnection(), localUrl: "local_url" });
+}
+
+{
+  const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.DatabaseSummarySchema>): Init<typeof w.GetMachineResponseSchema> => ({ projects: [{ database: leaf }] }), async (api) => (await api.getMachine({}))?.projects?.[0]?.database);
+  m.reads("DatabaseSummary: nothing set", {}, empty.DatabaseSummary());
+  m.reads("DatabaseSummary: a field newer than the SDK", newer(w.DatabaseSummarySchema), empty.DatabaseSummary());
+  m.reads("DatabaseSummary.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseSummary(), engine: "POSTGRES" });
+  m.reads("DatabaseSummary.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseSummary(), engine: "VALKEY" });
+  m.reads("DatabaseSummary.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseSummary(), engine: 9999 });
+  m.reads("DatabaseSummary.major_version", { majorVersion: 1002 }, { ...empty.DatabaseSummary(), majorVersion: 1002 });
+  m.reads("DatabaseSummary.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.DatabaseSummary(), dataBytes: 9007199254740993n });
+  m.reads("DatabaseSummary.connections", { connections: 1004 }, { ...empty.DatabaseSummary(), connections: 1004 });
+  m.reads("DatabaseSummary.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.DatabaseSummary(), linkedProjects: ["linked_projects", ""] });
+  m.reads("DatabaseSummary.server_version", { serverVersion: "server_version" }, { ...empty.DatabaseSummary(), serverVersion: "server_version" });
+}
+
+{
+  const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.DatabaseEngineOfferSchema>): Init<typeof w.GetMachineResponseSchema> => ({ machine: { databaseEngines: [leaf] } }), async (api) => (await api.getMachine({}))?.machine?.databaseEngines?.[0]);
+  m.reads("DatabaseEngineOffer: nothing set", {}, empty.DatabaseEngineOffer());
+  m.reads("DatabaseEngineOffer: a field newer than the SDK", newer(w.DatabaseEngineOfferSchema), empty.DatabaseEngineOffer());
+  m.reads("DatabaseEngineOffer.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseEngineOffer(), engine: "POSTGRES" });
+  m.reads("DatabaseEngineOffer.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseEngineOffer(), engine: "VALKEY" });
+  m.reads("DatabaseEngineOffer.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseEngineOffer(), engine: 9999 });
+  m.reads("DatabaseEngineOffer.major_version", { majorVersion: 1002 }, { ...empty.DatabaseEngineOffer(), majorVersion: 1002 });
+  m.reads("DatabaseEngineOffer.sizes", { sizes: [{}] }, { ...empty.DatabaseEngineOffer(), sizes: [empty.DatabaseSizeChoice()] });
+  m.reads("DatabaseEngineOffer.default_memory_limit_bytes", { defaultMemoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 9007199254740993n });
+}
+
+{
+  const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.DatabaseSizeChoiceSchema>): Init<typeof w.GetMachineResponseSchema> => ({ machine: { databaseEngines: [{ sizes: [leaf] }] } }), async (api) => (await api.getMachine({}))?.machine?.databaseEngines?.[0]?.sizes?.[0]);
+  m.reads("DatabaseSizeChoice: nothing set", {}, empty.DatabaseSizeChoice());
+  m.reads("DatabaseSizeChoice: a field newer than the SDK", newer(w.DatabaseSizeChoiceSchema), empty.DatabaseSizeChoice());
+  m.reads("DatabaseSizeChoice.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseSizeChoice(), memoryLimitBytes: 9007199254740993n });
+}
+
+{
+  const m = reading(w.LinkDatabaseResponseSchema, (leaf: Init<typeof w.LinkDatabaseResponseSchema>): Init<typeof w.LinkDatabaseResponseSchema> => (leaf), async (api) => (await api.linkDatabase({})));
+  m.reads("LinkDatabaseResponse: nothing set", {}, empty.LinkDatabaseResponse());
+  m.reads("LinkDatabaseResponse: a field newer than the SDK", newer(w.LinkDatabaseResponseSchema), empty.LinkDatabaseResponse());
+  m.reads("LinkDatabaseResponse.project", { project: {} }, { ...empty.LinkDatabaseResponse(), project: empty.Project() });
+}
+
+{
   const m = reading(w.SetProjectAlertsResponseSchema, (leaf: Init<typeof w.SetProjectAlertsResponseSchema>): Init<typeof w.SetProjectAlertsResponseSchema> => (leaf), async (api) => (await api.setProjectAlerts({})));
   m.reads("SetProjectAlertsResponse: nothing set", {}, empty.SetProjectAlertsResponse());
   m.reads("SetProjectAlertsResponse: a field newer than the SDK", newer(w.SetProjectAlertsResponseSchema), empty.SetProjectAlertsResponse());
@@ -780,6 +867,7 @@ export const empty = {
   m.reads("Incident.kind: SITE_DOWN", { kind: w.ProjectProblemKind.SITE_DOWN }, { ...empty.Incident(), kind: "SITE_DOWN" });
   m.reads("Incident.kind: HTTP_ERRORS", { kind: w.ProjectProblemKind.HTTP_ERRORS }, { ...empty.Incident(), kind: "HTTP_ERRORS" });
   m.reads("Incident.kind: HTTP_SLOW", { kind: w.ProjectProblemKind.HTTP_SLOW }, { ...empty.Incident(), kind: "HTTP_SLOW" });
+  m.reads("Incident.kind: DATABASE_SETUP", { kind: w.ProjectProblemKind.DATABASE_SETUP }, { ...empty.Incident(), kind: "DATABASE_SETUP" });
   m.reads("Incident.kind: a value newer than the SDK", { kind: 9999 as w.ProjectProblemKind }, { ...empty.Incident(), kind: 9999 });
   m.reads("Incident.service", { service: "service" }, { ...empty.Incident(), service: "service" });
   m.reads("Incident.check", { check: {} }, { ...empty.Incident(), check: empty.SiteCheck() });
@@ -1026,6 +1114,18 @@ export const empty = {
   const m = readingDetail(w.MachineUpdatePendingSchema, (leaf: Init<typeof w.MachineUpdatePendingSchema>): Init<typeof w.MachineUpdatePendingSchema> => (leaf), anyCall, (error) => error.machineUpdatePending);
   m.reads("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
   m.reads("MachineUpdatePending: a field newer than the SDK", newer(w.MachineUpdatePendingSchema), empty.MachineUpdatePending());
+}
+
+{
+  const m = readingDetail(w.DatabaseLinkRefusalSchema, (leaf: Init<typeof w.DatabaseLinkRefusalSchema>): Init<typeof w.DatabaseLinkRefusalSchema> => (leaf), anyCall, (error) => error.databaseLinkRefusal);
+  m.reads("DatabaseLinkRefusal: nothing set", {}, empty.DatabaseLinkRefusal());
+  m.reads("DatabaseLinkRefusal: a field newer than the SDK", newer(w.DatabaseLinkRefusalSchema), empty.DatabaseLinkRefusal());
+  m.reads("DatabaseLinkRefusal.project_id", { projectId: "project_id" }, { ...empty.DatabaseLinkRefusal(), projectId: "project_id" });
+  m.reads("DatabaseLinkRefusal.reason: APP_IS_DATABASE", { reason: w.DatabaseLinkRefusalReason.APP_IS_DATABASE }, { ...empty.DatabaseLinkRefusal(), reason: "APP_IS_DATABASE" });
+  m.reads("DatabaseLinkRefusal.reason: SERVICE_NAME_TAKEN", { reason: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN }, { ...empty.DatabaseLinkRefusal(), reason: "SERVICE_NAME_TAKEN" });
+  m.reads("DatabaseLinkRefusal.reason: TOO_MANY_LINKS", { reason: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS }, { ...empty.DatabaseLinkRefusal(), reason: "TOO_MANY_LINKS" });
+  m.reads("DatabaseLinkRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseLinkRefusalReason }, { ...empty.DatabaseLinkRefusal(), reason: 9999 });
+  m.reads("DatabaseLinkRefusal.service", { service: "service" }, { ...empty.DatabaseLinkRefusal(), service: "service" });
 }
 
 {

@@ -16,6 +16,7 @@ METHODS = {
     "get_operation": "GetOperation",
     "query_http_traffic": "QueryHttpTraffic",
     "query_container_logs": "QueryContainerLogs",
+    "link_database": "LinkDatabase",
     "run_service_command": "RunServiceCommand",
     "read_path": "ReadPath",
     "create_transfer": "CreateTransfer",
@@ -52,6 +53,7 @@ DETAILS = (
     "ProjectChanged",
     "MachineUnreachable",
     "MachineUpdatePending",
+    "DatabaseLinkRefusal",
     "NoMachine",
 )
 

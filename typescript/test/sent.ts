@@ -157,6 +157,8 @@ import type * as p from "pethost";
   m.sends("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { waitSeconds: 1009 });
   m.sends("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("CreateProjectRequest.database: POSTGRES", { database: "POSTGRES" }, { database: w.DatabaseEngine.POSTGRES });
+  m.sends("CreateProjectRequest.database: VALKEY", { database: "VALKEY" }, { database: w.DatabaseEngine.VALKEY });
 }
 
 {
@@ -306,6 +308,15 @@ import type * as p from "pethost";
   m.sends("DeleteProjectAction: nothing set", {}, {});
   m.sends("DeleteProjectAction.skip_final_backup", { skipFinalBackup: true }, { skipFinalBackup: true });
   m.sends("DeleteProjectAction.skip_final_backup: zero is not sent", { skipFinalBackup: false }, {});
+}
+
+{
+  const m = sending(w.LinkDatabaseRequestSchema, (leaf: Init<typeof w.LinkDatabaseRequestSchema>): Init<typeof w.LinkDatabaseRequestSchema> => (leaf), async (api, given: p.LinkDatabaseRequest) => api.linkDatabase(given));
+  m.sends("LinkDatabaseRequest: nothing set", {}, {});
+  m.sends("LinkDatabaseRequest.database_project_id", { databaseProjectId: "database_project_id" }, { databaseProjectId: "database_project_id" });
+  m.sends("LinkDatabaseRequest.database_project_id: zero is not sent", { databaseProjectId: "" }, {});
+  m.sends("LinkDatabaseRequest.link", { link: ["link", ""] }, { link: ["link", ""] });
+  m.sends("LinkDatabaseRequest.unlink", { unlink: ["unlink", ""] }, { unlink: ["unlink", ""] });
 }
 
 {
@@ -482,6 +493,7 @@ import type * as p from "pethost";
   m.sends("CreateTransferRequest.upload_archive", { uploadArchive: {} }, { transfer: { case: "uploadArchive", value: {} } });
   m.sends("CreateTransferRequest.upload_file", { uploadFile: {} }, { transfer: { case: "uploadFile", value: {} } });
   m.sends("CreateTransferRequest.download", { download: {} }, { transfer: { case: "download", value: {} } });
+  m.sends("CreateTransferRequest.download_database", { downloadDatabase: {} }, { transfer: { case: "downloadDatabase", value: {} } });
   m.refuses("CreateTransferRequest.transfer: two members", { uploadArchive: {}, uploadFile: {} }, "transfer: uploadArchive and uploadFile are both set; set one");
 }
 
@@ -518,6 +530,15 @@ import type * as p from "pethost";
   m.sends("PathDownload.path", { path: "path" }, { path: "path" });
   m.sends("PathDownload.path: zero is not sent", { path: "" }, {});
   m.refuses("PathDownload.root: two members", { service: "service", volume: "volume" }, "root: service and volume are both set; set one");
+}
+
+{
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.DatabaseDumpSchema>): Init<typeof w.CreateTransferRequestSchema> => ({ transfer: { case: "downloadDatabase", value: leaf } }), async (api, given: p.DatabaseDumpInput) => api.createTransfer({ downloadDatabase: given }));
+  m.sends("DatabaseDump: nothing set", {}, {});
+  m.sends("DatabaseDump.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("DatabaseDump.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("DatabaseDump.database", { database: "database" }, { database: "database" });
+  m.sends("DatabaseDump.database: zero is not sent", { database: "" }, {});
 }
 
 {

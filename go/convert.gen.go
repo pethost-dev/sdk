@@ -62,6 +62,8 @@ func fromWireMachine(w *panelv1.Machine) Machine {
 		timeFromWire(w.GetScheduledRestartTime()),
 		sliceFromWire(w.GetSessions(), fromWireMachineSession),
 		sliceFromWire(w.GetAlertChannels(), fromWireAlertDestination),
+		sliceFromWire(w.GetDatabaseEngines(), fromWireDatabaseEngineOffer),
+		w.GetMemoryLimitsBytes(),
 	}
 }
 
@@ -93,6 +95,8 @@ func toWireMachine(v Machine) *panelv1.Machine {
 		ScheduledRestartTime:       timeToWire(v.ScheduledRestartTime),
 		Sessions:                   sliceToWire(v.Sessions, toWireMachineSession),
 		AlertChannels:              sliceToWire(v.AlertChannels, toWireAlertDestination),
+		DatabaseEngines:            sliceToWire(v.DatabaseEngines, toWireDatabaseEngineOffer),
+		MemoryLimitsBytes:          nonZero(v.MemoryLimitsBytes),
 	}
 	return b.Build()
 }
@@ -364,6 +368,7 @@ func fromWireProjectSummary(w *panelv1.ProjectSummary) ProjectSummary {
 		sliceFromWire(w.GetRunningOperations(), fromWireOperation),
 		w.GetPinned(),
 		w.GetDiskUsedBytes(),
+		pointerFromWire(w.GetDatabase(), fromWireDatabaseSummary),
 	}
 }
 
@@ -382,6 +387,7 @@ func toWireProjectSummary(v ProjectSummary) *panelv1.ProjectSummary {
 		RunningOperations:  sliceToWire(v.RunningOperations, toWireOperation),
 		Pinned:             nonZero(v.Pinned),
 		DiskUsedBytes:      nonZero(v.DiskUsedBytes),
+		Database:           pointerToWire(v.Database, toWireDatabaseSummary),
 	}
 	return b.Build()
 }
@@ -490,6 +496,8 @@ func fromWireProject(w *panelv1.Project) Project {
 		sliceFromWire(w.GetIncidents(), fromWireIncident),
 		w.GetMoreIncidents(),
 		sliceFromWire(w.GetUptimeDays(), fromWireUptimeDay),
+		pointerFromWire(w.GetDatabase(), fromWireDatabase),
+		w.GetLinkedDatabases(),
 	}
 }
 
@@ -521,6 +529,8 @@ func toWireProject(v Project) *panelv1.Project {
 		Incidents:             sliceToWire(v.Incidents, toWireIncident),
 		MoreIncidents:         nonZero(v.MoreIncidents),
 		UptimeDays:            sliceToWire(v.UptimeDays, toWireUptimeDay),
+		Database:              pointerToWire(v.Database, toWireDatabase),
+		LinkedDatabases:       v.LinkedDatabases,
 	}
 	return b.Build()
 }
@@ -954,6 +964,7 @@ func fromWireCreateProjectRequest(w *panelv1.CreateProjectRequest) CreateProject
 		w.GetTimeoutSeconds(),
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		fromWireDatabaseEngine(w.GetDatabase()),
 	}
 }
 
@@ -967,6 +978,7 @@ func toWireCreateProjectRequest(v CreateProjectRequest) *panelv1.CreateProjectRe
 		TimeoutSeconds: nonZero(v.TimeoutSeconds),
 		OperationId:    nonZero(v.OperationID),
 		WaitSeconds:    v.WaitSeconds,
+		Database:       nonZero(toWireDatabaseEngine(v.Database)),
 	}
 	return b.Build()
 }
@@ -1450,6 +1462,149 @@ func toWireRunProjectActionResponse(v RunProjectActionResponse) *panelv1.RunProj
 		Operation: pointerToWire(v.Operation, toWireOperation),
 		Project:   pointerToWire(v.Project, toWireProject),
 		Log:       sliceToWire(v.Log, toWireOperationLogLine),
+	}
+	return b.Build()
+}
+
+func fromWireDatabase(w *panelv1.Database) Database {
+	return Database{
+		fromWireDatabaseEngine(w.GetEngine()),
+		w.GetMajorVersion(),
+		w.GetServerVersion(),
+		w.GetMemoryLimitBytes(),
+		w.GetDataBytes(),
+		w.GetConnections(),
+		w.GetMaxConnections(),
+		w.GetLinkedProjects(),
+		pointerFromWire(w.GetConnection(), fromWireDatabaseConnection),
+		w.GetService(),
+		w.GetVolume(),
+	}
+}
+
+func toWireDatabase(v Database) *panelv1.Database {
+	b := panelv1.Database_builder{
+		Engine:           nonZero(toWireDatabaseEngine(v.Engine)),
+		MajorVersion:     nonZero(v.MajorVersion),
+		ServerVersion:    nonZero(v.ServerVersion),
+		MemoryLimitBytes: nonZero(v.MemoryLimitBytes),
+		DataBytes:        nonZero(v.DataBytes),
+		Connections:      nonZero(v.Connections),
+		MaxConnections:   nonZero(v.MaxConnections),
+		LinkedProjects:   v.LinkedProjects,
+		Connection:       pointerToWire(v.Connection, toWireDatabaseConnection),
+		Service:          nonZero(v.Service),
+		Volume:           nonZero(v.Volume),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseConnection(w *panelv1.DatabaseConnection) DatabaseConnection {
+	return DatabaseConnection{
+		w.GetHost(),
+		w.GetPort(),
+		w.GetUser(),
+		w.GetDatabase(),
+		w.GetPassword(),
+		w.GetUrl(),
+		w.GetLocalUrl(),
+	}
+}
+
+func toWireDatabaseConnection(v DatabaseConnection) *panelv1.DatabaseConnection {
+	b := panelv1.DatabaseConnection_builder{
+		Host:     nonZero(v.Host),
+		Port:     nonZero(v.Port),
+		User:     nonZero(v.User),
+		Database: nonZero(v.Database),
+		Password: nonZero(v.Password),
+		Url:      nonZero(v.URL),
+		LocalUrl: nonZero(v.LocalURL),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseSummary(w *panelv1.DatabaseSummary) DatabaseSummary {
+	return DatabaseSummary{
+		fromWireDatabaseEngine(w.GetEngine()),
+		w.GetMajorVersion(),
+		w.GetDataBytes(),
+		w.GetConnections(),
+		w.GetLinkedProjects(),
+		w.GetServerVersion(),
+	}
+}
+
+func toWireDatabaseSummary(v DatabaseSummary) *panelv1.DatabaseSummary {
+	b := panelv1.DatabaseSummary_builder{
+		Engine:         nonZero(toWireDatabaseEngine(v.Engine)),
+		MajorVersion:   nonZero(v.MajorVersion),
+		DataBytes:      nonZero(v.DataBytes),
+		Connections:    nonZero(v.Connections),
+		LinkedProjects: v.LinkedProjects,
+		ServerVersion:  nonZero(v.ServerVersion),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseEngineOffer(w *panelv1.DatabaseEngineOffer) DatabaseEngineOffer {
+	return DatabaseEngineOffer{
+		fromWireDatabaseEngine(w.GetEngine()),
+		w.GetMajorVersion(),
+		sliceFromWire(w.GetSizes(), fromWireDatabaseSizeChoice),
+		w.GetDefaultMemoryLimitBytes(),
+	}
+}
+
+func toWireDatabaseEngineOffer(v DatabaseEngineOffer) *panelv1.DatabaseEngineOffer {
+	b := panelv1.DatabaseEngineOffer_builder{
+		Engine:                  nonZero(toWireDatabaseEngine(v.Engine)),
+		MajorVersion:            nonZero(v.MajorVersion),
+		Sizes:                   sliceToWire(v.Sizes, toWireDatabaseSizeChoice),
+		DefaultMemoryLimitBytes: nonZero(v.DefaultMemoryLimitBytes),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseSizeChoice(w *panelv1.DatabaseSizeChoice) DatabaseSizeChoice {
+	return DatabaseSizeChoice{
+		w.GetMemoryLimitBytes(),
+	}
+}
+
+func toWireDatabaseSizeChoice(v DatabaseSizeChoice) *panelv1.DatabaseSizeChoice {
+	b := panelv1.DatabaseSizeChoice_builder{
+		MemoryLimitBytes: nonZero(v.MemoryLimitBytes),
+	}
+	return b.Build()
+}
+
+func fromWireLinkDatabaseRequest(w *panelv1.LinkDatabaseRequest) LinkDatabaseRequest {
+	return LinkDatabaseRequest{
+		w.GetDatabaseProjectId(),
+		w.GetLink(),
+		w.GetUnlink(),
+	}
+}
+
+func toWireLinkDatabaseRequest(v LinkDatabaseRequest) *panelv1.LinkDatabaseRequest {
+	b := panelv1.LinkDatabaseRequest_builder{
+		DatabaseProjectId: nonZero(v.DatabaseProjectID),
+		Link:              v.Link,
+		Unlink:            v.Unlink,
+	}
+	return b.Build()
+}
+
+func fromWireLinkDatabaseResponse(w *panelv1.LinkDatabaseResponse) LinkDatabaseResponse {
+	return LinkDatabaseResponse{
+		pointerFromWire(w.GetProject(), fromWireProject),
+	}
+}
+
+func toWireLinkDatabaseResponse(v LinkDatabaseResponse) *panelv1.LinkDatabaseResponse {
+	b := panelv1.LinkDatabaseResponse_builder{
+		Project: pointerToWire(v.Project, toWireProject),
 	}
 	return b.Build()
 }
@@ -2177,6 +2332,8 @@ func fromWireCreateTransferTransfer(w *panelv1.CreateTransferRequest) CreateTran
 		return CreateTransferUploadFile(fromWireFileUpload(w.GetUploadFile()))
 	case panelv1.CreateTransferRequest_Download_case:
 		return CreateTransferDownload(fromWirePathDownload(w.GetDownload()))
+	case panelv1.CreateTransferRequest_DownloadDatabase_case:
+		return CreateTransferDownloadDatabase(fromWireDatabaseDump(w.GetDownloadDatabase()))
 	}
 	return nil
 }
@@ -2193,10 +2350,15 @@ func (v CreateTransferDownload) toCreateTransferTransfer(b *panelv1.CreateTransf
 	b.Download = toWirePathDownload(PathDownload(v))
 }
 
+func (v CreateTransferDownloadDatabase) toCreateTransferTransfer(b *panelv1.CreateTransferRequest_builder) {
+	b.DownloadDatabase = toWireDatabaseDump(DatabaseDump(v))
+}
+
 var (
 	_ CreateTransferTransfer = CreateTransferUploadArchive{}
 	_ CreateTransferTransfer = CreateTransferUploadFile{}
 	_ CreateTransferTransfer = CreateTransferDownload{}
+	_ CreateTransferTransfer = CreateTransferDownloadDatabase{}
 )
 
 func fromWireArchiveUpload(w *panelv1.ArchiveUpload) ArchiveUpload {
@@ -2296,6 +2458,21 @@ var (
 	_ PathDownloadRoot = PathDownloadVolume("")
 )
 
+func fromWireDatabaseDump(w *panelv1.DatabaseDump) DatabaseDump {
+	return DatabaseDump{
+		w.GetProjectId(),
+		w.GetDatabase(),
+	}
+}
+
+func toWireDatabaseDump(v DatabaseDump) *panelv1.DatabaseDump {
+	b := panelv1.DatabaseDump_builder{
+		ProjectId: nonZero(v.ProjectID),
+		Database:  nonZero(v.Database),
+	}
+	return b.Build()
+}
+
 func fromWireCreateTransferResponse(w *panelv1.CreateTransferResponse) CreateTransferResponse {
 	return CreateTransferResponse{
 		w.GetUrl(),
@@ -2368,6 +2545,23 @@ func fromWireMachineUpdatePending(w *panelv1.MachineUpdatePending) MachineUpdate
 
 func toWireMachineUpdatePending(v MachineUpdatePending) *panelv1.MachineUpdatePending {
 	b := panelv1.MachineUpdatePending_builder{}
+	return b.Build()
+}
+
+func fromWireDatabaseLinkRefusal(w *panelv1.DatabaseLinkRefusal) DatabaseLinkRefusal {
+	return DatabaseLinkRefusal{
+		w.GetProjectId(),
+		fromWireDatabaseLinkRefusalReason(w.GetReason()),
+		w.GetService(),
+	}
+}
+
+func toWireDatabaseLinkRefusal(v DatabaseLinkRefusal) *panelv1.DatabaseLinkRefusal {
+	b := panelv1.DatabaseLinkRefusal_builder{
+		ProjectId: nonZero(v.ProjectID),
+		Reason:    nonZero(toWireDatabaseLinkRefusalReason(v.Reason)),
+		Service:   nonZero(v.Service),
+	}
 	return b.Build()
 }
 
@@ -2570,6 +2764,10 @@ func toWireDeployFailureReason(v DeployFailureReason) panelv1.DeployFailureReaso
 	return panelv1.DeployFailureReason(v)
 }
 
+func fromWireDatabaseEngine(w panelv1.DatabaseEngine) DatabaseEngine { return DatabaseEngine(w) }
+
+func toWireDatabaseEngine(v DatabaseEngine) panelv1.DatabaseEngine { return panelv1.DatabaseEngine(v) }
+
 func fromWireTrafficMetric(w panelv1.TrafficMetric) TrafficMetric { return TrafficMetric(w) }
 
 func toWireTrafficMetric(v TrafficMetric) panelv1.TrafficMetric { return panelv1.TrafficMetric(v) }
@@ -2597,6 +2795,14 @@ func toWireFileType(v FileType) panelv1.FileType { return panelv1.FileType(v) }
 func fromWireFileLocation(w panelv1.FileLocation) FileLocation { return FileLocation(w) }
 
 func toWireFileLocation(v FileLocation) panelv1.FileLocation { return panelv1.FileLocation(v) }
+
+func fromWireDatabaseLinkRefusalReason(w panelv1.DatabaseLinkRefusalReason) DatabaseLinkRefusalReason {
+	return DatabaseLinkRefusalReason(w)
+}
+
+func toWireDatabaseLinkRefusalReason(v DatabaseLinkRefusalReason) panelv1.DatabaseLinkRefusalReason {
+	return panelv1.DatabaseLinkRefusalReason(v)
+}
 
 func fromWireNoMachineReason(w panelv1.NoMachineReason) NoMachineReason { return NoMachineReason(w) }
 
@@ -2631,6 +2837,7 @@ func _() {
 	_ = same[ProjectProblemKindSiteDown-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_SITE_DOWN)]
 	_ = same[ProjectProblemKindHTTPErrors-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_ERRORS)]
 	_ = same[ProjectProblemKindHTTPSlow-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_HTTP_SLOW)]
+	_ = same[ProjectProblemKindDatabaseSetup-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_DATABASE_SETUP)]
 	_ = same[ServicesActionKindUnspecified-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_UNSPECIFIED)]
 	_ = same[ServicesActionKindStart-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_START)]
 	_ = same[ServicesActionKindStop-ServicesActionKind(panelv1.ServicesActionKind_SERVICES_ACTION_KIND_STOP)]
@@ -2680,6 +2887,9 @@ func _() {
 	_ = same[DeployFailureReasonTimedOut-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_TIMED_OUT)]
 	_ = same[DeployFailureReasonUncoveredImageVolume-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME)]
 	_ = same[DeployFailureReasonBuildMemoryUnavailable-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE)]
+	_ = same[DatabaseEngineUnspecified-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED)]
+	_ = same[DatabaseEnginePostgres-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_POSTGRES)]
+	_ = same[DatabaseEngineValkey-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_VALKEY)]
 	_ = same[TrafficMetricUnspecified-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED)]
 	_ = same[TrafficMetricServerErrors-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERRORS)]
 	_ = same[TrafficMetricServerErrorPercent-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERROR_PERCENT)]
@@ -2707,6 +2917,10 @@ func _() {
 	_ = same[FileLocationContainer-FileLocation(panelv1.FileLocation_FILE_LOCATION_CONTAINER)]
 	_ = same[FileLocationVolume-FileLocation(panelv1.FileLocation_FILE_LOCATION_VOLUME)]
 	_ = same[FileLocationProjectFiles-FileLocation(panelv1.FileLocation_FILE_LOCATION_PROJECT_FILES)]
+	_ = same[DatabaseLinkRefusalReasonUnspecified-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED)]
+	_ = same[DatabaseLinkRefusalReasonAppIsDatabase-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE)]
+	_ = same[DatabaseLinkRefusalReasonServiceNameTaken-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN)]
+	_ = same[DatabaseLinkRefusalReasonTooManyLinks-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS)]
 	_ = same[NoMachineReasonUnspecified-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_UNSPECIFIED)]
 	_ = same[NoMachineReasonNoPlan-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_NO_PLAN)]
 	_ = same[NoMachineReasonBeingPrepared-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_BEING_PREPARED)]

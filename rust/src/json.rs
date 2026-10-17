@@ -112,6 +112,12 @@ json!(
     convert::deploy_failure_reason_from_wire
 );
 json!(
+    types::DatabaseEngine,
+    buffa::EnumValue<wire::DatabaseEngine>,
+    convert::database_engine_to_wire,
+    convert::database_engine_from_wire
+);
+json!(
     types::TrafficMetric,
     buffa::EnumValue<wire::TrafficMetric>,
     convert::traffic_metric_to_wire,
@@ -146,6 +152,12 @@ json!(
     buffa::EnumValue<wire::FileLocation>,
     convert::file_location_to_wire,
     convert::file_location_from_wire
+);
+json!(
+    types::DatabaseLinkRefusalReason,
+    buffa::EnumValue<wire::DatabaseLinkRefusalReason>,
+    convert::database_link_refusal_reason_to_wire,
+    convert::database_link_refusal_reason_from_wire
 );
 json!(
     types::NoMachineReason,
@@ -450,6 +462,48 @@ json!(
     types::RunProjectActionResponse::from
 );
 json!(
+    types::Database,
+    wire::Database,
+    wire::Database::from,
+    types::Database::from
+);
+json!(
+    types::DatabaseConnection,
+    wire::DatabaseConnection,
+    wire::DatabaseConnection::from,
+    types::DatabaseConnection::from
+);
+json!(
+    types::DatabaseSummary,
+    wire::DatabaseSummary,
+    wire::DatabaseSummary::from,
+    types::DatabaseSummary::from
+);
+json!(
+    types::DatabaseEngineOffer,
+    wire::DatabaseEngineOffer,
+    wire::DatabaseEngineOffer::from,
+    types::DatabaseEngineOffer::from
+);
+json!(
+    types::DatabaseSizeChoice,
+    wire::DatabaseSizeChoice,
+    wire::DatabaseSizeChoice::from,
+    types::DatabaseSizeChoice::from
+);
+json!(
+    types::LinkDatabaseRequest,
+    wire::LinkDatabaseRequest,
+    wire::LinkDatabaseRequest::from,
+    types::LinkDatabaseRequest::from
+);
+json!(
+    types::LinkDatabaseResponse,
+    wire::LinkDatabaseResponse,
+    wire::LinkDatabaseResponse::from,
+    types::LinkDatabaseResponse::from
+);
+json!(
     types::SetProjectAlertsRequest,
     wire::SetProjectAlertsRequest,
     wire::SetProjectAlertsRequest::from,
@@ -643,6 +697,12 @@ json!(
     types::PathDownload::from
 );
 json!(
+    types::DatabaseDump,
+    wire::DatabaseDump,
+    wire::DatabaseDump::from,
+    types::DatabaseDump::from
+);
+json!(
     types::CreateTransferResponse,
     wire::CreateTransferResponse,
     wire::CreateTransferResponse::from,
@@ -671,6 +731,12 @@ json!(
     wire::MachineUpdatePending,
     wire::MachineUpdatePending::from,
     types::MachineUpdatePending::from
+);
+json!(
+    types::DatabaseLinkRefusal,
+    wire::DatabaseLinkRefusal,
+    wire::DatabaseLinkRefusal::from,
+    types::DatabaseLinkRefusal::from
 );
 json!(
     types::NoMachine,

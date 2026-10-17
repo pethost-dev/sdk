@@ -58,8 +58,8 @@ func (c *Client) RunMachineAction(ctx context.Context, request *RunMachineAction
 //
 // One project in full: services (state, health, image, the ports it listens on, volumes,
 // environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-// snapshots, the last day's HTTP traffic. Env-file values only with IncludeSecretValues. Its
-// files: [Client.ReadPath].
+// snapshots, the last day's HTTP traffic. Env-file values and a database's password
+// ([Project.Database].Connection) only with IncludeSecretValues. Its files: [Client.ReadPath].
 func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*GetProjectResponse, error) {
 	response, err := c.wire.GetProject(ctx, toWireGetProjectRequest(orZero(request)))
 	if err != nil {
@@ -85,6 +85,12 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // /compose.yaml, other compose and override files are dropped. Without one, a Dockerfile
 // yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of
 // its last stage).
+//
+// A database (Postgres or Valkey): Database, no files, and a ProjectID without "_", not a
+// number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
+// (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
+// writes its compose.yaml and /.env and deploys it at its default size, with no address; then
+// [Client.LinkDatabase] the apps that use it.
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -140,8 +146,9 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 //
 // [CodeAlreadyExists] = the id is taken (a retry with its OperationID returns that operation).
 // [CodeFailedPrecondition] = the GitHub App cannot read the repository (see
-// [GetMachineResponse.Github]), or no such branch or directory. A deleted project's id
-// inherits its snapshots.
+// [GetMachineResponse.Github]), or no such branch or directory; + [MachineUpdatePending] =
+// Database, on a machine whose software predates databases. A deleted project's id inherits
+// its snapshots.
 func (c *Client) CreateProject(ctx context.Context, request *CreateProjectRequest) (*CreateProjectResponse, error) {
 	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(orZero(request)))
 	if err != nil {
@@ -207,7 +214,9 @@ func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (
 // an operation, change the source, delete an undeclared volume or the project. Recreate, back
 // up, restore, delete and [RunProjectActionSetSource]'s deploy run as operations, waited for
 // (WaitSeconds), as is the end of a cancelled one; the others are done on return. Answers with
-// the project as it then is.
+// the project as it then is. [RunProjectActionRestoreSnapshot] takes the project's own
+// snapshots only. A database's snapshot as a new database is the person's to make, in the
+// panel (the database's Backups tab, Restore as a new database): no tool makes one.
 func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectActionRequest) (*RunProjectActionResponse, error) {
 	response, err := c.wire.RunProjectAction(ctx, toWireRunProjectActionRequest(orZero(request)))
 	if err != nil {
@@ -276,6 +285,24 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 	return new(fromWireQueryContainerLogsResponse(response)), nil
 }
 
+// LinkDatabase: link projects to a database. It may delete or overwrite.
+//
+// Lets projects reach a database project: inside each linked project the database is the host
+// `<database_project_id>` at its port, and [Project.Database] says how to sign in (its
+// password with [Client.GetProject] [GetProjectRequest.IncludeSecretValues]). Takes effect at
+// once and deploys nothing. [CodeInvalidArgument] = a project in both link and unlink.
+// [CodeNotFound] = no such project. [CodeFailedPrecondition] = DatabaseProjectID is no
+// database; + [DatabaseLinkRefusal] = the app is a database, has a service named or aliased
+// like the database, or there are 20 links already; + [MachineUpdatePending] = the machine's
+// software predates databases. Answers with the database's Project.
+func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest) (*LinkDatabaseResponse, error) {
+	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(orZero(request)))
+	if err != nil {
+		return nil, fromWireError(err)
+	}
+	return new(fromWireLinkDatabaseResponse(response)), nil
+}
+
 // RunServiceCommand: run a command in a service. It may delete or overwrite.
 //
 // Runs a command in a running service's container, like `docker exec`; returns the exit code
@@ -318,13 +345,19 @@ func (c *Client) ReadPath(ctx context.Context, request *ReadPathRequest) (*ReadP
 //   - [CreateTransferUploadFile]: one file into a container or volume, replacing any file
 //     there (replaces), creating parents.
 //   - download: a file, or a directory as a .tar (FileName).
+//   - [CreateTransferDownloadDatabase]: a database project's dump, made as it downloads:
+//     Postgres's for pg_restore (roles are not in it), Valkey's .rdb. One at a time per
+//     database.
 //
 // Plain-text answers: 404 used or expired URL, 409 [CodeFailedPrecondition], 413 archive over
-// 2 GiB, 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps
-// nothing: get a new URL. Errors as [Client.ReadPath]; [CodeFailedPrecondition] also =
-// downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
-// or /sys, or the hostname not yet certified. [CodeResourceExhausted] = disk full, or too many
-// transfers.
+// 2 GiB, 422 unsafe archive (a reason per line), 503 [CodeUnavailable], 507 disk full. A
+// failed transfer keeps nothing: get a new URL. Errors as [Client.ReadPath];
+// [CodeFailedPrecondition] also = downloading neither a file nor a directory, uploading onto a
+// non-file, a mount point, /proc or /sys, the hostname not yet certified, or a dump of a
+// project that is no database or is not running. [CodeNotFound] also = a Postgres database the
+// server lacks (the message lists its databases). [CodeResourceExhausted] = disk full, or too
+// many transfers. [CodeUnavailable] = Postgres runs but does not answer yet: try again
+// shortly.
 func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequest) (*CreateTransferResponse, error) {
 	response, err := c.wire.CreateTransfer(ctx, toWireCreateTransferRequest(orZero(request)))
 	if err != nil {

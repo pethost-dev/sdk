@@ -652,6 +652,77 @@ func (v *RunProjectActionResponse) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v Database) MarshalJSON() ([]byte, error) { return marshalJSON(toWireDatabase(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *Database) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireDatabase) }
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseConnection) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseConnection(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseConnection) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseConnection)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseSummary) MarshalJSON() ([]byte, error) { return marshalJSON(toWireDatabaseSummary(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseSummary) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseSummary)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseEngineOffer) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseEngineOffer(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseEngineOffer) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseEngineOffer)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseSizeChoice) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseSizeChoice(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseSizeChoice) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseSizeChoice)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v LinkDatabaseRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireLinkDatabaseRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *LinkDatabaseRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireLinkDatabaseRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v LinkDatabaseResponse) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireLinkDatabaseResponse(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *LinkDatabaseResponse) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireLinkDatabaseResponse)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v SetProjectAlertsRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireSetProjectAlertsRequest(v))
 }
@@ -979,6 +1050,16 @@ func (v *CreateTransferDownload) UnmarshalJSON(data []byte) error {
 	return (*PathDownload)(v).UnmarshalJSON(data)
 }
 
+// MarshalJSON writes the member alone as the API's JSON of a [DatabaseDump].
+func (v CreateTransferDownloadDatabase) MarshalJSON() ([]byte, error) {
+	return DatabaseDump(v).MarshalJSON()
+}
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [DatabaseDump].
+func (v *CreateTransferDownloadDatabase) UnmarshalJSON(data []byte) error {
+	return (*DatabaseDump)(v).UnmarshalJSON(data)
+}
+
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v ArchiveUpload) MarshalJSON() ([]byte, error) { return marshalJSON(toWireArchiveUpload(v)) }
 
@@ -1004,6 +1085,15 @@ func (v PathDownload) MarshalJSON() ([]byte, error) { return marshalJSON(toWireP
 // API does not have is refused.
 func (v *PathDownload) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWirePathDownload)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseDump) MarshalJSON() ([]byte, error) { return marshalJSON(toWireDatabaseDump(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseDump) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseDump)
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
@@ -1055,6 +1145,17 @@ func (v MachineUpdatePending) MarshalJSON() ([]byte, error) {
 // API does not have is refused.
 func (v *MachineUpdatePending) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireMachineUpdatePending)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseLinkRefusal) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseLinkRefusal(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseLinkRefusal) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseLinkRefusal)
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
@@ -1177,8 +1278,8 @@ func (v *MachineSessionKind) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "PROJECT_PROBLEM_KIND_HTTP_SLOW" for [ProjectProblemKindHTTPSlow], or its number when the
-// package has no name for it.
+// "PROJECT_PROBLEM_KIND_DATABASE_SETUP" for [ProjectProblemKindDatabaseSetup], or its number
+// when the package has no name for it.
 func (v ProjectProblemKind) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireProjectProblemKind(v))
 }
@@ -1278,6 +1379,18 @@ func (v *DeployFailureReason) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "DATABASE_ENGINE_VALKEY" for [DatabaseEngineValkey], or its number when the package has no
+// name for it.
+func (v DatabaseEngine) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireDatabaseEngine(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *DatabaseEngine) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.DatabaseEngine(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
 // "TRAFFIC_METRIC_LATENCY_P95_MS" for [TrafficMetricLatencyP95Ms], or its number when the
 // package has no name for it.
 func (v TrafficMetric) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireTrafficMetric(v)) }
@@ -1336,6 +1449,18 @@ func (v FileLocation) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toW
 // UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
 func (v *FileLocation) UnmarshalJSON(data []byte) error {
 	return unmarshalEnumJSON(data, v, panelv1.FileLocation(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS" for [DatabaseLinkRefusalReasonTooManyLinks],
+// or its number when the package has no name for it.
+func (v DatabaseLinkRefusalReason) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireDatabaseLinkRefusalReason(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *DatabaseLinkRefusalReason) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.DatabaseLinkRefusalReason(0).Descriptor())
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,

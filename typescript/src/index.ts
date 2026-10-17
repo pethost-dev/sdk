@@ -80,6 +80,8 @@ export const MachineSessionKind = {
  *   sends to.
  * - `HTTP_ERRORS`: A traffic rule on 5xx holds.
  * - `HTTP_SLOW`: A traffic rule on p95 holds.
+ * - `DATABASE_SETUP`: A database the machine has not set up for 2 minutes since it started, or
+ *   whose apps' user is gone: the message says the engine's error.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -140,6 +142,11 @@ export const ProjectProblemKind = {
   HTTP_ERRORS: "HTTP_ERRORS",
   /** A traffic rule on p95 holds. */
   HTTP_SLOW: "HTTP_SLOW",
+  /**
+   * A database the machine has not set up for 2 minutes since it started, or whose apps' user is
+   * gone: the message says the engine's error.
+   */
+  DATABASE_SETUP: "DATABASE_SETUP",
 } as const;
 
 /**
@@ -331,6 +338,18 @@ export const DeployFailureReason = {
 } as const;
 
 /**
+ * - `POSTGRES`
+ * - `VALKEY`
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type DatabaseEngine = (typeof DatabaseEngine)[keyof typeof DatabaseEngine];
+export const DatabaseEngine = {
+  POSTGRES: "POSTGRES",
+  VALKEY: "VALKEY",
+} as const;
+
+/**
  * - `SERVER_ERRORS`: 5xx responses in the window.
  * - `SERVER_ERROR_PERCENT`: 5xx, of the window's requests (WebSockets too).
  * - `LATENCY_P95_MS`
@@ -445,6 +464,27 @@ export const FileLocation = {
    * {@link Pethost.deployProject | deployProject}.
    */
   PROJECT_FILES: "PROJECT_FILES",
+} as const;
+
+/**
+ * - `APP_IS_DATABASE`: It is a database itself.
+ * - `SERVICE_NAME_TAKEN`: A service of it is named or aliased like the database, whose host it
+ *   would hide: rename the service or its alias.
+ * - `TOO_MANY_LINKS`: The database has 20: unlink one first.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type DatabaseLinkRefusalReason = (typeof DatabaseLinkRefusalReason)[keyof typeof DatabaseLinkRefusalReason];
+export const DatabaseLinkRefusalReason = {
+  /** It is a database itself. */
+  APP_IS_DATABASE: "APP_IS_DATABASE",
+  /**
+   * A service of it is named or aliased like the database, whose host it would hide: rename the
+   * service or its alias.
+   */
+  SERVICE_NAME_TAKEN: "SERVICE_NAME_TAKEN",
+  /** The database has 20: unlink one first. */
+  TOO_MANY_LINKS: "TOO_MANY_LINKS",
 } as const;
 
 /**
@@ -585,6 +625,16 @@ export interface Machine {
    * alerts reach nobody.
    */
   alertChannels: AlertDestination[];
+  /**
+   * The databases the machine makes ({@link Pethost.createProject | createProject}'s `database`),
+   * one per engine, with the sizes they may take. Empty = the machine's software predates databases.
+   */
+  databaseEngines: DatabaseEngineOffer[];
+  /**
+   * The sum of every service's memory limit (`mem_limit`): what the projects may take together,
+   * which memoryTotalBytes does not reserve.
+   */
+  memoryLimitsBytes: bigint;
 }
 
 /** {@link Machine} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -904,6 +954,8 @@ export interface ProjectSummary {
    * with another project counts in both. Measured every few minutes.
    */
   diskUsedBytes: bigint;
+  /** Set = a database project ({@link Pethost.createProject | createProject} `database`). */
+  database?: DatabaseSummary;
 }
 
 /** {@link ProjectSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -959,8 +1011,8 @@ export const ProjectProblem: JsonCodec<ProjectProblem, ProjectProblem> = {
 export interface GetProjectRequest {
   projectId?: string | undefined;
   /**
-   * True = include env-file values (EnvironmentVariable.secret). To edit .env:
-   * {@link Pethost.readPath | readPath} /.env.
+   * True = include env-file values (EnvironmentVariable.secret) and a database's password
+   * (Project.database.connection). To edit .env: {@link Pethost.readPath | readPath} /.env.
    */
   includeSecretValues?: boolean | undefined;
   /** Only older snapshots: the oldest createTime seen, to page back. Absent = the newest. */
@@ -1085,6 +1137,16 @@ export interface Project {
   moreIncidents: boolean;
   /** Oldest first, GetProjectRequest.uptimeDayCount of them, today's last. */
   uptimeDays: UptimeDay[];
+  /**
+   * Set = a database project ({@link Pethost.createProject | createProject} `database`): its engine,
+   * its state and how apps sign in.
+   */
+  database?: Database;
+  /**
+   * The database projects this one reaches ({@link Pethost.linkDatabase | linkDatabase}), each at
+   * the host of its projectId.
+   */
+  linkedDatabases: string[];
 }
 
 /** {@link Project} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1667,6 +1729,11 @@ export interface CreateProjectRequest {
   operationId?: string | undefined;
   /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
   waitSeconds?: number | undefined;
+  /**
+   * Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, uploadId,
+   * source, xPethost out.
+   */
+  database?: DatabaseEngine | undefined;
 }
 
 /** {@link CreateProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2314,6 +2381,133 @@ export const RunProjectActionResponse: JsonCodec<RunProjectActionResponse, RunPr
   fromJson: (json) => convert.fromRunProjectActionResponse(readJson(wire.RunProjectActionResponseSchema, json)),
 };
 
+/** A database project: one service running Postgres or Valkey, whose files the machine wrote. */
+export interface Database {
+  engine?: DatabaseEngine | number;
+  /** As it was made, e.g. 18. */
+  majorVersion: number;
+  /** What the server says it runs, e.g. "18.6". Empty = not answering. */
+  serverVersion: string;
+  /** Its size: its service's `mem_limit` in compose.yaml. */
+  memoryLimitBytes: bigint;
+  /** Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes. */
+  dataBytes: bigint;
+  /** Open now. */
+  connections: number;
+  /** Valkey: maxclients. */
+  maxConnections: number;
+  /** The projects that reach it ({@link Pethost.linkDatabase | linkDatabase}). */
+  linkedProjects: string[];
+  connection?: DatabaseConnection;
+  /** The service of Project.services that runs the database. */
+  service: string;
+  /** The volume of Project.volumes that holds its data. */
+  volume: string;
+}
+
+/** {@link Database} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Database: JsonCodec<Database, Database> = {
+  toJson: (value) => writeJson(wire.DatabaseSchema, convert.toDatabase(value)),
+  fromJson: (json) => convert.fromDatabase(readJson(wire.DatabaseSchema, json)),
+};
+
+/** How a linked project signs in, as the apps' user. */
+export interface DatabaseConnection {
+  /** The database's projectId. */
+  host: string;
+  port: number;
+  /** "app"; Valkey: "default". */
+  user: string;
+  /** "app"; Valkey: "0". */
+  database: string;
+  /** Only with {@link Pethost.getProject | getProject}'s includeSecretValues. */
+  password: string;
+  /**
+   * For the app's .env, e.g. DATABASE_URL=\<url>. Without includeSecretValues, **** stands for the
+   * password.
+   */
+  url: string;
+  /** As url, at localhost: what the SSH tunnel to its service gives (Service.sshCommand). */
+  localUrl: string;
+}
+
+/** {@link DatabaseConnection} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseConnection: JsonCodec<DatabaseConnection, DatabaseConnection> = {
+  toJson: (value) => writeJson(wire.DatabaseConnectionSchema, convert.toDatabaseConnection(value)),
+  fromJson: (json) => convert.fromDatabaseConnection(readJson(wire.DatabaseConnectionSchema, json)),
+};
+
+/** A database project in brief (ProjectSummary.database). */
+export interface DatabaseSummary {
+  engine?: DatabaseEngine | number;
+  majorVersion: number;
+  /** As in Database. */
+  dataBytes: bigint;
+  connections: number;
+  linkedProjects: string[];
+  /** As in Database: empty = not answering, its figures are zero. */
+  serverVersion: string;
+}
+
+/** {@link DatabaseSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseSummary: JsonCodec<DatabaseSummary, DatabaseSummary> = {
+  toJson: (value) => writeJson(wire.DatabaseSummarySchema, convert.toDatabaseSummary(value)),
+  fromJson: (json) => convert.fromDatabaseSummary(readJson(wire.DatabaseSummarySchema, json)),
+};
+
+/** An engine the machine makes databases of (Machine.databaseEngines). */
+export interface DatabaseEngineOffer {
+  engine?: DatabaseEngine | number;
+  /** The major a new database gets, e.g. 18. */
+  majorVersion: number;
+  /** Smallest first. */
+  sizes: DatabaseSizeChoice[];
+  /** The size {@link Pethost.createProject | createProject}'s `database` gives. */
+  defaultMemoryLimitBytes: bigint;
+}
+
+/** {@link DatabaseEngineOffer} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseEngineOffer: JsonCodec<DatabaseEngineOffer, DatabaseEngineOffer> = {
+  toJson: (value) => writeJson(wire.DatabaseEngineOfferSchema, convert.toDatabaseEngineOffer(value)),
+  fromJson: (json) => convert.fromDatabaseEngineOffer(readJson(wire.DatabaseEngineOfferSchema, json)),
+};
+
+/** A size a database may take. */
+export interface DatabaseSizeChoice {
+  memoryLimitBytes: bigint;
+}
+
+/** {@link DatabaseSizeChoice} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseSizeChoice: JsonCodec<DatabaseSizeChoice, DatabaseSizeChoice> = {
+  toJson: (value) => writeJson(wire.DatabaseSizeChoiceSchema, convert.toDatabaseSizeChoice(value)),
+  fromJson: (json) => convert.fromDatabaseSizeChoice(readJson(wire.DatabaseSizeChoiceSchema, json)),
+};
+
+export interface LinkDatabaseRequest {
+  databaseProjectId?: string | undefined;
+  /** App project_ids to link. */
+  link?: readonly string[] | undefined;
+  /** App project_ids to unlink. */
+  unlink?: readonly string[] | undefined;
+}
+
+/** {@link LinkDatabaseRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const LinkDatabaseRequest: JsonCodec<LinkDatabaseRequest, LinkDatabaseRequest> = {
+  toJson: (value) => writeJson(wire.LinkDatabaseRequestSchema, convert.toLinkDatabaseRequest(value)),
+  fromJson: (json) => convert.fromLinkDatabaseRequest(readJson(wire.LinkDatabaseRequestSchema, json)),
+};
+
+export interface LinkDatabaseResponse {
+  /** The database, as {@link Pethost.getProject | getProject} returns it. */
+  project?: Project;
+}
+
+/** {@link LinkDatabaseResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const LinkDatabaseResponse: JsonCodec<LinkDatabaseResponse, LinkDatabaseResponse> = {
+  toJson: (value) => writeJson(wire.LinkDatabaseResponseSchema, convert.toLinkDatabaseResponse(value)),
+  fromJson: (json) => convert.fromLinkDatabaseResponse(readJson(wire.LinkDatabaseResponseSchema, json)),
+};
+
 export interface SetProjectAlertsRequest {
   projectId?: string | undefined;
   /** ≤10. Given = the whole list. */
@@ -2437,7 +2631,7 @@ export const TrafficRule: JsonCodec<TrafficRuleInput, TrafficRule> = {
 export interface ProjectAlerts {
   /** Until set: the project's URL at "/" (machineDefault); none without a route. */
   checks: SiteCheckState[];
-  /** Until set: 10 or more 5xx in 5 minutes, of every request (machineDefault). */
+  /** Until set: 10 or more 5xx in 5 minutes, of every request (machineDefault); none without a route. */
   trafficRules: TrafficRuleState[];
   /** True = incidents are recorded, nothing is sent. */
   off: boolean;
@@ -3037,22 +3231,32 @@ export const ReadPathResponse: JsonCodec<ReadPathResponse, ReadPathResponse> = {
 
 export type CreateTransferRequest = (
   | {
-      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`. */
+      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`, `downloadDatabase`. */
       uploadArchive?: ArchiveUploadInput | undefined;
       uploadFile?: undefined;
       download?: undefined;
+      downloadDatabase?: undefined;
     }
   | {
-      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`. */
+      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`, `downloadDatabase`. */
       uploadFile?: FileUploadInput | undefined;
       uploadArchive?: undefined;
       download?: undefined;
+      downloadDatabase?: undefined;
     }
   | {
-      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`. */
+      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`, `downloadDatabase`. */
       download?: PathDownloadInput | undefined;
       uploadArchive?: undefined;
       uploadFile?: undefined;
+      downloadDatabase?: undefined;
+    }
+  | {
+      /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`, `downloadDatabase`. */
+      downloadDatabase?: DatabaseDumpInput | undefined;
+      uploadArchive?: undefined;
+      uploadFile?: undefined;
+      download?: undefined;
     }
 );
 
@@ -3145,6 +3349,19 @@ export const PathDownload: JsonCodec<PathDownloadInput, PathDownloadInput> = {
   fromJson: (json) => convert.fromPathDownload(readJson(wire.PathDownloadSchema, json)),
 };
 
+/** A database project's dump: Postgres's in its custom format, Valkey's .rdb. */
+export interface DatabaseDumpInput {
+  projectId?: string | undefined;
+  /** Postgres: the database to dump. Empty = "app", the apps'. */
+  database?: string | undefined;
+}
+
+/** {@link DatabaseDumpInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseDump: JsonCodec<DatabaseDumpInput, DatabaseDumpInput> = {
+  toJson: (value) => writeJson(wire.DatabaseDumpSchema, convert.toDatabaseDump(value)),
+  fromJson: (json) => convert.fromDatabaseDump(readJson(wire.DatabaseDumpSchema, json)),
+};
+
 export interface CreateTransferResponse {
   /** On the machine's hostname (Machine.hostname); it works once. */
   url: string;
@@ -3169,7 +3386,8 @@ export interface CreateTransferResponse {
   replaces: boolean;
   /**
    * download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
-   * after the project and its service or volume. Empty for an upload.
+   * after the project and its service or volume. downloadDatabase: "\<projectId>-\<database>.dump"
+   * or "\<projectId>.rdb". Empty for an upload.
    */
   fileName: string;
   /**
@@ -3248,6 +3466,24 @@ export type MachineUpdatePending = Record<string, never>;
 export const MachineUpdatePending: JsonCodec<MachineUpdatePending, MachineUpdatePending> = {
   toJson: (value) => writeJson(wire.MachineUpdatePendingSchema, convert.toMachineUpdatePending(value)),
   fromJson: (json) => convert.fromMachineUpdatePending(readJson(wire.MachineUpdatePendingSchema, json)),
+};
+
+/**
+ * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
+ * CreateDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+ */
+export interface DatabaseLinkRefusal {
+  /** The first one refused. */
+  projectId: string;
+  reason?: DatabaseLinkRefusalReason | number;
+  /** SERVICE_NAME_TAKEN: its service. */
+  service: string;
+}
+
+/** {@link DatabaseLinkRefusal} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseLinkRefusal: JsonCodec<DatabaseLinkRefusal, DatabaseLinkRefusal> = {
+  toJson: (value) => writeJson(wire.DatabaseLinkRefusalSchema, convert.toDatabaseLinkRefusal(value)),
+  fromJson: (json) => convert.fromDatabaseLinkRefusal(readJson(wire.DatabaseLinkRefusalSchema, json)),
 };
 
 /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
@@ -3455,13 +3691,18 @@ export class PethostError extends Error {
    * with the machine's next update, which Pethost runs; nothing for the caller to do.
    */
   declare readonly machineUpdatePending?: MachineUpdatePending;
+  /**
+   * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
+   * CreateDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+   */
+  declare readonly databaseLinkRefusal?: DatabaseLinkRefusal;
   /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
   declare readonly noMachine?: NoMachine;
 
   constructor(
     code: ErrorCode,
     message: string,
-    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly machineUpdatePending?: MachineUpdatePending | undefined; readonly noMachine?: NoMachine | undefined; } = {},
+    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly machineUpdatePending?: MachineUpdatePending | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -3470,6 +3711,7 @@ export class PethostError extends Error {
     if (details.projectChanged) this.projectChanged = details.projectChanged;
     if (details.machineUnreachable) this.machineUnreachable = details.machineUnreachable;
     if (details.machineUpdatePending) this.machineUpdatePending = details.machineUpdatePending;
+    if (details.databaseLinkRefusal) this.databaseLinkRefusal = details.databaseLinkRefusal;
     if (details.noMachine) this.noMachine = details.noMachine;
   }
 }
@@ -3508,6 +3750,10 @@ export interface CallOptions {
  *
  * - Project (projectId): a Docker Compose project, a directory with compose.yaml at its root,
  *   deployed whole. People see metadata.name.
+ * - Database: a project {@link Pethost.createProject | createProject} made with `database`
+ *   (Postgres or Valkey). The machine wrote its files and knows the engine. Apps reach it at the
+ *   host \<projectId> once {@link Pethost.linkDatabase | linkDatabase} links them;
+ *   Project.database says how to sign in.
  * - Service (service): one container. The person opens a shell in it from their terminal with `ssh
  *   <service>.<project_id>@<Machine.hostname>` (Service.sshCommand), once
  *   RunMachineActionRequest.addSshKey added their public key. Nobody logs in to the machine
@@ -3565,7 +3811,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.7");
+      request.header.set("User-Agent", "pethost-typescript/0.2.8");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3624,8 +3870,9 @@ export class Pethost {
    *
    * One project in full: services (state, health, image, the ports it listens on, volumes,
    * environment, the SSH command), volumes, routes, hosts with certificates, recent operations,
-   * snapshots, the last day's HTTP traffic. Env-file values only with includeSecretValues. Its
-   * files: {@link Pethost.readPath | readPath}.
+   * snapshots, the last day's HTTP traffic. Env-file values and a database's password
+   * (Project.database.connection) only with includeSecretValues. Its files:
+   * {@link Pethost.readPath | readPath}.
    *
    * Reads only: it changes nothing.
    *
@@ -3657,6 +3904,12 @@ export class Pethost {
    * compose.yaml, compose.yml, docker-compose.yml or docker-compose.yaml; it becomes /compose.yaml,
    * other compose and override files are dropped. Without one, a Dockerfile yields service `app`
    * (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
+   *
+   * A database (Postgres or Valkey): `database`, no files, and a projectId without "_", not a number
+   * (only digits, or 0x and hex digits) and no name of every container's /etc/hosts (localhost,
+   * ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine writes its
+   * compose.yaml and /.env and deploys it at its default size, with no address; then
+   * {@link Pethost.linkDatabase | linkDatabase} the apps that use it.
    *
    * compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is
    * recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of
@@ -3713,7 +3966,8 @@ export class Pethost {
    *
    * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation).
    * FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachineResponse.github),
-   * or no such branch or directory. A deleted project's id inherits its snapshots.
+   * or no such branch or directory; + {@link MachineUpdatePending} = `database`, on a machine whose
+   * software predates databases. A deleted project's id inherits its snapshots.
    *
    * @throws {@link PethostError} when the call fails.
    */
@@ -3798,6 +4052,9 @@ export class Pethost {
    * operation, change the source, delete an undeclared volume or the project. Recreate, back up,
    * restore, delete and setSource's deploy run as operations, waited for (waitSeconds), as is the
    * end of a cancelled one; the others are done on return. Answers with the project as it then is.
+   * restoreSnapshot takes the project's own snapshots only. A database's snapshot as a new database
+   * is the person's to make, in the panel (the database's Backups tab, Restore as a new database):
+   * no tool makes one.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -3901,6 +4158,31 @@ export class Pethost {
   }
 
   /**
+   * Link projects to a database.
+   *
+   * Lets projects reach a database project: inside each linked project the database is the host
+   * `<database_project_id>` at its port, and Project.database says how to sign in (its password with
+   * {@link Pethost.getProject | getProject} includeSecretValues). Takes effect at once and deploys
+   * nothing. INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
+   * FAILED_PRECONDITION = databaseProjectId is no database; + {@link DatabaseLinkRefusal} = the app
+   * is a database, has a service named or aliased like the database, or there are 20 links already;
+   * + {@link MachineUpdatePending} = the machine's software predates databases. Answers with the
+   * database's Project.
+   *
+   * Destructive: it may delete or overwrite something.
+   *
+   * @throws {@link PethostError} when the call fails.
+   */
+  async linkDatabase(request: LinkDatabaseRequest, options?: CallOptions): Promise<LinkDatabaseResponse> {
+    const wireRequest = convert.toLinkDatabaseRequest(request);
+    try {
+      return convert.fromLinkDatabaseResponse(await this.#wire.linkDatabase(wireRequest, { signal: options?.signal }));
+    } catch (error) {
+      throw toError(error);
+    }
+  }
+
+  /**
    * Run a command in a service.
    *
    * Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -3958,12 +4240,17 @@ export class Pethost {
    * - uploadFile: one file into a container or volume, replacing any file there (replaces), creating
    *   parents.
    * - download: a file, or a directory as a .tar (fileName).
+   * - downloadDatabase: a database project's dump, made as it downloads: Postgres's for pg_restore
+   *   (roles are not in it), Valkey's .rdb. One at a time per database.
    *
    * Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2 GiB,
-   * 422 unsafe archive (a reason per line), 507 disk full. A failed transfer keeps nothing: get a
-   * new URL. Errors as {@link Pethost.readPath | readPath}; FAILED_PRECONDITION also = downloading
-   * neither a file nor a directory, uploading onto a non-file, a mount point, /proc or /sys, or the
-   * hostname not yet certified. RESOURCE_EXHAUSTED = disk full, or too many transfers.
+   * 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed transfer keeps
+   * nothing: get a new URL. Errors as {@link Pethost.readPath | readPath}; FAILED_PRECONDITION also
+   * = downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc or
+   * /sys, the hostname not yet certified, or a dump of a project that is no database or is not
+   * running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
+   * databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres runs
+   * but does not answer yet: try again shortly.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -4139,6 +4426,7 @@ function toError(error: unknown): PethostError {
       projectChanged: failed.findDetails(wire.ProjectChangedSchema).map(convert.fromProjectChanged)[0],
       machineUnreachable: failed.findDetails(wire.MachineUnreachableSchema).map(convert.fromMachineUnreachable)[0],
       machineUpdatePending: failed.findDetails(wire.MachineUpdatePendingSchema).map(convert.fromMachineUpdatePending)[0],
+      databaseLinkRefusal: failed.findDetails(wire.DatabaseLinkRefusalSchema).map(convert.fromDatabaseLinkRefusal)[0],
       noMachine: failed.findDetails(wire.NoMachineSchema).map(convert.fromNoMachine)[0],
     },
     { cause: failed.cause ?? failed },

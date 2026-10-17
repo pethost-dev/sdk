@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.2.7"),
+    ("user-agent", "pethost-rust/0.2.8"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -426,7 +426,7 @@ mod samples {
     }
 
     pub fn project_problem_kind(k: usize) -> types::ProjectProblemKind {
-        match k % 15 {
+        match k % 16 {
             0 => types::ProjectProblemKind::Unspecified,
             1 => types::ProjectProblemKind::DeployFailed,
             2 => types::ProjectProblemKind::ServiceUnhealthy,
@@ -441,7 +441,8 @@ mod samples {
             11 => types::ProjectProblemKind::SiteDown,
             12 => types::ProjectProblemKind::HttpErrors,
             13 => types::ProjectProblemKind::HttpSlow,
-            _ => types::ProjectProblemKind::Unrecognized(14),
+            14 => types::ProjectProblemKind::DatabaseSetup,
+            _ => types::ProjectProblemKind::Unrecognized(15),
         }
     }
 
@@ -542,6 +543,15 @@ mod samples {
         }
     }
 
+    pub fn database_engine(k: usize) -> types::DatabaseEngine {
+        match k % 4 {
+            0 => types::DatabaseEngine::Unspecified,
+            1 => types::DatabaseEngine::Postgres,
+            2 => types::DatabaseEngine::Valkey,
+            _ => types::DatabaseEngine::Unrecognized(3),
+        }
+    }
+
     pub fn traffic_metric(k: usize) -> types::TrafficMetric {
         match k % 5 {
             0 => types::TrafficMetric::Unspecified,
@@ -602,6 +612,16 @@ mod samples {
             2 => types::FileLocation::Volume,
             3 => types::FileLocation::ProjectFiles,
             _ => types::FileLocation::Unrecognized(4),
+        }
+    }
+
+    pub fn database_link_refusal_reason(k: usize) -> types::DatabaseLinkRefusalReason {
+        match k % 5 {
+            0 => types::DatabaseLinkRefusalReason::Unspecified,
+            1 => types::DatabaseLinkRefusalReason::AppIsDatabase,
+            2 => types::DatabaseLinkRefusalReason::ServiceNameTaken,
+            3 => types::DatabaseLinkRefusalReason::TooManyLinks,
+            _ => types::DatabaseLinkRefusalReason::Unrecognized(4),
         }
     }
 
@@ -679,6 +699,14 @@ mod samples {
                     samples::alert_destination(k + 26, later),
                 ],
             );
+            message.database_engines = states::many(
+                k,
+                [
+                    samples::database_engine_offer(k + 26, later),
+                    samples::database_engine_offer(k + 27, later),
+                ],
+            );
+            message.memory_limits_bytes = states::plain(k, u64::from(states::number(28, k)) << 44);
         })
     }
 
@@ -839,6 +867,7 @@ mod samples {
             );
             message.pinned = states::flag(1, k);
             message.disk_used_bytes = states::plain(k, u64::from(states::number(13, k)) << 44);
+            message.database = states::maybe(k, samples::database_summary(k + 13, later));
         })
     }
 
@@ -917,6 +946,14 @@ mod samples {
             message.uptime_days = states::many(
                 k,
                 [samples::uptime_day(k + 25, later), samples::uptime_day(k + 26, later)],
+            );
+            message.database = states::maybe(k, samples::database(k + 26, later));
+            message.linked_databases = states::many(
+                k,
+                [
+                    states::text("linked_databases", k),
+                    states::text("linked_databases", k + 1),
+                ],
             );
         })
     }
@@ -1166,6 +1203,7 @@ mod samples {
             timeout_seconds: states::plain(k, states::number(6, k)),
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(9, k)),
+            database: samples::database_engine(k + 8),
         }
     }
 
@@ -1424,6 +1462,92 @@ mod samples {
                     samples::operation_log_line(k + 3, later),
                 ],
             );
+        })
+    }
+
+    pub fn database(k: usize, later: bool) -> types::Database {
+        states::make(|message: &mut types::Database| {
+            message.engine = samples::database_engine(k);
+            message.major_version = states::plain(k, states::number(2, k));
+            message.server_version = states::plain(k, states::text("server_version", k));
+            message.memory_limit_bytes = states::plain(k, u64::from(states::number(4, k)) << 44);
+            message.data_bytes = states::plain(k, u64::from(states::number(5, k)) << 44);
+            message.connections = states::plain(k, states::number(6, k));
+            message.max_connections = states::plain(k, states::number(7, k));
+            message.linked_projects = states::many(
+                k,
+                [
+                    states::text("linked_projects", k),
+                    states::text("linked_projects", k + 1),
+                ],
+            );
+            message.connection = states::maybe(k, samples::database_connection(k + 8, later));
+            message.service = states::plain(k, states::text("service", k));
+            message.volume = states::plain(k, states::text("volume", k));
+        })
+    }
+
+    pub fn database_connection(k: usize, later: bool) -> types::DatabaseConnection {
+        states::make(|message: &mut types::DatabaseConnection| {
+            message.host = states::plain(k, states::text("host", k));
+            message.port = states::plain(k, states::number(2, k));
+            message.user = states::plain(k, states::text("user", k));
+            message.database = states::plain(k, states::text("database", k));
+            message.password = states::plain(k, states::text("password", k));
+            message.url = states::plain(k, states::text("url", k));
+            message.local_url = states::plain(k, states::text("local_url", k));
+        })
+    }
+
+    pub fn database_summary(k: usize, later: bool) -> types::DatabaseSummary {
+        states::make(|message: &mut types::DatabaseSummary| {
+            message.engine = samples::database_engine(k);
+            message.major_version = states::plain(k, states::number(2, k));
+            message.data_bytes = states::plain(k, u64::from(states::number(3, k)) << 44);
+            message.connections = states::plain(k, states::number(4, k));
+            message.linked_projects = states::many(
+                k,
+                [
+                    states::text("linked_projects", k),
+                    states::text("linked_projects", k + 1),
+                ],
+            );
+            message.server_version = states::plain(k, states::text("server_version", k));
+        })
+    }
+
+    pub fn database_engine_offer(k: usize, later: bool) -> types::DatabaseEngineOffer {
+        states::make(|message: &mut types::DatabaseEngineOffer| {
+            message.engine = samples::database_engine(k);
+            message.major_version = states::plain(k, states::number(2, k));
+            message.sizes = states::many(
+                k,
+                [
+                    samples::database_size_choice(k + 2, later),
+                    samples::database_size_choice(k + 3, later),
+                ],
+            );
+            message.default_memory_limit_bytes = states::plain(k, u64::from(states::number(4, k)) << 44);
+        })
+    }
+
+    pub fn database_size_choice(k: usize, later: bool) -> types::DatabaseSizeChoice {
+        states::make(|message: &mut types::DatabaseSizeChoice| {
+            message.memory_limit_bytes = states::plain(k, u64::from(states::number(1, k)) << 44);
+        })
+    }
+
+    pub fn link_database_request(k: usize, later: bool) -> types::LinkDatabaseRequest {
+        types::LinkDatabaseRequest {
+            database_project_id: states::plain(k, states::text("database_project_id", k)),
+            link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
+            unlink: states::many(k, [states::text("unlink", k), states::text("unlink", k + 1)]),
+        }
+    }
+
+    pub fn link_database_response(k: usize, later: bool) -> types::LinkDatabaseResponse {
+        states::make(|message: &mut types::LinkDatabaseResponse| {
+            message.project = states::maybe(k, samples::project(k, later));
         })
     }
 
@@ -1800,7 +1924,7 @@ mod samples {
 
     pub fn create_transfer_request(k: usize, later: bool) -> types::CreateTransferRequest {
         types::CreateTransferRequest {
-            transfer: match k % 8 {
+            transfer: match k % 10 {
                 0 => None,
                 1 => None,
                 2 => Some(types::CreateTransferRequestTransfer::UploadArchive(
@@ -1812,9 +1936,15 @@ mod samples {
                 4 => Some(types::CreateTransferRequestTransfer::Download(samples::path_download(
                     k, later,
                 ))),
-                5 => Some(types::CreateTransferRequestTransfer::UploadArchive(Default::default())),
-                6 => Some(types::CreateTransferRequestTransfer::UploadFile(Default::default())),
-                _ => Some(types::CreateTransferRequestTransfer::Download(Default::default())),
+                5 => Some(types::CreateTransferRequestTransfer::DownloadDatabase(
+                    samples::database_dump(k, later),
+                )),
+                6 => Some(types::CreateTransferRequestTransfer::UploadArchive(Default::default())),
+                7 => Some(types::CreateTransferRequestTransfer::UploadFile(Default::default())),
+                8 => Some(types::CreateTransferRequestTransfer::Download(Default::default())),
+                _ => Some(types::CreateTransferRequestTransfer::DownloadDatabase(
+                    Default::default(),
+                )),
             },
         }
     }
@@ -1855,6 +1985,13 @@ mod samples {
         }
     }
 
+    pub fn database_dump(k: usize, later: bool) -> types::DatabaseDump {
+        types::DatabaseDump {
+            project_id: states::plain(k, states::text("project_id", k)),
+            database: states::plain(k, states::text("database", k)),
+        }
+    }
+
     pub fn create_transfer_response(k: usize, later: bool) -> types::CreateTransferResponse {
         states::make(|message: &mut types::CreateTransferResponse| {
             message.url = states::plain(k, states::text("url", k));
@@ -1891,6 +2028,14 @@ mod samples {
 
     pub fn machine_update_pending(_k: usize, later: bool) -> types::MachineUpdatePending {
         types::MachineUpdatePending::default()
+    }
+
+    pub fn database_link_refusal(k: usize, later: bool) -> types::DatabaseLinkRefusal {
+        states::make(|message: &mut types::DatabaseLinkRefusal| {
+            message.project_id = states::plain(k, states::text("project_id", k));
+            message.reason = samples::database_link_refusal_reason(k + 1);
+            message.service = states::plain(k, states::text("service", k));
+        })
     }
 
     pub fn no_machine(k: usize, later: bool) -> types::NoMachine {
@@ -1989,7 +2134,7 @@ mod on_wire {
 
     pub fn project_problem_kind(k: usize) -> buffa::EnumValue<wire::ProjectProblemKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 15 {
+        let number = match k % 16 {
             0 => 0,
             1 => 1,
             2 => 2,
@@ -2004,7 +2149,8 @@ mod on_wire {
             11 => 11,
             12 => 12,
             13 => 13,
-            _ => 14,
+            14 => 14,
+            _ => 15,
         };
         buffa::EnumValue::from(number)
     }
@@ -2122,6 +2268,17 @@ mod on_wire {
         buffa::EnumValue::from(number)
     }
 
+    pub fn database_engine(k: usize) -> buffa::EnumValue<wire::DatabaseEngine> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 4 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            _ => 3,
+        };
+        buffa::EnumValue::from(number)
+    }
+
     pub fn traffic_metric(k: usize) -> buffa::EnumValue<wire::TrafficMetric> {
         // By the proto's numbers: the variants' names are the converters' to get right.
         let number = match k % 5 {
@@ -2186,6 +2343,18 @@ mod on_wire {
     }
 
     pub fn file_location(k: usize) -> buffa::EnumValue<wire::FileLocation> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 5 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            _ => 4,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn database_link_refusal_reason(k: usize) -> buffa::EnumValue<wire::DatabaseLinkRefusalReason> {
         // By the proto's numbers: the variants' names are the converters' to get right.
         let number = match k % 5 {
             0 => 0,
@@ -2288,6 +2457,14 @@ mod on_wire {
                     on_wire::alert_destination(k + 26, received),
                 ],
             ),
+            database_engines: states::many(
+                k,
+                [
+                    on_wire::database_engine_offer(k + 26, received),
+                    on_wire::database_engine_offer(k + 27, received),
+                ],
+            ),
+            memory_limits_bytes: states::present(states::plain(k, u64::from(states::number(28, k)) << 44)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2524,6 +2701,7 @@ mod on_wire {
             ),
             pinned: states::present(states::flag(1, k)),
             disk_used_bytes: states::present(states::plain(k, u64::from(states::number(13, k)) << 44)),
+            database: states::maybe(k, on_wire::database_summary(k + 13, received)).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2644,6 +2822,14 @@ mod on_wire {
                 [
                     on_wire::uptime_day(k + 25, received),
                     on_wire::uptime_day(k + 26, received),
+                ],
+            ),
+            database: states::maybe(k, on_wire::database(k + 26, received)).into(),
+            linked_databases: states::many(
+                k,
+                [
+                    states::text("linked_databases", k),
+                    states::text("linked_databases", k + 1),
                 ],
             ),
             ..Default::default()
@@ -2983,6 +3169,7 @@ mod on_wire {
             timeout_seconds: states::present(states::plain(k, states::number(6, k))),
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(9, k)),
+            database: states::set(on_wire::database_engine(k + 8)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3377,6 +3564,127 @@ mod on_wire {
                     on_wire::operation_log_line(k + 3, received),
                 ],
             ),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database(k: usize, received: bool) -> wire::Database {
+        let mut message = wire::Database {
+            engine: states::set(on_wire::database_engine(k)),
+            major_version: states::present(states::plain(k, states::number(2, k))),
+            server_version: states::present(states::plain(k, states::text("server_version", k))),
+            memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(4, k)) << 44)),
+            data_bytes: states::present(states::plain(k, u64::from(states::number(5, k)) << 44)),
+            connections: states::present(states::plain(k, states::number(6, k))),
+            max_connections: states::present(states::plain(k, states::number(7, k))),
+            linked_projects: states::many(
+                k,
+                [
+                    states::text("linked_projects", k),
+                    states::text("linked_projects", k + 1),
+                ],
+            ),
+            connection: states::maybe(k, on_wire::database_connection(k + 8, received)).into(),
+            service: states::present(states::plain(k, states::text("service", k))),
+            volume: states::present(states::plain(k, states::text("volume", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_connection(k: usize, received: bool) -> wire::DatabaseConnection {
+        let mut message = wire::DatabaseConnection {
+            host: states::present(states::plain(k, states::text("host", k))),
+            port: states::present(states::plain(k, states::number(2, k))),
+            user: states::present(states::plain(k, states::text("user", k))),
+            database: states::present(states::plain(k, states::text("database", k))),
+            password: states::present(states::plain(k, states::text("password", k))),
+            url: states::present(states::plain(k, states::text("url", k))),
+            local_url: states::present(states::plain(k, states::text("local_url", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_summary(k: usize, received: bool) -> wire::DatabaseSummary {
+        let mut message = wire::DatabaseSummary {
+            engine: states::set(on_wire::database_engine(k)),
+            major_version: states::present(states::plain(k, states::number(2, k))),
+            data_bytes: states::present(states::plain(k, u64::from(states::number(3, k)) << 44)),
+            connections: states::present(states::plain(k, states::number(4, k))),
+            linked_projects: states::many(
+                k,
+                [
+                    states::text("linked_projects", k),
+                    states::text("linked_projects", k + 1),
+                ],
+            ),
+            server_version: states::present(states::plain(k, states::text("server_version", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_engine_offer(k: usize, received: bool) -> wire::DatabaseEngineOffer {
+        let mut message = wire::DatabaseEngineOffer {
+            engine: states::set(on_wire::database_engine(k)),
+            major_version: states::present(states::plain(k, states::number(2, k))),
+            sizes: states::many(
+                k,
+                [
+                    on_wire::database_size_choice(k + 2, received),
+                    on_wire::database_size_choice(k + 3, received),
+                ],
+            ),
+            default_memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(4, k)) << 44)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_size_choice(k: usize, received: bool) -> wire::DatabaseSizeChoice {
+        let mut message = wire::DatabaseSizeChoice {
+            memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(1, k)) << 44)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn link_database_request(k: usize, received: bool) -> wire::LinkDatabaseRequest {
+        let mut message = wire::LinkDatabaseRequest {
+            database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
+            link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
+            unlink: states::many(k, [states::text("unlink", k), states::text("unlink", k + 1)]),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn link_database_response(k: usize, received: bool) -> wire::LinkDatabaseResponse {
+        let mut message = wire::LinkDatabaseResponse {
+            project: states::maybe(k, on_wire::project(k, received)).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3926,7 +4234,7 @@ mod on_wire {
 
     pub fn create_transfer_request(k: usize, received: bool) -> wire::CreateTransferRequest {
         let mut message = wire::CreateTransferRequest {
-            transfer: match k % 8 {
+            transfer: match k % 10 {
                 0 | 1 => None,
                 2 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::UploadArchive(
                     Box::new(on_wire::archive_upload(k, received)),
@@ -3937,15 +4245,23 @@ mod on_wire {
                 4 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::Download(
                     Box::new(on_wire::path_download(k, received)),
                 )),
-                5 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::UploadArchive(
+                5 => Some(
+                    wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(Box::new(
+                        on_wire::database_dump(k, received),
+                    )),
+                ),
+                6 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::UploadArchive(
                     Default::default(),
                 )),
-                6 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::UploadFile(
+                7 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::UploadFile(
                     Default::default(),
                 )),
-                _ => Some(wire::__buffa::oneof::create_transfer_request::Transfer::Download(
+                8 => Some(wire::__buffa::oneof::create_transfer_request::Transfer::Download(
                     Default::default(),
                 )),
+                _ => {
+                    Some(wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(Default::default()))
+                }
             },
             ..Default::default()
         };
@@ -4012,6 +4328,18 @@ mod on_wire {
         message
     }
 
+    pub fn database_dump(k: usize, received: bool) -> wire::DatabaseDump {
+        let mut message = wire::DatabaseDump {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            database: states::present(states::plain(k, states::text("database", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
     pub fn create_transfer_response(k: usize, received: bool) -> wire::CreateTransferResponse {
         let mut message = wire::CreateTransferResponse {
             url: states::present(states::plain(k, states::text("url", k))),
@@ -4067,6 +4395,19 @@ mod on_wire {
 
     pub fn machine_update_pending(k: usize, received: bool) -> wire::MachineUpdatePending {
         let mut message = wire::MachineUpdatePending { ..Default::default() };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_link_refusal(k: usize, received: bool) -> wire::DatabaseLinkRefusal {
+        let mut message = wire::DatabaseLinkRefusal {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            reason: states::set(on_wire::database_link_refusal_reason(k + 1)),
+            service: states::present(states::plain(k, states::text("service", k))),
+            ..Default::default()
+        };
         if received && k % 2 == 1 {
             message.__buffa_unknown_fields.push(states::later_field());
         }
@@ -4227,7 +4568,7 @@ async fn get_project_request_is_sent() {
 
 #[tokio::test]
 async fn create_project_request_is_sent() {
-    for k in 0..3 {
+    for k in 0..4 {
         let request = samples::create_project_request(k, true);
         let expected = on_wire::create_project_request(k, false);
 
@@ -4362,6 +4703,21 @@ async fn query_container_logs_request_is_sent() {
 }
 
 #[tokio::test]
+async fn link_database_request_is_sent() {
+    for k in 0..2 {
+        let request = samples::link_database_request(k, true);
+        let expected = on_wire::link_database_request(k, false);
+
+        let answer = ok(&wire::LinkDatabaseResponse::default());
+        let call = |client: Client| async move { client.link_database(request).await };
+        let (sent, response): (wire::LinkDatabaseRequest, _) = exchange("LinkDatabase", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(response.unwrap(), types::LinkDatabaseResponse::default(), "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn run_service_command_request_is_sent() {
     for k in 0..2 {
         let request = samples::run_service_command_request(k, true);
@@ -4397,7 +4753,7 @@ async fn read_path_request_is_sent() {
 
 #[tokio::test]
 async fn create_transfer_request_is_sent() {
-    for k in 0..8 {
+    for k in 0..10 {
         let request = samples::create_transfer_request(k, true);
         let expected = on_wire::create_transfer_request(k, false);
 
@@ -4945,6 +5301,35 @@ async fn path_download_is_sent() {
 }
 
 #[tokio::test]
+async fn database_dump_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::CreateTransferRequest| {
+            message.transfer = Some(types::CreateTransferRequestTransfer::DownloadDatabase(
+                samples::database_dump(k, true),
+            ))
+        });
+        let expected = states::make(|message: &mut wire::CreateTransferRequest| {
+            message.transfer = Some(
+                wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(Box::new(
+                    on_wire::database_dump(k, false),
+                )),
+            )
+        });
+
+        let answer = ok(&wire::CreateTransferResponse::default());
+        let call = |client: Client| async move { client.create_transfer(request).await };
+        let (sent, response): (wire::CreateTransferRequest, _) = exchange("CreateTransfer", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::CreateTransferResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn github_source_is_sent() {
     for k in 0..3 {
         let request = states::make(|message: &mut types::CreateProjectRequest| {
@@ -5212,6 +5597,19 @@ async fn query_container_logs_response_is_received() {
 }
 
 #[tokio::test]
+async fn link_database_response_is_received() {
+    for k in 0..2 {
+        let answer = ok(&on_wire::link_database_response(k, true));
+        let expected = samples::link_database_response(k, true);
+
+        let call = |client: Client| async move { client.link_database(types::LinkDatabaseRequest::default()).await };
+        let (_, response): (wire::LinkDatabaseRequest, _) = exchange("LinkDatabase", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn run_service_command_response_is_received() {
     for k in 0..2 {
         let answer = ok(&on_wire::run_service_command_response(k, true));
@@ -5367,6 +5765,25 @@ async fn machine_update_pending_is_received() {
             "unavailable",
             503,
             &[("pethost.panel.v1.MachineUpdatePending", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_link_refusal_is_received() {
+    for k in 0..5 {
+        let detail = on_wire::database_link_refusal(k, true).encode_to_vec();
+        let expected = ErrorDetail::DatabaseLinkRefusal(samples::database_link_refusal(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.DatabaseLinkRefusal", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
         let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
@@ -5777,6 +6194,28 @@ async fn alert_destination_is_received() {
 }
 
 #[tokio::test]
+async fn database_engine_offer_is_received() {
+    for k in 0..4 {
+        let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut wire::Machine| {
+                message.database_engines = vec![on_wire::database_engine_offer(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut types::Machine| {
+                message.database_engines = vec![samples::database_engine_offer(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn project_metadata_is_received() {
     for k in 0..3 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
@@ -5799,7 +6238,7 @@ async fn project_metadata_is_received() {
 
 #[tokio::test]
 async fn project_problem_is_received() {
-    for k in 0..15 {
+    for k in 0..16 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
             message.projects = vec![states::make(|message: &mut wire::ProjectSummary| {
                 message.problems = vec![on_wire::project_problem(k, true)]
@@ -5829,6 +6268,27 @@ async fn service_summary_is_received() {
         let expected = states::make(|message: &mut types::GetMachineResponse| {
             message.projects = vec![states::make(|message: &mut types::ProjectSummary| {
                 message.services = vec![samples::service_summary(k, true)]
+            })]
+        });
+
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_summary_is_received() {
+    for k in 0..4 {
+        let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
+            message.projects = vec![states::make(|message: &mut wire::ProjectSummary| {
+                message.database = Some(on_wire::database_summary(k, true)).into()
+            })]
+        }));
+        let expected = states::make(|message: &mut types::GetMachineResponse| {
+            message.projects = vec![states::make(|message: &mut types::ProjectSummary| {
+                message.database = Some(samples::database_summary(k, true))
             })]
         });
 
@@ -6016,7 +6476,7 @@ async fn running_services_action_is_received() {
 
 #[tokio::test]
 async fn incident_is_received() {
-    for k in 0..15 {
+    for k in 0..16 {
         let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
             message.project = Some(states::make(|message: &mut wire::Project| {
                 message.incidents = vec![on_wire::incident(k, true)]
@@ -6048,6 +6508,28 @@ async fn uptime_day_is_received() {
         let expected = states::make(|message: &mut types::GetProjectResponse| {
             message.project = Some(states::make(|message: &mut types::Project| {
                 message.uptime_days = vec![samples::uptime_day(k, true)]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_is_received() {
+    for k in 0..4 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.database = Some(on_wire::database(k, true)).into()
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.database = Some(samples::database(k, true))
             }))
         });
 
@@ -6127,6 +6609,32 @@ async fn traffic_rule_state_is_received() {
                 .await
         };
         let (_, response): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_size_choice_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut wire::Machine| {
+                message.database_engines = vec![states::make(|message: &mut wire::DatabaseEngineOffer| {
+                    message.sizes = vec![on_wire::database_size_choice(k, true)]
+                })]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetMachineResponse| {
+            message.machine = Some(states::make(|message: &mut types::Machine| {
+                message.database_engines = vec![states::make(|message: &mut types::DatabaseEngineOffer| {
+                    message.sizes = vec![samples::database_size_choice(k, true)]
+                })]
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -6370,6 +6878,33 @@ async fn incident_evidence_is_received() {
 }
 
 #[tokio::test]
+async fn database_connection_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.database = Some(states::make(|message: &mut wire::Database| {
+                    message.connection = Some(on_wire::database_connection(k, true)).into()
+                }))
+                .into()
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.database = Some(states::make(|message: &mut types::Database| {
+                    message.connection = Some(samples::database_connection(k, true))
+                }))
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn site_check_result_is_received() {
     for k in 0..2 {
         let answer = ok(&states::make(|message: &mut wire::SetProjectAlertsResponse| {
@@ -6590,8 +7125,9 @@ fn project_problem_kind_is_json() {
         "PROJECT_PROBLEM_KIND_SITE_DOWN",
         "PROJECT_PROBLEM_KIND_HTTP_ERRORS",
         "PROJECT_PROBLEM_KIND_HTTP_SLOW",
+        "PROJECT_PROBLEM_KIND_DATABASE_SETUP",
     ];
-    an_enum_is_json(&names, 14, samples::project_problem_kind);
+    an_enum_is_json(&names, 15, samples::project_problem_kind);
 }
 
 #[test]
@@ -6700,6 +7236,16 @@ fn deploy_failure_reason_is_json() {
 }
 
 #[test]
+fn database_engine_is_json() {
+    let names = [
+        "DATABASE_ENGINE_UNSPECIFIED",
+        "DATABASE_ENGINE_POSTGRES",
+        "DATABASE_ENGINE_VALKEY",
+    ];
+    an_enum_is_json(&names, 3, samples::database_engine);
+}
+
+#[test]
 fn traffic_metric_is_json() {
     let names = [
         "TRAFFIC_METRIC_UNSPECIFIED",
@@ -6769,6 +7315,17 @@ fn file_location_is_json() {
 }
 
 #[test]
+fn database_link_refusal_reason_is_json() {
+    let names = [
+        "DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED",
+        "DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE",
+        "DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN",
+        "DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS",
+    ];
+    an_enum_is_json(&names, 4, samples::database_link_refusal_reason);
+}
+
+#[test]
 fn no_machine_reason_is_json() {
     let names = [
         "NO_MACHINE_REASON_UNSPECIFIED",
@@ -6819,6 +7376,8 @@ fn machine_is_json() {
         "scheduled_restart_time",
         "sessions",
         "alert_channels",
+        "database_engines",
+        "memory_limits_bytes",
     ];
     a_message_is_json(2, &names, samples::machine, on_wire::machine);
 }
@@ -6950,6 +7509,7 @@ fn project_summary_is_json() {
         "running_operations",
         "pinned",
         "disk_used_bytes",
+        "database",
     ];
     a_message_is_json(2, &names, samples::project_summary, on_wire::project_summary);
 }
@@ -6970,7 +7530,7 @@ fn project_problem_is_json() {
         "problem_message",
         "incident_id",
     ];
-    a_message_is_json(15, &names, samples::project_problem, on_wire::project_problem);
+    a_message_is_json(16, &names, samples::project_problem, on_wire::project_problem);
 }
 
 #[test]
@@ -7022,6 +7582,8 @@ fn project_is_json() {
         "incidents",
         "more_incidents",
         "uptime_days",
+        "database",
+        "linked_databases",
     ];
     a_message_is_json(6, &names, samples::project, on_wire::project);
 }
@@ -7229,9 +7791,10 @@ fn create_project_request_is_json() {
         "timeout_seconds",
         "operation_id",
         "wait_seconds",
+        "database",
     ];
     a_message_is_json(
-        3,
+        4,
         &names,
         samples::create_project_request,
         on_wire::create_project_request,
@@ -7433,6 +7996,82 @@ fn run_project_action_response_is_json() {
 }
 
 #[test]
+fn database_is_json() {
+    let names = [
+        "engine",
+        "major_version",
+        "server_version",
+        "memory_limit_bytes",
+        "data_bytes",
+        "connections",
+        "max_connections",
+        "linked_projects",
+        "connection",
+        "service",
+        "volume",
+    ];
+    a_message_is_json(4, &names, samples::database, on_wire::database);
+}
+
+#[test]
+fn database_connection_is_json() {
+    let names = ["host", "port", "user", "database", "password", "url", "local_url"];
+    a_message_is_json(2, &names, samples::database_connection, on_wire::database_connection);
+}
+
+#[test]
+fn database_summary_is_json() {
+    let names = [
+        "engine",
+        "major_version",
+        "data_bytes",
+        "connections",
+        "linked_projects",
+        "server_version",
+    ];
+    a_message_is_json(4, &names, samples::database_summary, on_wire::database_summary);
+}
+
+#[test]
+fn database_engine_offer_is_json() {
+    let names = ["engine", "major_version", "sizes", "default_memory_limit_bytes"];
+    a_message_is_json(
+        4,
+        &names,
+        samples::database_engine_offer,
+        on_wire::database_engine_offer,
+    );
+}
+
+#[test]
+fn database_size_choice_is_json() {
+    let names = ["memory_limit_bytes"];
+    a_message_is_json(2, &names, samples::database_size_choice, on_wire::database_size_choice);
+}
+
+#[test]
+fn link_database_request_is_json() {
+    let names = ["database_project_id", "link", "unlink"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::link_database_request,
+        on_wire::link_database_request,
+    );
+}
+
+#[test]
+fn link_database_response_is_json() {
+    let names = ["project"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::link_database_response,
+        on_wire::link_database_response,
+    );
+}
+
+#[test]
 fn set_project_alerts_request_is_json() {
     let names = [
         "project_id",
@@ -7526,7 +8165,7 @@ fn incident_is_json() {
         "incident_message",
         "evidence",
     ];
-    a_message_is_json(15, &names, samples::incident, on_wire::incident);
+    a_message_is_json(16, &names, samples::incident, on_wire::incident);
 }
 
 #[test]
@@ -7794,9 +8433,9 @@ fn read_path_response_is_json() {
 
 #[test]
 fn create_transfer_request_is_json() {
-    let names = ["upload_archive", "upload_file", "download"];
+    let names = ["upload_archive", "upload_file", "download", "download_database"];
     a_message_is_json(
-        8,
+        10,
         &names,
         samples::create_transfer_request,
         on_wire::create_transfer_request,
@@ -7819,6 +8458,12 @@ fn file_upload_is_json() {
 fn path_download_is_json() {
     let names = ["project_id", "service", "volume", "path"];
     a_message_is_json(6, &names, samples::path_download, on_wire::path_download);
+}
+
+#[test]
+fn database_dump_is_json() {
+    let names = ["project_id", "database"];
+    a_message_is_json(2, &names, samples::database_dump, on_wire::database_dump);
 }
 
 #[test]
@@ -7867,6 +8512,17 @@ fn machine_update_pending_is_json() {
         &names,
         samples::machine_update_pending,
         on_wire::machine_update_pending,
+    );
+}
+
+#[test]
+fn database_link_refusal_is_json() {
+    let names = ["project_id", "reason", "service"];
+    a_message_is_json(
+        5,
+        &names,
+        samples::database_link_refusal,
+        on_wire::database_link_refusal,
     );
 }
 

@@ -90,6 +90,8 @@ class ProjectProblemKind(OpenEnum):
         SITE_DOWN: A site check (Project.alerts) failed 3 times in a row; service: the one its route sends to.
         HTTP_ERRORS: A traffic rule on 5xx holds.
         HTTP_SLOW: A traffic rule on p95 holds.
+        DATABASE_SETUP: A database the machine has not set up for 2 minutes since it started, or whose apps' user is
+            gone: the message says the engine's error.
     """
 
     UNSPECIFIED = 0
@@ -155,6 +157,11 @@ class ProjectProblemKind(OpenEnum):
 
     HTTP_SLOW = 13
     """A traffic rule on p95 holds."""
+
+    DATABASE_SETUP = 14
+    """A database the machine has not set up for 2 minutes since it started, or whose apps' user is
+    gone: the message says the engine's error.
+    """
 
 
 class ServicesActionKind(OpenEnum):
@@ -344,6 +351,14 @@ class DeployFailureReason(OpenEnum):
     """The running projects leave too little memory for a build; the message says how much."""
 
 
+class DatabaseEngine(OpenEnum):
+    UNSPECIFIED = 0
+
+    POSTGRES = 1
+
+    VALKEY = 2
+
+
 class TrafficMetric(OpenEnum):
     """
     Attributes:
@@ -466,6 +481,29 @@ class FileLocation(OpenEnum):
     """
 
 
+class DatabaseLinkRefusalReason(OpenEnum):
+    """
+    Attributes:
+        APP_IS_DATABASE: It is a database itself.
+        SERVICE_NAME_TAKEN: A service of it is named or aliased like the database, whose host it would hide: rename
+            the service or its alias.
+        TOO_MANY_LINKS: The database has 20: unlink one first.
+    """
+
+    UNSPECIFIED = 0
+
+    APP_IS_DATABASE = 1
+    """It is a database itself."""
+
+    SERVICE_NAME_TAKEN = 2
+    """A service of it is named or aliased like the database, whose host it would hide: rename
+    the service or its alias.
+    """
+
+    TOO_MANY_LINKS = 3
+    """The database has 20: unlink one first."""
+
+
 class NoMachineReason(OpenEnum):
     """
     Attributes:
@@ -580,6 +618,10 @@ class Machine:
         alert_channels: Where Pethost tells the person of incidents: the account's channels that are on, email first,
             then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
             alerts reach nobody.
+        database_engines: The databases the machine makes (create_project's `database`), one per engine, with the sizes
+            they may take. Empty = the machine's software predates databases.
+        memory_limits_bytes: The sum of every service's memory limit (`mem_limit`): what the projects may take together,
+            which memory_total_bytes does not reserve.
     """
 
     name: str = ""
@@ -686,6 +728,16 @@ class Machine:
     """Where Pethost tells the person of incidents: the account's channels that are on, email first,
     then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
     alerts reach nobody.
+    """
+
+    database_engines: Sequence[DatabaseEngineOffer] = ()
+    """The databases the machine makes (create_project's `database`), one per engine, with the sizes
+    they may take. Empty = the machine's software predates databases.
+    """
+
+    memory_limits_bytes: int = 0
+    """The sum of every service's memory limit (`mem_limit`): what the projects may take together,
+    which memory_total_bytes does not reserve.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -1171,6 +1223,7 @@ class ProjectSummary:
         pinned: A github project stays on its commit: GithubSource.pinned.
         disk_used_bytes: Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
             with another project counts in both. Measured every few minutes.
+        database: Set = a database project (create_project `database`).
     """
 
     project_id: str = ""
@@ -1211,6 +1264,9 @@ class ProjectSummary:
     """Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
     with another project counts in both. Measured every few minutes.
     """
+
+    database: DatabaseSummary | None = None
+    """Set = a database project (create_project `database`)."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1400,6 +1456,9 @@ class Project:
             after_operation_id, quiet_reason and flapping.
         more_incidents: True = older ones remain: page with incidents_before and incidents_before_id.
         uptime_days: Oldest first, get_project(uptime_day_count=) of them, today's last.
+        database: Set = a database project (create_project `database`): its engine, its state and how apps sign
+            in.
+        linked_databases: The database projects this one reaches (link_database), each at the host of its project_id.
     """
 
     project_id: str = ""
@@ -1502,6 +1561,14 @@ class Project:
 
     uptime_days: Sequence[UptimeDay] = ()
     """Oldest first, get_project(uptime_day_count=) of them, today's last."""
+
+    database: Database | None = None
+    """Set = a database project (create_project `database`): its engine, its state and how apps sign
+    in.
+    """
+
+    linked_databases: Sequence[str] = ()
+    """The database projects this one reaches (link_database), each at the host of its project_id."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3312,6 +3379,287 @@ class RunProjectActionResponse:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class Database:
+    """A database project: one service running Postgres or Valkey, whose files the machine wrote.
+
+    Attributes:
+        major_version: As it was made, e.g. 18.
+        server_version: What the server says it runs, e.g. "18.6". Empty = not answering.
+        memory_limit_bytes: Its size: its service's `mem_limit` in compose.yaml.
+        data_bytes: Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+        connections: Open now.
+        max_connections: Valkey: maxclients.
+        linked_projects: The projects that reach it (link_database).
+        service: The service of Project.services that runs the database.
+        volume: The volume of Project.volumes that holds its data.
+    """
+
+    engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
+
+    major_version: int = 0
+    """As it was made, e.g. 18."""
+
+    server_version: str = ""
+    """What the server says it runs, e.g. "18.6". Empty = not answering."""
+
+    memory_limit_bytes: int = 0
+    """Its size: its service's `mem_limit` in compose.yaml."""
+
+    data_bytes: int = 0
+    """Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes."""
+
+    connections: int = 0
+    """Open now."""
+
+    max_connections: int = 0
+    """Valkey: maxclients."""
+
+    linked_projects: Sequence[str] = ()
+    """The projects that reach it (link_database)."""
+
+    connection: DatabaseConnection | None = None
+
+    service: str = ""
+    """The service of Project.services that runs the database."""
+
+    volume: str = ""
+    """The volume of Project.volumes that holds its data."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Database:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseConnection:
+    """How a linked project signs in, as the apps' user.
+
+    Attributes:
+        host: The database's project_id.
+        user: "app"; Valkey: "default".
+        database: "app"; Valkey: "0".
+        password: Only with get_project's include_secret_values.
+        url: For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
+            the password.
+        local_url: As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+    """
+
+    host: str = ""
+    """The database's project_id."""
+
+    port: int = 0
+
+    user: str = ""
+    """"app"; Valkey: "default"."""
+
+    database: str = ""
+    """"app"; Valkey: "0"."""
+
+    password: str = ""
+    """Only with get_project's include_secret_values."""
+
+    url: str = ""
+    """For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
+    the password.
+    """
+
+    local_url: str = ""
+    """As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command)."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_connection_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseConnection:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_connection_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseSummary:
+    """A database project in brief (ProjectSummary.database).
+
+    Attributes:
+        data_bytes: As in Database.
+        server_version: As in Database: empty = not answering, its figures are zero.
+    """
+
+    engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
+
+    major_version: int = 0
+
+    data_bytes: int = 0
+    """As in Database."""
+
+    connections: int = 0
+
+    linked_projects: Sequence[str] = ()
+
+    server_version: str = ""
+    """As in Database: empty = not answering, its figures are zero."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_summary_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseSummary:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_summary_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseEngineOffer:
+    """An engine the machine makes databases of (Machine.database_engines).
+
+    Attributes:
+        major_version: The major a new database gets, e.g. 18.
+        sizes: Smallest first.
+        default_memory_limit_bytes: The size create_project's `database` gives.
+    """
+
+    engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
+
+    major_version: int = 0
+    """The major a new database gets, e.g. 18."""
+
+    sizes: Sequence[DatabaseSizeChoice] = ()
+    """Smallest first."""
+
+    default_memory_limit_bytes: int = 0
+    """The size create_project's `database` gives."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_engine_offer_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseEngineOffer:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_engine_offer_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseSizeChoice:
+    """A size a database may take."""
+
+    memory_limit_bytes: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_size_choice_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseSizeChoice:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_size_choice_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LinkDatabaseResponse:
+    """
+    Attributes:
+        project: The database, as get_project returns it.
+    """
+
+    project: Project | None = None
+    """The database, as get_project returns it."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.link_database_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> LinkDatabaseResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.link_database_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SetProjectAlertsResponse:
     """
     Attributes:
@@ -3449,7 +3797,8 @@ class ProjectAlerts:
 
     Attributes:
         checks: Until set: the project's URL at "/" (machine_default); none without a route.
-        traffic_rules: Until set: 10 or more 5xx in 5 minutes, of every request (machine_default).
+        traffic_rules: Until set: 10 or more 5xx in 5 minutes, of every request (machine_default); none without a
+            route.
         off: True = incidents are recorded, nothing is sent.
         mute_end_time: Absent = not muted.
         uptime_percent: Of the time the checks ran in the last 30 days, the share they were up, e.g. 99.97. Absent =
@@ -3460,7 +3809,9 @@ class ProjectAlerts:
     """Until set: the project's URL at "/" (machine_default); none without a route."""
 
     traffic_rules: Sequence[TrafficRuleState] = ()
-    """Until set: 10 or more 5xx in 5 minutes, of every request (machine_default)."""
+    """Until set: 10 or more 5xx in 5 minutes, of every request (machine_default); none without a
+    route.
+    """
 
     off: bool = False
     """True = incidents are recorded, nothing is sent."""
@@ -4724,6 +5075,42 @@ class PathDownload:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseDump:
+    """A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+
+    Attributes:
+        database: Postgres: the database to dump. Empty = "app", the apps'.
+    """
+
+    project_id: str = ""
+
+    database: str = ""
+    """Postgres: the database to dump. Empty = "app", the apps'."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_dump_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseDump:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_dump_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class CreateTransferResponse:
     """
     Attributes:
@@ -4739,7 +5126,8 @@ class CreateTransferResponse:
             answered the PUT with 200.
         replaces: upload_file: a file is at path now; the upload replaces it.
         file_name: download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
-            after the project and its service or volume. Empty for an upload.
+            after the project and its service or volume. download_database: "<project_id>-<database>.dump"
+            or "<project_id>.rdb". Empty for an upload.
         exclude_names: upload_archive: the names `command` leaves out of the archive, wherever they lie in the
             directory. A program that packs the directory itself leaves out the same.
     """
@@ -4771,7 +5159,8 @@ class CreateTransferResponse:
 
     file_name: str = ""
     """download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
-    after the project and its service or volume. Empty for an upload.
+    after the project and its service or volume. download_database: "<project_id>-<database>.dump"
+    or "<project_id>.rdb". Empty for an upload.
     """
 
     exclude_names: Sequence[str] = ()
@@ -4943,6 +5332,47 @@ class MachineUpdatePending:
         from . import _convert
 
         return _convert.machine_update_pending_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseLinkRefusal:
+    """Detail of a FailedPreconditionError error from link_database or CreateDatabase: a project of `link`
+    cannot be linked to the database. Nothing changed.
+
+    Attributes:
+        project_id: The first one refused.
+        service: SERVICE_NAME_TAKEN: its service.
+    """
+
+    project_id: str = ""
+    """The first one refused."""
+
+    reason: DatabaseLinkRefusalReason = DatabaseLinkRefusalReason.UNSPECIFIED
+
+    service: str = ""
+    """SERVICE_NAME_TAKEN: its service."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_link_refusal_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseLinkRefusal:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_link_refusal_from_dict(data)
 
 
 @final

@@ -72,6 +72,10 @@ func (f *fake) QueryContainerLogs(_ context.Context, request *panelv1.QueryConta
 	return answer[*panelv1.QueryContainerLogsResponse](&f.exchange, request)
 }
 
+func (f *fake) LinkDatabase(_ context.Context, request *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
+	return answer[*panelv1.LinkDatabaseResponse](&f.exchange, request)
+}
+
 func (f *fake) RunServiceCommand(_ context.Context, request *panelv1.RunServiceCommandRequest) (*panelv1.RunServiceCommandResponse, error) {
 	return answer[*panelv1.RunServiceCommandResponse](&f.exchange, request)
 }
@@ -109,6 +113,7 @@ var calls = []call{
 	callOf("GetOperation", (*Client).GetOperation, sampleGetOperationRequest, sampleGetOperationResponse, &panelv1.GetOperationRequest{}, &panelv1.GetOperationResponse{}),
 	callOf("QueryHTTPTraffic", (*Client).QueryHTTPTraffic, sampleQueryHTTPTrafficRequest, sampleQueryHTTPTrafficResponse, &panelv1.QueryHttpTrafficRequest{}, &panelv1.QueryHttpTrafficResponse{}),
 	callOf("QueryContainerLogs", (*Client).QueryContainerLogs, sampleQueryContainerLogsRequest, sampleQueryContainerLogsResponse, &panelv1.QueryContainerLogsRequest{}, &panelv1.QueryContainerLogsResponse{}),
+	callOf("LinkDatabase", (*Client).LinkDatabase, sampleLinkDatabaseRequest, sampleLinkDatabaseResponse, &panelv1.LinkDatabaseRequest{}, &panelv1.LinkDatabaseResponse{}),
 	callOf("RunServiceCommand", (*Client).RunServiceCommand, sampleRunServiceCommandRequest, sampleRunServiceCommandResponse, &panelv1.RunServiceCommandRequest{}, &panelv1.RunServiceCommandResponse{}),
 	callOf("ReadPath", (*Client).ReadPath, sampleReadPathRequest, sampleReadPathResponse, &panelv1.ReadPathRequest{}, &panelv1.ReadPathResponse{}),
 	callOf("CreateTransfer", (*Client).CreateTransfer, sampleCreateTransferRequest, sampleCreateTransferResponse, &panelv1.CreateTransferRequest{}, &panelv1.CreateTransferResponse{}),
@@ -123,6 +128,7 @@ var details = []detail{
 	{&panelv1.ProjectChanged{}, func(s seed) Error { return Error{ProjectChanged: new(sampleProjectChanged(s))} }},
 	{&panelv1.MachineUnreachable{}, func(s seed) Error { return Error{MachineUnreachable: new(sampleMachineUnreachable(s))} }},
 	{&panelv1.MachineUpdatePending{}, func(s seed) Error { return Error{MachineUpdatePending: new(sampleMachineUpdatePending(s))} }},
+	{&panelv1.DatabaseLinkRefusal{}, func(s seed) Error { return Error{DatabaseLinkRefusal: new(sampleDatabaseLinkRefusal(s))} }},
 	{&panelv1.NoMachine{}, func(s seed) Error { return Error{NoMachine: new(sampleNoMachine(s))} }},
 }
 
@@ -183,6 +189,13 @@ var shapes = []shape{
 	shapeOf(sampleCancelOperationAction, &panelv1.CancelOperationAction{}),
 	shapeOf(sampleDeleteProjectAction, &panelv1.DeleteProjectAction{}),
 	shapeOf(sampleRunProjectActionResponse, &panelv1.RunProjectActionResponse{}),
+	shapeOf(sampleDatabase, &panelv1.Database{}),
+	shapeOf(sampleDatabaseConnection, &panelv1.DatabaseConnection{}),
+	shapeOf(sampleDatabaseSummary, &panelv1.DatabaseSummary{}),
+	shapeOf(sampleDatabaseEngineOffer, &panelv1.DatabaseEngineOffer{}),
+	shapeOf(sampleDatabaseSizeChoice, &panelv1.DatabaseSizeChoice{}),
+	shapeOf(sampleLinkDatabaseRequest, &panelv1.LinkDatabaseRequest{}),
+	shapeOf(sampleLinkDatabaseResponse, &panelv1.LinkDatabaseResponse{}),
 	shapeOf(sampleSetProjectAlertsRequest, &panelv1.SetProjectAlertsRequest{}),
 	shapeOf(sampleSetProjectAlertsResponse, &panelv1.SetProjectAlertsResponse{}),
 	shapeOf(sampleSiteCheck, &panelv1.SiteCheck{}),
@@ -216,11 +229,13 @@ var shapes = []shape{
 	shapeOf(sampleArchiveUpload, &panelv1.ArchiveUpload{}),
 	shapeOf(sampleFileUpload, &panelv1.FileUpload{}),
 	shapeOf(samplePathDownload, &panelv1.PathDownload{}),
+	shapeOf(sampleDatabaseDump, &panelv1.DatabaseDump{}),
 	shapeOf(sampleCreateTransferResponse, &panelv1.CreateTransferResponse{}),
 	shapeOf(sampleProjectBusy, &panelv1.ProjectBusy{}),
 	shapeOf(sampleProjectChanged, &panelv1.ProjectChanged{}),
 	shapeOf(sampleMachineUnreachable, &panelv1.MachineUnreachable{}),
 	shapeOf(sampleMachineUpdatePending, &panelv1.MachineUpdatePending{}),
+	shapeOf(sampleDatabaseLinkRefusal, &panelv1.DatabaseLinkRefusal{}),
 	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
 	shapeOf(sampleWatchOperationRequest, &panelv1.WatchOperationRequest{}),
 	shapeOf(sampleWatchOperationResponse, &panelv1.WatchOperationResponse{}),
@@ -243,12 +258,14 @@ var enums = []enum{
 	enumOf[OperationKind, panelv1.OperationKind]("OperationKind"),
 	enumOf[OperationStatus, panelv1.OperationStatus]("OperationStatus"),
 	enumOf[DeployFailureReason, panelv1.DeployFailureReason]("DeployFailureReason"),
+	enumOf[DatabaseEngine, panelv1.DatabaseEngine]("DatabaseEngine"),
 	enumOf[TrafficMetric, panelv1.TrafficMetric]("TrafficMetric"),
 	enumOf[AlertStatus, panelv1.AlertStatus]("AlertStatus"),
 	enumOf[IncidentQuietReason, panelv1.IncidentQuietReason]("IncidentQuietReason"),
 	enumOf[OutputStream, panelv1.OutputStream]("OutputStream"),
 	enumOf[FileType, panelv1.FileType]("FileType"),
 	enumOf[FileLocation, panelv1.FileLocation]("FileLocation"),
+	enumOf[DatabaseLinkRefusalReason, panelv1.DatabaseLinkRefusalReason]("DatabaseLinkRefusalReason"),
 	enumOf[NoMachineReason, panelv1.NoMachineReason]("NoMachineReason"),
 }
 
@@ -293,6 +310,8 @@ func sampleMachine(s seed) Machine {
 		ScheduledRestartTime:       instant(s.at("pethost.panel.v1.Machine.scheduled_restart_time")),
 		Sessions:                   list(s.at("pethost.panel.v1.Machine.sessions"), sampleMachineSession),
 		AlertChannels:              list(s.at("pethost.panel.v1.Machine.alert_channels"), sampleAlertDestination),
+		DatabaseEngines:            list(s.at("pethost.panel.v1.Machine.database_engines"), sampleDatabaseEngineOffer),
+		MemoryLimitsBytes:          plain[uint64](s.at("pethost.panel.v1.Machine.memory_limits_bytes")),
 	}
 }
 
@@ -426,6 +445,7 @@ func sampleProjectSummary(s seed) ProjectSummary {
 		RunningOperations:  list(s.at("pethost.panel.v1.ProjectSummary.running_operations"), sampleOperation),
 		Pinned:             plain[bool](s.at("pethost.panel.v1.ProjectSummary.pinned")),
 		DiskUsedBytes:      plain[uint64](s.at("pethost.panel.v1.ProjectSummary.disk_used_bytes")),
+		Database:           pointer(s.at("pethost.panel.v1.ProjectSummary.database"), sampleDatabaseSummary),
 	}
 }
 
@@ -493,6 +513,8 @@ func sampleProject(s seed) Project {
 		Incidents:             list(s.at("pethost.panel.v1.Project.incidents"), sampleIncident),
 		MoreIncidents:         plain[bool](s.at("pethost.panel.v1.Project.more_incidents")),
 		UptimeDays:            list(s.at("pethost.panel.v1.Project.uptime_days"), sampleUptimeDay),
+		Database:              pointer(s.at("pethost.panel.v1.Project.database"), sampleDatabase),
+		LinkedDatabases:       list(s.at("pethost.panel.v1.Project.linked_databases"), scalar[string]),
 	}
 }
 
@@ -706,6 +728,7 @@ func sampleCreateProjectRequest(s seed) CreateProjectRequest {
 		TimeoutSeconds: plain[uint32](s.at("pethost.panel.v1.CreateProjectRequest.timeout_seconds")),
 		OperationID:    plain[string](s.at("pethost.panel.v1.CreateProjectRequest.operation_id")),
 		WaitSeconds:    marked[uint32](s.at("pethost.panel.v1.CreateProjectRequest.wait_seconds")),
+		Database:       plain[DatabaseEngine](s.at("pethost.panel.v1.CreateProjectRequest.database")),
 	}
 }
 
@@ -910,6 +933,74 @@ func sampleRunProjectActionResponse(s seed) RunProjectActionResponse {
 		Operation: pointer(s.at("pethost.panel.v1.RunProjectActionResponse.operation"), sampleOperation),
 		Project:   pointer(s.at("pethost.panel.v1.RunProjectActionResponse.project"), sampleProject),
 		Log:       list(s.at("pethost.panel.v1.RunProjectActionResponse.log"), sampleOperationLogLine),
+	}
+}
+
+func sampleDatabase(s seed) Database {
+	return Database{
+		Engine:           plain[DatabaseEngine](s.at("pethost.panel.v1.Database.engine")),
+		MajorVersion:     plain[uint32](s.at("pethost.panel.v1.Database.major_version")),
+		ServerVersion:    plain[string](s.at("pethost.panel.v1.Database.server_version")),
+		MemoryLimitBytes: plain[uint64](s.at("pethost.panel.v1.Database.memory_limit_bytes")),
+		DataBytes:        plain[uint64](s.at("pethost.panel.v1.Database.data_bytes")),
+		Connections:      plain[uint32](s.at("pethost.panel.v1.Database.connections")),
+		MaxConnections:   plain[uint32](s.at("pethost.panel.v1.Database.max_connections")),
+		LinkedProjects:   list(s.at("pethost.panel.v1.Database.linked_projects"), scalar[string]),
+		Connection:       pointer(s.at("pethost.panel.v1.Database.connection"), sampleDatabaseConnection),
+		Service:          plain[string](s.at("pethost.panel.v1.Database.service")),
+		Volume:           plain[string](s.at("pethost.panel.v1.Database.volume")),
+	}
+}
+
+func sampleDatabaseConnection(s seed) DatabaseConnection {
+	return DatabaseConnection{
+		Host:     plain[string](s.at("pethost.panel.v1.DatabaseConnection.host")),
+		Port:     plain[uint32](s.at("pethost.panel.v1.DatabaseConnection.port")),
+		User:     plain[string](s.at("pethost.panel.v1.DatabaseConnection.user")),
+		Database: plain[string](s.at("pethost.panel.v1.DatabaseConnection.database")),
+		Password: plain[string](s.at("pethost.panel.v1.DatabaseConnection.password")),
+		URL:      plain[string](s.at("pethost.panel.v1.DatabaseConnection.url")),
+		LocalURL: plain[string](s.at("pethost.panel.v1.DatabaseConnection.local_url")),
+	}
+}
+
+func sampleDatabaseSummary(s seed) DatabaseSummary {
+	return DatabaseSummary{
+		Engine:         plain[DatabaseEngine](s.at("pethost.panel.v1.DatabaseSummary.engine")),
+		MajorVersion:   plain[uint32](s.at("pethost.panel.v1.DatabaseSummary.major_version")),
+		DataBytes:      plain[uint64](s.at("pethost.panel.v1.DatabaseSummary.data_bytes")),
+		Connections:    plain[uint32](s.at("pethost.panel.v1.DatabaseSummary.connections")),
+		LinkedProjects: list(s.at("pethost.panel.v1.DatabaseSummary.linked_projects"), scalar[string]),
+		ServerVersion:  plain[string](s.at("pethost.panel.v1.DatabaseSummary.server_version")),
+	}
+}
+
+func sampleDatabaseEngineOffer(s seed) DatabaseEngineOffer {
+	return DatabaseEngineOffer{
+		Engine:                  plain[DatabaseEngine](s.at("pethost.panel.v1.DatabaseEngineOffer.engine")),
+		MajorVersion:            plain[uint32](s.at("pethost.panel.v1.DatabaseEngineOffer.major_version")),
+		Sizes:                   list(s.at("pethost.panel.v1.DatabaseEngineOffer.sizes"), sampleDatabaseSizeChoice),
+		DefaultMemoryLimitBytes: plain[uint64](s.at("pethost.panel.v1.DatabaseEngineOffer.default_memory_limit_bytes")),
+	}
+}
+
+func sampleDatabaseSizeChoice(s seed) DatabaseSizeChoice {
+	return DatabaseSizeChoice{
+		MemoryLimitBytes: plain[uint64](s.at("pethost.panel.v1.DatabaseSizeChoice.memory_limit_bytes")),
+	}
+}
+
+func sampleLinkDatabaseRequest(s seed) LinkDatabaseRequest {
+	return LinkDatabaseRequest{
+		DatabaseProjectID: plain[string](s.at("pethost.panel.v1.LinkDatabaseRequest.database_project_id")),
+		Link:              list(s.at("pethost.panel.v1.LinkDatabaseRequest.link"), scalar[string]),
+		Unlink:            list(s.at("pethost.panel.v1.LinkDatabaseRequest.unlink"), scalar[string]),
+	}
+}
+
+func sampleLinkDatabaseResponse(s seed) LinkDatabaseResponse {
+	return LinkDatabaseResponse{
+		Project: pointer(s.at("pethost.panel.v1.LinkDatabaseResponse.project"), sampleProject),
 	}
 }
 
@@ -1255,13 +1346,15 @@ func sampleCreateTransferRequest(s seed) CreateTransferRequest {
 }
 
 func sampleCreateTransferTransfer(s seed) CreateTransferTransfer {
-	switch s.member(3) {
+	switch s.member(4) {
 	case 0:
 		return CreateTransferUploadArchive(member(s, sampleArchiveUpload))
 	case 1:
 		return CreateTransferUploadFile(member(s, sampleFileUpload))
 	case 2:
 		return CreateTransferDownload(member(s, samplePathDownload))
+	case 3:
+		return CreateTransferDownloadDatabase(member(s, sampleDatabaseDump))
 	}
 	return nil
 }
@@ -1308,6 +1401,13 @@ func samplePathDownloadRoot(s seed) PathDownloadRoot {
 	return nil
 }
 
+func sampleDatabaseDump(s seed) DatabaseDump {
+	return DatabaseDump{
+		ProjectID: plain[string](s.at("pethost.panel.v1.DatabaseDump.project_id")),
+		Database:  plain[string](s.at("pethost.panel.v1.DatabaseDump.database")),
+	}
+}
+
 func sampleCreateTransferResponse(s seed) CreateTransferResponse {
 	return CreateTransferResponse{
 		URL:          plain[string](s.at("pethost.panel.v1.CreateTransferResponse.url")),
@@ -1341,6 +1441,14 @@ func sampleMachineUnreachable(s seed) MachineUnreachable {
 
 func sampleMachineUpdatePending(s seed) MachineUpdatePending {
 	return MachineUpdatePending{}
+}
+
+func sampleDatabaseLinkRefusal(s seed) DatabaseLinkRefusal {
+	return DatabaseLinkRefusal{
+		ProjectID: plain[string](s.at("pethost.panel.v1.DatabaseLinkRefusal.project_id")),
+		Reason:    plain[DatabaseLinkRefusalReason](s.at("pethost.panel.v1.DatabaseLinkRefusal.reason")),
+		Service:   plain[string](s.at("pethost.panel.v1.DatabaseLinkRefusal.service")),
+	}
 }
 
 func sampleNoMachine(s seed) NoMachine {

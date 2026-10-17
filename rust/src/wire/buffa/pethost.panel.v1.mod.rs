@@ -87,6 +87,15 @@ pub mod __buffa {
         reg.register_json_any(super::__CANCEL_OPERATION_ACTION_JSON_ANY);
         reg.register_json_any(super::__DELETE_PROJECT_ACTION_JSON_ANY);
         reg.register_json_any(super::__RUN_PROJECT_ACTION_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_CONNECTION_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SUMMARY_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_ENGINE_OFFER_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SIZE_CHOICE_JSON_ANY);
+        reg.register_json_any(super::__LINK_DATABASE_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__LINK_DATABASE_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__CREATE_DATABASE_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__CREATE_DATABASE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SET_PROJECT_ALERTS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__SET_PROJECT_ALERTS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SITE_CHECK_JSON_ANY);
@@ -122,6 +131,7 @@ pub mod __buffa {
         reg.register_json_any(super::__ARCHIVE_UPLOAD_JSON_ANY);
         reg.register_json_any(super::__FILE_UPLOAD_JSON_ANY);
         reg.register_json_any(super::__PATH_DOWNLOAD_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_DUMP_JSON_ANY);
         reg.register_json_any(super::__CREATE_TRANSFER_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__GET_UPLOAD_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GET_UPLOAD_RESPONSE_JSON_ANY);
@@ -129,6 +139,7 @@ pub mod __buffa {
         reg.register_json_any(super::__PROJECT_CHANGED_JSON_ANY);
         reg.register_json_any(super::__MACHINE_UNREACHABLE_JSON_ANY);
         reg.register_json_any(super::__MACHINE_UPDATE_PENDING_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_LINK_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_RESPONSE_JSON_ANY);
@@ -362,6 +373,42 @@ pub use self::__buffa::view::RunProjectActionResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::RunProjectActionResponseOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::DatabaseView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseConnectionView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseConnectionOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSummaryView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSummaryOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseEngineOfferView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseEngineOfferOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSizeChoiceView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSizeChoiceOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::LinkDatabaseRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::LinkDatabaseRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::LinkDatabaseResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::LinkDatabaseResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CreateDatabaseRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::CreateDatabaseRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CreateDatabaseResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::CreateDatabaseResponseOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::SetProjectAlertsRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::SetProjectAlertsRequestOwnedView;
@@ -502,6 +549,10 @@ pub use self::__buffa::view::PathDownloadView;
 #[doc(inline)]
 pub use self::__buffa::view::PathDownloadOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::DatabaseDumpView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseDumpOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::CreateTransferResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateTransferResponseOwnedView;
@@ -529,6 +580,10 @@ pub use self::__buffa::view::MachineUnreachableOwnedView;
 pub use self::__buffa::view::MachineUpdatePendingView;
 #[doc(inline)]
 pub use self::__buffa::view::MachineUpdatePendingOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseLinkRefusalView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseLinkRefusalOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::NoMachineView;
 #[doc(inline)]
