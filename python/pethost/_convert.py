@@ -1659,6 +1659,7 @@ def database_from_wire(_w: _pb.Database) -> _t.Database:
         connection=database_connection_from_wire(_w.connection) if _w.connection is not None else None,
         service=_w.service,
         volume=_w.volume,
+        console_command=tuple(_w.console_command),
     )
 
 
@@ -1675,6 +1676,7 @@ def database_to_wire(_v: _t.Database) -> _pb.Database:
         connection=database_connection_to_wire(_v.connection) if _v.connection is not None else None,
         service=_v.service or None,
         volume=_v.volume or None,
+        console_command=_rt.strings("Database.console_command", _v.console_command),
     )
 
 

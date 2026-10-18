@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.2.8"),
+    ("user-agent", "pethost-rust/0.2.9"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -414,14 +414,15 @@ mod samples {
     }
 
     pub fn machine_session_kind(k: usize) -> types::MachineSessionKind {
-        match k % 7 {
+        match k % 8 {
             0 => types::MachineSessionKind::Unspecified,
             1 => types::MachineSessionKind::WebTerminal,
             2 => types::MachineSessionKind::SshTerminal,
             3 => types::MachineSessionKind::SshCommand,
             4 => types::MachineSessionKind::Sftp,
             5 => types::MachineSessionKind::Tunnel,
-            _ => types::MachineSessionKind::Unrecognized(6),
+            6 => types::MachineSessionKind::DatabaseClient,
+            _ => types::MachineSessionKind::Unrecognized(7),
         }
     }
 
@@ -1484,6 +1485,13 @@ mod samples {
             message.connection = states::maybe(k, samples::database_connection(k + 8, later));
             message.service = states::plain(k, states::text("service", k));
             message.volume = states::plain(k, states::text("volume", k));
+            message.console_command = states::many(
+                k,
+                [
+                    states::text("console_command", k),
+                    states::text("console_command", k + 1),
+                ],
+            );
         })
     }
 
@@ -2120,14 +2128,15 @@ mod on_wire {
 
     pub fn machine_session_kind(k: usize) -> buffa::EnumValue<wire::MachineSessionKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 7 {
+        let number = match k % 8 {
             0 => 0,
             1 => 1,
             2 => 2,
             3 => 3,
             4 => 4,
             5 => 5,
-            _ => 6,
+            6 => 6,
+            _ => 7,
         };
         buffa::EnumValue::from(number)
     }
@@ -3591,6 +3600,13 @@ mod on_wire {
             connection: states::maybe(k, on_wire::database_connection(k + 8, received)).into(),
             service: states::present(states::plain(k, states::text("service", k))),
             volume: states::present(states::plain(k, states::text("volume", k))),
+            console_command: states::many(
+                k,
+                [
+                    states::text("console_command", k),
+                    states::text("console_command", k + 1),
+                ],
+            ),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -6151,7 +6167,7 @@ async fn ssh_key_is_received() {
 
 #[tokio::test]
 async fn machine_session_is_received() {
-    for k in 0..7 {
+    for k in 0..8 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
             message.machine = Some(states::make(|message: &mut wire::Machine| {
                 message.sessions = vec![on_wire::machine_session(k, true)]
@@ -7104,8 +7120,9 @@ fn machine_session_kind_is_json() {
         "MACHINE_SESSION_KIND_SSH_COMMAND",
         "MACHINE_SESSION_KIND_SFTP",
         "MACHINE_SESSION_KIND_TUNNEL",
+        "MACHINE_SESSION_KIND_DATABASE_CLIENT",
     ];
-    an_enum_is_json(&names, 6, samples::machine_session_kind);
+    an_enum_is_json(&names, 7, samples::machine_session_kind);
 }
 
 #[test]
@@ -7401,7 +7418,7 @@ fn machine_session_is_json() {
         "ssh_key_label",
         "ssh_key_fingerprint",
     ];
-    a_message_is_json(7, &names, samples::machine_session, on_wire::machine_session);
+    a_message_is_json(8, &names, samples::machine_session, on_wire::machine_session);
 }
 
 #[test]
@@ -8009,6 +8026,7 @@ fn database_is_json() {
         "connection",
         "service",
         "volume",
+        "console_command",
     ];
     a_message_is_json(4, &names, samples::database, on_wire::database);
 }

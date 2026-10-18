@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import panel_pb
-from .panel_pb import CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
+from .panel_pb import CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenDatabaseClientRequest, OpenDatabaseClientResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -202,7 +202,8 @@ class PanelService(Protocol):
     async def get_incident(self, request: GetIncidentRequest, ctx: RequestContext[GetIncidentRequest, GetIncidentResponse], /) -> GetIncidentResponse:
         """
         One incident in full, with the incidents joined to it and what the machine saw when it opened
-        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+        project's incidents in GetProject (Project.incidents).
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -280,6 +281,20 @@ class PanelService(Protocol):
         {"error":"..."} when the program could not start or was ended, then it closes the
         connection. While open, the terminal is one of Machine.sessions. Not an MCP tool: agents use
         RunServiceCommand.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def open_database_client(self, request: OpenDatabaseClientRequest, ctx: RequestContext[OpenDatabaseClientRequest, OpenDatabaseClientResponse], /) -> OpenDatabaseClientResponse:
+        """
+        A client of a database project, for the web panel: returns a URL the browser opens as a
+        WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+        panel. What passes on it is between the web panel and the machine, and no part of this API.
+        It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+        certified; + MachineUpdatePending = the machine's software predates the database client.
+        RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+        opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+        open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -525,6 +540,16 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=svc.open_terminal,
+                ),
+                "/pethost.panel.v1.PanelService/OpenDatabaseClient": Endpoint.unary(
+                    method=MethodInfo(
+                        name="OpenDatabaseClient",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=OpenDatabaseClientRequest,
+                        output=OpenDatabaseClientResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=svc.open_database_client,
                 ),
                 "/pethost.panel.v1.PanelService/ReadPath": Endpoint.unary(
                     method=MethodInfo(
@@ -923,7 +948,8 @@ class PanelServiceClient(ConnectClient):
     ) -> GetIncidentResponse:
         """
         One incident in full, with the incidents joined to it and what the machine saw when it opened
-        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+        project's incidents in GetProject (Project.incidents).
         """
         return await self.execute_unary(
             request=request,
@@ -1135,6 +1161,37 @@ class PanelServiceClient(ConnectClient):
                 service_name="pethost.panel.v1.PanelService",
                 input=OpenTerminalRequest,
                 output=OpenTerminalResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
+    async def open_database_client(
+        self,
+        request: OpenDatabaseClientRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> OpenDatabaseClientResponse:
+        """
+        A client of a database project, for the web panel: returns a URL the browser opens as a
+        WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+        panel. What passes on it is between the web panel and the machine, and no part of this API.
+        It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+        certified; + MachineUpdatePending = the machine's software predates the database client.
+        RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+        opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+        open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="OpenDatabaseClient",
+                service_name="pethost.panel.v1.PanelService",
+                input=OpenDatabaseClientRequest,
+                output=OpenDatabaseClientResponse,
                 idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,
@@ -1487,7 +1544,8 @@ class PanelServiceSync(Protocol):
     def get_incident(self, request: GetIncidentRequest, ctx: RequestContext[GetIncidentRequest, GetIncidentResponse], /) -> GetIncidentResponse:
         """
         One incident in full, with the incidents joined to it and what the machine saw when it opened
-        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+        project's incidents in GetProject (Project.incidents).
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1565,6 +1623,20 @@ class PanelServiceSync(Protocol):
         {"error":"..."} when the program could not start or was ended, then it closes the
         connection. While open, the terminal is one of Machine.sessions. Not an MCP tool: agents use
         RunServiceCommand.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def open_database_client(self, request: OpenDatabaseClientRequest, ctx: RequestContext[OpenDatabaseClientRequest, OpenDatabaseClientResponse], /) -> OpenDatabaseClientResponse:
+        """
+        A client of a database project, for the web panel: returns a URL the browser opens as a
+        WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+        panel. What passes on it is between the web panel and the machine, and no part of this API.
+        It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+        certified; + MachineUpdatePending = the machine's software predates the database client.
+        RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+        opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+        open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1808,6 +1880,16 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=service.open_terminal,
+                ),
+                "/pethost.panel.v1.PanelService/OpenDatabaseClient": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="OpenDatabaseClient",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=OpenDatabaseClientRequest,
+                        output=OpenDatabaseClientResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=service.open_database_client,
                 ),
                 "/pethost.panel.v1.PanelService/ReadPath": EndpointSync.unary(
                     method=MethodInfo(
@@ -2198,7 +2280,8 @@ class PanelServiceClientSync(ConnectClientSync):
     ) -> GetIncidentResponse:
         """
         One incident in full, with the incidents joined to it and what the machine saw when it opened
-        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+        (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+        project's incidents in GetProject (Project.incidents).
         """
         return self.execute_unary(
             request=request,
@@ -2403,6 +2486,36 @@ class PanelServiceClientSync(ConnectClientSync):
                 service_name="pethost.panel.v1.PanelService",
                 input=OpenTerminalRequest,
                 output=OpenTerminalResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+    def open_database_client(
+        self,
+        request: OpenDatabaseClientRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> OpenDatabaseClientResponse:
+        """
+        A client of a database project, for the web panel: returns a URL the browser opens as a
+        WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+        panel. What passes on it is between the web panel and the machine, and no part of this API.
+        It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+        certified; + MachineUpdatePending = the machine's software predates the database client.
+        RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+        opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+        open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="OpenDatabaseClient",
+                service_name="pethost.panel.v1.PanelService",
+                input=OpenDatabaseClientRequest,
+                output=OpenDatabaseClientResponse,
                 idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,

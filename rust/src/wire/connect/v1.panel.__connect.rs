@@ -142,6 +142,18 @@ pub type OwnedOpenTerminalRequestView = ::buffa::view::OwnedView<
 pub type OwnedOpenTerminalResponseView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::OpenTerminalResponseView<'static>,
 >;
+///Shorthand for `OwnedView<OpenDatabaseClientRequestView<'static>>`.
+pub type OwnedOpenDatabaseClientRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientRequestView<
+        'static,
+    >,
+>;
+///Shorthand for `OwnedView<OpenDatabaseClientResponseView<'static>>`.
+pub type OwnedOpenDatabaseClientResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientResponseView<
+        'static,
+    >,
+>;
 ///Shorthand for `OwnedView<ReadPathRequestView<'static>>`.
 pub type OwnedReadPathRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::ReadPathRequestView<'static>,
@@ -754,6 +766,46 @@ for ::buffa::view::OwnedView<
         )
     }
 }
+impl ::connectrpc::Encodable<
+    crate::proto::pethost::panel::v1::OpenDatabaseClientResponse,
+>
+for crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<
+    crate::proto::pethost::panel::v1::OpenDatabaseClientResponse,
+>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientResponseView<
+        'static,
+    >,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
 impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::ReadPathResponse>
 for crate::proto::pethost::panel::v1::__buffa::view::ReadPathResponseView<'_> {
     fn encode(
@@ -1055,6 +1107,12 @@ pub const PANEL_SERVICE_RUN_SERVICE_COMMAND_SPEC: ::connectrpc::Spec = ::connect
 /// Static [`Spec`](::connectrpc::Spec) for the `OpenTerminal` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_OPEN_TERMINAL_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/OpenTerminal",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `OpenDatabaseClient` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_OPEN_DATABASE_CLIENT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/OpenDatabaseClient",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1452,7 +1510,8 @@ pub trait PanelService: Send + Sync + 'static {
         >,
     > + Send;
     /// One incident in full, with the incidents joined to it and what the machine saw when it opened
-    /// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+    /// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+    /// project's incidents in GetProject (Project.incidents).
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1668,6 +1727,37 @@ pub trait PanelService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::panel::v1::OpenTerminalResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// A client of a database project, for the web panel: returns a URL the browser opens as a
+    /// WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+    /// panel. What passes on it is between the web panel and the machine, and no part of this API.
+    /// It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+    /// FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+    /// certified; + MachineUpdatePending = the machine's software predates the database client.
+    /// RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+    /// opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+    /// open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn open_database_client<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::OpenDatabaseClientResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2334,6 +2424,35 @@ impl<S: PanelService> PanelServiceExt for S {
                 },
             )
             .with_spec(PANEL_SERVICE_OPEN_TERMINAL_SPEC)
+            .route_view(
+                PANEL_SERVICE_SERVICE_NAME,
+                "OpenDatabaseClient",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.open_database_client(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::OpenDatabaseClientResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_OPEN_DATABASE_CLIENT_SPEC)
             .route_view_idempotent(
                 PANEL_SERVICE_SERVICE_NAME,
                 "ReadPath",
@@ -2653,6 +2772,12 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(PANEL_SERVICE_OPEN_TERMINAL_SPEC),
+                )
+            }
+            "OpenDatabaseClient" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(PANEL_SERVICE_OPEN_DATABASE_CLIENT_SPEC),
                 )
             }
             "ReadPath" => {
@@ -3055,6 +3180,28 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::pethost::panel::v1::OpenTerminalResponse,
+                        >(format)
+                })
+            }
+            "OpenDatabaseClient" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+                    >::from_parts(&req, &body);
+                    svc.open_database_client(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::OpenDatabaseClientResponse,
                         >(format)
                 })
             }
@@ -4044,6 +4191,51 @@ where
                 &self.transport,
                 &self.config,
                 PANEL_SERVICE_OPEN_TERMINAL_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the OpenDatabaseClient RPC. Sends a request to /pethost.panel.v1.PanelService/OpenDatabaseClient.
+    pub async fn open_database_client(
+        &self,
+        request: crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.open_database_client_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the OpenDatabaseClient RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn open_database_client_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::OpenDatabaseClientRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::OpenDatabaseClientResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_OPEN_DATABASE_CLIENT_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

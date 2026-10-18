@@ -63,6 +63,9 @@ pub(crate) fn machine_session_kind_from_wire(
         buffa::EnumValue::Known(wire::MachineSessionKind::MACHINE_SESSION_KIND_TUNNEL) => {
             types::MachineSessionKind::Tunnel
         }
+        buffa::EnumValue::Known(wire::MachineSessionKind::MACHINE_SESSION_KIND_DATABASE_CLIENT) => {
+            types::MachineSessionKind::DatabaseClient
+        }
         buffa::EnumValue::Unknown(number) => types::MachineSessionKind::Unrecognized(number),
     }
 }
@@ -86,6 +89,9 @@ pub(crate) fn machine_session_kind_to_wire(
         types::MachineSessionKind::Sftp => buffa::EnumValue::Known(wire::MachineSessionKind::MACHINE_SESSION_KIND_SFTP),
         types::MachineSessionKind::Tunnel => {
             buffa::EnumValue::Known(wire::MachineSessionKind::MACHINE_SESSION_KIND_TUNNEL)
+        }
+        types::MachineSessionKind::DatabaseClient => {
+            buffa::EnumValue::Known(wire::MachineSessionKind::MACHINE_SESSION_KIND_DATABASE_CLIENT)
         }
         types::MachineSessionKind::Unrecognized(number) => buffa::EnumValue::from(number),
     }
@@ -3356,6 +3362,7 @@ impl From<types::Database> for wire::Database {
             connection,
             service,
             volume,
+            console_command,
         } = message;
 
         Self {
@@ -3370,6 +3377,7 @@ impl From<types::Database> for wire::Database {
             connection: connection.map(wire::DatabaseConnection::from).into(),
             service: self::present(service),
             volume: self::present(volume),
+            console_command,
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3389,6 +3397,7 @@ impl From<wire::Database> for types::Database {
             connection,
             service,
             volume,
+            console_command,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3404,6 +3413,7 @@ impl From<wire::Database> for types::Database {
             connection: connection.into_option().map(types::DatabaseConnection::from),
             service: service.unwrap_or_default(),
             volume: volume.unwrap_or_default(),
+            console_command,
         }
     }
 }

@@ -88,6 +88,7 @@ import * as p from "pethost";
   m.converts("MachineSession.kind: SSH_COMMAND", { kind: w.MachineSessionKind.SSH_COMMAND }, { ...empty.MachineSession(), kind: "SSH_COMMAND" });
   m.converts("MachineSession.kind: SFTP", { kind: w.MachineSessionKind.SFTP }, { ...empty.MachineSession(), kind: "SFTP" });
   m.converts("MachineSession.kind: TUNNEL", { kind: w.MachineSessionKind.TUNNEL }, { ...empty.MachineSession(), kind: "TUNNEL" });
+  m.converts("MachineSession.kind: DATABASE_CLIENT", { kind: w.MachineSessionKind.DATABASE_CLIENT }, { ...empty.MachineSession(), kind: "DATABASE_CLIENT" });
   m.converts("MachineSession.kind: a value newer than the SDK", { kind: 9999 as w.MachineSessionKind }, { ...empty.MachineSession(), kind: 9999 });
   m.refuses("MachineSession.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("MachineSession.project_id", { projectId: "project_id" }, { ...empty.MachineSession(), projectId: "project_id" });
@@ -829,6 +830,7 @@ import * as p from "pethost";
   m.converts("Database.connection", { connection: {} }, { ...empty.Database(), connection: empty.DatabaseConnection() });
   m.converts("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
   m.converts("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
+  m.converts("Database.console_command", { consoleCommand: ["console_command", ""] }, { ...empty.Database(), consoleCommand: ["console_command", ""] });
 }
 
 {

@@ -85,6 +85,7 @@ const fromMachineSessionKind: Record<w.MachineSessionKind, p.MachineSessionKind 
   [w.MachineSessionKind.SSH_COMMAND]: "SSH_COMMAND",
   [w.MachineSessionKind.SFTP]: "SFTP",
   [w.MachineSessionKind.TUNNEL]: "TUNNEL",
+  [w.MachineSessionKind.DATABASE_CLIENT]: "DATABASE_CLIENT",
 };
 const toMachineSessionKind: Record<p.MachineSessionKind, w.MachineSessionKind> = {
   WEB_TERMINAL: w.MachineSessionKind.WEB_TERMINAL,
@@ -92,6 +93,7 @@ const toMachineSessionKind: Record<p.MachineSessionKind, w.MachineSessionKind> =
   SSH_COMMAND: w.MachineSessionKind.SSH_COMMAND,
   SFTP: w.MachineSessionKind.SFTP,
   TUNNEL: w.MachineSessionKind.TUNNEL,
+  DATABASE_CLIENT: w.MachineSessionKind.DATABASE_CLIENT,
 };
 
 const fromProjectProblemKind: Record<w.ProjectProblemKind, p.ProjectProblemKind | undefined> = {
@@ -1649,6 +1651,7 @@ export function fromDatabase(m: w.Database): p.Database {
     connection: m.connection && fromDatabaseConnection(m.connection),
     service: m.service,
     volume: m.volume,
+    consoleCommand: m.consoleCommand,
   });
 }
 
@@ -1665,6 +1668,7 @@ export function toDatabase(m: p.Database): MessageInitShape<typeof w.DatabaseSch
     connection: m.connection && toDatabaseConnection(m.connection),
     service: m.service || undefined,
     volume: m.volume || undefined,
+    consoleCommand: m.consoleCommand && [...m.consoleCommand],
   } satisfies Fields<w.Database>;
 }
 

@@ -69,7 +69,7 @@ export const empty = {
   CancelOperationAction: () => ({ operationId: "" }),
   DeleteProjectAction: () => ({ skipFinalBackup: false }),
   RunProjectActionResponse: () => ({ log: [] }),
-  Database: () => ({ majorVersion: 0, serverVersion: "", memoryLimitBytes: 0n, dataBytes: 0n, connections: 0, maxConnections: 0, linkedProjects: [], service: "", volume: "" }),
+  Database: () => ({ majorVersion: 0, serverVersion: "", memoryLimitBytes: 0n, dataBytes: 0n, connections: 0, maxConnections: 0, linkedProjects: [], service: "", volume: "", consoleCommand: [] }),
   DatabaseConnection: () => ({ host: "", port: 0, user: "", database: "", password: "", url: "", localUrl: "" }),
   DatabaseSummary: () => ({ majorVersion: 0, dataBytes: 0n, connections: 0, linkedProjects: [], serverVersion: "" }),
   DatabaseEngineOffer: () => ({ majorVersion: 0, sizes: [], defaultMemoryLimitBytes: 0n }),
@@ -190,6 +190,7 @@ export const empty = {
   m.reads("MachineSession.kind: SSH_COMMAND", { kind: w.MachineSessionKind.SSH_COMMAND }, { ...empty.MachineSession(), kind: "SSH_COMMAND" });
   m.reads("MachineSession.kind: SFTP", { kind: w.MachineSessionKind.SFTP }, { ...empty.MachineSession(), kind: "SFTP" });
   m.reads("MachineSession.kind: TUNNEL", { kind: w.MachineSessionKind.TUNNEL }, { ...empty.MachineSession(), kind: "TUNNEL" });
+  m.reads("MachineSession.kind: DATABASE_CLIENT", { kind: w.MachineSessionKind.DATABASE_CLIENT }, { ...empty.MachineSession(), kind: "DATABASE_CLIENT" });
   m.reads("MachineSession.kind: a value newer than the SDK", { kind: 9999 as w.MachineSessionKind }, { ...empty.MachineSession(), kind: 9999 });
   m.reads("MachineSession.project_id", { projectId: "project_id" }, { ...empty.MachineSession(), projectId: "project_id" });
   m.reads("MachineSession.service", { service: "service" }, { ...empty.MachineSession(), service: "service" });
@@ -708,6 +709,7 @@ export const empty = {
   m.reads("Database.connection", { connection: {} }, { ...empty.Database(), connection: empty.DatabaseConnection() });
   m.reads("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
   m.reads("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
+  m.reads("Database.console_command", { consoleCommand: ["console_command", ""] }, { ...empty.Database(), consoleCommand: ["console_command", ""] });
 }
 
 {

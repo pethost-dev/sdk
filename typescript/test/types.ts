@@ -94,7 +94,7 @@ optional<p.RestoreSnapshotActionInput>({ snapshotId: true, volumes: true });
 optional<p.CancelOperationActionInput>({ operationId: true });
 optional<p.DeleteProjectActionInput>({ skipFinalBackup: true });
 optional<p.RunProjectActionResponse>({ operation: true, project: true, log: false });
-optional<p.Database>({ engine: true, majorVersion: false, serverVersion: false, memoryLimitBytes: false, dataBytes: false, connections: false, maxConnections: false, linkedProjects: false, connection: true, service: false, volume: false });
+optional<p.Database>({ engine: true, majorVersion: false, serverVersion: false, memoryLimitBytes: false, dataBytes: false, connections: false, maxConnections: false, linkedProjects: false, connection: true, service: false, volume: false, consoleCommand: false });
 optional<p.DatabaseConnection>({ host: false, port: false, user: false, database: false, password: false, url: false, localUrl: false });
 optional<p.DatabaseSummary>({ engine: true, majorVersion: false, dataBytes: false, connections: false, linkedProjects: false, serverVersion: false });
 optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: false, defaultMemoryLimitBytes: false });

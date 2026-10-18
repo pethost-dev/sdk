@@ -1479,6 +1479,7 @@ func fromWireDatabase(w *panelv1.Database) Database {
 		pointerFromWire(w.GetConnection(), fromWireDatabaseConnection),
 		w.GetService(),
 		w.GetVolume(),
+		w.GetConsoleCommand(),
 	}
 }
 
@@ -1495,6 +1496,7 @@ func toWireDatabase(v Database) *panelv1.Database {
 		Connection:       pointerToWire(v.Connection, toWireDatabaseConnection),
 		Service:          nonZero(v.Service),
 		Volume:           nonZero(v.Volume),
+		ConsoleCommand:   v.ConsoleCommand,
 	}
 	return b.Build()
 }
@@ -2823,6 +2825,7 @@ func _() {
 	_ = same[MachineSessionKindSSHCommand-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_SSH_COMMAND)]
 	_ = same[MachineSessionKindSftp-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_SFTP)]
 	_ = same[MachineSessionKindTunnel-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_TUNNEL)]
+	_ = same[MachineSessionKindDatabaseClient-MachineSessionKind(panelv1.MachineSessionKind_MACHINE_SESSION_KIND_DATABASE_CLIENT)]
 	_ = same[ProjectProblemKindUnspecified-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_UNSPECIFIED)]
 	_ = same[ProjectProblemKindDeployFailed-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_DEPLOY_FAILED)]
 	_ = same[ProjectProblemKindServiceUnhealthy-ProjectProblemKind(panelv1.ProjectProblemKind_PROJECT_PROBLEM_KIND_SERVICE_UNHEALTHY)]

@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pethost"
-version = "0.2.8"
+version = "0.2.9"
 description = "The Python SDK for Pethost, hosting for Docker Compose projects: deploy, read logs and requests, run commands and move files through its API."
 readme = "README.md"
 requires-python = ">=3.10"

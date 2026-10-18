@@ -1266,8 +1266,8 @@ func (v *AlertChannelKind) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "MACHINE_SESSION_KIND_TUNNEL" for [MachineSessionKindTunnel], or its number when the package
-// has no name for it.
+// "MACHINE_SESSION_KIND_DATABASE_CLIENT" for [MachineSessionKindDatabaseClient], or its number
+// when the package has no name for it.
 func (v MachineSessionKind) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireMachineSessionKind(v))
 }

@@ -129,6 +129,9 @@ const (
 	PanelServiceRunServiceCommandProcedure = "/pethost.panel.v1.PanelService/RunServiceCommand"
 	// PanelServiceOpenTerminalProcedure is the procedure name of the PanelService's OpenTerminal RPC.
 	PanelServiceOpenTerminalProcedure = "/pethost.panel.v1.PanelService/OpenTerminal"
+	// PanelServiceOpenDatabaseClientProcedure is the procedure name of the PanelService's
+	// OpenDatabaseClient RPC.
+	PanelServiceOpenDatabaseClientProcedure = "/pethost.panel.v1.PanelService/OpenDatabaseClient"
 	// PanelServiceReadPathProcedure is the procedure name of the PanelService's ReadPath RPC.
 	PanelServiceReadPathProcedure = "/pethost.panel.v1.PanelService/ReadPath"
 	// PanelServiceCreateTransferProcedure is the procedure name of the PanelService's CreateTransfer
@@ -267,6 +270,13 @@ var (
 			StreamType: connect.StreamTypeUnary,
 			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("OpenTerminal"),
 			Procedure:  PanelServiceOpenTerminalProcedure,
+		}
+	})
+	panelServiceOpenDatabaseClientSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("OpenDatabaseClient"),
+			Procedure:  PanelServiceOpenDatabaseClientProcedure,
 		}
 	})
 	panelServiceReadPathSpec = sync.OnceValue(func() connect.Spec {
@@ -454,7 +464,8 @@ type PanelServiceClient interface {
 	// = the machine's software predates alerts.
 	SetProjectAlerts(context.Context, *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error)
 	// One incident in full, with the incidents joined to it and what the machine saw when it opened
-	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+	// project's incidents in GetProject (Project.incidents).
 	GetIncident(context.Context, *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error)
 	// An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
 	// log's end if it FAILED. Call again while it is IN_PROGRESS. To read a log: after_log_line 0,
@@ -505,6 +516,16 @@ type PanelServiceClient interface {
 	// connection. While open, the terminal is one of Machine.sessions. Not an MCP tool: agents use
 	// RunServiceCommand.
 	OpenTerminal(context.Context, *panelv1.OpenTerminalRequest) (*panelv1.OpenTerminalResponse, error)
+	// A client of a database project, for the web panel: returns a URL the browser opens as a
+	// WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+	// panel. What passes on it is between the web panel and the machine, and no part of this API.
+	// It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+	// FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+	// certified; + MachineUpdatePending = the machine's software predates the database client.
+	// RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+	// opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+	// open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+	OpenDatabaseClient(context.Context, *panelv1.OpenDatabaseClientRequest) (*panelv1.OpenDatabaseClientResponse, error)
 	// Reads a file (text, 64 KiB a call; ≤1 MiB with length_bytes) or a directory's entries (~64 KiB
 	// a page): of the project's deployed files, or with `service` or `volume`, of a container
 	// (whole filesystem; while not running only its volumes, FAILED_PRECONDITION listing them) or a
@@ -756,7 +777,8 @@ type PanelServiceHandler interface {
 	// = the machine's software predates alerts.
 	SetProjectAlerts(context.Context, *panelv1.SetProjectAlertsRequest) (*panelv1.SetProjectAlertsResponse, error)
 	// One incident in full, with the incidents joined to it and what the machine saw when it opened
-	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+	// (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+	// project's incidents in GetProject (Project.incidents).
 	GetIncident(context.Context, *panelv1.GetIncidentRequest) (*panelv1.GetIncidentResponse, error)
 	// An operation, after waiting for it to end (wait_seconds): then the project as it is, and the
 	// log's end if it FAILED. Call again while it is IN_PROGRESS. To read a log: after_log_line 0,
@@ -807,6 +829,16 @@ type PanelServiceHandler interface {
 	// connection. While open, the terminal is one of Machine.sessions. Not an MCP tool: agents use
 	// RunServiceCommand.
 	OpenTerminal(context.Context, *panelv1.OpenTerminalRequest) (*panelv1.OpenTerminalResponse, error)
+	// A client of a database project, for the web panel: returns a URL the browser opens as a
+	// WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+	// panel. What passes on it is between the web panel and the machine, and no part of this API.
+	// It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+	// FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+	// certified; + MachineUpdatePending = the machine's software predates the database client.
+	// RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+	// opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+	// open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+	OpenDatabaseClient(context.Context, *panelv1.OpenDatabaseClientRequest) (*panelv1.OpenDatabaseClientResponse, error)
 	// Reads a file (text, 64 KiB a call; ≤1 MiB with length_bytes) or a directory's entries (~64 KiB
 	// a page): of the project's deployed files, or with `service` or `volume`, of a container
 	// (whole filesystem; while not running only its volumes, FAILED_PRECONDITION listing them) or a
@@ -871,6 +903,7 @@ func RegisterPanelServiceHandler(server *connect.Server, svc PanelServiceHandler
 		connect.Method{Spec: panelServiceCreateDatabaseSpec(), Handler: adapter.createDatabase},
 		connect.Method{Spec: panelServiceRunServiceCommandSpec(), Handler: adapter.runServiceCommand},
 		connect.Method{Spec: panelServiceOpenTerminalSpec(), Handler: adapter.openTerminal},
+		connect.Method{Spec: panelServiceOpenDatabaseClientSpec(), Handler: adapter.openDatabaseClient},
 		connect.Method{Spec: panelServiceReadPathSpec(), Handler: adapter.readPath},
 		connect.Method{Spec: panelServiceCreateTransferSpec(), Handler: adapter.createTransfer},
 		connect.Method{Spec: panelServiceGetUploadSpec(), Handler: adapter.getUpload},
@@ -993,6 +1026,10 @@ func (UnimplementedPanelServiceHandler) RunServiceCommand(context.Context, *pane
 
 func (UnimplementedPanelServiceHandler) OpenTerminal(context.Context, *panelv1.OpenTerminalRequest) (*panelv1.OpenTerminalResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.OpenTerminal is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) OpenDatabaseClient(context.Context, *panelv1.OpenDatabaseClientRequest) (*panelv1.OpenDatabaseClientResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.OpenDatabaseClient is not implemented")
 }
 
 func (UnimplementedPanelServiceHandler) ReadPath(context.Context, *panelv1.ReadPathRequest) (*panelv1.ReadPathResponse, error) {
@@ -1146,6 +1183,14 @@ func (c *panelServiceClient) RunServiceCommand(ctx context.Context, req *panelv1
 func (c *panelServiceClient) OpenTerminal(ctx context.Context, req *panelv1.OpenTerminalRequest) (*panelv1.OpenTerminalResponse, error) {
 	var res panelv1.OpenTerminalResponse
 	if err := c.client.CallUnary(ctx, panelServiceOpenTerminalSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) OpenDatabaseClient(ctx context.Context, req *panelv1.OpenDatabaseClientRequest) (*panelv1.OpenDatabaseClientResponse, error) {
+	var res panelv1.OpenDatabaseClientResponse
+	if err := c.client.CallUnary(ctx, panelServiceOpenDatabaseClientSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1387,6 +1432,18 @@ func (h panelServiceHandler) openTerminal(ctx context.Context, _ connect.Spec, s
 		return err
 	}
 	res, err := h.svc.OpenTerminal(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) openDatabaseClient(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.OpenDatabaseClientRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.OpenDatabaseClient(ctx, &req)
 	if err != nil {
 		return err
 	}

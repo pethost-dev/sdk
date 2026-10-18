@@ -241,7 +241,8 @@ service PanelService {
   }
 
   // One incident in full, with the incidents joined to it and what the machine saw when it opened
-  // (untrusted), for the web panel's incident page. NOT_FOUND = no such incident.
+  // (untrusted), for the web panel's incident page. NOT_FOUND = no such incident. Agents read a
+  // project's incidents in GetProject (Project.incidents).
   rpc GetIncident(GetIncidentRequest) returns (GetIncidentResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
@@ -319,6 +320,17 @@ service PanelService {
   // connection. While open, the terminal is one of Machine.sessions. Not an MCP tool: agents use
   // RunServiceCommand.
   rpc OpenTerminal(OpenTerminalRequest) returns (OpenTerminalResponse);
+
+  // A client of a database project, for the web panel: returns a URL the browser opens as a
+  // WebSocket straight to the machine, once, within 5 minutes, so rows never pass through the
+  // panel. What passes on it is between the web panel and the machine, and no part of this API.
+  // It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
+  // FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
+  // certified; + MachineUpdatePending = the machine's software predates the database client.
+  // RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
+  // opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
+  // open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.
+  rpc OpenDatabaseClient(OpenDatabaseClientRequest) returns (OpenDatabaseClientResponse);
 
   // ── Files ────────────────────────────────────────────────────────────────
 
@@ -486,9 +498,10 @@ enum AlertChannelKind {
   ALERT_CHANNEL_KIND_SLACK = 3; // A Slack channel.
 }
 
-// Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
-// program, SFTP or one connection of a tunnel. It lasts until the program exits or the
-// connection closes; RunMachineAction.end_session_id ends it sooner.
+// Something a person has open in a container: a web terminal (OpenTerminal), a database's client
+// (OpenDatabaseClient), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts
+// until the program exits or the connection closes; RunMachineAction.end_session_id ends it
+// sooner.
 message MachineSession {
   string session_id = 1; // For RunMachineAction.end_session_id.
   MachineSessionKind kind = 2;
@@ -497,7 +510,8 @@ message MachineSession {
   uint32 port = 5; // TUNNEL: the container's port.
   google.protobuf.Timestamp start_time = 6;
   string client_address = 7; // The person's IP address.
-  // Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL.
+  // Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+  // DATABASE_CLIENT.
   string ssh_key_label = 8;
   string ssh_key_fingerprint = 9;
 }
@@ -510,6 +524,7 @@ enum MachineSessionKind {
   MACHINE_SESSION_KIND_SSH_COMMAND = 3;
   MACHINE_SESSION_KIND_SFTP = 4; // scp, sftp or sshfs.
   MACHINE_SESSION_KIND_TUNNEL = 5; // One connection of an `ssh -L` tunnel to `port`.
+  MACHINE_SESSION_KIND_DATABASE_CLIENT = 6; // The web panel's client of a database.
 }
 
 // Where the disk goes; the rest of disk_used_bytes is the filesystem's own metadata and the
@@ -1391,6 +1406,8 @@ message Database {
   DatabaseConnection connection = 9;
   string service = 10; // The service of Project.services that runs the database.
   string volume = 11; // The volume of Project.volumes that holds its data.
+  // The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+  repeated string console_command = 12;
 }
 
 // How a linked project signs in, as the apps' user.
@@ -2090,6 +2107,16 @@ message TerminalSize {
 
 message OpenTerminalResponse {
   // E.g. "wss://m1.example.com/terminal/<ticket>"; "ws://" for a test machine's IP address.
+  string url = 1;
+  google.protobuf.Timestamp expire_time = 2; // The browser must open it before.
+}
+
+message OpenDatabaseClientRequest {
+  string project_id = 1; // A database project whose service runs.
+}
+
+message OpenDatabaseClientResponse {
+  // E.g. "wss://m1.example.com/database/<ticket>"; "ws://" for a test machine's IP address.
   string url = 1;
   google.protobuf.Timestamp expire_time = 2; // The browser must open it before.
 }

@@ -182,6 +182,8 @@ pub enum MachineSessionKind {
     MACHINE_SESSION_KIND_SFTP = 4i32,
     /// One connection of an `ssh -L` tunnel to `port`.
     MACHINE_SESSION_KIND_TUNNEL = 5i32,
+    /// The web panel's client of a database.
+    MACHINE_SESSION_KIND_DATABASE_CLIENT = 6i32,
 }
 impl MachineSessionKind {
     ///Idiomatic alias for [`Self::MACHINE_SESSION_KIND_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -202,6 +204,9 @@ impl MachineSessionKind {
     ///Idiomatic alias for [`Self::MACHINE_SESSION_KIND_TUNNEL`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Tunnel: Self = Self::MACHINE_SESSION_KIND_TUNNEL;
+    ///Idiomatic alias for [`Self::MACHINE_SESSION_KIND_DATABASE_CLIENT`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const DatabaseClient: Self = Self::MACHINE_SESSION_KIND_DATABASE_CLIENT;
 }
 impl ::core::default::Default for MachineSessionKind {
     fn default() -> Self {
@@ -305,6 +310,9 @@ impl ::buffa::Enumeration for MachineSessionKind {
             3i32 => ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_SSH_COMMAND),
             4i32 => ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_SFTP),
             5i32 => ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_TUNNEL),
+            6i32 => {
+                ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_DATABASE_CLIENT)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -323,6 +331,9 @@ impl ::buffa::Enumeration for MachineSessionKind {
             Self::MACHINE_SESSION_KIND_SSH_COMMAND => "MACHINE_SESSION_KIND_SSH_COMMAND",
             Self::MACHINE_SESSION_KIND_SFTP => "MACHINE_SESSION_KIND_SFTP",
             Self::MACHINE_SESSION_KIND_TUNNEL => "MACHINE_SESSION_KIND_TUNNEL",
+            Self::MACHINE_SESSION_KIND_DATABASE_CLIENT => {
+                "MACHINE_SESSION_KIND_DATABASE_CLIENT"
+            }
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -345,6 +356,9 @@ impl ::buffa::Enumeration for MachineSessionKind {
             "MACHINE_SESSION_KIND_TUNNEL" => {
                 ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_TUNNEL)
             }
+            "MACHINE_SESSION_KIND_DATABASE_CLIENT" => {
+                ::core::option::Option::Some(Self::MACHINE_SESSION_KIND_DATABASE_CLIENT)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -356,6 +370,7 @@ impl ::buffa::Enumeration for MachineSessionKind {
             Self::MACHINE_SESSION_KIND_SSH_COMMAND,
             Self::MACHINE_SESSION_KIND_SFTP,
             Self::MACHINE_SESSION_KIND_TUNNEL,
+            Self::MACHINE_SESSION_KIND_DATABASE_CLIENT,
         ]
     }
 }
@@ -5496,9 +5511,10 @@ pub const __ALERT_DESTINATION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = :
     from_json: ::buffa::type_registry::any_from_json::<AlertDestination>,
     is_wkt: false,
 };
-/// Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
-/// program, SFTP or one connection of a tunnel. It lasts until the program exits or the
-/// connection closes; RunMachineAction.end_session_id ends it sooner.
+/// Something a person has open in a container: a web terminal (OpenTerminal), a database's client
+/// (OpenDatabaseClient), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts
+/// until the program exits or the connection closes; RunMachineAction.end_session_id ends it
+/// sooner.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -5553,7 +5569,8 @@ pub struct MachineSession {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub client_address: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL.
+    /// Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+    /// DATABASE_CLIENT.
     ///
     /// Field 8: `ssh_key_label`
     #[serde(
@@ -22341,6 +22358,15 @@ pub struct Database {
     /// Field 11: `volume`
     #[serde(rename = "volume", skip_serializing_if = "::core::option::Option::is_none")]
     pub volume: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+    ///
+    /// Field 12: `console_command`
+    #[serde(
+        rename = "console_command",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub console_command: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -22359,6 +22385,7 @@ impl ::core::fmt::Debug for Database {
             .field("connection", &self.connection)
             .field("service", &self.service)
             .field("volume", &self.volume)
+            .field("console_command", &self.console_command)
             .finish()
     }
 }
@@ -22504,6 +22531,9 @@ impl ::buffa::Message for Database {
         if let Some(ref v) = self.volume {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        for v in &self.console_command {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -22551,6 +22581,9 @@ impl ::buffa::Message for Database {
         }
         if let Some(ref v) = self.volume {
             ::buffa::types::put_string_field(11u32, v, buf);
+        }
+        for v in &self.console_command {
+            ::buffa::types::put_string_field(12u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -22673,6 +22706,17 @@ impl ::buffa::Message for Database {
                     buf,
                 )?;
             }
+            12u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.console_command.push(__elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -22692,6 +22736,7 @@ impl ::buffa::Message for Database {
         self.connection = ::buffa::MessageField::none();
         self.service = ::core::option::Option::None;
         self.volume = ::core::option::Option::None;
+        self.console_command.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -39768,5 +39813,325 @@ pub const __OPEN_TERMINAL_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntr
     type_url: "type.googleapis.com/pethost.panel.v1.OpenTerminalResponse",
     to_json: ::buffa::type_registry::any_to_json::<OpenTerminalResponse>,
     from_json: ::buffa::type_registry::any_from_json::<OpenTerminalResponse>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct OpenDatabaseClientRequest {
+    /// A database project whose service runs.
+    ///
+    /// Field 1: `project_id`
+    #[serde(
+        rename = "project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for OpenDatabaseClientRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("OpenDatabaseClientRequest")
+            .field("project_id", &self.project_id)
+            .finish()
+    }
+}
+impl OpenDatabaseClientRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientRequest";
+}
+impl OpenDatabaseClientRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.project_id = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(OpenDatabaseClientRequest);
+impl ::buffa::MessageName for OpenDatabaseClientRequest {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "OpenDatabaseClientRequest";
+    const FULL_NAME: &'static str = "pethost.panel.v1.OpenDatabaseClientRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientRequest";
+}
+impl ::buffa::Message for OpenDatabaseClientRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.project_id = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for OpenDatabaseClientRequest {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.OpenDatabaseClientRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for OpenDatabaseClientRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __OPEN_DATABASE_CLIENT_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientRequest",
+    to_json: ::buffa::type_registry::any_to_json::<OpenDatabaseClientRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<OpenDatabaseClientRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct OpenDatabaseClientResponse {
+    /// E.g. "wss://m1.example.com/database/\<ticket\>"; "ws://" for a test machine's IP address.
+    ///
+    /// Field 1: `url`
+    #[serde(rename = "url", skip_serializing_if = "::core::option::Option::is_none")]
+    pub url: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The browser must open it before.
+    ///
+    /// Field 2: `expire_time`
+    #[serde(
+        rename = "expire_time",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub expire_time: ::buffa::MessageField<
+        ::buffa_types::google::protobuf::Timestamp,
+        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
+    >,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for OpenDatabaseClientResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("OpenDatabaseClientResponse")
+            .field("url", &self.url)
+            .field("expire_time", &self.expire_time)
+            .finish()
+    }
+}
+impl OpenDatabaseClientResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientResponse";
+}
+impl OpenDatabaseClientResponse {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::url`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_url(mut self, value: impl Into<::buffa::alloc::string::String>) -> Self {
+        self.url = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(OpenDatabaseClientResponse);
+impl ::buffa::MessageName for OpenDatabaseClientResponse {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "OpenDatabaseClientResponse";
+    const FULL_NAME: &'static str = "pethost.panel.v1.OpenDatabaseClientResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientResponse";
+}
+impl ::buffa::Message for OpenDatabaseClientResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.url {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.expire_time.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.expire_time.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.url {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if self.expire_time.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                2u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.expire_time.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.url.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.expire_time.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.url = ::core::option::Option::None;
+        self.expire_time = ::buffa::MessageField::none();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for OpenDatabaseClientResponse {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.OpenDatabaseClientResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for OpenDatabaseClientResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __OPEN_DATABASE_CLIENT_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.OpenDatabaseClientResponse",
+    to_json: ::buffa::type_registry::any_to_json::<OpenDatabaseClientResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<OpenDatabaseClientResponse>,
     is_wkt: false,
 };

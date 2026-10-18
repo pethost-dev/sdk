@@ -150,6 +150,8 @@ pub mod __buffa {
         reg.register_json_any(super::__OPEN_TERMINAL_REQUEST_JSON_ANY);
         reg.register_json_any(super::__TERMINAL_SIZE_JSON_ANY);
         reg.register_json_any(super::__OPEN_TERMINAL_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__OPEN_DATABASE_CLIENT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__OPEN_DATABASE_CLIENT_RESPONSE_JSON_ANY);
     }
 }
 #[doc(inline)]
@@ -624,5 +626,13 @@ pub use self::__buffa::view::TerminalSizeOwnedView;
 pub use self::__buffa::view::OpenTerminalResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::OpenTerminalResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::OpenDatabaseClientRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::OpenDatabaseClientRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::OpenDatabaseClientResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::OpenDatabaseClientResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::register_types;

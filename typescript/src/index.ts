@@ -32,6 +32,7 @@ export const AlertChannelKind = {
  * - `SSH_COMMAND`: A program without a terminal, such as `ssh ... <command>` or rsync.
  * - `SFTP`: scp, sftp or sshfs.
  * - `TUNNEL`: One connection of an `ssh -L` tunnel to `port`.
+ * - `DATABASE_CLIENT`: The web panel's client of a database.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -47,6 +48,8 @@ export const MachineSessionKind = {
   SFTP: "SFTP",
   /** One connection of an `ssh -L` tunnel to `port`. */
   TUNNEL: "TUNNEL",
+  /** The web panel's client of a database. */
+  DATABASE_CLIENT: "DATABASE_CLIENT",
 } as const;
 
 /**
@@ -657,9 +660,10 @@ export const AlertDestination: JsonCodec<AlertDestination, AlertDestination> = {
 };
 
 /**
- * Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
- * program, SFTP or one connection of a tunnel. It lasts until the program exits or the connection
- * closes; RunMachineActionRequest.endSessionId ends it sooner.
+ * Something a person has open in a container: a web terminal (OpenTerminal), a database's client
+ * (OpenDatabaseClient), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts
+ * until the program exits or the connection closes; RunMachineActionRequest.endSessionId ends it
+ * sooner.
  */
 export interface MachineSession {
   /** For RunMachineActionRequest.endSessionId. */
@@ -672,7 +676,10 @@ export interface MachineSession {
   startTime?: Date;
   /** The person's IP address. */
   clientAddress: string;
-  /** Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL. */
+  /**
+   * Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+   * DATABASE_CLIENT.
+   */
   sshKeyLabel: string;
   sshKeyFingerprint: string;
 }
@@ -2403,6 +2410,8 @@ export interface Database {
   service: string;
   /** The volume of Project.volumes that holds its data. */
   volume: string;
+  /** The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli. */
+  consoleCommand: string[];
 }
 
 /** {@link Database} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3811,7 +3820,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.8");
+      request.header.set("User-Agent", "pethost-typescript/0.2.9");
       return next(request);
     };
     this.#wire = connect.createClient(

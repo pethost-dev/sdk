@@ -39,6 +39,7 @@ class MachineSessionKind(OpenEnum):
         SSH_COMMAND: A program without a terminal, such as `ssh ... <command>` or rsync.
         SFTP: scp, sftp or sshfs.
         TUNNEL: One connection of an `ssh -L` tunnel to `port`.
+        DATABASE_CLIENT: The web panel's client of a database.
     """
 
     UNSPECIFIED = 0
@@ -57,6 +58,9 @@ class MachineSessionKind(OpenEnum):
 
     TUNNEL = 5
     """One connection of an `ssh -L` tunnel to `port`."""
+
+    DATABASE_CLIENT = 6
+    """The web panel's client of a database."""
 
 
 class ProjectProblemKind(OpenEnum):
@@ -801,15 +805,17 @@ class AlertDestination:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MachineSession:
-    """Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH, a
-    program, SFTP or one connection of a tunnel. It lasts until the program exits or the
-    connection closes; run_machine_action(end_session_id=) ends it sooner.
+    """Something a person has open in a container: a web terminal (OpenTerminal), a database's client
+    (OpenDatabaseClient), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts
+    until the program exits or the connection closes; run_machine_action(end_session_id=) ends it
+    sooner.
 
     Attributes:
         session_id: For run_machine_action(end_session_id=).
         port: TUNNEL: the container's port.
         client_address: The person's IP address.
-        ssh_key_label: Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL.
+        ssh_key_label: Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+            DATABASE_CLIENT.
     """
 
     session_id: str = ""
@@ -830,7 +836,9 @@ class MachineSession:
     """The person's IP address."""
 
     ssh_key_label: str = ""
-    """Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL."""
+    """Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+    DATABASE_CLIENT.
+    """
 
     ssh_key_fingerprint: str = ""
 
@@ -3392,6 +3400,7 @@ class Database:
         linked_projects: The projects that reach it (link_database).
         service: The service of Project.services that runs the database.
         volume: The volume of Project.volumes that holds its data.
+        console_command: The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
     """
 
     engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
@@ -3424,6 +3433,9 @@ class Database:
 
     volume: str = ""
     """The volume of Project.volumes that holds its data."""
+
+    console_command: Sequence[str] = ()
+    """The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an

@@ -111,9 +111,10 @@ type AlertDestination struct {
 	Label string
 }
 
-// Something a person has open in a container: a web terminal (OpenTerminal), or, through SSH,
-// a program, SFTP or one connection of a tunnel. It lasts until the program exits or the
-// connection closes; [RunMachineActionEndSessionID] ends it sooner.
+// Something a person has open in a container: a web terminal (OpenTerminal), a database's
+// client (OpenDatabaseClient), or, through SSH, a program, SFTP or one connection of a tunnel.
+// It lasts until the program exits or the connection closes; [RunMachineActionEndSessionID]
+// ends it sooner.
 type MachineSession struct {
 	// For [RunMachineActionEndSessionID].
 	SessionID string
@@ -125,7 +126,8 @@ type MachineSession struct {
 	StartTime time.Time
 	// The person's IP address.
 	ClientAddress string
-	// Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL.
+	// Through SSH: the key they logged in with, as it was then. Empty for WEB_TERMINAL and
+	// DATABASE_CLIENT.
 	SSHKeyLabel       string
 	SSHKeyFingerprint string
 }
@@ -1162,6 +1164,8 @@ type Database struct {
 	Service string
 	// The volume of [Project.Volumes] that holds its data.
 	Volume string
+	// The console, for OpenTerminal in Service: psql signed in as the superuser, or valkey-cli.
+	ConsoleCommand []string
 }
 
 // How a linked project signs in, as the apps' user.
@@ -1993,7 +1997,7 @@ func (v AlertChannelKind) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "MachineSessionKind(6)".
+// and prints as "MachineSessionKind(7)".
 type MachineSessionKind int32
 
 const (
@@ -2008,10 +2012,12 @@ const (
 	MachineSessionKindSftp MachineSessionKind = 4
 	// One connection of an `ssh -L` tunnel to `port`.
 	MachineSessionKindTunnel MachineSessionKind = 5
+	// The web panel's client of a database.
+	MachineSessionKindDatabaseClient MachineSessionKind = 6
 )
 
-// String is the value's name as the API's documentation writes it: "TUNNEL" for
-// [MachineSessionKindTunnel].
+// String is the value's name as the API's documentation writes it: "DATABASE_CLIENT" for
+// [MachineSessionKindDatabaseClient].
 func (v MachineSessionKind) String() string {
 	switch v {
 	case MachineSessionKindUnspecified:
@@ -2026,6 +2032,8 @@ func (v MachineSessionKind) String() string {
 		return "SFTP"
 	case MachineSessionKindTunnel:
 		return "TUNNEL"
+	case MachineSessionKindDatabaseClient:
+		return "DATABASE_CLIENT"
 	}
 	return "MachineSessionKind(" + strconv.Itoa(int(v)) + ")"
 }

@@ -949,6 +949,7 @@ func sampleDatabase(s seed) Database {
 		Connection:       pointer(s.at("pethost.panel.v1.Database.connection"), sampleDatabaseConnection),
 		Service:          plain[string](s.at("pethost.panel.v1.Database.service")),
 		Volume:           plain[string](s.at("pethost.panel.v1.Database.volume")),
+		ConsoleCommand:   list(s.at("pethost.panel.v1.Database.console_command"), scalar[string]),
 	}
 }
 

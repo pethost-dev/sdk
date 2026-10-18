@@ -142,7 +142,7 @@ pub enum AlertChannelKind {
     Unrecognized(i32),
 }
 
-/// Something a person has open in a container: a web terminal (`OpenTerminal`), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts until the program exits or the connection closes; [`RunMachineActionRequestAction::EndSessionId`](crate::types::RunMachineActionRequestAction::EndSessionId) ends it sooner.
+/// Something a person has open in a container: a web terminal (`OpenTerminal`), a database's client (`OpenDatabaseClient`), or, through SSH, a program, SFTP or one connection of a tunnel. It lasts until the program exits or the connection closes; [`RunMachineActionRequestAction::EndSessionId`](crate::types::RunMachineActionRequestAction::EndSessionId) ends it sooner.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct MachineSession {
@@ -156,7 +156,7 @@ pub struct MachineSession {
     pub start_time: ::core::option::Option<crate::Timestamp>,
     /// The person's IP address.
     pub client_address: ::std::string::String,
-    /// Through SSH: the key they logged in with, as it was then. Empty for `WEB_TERMINAL`.
+    /// Through SSH: the key they logged in with, as it was then. Empty for `WEB_TERMINAL` and `DATABASE_CLIENT`.
     pub ssh_key_label: ::std::string::String,
     pub ssh_key_fingerprint: ::std::string::String,
 }
@@ -177,6 +177,8 @@ pub enum MachineSessionKind {
     Sftp,
     /// One connection of an `ssh -L` tunnel to `port`.
     Tunnel,
+    /// The web panel's client of a database.
+    DatabaseClient,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -1203,6 +1205,8 @@ pub struct Database {
     pub service: ::std::string::String,
     /// The volume of [`Project::volumes`](crate::types::Project::volumes) that holds its data.
     pub volume: ::std::string::String,
+    /// The console, for `OpenTerminal` in `service`: psql signed in as the superuser, or valkey-cli.
+    pub console_command: ::std::vec::Vec<::std::string::String>,
 }
 
 /// How a linked project signs in, as the apps\' user.
