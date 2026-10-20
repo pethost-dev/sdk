@@ -32004,7 +32004,8 @@ impl ::serde::Serialize for DatabaseCommandStatsOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-/// Of every database of the server.
+/// Of every database of the server but postgres, where the machine reads them,
+/// and the templates; wal_bytes is the whole server's.
 #[derive(Clone, Debug, Default)]
 pub struct PostgresStatsView<'a> {
     /// Field 1: `commits`

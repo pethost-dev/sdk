@@ -3798,7 +3798,8 @@ export const DatabaseCommandStatsSchema: GenMessage<DatabaseCommandStats> = /*@_
   messageDesc(file_v1_panel, 68);
 
 /**
- * Of every database of the server.
+ * Of every database of the server but postgres, where the machine reads them,
+ * and the templates; wal_bytes is the whole server's.
  *
  * @generated from message pethost.panel.v1.PostgresStats
  */

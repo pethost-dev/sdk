@@ -1568,7 +1568,8 @@ enum DatabaseCommandKind {
   DATABASE_COMMAND_KIND_WRITE = 7; // Valkey.
 }
 
-// Of every database of the server.
+// Of every database of the server but postgres, where the machine reads them,
+// and the templates; wal_bytes is the whole server's.
 message PostgresStats {
   uint64 commits = 1;
   uint64 rollbacks = 2;

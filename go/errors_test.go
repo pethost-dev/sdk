@@ -141,7 +141,7 @@ func TestCaller(t *testing.T) {
 	}
 	for name, want := range map[string]string{
 		"Authorization":            "Bearer " + account,
-		"User-Agent":               "pethost-go/0.2.10",
+		"User-Agent":               "pethost-go/0.2.11",
 		"Content-Type":             "application/proto",
 		"Connect-Protocol-Version": "1",
 	} {

@@ -16550,7 +16550,8 @@ func (b0 DatabaseCommandStats_builder) Build() *DatabaseCommandStats {
 	return m0
 }
 
-// Of every database of the server.
+// Of every database of the server but postgres, where the machine reads them,
+// and the templates; wal_bytes is the whole server's.
 type PostgresStats struct {
 	state                                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Commits                      uint64                 `protobuf:"varint,1,opt,name=commits"`

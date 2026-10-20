@@ -4574,7 +4574,8 @@ _PostgresStatsFields: TypeAlias = Literal["commits", "rollbacks", "blocks_hit", 
 
 class PostgresStats(Message[_PostgresStatsFields]):
     """
-    Of every database of the server.
+    Of every database of the server but postgres, where the machine reads them,
+    and the templates; wal_bytes is the whole server's.
 
     ```proto
     message pethost.panel.v1.PostgresStats

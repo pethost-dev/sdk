@@ -27038,7 +27038,8 @@ pub const __DATABASE_COMMAND_STATS_JSON_ANY: ::buffa::type_registry::JsonAnyEntr
     from_json: ::buffa::type_registry::any_from_json::<DatabaseCommandStats>,
     is_wkt: false,
 };
-/// Of every database of the server.
+/// Of every database of the server but postgres, where the machine reads them,
+/// and the templates; wal_bytes is the whole server's.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
