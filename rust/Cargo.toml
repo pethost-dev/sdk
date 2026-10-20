@@ -2,7 +2,7 @@
 
 [package]
 name = "pethost"
-version = "0.2.9"
+version = "0.2.10"
 edition = "2024"
 rust-version = "1.88"
 description = "Client for the API of Pethost, managed hosting for Docker Compose projects: deploy, logs, HTTP traffic, files"

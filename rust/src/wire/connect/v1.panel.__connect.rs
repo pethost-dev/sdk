@@ -122,6 +122,28 @@ pub type OwnedCreateDatabaseRequestView = ::buffa::view::OwnedView<
 pub type OwnedCreateDatabaseResponseView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'static>,
 >;
+///Shorthand for `OwnedView<GetDatabaseStatsRequestView<'static>>`.
+pub type OwnedGetDatabaseStatsRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsRequestView<'static>,
+>;
+///Shorthand for `OwnedView<GetDatabaseStatsResponseView<'static>>`.
+pub type OwnedGetDatabaseStatsResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsResponseView<
+        'static,
+    >,
+>;
+///Shorthand for `OwnedView<CancelDatabaseQueryRequestView<'static>>`.
+pub type OwnedCancelDatabaseQueryRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryRequestView<
+        'static,
+    >,
+>;
+///Shorthand for `OwnedView<CancelDatabaseQueryResponseView<'static>>`.
+pub type OwnedCancelDatabaseQueryResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryResponseView<
+        'static,
+    >,
+>;
 ///Shorthand for `OwnedView<RunServiceCommandRequestView<'static>>`.
 pub type OwnedRunServiceCommandRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::RunServiceCommandRequestView<
@@ -696,6 +718,84 @@ for ::buffa::view::OwnedView<
         )
     }
 }
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetDatabaseStatsResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetDatabaseStatsResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsResponseView<
+        'static,
+    >,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
+impl ::connectrpc::Encodable<
+    crate::proto::pethost::panel::v1::CancelDatabaseQueryResponse,
+>
+for crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryResponseView<
+    '_,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<
+    crate::proto::pethost::panel::v1::CancelDatabaseQueryResponse,
+>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryResponseView<
+        'static,
+    >,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
 impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::RunServiceCommandResponse>
 for crate::proto::pethost::panel::v1::__buffa::view::RunServiceCommandResponseView<'_> {
     fn encode(
@@ -1095,6 +1195,18 @@ pub const PANEL_SERVICE_LINK_DATABASE_SPEC: ::connectrpc::Spec = ::connectrpc::S
 /// Static [`Spec`](::connectrpc::Spec) for the `CreateDatabase` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_CREATE_DATABASE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/CreateDatabase",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `GetDatabaseStats` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_GET_DATABASE_STATS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/GetDatabaseStats",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
+/// Static [`Spec`](::connectrpc::Spec) for the `CancelDatabaseQuery` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_CANCEL_DATABASE_QUERY_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/CancelDatabaseQuery",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1671,6 +1783,62 @@ pub trait PanelService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::panel::v1::CreateDatabaseResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+    /// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+    /// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+    /// readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+    /// database; + MachineUpdatePending = the machine's software predates the numbers.
+    /// INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+    /// hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+    /// agents use RunServiceCommand with psql or valkey-cli.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn get_database_stats<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::GetDatabaseStatsResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Cancels the statement a client session of a Postgres database runs, or ends the session
+    /// (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+    /// FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+    /// + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn cancel_database_query<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::CancelDatabaseQueryResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2366,6 +2534,64 @@ impl<S: PanelService> PanelServiceExt for S {
                 },
             )
             .with_spec(PANEL_SERVICE_CREATE_DATABASE_SPEC)
+            .route_view_idempotent(
+                PANEL_SERVICE_SERVICE_NAME,
+                "GetDatabaseStats",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.get_database_stats(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::GetDatabaseStatsResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_GET_DATABASE_STATS_SPEC)
+            .route_view(
+                PANEL_SERVICE_SERVICE_NAME,
+                "CancelDatabaseQuery",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.cancel_database_query(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::CancelDatabaseQueryResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_CANCEL_DATABASE_QUERY_SPEC)
             .route_view(
                 PANEL_SERVICE_SERVICE_NAME,
                 "RunServiceCommand",
@@ -2762,6 +2988,18 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .with_spec(PANEL_SERVICE_CREATE_DATABASE_SPEC),
                 )
             }
+            "GetDatabaseStats" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
+                        .with_spec(PANEL_SERVICE_GET_DATABASE_STATS_SPEC),
+                )
+            }
+            "CancelDatabaseQuery" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(PANEL_SERVICE_CANCEL_DATABASE_QUERY_SPEC),
+                )
+            }
             "RunServiceCommand" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
@@ -3136,6 +3374,50 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::pethost::panel::v1::CreateDatabaseResponse,
+                        >(format)
+                })
+            }
+            "GetDatabaseStats" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+                    >::from_parts(&req, &body);
+                    svc.get_database_stats(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::GetDatabaseStatsResponse,
+                        >(format)
+                })
+            }
+            "CancelDatabaseQuery" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+                    >::from_parts(&req, &body);
+                    svc.cancel_database_query(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::CancelDatabaseQueryResponse,
                         >(format)
                 })
             }
@@ -4101,6 +4383,96 @@ where
                 &self.transport,
                 &self.config,
                 PANEL_SERVICE_CREATE_DATABASE_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the GetDatabaseStats RPC. Sends a request to /pethost.panel.v1.PanelService/GetDatabaseStats.
+    pub async fn get_database_stats(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.get_database_stats_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the GetDatabaseStats RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_database_stats_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetDatabaseStatsRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetDatabaseStatsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_GET_DATABASE_STATS_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the CancelDatabaseQuery RPC. Sends a request to /pethost.panel.v1.PanelService/CancelDatabaseQuery.
+    pub async fn cancel_database_query(
+        &self,
+        request: crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.cancel_database_query_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the CancelDatabaseQuery RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn cancel_database_query_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::CancelDatabaseQueryRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::CancelDatabaseQueryResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_CANCEL_DATABASE_QUERY_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

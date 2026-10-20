@@ -124,6 +124,12 @@ const (
 	// PanelServiceCreateDatabaseProcedure is the procedure name of the PanelService's CreateDatabase
 	// RPC.
 	PanelServiceCreateDatabaseProcedure = "/pethost.panel.v1.PanelService/CreateDatabase"
+	// PanelServiceGetDatabaseStatsProcedure is the procedure name of the PanelService's
+	// GetDatabaseStats RPC.
+	PanelServiceGetDatabaseStatsProcedure = "/pethost.panel.v1.PanelService/GetDatabaseStats"
+	// PanelServiceCancelDatabaseQueryProcedure is the procedure name of the PanelService's
+	// CancelDatabaseQuery RPC.
+	PanelServiceCancelDatabaseQueryProcedure = "/pethost.panel.v1.PanelService/CancelDatabaseQuery"
 	// PanelServiceRunServiceCommandProcedure is the procedure name of the PanelService's
 	// RunServiceCommand RPC.
 	PanelServiceRunServiceCommandProcedure = "/pethost.panel.v1.PanelService/RunServiceCommand"
@@ -256,6 +262,21 @@ var (
 			StreamType: connect.StreamTypeUnary,
 			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("CreateDatabase"),
 			Procedure:  PanelServiceCreateDatabaseProcedure,
+		}
+	})
+	panelServiceGetDatabaseStatsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("GetDatabaseStats"),
+			Procedure:        PanelServiceGetDatabaseStatsProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	panelServiceCancelDatabaseQuerySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("CancelDatabaseQuery"),
+			Procedure:  PanelServiceCancelDatabaseQueryProcedure,
 		}
 	})
 	panelServiceRunServiceCommandSpec = sync.OnceValue(func() connect.Spec {
@@ -502,6 +523,20 @@ type PanelServiceClient interface {
 	// + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
 	// use CreateProject with `database`, then LinkDatabase.
 	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
+	// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+	// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+	// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+	// readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+	// database; + MachineUpdatePending = the machine's software predates the numbers.
+	// INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+	// hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+	// agents use RunServiceCommand with psql or valkey-cli.
+	GetDatabaseStats(context.Context, *panelv1.GetDatabaseStatsRequest) (*panelv1.GetDatabaseStatsResponse, error)
+	// Cancels the statement a client session of a Postgres database runs, or ends the session
+	// (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+	// FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+	// + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+	CancelDatabaseQuery(context.Context, *panelv1.CancelDatabaseQueryRequest) (*panelv1.CancelDatabaseQueryResponse, error)
 	// Runs a command in a running service's container, like `docker exec`; returns the exit code and
 	// the output's end once it exits or the timeout kills it. Over a bound on command, stdin or
 	// timeout = refused (named). Cannot start = exit 127 or 126, Docker's error in stdout. Untrusted
@@ -815,6 +850,20 @@ type PanelServiceHandler interface {
 	// + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
 	// use CreateProject with `database`, then LinkDatabase.
 	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
+	// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+	// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+	// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+	// readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+	// database; + MachineUpdatePending = the machine's software predates the numbers.
+	// INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+	// hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+	// agents use RunServiceCommand with psql or valkey-cli.
+	GetDatabaseStats(context.Context, *panelv1.GetDatabaseStatsRequest) (*panelv1.GetDatabaseStatsResponse, error)
+	// Cancels the statement a client session of a Postgres database runs, or ends the session
+	// (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+	// FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+	// + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+	CancelDatabaseQuery(context.Context, *panelv1.CancelDatabaseQueryRequest) (*panelv1.CancelDatabaseQueryResponse, error)
 	// Runs a command in a running service's container, like `docker exec`; returns the exit code and
 	// the output's end once it exits or the timeout kills it. Over a bound on command, stdin or
 	// timeout = refused (named). Cannot start = exit 127 or 126, Docker's error in stdout. Untrusted
@@ -901,6 +950,8 @@ func RegisterPanelServiceHandler(server *connect.Server, svc PanelServiceHandler
 		connect.Method{Spec: panelServiceQueryContainerLogsSpec(), Handler: adapter.queryContainerLogs},
 		connect.Method{Spec: panelServiceLinkDatabaseSpec(), Handler: adapter.linkDatabase},
 		connect.Method{Spec: panelServiceCreateDatabaseSpec(), Handler: adapter.createDatabase},
+		connect.Method{Spec: panelServiceGetDatabaseStatsSpec(), Handler: adapter.getDatabaseStats},
+		connect.Method{Spec: panelServiceCancelDatabaseQuerySpec(), Handler: adapter.cancelDatabaseQuery},
 		connect.Method{Spec: panelServiceRunServiceCommandSpec(), Handler: adapter.runServiceCommand},
 		connect.Method{Spec: panelServiceOpenTerminalSpec(), Handler: adapter.openTerminal},
 		connect.Method{Spec: panelServiceOpenDatabaseClientSpec(), Handler: adapter.openDatabaseClient},
@@ -1018,6 +1069,14 @@ func (UnimplementedPanelServiceHandler) LinkDatabase(context.Context, *panelv1.L
 
 func (UnimplementedPanelServiceHandler) CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.CreateDatabase is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) GetDatabaseStats(context.Context, *panelv1.GetDatabaseStatsRequest) (*panelv1.GetDatabaseStatsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.GetDatabaseStats is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) CancelDatabaseQuery(context.Context, *panelv1.CancelDatabaseQueryRequest) (*panelv1.CancelDatabaseQueryResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.CancelDatabaseQuery is not implemented")
 }
 
 func (UnimplementedPanelServiceHandler) RunServiceCommand(context.Context, *panelv1.RunServiceCommandRequest) (*panelv1.RunServiceCommandResponse, error) {
@@ -1167,6 +1226,22 @@ func (c *panelServiceClient) LinkDatabase(ctx context.Context, req *panelv1.Link
 func (c *panelServiceClient) CreateDatabase(ctx context.Context, req *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
 	var res panelv1.CreateDatabaseResponse
 	if err := c.client.CallUnary(ctx, panelServiceCreateDatabaseSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) GetDatabaseStats(ctx context.Context, req *panelv1.GetDatabaseStatsRequest) (*panelv1.GetDatabaseStatsResponse, error) {
+	var res panelv1.GetDatabaseStatsResponse
+	if err := c.client.CallUnary(ctx, panelServiceGetDatabaseStatsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) CancelDatabaseQuery(ctx context.Context, req *panelv1.CancelDatabaseQueryRequest) (*panelv1.CancelDatabaseQueryResponse, error) {
+	var res panelv1.CancelDatabaseQueryResponse
+	if err := c.client.CallUnary(ctx, panelServiceCancelDatabaseQuerySpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1408,6 +1483,30 @@ func (h panelServiceHandler) createDatabase(ctx context.Context, _ connect.Spec,
 		return err
 	}
 	res, err := h.svc.CreateDatabase(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) getDatabaseStats(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.GetDatabaseStatsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetDatabaseStats(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) cancelDatabaseQuery(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.CancelDatabaseQueryRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CancelDatabaseQuery(ctx, &req)
 	if err != nil {
 		return err
 	}

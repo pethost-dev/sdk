@@ -96,6 +96,19 @@ pub mod __buffa {
         reg.register_json_any(super::__LINK_DATABASE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__CREATE_DATABASE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CREATE_DATABASE_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GET_DATABASE_STATS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_DATABASE_STATS_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_STATS_BUCKET_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_STATS_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_COMMAND_STATS_JSON_ANY);
+        reg.register_json_any(super::__POSTGRES_STATS_JSON_ANY);
+        reg.register_json_any(super::__VALKEY_STATS_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_STATEMENT_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_ACTIVITY_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SESSION_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SLOW_COMMAND_JSON_ANY);
+        reg.register_json_any(super::__CANCEL_DATABASE_QUERY_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__CANCEL_DATABASE_QUERY_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SET_PROJECT_ALERTS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__SET_PROJECT_ALERTS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SITE_CHECK_JSON_ANY);
@@ -410,6 +423,58 @@ pub use self::__buffa::view::CreateDatabaseRequestOwnedView;
 pub use self::__buffa::view::CreateDatabaseResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateDatabaseResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetDatabaseStatsRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetDatabaseStatsRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetDatabaseStatsResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetDatabaseStatsResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatsBucketView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatsBucketOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatsView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseCommandStatsView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseCommandStatsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::PostgresStatsView;
+#[doc(inline)]
+pub use self::__buffa::view::PostgresStatsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ValkeyStatsView;
+#[doc(inline)]
+pub use self::__buffa::view::ValkeyStatsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatementView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseStatementOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseActivityView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseActivityOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSessionView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSessionOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSlowCommandView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSlowCommandOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CancelDatabaseQueryRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::CancelDatabaseQueryRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CancelDatabaseQueryResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::CancelDatabaseQueryResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::SetProjectAlertsRequestView;
 #[doc(inline)]

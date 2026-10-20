@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import panel_pb
-from .panel_pb import CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenDatabaseClientRequest, OpenDatabaseClientResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
+from .panel_pb import CancelDatabaseQueryRequest, CancelDatabaseQueryResponse, CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetDatabaseStatsRequest, GetDatabaseStatsResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenDatabaseClientRequest, OpenDatabaseClientResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -259,6 +259,28 @@ class PanelService(Protocol):
         + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
         + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
         use CreateProject with `database`, then LinkDatabase.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def get_database_stats(self, request: GetDatabaseStatsRequest, ctx: RequestContext[GetDatabaseStatsRequest, GetDatabaseStatsResponse], /) -> GetDatabaseStatsResponse:
+        """
+        A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+        totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+        now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+        readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+        database; + MachineUpdatePending = the machine's software predates the numbers.
+        INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+        hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+        agents use RunServiceCommand with psql or valkey-cli.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def cancel_database_query(self, request: CancelDatabaseQueryRequest, ctx: RequestContext[CancelDatabaseQueryRequest, CancelDatabaseQueryResponse], /) -> CancelDatabaseQueryResponse:
+        """
+        Cancels the statement a client session of a Postgres database runs, or ends the session
+        (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+        + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -520,6 +542,26 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=svc.create_database,
+                ),
+                "/pethost.panel.v1.PanelService/GetDatabaseStats": Endpoint.unary(
+                    method=MethodInfo(
+                        name="GetDatabaseStats",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetDatabaseStatsRequest,
+                        output=GetDatabaseStatsResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=svc.get_database_stats,
+                ),
+                "/pethost.panel.v1.PanelService/CancelDatabaseQuery": Endpoint.unary(
+                    method=MethodInfo(
+                        name="CancelDatabaseQuery",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=CancelDatabaseQueryRequest,
+                        output=CancelDatabaseQueryResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=svc.cancel_database_query,
                 ),
                 "/pethost.panel.v1.PanelService/RunServiceCommand": Endpoint.unary(
                     method=MethodInfo(
@@ -1111,6 +1153,64 @@ class PanelServiceClient(ConnectClient):
             timeout_ms=timeout_ms,
         )
 
+    async def get_database_stats(
+        self,
+        request: GetDatabaseStatsRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetDatabaseStatsResponse:
+        """
+        A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+        totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+        now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+        readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+        database; + MachineUpdatePending = the machine's software predates the numbers.
+        INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+        hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+        agents use RunServiceCommand with psql or valkey-cli.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetDatabaseStats",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetDatabaseStatsRequest,
+                output=GetDatabaseStatsResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
+        )
+
+    async def cancel_database_query(
+        self,
+        request: CancelDatabaseQueryRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CancelDatabaseQueryResponse:
+        """
+        Cancels the statement a client session of a Postgres database runs, or ends the session
+        (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+        + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CancelDatabaseQuery",
+                service_name="pethost.panel.v1.PanelService",
+                input=CancelDatabaseQueryRequest,
+                output=CancelDatabaseQueryResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
     async def run_service_command(
         self,
         request: RunServiceCommandRequest,
@@ -1604,6 +1704,28 @@ class PanelServiceSync(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    def get_database_stats(self, request: GetDatabaseStatsRequest, ctx: RequestContext[GetDatabaseStatsRequest, GetDatabaseStatsResponse], /) -> GetDatabaseStatsResponse:
+        """
+        A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+        totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+        now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+        readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+        database; + MachineUpdatePending = the machine's software predates the numbers.
+        INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+        hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+        agents use RunServiceCommand with psql or valkey-cli.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def cancel_database_query(self, request: CancelDatabaseQueryRequest, ctx: RequestContext[CancelDatabaseQueryRequest, CancelDatabaseQueryResponse], /) -> CancelDatabaseQueryResponse:
+        """
+        Cancels the statement a client session of a Postgres database runs, or ends the session
+        (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+        + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     def run_service_command(self, request: RunServiceCommandRequest, ctx: RequestContext[RunServiceCommandRequest, RunServiceCommandResponse], /) -> RunServiceCommandResponse:
         """
         Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -1860,6 +1982,26 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=service.create_database,
+                ),
+                "/pethost.panel.v1.PanelService/GetDatabaseStats": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="GetDatabaseStats",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetDatabaseStatsRequest,
+                        output=GetDatabaseStatsResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=service.get_database_stats,
+                ),
+                "/pethost.panel.v1.PanelService/CancelDatabaseQuery": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="CancelDatabaseQuery",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=CancelDatabaseQueryRequest,
+                        output=CancelDatabaseQueryResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=service.cancel_database_query,
                 ),
                 "/pethost.panel.v1.PanelService/RunServiceCommand": EndpointSync.unary(
                     method=MethodInfo(
@@ -2432,6 +2574,62 @@ class PanelServiceClientSync(ConnectClientSync):
                 service_name="pethost.panel.v1.PanelService",
                 input=CreateDatabaseRequest,
                 output=CreateDatabaseResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+    def get_database_stats(
+        self,
+        request: GetDatabaseStatsRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetDatabaseStatsResponse:
+        """
+        A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+        totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+        now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+        readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+        database; + MachineUpdatePending = the machine's software predates the numbers.
+        INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+        hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+        agents use RunServiceCommand with psql or valkey-cli.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetDatabaseStats",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetDatabaseStatsRequest,
+                output=GetDatabaseStatsResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
+        )
+    def cancel_database_query(
+        self,
+        request: CancelDatabaseQueryRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CancelDatabaseQueryResponse:
+        """
+        Cancels the statement a client session of a Postgres database runs, or ends the session
+        (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+        FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+        + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CancelDatabaseQuery",
+                service_name="pethost.panel.v1.PanelService",
+                input=CancelDatabaseQueryRequest,
+                output=CancelDatabaseQueryResponse,
                 idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,

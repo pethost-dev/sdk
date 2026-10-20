@@ -301,6 +301,24 @@ service PanelService {
   // use CreateProject with `database`, then LinkDatabase.
   rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
 
+  // A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
+  // totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
+  // now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
+  // readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+  // database; + MachineUpdatePending = the machine's software predates the numbers.
+  // INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
+  // hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
+  // agents use RunServiceCommand with psql or valkey-cli.
+  rpc GetDatabaseStats(GetDatabaseStatsRequest) returns (GetDatabaseStatsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Cancels the statement a client session of a Postgres database runs, or ends the session
+  // (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+  // FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
+  // + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+  rpc CancelDatabaseQuery(CancelDatabaseQueryRequest) returns (CancelDatabaseQueryResponse);
+
   // ── Service ──────────────────────────────────────────────────────────────
 
   // Runs a command in a running service's container, like `docker exec`; returns the exit code and
@@ -1480,6 +1498,179 @@ message CreateDatabaseResponse {
   repeated string adjustments = 3;
   Project project = 4;
   repeated OperationLogLine log = 5;
+}
+
+// ── Database numbers ───────────────────────────────────────────────────────
+
+message GetDatabaseStatsRequest {
+  string project_id = 1;
+  google.protobuf.Timestamp start_time = 2; // Absent = an hour before end_time.
+  google.protobuf.Timestamp end_time = 3; // Absent = now.
+  uint32 last_seconds = 4; // The range ending at end_time. Not with start_time.
+  // Whole minutes (hours, for a range that starts over 7 days ago); ≤500 buckets. 0 = no series.
+  uint32 bucket_width_seconds = 5;
+  DatabaseStatementOrder statement_order = 6;
+}
+
+message GetDatabaseStatsResponse {
+  // The range, as the machine applied it: in whole minutes, on its clock.
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+  google.protobuf.Timestamp oldest_kept_time = 3; // Absent = none is kept yet.
+  DatabaseStats overall = 4;
+  // Oldest first, every bucket of the range, aligned to the clock.
+  repeated DatabaseStatsBucket buckets = 5;
+  // The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
+  // $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+  repeated DatabaseStatement statements = 6;
+  bool statements_tracked = 7; // False = Postgres's pg_stat_statements does not answer.
+  DatabaseActivity activity = 8; // Absent = the server did not answer.
+}
+
+message DatabaseStatsBucket {
+  google.protobuf.Timestamp start_time = 1;
+  DatabaseStats stats = 2; // Absent = nothing is kept of it.
+}
+
+// What a database did over a time, and how high its levels went. Counts are of sampled_seconds,
+// the time its server was read across.
+message DatabaseStats {
+  uint32 sampled_seconds = 1; // 0 = its server was not read twice in a row: no counts.
+  double cpu_cores_mean = 2;
+  double cpu_cores_max = 3;
+  uint64 memory_used_bytes_max = 4;
+  uint64 memory_limit_bytes = 5;
+  uint64 volume_bytes = 6; // The last; measured minutes behind.
+  uint64 data_bytes = 7; // The last, as Database.data_bytes.
+  uint32 connections_max = 8;
+  uint32 max_connections = 9;
+  repeated DatabaseCommandStats commands = 10; // By kind.
+  PostgresStats postgres = 11;
+  ValkeyStats valkey = 12;
+}
+
+message DatabaseCommandStats {
+  DatabaseCommandKind kind = 1;
+  uint64 calls = 2;
+  double total_time_ms = 3;
+  uint64 rows = 4; // Postgres.
+  uint64 failed_calls = 5; // Valkey.
+}
+
+enum DatabaseCommandKind {
+  DATABASE_COMMAND_KIND_UNSPECIFIED = 0;
+  DATABASE_COMMAND_KIND_OTHER = 1;
+  DATABASE_COMMAND_KIND_SELECT = 2;
+  DATABASE_COMMAND_KIND_INSERT = 3;
+  DATABASE_COMMAND_KIND_UPDATE = 4;
+  DATABASE_COMMAND_KIND_DELETE = 5;
+  DATABASE_COMMAND_KIND_READ = 6; // Valkey.
+  DATABASE_COMMAND_KIND_WRITE = 7; // Valkey.
+}
+
+// Of every database of the server.
+message PostgresStats {
+  uint64 commits = 1;
+  uint64 rollbacks = 2;
+  uint64 blocks_hit = 3; // Read from its cache.
+  uint64 blocks_read = 4; // Read from disk.
+  uint64 rows_fetched = 5;
+  uint64 rows_scanned = 6;
+  uint64 rows_inserted = 7;
+  uint64 rows_updated = 8;
+  uint64 rows_deleted = 9;
+  uint64 deadlocks = 10;
+  uint64 temp_bytes = 11; // Written to temporary files.
+  uint64 wal_bytes = 12;
+  uint32 active_max = 13; // Sessions running a statement.
+  uint32 idle_in_transaction_max = 14;
+  uint32 waiting_max = 15; // On a lock.
+  uint32 longest_transaction_seconds_max = 16;
+}
+
+message ValkeyStats {
+  uint64 keyspace_hits = 1;
+  uint64 keyspace_misses = 2;
+  uint64 expired_keys = 3;
+  uint64 evicted_keys = 4;
+  uint64 net_input_bytes = 5;
+  uint64 net_output_bytes = 6;
+  uint64 rejected_connections = 7;
+  uint64 keys = 8; // The last.
+  uint64 used_memory_bytes_max = 9;
+  uint64 maxmemory_bytes = 10; // 0 = none.
+  uint32 blocked_clients_max = 11;
+}
+
+message DatabaseStatement {
+  string id = 1; // Postgres's queryid, or Valkey's command.
+  string text = 2;
+  DatabaseCommandKind kind = 3;
+  uint64 calls = 4;
+  double total_time_ms = 5;
+  uint64 rows = 6;
+  uint64 failed_calls = 7;
+}
+
+enum DatabaseStatementOrder {
+  DATABASE_STATEMENT_ORDER_UNSPECIFIED = 0; // As TOTAL_TIME.
+  DATABASE_STATEMENT_ORDER_TOTAL_TIME = 1;
+  DATABASE_STATEMENT_ORDER_MEAN_TIME = 2;
+  DATABASE_STATEMENT_ORDER_CALLS = 3;
+}
+
+// What the server runs now.
+message DatabaseActivity {
+  google.protobuf.Timestamp read_time = 1;
+  // Postgres: its client sessions but the machine's, those in a transaction first, the longest
+  // first; at most 50.
+  repeated DatabaseSession sessions = 2;
+  uint32 session_count = 3; // Of which sessions are a part.
+  repeated DatabaseSlowCommand slow_commands = 4; // Valkey's slow log, newest first; at most 20.
+}
+
+message DatabaseSession {
+  int32 pid = 1; // For CancelDatabaseQuery.
+  string user = 2;
+  string database = 3;
+  string application_name = 4; // Untrusted.
+  string client_address = 5; // Empty = the server's socket.
+  DatabaseSessionState state = 6;
+  google.protobuf.Timestamp backend_start_time = 7;
+  google.protobuf.Timestamp transaction_start_time = 8; // Absent = in none.
+  google.protobuf.Timestamp query_start_time = 9; // Of the last statement. Absent = none.
+  string wait_event_type = 10; // E.g. "Lock". Empty = not waiting.
+  string wait_event = 11;
+  repeated int32 blocked_by_pids = 12;
+  string query = 13; // Running, or the last that ran; ≤2000 characters. Untrusted.
+}
+
+enum DatabaseSessionState {
+  DATABASE_SESSION_STATE_UNSPECIFIED = 0;
+  DATABASE_SESSION_STATE_OTHER = 1;
+  DATABASE_SESSION_STATE_ACTIVE = 2;
+  DATABASE_SESSION_STATE_IDLE = 3;
+  DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION = 4;
+  DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED = 5;
+}
+
+message DatabaseSlowCommand {
+  google.protobuf.Timestamp time = 1;
+  double duration_ms = 2;
+  string command = 3; // E.g. "keys" or "client|list".
+  string key = 4; // Its first key, ≤200 bytes; empty = none. Untrusted.
+  string client_address = 5;
+  string client_name = 6; // Untrusted.
+}
+
+message CancelDatabaseQueryRequest {
+  string project_id = 1;
+  int32 pid = 2; // A DatabaseSession's.
+  bool end_session = 3; // True = end the session, whatever it runs.
+}
+
+message CancelDatabaseQueryResponse {
+  bool done = 1; // False = no such session: it ended, or it is the machine's.
 }
 
 // ── Alerts ─────────────────────────────────────────────────────────────────

@@ -781,6 +781,165 @@ func (x DatabaseEngine) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
+type DatabaseCommandKind int32
+
+const (
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_UNSPECIFIED DatabaseCommandKind = 0
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_OTHER       DatabaseCommandKind = 1
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_SELECT      DatabaseCommandKind = 2
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_INSERT      DatabaseCommandKind = 3
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_UPDATE      DatabaseCommandKind = 4
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_DELETE      DatabaseCommandKind = 5
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_READ        DatabaseCommandKind = 6 // Valkey.
+	DatabaseCommandKind_DATABASE_COMMAND_KIND_WRITE       DatabaseCommandKind = 7 // Valkey.
+)
+
+// Enum value maps for DatabaseCommandKind.
+var (
+	DatabaseCommandKind_name = map[int32]string{
+		0: "DATABASE_COMMAND_KIND_UNSPECIFIED",
+		1: "DATABASE_COMMAND_KIND_OTHER",
+		2: "DATABASE_COMMAND_KIND_SELECT",
+		3: "DATABASE_COMMAND_KIND_INSERT",
+		4: "DATABASE_COMMAND_KIND_UPDATE",
+		5: "DATABASE_COMMAND_KIND_DELETE",
+		6: "DATABASE_COMMAND_KIND_READ",
+		7: "DATABASE_COMMAND_KIND_WRITE",
+	}
+	DatabaseCommandKind_value = map[string]int32{
+		"DATABASE_COMMAND_KIND_UNSPECIFIED": 0,
+		"DATABASE_COMMAND_KIND_OTHER":       1,
+		"DATABASE_COMMAND_KIND_SELECT":      2,
+		"DATABASE_COMMAND_KIND_INSERT":      3,
+		"DATABASE_COMMAND_KIND_UPDATE":      4,
+		"DATABASE_COMMAND_KIND_DELETE":      5,
+		"DATABASE_COMMAND_KIND_READ":        6,
+		"DATABASE_COMMAND_KIND_WRITE":       7,
+	}
+)
+
+func (x DatabaseCommandKind) Enum() *DatabaseCommandKind {
+	p := new(DatabaseCommandKind)
+	*p = x
+	return p
+}
+
+func (x DatabaseCommandKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DatabaseCommandKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[12].Descriptor()
+}
+
+func (DatabaseCommandKind) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[12]
+}
+
+func (x DatabaseCommandKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type DatabaseStatementOrder int32
+
+const (
+	DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_UNSPECIFIED DatabaseStatementOrder = 0 // As TOTAL_TIME.
+	DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_TOTAL_TIME  DatabaseStatementOrder = 1
+	DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_MEAN_TIME   DatabaseStatementOrder = 2
+	DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_CALLS       DatabaseStatementOrder = 3
+)
+
+// Enum value maps for DatabaseStatementOrder.
+var (
+	DatabaseStatementOrder_name = map[int32]string{
+		0: "DATABASE_STATEMENT_ORDER_UNSPECIFIED",
+		1: "DATABASE_STATEMENT_ORDER_TOTAL_TIME",
+		2: "DATABASE_STATEMENT_ORDER_MEAN_TIME",
+		3: "DATABASE_STATEMENT_ORDER_CALLS",
+	}
+	DatabaseStatementOrder_value = map[string]int32{
+		"DATABASE_STATEMENT_ORDER_UNSPECIFIED": 0,
+		"DATABASE_STATEMENT_ORDER_TOTAL_TIME":  1,
+		"DATABASE_STATEMENT_ORDER_MEAN_TIME":   2,
+		"DATABASE_STATEMENT_ORDER_CALLS":       3,
+	}
+)
+
+func (x DatabaseStatementOrder) Enum() *DatabaseStatementOrder {
+	p := new(DatabaseStatementOrder)
+	*p = x
+	return p
+}
+
+func (x DatabaseStatementOrder) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DatabaseStatementOrder) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[13].Descriptor()
+}
+
+func (DatabaseStatementOrder) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[13]
+}
+
+func (x DatabaseStatementOrder) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type DatabaseSessionState int32
+
+const (
+	DatabaseSessionState_DATABASE_SESSION_STATE_UNSPECIFIED                 DatabaseSessionState = 0
+	DatabaseSessionState_DATABASE_SESSION_STATE_OTHER                       DatabaseSessionState = 1
+	DatabaseSessionState_DATABASE_SESSION_STATE_ACTIVE                      DatabaseSessionState = 2
+	DatabaseSessionState_DATABASE_SESSION_STATE_IDLE                        DatabaseSessionState = 3
+	DatabaseSessionState_DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION         DatabaseSessionState = 4
+	DatabaseSessionState_DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED DatabaseSessionState = 5
+)
+
+// Enum value maps for DatabaseSessionState.
+var (
+	DatabaseSessionState_name = map[int32]string{
+		0: "DATABASE_SESSION_STATE_UNSPECIFIED",
+		1: "DATABASE_SESSION_STATE_OTHER",
+		2: "DATABASE_SESSION_STATE_ACTIVE",
+		3: "DATABASE_SESSION_STATE_IDLE",
+		4: "DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION",
+		5: "DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED",
+	}
+	DatabaseSessionState_value = map[string]int32{
+		"DATABASE_SESSION_STATE_UNSPECIFIED":                 0,
+		"DATABASE_SESSION_STATE_OTHER":                       1,
+		"DATABASE_SESSION_STATE_ACTIVE":                      2,
+		"DATABASE_SESSION_STATE_IDLE":                        3,
+		"DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION":         4,
+		"DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED": 5,
+	}
+)
+
+func (x DatabaseSessionState) Enum() *DatabaseSessionState {
+	p := new(DatabaseSessionState)
+	*p = x
+	return p
+}
+
+func (x DatabaseSessionState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DatabaseSessionState) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[14].Descriptor()
+}
+
+func (DatabaseSessionState) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[14]
+}
+
+func (x DatabaseSessionState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
 type TrafficMetric int32
 
 const (
@@ -817,11 +976,11 @@ func (x TrafficMetric) String() string {
 }
 
 func (TrafficMetric) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[12].Descriptor()
+	return file_v1_panel_proto_enumTypes[15].Descriptor()
 }
 
 func (TrafficMetric) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[12]
+	return &file_v1_panel_proto_enumTypes[15]
 }
 
 func (x TrafficMetric) Number() protoreflect.EnumNumber {
@@ -872,11 +1031,11 @@ func (x AlertStatus) String() string {
 }
 
 func (AlertStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[13].Descriptor()
+	return file_v1_panel_proto_enumTypes[16].Descriptor()
 }
 
 func (AlertStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[13]
+	return &file_v1_panel_proto_enumTypes[16]
 }
 
 func (x AlertStatus) Number() protoreflect.EnumNumber {
@@ -923,11 +1082,11 @@ func (x IncidentQuietReason) String() string {
 }
 
 func (IncidentQuietReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[14].Descriptor()
+	return file_v1_panel_proto_enumTypes[17].Descriptor()
 }
 
 func (IncidentQuietReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[14]
+	return &file_v1_panel_proto_enumTypes[17]
 }
 
 func (x IncidentQuietReason) Number() protoreflect.EnumNumber {
@@ -967,11 +1126,11 @@ func (x OutputStream) String() string {
 }
 
 func (OutputStream) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[15].Descriptor()
+	return file_v1_panel_proto_enumTypes[18].Descriptor()
 }
 
 func (OutputStream) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[15]
+	return &file_v1_panel_proto_enumTypes[18]
 }
 
 func (x OutputStream) Number() protoreflect.EnumNumber {
@@ -1017,11 +1176,11 @@ func (x FileType) String() string {
 }
 
 func (FileType) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[16].Descriptor()
+	return file_v1_panel_proto_enumTypes[19].Descriptor()
 }
 
 func (FileType) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[16]
+	return &file_v1_panel_proto_enumTypes[19]
 }
 
 func (x FileType) Number() protoreflect.EnumNumber {
@@ -1070,11 +1229,11 @@ func (x FileLocation) String() string {
 }
 
 func (FileLocation) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[17].Descriptor()
+	return file_v1_panel_proto_enumTypes[20].Descriptor()
 }
 
 func (FileLocation) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[17]
+	return &file_v1_panel_proto_enumTypes[20]
 }
 
 func (x FileLocation) Number() protoreflect.EnumNumber {
@@ -1119,11 +1278,11 @@ func (x DatabaseLinkRefusalReason) String() string {
 }
 
 func (DatabaseLinkRefusalReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[18].Descriptor()
+	return file_v1_panel_proto_enumTypes[21].Descriptor()
 }
 
 func (DatabaseLinkRefusalReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[18]
+	return &file_v1_panel_proto_enumTypes[21]
 }
 
 func (x DatabaseLinkRefusalReason) Number() protoreflect.EnumNumber {
@@ -1165,11 +1324,11 @@ func (x NoMachineReason) String() string {
 }
 
 func (NoMachineReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[19].Descriptor()
+	return file_v1_panel_proto_enumTypes[22].Descriptor()
 }
 
 func (NoMachineReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[19]
+	return &file_v1_panel_proto_enumTypes[22]
 }
 
 func (x NoMachineReason) Number() protoreflect.EnumNumber {
@@ -15261,6 +15420,3307 @@ func (b0 CreateDatabaseResponse_builder) Build() *CreateDatabaseResponse {
 	return m0
 }
 
+type GetDatabaseStatsRequest struct {
+	state                         protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId          *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_StartTime          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=start_time,json=startTime"`
+	xxx_hidden_EndTime            *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=end_time,json=endTime"`
+	xxx_hidden_LastSeconds        uint32                 `protobuf:"varint,4,opt,name=last_seconds,json=lastSeconds"`
+	xxx_hidden_BucketWidthSeconds uint32                 `protobuf:"varint,5,opt,name=bucket_width_seconds,json=bucketWidthSeconds"`
+	xxx_hidden_StatementOrder     DatabaseStatementOrder `protobuf:"varint,6,opt,name=statement_order,json=statementOrder,enum=pethost.panel.v1.DatabaseStatementOrder"`
+	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
+	XXX_presence                  [1]uint32
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *GetDatabaseStatsRequest) Reset() {
+	*x = GetDatabaseStatsRequest{}
+	mi := &file_v1_panel_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDatabaseStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDatabaseStatsRequest) ProtoMessage() {}
+
+func (x *GetDatabaseStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetDatabaseStatsRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetDatabaseStatsRequest) GetStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_StartTime
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsRequest) GetEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_EndTime
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsRequest) GetLastSeconds() uint32 {
+	if x != nil {
+		return x.xxx_hidden_LastSeconds
+	}
+	return 0
+}
+
+func (x *GetDatabaseStatsRequest) GetBucketWidthSeconds() uint32 {
+	if x != nil {
+		return x.xxx_hidden_BucketWidthSeconds
+	}
+	return 0
+}
+
+func (x *GetDatabaseStatsRequest) GetStatementOrder() DatabaseStatementOrder {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 5) {
+			return x.xxx_hidden_StatementOrder
+		}
+	}
+	return DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_UNSPECIFIED
+}
+
+func (x *GetDatabaseStatsRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
+}
+
+func (x *GetDatabaseStatsRequest) SetStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_StartTime = v
+}
+
+func (x *GetDatabaseStatsRequest) SetEndTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_EndTime = v
+}
+
+func (x *GetDatabaseStatsRequest) SetLastSeconds(v uint32) {
+	x.xxx_hidden_LastSeconds = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+}
+
+func (x *GetDatabaseStatsRequest) SetBucketWidthSeconds(v uint32) {
+	x.xxx_hidden_BucketWidthSeconds = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *GetDatabaseStatsRequest) SetStatementOrder(v DatabaseStatementOrder) {
+	x.xxx_hidden_StatementOrder = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+}
+
+func (x *GetDatabaseStatsRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *GetDatabaseStatsRequest) HasStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_StartTime != nil
+}
+
+func (x *GetDatabaseStatsRequest) HasEndTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_EndTime != nil
+}
+
+func (x *GetDatabaseStatsRequest) HasLastSeconds() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *GetDatabaseStatsRequest) HasBucketWidthSeconds() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *GetDatabaseStatsRequest) HasStatementOrder() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *GetDatabaseStatsRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *GetDatabaseStatsRequest) ClearStartTime() {
+	x.xxx_hidden_StartTime = nil
+}
+
+func (x *GetDatabaseStatsRequest) ClearEndTime() {
+	x.xxx_hidden_EndTime = nil
+}
+
+func (x *GetDatabaseStatsRequest) ClearLastSeconds() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_LastSeconds = 0
+}
+
+func (x *GetDatabaseStatsRequest) ClearBucketWidthSeconds() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_BucketWidthSeconds = 0
+}
+
+func (x *GetDatabaseStatsRequest) ClearStatementOrder() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_StatementOrder = DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_UNSPECIFIED
+}
+
+type GetDatabaseStatsRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId   *string
+	StartTime   *timestamppb.Timestamp
+	EndTime     *timestamppb.Timestamp
+	LastSeconds *uint32
+	// Whole minutes (hours, for a range that starts over 7 days ago); ≤500 buckets. 0 = no series.
+	BucketWidthSeconds *uint32
+	StatementOrder     *DatabaseStatementOrder
+}
+
+func (b0 GetDatabaseStatsRequest_builder) Build() *GetDatabaseStatsRequest {
+	m0 := &GetDatabaseStatsRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	x.xxx_hidden_StartTime = b.StartTime
+	x.xxx_hidden_EndTime = b.EndTime
+	if b.LastSeconds != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		x.xxx_hidden_LastSeconds = *b.LastSeconds
+	}
+	if b.BucketWidthSeconds != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		x.xxx_hidden_BucketWidthSeconds = *b.BucketWidthSeconds
+	}
+	if b.StatementOrder != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_StatementOrder = *b.StatementOrder
+	}
+	return m0
+}
+
+type GetDatabaseStatsResponse struct {
+	state                        protoimpl.MessageState  `protogen:"opaque.v1"`
+	xxx_hidden_StartTime         *timestamppb.Timestamp  `protobuf:"bytes,1,opt,name=start_time,json=startTime"`
+	xxx_hidden_EndTime           *timestamppb.Timestamp  `protobuf:"bytes,2,opt,name=end_time,json=endTime"`
+	xxx_hidden_OldestKeptTime    *timestamppb.Timestamp  `protobuf:"bytes,3,opt,name=oldest_kept_time,json=oldestKeptTime"`
+	xxx_hidden_Overall           *DatabaseStats          `protobuf:"bytes,4,opt,name=overall"`
+	xxx_hidden_Buckets           *[]*DatabaseStatsBucket `protobuf:"bytes,5,rep,name=buckets"`
+	xxx_hidden_Statements        *[]*DatabaseStatement   `protobuf:"bytes,6,rep,name=statements"`
+	xxx_hidden_StatementsTracked bool                    `protobuf:"varint,7,opt,name=statements_tracked,json=statementsTracked"`
+	xxx_hidden_Activity          *DatabaseActivity       `protobuf:"bytes,8,opt,name=activity"`
+	XXX_raceDetectHookData       protoimpl.RaceDetectHookData
+	XXX_presence                 [1]uint32
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *GetDatabaseStatsResponse) Reset() {
+	*x = GetDatabaseStatsResponse{}
+	mi := &file_v1_panel_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDatabaseStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDatabaseStatsResponse) ProtoMessage() {}
+
+func (x *GetDatabaseStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetDatabaseStatsResponse) GetStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_StartTime
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_EndTime
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetOldestKeptTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_OldestKeptTime
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetOverall() *DatabaseStats {
+	if x != nil {
+		return x.xxx_hidden_Overall
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetBuckets() []*DatabaseStatsBucket {
+	if x != nil {
+		if x.xxx_hidden_Buckets != nil {
+			return *x.xxx_hidden_Buckets
+		}
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetStatements() []*DatabaseStatement {
+	if x != nil {
+		if x.xxx_hidden_Statements != nil {
+			return *x.xxx_hidden_Statements
+		}
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) GetStatementsTracked() bool {
+	if x != nil {
+		return x.xxx_hidden_StatementsTracked
+	}
+	return false
+}
+
+func (x *GetDatabaseStatsResponse) GetActivity() *DatabaseActivity {
+	if x != nil {
+		return x.xxx_hidden_Activity
+	}
+	return nil
+}
+
+func (x *GetDatabaseStatsResponse) SetStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_StartTime = v
+}
+
+func (x *GetDatabaseStatsResponse) SetEndTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_EndTime = v
+}
+
+func (x *GetDatabaseStatsResponse) SetOldestKeptTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_OldestKeptTime = v
+}
+
+func (x *GetDatabaseStatsResponse) SetOverall(v *DatabaseStats) {
+	x.xxx_hidden_Overall = v
+}
+
+func (x *GetDatabaseStatsResponse) SetBuckets(v []*DatabaseStatsBucket) {
+	x.xxx_hidden_Buckets = &v
+}
+
+func (x *GetDatabaseStatsResponse) SetStatements(v []*DatabaseStatement) {
+	x.xxx_hidden_Statements = &v
+}
+
+func (x *GetDatabaseStatsResponse) SetStatementsTracked(v bool) {
+	x.xxx_hidden_StatementsTracked = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *GetDatabaseStatsResponse) SetActivity(v *DatabaseActivity) {
+	x.xxx_hidden_Activity = v
+}
+
+func (x *GetDatabaseStatsResponse) HasStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_StartTime != nil
+}
+
+func (x *GetDatabaseStatsResponse) HasEndTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_EndTime != nil
+}
+
+func (x *GetDatabaseStatsResponse) HasOldestKeptTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_OldestKeptTime != nil
+}
+
+func (x *GetDatabaseStatsResponse) HasOverall() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Overall != nil
+}
+
+func (x *GetDatabaseStatsResponse) HasStatementsTracked() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *GetDatabaseStatsResponse) HasActivity() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Activity != nil
+}
+
+func (x *GetDatabaseStatsResponse) ClearStartTime() {
+	x.xxx_hidden_StartTime = nil
+}
+
+func (x *GetDatabaseStatsResponse) ClearEndTime() {
+	x.xxx_hidden_EndTime = nil
+}
+
+func (x *GetDatabaseStatsResponse) ClearOldestKeptTime() {
+	x.xxx_hidden_OldestKeptTime = nil
+}
+
+func (x *GetDatabaseStatsResponse) ClearOverall() {
+	x.xxx_hidden_Overall = nil
+}
+
+func (x *GetDatabaseStatsResponse) ClearStatementsTracked() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_StatementsTracked = false
+}
+
+func (x *GetDatabaseStatsResponse) ClearActivity() {
+	x.xxx_hidden_Activity = nil
+}
+
+type GetDatabaseStatsResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// The range, as the machine applied it: in whole minutes, on its clock.
+	StartTime      *timestamppb.Timestamp
+	EndTime        *timestamppb.Timestamp
+	OldestKeptTime *timestamppb.Timestamp
+	Overall        *DatabaseStats
+	// Oldest first, every bucket of the range, aligned to the clock.
+	Buckets []*DatabaseStatsBucket
+	// The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
+	// $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+	Statements        []*DatabaseStatement
+	StatementsTracked *bool
+	Activity          *DatabaseActivity
+}
+
+func (b0 GetDatabaseStatsResponse_builder) Build() *GetDatabaseStatsResponse {
+	m0 := &GetDatabaseStatsResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_StartTime = b.StartTime
+	x.xxx_hidden_EndTime = b.EndTime
+	x.xxx_hidden_OldestKeptTime = b.OldestKeptTime
+	x.xxx_hidden_Overall = b.Overall
+	x.xxx_hidden_Buckets = &b.Buckets
+	x.xxx_hidden_Statements = &b.Statements
+	if b.StatementsTracked != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
+		x.xxx_hidden_StatementsTracked = *b.StatementsTracked
+	}
+	x.xxx_hidden_Activity = b.Activity
+	return m0
+}
+
+type DatabaseStatsBucket struct {
+	state                protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_StartTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=start_time,json=startTime"`
+	xxx_hidden_Stats     *DatabaseStats         `protobuf:"bytes,2,opt,name=stats"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *DatabaseStatsBucket) Reset() {
+	*x = DatabaseStatsBucket{}
+	mi := &file_v1_panel_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseStatsBucket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseStatsBucket) ProtoMessage() {}
+
+func (x *DatabaseStatsBucket) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseStatsBucket) GetStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_StartTime
+	}
+	return nil
+}
+
+func (x *DatabaseStatsBucket) GetStats() *DatabaseStats {
+	if x != nil {
+		return x.xxx_hidden_Stats
+	}
+	return nil
+}
+
+func (x *DatabaseStatsBucket) SetStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_StartTime = v
+}
+
+func (x *DatabaseStatsBucket) SetStats(v *DatabaseStats) {
+	x.xxx_hidden_Stats = v
+}
+
+func (x *DatabaseStatsBucket) HasStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_StartTime != nil
+}
+
+func (x *DatabaseStatsBucket) HasStats() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Stats != nil
+}
+
+func (x *DatabaseStatsBucket) ClearStartTime() {
+	x.xxx_hidden_StartTime = nil
+}
+
+func (x *DatabaseStatsBucket) ClearStats() {
+	x.xxx_hidden_Stats = nil
+}
+
+type DatabaseStatsBucket_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	StartTime *timestamppb.Timestamp
+	Stats     *DatabaseStats
+}
+
+func (b0 DatabaseStatsBucket_builder) Build() *DatabaseStatsBucket {
+	m0 := &DatabaseStatsBucket{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_StartTime = b.StartTime
+	x.xxx_hidden_Stats = b.Stats
+	return m0
+}
+
+// What a database did over a time, and how high its levels went. Counts are of sampled_seconds,
+// the time its server was read across.
+type DatabaseStats struct {
+	state                         protoimpl.MessageState   `protogen:"opaque.v1"`
+	xxx_hidden_SampledSeconds     uint32                   `protobuf:"varint,1,opt,name=sampled_seconds,json=sampledSeconds"`
+	xxx_hidden_CpuCoresMean       float64                  `protobuf:"fixed64,2,opt,name=cpu_cores_mean,json=cpuCoresMean"`
+	xxx_hidden_CpuCoresMax        float64                  `protobuf:"fixed64,3,opt,name=cpu_cores_max,json=cpuCoresMax"`
+	xxx_hidden_MemoryUsedBytesMax uint64                   `protobuf:"varint,4,opt,name=memory_used_bytes_max,json=memoryUsedBytesMax"`
+	xxx_hidden_MemoryLimitBytes   uint64                   `protobuf:"varint,5,opt,name=memory_limit_bytes,json=memoryLimitBytes"`
+	xxx_hidden_VolumeBytes        uint64                   `protobuf:"varint,6,opt,name=volume_bytes,json=volumeBytes"`
+	xxx_hidden_DataBytes          uint64                   `protobuf:"varint,7,opt,name=data_bytes,json=dataBytes"`
+	xxx_hidden_ConnectionsMax     uint32                   `protobuf:"varint,8,opt,name=connections_max,json=connectionsMax"`
+	xxx_hidden_MaxConnections     uint32                   `protobuf:"varint,9,opt,name=max_connections,json=maxConnections"`
+	xxx_hidden_Commands           *[]*DatabaseCommandStats `protobuf:"bytes,10,rep,name=commands"`
+	xxx_hidden_Postgres           *PostgresStats           `protobuf:"bytes,11,opt,name=postgres"`
+	xxx_hidden_Valkey             *ValkeyStats             `protobuf:"bytes,12,opt,name=valkey"`
+	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
+	XXX_presence                  [1]uint32
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *DatabaseStats) Reset() {
+	*x = DatabaseStats{}
+	mi := &file_v1_panel_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseStats) ProtoMessage() {}
+
+func (x *DatabaseStats) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseStats) GetSampledSeconds() uint32 {
+	if x != nil {
+		return x.xxx_hidden_SampledSeconds
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetCpuCoresMean() float64 {
+	if x != nil {
+		return x.xxx_hidden_CpuCoresMean
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetCpuCoresMax() float64 {
+	if x != nil {
+		return x.xxx_hidden_CpuCoresMax
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetMemoryUsedBytesMax() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MemoryUsedBytesMax
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetMemoryLimitBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MemoryLimitBytes
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetVolumeBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_VolumeBytes
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetDataBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_DataBytes
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetConnectionsMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_ConnectionsMax
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetMaxConnections() uint32 {
+	if x != nil {
+		return x.xxx_hidden_MaxConnections
+	}
+	return 0
+}
+
+func (x *DatabaseStats) GetCommands() []*DatabaseCommandStats {
+	if x != nil {
+		if x.xxx_hidden_Commands != nil {
+			return *x.xxx_hidden_Commands
+		}
+	}
+	return nil
+}
+
+func (x *DatabaseStats) GetPostgres() *PostgresStats {
+	if x != nil {
+		return x.xxx_hidden_Postgres
+	}
+	return nil
+}
+
+func (x *DatabaseStats) GetValkey() *ValkeyStats {
+	if x != nil {
+		return x.xxx_hidden_Valkey
+	}
+	return nil
+}
+
+func (x *DatabaseStats) SetSampledSeconds(v uint32) {
+	x.xxx_hidden_SampledSeconds = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 12)
+}
+
+func (x *DatabaseStats) SetCpuCoresMean(v float64) {
+	x.xxx_hidden_CpuCoresMean = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 12)
+}
+
+func (x *DatabaseStats) SetCpuCoresMax(v float64) {
+	x.xxx_hidden_CpuCoresMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 12)
+}
+
+func (x *DatabaseStats) SetMemoryUsedBytesMax(v uint64) {
+	x.xxx_hidden_MemoryUsedBytesMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 12)
+}
+
+func (x *DatabaseStats) SetMemoryLimitBytes(v uint64) {
+	x.xxx_hidden_MemoryLimitBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 12)
+}
+
+func (x *DatabaseStats) SetVolumeBytes(v uint64) {
+	x.xxx_hidden_VolumeBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 12)
+}
+
+func (x *DatabaseStats) SetDataBytes(v uint64) {
+	x.xxx_hidden_DataBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 12)
+}
+
+func (x *DatabaseStats) SetConnectionsMax(v uint32) {
+	x.xxx_hidden_ConnectionsMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 12)
+}
+
+func (x *DatabaseStats) SetMaxConnections(v uint32) {
+	x.xxx_hidden_MaxConnections = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 12)
+}
+
+func (x *DatabaseStats) SetCommands(v []*DatabaseCommandStats) {
+	x.xxx_hidden_Commands = &v
+}
+
+func (x *DatabaseStats) SetPostgres(v *PostgresStats) {
+	x.xxx_hidden_Postgres = v
+}
+
+func (x *DatabaseStats) SetValkey(v *ValkeyStats) {
+	x.xxx_hidden_Valkey = v
+}
+
+func (x *DatabaseStats) HasSampledSeconds() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *DatabaseStats) HasCpuCoresMean() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseStats) HasCpuCoresMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseStats) HasMemoryUsedBytesMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseStats) HasMemoryLimitBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *DatabaseStats) HasVolumeBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *DatabaseStats) HasDataBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *DatabaseStats) HasConnectionsMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
+func (x *DatabaseStats) HasMaxConnections() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
+func (x *DatabaseStats) HasPostgres() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Postgres != nil
+}
+
+func (x *DatabaseStats) HasValkey() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Valkey != nil
+}
+
+func (x *DatabaseStats) ClearSampledSeconds() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_SampledSeconds = 0
+}
+
+func (x *DatabaseStats) ClearCpuCoresMean() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_CpuCoresMean = 0
+}
+
+func (x *DatabaseStats) ClearCpuCoresMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_CpuCoresMax = 0
+}
+
+func (x *DatabaseStats) ClearMemoryUsedBytesMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_MemoryUsedBytesMax = 0
+}
+
+func (x *DatabaseStats) ClearMemoryLimitBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_MemoryLimitBytes = 0
+}
+
+func (x *DatabaseStats) ClearVolumeBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_VolumeBytes = 0
+}
+
+func (x *DatabaseStats) ClearDataBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_DataBytes = 0
+}
+
+func (x *DatabaseStats) ClearConnectionsMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_ConnectionsMax = 0
+}
+
+func (x *DatabaseStats) ClearMaxConnections() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_MaxConnections = 0
+}
+
+func (x *DatabaseStats) ClearPostgres() {
+	x.xxx_hidden_Postgres = nil
+}
+
+func (x *DatabaseStats) ClearValkey() {
+	x.xxx_hidden_Valkey = nil
+}
+
+type DatabaseStats_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	SampledSeconds     *uint32
+	CpuCoresMean       *float64
+	CpuCoresMax        *float64
+	MemoryUsedBytesMax *uint64
+	MemoryLimitBytes   *uint64
+	VolumeBytes        *uint64
+	DataBytes          *uint64
+	ConnectionsMax     *uint32
+	MaxConnections     *uint32
+	Commands           []*DatabaseCommandStats
+	Postgres           *PostgresStats
+	Valkey             *ValkeyStats
+}
+
+func (b0 DatabaseStats_builder) Build() *DatabaseStats {
+	m0 := &DatabaseStats{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.SampledSeconds != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 12)
+		x.xxx_hidden_SampledSeconds = *b.SampledSeconds
+	}
+	if b.CpuCoresMean != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 12)
+		x.xxx_hidden_CpuCoresMean = *b.CpuCoresMean
+	}
+	if b.CpuCoresMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 12)
+		x.xxx_hidden_CpuCoresMax = *b.CpuCoresMax
+	}
+	if b.MemoryUsedBytesMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 12)
+		x.xxx_hidden_MemoryUsedBytesMax = *b.MemoryUsedBytesMax
+	}
+	if b.MemoryLimitBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 12)
+		x.xxx_hidden_MemoryLimitBytes = *b.MemoryLimitBytes
+	}
+	if b.VolumeBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 12)
+		x.xxx_hidden_VolumeBytes = *b.VolumeBytes
+	}
+	if b.DataBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 12)
+		x.xxx_hidden_DataBytes = *b.DataBytes
+	}
+	if b.ConnectionsMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 12)
+		x.xxx_hidden_ConnectionsMax = *b.ConnectionsMax
+	}
+	if b.MaxConnections != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 12)
+		x.xxx_hidden_MaxConnections = *b.MaxConnections
+	}
+	x.xxx_hidden_Commands = &b.Commands
+	x.xxx_hidden_Postgres = b.Postgres
+	x.xxx_hidden_Valkey = b.Valkey
+	return m0
+}
+
+type DatabaseCommandStats struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Kind        DatabaseCommandKind    `protobuf:"varint,1,opt,name=kind,enum=pethost.panel.v1.DatabaseCommandKind"`
+	xxx_hidden_Calls       uint64                 `protobuf:"varint,2,opt,name=calls"`
+	xxx_hidden_TotalTimeMs float64                `protobuf:"fixed64,3,opt,name=total_time_ms,json=totalTimeMs"`
+	xxx_hidden_Rows        uint64                 `protobuf:"varint,4,opt,name=rows"`
+	xxx_hidden_FailedCalls uint64                 `protobuf:"varint,5,opt,name=failed_calls,json=failedCalls"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *DatabaseCommandStats) Reset() {
+	*x = DatabaseCommandStats{}
+	mi := &file_v1_panel_proto_msgTypes[68]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseCommandStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseCommandStats) ProtoMessage() {}
+
+func (x *DatabaseCommandStats) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[68]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseCommandStats) GetKind() DatabaseCommandKind {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 0) {
+			return x.xxx_hidden_Kind
+		}
+	}
+	return DatabaseCommandKind_DATABASE_COMMAND_KIND_UNSPECIFIED
+}
+
+func (x *DatabaseCommandStats) GetCalls() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Calls
+	}
+	return 0
+}
+
+func (x *DatabaseCommandStats) GetTotalTimeMs() float64 {
+	if x != nil {
+		return x.xxx_hidden_TotalTimeMs
+	}
+	return 0
+}
+
+func (x *DatabaseCommandStats) GetRows() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Rows
+	}
+	return 0
+}
+
+func (x *DatabaseCommandStats) GetFailedCalls() uint64 {
+	if x != nil {
+		return x.xxx_hidden_FailedCalls
+	}
+	return 0
+}
+
+func (x *DatabaseCommandStats) SetKind(v DatabaseCommandKind) {
+	x.xxx_hidden_Kind = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
+}
+
+func (x *DatabaseCommandStats) SetCalls(v uint64) {
+	x.xxx_hidden_Calls = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
+}
+
+func (x *DatabaseCommandStats) SetTotalTimeMs(v float64) {
+	x.xxx_hidden_TotalTimeMs = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+}
+
+func (x *DatabaseCommandStats) SetRows(v uint64) {
+	x.xxx_hidden_Rows = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+}
+
+func (x *DatabaseCommandStats) SetFailedCalls(v uint64) {
+	x.xxx_hidden_FailedCalls = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+}
+
+func (x *DatabaseCommandStats) HasKind() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *DatabaseCommandStats) HasCalls() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseCommandStats) HasTotalTimeMs() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseCommandStats) HasRows() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseCommandStats) HasFailedCalls() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *DatabaseCommandStats) ClearKind() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Kind = DatabaseCommandKind_DATABASE_COMMAND_KIND_UNSPECIFIED
+}
+
+func (x *DatabaseCommandStats) ClearCalls() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Calls = 0
+}
+
+func (x *DatabaseCommandStats) ClearTotalTimeMs() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_TotalTimeMs = 0
+}
+
+func (x *DatabaseCommandStats) ClearRows() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Rows = 0
+}
+
+func (x *DatabaseCommandStats) ClearFailedCalls() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_FailedCalls = 0
+}
+
+type DatabaseCommandStats_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Kind        *DatabaseCommandKind
+	Calls       *uint64
+	TotalTimeMs *float64
+	Rows        *uint64
+	FailedCalls *uint64
+}
+
+func (b0 DatabaseCommandStats_builder) Build() *DatabaseCommandStats {
+	m0 := &DatabaseCommandStats{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Kind != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
+		x.xxx_hidden_Kind = *b.Kind
+	}
+	if b.Calls != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		x.xxx_hidden_Calls = *b.Calls
+	}
+	if b.TotalTimeMs != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		x.xxx_hidden_TotalTimeMs = *b.TotalTimeMs
+	}
+	if b.Rows != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
+		x.xxx_hidden_Rows = *b.Rows
+	}
+	if b.FailedCalls != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_FailedCalls = *b.FailedCalls
+	}
+	return m0
+}
+
+// Of every database of the server.
+type PostgresStats struct {
+	state                                   protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Commits                      uint64                 `protobuf:"varint,1,opt,name=commits"`
+	xxx_hidden_Rollbacks                    uint64                 `protobuf:"varint,2,opt,name=rollbacks"`
+	xxx_hidden_BlocksHit                    uint64                 `protobuf:"varint,3,opt,name=blocks_hit,json=blocksHit"`
+	xxx_hidden_BlocksRead                   uint64                 `protobuf:"varint,4,opt,name=blocks_read,json=blocksRead"`
+	xxx_hidden_RowsFetched                  uint64                 `protobuf:"varint,5,opt,name=rows_fetched,json=rowsFetched"`
+	xxx_hidden_RowsScanned                  uint64                 `protobuf:"varint,6,opt,name=rows_scanned,json=rowsScanned"`
+	xxx_hidden_RowsInserted                 uint64                 `protobuf:"varint,7,opt,name=rows_inserted,json=rowsInserted"`
+	xxx_hidden_RowsUpdated                  uint64                 `protobuf:"varint,8,opt,name=rows_updated,json=rowsUpdated"`
+	xxx_hidden_RowsDeleted                  uint64                 `protobuf:"varint,9,opt,name=rows_deleted,json=rowsDeleted"`
+	xxx_hidden_Deadlocks                    uint64                 `protobuf:"varint,10,opt,name=deadlocks"`
+	xxx_hidden_TempBytes                    uint64                 `protobuf:"varint,11,opt,name=temp_bytes,json=tempBytes"`
+	xxx_hidden_WalBytes                     uint64                 `protobuf:"varint,12,opt,name=wal_bytes,json=walBytes"`
+	xxx_hidden_ActiveMax                    uint32                 `protobuf:"varint,13,opt,name=active_max,json=activeMax"`
+	xxx_hidden_IdleInTransactionMax         uint32                 `protobuf:"varint,14,opt,name=idle_in_transaction_max,json=idleInTransactionMax"`
+	xxx_hidden_WaitingMax                   uint32                 `protobuf:"varint,15,opt,name=waiting_max,json=waitingMax"`
+	xxx_hidden_LongestTransactionSecondsMax uint32                 `protobuf:"varint,16,opt,name=longest_transaction_seconds_max,json=longestTransactionSecondsMax"`
+	XXX_raceDetectHookData                  protoimpl.RaceDetectHookData
+	XXX_presence                            [1]uint32
+	unknownFields                           protoimpl.UnknownFields
+	sizeCache                               protoimpl.SizeCache
+}
+
+func (x *PostgresStats) Reset() {
+	*x = PostgresStats{}
+	mi := &file_v1_panel_proto_msgTypes[69]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PostgresStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PostgresStats) ProtoMessage() {}
+
+func (x *PostgresStats) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[69]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *PostgresStats) GetCommits() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Commits
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRollbacks() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Rollbacks
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetBlocksHit() uint64 {
+	if x != nil {
+		return x.xxx_hidden_BlocksHit
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetBlocksRead() uint64 {
+	if x != nil {
+		return x.xxx_hidden_BlocksRead
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRowsFetched() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RowsFetched
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRowsScanned() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RowsScanned
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRowsInserted() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RowsInserted
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRowsUpdated() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RowsUpdated
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetRowsDeleted() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RowsDeleted
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetDeadlocks() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Deadlocks
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetTempBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_TempBytes
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetWalBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_WalBytes
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetActiveMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_ActiveMax
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetIdleInTransactionMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_IdleInTransactionMax
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetWaitingMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_WaitingMax
+	}
+	return 0
+}
+
+func (x *PostgresStats) GetLongestTransactionSecondsMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_LongestTransactionSecondsMax
+	}
+	return 0
+}
+
+func (x *PostgresStats) SetCommits(v uint64) {
+	x.xxx_hidden_Commits = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 16)
+}
+
+func (x *PostgresStats) SetRollbacks(v uint64) {
+	x.xxx_hidden_Rollbacks = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 16)
+}
+
+func (x *PostgresStats) SetBlocksHit(v uint64) {
+	x.xxx_hidden_BlocksHit = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 16)
+}
+
+func (x *PostgresStats) SetBlocksRead(v uint64) {
+	x.xxx_hidden_BlocksRead = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 16)
+}
+
+func (x *PostgresStats) SetRowsFetched(v uint64) {
+	x.xxx_hidden_RowsFetched = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 16)
+}
+
+func (x *PostgresStats) SetRowsScanned(v uint64) {
+	x.xxx_hidden_RowsScanned = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 16)
+}
+
+func (x *PostgresStats) SetRowsInserted(v uint64) {
+	x.xxx_hidden_RowsInserted = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 16)
+}
+
+func (x *PostgresStats) SetRowsUpdated(v uint64) {
+	x.xxx_hidden_RowsUpdated = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 16)
+}
+
+func (x *PostgresStats) SetRowsDeleted(v uint64) {
+	x.xxx_hidden_RowsDeleted = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 16)
+}
+
+func (x *PostgresStats) SetDeadlocks(v uint64) {
+	x.xxx_hidden_Deadlocks = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 16)
+}
+
+func (x *PostgresStats) SetTempBytes(v uint64) {
+	x.xxx_hidden_TempBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 16)
+}
+
+func (x *PostgresStats) SetWalBytes(v uint64) {
+	x.xxx_hidden_WalBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 16)
+}
+
+func (x *PostgresStats) SetActiveMax(v uint32) {
+	x.xxx_hidden_ActiveMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 16)
+}
+
+func (x *PostgresStats) SetIdleInTransactionMax(v uint32) {
+	x.xxx_hidden_IdleInTransactionMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 16)
+}
+
+func (x *PostgresStats) SetWaitingMax(v uint32) {
+	x.xxx_hidden_WaitingMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 16)
+}
+
+func (x *PostgresStats) SetLongestTransactionSecondsMax(v uint32) {
+	x.xxx_hidden_LongestTransactionSecondsMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 16)
+}
+
+func (x *PostgresStats) HasCommits() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *PostgresStats) HasRollbacks() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *PostgresStats) HasBlocksHit() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *PostgresStats) HasBlocksRead() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *PostgresStats) HasRowsFetched() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *PostgresStats) HasRowsScanned() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *PostgresStats) HasRowsInserted() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *PostgresStats) HasRowsUpdated() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
+func (x *PostgresStats) HasRowsDeleted() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
+func (x *PostgresStats) HasDeadlocks() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
+func (x *PostgresStats) HasTempBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+}
+
+func (x *PostgresStats) HasWalBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 11)
+}
+
+func (x *PostgresStats) HasActiveMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+}
+
+func (x *PostgresStats) HasIdleInTransactionMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
+}
+
+func (x *PostgresStats) HasWaitingMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
+}
+
+func (x *PostgresStats) HasLongestTransactionSecondsMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 15)
+}
+
+func (x *PostgresStats) ClearCommits() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Commits = 0
+}
+
+func (x *PostgresStats) ClearRollbacks() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Rollbacks = 0
+}
+
+func (x *PostgresStats) ClearBlocksHit() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_BlocksHit = 0
+}
+
+func (x *PostgresStats) ClearBlocksRead() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_BlocksRead = 0
+}
+
+func (x *PostgresStats) ClearRowsFetched() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_RowsFetched = 0
+}
+
+func (x *PostgresStats) ClearRowsScanned() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_RowsScanned = 0
+}
+
+func (x *PostgresStats) ClearRowsInserted() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_RowsInserted = 0
+}
+
+func (x *PostgresStats) ClearRowsUpdated() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_RowsUpdated = 0
+}
+
+func (x *PostgresStats) ClearRowsDeleted() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_RowsDeleted = 0
+}
+
+func (x *PostgresStats) ClearDeadlocks() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_Deadlocks = 0
+}
+
+func (x *PostgresStats) ClearTempBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	x.xxx_hidden_TempBytes = 0
+}
+
+func (x *PostgresStats) ClearWalBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 11)
+	x.xxx_hidden_WalBytes = 0
+}
+
+func (x *PostgresStats) ClearActiveMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
+	x.xxx_hidden_ActiveMax = 0
+}
+
+func (x *PostgresStats) ClearIdleInTransactionMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
+	x.xxx_hidden_IdleInTransactionMax = 0
+}
+
+func (x *PostgresStats) ClearWaitingMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
+	x.xxx_hidden_WaitingMax = 0
+}
+
+func (x *PostgresStats) ClearLongestTransactionSecondsMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 15)
+	x.xxx_hidden_LongestTransactionSecondsMax = 0
+}
+
+type PostgresStats_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Commits                      *uint64
+	Rollbacks                    *uint64
+	BlocksHit                    *uint64
+	BlocksRead                   *uint64
+	RowsFetched                  *uint64
+	RowsScanned                  *uint64
+	RowsInserted                 *uint64
+	RowsUpdated                  *uint64
+	RowsDeleted                  *uint64
+	Deadlocks                    *uint64
+	TempBytes                    *uint64
+	WalBytes                     *uint64
+	ActiveMax                    *uint32
+	IdleInTransactionMax         *uint32
+	WaitingMax                   *uint32
+	LongestTransactionSecondsMax *uint32
+}
+
+func (b0 PostgresStats_builder) Build() *PostgresStats {
+	m0 := &PostgresStats{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Commits != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 16)
+		x.xxx_hidden_Commits = *b.Commits
+	}
+	if b.Rollbacks != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 16)
+		x.xxx_hidden_Rollbacks = *b.Rollbacks
+	}
+	if b.BlocksHit != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 16)
+		x.xxx_hidden_BlocksHit = *b.BlocksHit
+	}
+	if b.BlocksRead != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 16)
+		x.xxx_hidden_BlocksRead = *b.BlocksRead
+	}
+	if b.RowsFetched != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 16)
+		x.xxx_hidden_RowsFetched = *b.RowsFetched
+	}
+	if b.RowsScanned != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 16)
+		x.xxx_hidden_RowsScanned = *b.RowsScanned
+	}
+	if b.RowsInserted != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 16)
+		x.xxx_hidden_RowsInserted = *b.RowsInserted
+	}
+	if b.RowsUpdated != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 16)
+		x.xxx_hidden_RowsUpdated = *b.RowsUpdated
+	}
+	if b.RowsDeleted != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 16)
+		x.xxx_hidden_RowsDeleted = *b.RowsDeleted
+	}
+	if b.Deadlocks != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 16)
+		x.xxx_hidden_Deadlocks = *b.Deadlocks
+	}
+	if b.TempBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 16)
+		x.xxx_hidden_TempBytes = *b.TempBytes
+	}
+	if b.WalBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 16)
+		x.xxx_hidden_WalBytes = *b.WalBytes
+	}
+	if b.ActiveMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 16)
+		x.xxx_hidden_ActiveMax = *b.ActiveMax
+	}
+	if b.IdleInTransactionMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 16)
+		x.xxx_hidden_IdleInTransactionMax = *b.IdleInTransactionMax
+	}
+	if b.WaitingMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 16)
+		x.xxx_hidden_WaitingMax = *b.WaitingMax
+	}
+	if b.LongestTransactionSecondsMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 16)
+		x.xxx_hidden_LongestTransactionSecondsMax = *b.LongestTransactionSecondsMax
+	}
+	return m0
+}
+
+type ValkeyStats struct {
+	state                          protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_KeyspaceHits        uint64                 `protobuf:"varint,1,opt,name=keyspace_hits,json=keyspaceHits"`
+	xxx_hidden_KeyspaceMisses      uint64                 `protobuf:"varint,2,opt,name=keyspace_misses,json=keyspaceMisses"`
+	xxx_hidden_ExpiredKeys         uint64                 `protobuf:"varint,3,opt,name=expired_keys,json=expiredKeys"`
+	xxx_hidden_EvictedKeys         uint64                 `protobuf:"varint,4,opt,name=evicted_keys,json=evictedKeys"`
+	xxx_hidden_NetInputBytes       uint64                 `protobuf:"varint,5,opt,name=net_input_bytes,json=netInputBytes"`
+	xxx_hidden_NetOutputBytes      uint64                 `protobuf:"varint,6,opt,name=net_output_bytes,json=netOutputBytes"`
+	xxx_hidden_RejectedConnections uint64                 `protobuf:"varint,7,opt,name=rejected_connections,json=rejectedConnections"`
+	xxx_hidden_Keys                uint64                 `protobuf:"varint,8,opt,name=keys"`
+	xxx_hidden_UsedMemoryBytesMax  uint64                 `protobuf:"varint,9,opt,name=used_memory_bytes_max,json=usedMemoryBytesMax"`
+	xxx_hidden_MaxmemoryBytes      uint64                 `protobuf:"varint,10,opt,name=maxmemory_bytes,json=maxmemoryBytes"`
+	xxx_hidden_BlockedClientsMax   uint32                 `protobuf:"varint,11,opt,name=blocked_clients_max,json=blockedClientsMax"`
+	XXX_raceDetectHookData         protoimpl.RaceDetectHookData
+	XXX_presence                   [1]uint32
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
+}
+
+func (x *ValkeyStats) Reset() {
+	*x = ValkeyStats{}
+	mi := &file_v1_panel_proto_msgTypes[70]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValkeyStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValkeyStats) ProtoMessage() {}
+
+func (x *ValkeyStats) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[70]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ValkeyStats) GetKeyspaceHits() uint64 {
+	if x != nil {
+		return x.xxx_hidden_KeyspaceHits
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetKeyspaceMisses() uint64 {
+	if x != nil {
+		return x.xxx_hidden_KeyspaceMisses
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetExpiredKeys() uint64 {
+	if x != nil {
+		return x.xxx_hidden_ExpiredKeys
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetEvictedKeys() uint64 {
+	if x != nil {
+		return x.xxx_hidden_EvictedKeys
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetNetInputBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_NetInputBytes
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetNetOutputBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_NetOutputBytes
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetRejectedConnections() uint64 {
+	if x != nil {
+		return x.xxx_hidden_RejectedConnections
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetKeys() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Keys
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetUsedMemoryBytesMax() uint64 {
+	if x != nil {
+		return x.xxx_hidden_UsedMemoryBytesMax
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetMaxmemoryBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MaxmemoryBytes
+	}
+	return 0
+}
+
+func (x *ValkeyStats) GetBlockedClientsMax() uint32 {
+	if x != nil {
+		return x.xxx_hidden_BlockedClientsMax
+	}
+	return 0
+}
+
+func (x *ValkeyStats) SetKeyspaceHits(v uint64) {
+	x.xxx_hidden_KeyspaceHits = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 11)
+}
+
+func (x *ValkeyStats) SetKeyspaceMisses(v uint64) {
+	x.xxx_hidden_KeyspaceMisses = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 11)
+}
+
+func (x *ValkeyStats) SetExpiredKeys(v uint64) {
+	x.xxx_hidden_ExpiredKeys = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 11)
+}
+
+func (x *ValkeyStats) SetEvictedKeys(v uint64) {
+	x.xxx_hidden_EvictedKeys = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 11)
+}
+
+func (x *ValkeyStats) SetNetInputBytes(v uint64) {
+	x.xxx_hidden_NetInputBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 11)
+}
+
+func (x *ValkeyStats) SetNetOutputBytes(v uint64) {
+	x.xxx_hidden_NetOutputBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 11)
+}
+
+func (x *ValkeyStats) SetRejectedConnections(v uint64) {
+	x.xxx_hidden_RejectedConnections = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 11)
+}
+
+func (x *ValkeyStats) SetKeys(v uint64) {
+	x.xxx_hidden_Keys = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 11)
+}
+
+func (x *ValkeyStats) SetUsedMemoryBytesMax(v uint64) {
+	x.xxx_hidden_UsedMemoryBytesMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 11)
+}
+
+func (x *ValkeyStats) SetMaxmemoryBytes(v uint64) {
+	x.xxx_hidden_MaxmemoryBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 11)
+}
+
+func (x *ValkeyStats) SetBlockedClientsMax(v uint32) {
+	x.xxx_hidden_BlockedClientsMax = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 11)
+}
+
+func (x *ValkeyStats) HasKeyspaceHits() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ValkeyStats) HasKeyspaceMisses() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ValkeyStats) HasExpiredKeys() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ValkeyStats) HasEvictedKeys() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *ValkeyStats) HasNetInputBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *ValkeyStats) HasNetOutputBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *ValkeyStats) HasRejectedConnections() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *ValkeyStats) HasKeys() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
+func (x *ValkeyStats) HasUsedMemoryBytesMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
+func (x *ValkeyStats) HasMaxmemoryBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
+func (x *ValkeyStats) HasBlockedClientsMax() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+}
+
+func (x *ValkeyStats) ClearKeyspaceHits() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_KeyspaceHits = 0
+}
+
+func (x *ValkeyStats) ClearKeyspaceMisses() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_KeyspaceMisses = 0
+}
+
+func (x *ValkeyStats) ClearExpiredKeys() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_ExpiredKeys = 0
+}
+
+func (x *ValkeyStats) ClearEvictedKeys() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_EvictedKeys = 0
+}
+
+func (x *ValkeyStats) ClearNetInputBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_NetInputBytes = 0
+}
+
+func (x *ValkeyStats) ClearNetOutputBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_NetOutputBytes = 0
+}
+
+func (x *ValkeyStats) ClearRejectedConnections() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_RejectedConnections = 0
+}
+
+func (x *ValkeyStats) ClearKeys() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_Keys = 0
+}
+
+func (x *ValkeyStats) ClearUsedMemoryBytesMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_UsedMemoryBytesMax = 0
+}
+
+func (x *ValkeyStats) ClearMaxmemoryBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_MaxmemoryBytes = 0
+}
+
+func (x *ValkeyStats) ClearBlockedClientsMax() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	x.xxx_hidden_BlockedClientsMax = 0
+}
+
+type ValkeyStats_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	KeyspaceHits        *uint64
+	KeyspaceMisses      *uint64
+	ExpiredKeys         *uint64
+	EvictedKeys         *uint64
+	NetInputBytes       *uint64
+	NetOutputBytes      *uint64
+	RejectedConnections *uint64
+	Keys                *uint64
+	UsedMemoryBytesMax  *uint64
+	MaxmemoryBytes      *uint64
+	BlockedClientsMax   *uint32
+}
+
+func (b0 ValkeyStats_builder) Build() *ValkeyStats {
+	m0 := &ValkeyStats{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.KeyspaceHits != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 11)
+		x.xxx_hidden_KeyspaceHits = *b.KeyspaceHits
+	}
+	if b.KeyspaceMisses != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 11)
+		x.xxx_hidden_KeyspaceMisses = *b.KeyspaceMisses
+	}
+	if b.ExpiredKeys != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 11)
+		x.xxx_hidden_ExpiredKeys = *b.ExpiredKeys
+	}
+	if b.EvictedKeys != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 11)
+		x.xxx_hidden_EvictedKeys = *b.EvictedKeys
+	}
+	if b.NetInputBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 11)
+		x.xxx_hidden_NetInputBytes = *b.NetInputBytes
+	}
+	if b.NetOutputBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 11)
+		x.xxx_hidden_NetOutputBytes = *b.NetOutputBytes
+	}
+	if b.RejectedConnections != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 11)
+		x.xxx_hidden_RejectedConnections = *b.RejectedConnections
+	}
+	if b.Keys != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 11)
+		x.xxx_hidden_Keys = *b.Keys
+	}
+	if b.UsedMemoryBytesMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 11)
+		x.xxx_hidden_UsedMemoryBytesMax = *b.UsedMemoryBytesMax
+	}
+	if b.MaxmemoryBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 11)
+		x.xxx_hidden_MaxmemoryBytes = *b.MaxmemoryBytes
+	}
+	if b.BlockedClientsMax != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 11)
+		x.xxx_hidden_BlockedClientsMax = *b.BlockedClientsMax
+	}
+	return m0
+}
+
+type DatabaseStatement struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Id          *string                `protobuf:"bytes,1,opt,name=id"`
+	xxx_hidden_Text        *string                `protobuf:"bytes,2,opt,name=text"`
+	xxx_hidden_Kind        DatabaseCommandKind    `protobuf:"varint,3,opt,name=kind,enum=pethost.panel.v1.DatabaseCommandKind"`
+	xxx_hidden_Calls       uint64                 `protobuf:"varint,4,opt,name=calls"`
+	xxx_hidden_TotalTimeMs float64                `protobuf:"fixed64,5,opt,name=total_time_ms,json=totalTimeMs"`
+	xxx_hidden_Rows        uint64                 `protobuf:"varint,6,opt,name=rows"`
+	xxx_hidden_FailedCalls uint64                 `protobuf:"varint,7,opt,name=failed_calls,json=failedCalls"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *DatabaseStatement) Reset() {
+	*x = DatabaseStatement{}
+	mi := &file_v1_panel_proto_msgTypes[71]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseStatement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseStatement) ProtoMessage() {}
+
+func (x *DatabaseStatement) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[71]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseStatement) GetId() string {
+	if x != nil {
+		if x.xxx_hidden_Id != nil {
+			return *x.xxx_hidden_Id
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseStatement) GetText() string {
+	if x != nil {
+		if x.xxx_hidden_Text != nil {
+			return *x.xxx_hidden_Text
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseStatement) GetKind() DatabaseCommandKind {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 2) {
+			return x.xxx_hidden_Kind
+		}
+	}
+	return DatabaseCommandKind_DATABASE_COMMAND_KIND_UNSPECIFIED
+}
+
+func (x *DatabaseStatement) GetCalls() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Calls
+	}
+	return 0
+}
+
+func (x *DatabaseStatement) GetTotalTimeMs() float64 {
+	if x != nil {
+		return x.xxx_hidden_TotalTimeMs
+	}
+	return 0
+}
+
+func (x *DatabaseStatement) GetRows() uint64 {
+	if x != nil {
+		return x.xxx_hidden_Rows
+	}
+	return 0
+}
+
+func (x *DatabaseStatement) GetFailedCalls() uint64 {
+	if x != nil {
+		return x.xxx_hidden_FailedCalls
+	}
+	return 0
+}
+
+func (x *DatabaseStatement) SetId(v string) {
+	x.xxx_hidden_Id = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+}
+
+func (x *DatabaseStatement) SetText(v string) {
+	x.xxx_hidden_Text = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+}
+
+func (x *DatabaseStatement) SetKind(v DatabaseCommandKind) {
+	x.xxx_hidden_Kind = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+}
+
+func (x *DatabaseStatement) SetCalls(v uint64) {
+	x.xxx_hidden_Calls = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+}
+
+func (x *DatabaseStatement) SetTotalTimeMs(v float64) {
+	x.xxx_hidden_TotalTimeMs = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+}
+
+func (x *DatabaseStatement) SetRows(v uint64) {
+	x.xxx_hidden_Rows = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *DatabaseStatement) SetFailedCalls(v uint64) {
+	x.xxx_hidden_FailedCalls = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+}
+
+func (x *DatabaseStatement) HasId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *DatabaseStatement) HasText() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseStatement) HasKind() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseStatement) HasCalls() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseStatement) HasTotalTimeMs() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *DatabaseStatement) HasRows() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *DatabaseStatement) HasFailedCalls() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *DatabaseStatement) ClearId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Id = nil
+}
+
+func (x *DatabaseStatement) ClearText() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Text = nil
+}
+
+func (x *DatabaseStatement) ClearKind() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Kind = DatabaseCommandKind_DATABASE_COMMAND_KIND_UNSPECIFIED
+}
+
+func (x *DatabaseStatement) ClearCalls() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Calls = 0
+}
+
+func (x *DatabaseStatement) ClearTotalTimeMs() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_TotalTimeMs = 0
+}
+
+func (x *DatabaseStatement) ClearRows() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_Rows = 0
+}
+
+func (x *DatabaseStatement) ClearFailedCalls() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_FailedCalls = 0
+}
+
+type DatabaseStatement_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Id          *string
+	Text        *string
+	Kind        *DatabaseCommandKind
+	Calls       *uint64
+	TotalTimeMs *float64
+	Rows        *uint64
+	FailedCalls *uint64
+}
+
+func (b0 DatabaseStatement_builder) Build() *DatabaseStatement {
+	m0 := &DatabaseStatement{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Id != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		x.xxx_hidden_Id = b.Id
+	}
+	if b.Text != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		x.xxx_hidden_Text = b.Text
+	}
+	if b.Kind != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		x.xxx_hidden_Kind = *b.Kind
+	}
+	if b.Calls != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		x.xxx_hidden_Calls = *b.Calls
+	}
+	if b.TotalTimeMs != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		x.xxx_hidden_TotalTimeMs = *b.TotalTimeMs
+	}
+	if b.Rows != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		x.xxx_hidden_Rows = *b.Rows
+	}
+	if b.FailedCalls != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		x.xxx_hidden_FailedCalls = *b.FailedCalls
+	}
+	return m0
+}
+
+// What the server runs now.
+type DatabaseActivity struct {
+	state                   protoimpl.MessageState  `protogen:"opaque.v1"`
+	xxx_hidden_ReadTime     *timestamppb.Timestamp  `protobuf:"bytes,1,opt,name=read_time,json=readTime"`
+	xxx_hidden_Sessions     *[]*DatabaseSession     `protobuf:"bytes,2,rep,name=sessions"`
+	xxx_hidden_SessionCount uint32                  `protobuf:"varint,3,opt,name=session_count,json=sessionCount"`
+	xxx_hidden_SlowCommands *[]*DatabaseSlowCommand `protobuf:"bytes,4,rep,name=slow_commands,json=slowCommands"`
+	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
+	XXX_presence            [1]uint32
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *DatabaseActivity) Reset() {
+	*x = DatabaseActivity{}
+	mi := &file_v1_panel_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseActivity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseActivity) ProtoMessage() {}
+
+func (x *DatabaseActivity) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseActivity) GetReadTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_ReadTime
+	}
+	return nil
+}
+
+func (x *DatabaseActivity) GetSessions() []*DatabaseSession {
+	if x != nil {
+		if x.xxx_hidden_Sessions != nil {
+			return *x.xxx_hidden_Sessions
+		}
+	}
+	return nil
+}
+
+func (x *DatabaseActivity) GetSessionCount() uint32 {
+	if x != nil {
+		return x.xxx_hidden_SessionCount
+	}
+	return 0
+}
+
+func (x *DatabaseActivity) GetSlowCommands() []*DatabaseSlowCommand {
+	if x != nil {
+		if x.xxx_hidden_SlowCommands != nil {
+			return *x.xxx_hidden_SlowCommands
+		}
+	}
+	return nil
+}
+
+func (x *DatabaseActivity) SetReadTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_ReadTime = v
+}
+
+func (x *DatabaseActivity) SetSessions(v []*DatabaseSession) {
+	x.xxx_hidden_Sessions = &v
+}
+
+func (x *DatabaseActivity) SetSessionCount(v uint32) {
+	x.xxx_hidden_SessionCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *DatabaseActivity) SetSlowCommands(v []*DatabaseSlowCommand) {
+	x.xxx_hidden_SlowCommands = &v
+}
+
+func (x *DatabaseActivity) HasReadTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_ReadTime != nil
+}
+
+func (x *DatabaseActivity) HasSessionCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseActivity) ClearReadTime() {
+	x.xxx_hidden_ReadTime = nil
+}
+
+func (x *DatabaseActivity) ClearSessionCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_SessionCount = 0
+}
+
+type DatabaseActivity_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ReadTime *timestamppb.Timestamp
+	// Postgres: its client sessions but the machine's, those in a transaction first, the longest
+	// first; at most 50.
+	Sessions     []*DatabaseSession
+	SessionCount *uint32
+	SlowCommands []*DatabaseSlowCommand
+}
+
+func (b0 DatabaseActivity_builder) Build() *DatabaseActivity {
+	m0 := &DatabaseActivity{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_ReadTime = b.ReadTime
+	x.xxx_hidden_Sessions = &b.Sessions
+	if b.SessionCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_SessionCount = *b.SessionCount
+	}
+	x.xxx_hidden_SlowCommands = &b.SlowCommands
+	return m0
+}
+
+type DatabaseSession struct {
+	state                           protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Pid                  int32                  `protobuf:"varint,1,opt,name=pid"`
+	xxx_hidden_User                 *string                `protobuf:"bytes,2,opt,name=user"`
+	xxx_hidden_Database             *string                `protobuf:"bytes,3,opt,name=database"`
+	xxx_hidden_ApplicationName      *string                `protobuf:"bytes,4,opt,name=application_name,json=applicationName"`
+	xxx_hidden_ClientAddress        *string                `protobuf:"bytes,5,opt,name=client_address,json=clientAddress"`
+	xxx_hidden_State                DatabaseSessionState   `protobuf:"varint,6,opt,name=state,enum=pethost.panel.v1.DatabaseSessionState"`
+	xxx_hidden_BackendStartTime     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=backend_start_time,json=backendStartTime"`
+	xxx_hidden_TransactionStartTime *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=transaction_start_time,json=transactionStartTime"`
+	xxx_hidden_QueryStartTime       *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=query_start_time,json=queryStartTime"`
+	xxx_hidden_WaitEventType        *string                `protobuf:"bytes,10,opt,name=wait_event_type,json=waitEventType"`
+	xxx_hidden_WaitEvent            *string                `protobuf:"bytes,11,opt,name=wait_event,json=waitEvent"`
+	xxx_hidden_BlockedByPids        []int32                `protobuf:"varint,12,rep,packed,name=blocked_by_pids,json=blockedByPids"`
+	xxx_hidden_Query                *string                `protobuf:"bytes,13,opt,name=query"`
+	XXX_raceDetectHookData          protoimpl.RaceDetectHookData
+	XXX_presence                    [1]uint32
+	unknownFields                   protoimpl.UnknownFields
+	sizeCache                       protoimpl.SizeCache
+}
+
+func (x *DatabaseSession) Reset() {
+	*x = DatabaseSession{}
+	mi := &file_v1_panel_proto_msgTypes[73]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseSession) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseSession) ProtoMessage() {}
+
+func (x *DatabaseSession) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[73]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseSession) GetPid() int32 {
+	if x != nil {
+		return x.xxx_hidden_Pid
+	}
+	return 0
+}
+
+func (x *DatabaseSession) GetUser() string {
+	if x != nil {
+		if x.xxx_hidden_User != nil {
+			return *x.xxx_hidden_User
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetDatabase() string {
+	if x != nil {
+		if x.xxx_hidden_Database != nil {
+			return *x.xxx_hidden_Database
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetApplicationName() string {
+	if x != nil {
+		if x.xxx_hidden_ApplicationName != nil {
+			return *x.xxx_hidden_ApplicationName
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetClientAddress() string {
+	if x != nil {
+		if x.xxx_hidden_ClientAddress != nil {
+			return *x.xxx_hidden_ClientAddress
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetState() DatabaseSessionState {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 5) {
+			return x.xxx_hidden_State
+		}
+	}
+	return DatabaseSessionState_DATABASE_SESSION_STATE_UNSPECIFIED
+}
+
+func (x *DatabaseSession) GetBackendStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_BackendStartTime
+	}
+	return nil
+}
+
+func (x *DatabaseSession) GetTransactionStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_TransactionStartTime
+	}
+	return nil
+}
+
+func (x *DatabaseSession) GetQueryStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_QueryStartTime
+	}
+	return nil
+}
+
+func (x *DatabaseSession) GetWaitEventType() string {
+	if x != nil {
+		if x.xxx_hidden_WaitEventType != nil {
+			return *x.xxx_hidden_WaitEventType
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetWaitEvent() string {
+	if x != nil {
+		if x.xxx_hidden_WaitEvent != nil {
+			return *x.xxx_hidden_WaitEvent
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) GetBlockedByPids() []int32 {
+	if x != nil {
+		return x.xxx_hidden_BlockedByPids
+	}
+	return nil
+}
+
+func (x *DatabaseSession) GetQuery() string {
+	if x != nil {
+		if x.xxx_hidden_Query != nil {
+			return *x.xxx_hidden_Query
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSession) SetPid(v int32) {
+	x.xxx_hidden_Pid = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 13)
+}
+
+func (x *DatabaseSession) SetUser(v string) {
+	x.xxx_hidden_User = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 13)
+}
+
+func (x *DatabaseSession) SetDatabase(v string) {
+	x.xxx_hidden_Database = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 13)
+}
+
+func (x *DatabaseSession) SetApplicationName(v string) {
+	x.xxx_hidden_ApplicationName = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 13)
+}
+
+func (x *DatabaseSession) SetClientAddress(v string) {
+	x.xxx_hidden_ClientAddress = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 13)
+}
+
+func (x *DatabaseSession) SetState(v DatabaseSessionState) {
+	x.xxx_hidden_State = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 13)
+}
+
+func (x *DatabaseSession) SetBackendStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_BackendStartTime = v
+}
+
+func (x *DatabaseSession) SetTransactionStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_TransactionStartTime = v
+}
+
+func (x *DatabaseSession) SetQueryStartTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_QueryStartTime = v
+}
+
+func (x *DatabaseSession) SetWaitEventType(v string) {
+	x.xxx_hidden_WaitEventType = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 13)
+}
+
+func (x *DatabaseSession) SetWaitEvent(v string) {
+	x.xxx_hidden_WaitEvent = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 13)
+}
+
+func (x *DatabaseSession) SetBlockedByPids(v []int32) {
+	x.xxx_hidden_BlockedByPids = v
+}
+
+func (x *DatabaseSession) SetQuery(v string) {
+	x.xxx_hidden_Query = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 13)
+}
+
+func (x *DatabaseSession) HasPid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *DatabaseSession) HasUser() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseSession) HasDatabase() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseSession) HasApplicationName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseSession) HasClientAddress() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *DatabaseSession) HasState() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *DatabaseSession) HasBackendStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_BackendStartTime != nil
+}
+
+func (x *DatabaseSession) HasTransactionStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_TransactionStartTime != nil
+}
+
+func (x *DatabaseSession) HasQueryStartTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_QueryStartTime != nil
+}
+
+func (x *DatabaseSession) HasWaitEventType() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
+func (x *DatabaseSession) HasWaitEvent() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+}
+
+func (x *DatabaseSession) HasQuery() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+}
+
+func (x *DatabaseSession) ClearPid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Pid = 0
+}
+
+func (x *DatabaseSession) ClearUser() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_User = nil
+}
+
+func (x *DatabaseSession) ClearDatabase() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Database = nil
+}
+
+func (x *DatabaseSession) ClearApplicationName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_ApplicationName = nil
+}
+
+func (x *DatabaseSession) ClearClientAddress() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_ClientAddress = nil
+}
+
+func (x *DatabaseSession) ClearState() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_State = DatabaseSessionState_DATABASE_SESSION_STATE_UNSPECIFIED
+}
+
+func (x *DatabaseSession) ClearBackendStartTime() {
+	x.xxx_hidden_BackendStartTime = nil
+}
+
+func (x *DatabaseSession) ClearTransactionStartTime() {
+	x.xxx_hidden_TransactionStartTime = nil
+}
+
+func (x *DatabaseSession) ClearQueryStartTime() {
+	x.xxx_hidden_QueryStartTime = nil
+}
+
+func (x *DatabaseSession) ClearWaitEventType() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_WaitEventType = nil
+}
+
+func (x *DatabaseSession) ClearWaitEvent() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	x.xxx_hidden_WaitEvent = nil
+}
+
+func (x *DatabaseSession) ClearQuery() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
+	x.xxx_hidden_Query = nil
+}
+
+type DatabaseSession_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Pid                  *int32
+	User                 *string
+	Database             *string
+	ApplicationName      *string
+	ClientAddress        *string
+	State                *DatabaseSessionState
+	BackendStartTime     *timestamppb.Timestamp
+	TransactionStartTime *timestamppb.Timestamp
+	QueryStartTime       *timestamppb.Timestamp
+	WaitEventType        *string
+	WaitEvent            *string
+	BlockedByPids        []int32
+	Query                *string
+}
+
+func (b0 DatabaseSession_builder) Build() *DatabaseSession {
+	m0 := &DatabaseSession{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Pid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 13)
+		x.xxx_hidden_Pid = *b.Pid
+	}
+	if b.User != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 13)
+		x.xxx_hidden_User = b.User
+	}
+	if b.Database != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 13)
+		x.xxx_hidden_Database = b.Database
+	}
+	if b.ApplicationName != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 13)
+		x.xxx_hidden_ApplicationName = b.ApplicationName
+	}
+	if b.ClientAddress != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 13)
+		x.xxx_hidden_ClientAddress = b.ClientAddress
+	}
+	if b.State != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 13)
+		x.xxx_hidden_State = *b.State
+	}
+	x.xxx_hidden_BackendStartTime = b.BackendStartTime
+	x.xxx_hidden_TransactionStartTime = b.TransactionStartTime
+	x.xxx_hidden_QueryStartTime = b.QueryStartTime
+	if b.WaitEventType != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 13)
+		x.xxx_hidden_WaitEventType = b.WaitEventType
+	}
+	if b.WaitEvent != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 13)
+		x.xxx_hidden_WaitEvent = b.WaitEvent
+	}
+	x.xxx_hidden_BlockedByPids = b.BlockedByPids
+	if b.Query != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 13)
+		x.xxx_hidden_Query = b.Query
+	}
+	return m0
+}
+
+type DatabaseSlowCommand struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Time          *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time"`
+	xxx_hidden_DurationMs    float64                `protobuf:"fixed64,2,opt,name=duration_ms,json=durationMs"`
+	xxx_hidden_Command       *string                `protobuf:"bytes,3,opt,name=command"`
+	xxx_hidden_Key           *string                `protobuf:"bytes,4,opt,name=key"`
+	xxx_hidden_ClientAddress *string                `protobuf:"bytes,5,opt,name=client_address,json=clientAddress"`
+	xxx_hidden_ClientName    *string                `protobuf:"bytes,6,opt,name=client_name,json=clientName"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *DatabaseSlowCommand) Reset() {
+	*x = DatabaseSlowCommand{}
+	mi := &file_v1_panel_proto_msgTypes[74]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseSlowCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseSlowCommand) ProtoMessage() {}
+
+func (x *DatabaseSlowCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[74]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseSlowCommand) GetTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_Time
+	}
+	return nil
+}
+
+func (x *DatabaseSlowCommand) GetDurationMs() float64 {
+	if x != nil {
+		return x.xxx_hidden_DurationMs
+	}
+	return 0
+}
+
+func (x *DatabaseSlowCommand) GetCommand() string {
+	if x != nil {
+		if x.xxx_hidden_Command != nil {
+			return *x.xxx_hidden_Command
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSlowCommand) GetKey() string {
+	if x != nil {
+		if x.xxx_hidden_Key != nil {
+			return *x.xxx_hidden_Key
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSlowCommand) GetClientAddress() string {
+	if x != nil {
+		if x.xxx_hidden_ClientAddress != nil {
+			return *x.xxx_hidden_ClientAddress
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSlowCommand) GetClientName() string {
+	if x != nil {
+		if x.xxx_hidden_ClientName != nil {
+			return *x.xxx_hidden_ClientName
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSlowCommand) SetTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_Time = v
+}
+
+func (x *DatabaseSlowCommand) SetDurationMs(v float64) {
+	x.xxx_hidden_DurationMs = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+}
+
+func (x *DatabaseSlowCommand) SetCommand(v string) {
+	x.xxx_hidden_Command = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+}
+
+func (x *DatabaseSlowCommand) SetKey(v string) {
+	x.xxx_hidden_Key = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+}
+
+func (x *DatabaseSlowCommand) SetClientAddress(v string) {
+	x.xxx_hidden_ClientAddress = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *DatabaseSlowCommand) SetClientName(v string) {
+	x.xxx_hidden_ClientName = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+}
+
+func (x *DatabaseSlowCommand) HasTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Time != nil
+}
+
+func (x *DatabaseSlowCommand) HasDurationMs() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseSlowCommand) HasCommand() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseSlowCommand) HasKey() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseSlowCommand) HasClientAddress() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *DatabaseSlowCommand) HasClientName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *DatabaseSlowCommand) ClearTime() {
+	x.xxx_hidden_Time = nil
+}
+
+func (x *DatabaseSlowCommand) ClearDurationMs() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_DurationMs = 0
+}
+
+func (x *DatabaseSlowCommand) ClearCommand() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Command = nil
+}
+
+func (x *DatabaseSlowCommand) ClearKey() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Key = nil
+}
+
+func (x *DatabaseSlowCommand) ClearClientAddress() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_ClientAddress = nil
+}
+
+func (x *DatabaseSlowCommand) ClearClientName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_ClientName = nil
+}
+
+type DatabaseSlowCommand_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Time          *timestamppb.Timestamp
+	DurationMs    *float64
+	Command       *string
+	Key           *string
+	ClientAddress *string
+	ClientName    *string
+}
+
+func (b0 DatabaseSlowCommand_builder) Build() *DatabaseSlowCommand {
+	m0 := &DatabaseSlowCommand{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Time = b.Time
+	if b.DurationMs != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		x.xxx_hidden_DurationMs = *b.DurationMs
+	}
+	if b.Command != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
+		x.xxx_hidden_Command = b.Command
+	}
+	if b.Key != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		x.xxx_hidden_Key = b.Key
+	}
+	if b.ClientAddress != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		x.xxx_hidden_ClientAddress = b.ClientAddress
+	}
+	if b.ClientName != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_ClientName = b.ClientName
+	}
+	return m0
+}
+
+type CancelDatabaseQueryRequest struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_Pid         int32                  `protobuf:"varint,2,opt,name=pid"`
+	xxx_hidden_EndSession  bool                   `protobuf:"varint,3,opt,name=end_session,json=endSession"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *CancelDatabaseQueryRequest) Reset() {
+	*x = CancelDatabaseQueryRequest{}
+	mi := &file_v1_panel_proto_msgTypes[75]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelDatabaseQueryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelDatabaseQueryRequest) ProtoMessage() {}
+
+func (x *CancelDatabaseQueryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[75]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *CancelDatabaseQueryRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *CancelDatabaseQueryRequest) GetPid() int32 {
+	if x != nil {
+		return x.xxx_hidden_Pid
+	}
+	return 0
+}
+
+func (x *CancelDatabaseQueryRequest) GetEndSession() bool {
+	if x != nil {
+		return x.xxx_hidden_EndSession
+	}
+	return false
+}
+
+func (x *CancelDatabaseQueryRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *CancelDatabaseQueryRequest) SetPid(v int32) {
+	x.xxx_hidden_Pid = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *CancelDatabaseQueryRequest) SetEndSession(v bool) {
+	x.xxx_hidden_EndSession = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *CancelDatabaseQueryRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *CancelDatabaseQueryRequest) HasPid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *CancelDatabaseQueryRequest) HasEndSession() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *CancelDatabaseQueryRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *CancelDatabaseQueryRequest) ClearPid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Pid = 0
+}
+
+func (x *CancelDatabaseQueryRequest) ClearEndSession() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_EndSession = false
+}
+
+type CancelDatabaseQueryRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId  *string
+	Pid        *int32
+	EndSession *bool
+}
+
+func (b0 CancelDatabaseQueryRequest_builder) Build() *CancelDatabaseQueryRequest {
+	m0 := &CancelDatabaseQueryRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.Pid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_Pid = *b.Pid
+	}
+	if b.EndSession != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_EndSession = *b.EndSession
+	}
+	return m0
+}
+
+type CancelDatabaseQueryResponse struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Done        bool                   `protobuf:"varint,1,opt,name=done"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *CancelDatabaseQueryResponse) Reset() {
+	*x = CancelDatabaseQueryResponse{}
+	mi := &file_v1_panel_proto_msgTypes[76]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelDatabaseQueryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelDatabaseQueryResponse) ProtoMessage() {}
+
+func (x *CancelDatabaseQueryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[76]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *CancelDatabaseQueryResponse) GetDone() bool {
+	if x != nil {
+		return x.xxx_hidden_Done
+	}
+	return false
+}
+
+func (x *CancelDatabaseQueryResponse) SetDone(v bool) {
+	x.xxx_hidden_Done = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *CancelDatabaseQueryResponse) HasDone() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *CancelDatabaseQueryResponse) ClearDone() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Done = false
+}
+
+type CancelDatabaseQueryResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Done *bool
+}
+
+func (b0 CancelDatabaseQueryResponse_builder) Build() *CancelDatabaseQueryResponse {
+	m0 := &CancelDatabaseQueryResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Done != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Done = *b.Done
+	}
+	return m0
+}
+
 type SetProjectAlertsRequest struct {
 	state                         protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId          *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
@@ -15278,7 +18738,7 @@ type SetProjectAlertsRequest struct {
 
 func (x *SetProjectAlertsRequest) Reset() {
 	*x = SetProjectAlertsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15290,7 +18750,7 @@ func (x *SetProjectAlertsRequest) String() string {
 func (*SetProjectAlertsRequest) ProtoMessage() {}
 
 func (x *SetProjectAlertsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15502,7 +18962,7 @@ type SetProjectAlertsResponse struct {
 
 func (x *SetProjectAlertsResponse) Reset() {
 	*x = SetProjectAlertsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15514,7 +18974,7 @@ func (x *SetProjectAlertsResponse) String() string {
 func (*SetProjectAlertsResponse) ProtoMessage() {}
 
 func (x *SetProjectAlertsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15578,7 +19038,7 @@ type SiteCheck struct {
 
 func (x *SiteCheck) Reset() {
 	*x = SiteCheck{}
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15590,7 +19050,7 @@ func (x *SiteCheck) String() string {
 func (*SiteCheck) ProtoMessage() {}
 
 func (x *SiteCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15756,7 +19216,7 @@ type TrafficRule struct {
 
 func (x *TrafficRule) Reset() {
 	*x = TrafficRule{}
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15768,7 +19228,7 @@ func (x *TrafficRule) String() string {
 func (*TrafficRule) ProtoMessage() {}
 
 func (x *TrafficRule) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15952,7 +19412,7 @@ type ProjectAlerts struct {
 
 func (x *ProjectAlerts) Reset() {
 	*x = ProjectAlerts{}
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15964,7 +19424,7 @@ func (x *ProjectAlerts) String() string {
 func (*ProjectAlerts) ProtoMessage() {}
 
 func (x *ProjectAlerts) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16119,7 +19579,7 @@ type SiteCheckState struct {
 
 func (x *SiteCheckState) Reset() {
 	*x = SiteCheckState{}
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16131,7 +19591,7 @@ func (x *SiteCheckState) String() string {
 func (*SiteCheckState) ProtoMessage() {}
 
 func (x *SiteCheckState) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16308,7 +19768,7 @@ type SiteCheckResult struct {
 
 func (x *SiteCheckResult) Reset() {
 	*x = SiteCheckResult{}
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16320,7 +19780,7 @@ func (x *SiteCheckResult) String() string {
 func (*SiteCheckResult) ProtoMessage() {}
 
 func (x *SiteCheckResult) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16474,7 +19934,7 @@ type TrafficRuleState struct {
 
 func (x *TrafficRuleState) Reset() {
 	*x = TrafficRuleState{}
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16486,7 +19946,7 @@ func (x *TrafficRuleState) String() string {
 func (*TrafficRuleState) ProtoMessage() {}
 
 func (x *TrafficRuleState) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16712,7 +20172,7 @@ type Incident struct {
 
 func (x *Incident) Reset() {
 	*x = Incident{}
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16724,7 +20184,7 @@ func (x *Incident) String() string {
 func (*Incident) ProtoMessage() {}
 
 func (x *Incident) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17256,7 +20716,7 @@ type IncidentEvidence struct {
 
 func (x *IncidentEvidence) Reset() {
 	*x = IncidentEvidence{}
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17268,7 +20728,7 @@ func (x *IncidentEvidence) String() string {
 func (*IncidentEvidence) ProtoMessage() {}
 
 func (x *IncidentEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17489,7 +20949,7 @@ type UptimeDay struct {
 
 func (x *UptimeDay) Reset() {
 	*x = UptimeDay{}
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17501,7 +20961,7 @@ func (x *UptimeDay) String() string {
 func (*UptimeDay) ProtoMessage() {}
 
 func (x *UptimeDay) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17618,7 +21078,7 @@ type GetIncidentRequest struct {
 
 func (x *GetIncidentRequest) Reset() {
 	*x = GetIncidentRequest{}
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17630,7 +21090,7 @@ func (x *GetIncidentRequest) String() string {
 func (*GetIncidentRequest) ProtoMessage() {}
 
 func (x *GetIncidentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17727,7 +21187,7 @@ type GetIncidentResponse struct {
 
 func (x *GetIncidentResponse) Reset() {
 	*x = GetIncidentResponse{}
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17739,7 +21199,7 @@ func (x *GetIncidentResponse) String() string {
 func (*GetIncidentResponse) ProtoMessage() {}
 
 func (x *GetIncidentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17816,7 +21276,7 @@ type GetOperationRequest struct {
 
 func (x *GetOperationRequest) Reset() {
 	*x = GetOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17828,7 +21288,7 @@ func (x *GetOperationRequest) String() string {
 func (*GetOperationRequest) ProtoMessage() {}
 
 func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18020,7 +21480,7 @@ type GetOperationResponse struct {
 
 func (x *GetOperationResponse) Reset() {
 	*x = GetOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18032,7 +21492,7 @@ func (x *GetOperationResponse) String() string {
 func (*GetOperationResponse) ProtoMessage() {}
 
 func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18194,7 +21654,7 @@ type OperationLogLine struct {
 
 func (x *OperationLogLine) Reset() {
 	*x = OperationLogLine{}
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18206,7 +21666,7 @@ func (x *OperationLogLine) String() string {
 func (*OperationLogLine) ProtoMessage() {}
 
 func (x *OperationLogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18302,7 +21762,7 @@ type HttpTrafficFilter struct {
 
 func (x *HttpTrafficFilter) Reset() {
 	*x = HttpTrafficFilter{}
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18314,7 +21774,7 @@ func (x *HttpTrafficFilter) String() string {
 func (*HttpTrafficFilter) ProtoMessage() {}
 
 func (x *HttpTrafficFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18512,7 +21972,7 @@ type QueryHttpTrafficRequest struct {
 
 func (x *QueryHttpTrafficRequest) Reset() {
 	*x = QueryHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18524,7 +21984,7 @@ func (x *QueryHttpTrafficRequest) String() string {
 func (*QueryHttpTrafficRequest) ProtoMessage() {}
 
 func (x *QueryHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18792,7 +22252,7 @@ type QueryHttpTrafficResponse struct {
 
 func (x *QueryHttpTrafficResponse) Reset() {
 	*x = QueryHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18804,7 +22264,7 @@ func (x *QueryHttpTrafficResponse) String() string {
 func (*QueryHttpTrafficResponse) ProtoMessage() {}
 
 func (x *QueryHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19076,7 +22536,7 @@ type HttpTrafficBucket struct {
 
 func (x *HttpTrafficBucket) Reset() {
 	*x = HttpTrafficBucket{}
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19088,7 +22548,7 @@ func (x *HttpTrafficBucket) String() string {
 func (*HttpTrafficBucket) ProtoMessage() {}
 
 func (x *HttpTrafficBucket) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19172,7 +22632,7 @@ type HttpPathTraffic struct {
 
 func (x *HttpPathTraffic) Reset() {
 	*x = HttpPathTraffic{}
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19184,7 +22644,7 @@ func (x *HttpPathTraffic) String() string {
 func (*HttpPathTraffic) ProtoMessage() {}
 
 func (x *HttpPathTraffic) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19321,7 +22781,7 @@ type HttpRequest struct {
 
 func (x *HttpRequest) Reset() {
 	*x = HttpRequest{}
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19333,7 +22793,7 @@ func (x *HttpRequest) String() string {
 func (*HttpRequest) ProtoMessage() {}
 
 func (x *HttpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19826,7 +23286,7 @@ type ContainerLogFilter struct {
 
 func (x *ContainerLogFilter) Reset() {
 	*x = ContainerLogFilter{}
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19838,7 +23298,7 @@ func (x *ContainerLogFilter) String() string {
 func (*ContainerLogFilter) ProtoMessage() {}
 
 func (x *ContainerLogFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19975,7 +23435,7 @@ type QueryContainerLogsRequest struct {
 
 func (x *QueryContainerLogsRequest) Reset() {
 	*x = QueryContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19987,7 +23447,7 @@ func (x *QueryContainerLogsRequest) String() string {
 func (*QueryContainerLogsRequest) ProtoMessage() {}
 
 func (x *QueryContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20249,7 +23709,7 @@ type QueryContainerLogsResponse struct {
 
 func (x *QueryContainerLogsResponse) Reset() {
 	*x = QueryContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20261,7 +23721,7 @@ func (x *QueryContainerLogsResponse) String() string {
 func (*QueryContainerLogsResponse) ProtoMessage() {}
 
 func (x *QueryContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20454,7 +23914,7 @@ type LogLine struct {
 
 func (x *LogLine) Reset() {
 	*x = LogLine{}
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20466,7 +23926,7 @@ func (x *LogLine) String() string {
 func (*LogLine) ProtoMessage() {}
 
 func (x *LogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20628,7 +24088,7 @@ type RunServiceCommandRequest struct {
 
 func (x *RunServiceCommandRequest) Reset() {
 	*x = RunServiceCommandRequest{}
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20640,7 +24100,7 @@ func (x *RunServiceCommandRequest) String() string {
 func (*RunServiceCommandRequest) ProtoMessage() {}
 
 func (x *RunServiceCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20883,7 +24343,7 @@ type RunServiceCommandResponse struct {
 
 func (x *RunServiceCommandResponse) Reset() {
 	*x = RunServiceCommandResponse{}
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20895,7 +24355,7 @@ func (x *RunServiceCommandResponse) String() string {
 func (*RunServiceCommandResponse) ProtoMessage() {}
 
 func (x *RunServiceCommandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21090,7 +24550,7 @@ type FileEntry struct {
 
 func (x *FileEntry) Reset() {
 	*x = FileEntry{}
-	mi := &file_v1_panel_proto_msgTypes[92]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21102,7 +24562,7 @@ func (x *FileEntry) String() string {
 func (*FileEntry) ProtoMessage() {}
 
 func (x *FileEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[92]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21380,7 +24840,7 @@ type ReadPathRequest struct {
 
 func (x *ReadPathRequest) Reset() {
 	*x = ReadPathRequest{}
-	mi := &file_v1_panel_proto_msgTypes[93]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21392,7 +24852,7 @@ func (x *ReadPathRequest) String() string {
 func (*ReadPathRequest) ProtoMessage() {}
 
 func (x *ReadPathRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[93]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21698,7 +25158,7 @@ func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
 type case_ReadPathRequest_Root protoreflect.FieldNumber
 
 func (x case_ReadPathRequest_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[93].Descriptor()
+	md := file_v1_panel_proto_msgTypes[106].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -21741,7 +25201,7 @@ type ReadPathResponse struct {
 
 func (x *ReadPathResponse) Reset() {
 	*x = ReadPathResponse{}
-	mi := &file_v1_panel_proto_msgTypes[94]
+	mi := &file_v1_panel_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21753,7 +25213,7 @@ func (x *ReadPathResponse) String() string {
 func (*ReadPathResponse) ProtoMessage() {}
 
 func (x *ReadPathResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[94]
+	mi := &file_v1_panel_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22081,7 +25541,7 @@ type CreateTransferRequest struct {
 
 func (x *CreateTransferRequest) Reset() {
 	*x = CreateTransferRequest{}
-	mi := &file_v1_panel_proto_msgTypes[95]
+	mi := &file_v1_panel_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22093,7 +25553,7 @@ func (x *CreateTransferRequest) String() string {
 func (*CreateTransferRequest) ProtoMessage() {}
 
 func (x *CreateTransferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[95]
+	mi := &file_v1_panel_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22296,7 +25756,7 @@ func (b0 CreateTransferRequest_builder) Build() *CreateTransferRequest {
 type case_CreateTransferRequest_Transfer protoreflect.FieldNumber
 
 func (x case_CreateTransferRequest_Transfer) String() string {
-	md := file_v1_panel_proto_msgTypes[95].Descriptor()
+	md := file_v1_panel_proto_msgTypes[108].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -22345,7 +25805,7 @@ type ArchiveUpload struct {
 
 func (x *ArchiveUpload) Reset() {
 	*x = ArchiveUpload{}
-	mi := &file_v1_panel_proto_msgTypes[96]
+	mi := &file_v1_panel_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22357,7 +25817,7 @@ func (x *ArchiveUpload) String() string {
 func (*ArchiveUpload) ProtoMessage() {}
 
 func (x *ArchiveUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[96]
+	mi := &file_v1_panel_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22426,7 +25886,7 @@ type FileUpload struct {
 
 func (x *FileUpload) Reset() {
 	*x = FileUpload{}
-	mi := &file_v1_panel_proto_msgTypes[97]
+	mi := &file_v1_panel_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22438,7 +25898,7 @@ func (x *FileUpload) String() string {
 func (*FileUpload) ProtoMessage() {}
 
 func (x *FileUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[97]
+	mi := &file_v1_panel_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22621,7 +26081,7 @@ func (b0 FileUpload_builder) Build() *FileUpload {
 type case_FileUpload_Root protoreflect.FieldNumber
 
 func (x case_FileUpload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[97].Descriptor()
+	md := file_v1_panel_proto_msgTypes[110].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -22658,7 +26118,7 @@ type PathDownload struct {
 
 func (x *PathDownload) Reset() {
 	*x = PathDownload{}
-	mi := &file_v1_panel_proto_msgTypes[98]
+	mi := &file_v1_panel_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22670,7 +26130,7 @@ func (x *PathDownload) String() string {
 func (*PathDownload) ProtoMessage() {}
 
 func (x *PathDownload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[98]
+	mi := &file_v1_panel_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22855,7 +26315,7 @@ func (b0 PathDownload_builder) Build() *PathDownload {
 type case_PathDownload_Root protoreflect.FieldNumber
 
 func (x case_PathDownload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[98].Descriptor()
+	md := file_v1_panel_proto_msgTypes[111].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -22891,7 +26351,7 @@ type DatabaseDump struct {
 
 func (x *DatabaseDump) Reset() {
 	*x = DatabaseDump{}
-	mi := &file_v1_panel_proto_msgTypes[99]
+	mi := &file_v1_panel_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22903,7 +26363,7 @@ func (x *DatabaseDump) String() string {
 func (*DatabaseDump) ProtoMessage() {}
 
 func (x *DatabaseDump) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[99]
+	mi := &file_v1_panel_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23008,7 +26468,7 @@ type CreateTransferResponse struct {
 
 func (x *CreateTransferResponse) Reset() {
 	*x = CreateTransferResponse{}
-	mi := &file_v1_panel_proto_msgTypes[100]
+	mi := &file_v1_panel_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23020,7 +26480,7 @@ func (x *CreateTransferResponse) String() string {
 func (*CreateTransferResponse) ProtoMessage() {}
 
 func (x *CreateTransferResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[100]
+	mi := &file_v1_panel_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23292,7 +26752,7 @@ type GetUploadRequest struct {
 
 func (x *GetUploadRequest) Reset() {
 	*x = GetUploadRequest{}
-	mi := &file_v1_panel_proto_msgTypes[101]
+	mi := &file_v1_panel_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23304,7 +26764,7 @@ func (x *GetUploadRequest) String() string {
 func (*GetUploadRequest) ProtoMessage() {}
 
 func (x *GetUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[101]
+	mi := &file_v1_panel_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23375,7 +26835,7 @@ type GetUploadResponse struct {
 
 func (x *GetUploadResponse) Reset() {
 	*x = GetUploadResponse{}
-	mi := &file_v1_panel_proto_msgTypes[102]
+	mi := &file_v1_panel_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23387,7 +26847,7 @@ func (x *GetUploadResponse) String() string {
 func (*GetUploadResponse) ProtoMessage() {}
 
 func (x *GetUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[102]
+	mi := &file_v1_panel_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23600,7 +27060,7 @@ type ProjectBusy struct {
 
 func (x *ProjectBusy) Reset() {
 	*x = ProjectBusy{}
-	mi := &file_v1_panel_proto_msgTypes[103]
+	mi := &file_v1_panel_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23612,7 +27072,7 @@ func (x *ProjectBusy) String() string {
 func (*ProjectBusy) ProtoMessage() {}
 
 func (x *ProjectBusy) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[103]
+	mi := &file_v1_panel_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23735,7 +27195,7 @@ type ProjectChanged struct {
 
 func (x *ProjectChanged) Reset() {
 	*x = ProjectChanged{}
-	mi := &file_v1_panel_proto_msgTypes[104]
+	mi := &file_v1_panel_proto_msgTypes[117]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23747,7 +27207,7 @@ func (x *ProjectChanged) String() string {
 func (*ProjectChanged) ProtoMessage() {}
 
 func (x *ProjectChanged) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[104]
+	mi := &file_v1_panel_proto_msgTypes[117]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23781,7 +27241,7 @@ type MachineUnreachable struct {
 
 func (x *MachineUnreachable) Reset() {
 	*x = MachineUnreachable{}
-	mi := &file_v1_panel_proto_msgTypes[105]
+	mi := &file_v1_panel_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23793,7 +27253,7 @@ func (x *MachineUnreachable) String() string {
 func (*MachineUnreachable) ProtoMessage() {}
 
 func (x *MachineUnreachable) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[105]
+	mi := &file_v1_panel_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23852,7 +27312,7 @@ type MachineUpdatePending struct {
 
 func (x *MachineUpdatePending) Reset() {
 	*x = MachineUpdatePending{}
-	mi := &file_v1_panel_proto_msgTypes[106]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23864,7 +27324,7 @@ func (x *MachineUpdatePending) String() string {
 func (*MachineUpdatePending) ProtoMessage() {}
 
 func (x *MachineUpdatePending) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[106]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23902,7 +27362,7 @@ type DatabaseLinkRefusal struct {
 
 func (x *DatabaseLinkRefusal) Reset() {
 	*x = DatabaseLinkRefusal{}
-	mi := &file_v1_panel_proto_msgTypes[107]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23914,7 +27374,7 @@ func (x *DatabaseLinkRefusal) String() string {
 func (*DatabaseLinkRefusal) ProtoMessage() {}
 
 func (x *DatabaseLinkRefusal) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[107]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24045,7 +27505,7 @@ type NoMachine struct {
 
 func (x *NoMachine) Reset() {
 	*x = NoMachine{}
-	mi := &file_v1_panel_proto_msgTypes[108]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24057,7 +27517,7 @@ func (x *NoMachine) String() string {
 func (*NoMachine) ProtoMessage() {}
 
 func (x *NoMachine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[108]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24156,7 +27616,7 @@ type WatchOperationRequest struct {
 
 func (x *WatchOperationRequest) Reset() {
 	*x = WatchOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[109]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24168,7 +27628,7 @@ func (x *WatchOperationRequest) String() string {
 func (*WatchOperationRequest) ProtoMessage() {}
 
 func (x *WatchOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[109]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24264,7 +27724,7 @@ type WatchOperationResponse struct {
 
 func (x *WatchOperationResponse) Reset() {
 	*x = WatchOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[110]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24276,7 +27736,7 @@ func (x *WatchOperationResponse) String() string {
 func (*WatchOperationResponse) ProtoMessage() {}
 
 func (x *WatchOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[110]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24403,7 +27863,7 @@ func (b0 WatchOperationResponse_builder) Build() *WatchOperationResponse {
 type case_WatchOperationResponse_Message protoreflect.FieldNumber
 
 func (x case_WatchOperationResponse_Message) String() string {
-	md := file_v1_panel_proto_msgTypes[110].Descriptor()
+	md := file_v1_panel_proto_msgTypes[123].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -24439,7 +27899,7 @@ type TailContainerLogsRequest struct {
 
 func (x *TailContainerLogsRequest) Reset() {
 	*x = TailContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[111]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24451,7 +27911,7 @@ func (x *TailContainerLogsRequest) String() string {
 func (*TailContainerLogsRequest) ProtoMessage() {}
 
 func (x *TailContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[111]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24574,7 +28034,7 @@ type TailContainerLogsResponse struct {
 
 func (x *TailContainerLogsResponse) Reset() {
 	*x = TailContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[112]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24586,7 +28046,7 @@ func (x *TailContainerLogsResponse) String() string {
 func (*TailContainerLogsResponse) ProtoMessage() {}
 
 func (x *TailContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[112]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24678,7 +28138,7 @@ type TailHttpTrafficRequest struct {
 
 func (x *TailHttpTrafficRequest) Reset() {
 	*x = TailHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[113]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24690,7 +28150,7 @@ func (x *TailHttpTrafficRequest) String() string {
 func (*TailHttpTrafficRequest) ProtoMessage() {}
 
 func (x *TailHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[113]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24807,7 +28267,7 @@ type TailHttpTrafficResponse struct {
 
 func (x *TailHttpTrafficResponse) Reset() {
 	*x = TailHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[114]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24819,7 +28279,7 @@ func (x *TailHttpTrafficResponse) String() string {
 func (*TailHttpTrafficResponse) ProtoMessage() {}
 
 func (x *TailHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[114]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24882,7 +28342,7 @@ type OpenTerminalRequest struct {
 
 func (x *OpenTerminalRequest) Reset() {
 	*x = OpenTerminalRequest{}
-	mi := &file_v1_panel_proto_msgTypes[115]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24894,7 +28354,7 @@ func (x *OpenTerminalRequest) String() string {
 func (*OpenTerminalRequest) ProtoMessage() {}
 
 func (x *OpenTerminalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[115]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25095,7 +28555,7 @@ type TerminalSize struct {
 
 func (x *TerminalSize) Reset() {
 	*x = TerminalSize{}
-	mi := &file_v1_panel_proto_msgTypes[116]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25107,7 +28567,7 @@ func (x *TerminalSize) String() string {
 func (*TerminalSize) ProtoMessage() {}
 
 func (x *TerminalSize) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[116]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25200,7 +28660,7 @@ type OpenTerminalResponse struct {
 
 func (x *OpenTerminalResponse) Reset() {
 	*x = OpenTerminalResponse{}
-	mi := &file_v1_panel_proto_msgTypes[117]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25212,7 +28672,7 @@ func (x *OpenTerminalResponse) String() string {
 func (*OpenTerminalResponse) ProtoMessage() {}
 
 func (x *OpenTerminalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[117]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25303,7 +28763,7 @@ type OpenDatabaseClientRequest struct {
 
 func (x *OpenDatabaseClientRequest) Reset() {
 	*x = OpenDatabaseClientRequest{}
-	mi := &file_v1_panel_proto_msgTypes[118]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25315,7 +28775,7 @@ func (x *OpenDatabaseClientRequest) String() string {
 func (*OpenDatabaseClientRequest) ProtoMessage() {}
 
 func (x *OpenDatabaseClientRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[118]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25382,7 +28842,7 @@ type OpenDatabaseClientResponse struct {
 
 func (x *OpenDatabaseClientResponse) Reset() {
 	*x = OpenDatabaseClientResponse{}
-	mi := &file_v1_panel_proto_msgTypes[119]
+	mi := &file_v1_panel_proto_msgTypes[132]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25394,7 +28854,7 @@ func (x *OpenDatabaseClientResponse) String() string {
 func (*OpenDatabaseClientResponse) ProtoMessage() {}
 
 func (x *OpenDatabaseClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[119]
+	mi := &file_v1_panel_proto_msgTypes[132]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25990,7 +29450,135 @@ const file_v1_panel_proto_rawDesc = "" +
 	"violations\x12 \n" +
 	"\vadjustments\x18\x03 \x03(\tR\vadjustments\x123\n" +
 	"\aproject\x18\x04 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
-	"\x03log\x18\x05 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xc9\x02\n" +
+	"\x03log\x18\x05 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xd2\x02\n" +
+	"\x17GetDatabaseStatsRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x129\n" +
+	"\n" +
+	"start_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\bend_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12!\n" +
+	"\flast_seconds\x18\x04 \x01(\rR\vlastSeconds\x120\n" +
+	"\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12Q\n" +
+	"\x0fstatement_order\x18\x06 \x01(\x0e2(.pethost.panel.v1.DatabaseStatementOrderR\x0estatementOrder\"\x82\x04\n" +
+	"\x18GetDatabaseStatsResponse\x129\n" +
+	"\n" +
+	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\bend_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12D\n" +
+	"\x10oldest_kept_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x129\n" +
+	"\aoverall\x18\x04 \x01(\v2\x1f.pethost.panel.v1.DatabaseStatsR\aoverall\x12?\n" +
+	"\abuckets\x18\x05 \x03(\v2%.pethost.panel.v1.DatabaseStatsBucketR\abuckets\x12C\n" +
+	"\n" +
+	"statements\x18\x06 \x03(\v2#.pethost.panel.v1.DatabaseStatementR\n" +
+	"statements\x12-\n" +
+	"\x12statements_tracked\x18\a \x01(\bR\x11statementsTracked\x12>\n" +
+	"\bactivity\x18\b \x01(\v2\".pethost.panel.v1.DatabaseActivityR\bactivity\"\x87\x01\n" +
+	"\x13DatabaseStatsBucket\x129\n" +
+	"\n" +
+	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\x05stats\x18\x02 \x01(\v2\x1f.pethost.panel.v1.DatabaseStatsR\x05stats\"\xaf\x04\n" +
+	"\rDatabaseStats\x12'\n" +
+	"\x0fsampled_seconds\x18\x01 \x01(\rR\x0esampledSeconds\x12$\n" +
+	"\x0ecpu_cores_mean\x18\x02 \x01(\x01R\fcpuCoresMean\x12\"\n" +
+	"\rcpu_cores_max\x18\x03 \x01(\x01R\vcpuCoresMax\x121\n" +
+	"\x15memory_used_bytes_max\x18\x04 \x01(\x04R\x12memoryUsedBytesMax\x12,\n" +
+	"\x12memory_limit_bytes\x18\x05 \x01(\x04R\x10memoryLimitBytes\x12!\n" +
+	"\fvolume_bytes\x18\x06 \x01(\x04R\vvolumeBytes\x12\x1d\n" +
+	"\n" +
+	"data_bytes\x18\a \x01(\x04R\tdataBytes\x12'\n" +
+	"\x0fconnections_max\x18\b \x01(\rR\x0econnectionsMax\x12'\n" +
+	"\x0fmax_connections\x18\t \x01(\rR\x0emaxConnections\x12B\n" +
+	"\bcommands\x18\n" +
+	" \x03(\v2&.pethost.panel.v1.DatabaseCommandStatsR\bcommands\x12;\n" +
+	"\bpostgres\x18\v \x01(\v2\x1f.pethost.panel.v1.PostgresStatsR\bpostgres\x125\n" +
+	"\x06valkey\x18\f \x01(\v2\x1d.pethost.panel.v1.ValkeyStatsR\x06valkey\"\xc2\x01\n" +
+	"\x14DatabaseCommandStats\x129\n" +
+	"\x04kind\x18\x01 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n" +
+	"\x05calls\x18\x02 \x01(\x04R\x05calls\x12\"\n" +
+	"\rtotal_time_ms\x18\x03 \x01(\x01R\vtotalTimeMs\x12\x12\n" +
+	"\x04rows\x18\x04 \x01(\x04R\x04rows\x12!\n" +
+	"\ffailed_calls\x18\x05 \x01(\x04R\vfailedCalls\"\xd0\x04\n" +
+	"\rPostgresStats\x12\x18\n" +
+	"\acommits\x18\x01 \x01(\x04R\acommits\x12\x1c\n" +
+	"\trollbacks\x18\x02 \x01(\x04R\trollbacks\x12\x1d\n" +
+	"\n" +
+	"blocks_hit\x18\x03 \x01(\x04R\tblocksHit\x12\x1f\n" +
+	"\vblocks_read\x18\x04 \x01(\x04R\n" +
+	"blocksRead\x12!\n" +
+	"\frows_fetched\x18\x05 \x01(\x04R\vrowsFetched\x12!\n" +
+	"\frows_scanned\x18\x06 \x01(\x04R\vrowsScanned\x12#\n" +
+	"\rrows_inserted\x18\a \x01(\x04R\frowsInserted\x12!\n" +
+	"\frows_updated\x18\b \x01(\x04R\vrowsUpdated\x12!\n" +
+	"\frows_deleted\x18\t \x01(\x04R\vrowsDeleted\x12\x1c\n" +
+	"\tdeadlocks\x18\n" +
+	" \x01(\x04R\tdeadlocks\x12\x1d\n" +
+	"\n" +
+	"temp_bytes\x18\v \x01(\x04R\ttempBytes\x12\x1b\n" +
+	"\twal_bytes\x18\f \x01(\x04R\bwalBytes\x12\x1d\n" +
+	"\n" +
+	"active_max\x18\r \x01(\rR\tactiveMax\x125\n" +
+	"\x17idle_in_transaction_max\x18\x0e \x01(\rR\x14idleInTransactionMax\x12\x1f\n" +
+	"\vwaiting_max\x18\x0f \x01(\rR\n" +
+	"waitingMax\x12E\n" +
+	"\x1flongest_transaction_seconds_max\x18\x10 \x01(\rR\x1clongestTransactionSecondsMax\"\xc6\x03\n" +
+	"\vValkeyStats\x12#\n" +
+	"\rkeyspace_hits\x18\x01 \x01(\x04R\fkeyspaceHits\x12'\n" +
+	"\x0fkeyspace_misses\x18\x02 \x01(\x04R\x0ekeyspaceMisses\x12!\n" +
+	"\fexpired_keys\x18\x03 \x01(\x04R\vexpiredKeys\x12!\n" +
+	"\fevicted_keys\x18\x04 \x01(\x04R\vevictedKeys\x12&\n" +
+	"\x0fnet_input_bytes\x18\x05 \x01(\x04R\rnetInputBytes\x12(\n" +
+	"\x10net_output_bytes\x18\x06 \x01(\x04R\x0enetOutputBytes\x121\n" +
+	"\x14rejected_connections\x18\a \x01(\x04R\x13rejectedConnections\x12\x12\n" +
+	"\x04keys\x18\b \x01(\x04R\x04keys\x121\n" +
+	"\x15used_memory_bytes_max\x18\t \x01(\x04R\x12usedMemoryBytesMax\x12'\n" +
+	"\x0fmaxmemory_bytes\x18\n" +
+	" \x01(\x04R\x0emaxmemoryBytes\x12.\n" +
+	"\x13blocked_clients_max\x18\v \x01(\rR\x11blockedClientsMax\"\xe3\x01\n" +
+	"\x11DatabaseStatement\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\x129\n" +
+	"\x04kind\x18\x03 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n" +
+	"\x05calls\x18\x04 \x01(\x04R\x05calls\x12\"\n" +
+	"\rtotal_time_ms\x18\x05 \x01(\x01R\vtotalTimeMs\x12\x12\n" +
+	"\x04rows\x18\x06 \x01(\x04R\x04rows\x12!\n" +
+	"\ffailed_calls\x18\a \x01(\x04R\vfailedCalls\"\xfb\x01\n" +
+	"\x10DatabaseActivity\x127\n" +
+	"\tread_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\breadTime\x12=\n" +
+	"\bsessions\x18\x02 \x03(\v2!.pethost.panel.v1.DatabaseSessionR\bsessions\x12#\n" +
+	"\rsession_count\x18\x03 \x01(\rR\fsessionCount\x12J\n" +
+	"\rslow_commands\x18\x04 \x03(\v2%.pethost.panel.v1.DatabaseSlowCommandR\fslowCommands\"\xca\x04\n" +
+	"\x0fDatabaseSession\x12\x10\n" +
+	"\x03pid\x18\x01 \x01(\x05R\x03pid\x12\x12\n" +
+	"\x04user\x18\x02 \x01(\tR\x04user\x12\x1a\n" +
+	"\bdatabase\x18\x03 \x01(\tR\bdatabase\x12)\n" +
+	"\x10application_name\x18\x04 \x01(\tR\x0fapplicationName\x12%\n" +
+	"\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12<\n" +
+	"\x05state\x18\x06 \x01(\x0e2&.pethost.panel.v1.DatabaseSessionStateR\x05state\x12H\n" +
+	"\x12backend_start_time\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x10backendStartTime\x12P\n" +
+	"\x16transaction_start_time\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\x14transactionStartTime\x12D\n" +
+	"\x10query_start_time\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x0equeryStartTime\x12&\n" +
+	"\x0fwait_event_type\x18\n" +
+	" \x01(\tR\rwaitEventType\x12\x1d\n" +
+	"\n" +
+	"wait_event\x18\v \x01(\tR\twaitEvent\x12&\n" +
+	"\x0fblocked_by_pids\x18\f \x03(\x05R\rblockedByPids\x12\x14\n" +
+	"\x05query\x18\r \x01(\tR\x05query\"\xda\x01\n" +
+	"\x13DatabaseSlowCommand\x12.\n" +
+	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12\x1f\n" +
+	"\vduration_ms\x18\x02 \x01(\x01R\n" +
+	"durationMs\x12\x18\n" +
+	"\acommand\x18\x03 \x01(\tR\acommand\x12\x10\n" +
+	"\x03key\x18\x04 \x01(\tR\x03key\x12%\n" +
+	"\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12\x1f\n" +
+	"\vclient_name\x18\x06 \x01(\tR\n" +
+	"clientName\"n\n" +
+	"\x1aCancelDatabaseQueryRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x10\n" +
+	"\x03pid\x18\x02 \x01(\x05R\x03pid\x12\x1f\n" +
+	"\vend_session\x18\x03 \x01(\bR\n" +
+	"endSession\"1\n" +
+	"\x1bCancelDatabaseQueryResponse\x12\x12\n" +
+	"\x04done\x18\x01 \x01(\bR\x04done\"\xc9\x02\n" +
 	"\x17SetProjectAlertsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x123\n" +
@@ -26449,7 +30037,28 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0eDatabaseEngine\x12\x1f\n" +
 	"\x1bDATABASE_ENGINE_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DATABASE_ENGINE_POSTGRES\x10\x01\x12\x1a\n" +
-	"\x16DATABASE_ENGINE_VALKEY\x10\x02*\x9d\x01\n" +
+	"\x16DATABASE_ENGINE_VALKEY\x10\x02*\xa6\x02\n" +
+	"\x13DatabaseCommandKind\x12%\n" +
+	"!DATABASE_COMMAND_KIND_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bDATABASE_COMMAND_KIND_OTHER\x10\x01\x12 \n" +
+	"\x1cDATABASE_COMMAND_KIND_SELECT\x10\x02\x12 \n" +
+	"\x1cDATABASE_COMMAND_KIND_INSERT\x10\x03\x12 \n" +
+	"\x1cDATABASE_COMMAND_KIND_UPDATE\x10\x04\x12 \n" +
+	"\x1cDATABASE_COMMAND_KIND_DELETE\x10\x05\x12\x1e\n" +
+	"\x1aDATABASE_COMMAND_KIND_READ\x10\x06\x12\x1f\n" +
+	"\x1bDATABASE_COMMAND_KIND_WRITE\x10\a*\xb7\x01\n" +
+	"\x16DatabaseStatementOrder\x12(\n" +
+	"$DATABASE_STATEMENT_ORDER_UNSPECIFIED\x10\x00\x12'\n" +
+	"#DATABASE_STATEMENT_ORDER_TOTAL_TIME\x10\x01\x12&\n" +
+	"\"DATABASE_STATEMENT_ORDER_MEAN_TIME\x10\x02\x12\"\n" +
+	"\x1eDATABASE_STATEMENT_ORDER_CALLS\x10\x03*\x8c\x02\n" +
+	"\x14DatabaseSessionState\x12&\n" +
+	"\"DATABASE_SESSION_STATE_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cDATABASE_SESSION_STATE_OTHER\x10\x01\x12!\n" +
+	"\x1dDATABASE_SESSION_STATE_ACTIVE\x10\x02\x12\x1f\n" +
+	"\x1bDATABASE_SESSION_STATE_IDLE\x10\x03\x12.\n" +
+	"*DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION\x10\x04\x126\n" +
+	"2DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED\x10\x05*\x9d\x01\n" +
 	"\rTrafficMetric\x12\x1e\n" +
 	"\x1aTRAFFIC_METRIC_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cTRAFFIC_METRIC_SERVER_ERRORS\x10\x01\x12'\n" +
@@ -26491,7 +30100,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xbe\x16\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xa2\x18\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
@@ -26508,7 +30117,9 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n" +
 	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x85\x01\n" +
 	"\fLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bLink projects to a database\x12c\n" +
-	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\x12\x90\x01\n" +
+	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\x12n\n" +
+	"\x10GetDatabaseStats\x12).pethost.panel.v1.GetDatabaseStatsRequest\x1a*.pethost.panel.v1.GetDatabaseStatsResponse\"\x03\x90\x02\x01\x12r\n" +
+	"\x13CancelDatabaseQuery\x12,.pethost.panel.v1.CancelDatabaseQueryRequest\x1a-.pethost.panel.v1.CancelDatabaseQueryResponse\x12\x90\x01\n" +
 	"\x11RunServiceCommand\x12*.pethost.panel.v1.RunServiceCommandRequest\x1a+.pethost.panel.v1.RunServiceCommandResponse\"\"\x8a\xb5\x18\x1e\b\x01\x12\x1aRun a command in a service\x12]\n" +
 	"\fOpenTerminal\x12%.pethost.panel.v1.OpenTerminalRequest\x1a&.pethost.panel.v1.OpenTerminalResponse\x12o\n" +
 	"\x12OpenDatabaseClient\x12+.pethost.panel.v1.OpenDatabaseClientRequest\x1a,.pethost.panel.v1.OpenDatabaseClientResponse\x12t\n" +
@@ -26524,408 +30135,453 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x14com.pethost.panel.v1B\n" +
 	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
-var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 20)
-var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 120)
+var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 23)
+var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 133)
 var file_v1_panel_proto_goTypes = []any{
-	(AlertChannelKind)(0),              // 0: pethost.panel.v1.AlertChannelKind
-	(MachineSessionKind)(0),            // 1: pethost.panel.v1.MachineSessionKind
-	(ProjectProblemKind)(0),            // 2: pethost.panel.v1.ProjectProblemKind
-	(ServicesActionKind)(0),            // 3: pethost.panel.v1.ServicesActionKind
-	(ServiceState)(0),                  // 4: pethost.panel.v1.ServiceState
-	(RestartPolicy)(0),                 // 5: pethost.panel.v1.RestartPolicy
-	(HealthStatus)(0),                  // 6: pethost.panel.v1.HealthStatus
-	(CertificateSource)(0),             // 7: pethost.panel.v1.CertificateSource
-	(OperationKind)(0),                 // 8: pethost.panel.v1.OperationKind
-	(OperationStatus)(0),               // 9: pethost.panel.v1.OperationStatus
-	(DeployFailureReason)(0),           // 10: pethost.panel.v1.DeployFailureReason
-	(DatabaseEngine)(0),                // 11: pethost.panel.v1.DatabaseEngine
-	(TrafficMetric)(0),                 // 12: pethost.panel.v1.TrafficMetric
-	(AlertStatus)(0),                   // 13: pethost.panel.v1.AlertStatus
-	(IncidentQuietReason)(0),           // 14: pethost.panel.v1.IncidentQuietReason
-	(OutputStream)(0),                  // 15: pethost.panel.v1.OutputStream
-	(FileType)(0),                      // 16: pethost.panel.v1.FileType
-	(FileLocation)(0),                  // 17: pethost.panel.v1.FileLocation
-	(DatabaseLinkRefusalReason)(0),     // 18: pethost.panel.v1.DatabaseLinkRefusalReason
-	(NoMachineReason)(0),               // 19: pethost.panel.v1.NoMachineReason
-	(*GetMachineRequest)(nil),          // 20: pethost.panel.v1.GetMachineRequest
-	(*GetMachineResponse)(nil),         // 21: pethost.panel.v1.GetMachineResponse
-	(*Machine)(nil),                    // 22: pethost.panel.v1.Machine
-	(*AlertDestination)(nil),           // 23: pethost.panel.v1.AlertDestination
-	(*MachineSession)(nil),             // 24: pethost.panel.v1.MachineSession
-	(*DiskUsage)(nil),                  // 25: pethost.panel.v1.DiskUsage
-	(*SshKey)(nil),                     // 26: pethost.panel.v1.SshKey
-	(*GithubConnection)(nil),           // 27: pethost.panel.v1.GithubConnection
-	(*GithubRepository)(nil),           // 28: pethost.panel.v1.GithubRepository
-	(*DeletedProject)(nil),             // 29: pethost.panel.v1.DeletedProject
-	(*RunMachineActionRequest)(nil),    // 30: pethost.panel.v1.RunMachineActionRequest
-	(*RestartMachineAction)(nil),       // 31: pethost.panel.v1.RestartMachineAction
-	(*RunMachineActionResponse)(nil),   // 32: pethost.panel.v1.RunMachineActionResponse
-	(*ProjectMetadata)(nil),            // 33: pethost.panel.v1.ProjectMetadata
-	(*ProjectSummary)(nil),             // 34: pethost.panel.v1.ProjectSummary
-	(*ServiceSummary)(nil),             // 35: pethost.panel.v1.ServiceSummary
-	(*ProjectProblem)(nil),             // 36: pethost.panel.v1.ProjectProblem
-	(*GetProjectRequest)(nil),          // 37: pethost.panel.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),         // 38: pethost.panel.v1.GetProjectResponse
-	(*Project)(nil),                    // 39: pethost.panel.v1.Project
-	(*RunningServicesAction)(nil),      // 40: pethost.panel.v1.RunningServicesAction
-	(*ProjectSource)(nil),              // 41: pethost.panel.v1.ProjectSource
-	(*GithubSource)(nil),               // 42: pethost.panel.v1.GithubSource
-	(*GithubCommit)(nil),               // 43: pethost.panel.v1.GithubCommit
-	(*Service)(nil),                    // 44: pethost.panel.v1.Service
-	(*PublishedPort)(nil),              // 45: pethost.panel.v1.PublishedPort
-	(*VolumeMount)(nil),                // 46: pethost.panel.v1.VolumeMount
-	(*HealthCheck)(nil),                // 47: pethost.panel.v1.HealthCheck
-	(*EnvironmentVariable)(nil),        // 48: pethost.panel.v1.EnvironmentVariable
-	(*Volume)(nil),                     // 49: pethost.panel.v1.Volume
-	(*VolumeMountedBy)(nil),            // 50: pethost.panel.v1.VolumeMountedBy
-	(*Host)(nil),                       // 51: pethost.panel.v1.Host
-	(*Route)(nil),                      // 52: pethost.panel.v1.Route
-	(*Operation)(nil),                  // 53: pethost.panel.v1.Operation
-	(*Snapshot)(nil),                   // 54: pethost.panel.v1.Snapshot
-	(*HttpTrafficSummary)(nil),         // 55: pethost.panel.v1.HttpTrafficSummary
-	(*CreateProjectRequest)(nil),       // 56: pethost.panel.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil),      // 57: pethost.panel.v1.CreateProjectResponse
-	(*DeployProjectRequest)(nil),       // 58: pethost.panel.v1.DeployProjectRequest
-	(*MountVolume)(nil),                // 59: pethost.panel.v1.MountVolume
-	(*ProjectExtension)(nil),           // 60: pethost.panel.v1.ProjectExtension
-	(*FileChange)(nil),                 // 61: pethost.panel.v1.FileChange
-	(*DeployProjectResponse)(nil),      // 62: pethost.panel.v1.DeployProjectResponse
-	(*SpecViolation)(nil),              // 63: pethost.panel.v1.SpecViolation
-	(*ListCommitsRequest)(nil),         // 64: pethost.panel.v1.ListCommitsRequest
-	(*ListCommitsResponse)(nil),        // 65: pethost.panel.v1.ListCommitsResponse
-	(*BranchCommit)(nil),               // 66: pethost.panel.v1.BranchCommit
-	(*RunProjectActionRequest)(nil),    // 67: pethost.panel.v1.RunProjectActionRequest
-	(*ServicesAction)(nil),             // 68: pethost.panel.v1.ServicesAction
-	(*RecreateServiceAction)(nil),      // 69: pethost.panel.v1.RecreateServiceAction
-	(*BackUpAction)(nil),               // 70: pethost.panel.v1.BackUpAction
-	(*RestoreSnapshotAction)(nil),      // 71: pethost.panel.v1.RestoreSnapshotAction
-	(*CancelOperationAction)(nil),      // 72: pethost.panel.v1.CancelOperationAction
-	(*DeleteProjectAction)(nil),        // 73: pethost.panel.v1.DeleteProjectAction
-	(*RunProjectActionResponse)(nil),   // 74: pethost.panel.v1.RunProjectActionResponse
-	(*Database)(nil),                   // 75: pethost.panel.v1.Database
-	(*DatabaseConnection)(nil),         // 76: pethost.panel.v1.DatabaseConnection
-	(*DatabaseSummary)(nil),            // 77: pethost.panel.v1.DatabaseSummary
-	(*DatabaseEngineOffer)(nil),        // 78: pethost.panel.v1.DatabaseEngineOffer
-	(*DatabaseSizeChoice)(nil),         // 79: pethost.panel.v1.DatabaseSizeChoice
-	(*LinkDatabaseRequest)(nil),        // 80: pethost.panel.v1.LinkDatabaseRequest
-	(*LinkDatabaseResponse)(nil),       // 81: pethost.panel.v1.LinkDatabaseResponse
-	(*CreateDatabaseRequest)(nil),      // 82: pethost.panel.v1.CreateDatabaseRequest
-	(*CreateDatabaseResponse)(nil),     // 83: pethost.panel.v1.CreateDatabaseResponse
-	(*SetProjectAlertsRequest)(nil),    // 84: pethost.panel.v1.SetProjectAlertsRequest
-	(*SetProjectAlertsResponse)(nil),   // 85: pethost.panel.v1.SetProjectAlertsResponse
-	(*SiteCheck)(nil),                  // 86: pethost.panel.v1.SiteCheck
-	(*TrafficRule)(nil),                // 87: pethost.panel.v1.TrafficRule
-	(*ProjectAlerts)(nil),              // 88: pethost.panel.v1.ProjectAlerts
-	(*SiteCheckState)(nil),             // 89: pethost.panel.v1.SiteCheckState
-	(*SiteCheckResult)(nil),            // 90: pethost.panel.v1.SiteCheckResult
-	(*TrafficRuleState)(nil),           // 91: pethost.panel.v1.TrafficRuleState
-	(*Incident)(nil),                   // 92: pethost.panel.v1.Incident
-	(*IncidentEvidence)(nil),           // 93: pethost.panel.v1.IncidentEvidence
-	(*UptimeDay)(nil),                  // 94: pethost.panel.v1.UptimeDay
-	(*GetIncidentRequest)(nil),         // 95: pethost.panel.v1.GetIncidentRequest
-	(*GetIncidentResponse)(nil),        // 96: pethost.panel.v1.GetIncidentResponse
-	(*GetOperationRequest)(nil),        // 97: pethost.panel.v1.GetOperationRequest
-	(*GetOperationResponse)(nil),       // 98: pethost.panel.v1.GetOperationResponse
-	(*OperationLogLine)(nil),           // 99: pethost.panel.v1.OperationLogLine
-	(*HttpTrafficFilter)(nil),          // 100: pethost.panel.v1.HttpTrafficFilter
-	(*QueryHttpTrafficRequest)(nil),    // 101: pethost.panel.v1.QueryHttpTrafficRequest
-	(*QueryHttpTrafficResponse)(nil),   // 102: pethost.panel.v1.QueryHttpTrafficResponse
-	(*HttpTrafficBucket)(nil),          // 103: pethost.panel.v1.HttpTrafficBucket
-	(*HttpPathTraffic)(nil),            // 104: pethost.panel.v1.HttpPathTraffic
-	(*HttpRequest)(nil),                // 105: pethost.panel.v1.HttpRequest
-	(*ContainerLogFilter)(nil),         // 106: pethost.panel.v1.ContainerLogFilter
-	(*QueryContainerLogsRequest)(nil),  // 107: pethost.panel.v1.QueryContainerLogsRequest
-	(*QueryContainerLogsResponse)(nil), // 108: pethost.panel.v1.QueryContainerLogsResponse
-	(*LogLine)(nil),                    // 109: pethost.panel.v1.LogLine
-	(*RunServiceCommandRequest)(nil),   // 110: pethost.panel.v1.RunServiceCommandRequest
-	(*RunServiceCommandResponse)(nil),  // 111: pethost.panel.v1.RunServiceCommandResponse
-	(*FileEntry)(nil),                  // 112: pethost.panel.v1.FileEntry
-	(*ReadPathRequest)(nil),            // 113: pethost.panel.v1.ReadPathRequest
-	(*ReadPathResponse)(nil),           // 114: pethost.panel.v1.ReadPathResponse
-	(*CreateTransferRequest)(nil),      // 115: pethost.panel.v1.CreateTransferRequest
-	(*ArchiveUpload)(nil),              // 116: pethost.panel.v1.ArchiveUpload
-	(*FileUpload)(nil),                 // 117: pethost.panel.v1.FileUpload
-	(*PathDownload)(nil),               // 118: pethost.panel.v1.PathDownload
-	(*DatabaseDump)(nil),               // 119: pethost.panel.v1.DatabaseDump
-	(*CreateTransferResponse)(nil),     // 120: pethost.panel.v1.CreateTransferResponse
-	(*GetUploadRequest)(nil),           // 121: pethost.panel.v1.GetUploadRequest
-	(*GetUploadResponse)(nil),          // 122: pethost.panel.v1.GetUploadResponse
-	(*ProjectBusy)(nil),                // 123: pethost.panel.v1.ProjectBusy
-	(*ProjectChanged)(nil),             // 124: pethost.panel.v1.ProjectChanged
-	(*MachineUnreachable)(nil),         // 125: pethost.panel.v1.MachineUnreachable
-	(*MachineUpdatePending)(nil),       // 126: pethost.panel.v1.MachineUpdatePending
-	(*DatabaseLinkRefusal)(nil),        // 127: pethost.panel.v1.DatabaseLinkRefusal
-	(*NoMachine)(nil),                  // 128: pethost.panel.v1.NoMachine
-	(*WatchOperationRequest)(nil),      // 129: pethost.panel.v1.WatchOperationRequest
-	(*WatchOperationResponse)(nil),     // 130: pethost.panel.v1.WatchOperationResponse
-	(*TailContainerLogsRequest)(nil),   // 131: pethost.panel.v1.TailContainerLogsRequest
-	(*TailContainerLogsResponse)(nil),  // 132: pethost.panel.v1.TailContainerLogsResponse
-	(*TailHttpTrafficRequest)(nil),     // 133: pethost.panel.v1.TailHttpTrafficRequest
-	(*TailHttpTrafficResponse)(nil),    // 134: pethost.panel.v1.TailHttpTrafficResponse
-	(*OpenTerminalRequest)(nil),        // 135: pethost.panel.v1.OpenTerminalRequest
-	(*TerminalSize)(nil),               // 136: pethost.panel.v1.TerminalSize
-	(*OpenTerminalResponse)(nil),       // 137: pethost.panel.v1.OpenTerminalResponse
-	(*OpenDatabaseClientRequest)(nil),  // 138: pethost.panel.v1.OpenDatabaseClientRequest
-	(*OpenDatabaseClientResponse)(nil), // 139: pethost.panel.v1.OpenDatabaseClientResponse
-	(*timestamppb.Timestamp)(nil),      // 140: google.protobuf.Timestamp
+	(AlertChannelKind)(0),               // 0: pethost.panel.v1.AlertChannelKind
+	(MachineSessionKind)(0),             // 1: pethost.panel.v1.MachineSessionKind
+	(ProjectProblemKind)(0),             // 2: pethost.panel.v1.ProjectProblemKind
+	(ServicesActionKind)(0),             // 3: pethost.panel.v1.ServicesActionKind
+	(ServiceState)(0),                   // 4: pethost.panel.v1.ServiceState
+	(RestartPolicy)(0),                  // 5: pethost.panel.v1.RestartPolicy
+	(HealthStatus)(0),                   // 6: pethost.panel.v1.HealthStatus
+	(CertificateSource)(0),              // 7: pethost.panel.v1.CertificateSource
+	(OperationKind)(0),                  // 8: pethost.panel.v1.OperationKind
+	(OperationStatus)(0),                // 9: pethost.panel.v1.OperationStatus
+	(DeployFailureReason)(0),            // 10: pethost.panel.v1.DeployFailureReason
+	(DatabaseEngine)(0),                 // 11: pethost.panel.v1.DatabaseEngine
+	(DatabaseCommandKind)(0),            // 12: pethost.panel.v1.DatabaseCommandKind
+	(DatabaseStatementOrder)(0),         // 13: pethost.panel.v1.DatabaseStatementOrder
+	(DatabaseSessionState)(0),           // 14: pethost.panel.v1.DatabaseSessionState
+	(TrafficMetric)(0),                  // 15: pethost.panel.v1.TrafficMetric
+	(AlertStatus)(0),                    // 16: pethost.panel.v1.AlertStatus
+	(IncidentQuietReason)(0),            // 17: pethost.panel.v1.IncidentQuietReason
+	(OutputStream)(0),                   // 18: pethost.panel.v1.OutputStream
+	(FileType)(0),                       // 19: pethost.panel.v1.FileType
+	(FileLocation)(0),                   // 20: pethost.panel.v1.FileLocation
+	(DatabaseLinkRefusalReason)(0),      // 21: pethost.panel.v1.DatabaseLinkRefusalReason
+	(NoMachineReason)(0),                // 22: pethost.panel.v1.NoMachineReason
+	(*GetMachineRequest)(nil),           // 23: pethost.panel.v1.GetMachineRequest
+	(*GetMachineResponse)(nil),          // 24: pethost.panel.v1.GetMachineResponse
+	(*Machine)(nil),                     // 25: pethost.panel.v1.Machine
+	(*AlertDestination)(nil),            // 26: pethost.panel.v1.AlertDestination
+	(*MachineSession)(nil),              // 27: pethost.panel.v1.MachineSession
+	(*DiskUsage)(nil),                   // 28: pethost.panel.v1.DiskUsage
+	(*SshKey)(nil),                      // 29: pethost.panel.v1.SshKey
+	(*GithubConnection)(nil),            // 30: pethost.panel.v1.GithubConnection
+	(*GithubRepository)(nil),            // 31: pethost.panel.v1.GithubRepository
+	(*DeletedProject)(nil),              // 32: pethost.panel.v1.DeletedProject
+	(*RunMachineActionRequest)(nil),     // 33: pethost.panel.v1.RunMachineActionRequest
+	(*RestartMachineAction)(nil),        // 34: pethost.panel.v1.RestartMachineAction
+	(*RunMachineActionResponse)(nil),    // 35: pethost.panel.v1.RunMachineActionResponse
+	(*ProjectMetadata)(nil),             // 36: pethost.panel.v1.ProjectMetadata
+	(*ProjectSummary)(nil),              // 37: pethost.panel.v1.ProjectSummary
+	(*ServiceSummary)(nil),              // 38: pethost.panel.v1.ServiceSummary
+	(*ProjectProblem)(nil),              // 39: pethost.panel.v1.ProjectProblem
+	(*GetProjectRequest)(nil),           // 40: pethost.panel.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),          // 41: pethost.panel.v1.GetProjectResponse
+	(*Project)(nil),                     // 42: pethost.panel.v1.Project
+	(*RunningServicesAction)(nil),       // 43: pethost.panel.v1.RunningServicesAction
+	(*ProjectSource)(nil),               // 44: pethost.panel.v1.ProjectSource
+	(*GithubSource)(nil),                // 45: pethost.panel.v1.GithubSource
+	(*GithubCommit)(nil),                // 46: pethost.panel.v1.GithubCommit
+	(*Service)(nil),                     // 47: pethost.panel.v1.Service
+	(*PublishedPort)(nil),               // 48: pethost.panel.v1.PublishedPort
+	(*VolumeMount)(nil),                 // 49: pethost.panel.v1.VolumeMount
+	(*HealthCheck)(nil),                 // 50: pethost.panel.v1.HealthCheck
+	(*EnvironmentVariable)(nil),         // 51: pethost.panel.v1.EnvironmentVariable
+	(*Volume)(nil),                      // 52: pethost.panel.v1.Volume
+	(*VolumeMountedBy)(nil),             // 53: pethost.panel.v1.VolumeMountedBy
+	(*Host)(nil),                        // 54: pethost.panel.v1.Host
+	(*Route)(nil),                       // 55: pethost.panel.v1.Route
+	(*Operation)(nil),                   // 56: pethost.panel.v1.Operation
+	(*Snapshot)(nil),                    // 57: pethost.panel.v1.Snapshot
+	(*HttpTrafficSummary)(nil),          // 58: pethost.panel.v1.HttpTrafficSummary
+	(*CreateProjectRequest)(nil),        // 59: pethost.panel.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),       // 60: pethost.panel.v1.CreateProjectResponse
+	(*DeployProjectRequest)(nil),        // 61: pethost.panel.v1.DeployProjectRequest
+	(*MountVolume)(nil),                 // 62: pethost.panel.v1.MountVolume
+	(*ProjectExtension)(nil),            // 63: pethost.panel.v1.ProjectExtension
+	(*FileChange)(nil),                  // 64: pethost.panel.v1.FileChange
+	(*DeployProjectResponse)(nil),       // 65: pethost.panel.v1.DeployProjectResponse
+	(*SpecViolation)(nil),               // 66: pethost.panel.v1.SpecViolation
+	(*ListCommitsRequest)(nil),          // 67: pethost.panel.v1.ListCommitsRequest
+	(*ListCommitsResponse)(nil),         // 68: pethost.panel.v1.ListCommitsResponse
+	(*BranchCommit)(nil),                // 69: pethost.panel.v1.BranchCommit
+	(*RunProjectActionRequest)(nil),     // 70: pethost.panel.v1.RunProjectActionRequest
+	(*ServicesAction)(nil),              // 71: pethost.panel.v1.ServicesAction
+	(*RecreateServiceAction)(nil),       // 72: pethost.panel.v1.RecreateServiceAction
+	(*BackUpAction)(nil),                // 73: pethost.panel.v1.BackUpAction
+	(*RestoreSnapshotAction)(nil),       // 74: pethost.panel.v1.RestoreSnapshotAction
+	(*CancelOperationAction)(nil),       // 75: pethost.panel.v1.CancelOperationAction
+	(*DeleteProjectAction)(nil),         // 76: pethost.panel.v1.DeleteProjectAction
+	(*RunProjectActionResponse)(nil),    // 77: pethost.panel.v1.RunProjectActionResponse
+	(*Database)(nil),                    // 78: pethost.panel.v1.Database
+	(*DatabaseConnection)(nil),          // 79: pethost.panel.v1.DatabaseConnection
+	(*DatabaseSummary)(nil),             // 80: pethost.panel.v1.DatabaseSummary
+	(*DatabaseEngineOffer)(nil),         // 81: pethost.panel.v1.DatabaseEngineOffer
+	(*DatabaseSizeChoice)(nil),          // 82: pethost.panel.v1.DatabaseSizeChoice
+	(*LinkDatabaseRequest)(nil),         // 83: pethost.panel.v1.LinkDatabaseRequest
+	(*LinkDatabaseResponse)(nil),        // 84: pethost.panel.v1.LinkDatabaseResponse
+	(*CreateDatabaseRequest)(nil),       // 85: pethost.panel.v1.CreateDatabaseRequest
+	(*CreateDatabaseResponse)(nil),      // 86: pethost.panel.v1.CreateDatabaseResponse
+	(*GetDatabaseStatsRequest)(nil),     // 87: pethost.panel.v1.GetDatabaseStatsRequest
+	(*GetDatabaseStatsResponse)(nil),    // 88: pethost.panel.v1.GetDatabaseStatsResponse
+	(*DatabaseStatsBucket)(nil),         // 89: pethost.panel.v1.DatabaseStatsBucket
+	(*DatabaseStats)(nil),               // 90: pethost.panel.v1.DatabaseStats
+	(*DatabaseCommandStats)(nil),        // 91: pethost.panel.v1.DatabaseCommandStats
+	(*PostgresStats)(nil),               // 92: pethost.panel.v1.PostgresStats
+	(*ValkeyStats)(nil),                 // 93: pethost.panel.v1.ValkeyStats
+	(*DatabaseStatement)(nil),           // 94: pethost.panel.v1.DatabaseStatement
+	(*DatabaseActivity)(nil),            // 95: pethost.panel.v1.DatabaseActivity
+	(*DatabaseSession)(nil),             // 96: pethost.panel.v1.DatabaseSession
+	(*DatabaseSlowCommand)(nil),         // 97: pethost.panel.v1.DatabaseSlowCommand
+	(*CancelDatabaseQueryRequest)(nil),  // 98: pethost.panel.v1.CancelDatabaseQueryRequest
+	(*CancelDatabaseQueryResponse)(nil), // 99: pethost.panel.v1.CancelDatabaseQueryResponse
+	(*SetProjectAlertsRequest)(nil),     // 100: pethost.panel.v1.SetProjectAlertsRequest
+	(*SetProjectAlertsResponse)(nil),    // 101: pethost.panel.v1.SetProjectAlertsResponse
+	(*SiteCheck)(nil),                   // 102: pethost.panel.v1.SiteCheck
+	(*TrafficRule)(nil),                 // 103: pethost.panel.v1.TrafficRule
+	(*ProjectAlerts)(nil),               // 104: pethost.panel.v1.ProjectAlerts
+	(*SiteCheckState)(nil),              // 105: pethost.panel.v1.SiteCheckState
+	(*SiteCheckResult)(nil),             // 106: pethost.panel.v1.SiteCheckResult
+	(*TrafficRuleState)(nil),            // 107: pethost.panel.v1.TrafficRuleState
+	(*Incident)(nil),                    // 108: pethost.panel.v1.Incident
+	(*IncidentEvidence)(nil),            // 109: pethost.panel.v1.IncidentEvidence
+	(*UptimeDay)(nil),                   // 110: pethost.panel.v1.UptimeDay
+	(*GetIncidentRequest)(nil),          // 111: pethost.panel.v1.GetIncidentRequest
+	(*GetIncidentResponse)(nil),         // 112: pethost.panel.v1.GetIncidentResponse
+	(*GetOperationRequest)(nil),         // 113: pethost.panel.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),        // 114: pethost.panel.v1.GetOperationResponse
+	(*OperationLogLine)(nil),            // 115: pethost.panel.v1.OperationLogLine
+	(*HttpTrafficFilter)(nil),           // 116: pethost.panel.v1.HttpTrafficFilter
+	(*QueryHttpTrafficRequest)(nil),     // 117: pethost.panel.v1.QueryHttpTrafficRequest
+	(*QueryHttpTrafficResponse)(nil),    // 118: pethost.panel.v1.QueryHttpTrafficResponse
+	(*HttpTrafficBucket)(nil),           // 119: pethost.panel.v1.HttpTrafficBucket
+	(*HttpPathTraffic)(nil),             // 120: pethost.panel.v1.HttpPathTraffic
+	(*HttpRequest)(nil),                 // 121: pethost.panel.v1.HttpRequest
+	(*ContainerLogFilter)(nil),          // 122: pethost.panel.v1.ContainerLogFilter
+	(*QueryContainerLogsRequest)(nil),   // 123: pethost.panel.v1.QueryContainerLogsRequest
+	(*QueryContainerLogsResponse)(nil),  // 124: pethost.panel.v1.QueryContainerLogsResponse
+	(*LogLine)(nil),                     // 125: pethost.panel.v1.LogLine
+	(*RunServiceCommandRequest)(nil),    // 126: pethost.panel.v1.RunServiceCommandRequest
+	(*RunServiceCommandResponse)(nil),   // 127: pethost.panel.v1.RunServiceCommandResponse
+	(*FileEntry)(nil),                   // 128: pethost.panel.v1.FileEntry
+	(*ReadPathRequest)(nil),             // 129: pethost.panel.v1.ReadPathRequest
+	(*ReadPathResponse)(nil),            // 130: pethost.panel.v1.ReadPathResponse
+	(*CreateTransferRequest)(nil),       // 131: pethost.panel.v1.CreateTransferRequest
+	(*ArchiveUpload)(nil),               // 132: pethost.panel.v1.ArchiveUpload
+	(*FileUpload)(nil),                  // 133: pethost.panel.v1.FileUpload
+	(*PathDownload)(nil),                // 134: pethost.panel.v1.PathDownload
+	(*DatabaseDump)(nil),                // 135: pethost.panel.v1.DatabaseDump
+	(*CreateTransferResponse)(nil),      // 136: pethost.panel.v1.CreateTransferResponse
+	(*GetUploadRequest)(nil),            // 137: pethost.panel.v1.GetUploadRequest
+	(*GetUploadResponse)(nil),           // 138: pethost.panel.v1.GetUploadResponse
+	(*ProjectBusy)(nil),                 // 139: pethost.panel.v1.ProjectBusy
+	(*ProjectChanged)(nil),              // 140: pethost.panel.v1.ProjectChanged
+	(*MachineUnreachable)(nil),          // 141: pethost.panel.v1.MachineUnreachable
+	(*MachineUpdatePending)(nil),        // 142: pethost.panel.v1.MachineUpdatePending
+	(*DatabaseLinkRefusal)(nil),         // 143: pethost.panel.v1.DatabaseLinkRefusal
+	(*NoMachine)(nil),                   // 144: pethost.panel.v1.NoMachine
+	(*WatchOperationRequest)(nil),       // 145: pethost.panel.v1.WatchOperationRequest
+	(*WatchOperationResponse)(nil),      // 146: pethost.panel.v1.WatchOperationResponse
+	(*TailContainerLogsRequest)(nil),    // 147: pethost.panel.v1.TailContainerLogsRequest
+	(*TailContainerLogsResponse)(nil),   // 148: pethost.panel.v1.TailContainerLogsResponse
+	(*TailHttpTrafficRequest)(nil),      // 149: pethost.panel.v1.TailHttpTrafficRequest
+	(*TailHttpTrafficResponse)(nil),     // 150: pethost.panel.v1.TailHttpTrafficResponse
+	(*OpenTerminalRequest)(nil),         // 151: pethost.panel.v1.OpenTerminalRequest
+	(*TerminalSize)(nil),                // 152: pethost.panel.v1.TerminalSize
+	(*OpenTerminalResponse)(nil),        // 153: pethost.panel.v1.OpenTerminalResponse
+	(*OpenDatabaseClientRequest)(nil),   // 154: pethost.panel.v1.OpenDatabaseClientRequest
+	(*OpenDatabaseClientResponse)(nil),  // 155: pethost.panel.v1.OpenDatabaseClientResponse
+	(*timestamppb.Timestamp)(nil),       // 156: google.protobuf.Timestamp
 }
 var file_v1_panel_proto_depIdxs = []int32{
-	22,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
-	34,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
-	29,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
-	27,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
-	140, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
-	25,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
-	26,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
-	140, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	140, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
-	140, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
-	140, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
-	24,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
-	23,  // 12: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
-	78,  // 13: pethost.panel.v1.Machine.database_engines:type_name -> pethost.panel.v1.DatabaseEngineOffer
+	25,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
+	37,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
+	32,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
+	30,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
+	156, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
+	28,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
+	29,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
+	156, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	156, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
+	156, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
+	156, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
+	27,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
+	26,  // 12: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
+	81,  // 13: pethost.panel.v1.Machine.database_engines:type_name -> pethost.panel.v1.DatabaseEngineOffer
 	0,   // 14: pethost.panel.v1.AlertDestination.kind:type_name -> pethost.panel.v1.AlertChannelKind
 	1,   // 15: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
-	140, // 16: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
-	28,  // 17: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
-	140, // 18: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
-	54,  // 19: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
-	26,  // 20: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
-	31,  // 21: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
-	140, // 22: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
-	22,  // 23: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
-	33,  // 24: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	36,  // 25: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
-	35,  // 26: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
-	55,  // 27: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	140, // 28: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
-	53,  // 29: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
-	77,  // 30: pethost.panel.v1.ProjectSummary.database:type_name -> pethost.panel.v1.DatabaseSummary
+	156, // 16: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
+	31,  // 17: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
+	156, // 18: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
+	57,  // 19: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
+	29,  // 20: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
+	34,  // 21: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
+	156, // 22: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
+	25,  // 23: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
+	36,  // 24: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	39,  // 25: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
+	38,  // 26: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
+	58,  // 27: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	156, // 28: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
+	56,  // 29: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
+	80,  // 30: pethost.panel.v1.ProjectSummary.database:type_name -> pethost.panel.v1.DatabaseSummary
 	4,   // 31: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
 	2,   // 32: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	140, // 33: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
-	140, // 34: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
-	140, // 35: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
-	39,  // 36: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
-	33,  // 37: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	36,  // 38: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
+	156, // 33: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
+	156, // 34: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
+	156, // 35: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
+	42,  // 36: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
+	36,  // 37: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	39,  // 38: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
 	9,   // 39: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
-	140, // 40: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
-	44,  // 41: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
-	49,  // 42: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
-	52,  // 43: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
-	51,  // 44: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
-	53,  // 45: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
-	54,  // 46: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
-	140, // 47: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	55,  // 48: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	41,  // 49: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
-	40,  // 50: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
-	88,  // 51: pethost.panel.v1.Project.alerts:type_name -> pethost.panel.v1.ProjectAlerts
-	92,  // 52: pethost.panel.v1.Project.incidents:type_name -> pethost.panel.v1.Incident
-	94,  // 53: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
-	75,  // 54: pethost.panel.v1.Project.database:type_name -> pethost.panel.v1.Database
+	156, // 40: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
+	47,  // 41: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
+	52,  // 42: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
+	55,  // 43: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
+	54,  // 44: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
+	56,  // 45: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
+	57,  // 46: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
+	156, // 47: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	58,  // 48: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	44,  // 49: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
+	43,  // 50: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
+	104, // 51: pethost.panel.v1.Project.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	108, // 52: pethost.panel.v1.Project.incidents:type_name -> pethost.panel.v1.Incident
+	110, // 53: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
+	78,  // 54: pethost.panel.v1.Project.database:type_name -> pethost.panel.v1.Database
 	3,   // 55: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
-	140, // 56: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
-	42,  // 57: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
-	43,  // 58: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
-	43,  // 59: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
+	156, // 56: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
+	45,  // 57: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
+	46,  // 58: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
+	46,  // 59: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
 	4,   // 60: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
-	140, // 61: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
-	140, // 62: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
-	45,  // 63: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
-	46,  // 64: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
+	156, // 61: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
+	156, // 62: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
+	48,  // 63: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
+	49,  // 64: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
 	5,   // 65: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
-	47,  // 66: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
-	48,  // 67: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
+	50,  // 66: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
+	51,  // 67: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
 	6,   // 68: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
-	50,  // 69: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
-	140, // 70: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
+	53,  // 69: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
+	156, // 70: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
 	7,   // 71: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
-	140, // 72: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
+	156, // 72: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
 	8,   // 73: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
 	9,   // 74: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
-	140, // 75: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
-	140, // 76: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
+	156, // 75: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
+	156, // 76: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
 	10,  // 77: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
-	43,  // 78: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
-	140, // 79: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
-	41,  // 80: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
-	61,  // 81: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	60,  // 82: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	46,  // 78: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
+	156, // 79: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
+	44,  // 80: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
+	64,  // 81: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	63,  // 82: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
 	11,  // 83: pethost.panel.v1.CreateProjectRequest.database:type_name -> pethost.panel.v1.DatabaseEngine
-	53,  // 84: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	63,  // 85: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	39,  // 86: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
-	99,  // 87: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	61,  // 88: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	60,  // 89: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	59,  // 90: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
-	33,  // 91: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	52,  // 92: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
-	53,  // 93: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	63,  // 94: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	39,  // 95: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
-	99,  // 96: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	66,  // 97: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
-	43,  // 98: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
-	140, // 99: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
-	53,  // 100: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
-	68,  // 101: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
-	68,  // 102: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
-	68,  // 103: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
-	69,  // 104: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
-	70,  // 105: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
-	71,  // 106: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
-	72,  // 107: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
-	73,  // 108: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
-	41,  // 109: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
-	53,  // 110: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
-	39,  // 111: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
-	99,  // 112: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	56,  // 84: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 85: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 86: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 87: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	64,  // 88: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	63,  // 89: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	62,  // 90: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
+	36,  // 91: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	55,  // 92: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
+	56,  // 93: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 94: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 95: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 96: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	69,  // 97: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
+	46,  // 98: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
+	156, // 99: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
+	56,  // 100: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
+	71,  // 101: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
+	71,  // 102: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
+	71,  // 103: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
+	72,  // 104: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
+	73,  // 105: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
+	74,  // 106: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
+	75,  // 107: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
+	76,  // 108: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
+	44,  // 109: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
+	56,  // 110: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
+	42,  // 111: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 112: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
 	11,  // 113: pethost.panel.v1.Database.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	76,  // 114: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
+	79,  // 114: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
 	11,  // 115: pethost.panel.v1.DatabaseSummary.engine:type_name -> pethost.panel.v1.DatabaseEngine
 	11,  // 116: pethost.panel.v1.DatabaseEngineOffer.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	79,  // 117: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
-	39,  // 118: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	82,  // 117: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
+	42,  // 118: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
 	11,  // 119: pethost.panel.v1.CreateDatabaseRequest.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	53,  // 120: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
-	63,  // 121: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	39,  // 122: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
-	99,  // 123: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	86,  // 124: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
-	87,  // 125: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
-	88,  // 126: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
-	12,  // 127: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
-	100, // 128: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	89,  // 129: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
-	91,  // 130: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
-	140, // 131: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
-	86,  // 132: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
-	13,  // 133: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
-	90,  // 134: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
-	140, // 135: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
-	87,  // 136: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
-	13,  // 137: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
-	2,   // 138: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	86,  // 139: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
-	87,  // 140: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
-	140, // 141: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
-	140, // 142: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
-	140, // 143: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
-	14,  // 144: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
-	93,  // 145: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
-	90,  // 146: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
-	109, // 147: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
-	104, // 148: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
-	140, // 149: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
-	92,  // 150: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
-	92,  // 151: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
-	53,  // 152: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
-	39,  // 153: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
-	99,  // 154: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	140, // 155: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
-	100, // 156: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	140, // 157: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
-	140, // 158: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
-	140, // 159: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
-	140, // 160: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
-	140, // 161: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	55,  // 162: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	103, // 163: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
-	104, // 164: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
-	105, // 165: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
-	140, // 166: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
-	55,  // 167: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	55,  // 168: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	140, // 169: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
-	15,  // 170: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
-	106, // 171: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	140, // 172: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	140, // 173: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	140, // 174: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
-	140, // 175: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
-	140, // 176: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	109, // 177: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
-	140, // 178: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
-	15,  // 179: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
-	16,  // 180: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
-	140, // 181: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
-	112, // 182: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
-	17,  // 183: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
-	112, // 184: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
-	116, // 185: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
-	117, // 186: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
-	118, // 187: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
-	119, // 188: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
-	140, // 189: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
-	63,  // 190: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	8,   // 191: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
-	140, // 192: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
-	140, // 193: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
-	18,  // 194: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
-	19,  // 195: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
-	99,  // 196: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	53,  // 197: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
-	106, // 198: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	109, // 199: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
-	100, // 200: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	105, // 201: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
-	136, // 202: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
-	140, // 203: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
-	140, // 204: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
-	20,  // 205: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
-	30,  // 206: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
-	37,  // 207: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
-	56,  // 208: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
-	58,  // 209: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
-	64,  // 210: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
-	67,  // 211: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
-	84,  // 212: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
-	95,  // 213: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
-	97,  // 214: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
-	101, // 215: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
-	107, // 216: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
-	80,  // 217: pethost.panel.v1.PanelService.LinkDatabase:input_type -> pethost.panel.v1.LinkDatabaseRequest
-	82,  // 218: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
-	110, // 219: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
-	135, // 220: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
-	138, // 221: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
-	113, // 222: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
-	115, // 223: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
-	121, // 224: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
-	129, // 225: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
-	131, // 226: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
-	133, // 227: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
-	21,  // 228: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
-	32,  // 229: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
-	38,  // 230: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
-	57,  // 231: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
-	62,  // 232: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
-	65,  // 233: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
-	74,  // 234: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
-	85,  // 235: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
-	96,  // 236: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
-	98,  // 237: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
-	102, // 238: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
-	108, // 239: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
-	81,  // 240: pethost.panel.v1.PanelService.LinkDatabase:output_type -> pethost.panel.v1.LinkDatabaseResponse
-	83,  // 241: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
-	111, // 242: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
-	137, // 243: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
-	139, // 244: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
-	114, // 245: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
-	120, // 246: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
-	122, // 247: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
-	130, // 248: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
-	132, // 249: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
-	134, // 250: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
-	228, // [228:251] is the sub-list for method output_type
-	205, // [205:228] is the sub-list for method input_type
-	205, // [205:205] is the sub-list for extension type_name
-	205, // [205:205] is the sub-list for extension extendee
-	0,   // [0:205] is the sub-list for field type_name
+	56,  // 120: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 121: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 122: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 123: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	156, // 124: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 125: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
+	13,  // 126: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
+	156, // 127: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 128: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 129: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	90,  // 130: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
+	89,  // 131: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
+	94,  // 132: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
+	95,  // 133: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
+	156, // 134: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
+	90,  // 135: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
+	91,  // 136: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
+	92,  // 137: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
+	93,  // 138: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
+	12,  // 139: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	12,  // 140: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	156, // 141: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
+	96,  // 142: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
+	97,  // 143: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
+	14,  // 144: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
+	156, // 145: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
+	156, // 146: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
+	156, // 147: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
+	156, // 148: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
+	102, // 149: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
+	103, // 150: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
+	104, // 151: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	15,  // 152: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
+	116, // 153: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	105, // 154: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
+	107, // 155: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
+	156, // 156: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
+	102, // 157: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
+	16,  // 158: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
+	106, // 159: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
+	156, // 160: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
+	103, // 161: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
+	16,  // 162: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
+	2,   // 163: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	102, // 164: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
+	103, // 165: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
+	156, // 166: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
+	156, // 167: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
+	156, // 168: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
+	17,  // 169: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
+	109, // 170: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
+	106, // 171: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
+	125, // 172: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
+	120, // 173: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
+	156, // 174: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
+	108, // 175: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
+	108, // 176: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
+	56,  // 177: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
+	42,  // 178: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 179: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	156, // 180: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
+	116, // 181: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	156, // 182: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 183: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
+	156, // 184: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 185: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 186: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	58,  // 187: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	119, // 188: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
+	120, // 189: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
+	121, // 190: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
+	156, // 191: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
+	58,  // 192: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	58,  // 193: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	156, // 194: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
+	18,  // 195: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
+	122, // 196: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	156, // 197: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 198: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	156, // 199: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 200: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 201: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	125, // 202: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
+	156, // 203: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
+	18,  // 204: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
+	19,  // 205: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
+	156, // 206: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
+	128, // 207: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
+	20,  // 208: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
+	128, // 209: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
+	132, // 210: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
+	133, // 211: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
+	134, // 212: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
+	135, // 213: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
+	156, // 214: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
+	66,  // 215: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	8,   // 216: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
+	156, // 217: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
+	156, // 218: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
+	21,  // 219: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
+	22,  // 220: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
+	115, // 221: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	56,  // 222: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
+	122, // 223: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	125, // 224: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
+	116, // 225: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	121, // 226: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
+	152, // 227: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
+	156, // 228: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
+	156, // 229: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
+	23,  // 230: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
+	33,  // 231: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
+	40,  // 232: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
+	59,  // 233: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
+	61,  // 234: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
+	67,  // 235: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
+	70,  // 236: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
+	100, // 237: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
+	111, // 238: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
+	113, // 239: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
+	117, // 240: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
+	123, // 241: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
+	83,  // 242: pethost.panel.v1.PanelService.LinkDatabase:input_type -> pethost.panel.v1.LinkDatabaseRequest
+	85,  // 243: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
+	87,  // 244: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
+	98,  // 245: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
+	126, // 246: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
+	151, // 247: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
+	154, // 248: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
+	129, // 249: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
+	131, // 250: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
+	137, // 251: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
+	145, // 252: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
+	147, // 253: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
+	149, // 254: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
+	24,  // 255: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
+	35,  // 256: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
+	41,  // 257: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
+	60,  // 258: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
+	65,  // 259: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
+	68,  // 260: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
+	77,  // 261: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
+	101, // 262: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
+	112, // 263: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
+	114, // 264: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
+	118, // 265: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
+	124, // 266: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
+	84,  // 267: pethost.panel.v1.PanelService.LinkDatabase:output_type -> pethost.panel.v1.LinkDatabaseResponse
+	86,  // 268: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
+	88,  // 269: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
+	99,  // 270: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
+	127, // 271: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
+	153, // 272: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
+	155, // 273: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
+	130, // 274: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
+	136, // 275: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
+	138, // 276: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
+	146, // 277: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
+	148, // 278: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
+	150, // 279: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
+	255, // [255:280] is the sub-list for method output_type
+	230, // [230:255] is the sub-list for method input_type
+	230, // [230:230] is the sub-list for extension type_name
+	230, // [230:230] is the sub-list for extension extendee
+	0,   // [0:230] is the sub-list for field type_name
 }
 
 func init() { file_v1_panel_proto_init() }
@@ -26970,25 +30626,25 @@ func file_v1_panel_proto_init() {
 		(*runProjectActionRequest_SetSource)(nil),
 		(*runProjectActionRequest_DeleteVolume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[93].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[106].OneofWrappers = []any{
 		(*readPathRequest_Service)(nil),
 		(*readPathRequest_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[95].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[108].OneofWrappers = []any{
 		(*createTransferRequest_UploadArchive)(nil),
 		(*createTransferRequest_UploadFile)(nil),
 		(*createTransferRequest_Download)(nil),
 		(*createTransferRequest_DownloadDatabase)(nil),
 	}
-	file_v1_panel_proto_msgTypes[97].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[110].OneofWrappers = []any{
 		(*fileUpload_Service)(nil),
 		(*fileUpload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[98].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[111].OneofWrappers = []any{
 		(*pathDownload_Service)(nil),
 		(*pathDownload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[110].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[123].OneofWrappers = []any{
 		(*watchOperationResponse_Log)(nil),
 		(*watchOperationResponse_FinishedOperation)(nil),
 	}
@@ -26997,8 +30653,8 @@ func file_v1_panel_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_panel_proto_rawDesc), len(file_v1_panel_proto_rawDesc)),
-			NumEnums:      20,
-			NumMessages:   120,
+			NumEnums:      23,
+			NumMessages:   133,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
