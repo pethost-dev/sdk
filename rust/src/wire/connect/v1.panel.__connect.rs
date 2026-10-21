@@ -106,14 +106,6 @@ pub type OwnedQueryContainerLogsResponseView = ::buffa::view::OwnedView<
         'static,
     >,
 >;
-///Shorthand for `OwnedView<LinkDatabaseRequestView<'static>>`.
-pub type OwnedLinkDatabaseRequestView = ::buffa::view::OwnedView<
-    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<'static>,
->;
-///Shorthand for `OwnedView<LinkDatabaseResponseView<'static>>`.
-pub type OwnedLinkDatabaseResponseView = ::buffa::view::OwnedView<
-    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'static>,
->;
 ///Shorthand for `OwnedView<CreateDatabaseRequestView<'static>>`.
 pub type OwnedCreateDatabaseRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseRequestView<'static>,
@@ -121,6 +113,14 @@ pub type OwnedCreateDatabaseRequestView = ::buffa::view::OwnedView<
 ///Shorthand for `OwnedView<CreateDatabaseResponseView<'static>>`.
 pub type OwnedCreateDatabaseResponseView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'static>,
+>;
+///Shorthand for `OwnedView<LinkDatabaseRequestView<'static>>`.
+pub type OwnedLinkDatabaseRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<'static>,
+>;
+///Shorthand for `OwnedView<LinkDatabaseResponseView<'static>>`.
+pub type OwnedLinkDatabaseResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'static>,
 >;
 ///Shorthand for `OwnedView<GetDatabaseStatsRequestView<'static>>`.
 pub type OwnedGetDatabaseStatsRequestView = ::buffa::view::OwnedView<
@@ -650,8 +650,8 @@ for ::buffa::view::OwnedView<
         )
     }
 }
-impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::LinkDatabaseResponse>
-for crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'_> {
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::CreateDatabaseResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'_> {
     fn encode(
         &self,
         codec: ::connectrpc::CodecFormat,
@@ -659,9 +659,9 @@ for crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'_
         ::connectrpc::__codegen::encode_view_body(self, codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::LinkDatabaseResponse>
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::CreateDatabaseResponse>
 for ::buffa::view::OwnedView<
-    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'static>,
+    crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -684,8 +684,8 @@ for ::buffa::view::OwnedView<
         )
     }
 }
-impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::CreateDatabaseResponse>
-for crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'_> {
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::LinkDatabaseResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'_> {
     fn encode(
         &self,
         codec: ::connectrpc::CodecFormat,
@@ -693,9 +693,9 @@ for crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<
         ::connectrpc::__codegen::encode_view_body(self, codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::CreateDatabaseResponse>
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::LinkDatabaseResponse>
 for ::buffa::view::OwnedView<
-    crate::proto::pethost::panel::v1::__buffa::view::CreateDatabaseResponseView<'static>,
+    crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -1186,18 +1186,18 @@ pub const PANEL_SERVICE_QUERY_CONTAINER_LOGS_SPEC: ::connectrpc::Spec = ::connec
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
-/// Static [`Spec`](::connectrpc::Spec) for the `LinkDatabase` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
-pub const PANEL_SERVICE_LINK_DATABASE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/pethost.panel.v1.PanelService/LinkDatabase",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
 /// Static [`Spec`](::connectrpc::Spec) for the `CreateDatabase` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_CREATE_DATABASE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/CreateDatabase",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `LinkDatabase` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_LINK_DATABASE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/LinkDatabase",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
 /// Static [`Spec`](::connectrpc::Spec) for the `GetDatabaseStats` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_GET_DATABASE_STATS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/GetDatabaseStats",
@@ -1406,11 +1406,7 @@ pub trait PanelService: Send + Sync + 'static {
     /// Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
     /// named volume per VOLUME of its last stage).
     ///
-    /// A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-    /// number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-    /// (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-    /// writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-    /// LinkDatabase the apps that use it.
+    /// A database (Postgres or Valkey) is CreateDatabase's.
     ///
     /// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
     /// is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -1467,8 +1463,7 @@ pub trait PanelService: Send + Sync + 'static {
     ///
     /// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
     /// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-    /// such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-    /// predates databases. A deleted project's id inherits its snapshots.
+    /// such branch or directory. A deleted project's id inherits its snapshots.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1724,6 +1719,39 @@ pub trait PanelService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
+    /// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+    /// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+    /// host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+    /// Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+    /// its own and none of its links. Answers as CreateProject does.
+    /// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+    /// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+    /// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+    /// is of no database of that engine;
+    /// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+    /// + MachineUpdatePending = the machine's software predates databases.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn create_database<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::CreateDatabaseRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::CreateDatabaseResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
     /// Lets projects reach a database project: inside each linked project the database is the
     /// host `<database_project_id>` at its port, and Project.database says how to sign in (its
     /// password with GetProject include_secret_values). Takes effect at once and deploys nothing.
@@ -1751,38 +1779,6 @@ pub trait PanelService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::panel::v1::LinkDatabaseResponse,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
-    /// A database project for the web panel's New database and Restore as a new database: with
-    /// the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-    /// snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-    /// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-    /// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-    /// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-    /// is of no database of that engine;
-    /// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-    /// + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-    /// use CreateProject with `database`, then LinkDatabase.
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn create_database<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::pethost::panel::v1::CreateDatabaseRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::pethost::panel::v1::CreateDatabaseResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2478,35 +2474,6 @@ impl<S: PanelService> PanelServiceExt for S {
             .with_spec(PANEL_SERVICE_QUERY_CONTAINER_LOGS_SPEC)
             .route_view(
                 PANEL_SERVICE_SERVICE_NAME,
-                "LinkDatabase",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::pethost::panel::v1::LinkDatabaseRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.link_database(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::pethost::panel::v1::LinkDatabaseResponse,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(PANEL_SERVICE_LINK_DATABASE_SPEC)
-            .route_view(
-                PANEL_SERVICE_SERVICE_NAME,
                 "CreateDatabase",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -2534,6 +2501,35 @@ impl<S: PanelService> PanelServiceExt for S {
                 },
             )
             .with_spec(PANEL_SERVICE_CREATE_DATABASE_SPEC)
+            .route_view(
+                PANEL_SERVICE_SERVICE_NAME,
+                "LinkDatabase",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::LinkDatabaseRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.link_database(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::LinkDatabaseResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_LINK_DATABASE_SPEC)
             .route_view_idempotent(
                 PANEL_SERVICE_SERVICE_NAME,
                 "GetDatabaseStats",
@@ -2976,16 +2972,16 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .with_spec(PANEL_SERVICE_QUERY_CONTAINER_LOGS_SPEC),
                 )
             }
-            "LinkDatabase" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(PANEL_SERVICE_LINK_DATABASE_SPEC),
-                )
-            }
             "CreateDatabase" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(PANEL_SERVICE_CREATE_DATABASE_SPEC),
+                )
+            }
+            "LinkDatabase" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(PANEL_SERVICE_LINK_DATABASE_SPEC),
                 )
             }
             "GetDatabaseStats" => {
@@ -3333,28 +3329,6 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         >(format)
                 })
             }
-            "LinkDatabase" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::pethost::panel::v1::LinkDatabaseRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                        ctx.decode_options(),
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::pethost::panel::v1::LinkDatabaseRequest,
-                    >::from_parts(&req, &body);
-                    svc.link_database(ctx, req)
-                        .await?
-                        .encode::<
-                            crate::proto::pethost::panel::v1::LinkDatabaseResponse,
-                        >(format)
-                })
-            }
             "CreateDatabase" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
@@ -3374,6 +3348,28 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::pethost::panel::v1::CreateDatabaseResponse,
+                        >(format)
+                })
+            }
+            "LinkDatabase" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::LinkDatabaseRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::LinkDatabaseRequest,
+                    >::from_parts(&req, &body);
+                    svc.link_database(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::LinkDatabaseResponse,
                         >(format)
                 })
             }
@@ -4299,51 +4295,6 @@ where
             )
             .await
     }
-    /// Call the LinkDatabase RPC. Sends a request to /pethost.panel.v1.PanelService/LinkDatabase.
-    pub async fn link_database(
-        &self,
-        request: crate::proto::pethost::panel::v1::LinkDatabaseRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.link_database_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the LinkDatabase RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn link_database_with_options(
-        &self,
-        request: crate::proto::pethost::panel::v1::LinkDatabaseRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                PANEL_SERVICE_LINK_DATABASE_SPEC
-                    .with_origin(::connectrpc::SpecOrigin::Client),
-                request,
-                options,
-            )
-            .await
-    }
     /// Call the CreateDatabase RPC. Sends a request to /pethost.panel.v1.PanelService/CreateDatabase.
     pub async fn create_database(
         &self,
@@ -4383,6 +4334,51 @@ where
                 &self.transport,
                 &self.config,
                 PANEL_SERVICE_CREATE_DATABASE_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the LinkDatabase RPC. Sends a request to /pethost.panel.v1.PanelService/LinkDatabase.
+    pub async fn link_database(
+        &self,
+        request: crate::proto::pethost::panel::v1::LinkDatabaseRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.link_database_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the LinkDatabase RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn link_database_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::LinkDatabaseRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::LinkDatabaseResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_LINK_DATABASE_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

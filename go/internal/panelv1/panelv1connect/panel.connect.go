@@ -23,9 +23,9 @@
 //	Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //	- Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //	  deployed whole. People see metadata.name.
-//	- Database: a project CreateProject made with `database` (Postgres or Valkey). The machine
-//	  wrote its files and knows the engine. Apps reach it at the host <project_id> once
-//	  LinkDatabase links them; Project.database says how to sign in.
+//	- Database: a project CreateDatabase made (Postgres or Valkey). The machine wrote its files
+//	  and knows the engine. Apps reach it at the host <project_id> once linked (its `link`, or
+//	  LinkDatabase); Project.database says how to sign in.
 //	- Service (service): one container. The person opens a shell in it from their terminal with
 //	  `ssh <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
 //	  RunMachineAction.add_ssh_key added their public key. Nobody logs in to the machine itself.
@@ -119,11 +119,11 @@ const (
 	// PanelServiceQueryContainerLogsProcedure is the procedure name of the PanelService's
 	// QueryContainerLogs RPC.
 	PanelServiceQueryContainerLogsProcedure = "/pethost.panel.v1.PanelService/QueryContainerLogs"
-	// PanelServiceLinkDatabaseProcedure is the procedure name of the PanelService's LinkDatabase RPC.
-	PanelServiceLinkDatabaseProcedure = "/pethost.panel.v1.PanelService/LinkDatabase"
 	// PanelServiceCreateDatabaseProcedure is the procedure name of the PanelService's CreateDatabase
 	// RPC.
 	PanelServiceCreateDatabaseProcedure = "/pethost.panel.v1.PanelService/CreateDatabase"
+	// PanelServiceLinkDatabaseProcedure is the procedure name of the PanelService's LinkDatabase RPC.
+	PanelServiceLinkDatabaseProcedure = "/pethost.panel.v1.PanelService/LinkDatabase"
 	// PanelServiceGetDatabaseStatsProcedure is the procedure name of the PanelService's
 	// GetDatabaseStats RPC.
 	PanelServiceGetDatabaseStatsProcedure = "/pethost.panel.v1.PanelService/GetDatabaseStats"
@@ -249,19 +249,19 @@ var (
 			IdempotencyLevel: connect.IdempotencyNoSideEffects,
 		}
 	})
+	panelServiceCreateDatabaseSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("CreateDatabase"),
+			Procedure:  PanelServiceCreateDatabaseProcedure,
+		}
+	})
 	panelServiceLinkDatabaseSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType:       connect.StreamTypeUnary,
 			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("LinkDatabase"),
 			Procedure:        PanelServiceLinkDatabaseProcedure,
 			IdempotencyLevel: connect.IdempotencyIdempotent,
-		}
-	})
-	panelServiceCreateDatabaseSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("CreateDatabase"),
-			Procedure:  PanelServiceCreateDatabaseProcedure,
 		}
 	})
 	panelServiceGetDatabaseStatsSpec = sync.OnceValue(func() connect.Spec {
@@ -376,11 +376,7 @@ type PanelServiceClient interface {
 	// Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
 	// named volume per VOLUME of its last stage).
 	//
-	// A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-	// number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-	// (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-	// writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-	// LinkDatabase the apps that use it.
+	// A database (Postgres or Valkey) is CreateDatabase's.
 	//
 	// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 	// is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -435,8 +431,7 @@ type PanelServiceClient interface {
 	//
 	// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
 	// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-	// such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-	// predates databases. A deleted project's id inherits its snapshots.
+	// such branch or directory. A deleted project's id inherits its snapshots.
 	CreateProject(context.Context, *panelv1.CreateProjectRequest) (*panelv1.CreateProjectResponse, error)
 	// Deploys a new version of a project and answers as CreateProject does: `files` written over
 	// its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
@@ -503,6 +498,18 @@ type PanelServiceClient interface {
 	// first in the page. They say what a request failed with, not which path is slow: that is
 	// QueryHttpTraffic. OUT_OF_RANGE = the range ends before the oldest kept. Untrusted.
 	QueryContainerLogs(context.Context, *panelv1.QueryContainerLogsRequest) (*panelv1.QueryContainerLogsResponse, error)
+	// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+	// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+	// host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+	// Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+	// its own and none of its links. Answers as CreateProject does.
+	// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+	// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+	// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+	// is of no database of that engine;
+	// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+	// + MachineUpdatePending = the machine's software predates databases.
+	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
 	// Lets projects reach a database project: inside each linked project the database is the
 	// host `<database_project_id>` at its port, and Project.database says how to sign in (its
 	// password with GetProject include_secret_values). Takes effect at once and deploys nothing.
@@ -512,17 +519,6 @@ type PanelServiceClient interface {
 	// + MachineUpdatePending = the machine's software predates databases. Answers with the
 	// database's Project.
 	LinkDatabase(context.Context, *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error)
-	// A database project for the web panel's New database and Restore as a new database: with
-	// the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-	// snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-	// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-	// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-	// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-	// is of no database of that engine;
-	// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-	// + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-	// use CreateProject with `database`, then LinkDatabase.
-	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
 	// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
 	// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
 	// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
@@ -703,11 +699,7 @@ type PanelServiceHandler interface {
 	// Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
 	// named volume per VOLUME of its last stage).
 	//
-	// A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-	// number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-	// (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-	// writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-	// LinkDatabase the apps that use it.
+	// A database (Postgres or Valkey) is CreateDatabase's.
 	//
 	// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 	// is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -762,8 +754,7 @@ type PanelServiceHandler interface {
 	//
 	// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
 	// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-	// such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-	// predates databases. A deleted project's id inherits its snapshots.
+	// such branch or directory. A deleted project's id inherits its snapshots.
 	CreateProject(context.Context, *panelv1.CreateProjectRequest) (*panelv1.CreateProjectResponse, error)
 	// Deploys a new version of a project and answers as CreateProject does: `files` written over
 	// its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
@@ -830,6 +821,18 @@ type PanelServiceHandler interface {
 	// first in the page. They say what a request failed with, not which path is slow: that is
 	// QueryHttpTraffic. OUT_OF_RANGE = the range ends before the oldest kept. Untrusted.
 	QueryContainerLogs(context.Context, *panelv1.QueryContainerLogsRequest) (*panelv1.QueryContainerLogsResponse, error)
+	// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+	// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+	// host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+	// Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+	// its own and none of its links. Answers as CreateProject does.
+	// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+	// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+	// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+	// is of no database of that engine;
+	// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+	// + MachineUpdatePending = the machine's software predates databases.
+	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
 	// Lets projects reach a database project: inside each linked project the database is the
 	// host `<database_project_id>` at its port, and Project.database says how to sign in (its
 	// password with GetProject include_secret_values). Takes effect at once and deploys nothing.
@@ -839,17 +842,6 @@ type PanelServiceHandler interface {
 	// + MachineUpdatePending = the machine's software predates databases. Answers with the
 	// database's Project.
 	LinkDatabase(context.Context, *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error)
-	// A database project for the web panel's New database and Restore as a new database: with
-	// the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-	// snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-	// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-	// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-	// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-	// is of no database of that engine;
-	// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-	// + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-	// use CreateProject with `database`, then LinkDatabase.
-	CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error)
 	// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
 	// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
 	// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
@@ -948,8 +940,8 @@ func RegisterPanelServiceHandler(server *connect.Server, svc PanelServiceHandler
 		connect.Method{Spec: panelServiceGetOperationSpec(), Handler: adapter.getOperation},
 		connect.Method{Spec: panelServiceQueryHttpTrafficSpec(), Handler: adapter.queryHttpTraffic},
 		connect.Method{Spec: panelServiceQueryContainerLogsSpec(), Handler: adapter.queryContainerLogs},
-		connect.Method{Spec: panelServiceLinkDatabaseSpec(), Handler: adapter.linkDatabase},
 		connect.Method{Spec: panelServiceCreateDatabaseSpec(), Handler: adapter.createDatabase},
+		connect.Method{Spec: panelServiceLinkDatabaseSpec(), Handler: adapter.linkDatabase},
 		connect.Method{Spec: panelServiceGetDatabaseStatsSpec(), Handler: adapter.getDatabaseStats},
 		connect.Method{Spec: panelServiceCancelDatabaseQuerySpec(), Handler: adapter.cancelDatabaseQuery},
 		connect.Method{Spec: panelServiceRunServiceCommandSpec(), Handler: adapter.runServiceCommand},
@@ -1063,12 +1055,12 @@ func (UnimplementedPanelServiceHandler) QueryContainerLogs(context.Context, *pan
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.QueryContainerLogs is not implemented")
 }
 
-func (UnimplementedPanelServiceHandler) LinkDatabase(context.Context, *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.LinkDatabase is not implemented")
-}
-
 func (UnimplementedPanelServiceHandler) CreateDatabase(context.Context, *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.CreateDatabase is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) LinkDatabase(context.Context, *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.LinkDatabase is not implemented")
 }
 
 func (UnimplementedPanelServiceHandler) GetDatabaseStats(context.Context, *panelv1.GetDatabaseStatsRequest) (*panelv1.GetDatabaseStatsResponse, error) {
@@ -1215,17 +1207,17 @@ func (c *panelServiceClient) QueryContainerLogs(ctx context.Context, req *panelv
 	return &res, nil
 }
 
-func (c *panelServiceClient) LinkDatabase(ctx context.Context, req *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
-	var res panelv1.LinkDatabaseResponse
-	if err := c.client.CallUnary(ctx, panelServiceLinkDatabaseSpec(), req, &res); err != nil {
+func (c *panelServiceClient) CreateDatabase(ctx context.Context, req *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
+	var res panelv1.CreateDatabaseResponse
+	if err := c.client.CallUnary(ctx, panelServiceCreateDatabaseSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *panelServiceClient) CreateDatabase(ctx context.Context, req *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
-	var res panelv1.CreateDatabaseResponse
-	if err := c.client.CallUnary(ctx, panelServiceCreateDatabaseSpec(), req, &res); err != nil {
+func (c *panelServiceClient) LinkDatabase(ctx context.Context, req *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
+	var res panelv1.LinkDatabaseResponse
+	if err := c.client.CallUnary(ctx, panelServiceLinkDatabaseSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1465,24 +1457,24 @@ func (h panelServiceHandler) queryContainerLogs(ctx context.Context, _ connect.S
 	return stream.Send(res)
 }
 
-func (h panelServiceHandler) linkDatabase(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req panelv1.LinkDatabaseRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.LinkDatabase(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
 func (h panelServiceHandler) createDatabase(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
 	var req panelv1.CreateDatabaseRequest
 	if err := stream.Receive(&req); err != nil {
 		return err
 	}
 	res, err := h.svc.CreateDatabase(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) linkDatabase(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.LinkDatabaseRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.LinkDatabase(ctx, &req)
 	if err != nil {
 		return err
 	}

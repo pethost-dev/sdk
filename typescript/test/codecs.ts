@@ -609,10 +609,6 @@ import * as p from "pethost";
   m.converts("CreateProjectRequest.operation_id", { operationId: "operation_id" }, { ...empty.CreateProjectRequest(), operationId: "operation_id" });
   m.converts("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { ...empty.CreateProjectRequest(), waitSeconds: 1009 });
   m.converts("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateProjectRequest(), waitSeconds: 0 });
-  m.converts("CreateProjectRequest.database: POSTGRES", { database: w.DatabaseEngine.POSTGRES }, { ...empty.CreateProjectRequest(), database: "POSTGRES" });
-  m.converts("CreateProjectRequest.database: VALKEY", { database: w.DatabaseEngine.VALKEY }, { ...empty.CreateProjectRequest(), database: "VALKEY" });
-  m.refuses("CreateProjectRequest.database: a name newer than the SDK", { database: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
-  m.refuses("CreateProjectRequest.database: a number newer than the SDK", { database: 9999 }, "9999");
 }
 
 {
@@ -898,6 +894,35 @@ import * as p from "pethost";
   m.converts("LinkDatabaseResponse: nothing set", {}, empty.LinkDatabaseResponse());
   m.refuses("LinkDatabaseResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("LinkDatabaseResponse.project", { project: {} }, { ...empty.LinkDatabaseResponse(), project: empty.Project() });
+}
+
+{
+  const m = json(p.CreateDatabaseRequest, w.CreateDatabaseRequestSchema);
+  m.converts("CreateDatabaseRequest: nothing set", {}, empty.CreateDatabaseRequest());
+  m.refuses("CreateDatabaseRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("CreateDatabaseRequest.project_id", { projectId: "project_id" }, { ...empty.CreateDatabaseRequest(), projectId: "project_id" });
+  m.converts("CreateDatabaseRequest.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.CreateDatabaseRequest(), engine: "POSTGRES" });
+  m.converts("CreateDatabaseRequest.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.CreateDatabaseRequest(), engine: "VALKEY" });
+  m.refuses("CreateDatabaseRequest.engine: a name newer than the SDK", { engine: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.refuses("CreateDatabaseRequest.engine: a number newer than the SDK", { engine: 9999 }, "9999");
+  m.converts("CreateDatabaseRequest.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.CreateDatabaseRequest(), memoryLimitBytes: 9007199254740993n });
+  m.reads("CreateDatabaseRequest.memory_limit_bytes: as a number", { memory_limit_bytes: 1003 }, { ...empty.CreateDatabaseRequest(), memoryLimitBytes: 1003n });
+  m.converts("CreateDatabaseRequest.from_snapshot_id", { fromSnapshotId: "from_snapshot_id" }, { ...empty.CreateDatabaseRequest(), fromSnapshotId: "from_snapshot_id" });
+  m.converts("CreateDatabaseRequest.link", { link: ["link", ""] }, { ...empty.CreateDatabaseRequest(), link: ["link", ""] });
+  m.converts("CreateDatabaseRequest.operation_id", { operationId: "operation_id" }, { ...empty.CreateDatabaseRequest(), operationId: "operation_id" });
+  m.converts("CreateDatabaseRequest.wait_seconds", { waitSeconds: 1007 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 1007 });
+  m.converts("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 0 });
+}
+
+{
+  const m = json(p.CreateDatabaseResponse, w.CreateDatabaseResponseSchema);
+  m.converts("CreateDatabaseResponse: nothing set", {}, empty.CreateDatabaseResponse());
+  m.refuses("CreateDatabaseResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("CreateDatabaseResponse.operation", { operation: {} }, { ...empty.CreateDatabaseResponse(), operation: empty.Operation() });
+  m.converts("CreateDatabaseResponse.violations", { violations: [{}] }, { ...empty.CreateDatabaseResponse(), violations: [empty.SpecViolation()] });
+  m.converts("CreateDatabaseResponse.adjustments", { adjustments: ["adjustments", ""] }, { ...empty.CreateDatabaseResponse(), adjustments: ["adjustments", ""] });
+  m.converts("CreateDatabaseResponse.project", { project: {} }, { ...empty.CreateDatabaseResponse(), project: empty.Project() });
+  m.converts("CreateDatabaseResponse.log", { log: [{}] }, { ...empty.CreateDatabaseResponse(), log: [empty.OperationLogLine()] });
 }
 
 {

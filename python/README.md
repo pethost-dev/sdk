@@ -1,7 +1,7 @@
 # Pethost for Python
 
 The Python SDK for [Pethost](https://pethost.dev), hosting for Docker Compose projects on a
-machine of your own. It has the 15 calls of Pethost's API, the ones an agent has through its
+machine of your own. It has the 16 calls of Pethost's API, the ones an agent has through its
 MCP server: read the machine and its projects, deploy, read logs and HTTP requests, run
 commands, move files. It has the API's streams too, which follow an operation, the logs
 and the requests as they happen. Everything is typed, there is a synchronous client and an
@@ -85,6 +85,7 @@ asyncio.run(main())
 | `get_operation(project_id, ...)` | Get an operation | read-only |
 | `query_http_traffic(project_id, ...)` | Query HTTP traffic | read-only |
 | `query_container_logs(project_id, ...)` | Query container logs | read-only |
+| `create_database(project_id, ...)` | Create a database |  |
 | `link_database(database_project_id, ...)` | Link projects to a database | destructive |
 | `run_service_command(project_id, ...)` | Run a command in a service | destructive |
 | `read_path(project_id, ...)` | Read a file or directory | read-only |

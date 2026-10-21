@@ -73,7 +73,7 @@ optional<p.RouteInput>({ host: true, path: true, service: true, port: true, stri
 optional<p.Operation>({ operationId: false, kind: true, status: true, startTime: true, finishTime: true, failureMessage: false, deployFailureReason: true, madeCurrent: false, service: false, failedExitCode: false, snapshotId: false, restoredVolumes: false, undoSnapshotId: false, githubCommit: true, archiveName: false, adjustments: false, changedPaths: false, changedPathCount: false, filesKept: false, filesOperationId: false });
 optional<p.Snapshot>({ snapshotId: false, createTime: true, sizeBytes: false, volumes: false });
 optional<p.HttpTrafficSummary>({ requestCount: false, serverErrorCount: false, latencyP50Ms: false, latencyP95Ms: false });
-optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true, database: true });
+optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true });
 optional<p.CreateProjectResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 // @ts-expect-error two members of pethost.panel.v1.DeployProjectRequest.version
 accepts<p.DeployProjectRequest>({ uploadId: "upload_id", commit: "commit" });
@@ -101,6 +101,8 @@ optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: fals
 optional<p.DatabaseSizeChoice>({ memoryLimitBytes: false });
 optional<p.LinkDatabaseRequest>({ databaseProjectId: true, link: true, unlink: true });
 optional<p.LinkDatabaseResponse>({ project: true });
+optional<p.CreateDatabaseRequest>({ projectId: true, engine: true, memoryLimitBytes: true, fromSnapshotId: true, link: true, operationId: true, waitSeconds: true });
+optional<p.CreateDatabaseResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 optional<p.SetProjectAlertsRequest>({ projectId: true, checks: true, removeChecks: true, trafficRules: true, removeTrafficRules: true, off: true, muteMinutes: true });
 optional<p.SetProjectAlertsResponse>({ alerts: true });
 accepts<p.SiteCheckInput>(a<p.SiteCheck>());

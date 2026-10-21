@@ -1251,7 +1251,6 @@ export function fromCreateProjectRequest(m: w.CreateProjectRequest): p.CreatePro
     timeoutSeconds: m.timeoutSeconds,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
-    database: named(fromDatabaseEngine, m.database, "CreateProjectRequest.database"),
   });
 }
 
@@ -1265,7 +1264,6 @@ export function toCreateProjectRequest(m: p.CreateProjectRequest): MessageInitSh
     timeoutSeconds: m.timeoutSeconds || undefined,
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
-    database: m.database && toDatabaseEngine[m.database],
   } satisfies Fields<w.CreateProjectRequest>;
 }
 
@@ -1774,6 +1772,50 @@ export function toLinkDatabaseResponse(m: p.LinkDatabaseResponse): MessageInitSh
   return {
     project: m.project && toProject(m.project),
   } satisfies Fields<w.LinkDatabaseResponse>;
+}
+
+export function fromCreateDatabaseRequest(m: w.CreateDatabaseRequest): p.CreateDatabaseRequest {
+  return compact<p.CreateDatabaseRequest>({
+    projectId: m.projectId,
+    engine: named(fromDatabaseEngine, m.engine, "CreateDatabaseRequest.engine"),
+    memoryLimitBytes: m.memoryLimitBytes,
+    fromSnapshotId: m.fromSnapshotId,
+    link: m.link,
+    operationId: m.operationId,
+    waitSeconds: isFieldSet(m, w.CreateDatabaseRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+  });
+}
+
+export function toCreateDatabaseRequest(m: p.CreateDatabaseRequest): MessageInitShape<typeof w.CreateDatabaseRequestSchema> {
+  return {
+    projectId: m.projectId || undefined,
+    engine: m.engine && toDatabaseEngine[m.engine],
+    memoryLimitBytes: m.memoryLimitBytes || undefined,
+    fromSnapshotId: m.fromSnapshotId || undefined,
+    link: m.link && [...m.link],
+    operationId: m.operationId || undefined,
+    waitSeconds: m.waitSeconds,
+  } satisfies Fields<w.CreateDatabaseRequest>;
+}
+
+export function fromCreateDatabaseResponse(m: w.CreateDatabaseResponse): p.CreateDatabaseResponse {
+  return compact<p.CreateDatabaseResponse>({
+    operation: m.operation && fromOperation(m.operation),
+    violations: m.violations.map(fromSpecViolation),
+    adjustments: m.adjustments,
+    project: m.project && fromProject(m.project),
+    log: m.log.map(fromOperationLogLine),
+  });
+}
+
+export function toCreateDatabaseResponse(m: p.CreateDatabaseResponse): MessageInitShape<typeof w.CreateDatabaseResponseSchema> {
+  return {
+    operation: m.operation && toOperation(m.operation),
+    violations: m.violations?.map(toSpecViolation),
+    adjustments: m.adjustments && [...m.adjustments],
+    project: m.project && toProject(m.project),
+    log: m.log?.map(toOperationLogLine),
+  } satisfies Fields<w.CreateDatabaseResponse>;
 }
 
 export function fromSetProjectAlertsRequest(m: w.SetProjectAlertsRequest): p.SetProjectAlertsRequest {

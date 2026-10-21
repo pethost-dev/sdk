@@ -76,6 +76,8 @@ export const empty = {
   DatabaseSizeChoice: () => ({ memoryLimitBytes: 0n }),
   LinkDatabaseRequest: () => ({ databaseProjectId: "", link: [], unlink: [] }),
   LinkDatabaseResponse: () => ({}),
+  CreateDatabaseRequest: () => ({ projectId: "", memoryLimitBytes: 0n, fromSnapshotId: "", link: [], operationId: "" }),
+  CreateDatabaseResponse: () => ({ violations: [], adjustments: [], log: [] }),
   SetProjectAlertsRequest: () => ({ projectId: "", checks: [], removeChecks: false, trafficRules: [], removeTrafficRules: false }),
   SetProjectAlertsResponse: () => ({}),
   SiteCheck: () => ({ host: "", path: "", expectStatus: 0, mustContain: "" }),
@@ -763,6 +765,17 @@ export const empty = {
   m.reads("LinkDatabaseResponse: nothing set", {}, empty.LinkDatabaseResponse());
   m.reads("LinkDatabaseResponse: a field newer than the SDK", newer(w.LinkDatabaseResponseSchema), empty.LinkDatabaseResponse());
   m.reads("LinkDatabaseResponse.project", { project: {} }, { ...empty.LinkDatabaseResponse(), project: empty.Project() });
+}
+
+{
+  const m = reading(w.CreateDatabaseResponseSchema, (leaf: Init<typeof w.CreateDatabaseResponseSchema>): Init<typeof w.CreateDatabaseResponseSchema> => (leaf), async (api) => (await api.createDatabase({})));
+  m.reads("CreateDatabaseResponse: nothing set", {}, empty.CreateDatabaseResponse());
+  m.reads("CreateDatabaseResponse: a field newer than the SDK", newer(w.CreateDatabaseResponseSchema), empty.CreateDatabaseResponse());
+  m.reads("CreateDatabaseResponse.operation", { operation: {} }, { ...empty.CreateDatabaseResponse(), operation: empty.Operation() });
+  m.reads("CreateDatabaseResponse.violations", { violations: [{}] }, { ...empty.CreateDatabaseResponse(), violations: [empty.SpecViolation()] });
+  m.reads("CreateDatabaseResponse.adjustments", { adjustments: ["adjustments", ""] }, { ...empty.CreateDatabaseResponse(), adjustments: ["adjustments", ""] });
+  m.reads("CreateDatabaseResponse.project", { project: {} }, { ...empty.CreateDatabaseResponse(), project: empty.Project() });
+  m.reads("CreateDatabaseResponse.log", { log: [{}] }, { ...empty.CreateDatabaseResponse(), log: [empty.OperationLogLine()] });
 }
 
 {

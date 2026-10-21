@@ -17,6 +17,7 @@ from pethost._types import (
     BackUpAction,
     CancelOperationAction,
     ContainerLogFilter,
+    CreateDatabaseResponse,
     CreateProjectResponse,
     CreateTransferResponse,
     DatabaseDump,
@@ -382,7 +383,6 @@ class AsyncPethost:
         timeout_seconds: int = 0,
         operation_id: str = "",
         wait_seconds: int | None = None,
-        database: DatabaseEngine = DatabaseEngine.UNSPECIFIED,
     ) -> CreateProjectResponse:
         """Create a project.
 
@@ -401,11 +401,7 @@ class AsyncPethost:
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-        link_database the apps that use it.
+        A database (Postgres or Valkey) is create_database's.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -460,8 +456,7 @@ class AsyncPethost:
 
         AlreadyExistsError = the id is taken (a retry with its operation_id returns that operation).
         FailedPreconditionError = the GitHub App cannot read the repository (see GetMachineResponse.github), or no
-        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-        predates databases. A deleted project's id inherits its snapshots.
+        such branch or directory. A deleted project's id inherits its snapshots.
 
         Args:
             project_id: New, [a-z0-9][a-z0-9_-]*, ≤63 chars; immutable.
@@ -472,9 +467,8 @@ class AsyncPethost:
             timeout_seconds: As deploy_project's timeout_seconds.
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
-            database: Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, upload_id, source, x_pethost out.
         """
-        return _convert.create_project_response_from_wire(await self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds, database=database)))
+        return _convert.create_project_response_from_wire(await self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds)))
 
     @overload
     async def deploy_project(
@@ -1574,6 +1568,41 @@ class AsyncPethost:
             page_token: The previous next_page_token, other fields unchanged.
         """
         return _convert.query_container_logs_response_from_wire(await self._call(self._wire.query_container_logs, _convert.query_container_logs_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, limit=limit, from_start=from_start, page_token=page_token)))
+
+    async def create_database(
+        self,
+        project_id: str,
+        *,
+        engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED,
+        memory_limit_bytes: int = 0,
+        from_snapshot_id: str = "",
+        link: Sequence[str] = (),
+        operation_id: str = "",
+        wait_seconds: int | None = None,
+    ) -> CreateDatabaseResponse:
+        """Create a database.
+
+        A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+        deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+        host `<project_id>` once linked (`link`, or link_database after the app's create_project), and
+        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+        its own and none of its links. Answers as create_project does.
+        InvalidArgumentError = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NotFoundError = no such snapshot or app. FailedPreconditionError = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases.
+
+        Args:
+            project_id: As create_project's, without "_", not a number and no name of /etc/hosts: it is the host name apps use.
+            memory_limit_bytes: One of the engine's DatabaseEngineOffer.sizes. 0 = its default_memory_limit_bytes; a copy keeps its snapshot's.
+            from_snapshot_id: A snapshot of a database of `engine` (Project.snapshots, GetMachineResponse.deleted_projects): the new one starts with its data. Empty = an empty database.
+            link: App project_ids, linked before its operation ends.
+            operation_id: As deploy_project's operation_id.
+            wait_seconds: As deploy_project's wait_seconds.
+        """
+        return _convert.create_database_response_from_wire(await self._call(self._wire.create_database, _convert.create_database_request(project_id=project_id, engine=engine, memory_limit_bytes=memory_limit_bytes, from_snapshot_id=from_snapshot_id, link=link, operation_id=operation_id, wait_seconds=wait_seconds)))
 
     async def link_database(
         self,

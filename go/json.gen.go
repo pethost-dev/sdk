@@ -723,6 +723,28 @@ func (v *LinkDatabaseResponse) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v CreateDatabaseRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireCreateDatabaseRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *CreateDatabaseRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireCreateDatabaseRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v CreateDatabaseResponse) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireCreateDatabaseResponse(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *CreateDatabaseResponse) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireCreateDatabaseResponse)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v SetProjectAlertsRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireSetProjectAlertsRequest(v))
 }

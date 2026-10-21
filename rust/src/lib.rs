@@ -91,7 +91,7 @@
 //! Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //!
 //! - Project (`project_id`): a Docker Compose project, a directory with compose.yaml at its root, deployed whole. People see metadata.name.
-//! - Database: a project [`Client::create_project`](crate::Client::create_project) made with `database` (Postgres or Valkey). The machine wrote its files and knows the engine. Apps reach it at the host \<`project_id`\> once [`Client::link_database`](crate::Client::link_database) links them; [`Project::database`](crate::types::Project::database) says how to sign in.
+//! - Database: a project [`Client::create_database`](crate::Client::create_database) made (Postgres or Valkey). The machine wrote its files and knows the engine. Apps reach it at the host \<`project_id`\> once linked (its `link`, or [`Client::link_database`](crate::Client::link_database)); [`Project::database`](crate::types::Project::database) says how to sign in.
 //! - Service (service): one container. The person opens a shell in it from their terminal with `ssh <service>.<project_id>@<Machine.hostname>` ([`Service::ssh_command`](crate::types::Service::ssh_command)), once [`RunMachineActionRequestAction::AddSshKey`](crate::types::RunMachineActionRequestAction::AddSshKey) added their public key. Nobody logs in to the machine itself.
 //! - Volume (volume): a named volume. Survives deploys and removal from compose.yaml. All else a container writes is lost when it is recreated.
 //! - Host (host): a hostname the proxy serves over HTTPS, routing paths to services: any `<name>.<Machine.apps_domain>`, the person's domain on Pethost, or a domain they own.

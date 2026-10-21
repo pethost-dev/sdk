@@ -86,11 +86,7 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of
 // its last stage).
 //
-// A database (Postgres or Valkey): Database, no files, and a ProjectID without "_", not a
-// number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-// (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-// writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-// [Client.LinkDatabase] the apps that use it.
+// A database (Postgres or Valkey) is [Client.CreateDatabase]'s.
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -146,9 +142,8 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 //
 // [CodeAlreadyExists] = the id is taken (a retry with its OperationID returns that operation).
 // [CodeFailedPrecondition] = the GitHub App cannot read the repository (see
-// [GetMachineResponse.Github]), or no such branch or directory; + [MachineUpdatePending] =
-// Database, on a machine whose software predates databases. A deleted project's id inherits
-// its snapshots.
+// [GetMachineResponse.Github]), or no such branch or directory. A deleted project's id
+// inherits its snapshots.
 func (c *Client) CreateProject(ctx context.Context, request *CreateProjectRequest) (*CreateProjectResponse, error) {
 	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(orZero(request)))
 	if err != nil {
@@ -283,6 +278,27 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 		return nil, fromWireError(err)
 	}
 	return new(fromWireQueryContainerLogsResponse(response)), nil
+}
+
+// CreateDatabase: create a database.
+//
+// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+// host `<project_id>` once linked (Link, or [Client.LinkDatabase] after the app's
+// [Client.CreateProject]), and [Project.Database] says how to sign in. Or a copy of a
+// database's snapshot, with passwords of its own and none of its links. Answers as
+// [Client.CreateProject] does. [CodeInvalidArgument] = an engine or a size
+// [Machine.DatabaseEngines] does not offer, or a ProjectID with "_", that is a number or that
+// every container's /etc/hosts names (it is the host name apps use). [CodeNotFound] = no such
+// snapshot or app. [CodeFailedPrecondition] = the snapshot is of no database of that engine; +
+// [DatabaseLinkRefusal] = an app of Link cannot be linked, and nothing was created; +
+// [MachineUpdatePending] = the machine's software predates databases.
+func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
+	response, err := c.wire.CreateDatabase(ctx, toWireCreateDatabaseRequest(orZero(request)))
+	if err != nil {
+		return nil, fromWireError(err)
+	}
+	return new(fromWireCreateDatabaseResponse(response)), nil
 }
 
 // LinkDatabase: link projects to a database. It may delete or overwrite.

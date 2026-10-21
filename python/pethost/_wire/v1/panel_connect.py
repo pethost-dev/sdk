@@ -73,11 +73,7 @@ class PanelService(Protocol):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-        LinkDatabase the apps that use it.
+        A database (Postgres or Valkey) is CreateDatabase's.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -132,8 +128,7 @@ class PanelService(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-        predates databases. A deleted project's id inherits its snapshots.
+        such branch or directory. A deleted project's id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -234,6 +229,22 @@ class PanelService(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    async def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
+        """
+        A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+        deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+        its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     async def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
         """
         Lets projects reach a database project: inside each linked project the database is the
@@ -244,21 +255,6 @@ class PanelService(Protocol):
         a database, has a service named or aliased like the database, or there are 20 links already;
         + MachineUpdatePending = the machine's software predates databases. Answers with the
         database's Project.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    async def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
-        """
-        A database project for the web panel's New database and Restore as a new database: with
-        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-        is of no database of that engine;
-        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-        use CreateProject with `database`, then LinkDatabase.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -523,16 +519,6 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                     ),
                     function=svc.query_container_logs,
                 ),
-                "/pethost.panel.v1.PanelService/LinkDatabase": Endpoint.unary(
-                    method=MethodInfo(
-                        name="LinkDatabase",
-                        service_name="pethost.panel.v1.PanelService",
-                        input=LinkDatabaseRequest,
-                        output=LinkDatabaseResponse,
-                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
-                    ),
-                    function=svc.link_database,
-                ),
                 "/pethost.panel.v1.PanelService/CreateDatabase": Endpoint.unary(
                     method=MethodInfo(
                         name="CreateDatabase",
@@ -542,6 +528,16 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=svc.create_database,
+                ),
+                "/pethost.panel.v1.PanelService/LinkDatabase": Endpoint.unary(
+                    method=MethodInfo(
+                        name="LinkDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=LinkDatabaseRequest,
+                        output=LinkDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=svc.link_database,
                 ),
                 "/pethost.panel.v1.PanelService/GetDatabaseStats": Endpoint.unary(
                     method=MethodInfo(
@@ -773,11 +769,7 @@ class PanelServiceClient(ConnectClient):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-        LinkDatabase the apps that use it.
+        A database (Postgres or Valkey) is CreateDatabase's.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -832,8 +824,7 @@ class PanelServiceClient(ConnectClient):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-        predates databases. A deleted project's id inherits its snapshots.
+        such branch or directory. A deleted project's id inherits its snapshots.
         """
         return await self.execute_unary(
             request=request,
@@ -1091,6 +1082,39 @@ class PanelServiceClient(ConnectClient):
             use_get=use_get,
         )
 
+    async def create_database(
+        self,
+        request: CreateDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CreateDatabaseResponse:
+        """
+        A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+        deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+        its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CreateDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=CreateDatabaseRequest,
+                output=CreateDatabaseResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
     async def link_database(
         self,
         request: LinkDatabaseRequest,
@@ -1116,38 +1140,6 @@ class PanelServiceClient(ConnectClient):
                 input=LinkDatabaseRequest,
                 output=LinkDatabaseResponse,
                 idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-
-    async def create_database(
-        self,
-        request: CreateDatabaseRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> CreateDatabaseResponse:
-        """
-        A database project for the web panel's New database and Restore as a new database: with
-        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-        is of no database of that engine;
-        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-        use CreateProject with `database`, then LinkDatabase.
-        """
-        return await self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="CreateDatabase",
-                service_name="pethost.panel.v1.PanelService",
-                input=CreateDatabaseRequest,
-                output=CreateDatabaseResponse,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,
             timeout_ms=timeout_ms,
@@ -1515,11 +1507,7 @@ class PanelServiceSync(Protocol):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-        LinkDatabase the apps that use it.
+        A database (Postgres or Valkey) is CreateDatabase's.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -1574,8 +1562,7 @@ class PanelServiceSync(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-        predates databases. A deleted project's id inherits its snapshots.
+        such branch or directory. A deleted project's id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1676,6 +1663,22 @@ class PanelServiceSync(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
+    def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
+        """
+        A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+        deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+        its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
         """
         Lets projects reach a database project: inside each linked project the database is the
@@ -1686,21 +1689,6 @@ class PanelServiceSync(Protocol):
         a database, has a service named or aliased like the database, or there are 20 links already;
         + MachineUpdatePending = the machine's software predates databases. Answers with the
         database's Project.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    def create_database(self, request: CreateDatabaseRequest, ctx: RequestContext[CreateDatabaseRequest, CreateDatabaseResponse], /) -> CreateDatabaseResponse:
-        """
-        A database project for the web panel's New database and Restore as a new database: with
-        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-        is of no database of that engine;
-        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-        use CreateProject with `database`, then LinkDatabase.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1963,16 +1951,6 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                     ),
                     function=service.query_container_logs,
                 ),
-                "/pethost.panel.v1.PanelService/LinkDatabase": EndpointSync.unary(
-                    method=MethodInfo(
-                        name="LinkDatabase",
-                        service_name="pethost.panel.v1.PanelService",
-                        input=LinkDatabaseRequest,
-                        output=LinkDatabaseResponse,
-                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
-                    ),
-                    function=service.link_database,
-                ),
                 "/pethost.panel.v1.PanelService/CreateDatabase": EndpointSync.unary(
                     method=MethodInfo(
                         name="CreateDatabase",
@@ -1982,6 +1960,16 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=service.create_database,
+                ),
+                "/pethost.panel.v1.PanelService/LinkDatabase": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="LinkDatabase",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=LinkDatabaseRequest,
+                        output=LinkDatabaseResponse,
+                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
+                    ),
+                    function=service.link_database,
                 ),
                 "/pethost.panel.v1.PanelService/GetDatabaseStats": EndpointSync.unary(
                     method=MethodInfo(
@@ -2210,11 +2198,7 @@ class PanelServiceClientSync(ConnectClientSync):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-        number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-        (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-        writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-        LinkDatabase the apps that use it.
+        A database (Postgres or Valkey) is CreateDatabase's.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -2269,8 +2253,7 @@ class PanelServiceClientSync(ConnectClientSync):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-        predates databases. A deleted project's id inherits its snapshots.
+        such branch or directory. A deleted project's id inherits its snapshots.
         """
         return self.execute_unary(
             request=request,
@@ -2519,6 +2502,38 @@ class PanelServiceClientSync(ConnectClientSync):
             timeout_ms=timeout_ms,
             use_get=use_get,
         )
+    def create_database(
+        self,
+        request: CreateDatabaseRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> CreateDatabaseResponse:
+        """
+        A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+        deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+        its own and none of its links. Answers as CreateProject does.
+        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+        is of no database of that engine;
+        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+        + MachineUpdatePending = the machine's software predates databases.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="CreateDatabase",
+                service_name="pethost.panel.v1.PanelService",
+                input=CreateDatabaseRequest,
+                output=CreateDatabaseResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
     def link_database(
         self,
         request: LinkDatabaseRequest,
@@ -2544,37 +2559,6 @@ class PanelServiceClientSync(ConnectClientSync):
                 input=LinkDatabaseRequest,
                 output=LinkDatabaseResponse,
                 idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-    def create_database(
-        self,
-        request: CreateDatabaseRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> CreateDatabaseResponse:
-        """
-        A database project for the web panel's New database and Restore as a new database: with
-        the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-        snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-        INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-        project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-        host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-        is of no database of that engine;
-        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-        + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-        use CreateProject with `database`, then LinkDatabase.
-        """
-        return self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="CreateDatabase",
-                service_name="pethost.panel.v1.PanelService",
-                input=CreateDatabaseRequest,
-                output=CreateDatabaseResponse,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,
             timeout_ms=timeout_ms,

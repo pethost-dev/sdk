@@ -192,7 +192,7 @@ pub enum ErrorDetail {
     MachineUnreachable(types::MachineUnreachable),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
     MachineUpdatePending(types::MachineUpdatePending),
-    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or `CreateDatabase`: a project of `link` cannot be linked to the database. Nothing changed.
+    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or [`Client::create_database`](crate::Client::create_database): a project of `link` cannot be linked to the database. Nothing changed.
     DatabaseLinkRefusal(types::DatabaseLinkRefusal),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
     NoMachine(types::NoMachine),

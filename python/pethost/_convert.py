@@ -1816,6 +1816,34 @@ def link_database_response_from_dict(_j: dict[str, _Any]) -> _t.LinkDatabaseResp
     return link_database_response_from_wire(_rt.from_dict(_pb.LinkDatabaseResponse, _j))
 
 
+def create_database_response_from_wire(_w: _pb.CreateDatabaseResponse) -> _t.CreateDatabaseResponse:
+    return _t.CreateDatabaseResponse(
+        operation=operation_from_wire(_w.operation) if _w.operation is not None else None,
+        violations=tuple(spec_violation_from_wire(_x) for _x in _w.violations),
+        adjustments=tuple(_w.adjustments),
+        project=project_from_wire(_w.project) if _w.project is not None else None,
+        log=tuple(operation_log_line_from_wire(_x) for _x in _w.log),
+    )
+
+
+def create_database_response_to_wire(_v: _t.CreateDatabaseResponse) -> _pb.CreateDatabaseResponse:
+    return _pb.CreateDatabaseResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        violations=[spec_violation_to_wire(_x) for _x in _v.violations],
+        adjustments=_rt.strings("CreateDatabaseResponse.adjustments", _v.adjustments),
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        log=[operation_log_line_to_wire(_x) for _x in _v.log],
+    )
+
+
+def create_database_response_to_dict(_v: _t.CreateDatabaseResponse) -> dict[str, _Any]:
+    return _rt.to_dict(create_database_response_to_wire(_v))
+
+
+def create_database_response_from_dict(_j: dict[str, _Any]) -> _t.CreateDatabaseResponse:
+    return create_database_response_from_wire(_rt.from_dict(_pb.CreateDatabaseResponse, _j))
+
+
 def set_project_alerts_response_from_wire(_w: _pb.SetProjectAlertsResponse) -> _t.SetProjectAlertsResponse:
     return _t.SetProjectAlertsResponse(
         alerts=project_alerts_from_wire(_w.alerts) if _w.alerts is not None else None,
@@ -2917,7 +2945,6 @@ def create_project_request(
     timeout_seconds: int,
     operation_id: str,
     wait_seconds: int | None,
-    database: _t.DatabaseEngine,
 ) -> _pb.CreateProjectRequest:
     _w = _pb.CreateProjectRequest(
         project_id=project_id or None,
@@ -2928,7 +2955,6 @@ def create_project_request(
         timeout_seconds=timeout_seconds or None,
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
-        database=database_engine_to_wire(database) if database.value else None,
     )
     return _rt.checked(_w)
 
@@ -3111,6 +3137,28 @@ def query_container_logs_request(
         limit=limit or None,
         from_start=from_start or None,
         page_token=page_token or None,
+    )
+    return _rt.checked(_w)
+
+
+def create_database_request(
+    *,
+    project_id: str,
+    engine: _t.DatabaseEngine,
+    memory_limit_bytes: int,
+    from_snapshot_id: str,
+    link: Sequence[str],
+    operation_id: str,
+    wait_seconds: int | None,
+) -> _pb.CreateDatabaseRequest:
+    _w = _pb.CreateDatabaseRequest(
+        project_id=project_id or None,
+        engine=database_engine_to_wire(engine) if engine.value else None,
+        memory_limit_bytes=memory_limit_bytes or None,
+        from_snapshot_id=from_snapshot_id or None,
+        link=_rt.strings("create_database(link=)", link),
+        operation_id=operation_id or None,
+        wait_seconds=wait_seconds,
     )
     return _rt.checked(_w)
 

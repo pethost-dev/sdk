@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.2.11"),
+    ("user-agent", "pethost-rust/0.3.0"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -1204,7 +1204,6 @@ mod samples {
             timeout_seconds: states::plain(k, states::number(6, k)),
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(9, k)),
-            database: samples::database_engine(k + 8),
         }
     }
 
@@ -1556,6 +1555,40 @@ mod samples {
     pub fn link_database_response(k: usize, later: bool) -> types::LinkDatabaseResponse {
         states::make(|message: &mut types::LinkDatabaseResponse| {
             message.project = states::maybe(k, samples::project(k, later));
+        })
+    }
+
+    pub fn create_database_request(k: usize, later: bool) -> types::CreateDatabaseRequest {
+        types::CreateDatabaseRequest {
+            project_id: states::plain(k, states::text("project_id", k)),
+            engine: samples::database_engine(k + 1),
+            memory_limit_bytes: states::plain(k, u64::from(states::number(3, k)) << 44),
+            from_snapshot_id: states::plain(k, states::text("from_snapshot_id", k)),
+            link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
+            operation_id: states::plain(k, states::text("operation_id", k)),
+            wait_seconds: states::marked(k, states::number(7, k)),
+        }
+    }
+
+    pub fn create_database_response(k: usize, later: bool) -> types::CreateDatabaseResponse {
+        states::make(|message: &mut types::CreateDatabaseResponse| {
+            message.operation = states::maybe(k, samples::operation(k, later));
+            message.violations = states::many(
+                k,
+                [
+                    samples::spec_violation(k + 1, later),
+                    samples::spec_violation(k + 2, later),
+                ],
+            );
+            message.adjustments = states::many(k, [states::text("adjustments", k), states::text("adjustments", k + 1)]);
+            message.project = states::maybe(k, samples::project(k + 3, later));
+            message.log = states::many(
+                k,
+                [
+                    samples::operation_log_line(k + 4, later),
+                    samples::operation_log_line(k + 5, later),
+                ],
+            );
         })
     }
 
@@ -3178,7 +3211,6 @@ mod on_wire {
             timeout_seconds: states::present(states::plain(k, states::number(6, k))),
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(9, k)),
-            database: states::set(on_wire::database_engine(k + 8)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3701,6 +3733,50 @@ mod on_wire {
     pub fn link_database_response(k: usize, received: bool) -> wire::LinkDatabaseResponse {
         let mut message = wire::LinkDatabaseResponse {
             project: states::maybe(k, on_wire::project(k, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn create_database_request(k: usize, received: bool) -> wire::CreateDatabaseRequest {
+        let mut message = wire::CreateDatabaseRequest {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            engine: states::set(on_wire::database_engine(k + 1)),
+            memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(3, k)) << 44)),
+            from_snapshot_id: states::present(states::plain(k, states::text("from_snapshot_id", k))),
+            link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
+            operation_id: states::present(states::plain(k, states::text("operation_id", k))),
+            wait_seconds: states::marked(k, states::number(7, k)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn create_database_response(k: usize, received: bool) -> wire::CreateDatabaseResponse {
+        let mut message = wire::CreateDatabaseResponse {
+            operation: states::maybe(k, on_wire::operation(k, received)).into(),
+            violations: states::many(
+                k,
+                [
+                    on_wire::spec_violation(k + 1, received),
+                    on_wire::spec_violation(k + 2, received),
+                ],
+            ),
+            adjustments: states::many(k, [states::text("adjustments", k), states::text("adjustments", k + 1)]),
+            project: states::maybe(k, on_wire::project(k + 3, received)).into(),
+            log: states::many(
+                k,
+                [
+                    on_wire::operation_log_line(k + 4, received),
+                    on_wire::operation_log_line(k + 5, received),
+                ],
+            ),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4584,7 +4660,7 @@ async fn get_project_request_is_sent() {
 
 #[tokio::test]
 async fn create_project_request_is_sent() {
-    for k in 0..4 {
+    for k in 0..3 {
         let request = samples::create_project_request(k, true);
         let expected = on_wire::create_project_request(k, false);
 
@@ -4713,6 +4789,25 @@ async fn query_container_logs_request_is_sent() {
         assert_eq!(
             response.unwrap(),
             types::QueryContainerLogsResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn create_database_request_is_sent() {
+    for k in 0..4 {
+        let request = samples::create_database_request(k, true);
+        let expected = on_wire::create_database_request(k, false);
+
+        let answer = ok(&wire::CreateDatabaseResponse::default());
+        let call = |client: Client| async move { client.create_database(request).await };
+        let (sent, response): (wire::CreateDatabaseRequest, _) = exchange("CreateDatabase", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::CreateDatabaseResponse::default(),
             "at k = {k}"
         );
     }
@@ -5607,6 +5702,20 @@ async fn query_container_logs_response_is_received() {
                 .await
         };
         let (_, response): (wire::QueryContainerLogsRequest, _) = exchange("QueryContainerLogs", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn create_database_response_is_received() {
+    for k in 0..2 {
+        let answer = ok(&on_wire::create_database_response(k, true));
+        let expected = samples::create_database_response(k, true);
+
+        let call =
+            |client: Client| async move { client.create_database(types::CreateDatabaseRequest::default()).await };
+        let (_, response): (wire::CreateDatabaseRequest, _) = exchange("CreateDatabase", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -7808,10 +7917,9 @@ fn create_project_request_is_json() {
         "timeout_seconds",
         "operation_id",
         "wait_seconds",
-        "database",
     ];
     a_message_is_json(
-        4,
+        3,
         &names,
         samples::create_project_request,
         on_wire::create_project_request,
@@ -8086,6 +8194,36 @@ fn link_database_response_is_json() {
         &names,
         samples::link_database_response,
         on_wire::link_database_response,
+    );
+}
+
+#[test]
+fn create_database_request_is_json() {
+    let names = [
+        "project_id",
+        "engine",
+        "memory_limit_bytes",
+        "from_snapshot_id",
+        "link",
+        "operation_id",
+        "wait_seconds",
+    ];
+    a_message_is_json(
+        4,
+        &names,
+        samples::create_database_request,
+        on_wire::create_database_request,
+    );
+}
+
+#[test]
+fn create_database_response_is_json() {
+    let names = ["operation", "violations", "adjustments", "project", "log"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::create_database_response,
+        on_wire::create_database_response,
     );
 }
 

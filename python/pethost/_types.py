@@ -3672,6 +3672,43 @@ class LinkDatabaseResponse:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class CreateDatabaseResponse:
+    """As CreateProjectResponse."""
+
+    operation: Operation | None = None
+
+    violations: Sequence[SpecViolation] = ()
+
+    adjustments: Sequence[str] = ()
+
+    project: Project | None = None
+
+    log: Sequence[OperationLogLine] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.create_database_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CreateDatabaseResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.create_database_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SetProjectAlertsResponse:
     """
     Attributes:
@@ -5349,7 +5386,7 @@ class MachineUpdatePending:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DatabaseLinkRefusal:
-    """Detail of a FailedPreconditionError error from link_database or CreateDatabase: a project of `link`
+    """Detail of a FailedPreconditionError error from link_database or create_database: a project of `link`
     cannot be linked to the database. Nothing changed.
 
     Attributes:

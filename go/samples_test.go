@@ -72,6 +72,10 @@ func (f *fake) QueryContainerLogs(_ context.Context, request *panelv1.QueryConta
 	return answer[*panelv1.QueryContainerLogsResponse](&f.exchange, request)
 }
 
+func (f *fake) CreateDatabase(_ context.Context, request *panelv1.CreateDatabaseRequest) (*panelv1.CreateDatabaseResponse, error) {
+	return answer[*panelv1.CreateDatabaseResponse](&f.exchange, request)
+}
+
 func (f *fake) LinkDatabase(_ context.Context, request *panelv1.LinkDatabaseRequest) (*panelv1.LinkDatabaseResponse, error) {
 	return answer[*panelv1.LinkDatabaseResponse](&f.exchange, request)
 }
@@ -113,6 +117,7 @@ var calls = []call{
 	callOf("GetOperation", (*Client).GetOperation, sampleGetOperationRequest, sampleGetOperationResponse, &panelv1.GetOperationRequest{}, &panelv1.GetOperationResponse{}),
 	callOf("QueryHTTPTraffic", (*Client).QueryHTTPTraffic, sampleQueryHTTPTrafficRequest, sampleQueryHTTPTrafficResponse, &panelv1.QueryHttpTrafficRequest{}, &panelv1.QueryHttpTrafficResponse{}),
 	callOf("QueryContainerLogs", (*Client).QueryContainerLogs, sampleQueryContainerLogsRequest, sampleQueryContainerLogsResponse, &panelv1.QueryContainerLogsRequest{}, &panelv1.QueryContainerLogsResponse{}),
+	callOf("CreateDatabase", (*Client).CreateDatabase, sampleCreateDatabaseRequest, sampleCreateDatabaseResponse, &panelv1.CreateDatabaseRequest{}, &panelv1.CreateDatabaseResponse{}),
 	callOf("LinkDatabase", (*Client).LinkDatabase, sampleLinkDatabaseRequest, sampleLinkDatabaseResponse, &panelv1.LinkDatabaseRequest{}, &panelv1.LinkDatabaseResponse{}),
 	callOf("RunServiceCommand", (*Client).RunServiceCommand, sampleRunServiceCommandRequest, sampleRunServiceCommandResponse, &panelv1.RunServiceCommandRequest{}, &panelv1.RunServiceCommandResponse{}),
 	callOf("ReadPath", (*Client).ReadPath, sampleReadPathRequest, sampleReadPathResponse, &panelv1.ReadPathRequest{}, &panelv1.ReadPathResponse{}),
@@ -196,6 +201,8 @@ var shapes = []shape{
 	shapeOf(sampleDatabaseSizeChoice, &panelv1.DatabaseSizeChoice{}),
 	shapeOf(sampleLinkDatabaseRequest, &panelv1.LinkDatabaseRequest{}),
 	shapeOf(sampleLinkDatabaseResponse, &panelv1.LinkDatabaseResponse{}),
+	shapeOf(sampleCreateDatabaseRequest, &panelv1.CreateDatabaseRequest{}),
+	shapeOf(sampleCreateDatabaseResponse, &panelv1.CreateDatabaseResponse{}),
 	shapeOf(sampleSetProjectAlertsRequest, &panelv1.SetProjectAlertsRequest{}),
 	shapeOf(sampleSetProjectAlertsResponse, &panelv1.SetProjectAlertsResponse{}),
 	shapeOf(sampleSiteCheck, &panelv1.SiteCheck{}),
@@ -728,7 +735,6 @@ func sampleCreateProjectRequest(s seed) CreateProjectRequest {
 		TimeoutSeconds: plain[uint32](s.at("pethost.panel.v1.CreateProjectRequest.timeout_seconds")),
 		OperationID:    plain[string](s.at("pethost.panel.v1.CreateProjectRequest.operation_id")),
 		WaitSeconds:    marked[uint32](s.at("pethost.panel.v1.CreateProjectRequest.wait_seconds")),
-		Database:       plain[DatabaseEngine](s.at("pethost.panel.v1.CreateProjectRequest.database")),
 	}
 }
 
@@ -1002,6 +1008,28 @@ func sampleLinkDatabaseRequest(s seed) LinkDatabaseRequest {
 func sampleLinkDatabaseResponse(s seed) LinkDatabaseResponse {
 	return LinkDatabaseResponse{
 		Project: pointer(s.at("pethost.panel.v1.LinkDatabaseResponse.project"), sampleProject),
+	}
+}
+
+func sampleCreateDatabaseRequest(s seed) CreateDatabaseRequest {
+	return CreateDatabaseRequest{
+		ProjectID:        plain[string](s.at("pethost.panel.v1.CreateDatabaseRequest.project_id")),
+		Engine:           plain[DatabaseEngine](s.at("pethost.panel.v1.CreateDatabaseRequest.engine")),
+		MemoryLimitBytes: plain[uint64](s.at("pethost.panel.v1.CreateDatabaseRequest.memory_limit_bytes")),
+		FromSnapshotID:   plain[string](s.at("pethost.panel.v1.CreateDatabaseRequest.from_snapshot_id")),
+		Link:             list(s.at("pethost.panel.v1.CreateDatabaseRequest.link"), scalar[string]),
+		OperationID:      plain[string](s.at("pethost.panel.v1.CreateDatabaseRequest.operation_id")),
+		WaitSeconds:      marked[uint32](s.at("pethost.panel.v1.CreateDatabaseRequest.wait_seconds")),
+	}
+}
+
+func sampleCreateDatabaseResponse(s seed) CreateDatabaseResponse {
+	return CreateDatabaseResponse{
+		Operation:   pointer(s.at("pethost.panel.v1.CreateDatabaseResponse.operation"), sampleOperation),
+		Violations:  list(s.at("pethost.panel.v1.CreateDatabaseResponse.violations"), sampleSpecViolation),
+		Adjustments: list(s.at("pethost.panel.v1.CreateDatabaseResponse.adjustments"), scalar[string]),
+		Project:     pointer(s.at("pethost.panel.v1.CreateDatabaseResponse.project"), sampleProject),
+		Log:         list(s.at("pethost.panel.v1.CreateDatabaseResponse.log"), sampleOperationLogLine),
 	}
 }
 

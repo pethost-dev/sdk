@@ -504,6 +504,18 @@ json!(
     types::LinkDatabaseResponse::from
 );
 json!(
+    types::CreateDatabaseRequest,
+    wire::CreateDatabaseRequest,
+    wire::CreateDatabaseRequest::from,
+    types::CreateDatabaseRequest::from
+);
+json!(
+    types::CreateDatabaseResponse,
+    wire::CreateDatabaseResponse,
+    wire::CreateDatabaseResponse::from,
+    types::CreateDatabaseResponse::from
+);
+json!(
     types::SetProjectAlertsRequest,
     wire::SetProjectAlertsRequest,
     wire::SetProjectAlertsRequest::from,

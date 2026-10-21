@@ -17820,13 +17820,6 @@ pub struct CreateProjectRequestView<'a> {
     ///
     /// Field 9: `wait_seconds`
     pub wait_seconds: ::core::option::Option<u32>,
-    /// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
-    /// upload_id, source, x_pethost out.
-    ///
-    /// Field 10: `database`
-    pub database: ::core::option::Option<
-        ::buffa::EnumValue<super::super::DatabaseEngine>,
-    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for CreateProjectRequestView<'a> {
@@ -17936,15 +17929,6 @@ impl<'a> ::buffa::MessageView<'a> for CreateProjectRequestView<'a> {
                 )?;
                 view.wait_seconds = Some(::buffa::types::decode_uint32(&mut cur)?);
             }
-            10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.database = Some(
-                    ::buffa::EnumValue::from(::buffa::types::decode_int32(&mut cur)?),
-                );
-            }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -18019,7 +18003,6 @@ impl<'a> ::buffa::MessageView<'a> for CreateProjectRequestView<'a> {
             timeout_seconds: self.timeout_seconds,
             operation_id: self.operation_id.map(|s| s.to_string()),
             wait_seconds: self.wait_seconds,
-            database: self.database,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -18070,9 +18053,6 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateProjectRequestView<'a> {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
-        if let Some(ref v) = self.database {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -18122,9 +18102,6 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateProjectRequestView<'a> {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(9u32, v, buf);
-        }
-        if let Some(ref v) = self.database {
-            ::buffa::types::put_int32_field(10u32, v.to_i32(), buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -18182,9 +18159,6 @@ impl<'__a> ::serde::Serialize for CreateProjectRequestView<'__a> {
                     "wait_seconds",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
-        }
-        if let ::core::option::Option::Some(ref __v) = self.database {
-            __map.serialize_entry("database", __v)?;
         }
         __map.end()
     }
@@ -18347,16 +18321,6 @@ impl CreateProjectRequestOwnedView {
     #[must_use]
     pub fn wait_seconds(&self) -> ::core::option::Option<u32> {
         self.0.reborrow().wait_seconds
-    }
-    /// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
-    /// upload_id, source, x_pethost out.
-    ///
-    /// Field 10: `database`
-    #[must_use]
-    pub fn database(
-        &self,
-    ) -> ::core::option::Option<::buffa::EnumValue<super::super::DatabaseEngine>> {
-        self.0.reborrow().database
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<CreateProjectRequestView<'static>>>

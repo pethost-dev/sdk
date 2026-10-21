@@ -24,9 +24,9 @@
 //   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
-//   - Database: a project CreateProject made with `database` (Postgres or Valkey). The machine
-//     wrote its files and knows the engine. Apps reach it at the host <project_id> once
-//     LinkDatabase links them; Project.database says how to sign in.
+//   - Database: a project CreateDatabase made (Postgres or Valkey). The machine wrote its files
+//     and knows the engine. Apps reach it at the host <project_id> once linked (its `link`, or
+//     LinkDatabase); Project.database says how to sign in.
 //   - Service (service): one container. The person opens a shell in it from their terminal with
 //     `ssh <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
 //     RunMachineAction.add_ssh_key added their public key. Nobody logs in to the machine itself.
@@ -10151,7 +10151,6 @@ type CreateProjectRequest struct {
 	xxx_hidden_TimeoutSeconds uint32                 `protobuf:"varint,6,opt,name=timeout_seconds,json=timeoutSeconds"`
 	xxx_hidden_OperationId    *string                `protobuf:"bytes,7,opt,name=operation_id,json=operationId"`
 	xxx_hidden_WaitSeconds    uint32                 `protobuf:"varint,9,opt,name=wait_seconds,json=waitSeconds"`
-	xxx_hidden_Database       DatabaseEngine         `protobuf:"varint,10,opt,name=database,enum=pethost.panel.v1.DatabaseEngine"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -10250,18 +10249,9 @@ func (x *CreateProjectRequest) GetWaitSeconds() uint32 {
 	return 0
 }
 
-func (x *CreateProjectRequest) GetDatabase() DatabaseEngine {
-	if x != nil {
-		if protoimpl.X.Present(&(x.XXX_presence[0]), 8) {
-			return x.xxx_hidden_Database
-		}
-	}
-	return DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED
-}
-
 func (x *CreateProjectRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *CreateProjectRequest) SetSource(v *ProjectSource) {
@@ -10270,7 +10260,7 @@ func (x *CreateProjectRequest) SetSource(v *ProjectSource) {
 
 func (x *CreateProjectRequest) SetUploadId(v string) {
 	x.xxx_hidden_UploadId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 8)
 }
 
 func (x *CreateProjectRequest) SetFiles(v []*FileChange) {
@@ -10283,22 +10273,17 @@ func (x *CreateProjectRequest) SetXPethost(v *ProjectExtension) {
 
 func (x *CreateProjectRequest) SetTimeoutSeconds(v uint32) {
 	x.xxx_hidden_TimeoutSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *CreateProjectRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
 }
 
 func (x *CreateProjectRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 9)
-}
-
-func (x *CreateProjectRequest) SetDatabase(v DatabaseEngine) {
-	x.xxx_hidden_Database = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
 }
 
 func (x *CreateProjectRequest) HasProjectId() bool {
@@ -10350,13 +10335,6 @@ func (x *CreateProjectRequest) HasWaitSeconds() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
 }
 
-func (x *CreateProjectRequest) HasDatabase() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
-}
-
 func (x *CreateProjectRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -10390,11 +10368,6 @@ func (x *CreateProjectRequest) ClearWaitSeconds() {
 	x.xxx_hidden_WaitSeconds = 0
 }
 
-func (x *CreateProjectRequest) ClearDatabase() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
-	x.xxx_hidden_Database = DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED
-}
-
 type CreateProjectRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -10413,9 +10386,6 @@ type CreateProjectRequest_builder struct {
 	TimeoutSeconds *uint32
 	OperationId    *string
 	WaitSeconds    *uint32
-	// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
-	// upload_id, source, x_pethost out.
-	Database *DatabaseEngine
 }
 
 func (b0 CreateProjectRequest_builder) Build() *CreateProjectRequest {
@@ -10423,31 +10393,27 @@ func (b0 CreateProjectRequest_builder) Build() *CreateProjectRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Source = b.Source
 	if b.UploadId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 8)
 		x.xxx_hidden_UploadId = b.UploadId
 	}
 	x.xxx_hidden_Files = &b.Files
 	x.xxx_hidden_XPethost = b.XPethost
 	if b.TimeoutSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_TimeoutSeconds = *b.TimeoutSeconds
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
-	}
-	if b.Database != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
-		x.xxx_hidden_Database = *b.Database
 	}
 	return m0
 }
@@ -29264,7 +29230,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rrequest_count\x18\x01 \x01(\x04R\frequestCount\x12,\n" +
 	"\x12server_error_count\x18\x02 \x01(\x04R\x10serverErrorCount\x12$\n" +
 	"\x0elatency_p50_ms\x18\x03 \x01(\rR\flatencyP50Ms\x12$\n" +
-	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\xb3\x03\n" +
+	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\x85\x03\n" +
 	"\x14CreateProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x127\n" +
@@ -29274,9 +29240,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\tx_pethost\x18\x05 \x01(\v2\".pethost.panel.v1.ProjectExtensionR\bxPethost\x12'\n" +
 	"\x0ftimeout_seconds\x18\x06 \x01(\rR\x0etimeoutSeconds\x12!\n" +
 	"\foperation_id\x18\a \x01(\tR\voperationId\x12'\n" +
-	"\fwait_seconds\x18\t \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12<\n" +
-	"\bdatabase\x18\n" +
-	" \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\bdatabase\"\xa0\x02\n" +
+	"\fwait_seconds\x18\t \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSecondsJ\x04\b\n" +
+	"\x10\vR\bdatabase\"\xa0\x02\n" +
 	"\x15CreateProjectResponse\x129\n" +
 	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n" +
 	"\n" +
@@ -30101,7 +30066,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xa2\x18\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xbb\x18\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
@@ -30116,9 +30081,9 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\vGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse\"\x03\x90\x02\x01\x12x\n" +
 	"\fGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse\"\x19\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\x12\x86\x01\n" +
 	"\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n" +
-	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x85\x01\n" +
-	"\fLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bLink projects to a database\x12c\n" +
-	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\x12n\n" +
+	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12|\n" +
+	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\"\x17\x8a\xb5\x18\x13\x12\x11Create a database\x12\x85\x01\n" +
+	"\fLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bLink projects to a database\x12n\n" +
 	"\x10GetDatabaseStats\x12).pethost.panel.v1.GetDatabaseStatsRequest\x1a*.pethost.panel.v1.GetDatabaseStatsResponse\"\x03\x90\x02\x01\x12r\n" +
 	"\x13CancelDatabaseQuery\x12,.pethost.panel.v1.CancelDatabaseQueryRequest\x1a-.pethost.panel.v1.CancelDatabaseQueryResponse\x12\x90\x01\n" +
 	"\x11RunServiceCommand\x12*.pethost.panel.v1.RunServiceCommandRequest\x1a+.pethost.panel.v1.RunServiceCommandResponse\"\"\x8a\xb5\x18\x1e\b\x01\x12\x1aRun a command in a service\x12]\n" +
@@ -30381,208 +30346,207 @@ var file_v1_panel_proto_depIdxs = []int32{
 	44,  // 80: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
 	64,  // 81: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
 	63,  // 82: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	11,  // 83: pethost.panel.v1.CreateProjectRequest.database:type_name -> pethost.panel.v1.DatabaseEngine
-	56,  // 84: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	66,  // 85: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	42,  // 86: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
-	115, // 87: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	64,  // 88: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	63,  // 89: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	62,  // 90: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
-	36,  // 91: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	55,  // 92: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
-	56,  // 93: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	66,  // 94: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	42,  // 95: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
-	115, // 96: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	69,  // 97: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
-	46,  // 98: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
-	156, // 99: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
-	56,  // 100: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
-	71,  // 101: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
-	71,  // 102: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
-	71,  // 103: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
-	72,  // 104: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
-	73,  // 105: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
-	74,  // 106: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
-	75,  // 107: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
-	76,  // 108: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
-	44,  // 109: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
-	56,  // 110: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
-	42,  // 111: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
-	115, // 112: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	11,  // 113: pethost.panel.v1.Database.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	79,  // 114: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
-	11,  // 115: pethost.panel.v1.DatabaseSummary.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	11,  // 116: pethost.panel.v1.DatabaseEngineOffer.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	82,  // 117: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
-	42,  // 118: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
-	11,  // 119: pethost.panel.v1.CreateDatabaseRequest.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	56,  // 120: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
-	66,  // 121: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	42,  // 122: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
-	115, // 123: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	156, // 124: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 125: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
-	13,  // 126: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
-	156, // 127: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 128: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 129: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	90,  // 130: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
-	89,  // 131: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
-	94,  // 132: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
-	95,  // 133: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
-	156, // 134: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
-	90,  // 135: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
-	91,  // 136: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
-	92,  // 137: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
-	93,  // 138: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
-	12,  // 139: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
-	12,  // 140: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
-	156, // 141: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
-	96,  // 142: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
-	97,  // 143: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
-	14,  // 144: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
-	156, // 145: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
-	156, // 146: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
-	156, // 147: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
-	156, // 148: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
-	102, // 149: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
-	103, // 150: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
-	104, // 151: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
-	15,  // 152: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
-	116, // 153: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	105, // 154: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
-	107, // 155: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
-	156, // 156: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
-	102, // 157: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
-	16,  // 158: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
-	106, // 159: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
-	156, // 160: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
-	103, // 161: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
-	16,  // 162: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
-	2,   // 163: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	102, // 164: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
-	103, // 165: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
-	156, // 166: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
-	156, // 167: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
-	156, // 168: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
-	17,  // 169: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
-	109, // 170: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
-	106, // 171: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
-	125, // 172: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
-	120, // 173: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
-	156, // 174: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
-	108, // 175: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
-	108, // 176: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
-	56,  // 177: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
-	42,  // 178: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
-	115, // 179: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	156, // 180: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
-	116, // 181: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	156, // 182: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 183: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
-	156, // 184: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 185: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 186: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	58,  // 187: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	119, // 188: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
-	120, // 189: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
-	121, // 190: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
-	156, // 191: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
-	58,  // 192: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	58,  // 193: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	156, // 194: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
-	18,  // 195: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
-	122, // 196: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	156, // 197: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 198: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	156, // 199: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 200: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 201: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	125, // 202: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
-	156, // 203: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
-	18,  // 204: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
-	19,  // 205: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
-	156, // 206: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
-	128, // 207: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
-	20,  // 208: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
-	128, // 209: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
-	132, // 210: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
-	133, // 211: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
-	134, // 212: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
-	135, // 213: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
-	156, // 214: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
-	66,  // 215: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	8,   // 216: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
-	156, // 217: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
-	156, // 218: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
-	21,  // 219: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
-	22,  // 220: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
-	115, // 221: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	56,  // 222: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
-	122, // 223: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	125, // 224: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
-	116, // 225: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	121, // 226: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
-	152, // 227: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
-	156, // 228: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
-	156, // 229: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
-	23,  // 230: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
-	33,  // 231: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
-	40,  // 232: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
-	59,  // 233: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
-	61,  // 234: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
-	67,  // 235: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
-	70,  // 236: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
-	100, // 237: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
-	111, // 238: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
-	113, // 239: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
-	117, // 240: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
-	123, // 241: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
+	56,  // 83: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 84: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 85: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 86: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	64,  // 87: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	63,  // 88: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	62,  // 89: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
+	36,  // 90: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	55,  // 91: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
+	56,  // 92: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 93: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 94: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 95: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	69,  // 96: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
+	46,  // 97: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
+	156, // 98: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
+	56,  // 99: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
+	71,  // 100: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
+	71,  // 101: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
+	71,  // 102: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
+	72,  // 103: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
+	73,  // 104: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
+	74,  // 105: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
+	75,  // 106: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
+	76,  // 107: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
+	44,  // 108: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
+	56,  // 109: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
+	42,  // 110: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 111: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	11,  // 112: pethost.panel.v1.Database.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	79,  // 113: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
+	11,  // 114: pethost.panel.v1.DatabaseSummary.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	11,  // 115: pethost.panel.v1.DatabaseEngineOffer.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	82,  // 116: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
+	42,  // 117: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	11,  // 118: pethost.panel.v1.CreateDatabaseRequest.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	56,  // 119: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
+	66,  // 120: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	42,  // 121: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 122: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	156, // 123: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 124: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
+	13,  // 125: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
+	156, // 126: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 127: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 128: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	90,  // 129: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
+	89,  // 130: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
+	94,  // 131: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
+	95,  // 132: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
+	156, // 133: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
+	90,  // 134: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
+	91,  // 135: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
+	92,  // 136: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
+	93,  // 137: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
+	12,  // 138: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	12,  // 139: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	156, // 140: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
+	96,  // 141: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
+	97,  // 142: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
+	14,  // 143: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
+	156, // 144: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
+	156, // 145: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
+	156, // 146: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
+	156, // 147: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
+	102, // 148: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
+	103, // 149: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
+	104, // 150: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	15,  // 151: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
+	116, // 152: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	105, // 153: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
+	107, // 154: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
+	156, // 155: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
+	102, // 156: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
+	16,  // 157: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
+	106, // 158: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
+	156, // 159: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
+	103, // 160: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
+	16,  // 161: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
+	2,   // 162: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	102, // 163: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
+	103, // 164: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
+	156, // 165: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
+	156, // 166: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
+	156, // 167: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
+	17,  // 168: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
+	109, // 169: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
+	106, // 170: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
+	125, // 171: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
+	120, // 172: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
+	156, // 173: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
+	108, // 174: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
+	108, // 175: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
+	56,  // 176: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
+	42,  // 177: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
+	115, // 178: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	156, // 179: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
+	116, // 180: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	156, // 181: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 182: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
+	156, // 183: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 184: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 185: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	58,  // 186: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	119, // 187: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
+	120, // 188: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
+	121, // 189: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
+	156, // 190: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
+	58,  // 191: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	58,  // 192: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	156, // 193: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
+	18,  // 194: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
+	122, // 195: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	156, // 196: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	156, // 197: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	156, // 198: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
+	156, // 199: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
+	156, // 200: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	125, // 201: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
+	156, // 202: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
+	18,  // 203: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
+	19,  // 204: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
+	156, // 205: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
+	128, // 206: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
+	20,  // 207: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
+	128, // 208: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
+	132, // 209: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
+	133, // 210: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
+	134, // 211: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
+	135, // 212: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
+	156, // 213: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
+	66,  // 214: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	8,   // 215: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
+	156, // 216: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
+	156, // 217: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
+	21,  // 218: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
+	22,  // 219: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
+	115, // 220: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	56,  // 221: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
+	122, // 222: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	125, // 223: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
+	116, // 224: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	121, // 225: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
+	152, // 226: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
+	156, // 227: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
+	156, // 228: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
+	23,  // 229: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
+	33,  // 230: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
+	40,  // 231: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
+	59,  // 232: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
+	61,  // 233: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
+	67,  // 234: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
+	70,  // 235: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
+	100, // 236: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
+	111, // 237: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
+	113, // 238: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
+	117, // 239: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
+	123, // 240: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
+	85,  // 241: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
 	83,  // 242: pethost.panel.v1.PanelService.LinkDatabase:input_type -> pethost.panel.v1.LinkDatabaseRequest
-	85,  // 243: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
-	87,  // 244: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
-	98,  // 245: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
-	126, // 246: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
-	151, // 247: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
-	154, // 248: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
-	129, // 249: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
-	131, // 250: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
-	137, // 251: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
-	145, // 252: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
-	147, // 253: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
-	149, // 254: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
-	24,  // 255: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
-	35,  // 256: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
-	41,  // 257: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
-	60,  // 258: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
-	65,  // 259: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
-	68,  // 260: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
-	77,  // 261: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
-	101, // 262: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
-	112, // 263: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
-	114, // 264: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
-	118, // 265: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
-	124, // 266: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
+	87,  // 243: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
+	98,  // 244: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
+	126, // 245: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
+	151, // 246: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
+	154, // 247: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
+	129, // 248: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
+	131, // 249: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
+	137, // 250: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
+	145, // 251: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
+	147, // 252: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
+	149, // 253: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
+	24,  // 254: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
+	35,  // 255: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
+	41,  // 256: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
+	60,  // 257: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
+	65,  // 258: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
+	68,  // 259: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
+	77,  // 260: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
+	101, // 261: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
+	112, // 262: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
+	114, // 263: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
+	118, // 264: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
+	124, // 265: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
+	86,  // 266: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
 	84,  // 267: pethost.panel.v1.PanelService.LinkDatabase:output_type -> pethost.panel.v1.LinkDatabaseResponse
-	86,  // 268: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
-	88,  // 269: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
-	99,  // 270: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
-	127, // 271: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
-	153, // 272: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
-	155, // 273: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
-	130, // 274: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
-	136, // 275: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
-	138, // 276: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
-	146, // 277: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
-	148, // 278: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
-	150, // 279: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
-	255, // [255:280] is the sub-list for method output_type
-	230, // [230:255] is the sub-list for method input_type
-	230, // [230:230] is the sub-list for extension type_name
-	230, // [230:230] is the sub-list for extension extendee
-	0,   // [0:230] is the sub-list for field type_name
+	88,  // 268: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
+	99,  // 269: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
+	127, // 270: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
+	153, // 271: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
+	155, // 272: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
+	130, // 273: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
+	136, // 274: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
+	138, // 275: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
+	146, // 276: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
+	148, // 277: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
+	150, // 278: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
+	254, // [254:279] is the sub-list for method output_type
+	229, // [229:254] is the sub-list for method input_type
+	229, // [229:229] is the sub-list for extension type_name
+	229, // [229:229] is the sub-list for extension extendee
+	0,   // [0:229] is the sub-list for field type_name
 }
 
 func init() { file_v1_panel_proto_init() }

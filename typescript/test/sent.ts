@@ -157,8 +157,6 @@ import type * as p from "pethost";
   m.sends("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { waitSeconds: 1009 });
   m.sends("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
-  m.sends("CreateProjectRequest.database: POSTGRES", { database: "POSTGRES" }, { database: w.DatabaseEngine.POSTGRES });
-  m.sends("CreateProjectRequest.database: VALKEY", { database: "VALKEY" }, { database: w.DatabaseEngine.VALKEY });
 }
 
 {
@@ -317,6 +315,25 @@ import type * as p from "pethost";
   m.sends("LinkDatabaseRequest.database_project_id: zero is not sent", { databaseProjectId: "" }, {});
   m.sends("LinkDatabaseRequest.link", { link: ["link", ""] }, { link: ["link", ""] });
   m.sends("LinkDatabaseRequest.unlink", { unlink: ["unlink", ""] }, { unlink: ["unlink", ""] });
+}
+
+{
+  const m = sending(w.CreateDatabaseRequestSchema, (leaf: Init<typeof w.CreateDatabaseRequestSchema>): Init<typeof w.CreateDatabaseRequestSchema> => (leaf), async (api, given: p.CreateDatabaseRequest) => api.createDatabase(given));
+  m.sends("CreateDatabaseRequest: nothing set", {}, {});
+  m.sends("CreateDatabaseRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("CreateDatabaseRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("CreateDatabaseRequest.engine: POSTGRES", { engine: "POSTGRES" }, { engine: w.DatabaseEngine.POSTGRES });
+  m.sends("CreateDatabaseRequest.engine: VALKEY", { engine: "VALKEY" }, { engine: w.DatabaseEngine.VALKEY });
+  m.sends("CreateDatabaseRequest.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { memoryLimitBytes: 9007199254740993n });
+  m.sends("CreateDatabaseRequest.memory_limit_bytes: zero is not sent", { memoryLimitBytes: 0n }, {});
+  m.sends("CreateDatabaseRequest.from_snapshot_id", { fromSnapshotId: "from_snapshot_id" }, { fromSnapshotId: "from_snapshot_id" });
+  m.sends("CreateDatabaseRequest.from_snapshot_id: zero is not sent", { fromSnapshotId: "" }, {});
+  m.sends("CreateDatabaseRequest.link", { link: ["link", ""] }, { link: ["link", ""] });
+  m.sends("CreateDatabaseRequest.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
+  m.sends("CreateDatabaseRequest.operation_id: zero is not sent", { operationId: "" }, {});
+  m.sends("CreateDatabaseRequest.wait_seconds", { waitSeconds: 1007 }, { waitSeconds: 1007 });
+  m.sends("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
+  m.sends("CreateDatabaseRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
 }
 
 {

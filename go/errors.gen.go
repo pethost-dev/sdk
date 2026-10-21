@@ -48,8 +48,9 @@ type Error struct {
 	// nil = the API sent no such detail.
 	MachineUpdatePending *MachineUpdatePending
 
-	// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or CreateDatabase: a
-	// project of `link` cannot be linked to the database. Nothing changed.
+	// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or
+	// [Client.CreateDatabase]: a project of `link` cannot be linked to the database. Nothing
+	// changed.
 	//
 	// nil = the API sent no such detail.
 	DatabaseLinkRefusal *DatabaseLinkRefusal

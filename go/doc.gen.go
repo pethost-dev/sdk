@@ -67,9 +67,9 @@
 //
 //   - Project (ProjectID): a Docker Compose project, a directory with compose.yaml at its
 //     root, deployed whole. People see Metadata.Name.
-//   - Database: a project [Client.CreateProject] made with `database` (Postgres or Valkey).
-//     The machine wrote its files and knows the engine. Apps reach it at the host <ProjectID>
-//     once [Client.LinkDatabase] links them; [Project.Database] says how to sign in.
+//   - Database: a project [Client.CreateDatabase] made (Postgres or Valkey). The machine wrote
+//     its files and knows the engine. Apps reach it at the host <ProjectID> once linked (its
+//     `link`, or [Client.LinkDatabase]); [Project.Database] says how to sign in.
 //   - Service (service): one container. The person opens a shell in it from their terminal
 //     with `ssh <service>.<project_id>@<Machine.hostname>` ([Service.SSHCommand]), once
 //     [RunMachineActionAddSSHKey] added their public key. Nobody logs in to the machine

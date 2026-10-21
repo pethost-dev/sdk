@@ -17244,16 +17244,6 @@ pub struct CreateProjectRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub wait_seconds: ::core::option::Option<u32>,
-    /// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
-    /// upload_id, source, x_pethost out.
-    ///
-    /// Field 10: `database`
-    #[serde(
-        rename = "database",
-        with = "::buffa::json_helpers::opt_enum",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub database: ::core::option::Option<::buffa::EnumValue<DatabaseEngine>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -17269,7 +17259,6 @@ impl ::core::fmt::Debug for CreateProjectRequest {
             .field("timeout_seconds", &self.timeout_seconds)
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
-            .field("database", &self.database)
             .finish()
     }
 }
@@ -17323,16 +17312,6 @@ impl CreateProjectRequest {
     ///Sets [`Self::wait_seconds`] to `Some(value)`, consuming and returning `self`.
     pub fn with_wait_seconds(mut self, value: u32) -> Self {
         self.wait_seconds = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::database`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_database(
-        mut self,
-        value: impl Into<::buffa::EnumValue<DatabaseEngine>>,
-    ) -> Self {
-        self.database = Some(value.into());
         self
     }
 }
@@ -17395,9 +17374,6 @@ impl ::buffa::Message for CreateProjectRequest {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
-        if let Some(ref v) = self.database {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -17446,9 +17422,6 @@ impl ::buffa::Message for CreateProjectRequest {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(9u32, v, buf);
-        }
-        if let Some(ref v) = self.database {
-            ::buffa::types::put_int32_field(10u32, v.to_i32(), buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -17551,15 +17524,6 @@ impl ::buffa::Message for CreateProjectRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
-            10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.database = ::core::option::Option::Some(
-                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -17576,7 +17540,6 @@ impl ::buffa::Message for CreateProjectRequest {
         self.timeout_seconds = ::core::option::Option::None;
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
-        self.database = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }

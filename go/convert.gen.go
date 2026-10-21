@@ -964,7 +964,6 @@ func fromWireCreateProjectRequest(w *panelv1.CreateProjectRequest) CreateProject
 		w.GetTimeoutSeconds(),
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
-		fromWireDatabaseEngine(w.GetDatabase()),
 	}
 }
 
@@ -978,7 +977,6 @@ func toWireCreateProjectRequest(v CreateProjectRequest) *panelv1.CreateProjectRe
 		TimeoutSeconds: nonZero(v.TimeoutSeconds),
 		OperationId:    nonZero(v.OperationID),
 		WaitSeconds:    v.WaitSeconds,
-		Database:       nonZero(toWireDatabaseEngine(v.Database)),
 	}
 	return b.Build()
 }
@@ -1607,6 +1605,52 @@ func fromWireLinkDatabaseResponse(w *panelv1.LinkDatabaseResponse) LinkDatabaseR
 func toWireLinkDatabaseResponse(v LinkDatabaseResponse) *panelv1.LinkDatabaseResponse {
 	b := panelv1.LinkDatabaseResponse_builder{
 		Project: pointerToWire(v.Project, toWireProject),
+	}
+	return b.Build()
+}
+
+func fromWireCreateDatabaseRequest(w *panelv1.CreateDatabaseRequest) CreateDatabaseRequest {
+	return CreateDatabaseRequest{
+		w.GetProjectId(),
+		fromWireDatabaseEngine(w.GetEngine()),
+		w.GetMemoryLimitBytes(),
+		w.GetFromSnapshotId(),
+		w.GetLink(),
+		w.GetOperationId(),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+	}
+}
+
+func toWireCreateDatabaseRequest(v CreateDatabaseRequest) *panelv1.CreateDatabaseRequest {
+	b := panelv1.CreateDatabaseRequest_builder{
+		ProjectId:        nonZero(v.ProjectID),
+		Engine:           nonZero(toWireDatabaseEngine(v.Engine)),
+		MemoryLimitBytes: nonZero(v.MemoryLimitBytes),
+		FromSnapshotId:   nonZero(v.FromSnapshotID),
+		Link:             v.Link,
+		OperationId:      nonZero(v.OperationID),
+		WaitSeconds:      v.WaitSeconds,
+	}
+	return b.Build()
+}
+
+func fromWireCreateDatabaseResponse(w *panelv1.CreateDatabaseResponse) CreateDatabaseResponse {
+	return CreateDatabaseResponse{
+		pointerFromWire(w.GetOperation(), fromWireOperation),
+		sliceFromWire(w.GetViolations(), fromWireSpecViolation),
+		w.GetAdjustments(),
+		pointerFromWire(w.GetProject(), fromWireProject),
+		sliceFromWire(w.GetLog(), fromWireOperationLogLine),
+	}
+}
+
+func toWireCreateDatabaseResponse(v CreateDatabaseResponse) *panelv1.CreateDatabaseResponse {
+	b := panelv1.CreateDatabaseResponse_builder{
+		Operation:   pointerToWire(v.Operation, toWireOperation),
+		Violations:  sliceToWire(v.Violations, toWireSpecViolation),
+		Adjustments: v.Adjustments,
+		Project:     pointerToWire(v.Project, toWireProject),
+		Log:         sliceToWire(v.Log, toWireOperationLogLine),
 	}
 	return b.Build()
 }

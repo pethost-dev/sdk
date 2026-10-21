@@ -20,9 +20,9 @@ edition = "2024";
 //   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
-//   - Database: a project CreateProject made with `database` (Postgres or Valkey). The machine
-//     wrote its files and knows the engine. Apps reach it at the host <project_id> once
-//     LinkDatabase links them; Project.database says how to sign in.
+//   - Database: a project CreateDatabase made (Postgres or Valkey). The machine wrote its files
+//     and knows the engine. Apps reach it at the host <project_id> once linked (its `link`, or
+//     LinkDatabase); Project.database says how to sign in.
 //   - Service (service): one container. The person opens a shell in it from their terminal with
 //     `ssh <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
 //     RunMachineAction.add_ssh_key added their public key. Nobody logs in to the machine itself.
@@ -115,11 +115,7 @@ service PanelService {
   // Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
   // named volume per VOLUME of its last stage).
   //
-  // A database (Postgres or Valkey): `database`, no files, and a project_id without "_", not a
-  // number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts
-  // (localhost, ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine
-  // writes its compose.yaml and /.env and deploys it at its default size, with no address; then
-  // LinkDatabase the apps that use it.
+  // A database (Postgres or Valkey) is CreateDatabase's.
   //
   // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
   // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -174,8 +170,7 @@ service PanelService {
   //
   // ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
   // FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-  // such branch or directory; + MachineUpdatePending = `database`, on a machine whose software
-  // predates databases. A deleted project's id inherits its snapshots.
+  // such branch or directory. A deleted project's id inherits its snapshots.
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
     option (mcp_tool) = {title: "Create a project"};
   }
@@ -276,6 +271,21 @@ service PanelService {
 
   // ── Database ─────────────────────────────────────────────────────────────
 
+  // A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+  // deploys it, with no address. Make it before the app that uses it: the app reaches it at the
+  // host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
+  // Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
+  // its own and none of its links. Answers as CreateProject does.
+  // INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
+  // project_id with "_", that is a number or that every container's /etc/hosts names (it is the
+  // host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
+  // is of no database of that engine;
+  // + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
+  // + MachineUpdatePending = the machine's software predates databases.
+  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse) {
+    option (mcp_tool) = {title: "Create a database"};
+  }
+
   // Lets projects reach a database project: inside each linked project the database is the
   // host `<database_project_id>` at its port, and Project.database says how to sign in (its
   // password with GetProject include_secret_values). Takes effect at once and deploys nothing.
@@ -288,18 +298,6 @@ service PanelService {
     option idempotency_level = IDEMPOTENT;
     option (mcp_tool) = {title: "Link projects to a database", destructive: true};
   }
-
-  // A database project for the web panel's New database and Restore as a new database: with
-  // the size and the links CreateProject's `database` leaves out, or as a copy of a database's
-  // snapshot, with passwords of its own and none of its links. Answers as CreateProject does.
-  // INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
-  // project_id with "_", that is a number or that every container's /etc/hosts names (it is the
-  // host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-  // is of no database of that engine;
-  // + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-  // + MachineUpdatePending = the machine's software predates databases. Not an MCP tool: agents
-  // use CreateProject with `database`, then LinkDatabase.
-  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
 
   // A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
   // totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
@@ -1188,9 +1186,8 @@ message CreateProjectRequest {
   uint32 timeout_seconds = 6; // As DeployProject's timeout_seconds.
   string operation_id = 7; // As DeployProject's operation_id.
   uint32 wait_seconds = 9 [(optional) = true]; // As DeployProject's wait_seconds.
-  // Set = a database (Postgres or Valkey) the machine writes and deploys; leave files,
-  // upload_id, source, x_pethost out.
-  DatabaseEngine database = 10;
+  reserved 10;
+  reserved database;
 }
 
 message CreateProjectResponse {

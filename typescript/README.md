@@ -70,6 +70,7 @@ editor shows. A stream answers with its responses one by one, as "Streams" below
 | `getOperation` | Get an operation | Reads only |
 | `queryHttpTraffic` | Query HTTP traffic | Reads only |
 | `queryContainerLogs` | Query container logs | Reads only |
+| `createDatabase` | Create a database |  |
 | `linkDatabase` | Link projects to a database | Destructive |
 | `runServiceCommand` | Run a command in a service | Destructive |
 | `readPath` | Read a file or directory | Reads only |
@@ -160,7 +161,7 @@ A call that fails rejects with a `PethostError`:
   - `error.projectChanged`: Detail of an ABORTED error: baseDeployId is not the current deploy: the project was deployed since you read it. Read it again (Project.deployId) and redo your change on its files.
   - `error.machineUnreachable`: Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call again later.
   - `error.machineUpdatePending`: Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
-  - `error.databaseLinkRefusal`: Detail of a FAILED_PRECONDITION error from linkDatabase or CreateDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+  - `error.databaseLinkRefusal`: Detail of a FAILED_PRECONDITION error from linkDatabase or createDatabase: a project of `link` cannot be linked to the database. Nothing changed.
   - `error.noMachine`: Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 
 ## Links

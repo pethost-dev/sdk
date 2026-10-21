@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.2.11
+go get github.com/pethost-dev/sdk/go@v0.3.0
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -107,6 +107,7 @@ response or an error; a stream returns its responses one by one, as "Streams" be
 | `GetOperation` | Get an operation | read-only |
 | `QueryHTTPTraffic` | Query HTTP traffic | read-only |
 | `QueryContainerLogs` | Query container logs | read-only |
+| `CreateDatabase` | Create a database |  |
 | `LinkDatabase` | Link projects to a database | destructive |
 | `RunServiceCommand` | Run a command in a service | destructive |
 | `ReadPath` | Read a file or directory | read-only |

@@ -1736,11 +1736,6 @@ export interface CreateProjectRequest {
   operationId?: string | undefined;
   /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
   waitSeconds?: number | undefined;
-  /**
-   * Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, uploadId,
-   * source, xPethost out.
-   */
-  database?: DatabaseEngine | undefined;
 }
 
 /** {@link CreateProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2515,6 +2510,52 @@ export interface LinkDatabaseResponse {
 export const LinkDatabaseResponse: JsonCodec<LinkDatabaseResponse, LinkDatabaseResponse> = {
   toJson: (value) => writeJson(wire.LinkDatabaseResponseSchema, convert.toLinkDatabaseResponse(value)),
   fromJson: (json) => convert.fromLinkDatabaseResponse(readJson(wire.LinkDatabaseResponseSchema, json)),
+};
+
+export interface CreateDatabaseRequest {
+  /**
+   * As {@link Pethost.createProject | createProject}'s, without "_", not a number and no name of
+   * /etc/hosts: it is the host name apps use.
+   */
+  projectId?: string | undefined;
+  engine?: DatabaseEngine | undefined;
+  /**
+   * One of the engine's DatabaseEngineOffer.sizes. 0 = its defaultMemoryLimitBytes; a copy keeps its
+   * snapshot's.
+   */
+  memoryLimitBytes?: bigint | undefined;
+  /**
+   * A snapshot of a database of `engine` (Project.snapshots, GetMachineResponse.deletedProjects):
+   * the new one starts with its data. Empty = an empty database.
+   */
+  fromSnapshotId?: string | undefined;
+  /** App project_ids, linked before its operation ends. */
+  link?: readonly string[] | undefined;
+  /** As {@link Pethost.deployProject | deployProject}'s operationId. */
+  operationId?: string | undefined;
+  /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
+  waitSeconds?: number | undefined;
+}
+
+/** {@link CreateDatabaseRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateDatabaseRequest: JsonCodec<CreateDatabaseRequest, CreateDatabaseRequest> = {
+  toJson: (value) => writeJson(wire.CreateDatabaseRequestSchema, convert.toCreateDatabaseRequest(value)),
+  fromJson: (json) => convert.fromCreateDatabaseRequest(readJson(wire.CreateDatabaseRequestSchema, json)),
+};
+
+/** As {@link CreateProjectResponse}. */
+export interface CreateDatabaseResponse {
+  operation?: Operation;
+  violations: SpecViolation[];
+  adjustments: string[];
+  project?: Project;
+  log: OperationLogLine[];
+}
+
+/** {@link CreateDatabaseResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const CreateDatabaseResponse: JsonCodec<CreateDatabaseResponse, CreateDatabaseResponse> = {
+  toJson: (value) => writeJson(wire.CreateDatabaseResponseSchema, convert.toCreateDatabaseResponse(value)),
+  fromJson: (json) => convert.fromCreateDatabaseResponse(readJson(wire.CreateDatabaseResponseSchema, json)),
 };
 
 export interface SetProjectAlertsRequest {
@@ -3479,7 +3520,8 @@ export const MachineUpdatePending: JsonCodec<MachineUpdatePending, MachineUpdate
 
 /**
  * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
- * CreateDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+ * {@link Pethost.createDatabase | createDatabase}: a project of `link` cannot be linked to the
+ * database. Nothing changed.
  */
 export interface DatabaseLinkRefusal {
   /** The first one refused. */
@@ -3702,7 +3744,8 @@ export class PethostError extends Error {
   declare readonly machineUpdatePending?: MachineUpdatePending;
   /**
    * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
-   * CreateDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+   * {@link Pethost.createDatabase | createDatabase}: a project of `link` cannot be linked to the
+   * database. Nothing changed.
    */
   declare readonly databaseLinkRefusal?: DatabaseLinkRefusal;
   /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
@@ -3759,10 +3802,10 @@ export interface CallOptions {
  *
  * - Project (projectId): a Docker Compose project, a directory with compose.yaml at its root,
  *   deployed whole. People see metadata.name.
- * - Database: a project {@link Pethost.createProject | createProject} made with `database`
- *   (Postgres or Valkey). The machine wrote its files and knows the engine. Apps reach it at the
- *   host \<projectId> once {@link Pethost.linkDatabase | linkDatabase} links them;
- *   Project.database says how to sign in.
+ * - Database: a project {@link Pethost.createDatabase | createDatabase} made (Postgres or Valkey).
+ *   The machine wrote its files and knows the engine. Apps reach it at the host \<projectId> once
+ *   linked (its `link`, or {@link Pethost.linkDatabase | linkDatabase}); Project.database says how
+ *   to sign in.
  * - Service (service): one container. The person opens a shell in it from their terminal with `ssh
  *   <service>.<project_id>@<Machine.hostname>` (Service.sshCommand), once
  *   RunMachineActionRequest.addSshKey added their public key. Nobody logs in to the machine
@@ -3820,7 +3863,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.2.11");
+      request.header.set("User-Agent", "pethost-typescript/0.3.0");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3914,11 +3957,7 @@ export class Pethost {
    * other compose and override files are dropped. Without one, a Dockerfile yields service `app`
    * (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
    *
-   * A database (Postgres or Valkey): `database`, no files, and a projectId without "_", not a number
-   * (only digits, or 0x and hex digits) and no name of every container's /etc/hosts (localhost,
-   * ip6-localhost, ip6-loopback, ...): it is the host name apps use. The machine writes its
-   * compose.yaml and /.env and deploys it at its default size, with no address; then
-   * {@link Pethost.linkDatabase | linkDatabase} the apps that use it.
+   * A database (Postgres or Valkey) is {@link Pethost.createDatabase | createDatabase}'s.
    *
    * compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is
    * recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of
@@ -3975,8 +4014,7 @@ export class Pethost {
    *
    * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation).
    * FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachineResponse.github),
-   * or no such branch or directory; + {@link MachineUpdatePending} = `database`, on a machine whose
-   * software predates databases. A deleted project's id inherits its snapshots.
+   * or no such branch or directory. A deleted project's id inherits its snapshots.
    *
    * @throws {@link PethostError} when the call fails.
    */
@@ -4161,6 +4199,32 @@ export class Pethost {
     const wireRequest = convert.toQueryContainerLogsRequest(request);
     try {
       return convert.fromQueryContainerLogsResponse(await this.#wire.queryContainerLogs(wireRequest, { signal: options?.signal }));
+    } catch (error) {
+      throw toError(error);
+    }
+  }
+
+  /**
+   * Create a database.
+   *
+   * A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
+   * deploys it, with no address. Make it before the app that uses it: the app reaches it at the host
+   * `<project_id>` once linked (`link`, or {@link Pethost.linkDatabase | linkDatabase} after the
+   * app's {@link Pethost.createProject | createProject}), and Project.database says how to sign in.
+   * Or a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+   * {@link Pethost.createProject | createProject} does. INVALID_ARGUMENT = an engine or a size
+   * Machine.databaseEngines does not offer, or a projectId with "_", that is a number or that every
+   * container's /etc/hosts names (it is the host name apps use). NOT_FOUND = no such snapshot or
+   * app. FAILED_PRECONDITION = the snapshot is of no database of that engine; +
+   * {@link DatabaseLinkRefusal} = an app of `link` cannot be linked, and nothing was created; +
+   * {@link MachineUpdatePending} = the machine's software predates databases.
+   *
+   * @throws {@link PethostError} when the call fails.
+   */
+  async createDatabase(request: CreateDatabaseRequest, options?: CallOptions): Promise<CreateDatabaseResponse> {
+    const wireRequest = convert.toCreateDatabaseRequest(request);
+    try {
+      return convert.fromCreateDatabaseResponse(await this.#wire.createDatabase(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }

@@ -784,9 +784,6 @@ type CreateProjectRequest struct {
 	OperationID string
 	// As [Client.DeployProject]'s WaitSeconds.
 	WaitSeconds *uint32
-	// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, UploadID,
-	// source, XPethost out.
-	Database DatabaseEngine
 }
 
 // CreateProjectResponse is the response of [Client.CreateProject].
@@ -1227,6 +1224,38 @@ type LinkDatabaseRequest struct {
 type LinkDatabaseResponse struct {
 	// The database, as [Client.GetProject] returns it.
 	Project *Project
+}
+
+// CreateDatabaseRequest is the request of [Client.CreateDatabase].
+type CreateDatabaseRequest struct {
+	// As [Client.CreateProject]'s, without "_", not a number and no name of /etc/hosts: it is the
+	// host name apps use.
+	ProjectID string
+	Engine    DatabaseEngine
+	// One of the engine's [DatabaseEngineOffer.Sizes]. 0 = its
+	// [DatabaseEngineOffer.DefaultMemoryLimitBytes]; a copy keeps its snapshot's.
+	MemoryLimitBytes uint64
+	// A snapshot of a database of Engine ([Project.Snapshots],
+	// [GetMachineResponse.DeletedProjects]): the new one starts with its data. Empty = an empty
+	// database.
+	FromSnapshotID string
+	// App project_ids, linked before its operation ends.
+	Link []string
+	// As [Client.DeployProject]'s OperationID.
+	OperationID string
+	// As [Client.DeployProject]'s WaitSeconds.
+	WaitSeconds *uint32
+}
+
+// CreateDatabaseResponse is the response of [Client.CreateDatabase].
+//
+// As [CreateProjectResponse].
+type CreateDatabaseResponse struct {
+	Operation   *Operation
+	Violations  []SpecViolation
+	Adjustments []string
+	Project     *Project
+	Log         []OperationLogLine
 }
 
 // SetProjectAlertsRequest is the request of [Client.SetProjectAlerts].
@@ -1886,8 +1915,9 @@ type MachineUpdatePending struct{}
 
 // DatabaseLinkRefusal is a detail of an [Error]: [Error.DatabaseLinkRefusal].
 //
-// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or CreateDatabase: a
-// project of `link` cannot be linked to the database. Nothing changed.
+// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or
+// [Client.CreateDatabase]: a project of `link` cannot be linked to the database. Nothing
+// changed.
 type DatabaseLinkRefusal struct {
 	// The first one refused.
 	ProjectID string

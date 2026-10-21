@@ -2543,7 +2543,6 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
-            database,
         } = message;
 
         Self {
@@ -2555,7 +2554,6 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds: self::present(timeout_seconds),
             operation_id: self::present(operation_id),
             wait_seconds,
-            database: self::present(database).map(database_engine_to_wire),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2572,7 +2570,6 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
-            database,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2585,7 +2582,6 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds: timeout_seconds.unwrap_or_default(),
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
-            database: database.map(database_engine_from_wire).unwrap_or_default(),
         }
     }
 }
@@ -3630,6 +3626,98 @@ impl From<wire::LinkDatabaseResponse> for types::LinkDatabaseResponse {
 
         Self {
             project: project.into_option().map(types::Project::from),
+        }
+    }
+}
+
+impl From<types::CreateDatabaseRequest> for wire::CreateDatabaseRequest {
+    fn from(message: types::CreateDatabaseRequest) -> Self {
+        let types::CreateDatabaseRequest {
+            project_id,
+            engine,
+            memory_limit_bytes,
+            from_snapshot_id,
+            link,
+            operation_id,
+            wait_seconds,
+        } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            engine: self::present(engine).map(database_engine_to_wire),
+            memory_limit_bytes: self::present(memory_limit_bytes),
+            from_snapshot_id: self::present(from_snapshot_id),
+            link,
+            operation_id: self::present(operation_id),
+            wait_seconds,
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::CreateDatabaseRequest> for types::CreateDatabaseRequest {
+    fn from(message: wire::CreateDatabaseRequest) -> Self {
+        let wire::CreateDatabaseRequest {
+            project_id,
+            engine,
+            memory_limit_bytes,
+            from_snapshot_id,
+            link,
+            operation_id,
+            wait_seconds,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            engine: engine.map(database_engine_from_wire).unwrap_or_default(),
+            memory_limit_bytes: memory_limit_bytes.unwrap_or_default(),
+            from_snapshot_id: from_snapshot_id.unwrap_or_default(),
+            link,
+            operation_id: operation_id.unwrap_or_default(),
+            wait_seconds,
+        }
+    }
+}
+
+impl From<types::CreateDatabaseResponse> for wire::CreateDatabaseResponse {
+    fn from(message: types::CreateDatabaseResponse) -> Self {
+        let types::CreateDatabaseResponse {
+            operation,
+            violations,
+            adjustments,
+            project,
+            log,
+        } = message;
+
+        Self {
+            operation: operation.map(wire::Operation::from).into(),
+            violations: violations.into_iter().map(wire::SpecViolation::from).collect(),
+            adjustments,
+            project: project.map(wire::Project::from).into(),
+            log: log.into_iter().map(wire::OperationLogLine::from).collect(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::CreateDatabaseResponse> for types::CreateDatabaseResponse {
+    fn from(message: wire::CreateDatabaseResponse) -> Self {
+        let wire::CreateDatabaseResponse {
+            operation,
+            violations,
+            adjustments,
+            project,
+            log,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            operation: operation.into_option().map(types::Operation::from),
+            violations: violations.into_iter().map(types::SpecViolation::from).collect(),
+            adjustments,
+            project: project.into_option().map(types::Project::from),
+            log: log.into_iter().map(types::OperationLogLine::from).collect(),
         }
     }
 }

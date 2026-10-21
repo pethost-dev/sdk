@@ -910,8 +910,6 @@ pub struct CreateProjectRequest {
     pub operation_id: ::std::string::String,
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
     pub wait_seconds: ::core::option::Option<u32>,
-    /// Set = a database (Postgres or Valkey) the machine writes and deploys; leave files, `upload_id`, source, `x_pethost` out.
-    pub database: DatabaseEngine,
 }
 
 /// What [`Client::create_project`](crate::Client::create_project) returns.
@@ -1278,6 +1276,37 @@ pub struct LinkDatabaseRequest {
 pub struct LinkDatabaseResponse {
     /// The database, as [`Client::get_project`](crate::Client::get_project) returns it.
     pub project: ::core::option::Option<Project>,
+}
+
+/// What [`Client::create_database`](crate::Client::create_database) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct CreateDatabaseRequest {
+    /// As [`Client::create_project`](crate::Client::create_project)\'s, without \"\_\", not a number and no name of /etc/hosts: it is the host name apps use.
+    pub project_id: ::std::string::String,
+    pub engine: DatabaseEngine,
+    /// One of the engine's [`DatabaseEngineOffer::sizes`](crate::types::DatabaseEngineOffer::sizes). 0 = its `default_memory_limit_bytes`; a copy keeps its snapshot's.
+    pub memory_limit_bytes: u64,
+    /// A snapshot of a database of `engine` ([`Project::snapshots`](crate::types::Project::snapshots), [`GetMachineResponse::deleted_projects`](crate::types::GetMachineResponse::deleted_projects)): the new one starts with its data. Empty = an empty database.
+    pub from_snapshot_id: ::std::string::String,
+    /// App `project_ids`, linked before its operation ends.
+    pub link: ::std::vec::Vec<::std::string::String>,
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `operation_id`.
+    pub operation_id: ::std::string::String,
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
+    pub wait_seconds: ::core::option::Option<u32>,
+}
+
+/// What [`Client::create_database`](crate::Client::create_database) returns.
+///
+/// As [`CreateProjectResponse`](crate::types::CreateProjectResponse).
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct CreateDatabaseResponse {
+    pub operation: ::core::option::Option<Operation>,
+    pub violations: ::std::vec::Vec<SpecViolation>,
+    pub adjustments: ::std::vec::Vec<::std::string::String>,
+    pub project: ::core::option::Option<Project>,
+    pub log: ::std::vec::Vec<OperationLogLine>,
 }
 
 /// What [`Client::set_project_alerts`](crate::Client::set_project_alerts) takes.
@@ -1975,7 +2004,7 @@ pub struct MachineUnreachable {
 #[non_exhaustive]
 pub struct MachineUpdatePending {}
 
-/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or `CreateDatabase`: a project of `link` cannot be linked to the database. Nothing changed.
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or [`Client::create_database`](crate::Client::create_database): a project of `link` cannot be linked to the database. Nothing changed.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct DatabaseLinkRefusal {

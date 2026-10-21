@@ -107,7 +107,7 @@ impl Client {
     ///
     /// Files, one of: the directory as it is on your disk, as an archive ([`Client::create_transfer`](crate::Client::create_transfer), then `upload_id`): nothing is retyped; `files`, text you send yourself, when there is no directory or no shell (never a file you have not read); `source.github`. /.env holds the secrets (`env_file: .env`). The compose file is the root's pethost.compose.yaml (so the repository's compose.yaml stays for development), else compose.yaml, compose.yml, docker-compose.yml or docker-compose.yaml; it becomes /compose.yaml, other compose and override files are dropped. Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
     ///
-    /// A database (Postgres or Valkey): `database`, no files, and a `project_id` without \"\_\", not a number (only digits, or 0x and hex digits) and no name of every container's /etc/hosts (localhost, ip6-localhost, ip6-loopback, \.\.\.): it is the host name apps use. The machine writes its compose.yaml and /.env and deploys it at its default size, with no address; then [`Client::link_database`](crate::Client::link_database) the apps that use it.
+    /// A database (Postgres or Valkey) is [`Client::create_database`](crate::Client::create_database)\'s.
     ///
     /// compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of a route in `x-pethost`, the one extension read, in the file or as `x_pethost`:
     ///
@@ -131,7 +131,7 @@ impl Client {
     ///
     /// Not refused, and read the machine's way: a `container_name` and a network's `name` name nothing on the machine, so two projects may write the same (the project's services still reach the container by it); a service with `profiles` runs only while `COMPOSE_PROFILES` in /.env names one of them, and is no service of the project until then; a bind mount of a folder without `:ro` (`./data:/data`) mounts the project's volume named after the path (`data`), which deploys keep and backups hold, with none of the version's files in it, so project files take `:ro`, and data is plainer in a named volume (`data:/data`, with `data:` under `volumes:`); a bind mount of a file without `:ro` mounts it read-only. An image's VOLUME that no mount covers fails the deploy (`UNCOVERED_IMAGE_VOLUME`): mount a named volume or a tmpfs there.
     ///
-    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory; + [`MachineUpdatePending`](crate::types::MachineUpdatePending) = `database`, on a machine whose software predates databases. A deleted project's id inherits its snapshots.
+    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory. A deleted project's id inherits its snapshots.
     pub async fn create_project(
         &self,
         request: types::CreateProjectRequest,
@@ -243,6 +243,21 @@ impl Client {
         let response = self
             .wire
             .query_container_logs(request.into())
+            .await
+            .map_err(Error::from_wire)?;
+        Ok(response.into_owned().into())
+    }
+
+    /// Create a database.
+    ///
+    /// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and deploys it, with no address. Make it before the app that uses it: the app reaches it at the host `<project_id>` once linked (`link`, or [`Client::link_database`](crate::Client::link_database) after the app's [`Client::create_project`](crate::Client::create_project)), and [`Project::database`](crate::types::Project::database) says how to sign in. Or a copy of a database's snapshot, with passwords of its own and none of its links. Answers as [`Client::create_project`](crate::Client::create_project) does. [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) = an engine or a size [`Machine::database_engines`](crate::types::Machine::database_engines) does not offer, or a `project_id` with \"\_\", that is a number or that every container's /etc/hosts names (it is the host name apps use). [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) = no such snapshot or app. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the snapshot is of no database of that engine; + [`DatabaseLinkRefusal`](crate::types::DatabaseLinkRefusal) = an app of `link` cannot be linked, and nothing was created; + [`MachineUpdatePending`](crate::types::MachineUpdatePending) = the machine's software predates databases.
+    pub async fn create_database(
+        &self,
+        request: types::CreateDatabaseRequest,
+    ) -> Result<types::CreateDatabaseResponse, Error> {
+        let response = self
+            .wire
+            .create_database(request.into())
             .await
             .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
