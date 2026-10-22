@@ -48,6 +48,9 @@ type Machine struct {
 	// to a service's container ([Service.SSHCommand]). [Client.CreateTransfer]'s URLs are on it as
 	// well, and no route can take it.
 	Hostname string
+	// True = hostname is an IP address, not a name (a test machine's): no DNS record can point at
+	// it by name (a CNAME), so a domain must resolve to that address itself.
+	HostnameIsAddress bool
 	// "SHA256:...", to check on the first connection.
 	SSHHostKeyFingerprint string
 	// The person's public keys: each logs in to every container. Empty = none yet: nobody can log
@@ -96,8 +99,8 @@ type Machine struct {
 	// first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool
 	// does. Empty = alerts reach nobody.
 	AlertChannels []AlertDestination
-	// The databases the machine makes ([Client.CreateProject]'s `database`), one per engine, with
-	// the sizes they may take. Empty = the machine's software predates databases.
+	// The databases the machine makes ([Client.CreateDatabase]), one per engine, with the sizes
+	// they may take.
 	DatabaseEngines []DatabaseEngineOffer
 	// The sum of every service's memory limit (`mem_limit`): what the projects may take together,
 	// which MemoryTotalBytes does not reserve.
@@ -298,7 +301,7 @@ type ProjectSummary struct {
 	// Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
 	// with another project counts in both. Measured every few minutes.
 	DiskUsedBytes uint64
-	// Set = a database project ([Client.CreateProject] Database).
+	// Set = a database project ([Client.CreateDatabase]).
 	Database *DatabaseSummary
 }
 
@@ -410,8 +413,7 @@ type Project struct {
 	// ([Client.RunProjectAction] waits for its end). Until then the project takes no other action
 	// or deploy, and [Service.State] is still what it was before. Absent = none.
 	RunningServicesAction *RunningServicesAction
-	// What Pethost watches and how each part stands. Absent = the machine's software predates
-	// alerts: they come with its next update.
+	// What Pethost watches and how each part stands.
 	Alerts *ProjectAlerts
 	// The newest 5 that [GetProjectRequest.IncidentsBefore] selects, newest first: an open one in
 	// full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
@@ -422,8 +424,8 @@ type Project struct {
 	MoreIncidents bool
 	// Oldest first, [GetProjectRequest.UptimeDayCount] of them, today's last.
 	UptimeDays []UptimeDay
-	// Set = a database project ([Client.CreateProject] Database): its engine, its state and how
-	// apps sign in.
+	// Set = a database project ([Client.CreateDatabase]): its engine, its state and how apps sign
+	// in.
 	Database *Database
 	// The database projects this one reaches ([Client.LinkDatabase]), each at the host of its
 	// ProjectID.
@@ -567,9 +569,12 @@ type Service struct {
 	// project directory. Change them with [DeployProjectRequest.Files].
 	EnvFiles []string
 	// What the person runs in their own terminal for a shell in its container, e.g. "ssh
-	// web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address. It
-	// works once one of their public keys is among [Machine.SSHKeys].
+	// web.notes@m1.pethost.dev". It works once one of their public keys is among
+	// [Machine.SSHKeys].
 	SSHCommand string
+	// The address SSHCommand logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and
+	// `ssh -L` tunnels take it too. Empty when SSHCommand is.
+	SSHLogin string
 }
 
 // A port that `ports:` opens on the machine directly, to anyone, bypassing the proxy.
@@ -1202,7 +1207,8 @@ type DatabaseEngineOffer struct {
 	MajorVersion uint32
 	// Smallest first.
 	Sizes []DatabaseSizeChoice
-	// The size [Client.CreateProject]'s `database` gives.
+	// The size [Client.CreateDatabase] gives when its MemoryLimitBytes is 0, unless it copies a
+	// snapshot.
 	DefaultMemoryLimitBytes uint64
 }
 
@@ -1906,12 +1912,6 @@ type MachineUnreachable struct {
 	// ([Machine.AlertChannels]). Absent = not known yet.
 	SinceTime time.Time
 }
-
-// MachineUpdatePending is a detail of an [Error]: [Error.MachineUpdatePending].
-//
-// Detail of a [CodeFailedPrecondition] error: the machine's software predates what was asked.
-// It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
-type MachineUpdatePending struct{}
 
 // DatabaseLinkRefusal is a detail of an [Error]: [Error.DatabaseLinkRefusal].
 //

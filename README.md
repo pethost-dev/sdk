@@ -1,10 +1,11 @@
 # Pethost SDKs: deploy and host Docker Compose projects from TypeScript, Python, Go and Rust
 
-[Pethost](https://pethost.dev) is a small cloud for personal projects, easy to use for you and
-your agent: a machine of your own that runs Docker Compose projects, at one flat price. These
-libraries are its API as a typed client in four languages. A program does with one what the web
-panel and an agent do: it reads the machine, deploys a project, queries its logs and requests,
-runs commands in its containers and moves files. They are the same 13 calls an agent makes.
+[Pethost](https://pethost.dev) is the agent-first cloud for everything you build: your agent
+deploys and debugs your apps, and you see all of it in a simple panel. One flat price rents a
+machine of your own that runs Docker Compose projects. These libraries are its API as a typed
+client in four languages. A program does with one what the web panel and an agent do: it reads
+the machine, deploys a project, queries its logs and requests, runs commands in its containers
+and moves files. They are the calls an agent makes, and the API's live streams.
 
 | Language | Install | The SDK |
 |---|---|---|

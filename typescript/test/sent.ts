@@ -374,6 +374,7 @@ import type * as p from "pethost";
   m.sends("TrafficRule.metric: SERVER_ERRORS", { metric: "SERVER_ERRORS" }, { metric: w.TrafficMetric.SERVER_ERRORS });
   m.sends("TrafficRule.metric: SERVER_ERROR_PERCENT", { metric: "SERVER_ERROR_PERCENT" }, { metric: w.TrafficMetric.SERVER_ERROR_PERCENT });
   m.sends("TrafficRule.metric: LATENCY_P95_MS", { metric: "LATENCY_P95_MS" }, { metric: w.TrafficMetric.LATENCY_P95_MS });
+  m.sends("TrafficRule.metric: a value newer than the SDK", { metric: 9999 }, { metric: 9999 as w.TrafficMetric });
   m.sends("TrafficRule.filter", { filter: {} }, { filter: {} });
   m.sends("TrafficRule.threshold", { threshold: 1003.5 }, { threshold: 1003.5 });
   m.sends("TrafficRule.threshold: zero is not sent", { threshold: 0 }, {});

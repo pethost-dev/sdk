@@ -84,6 +84,8 @@ pub struct Machine {
     pub disk_usage: ::core::option::Option<DiskUsage>,
     /// The machine's name: what the person's own domains point at (a CNAME), and where they log in to a service's container ([`Service::ssh_command`](crate::types::Service::ssh_command)). [`Client::create_transfer`](crate::Client::create_transfer)\'s URLs are on it as well, and no route can take it.
     pub hostname: ::std::string::String,
+    /// True = hostname is an IP address, not a name (a test machine's): no DNS record can point at it by name (a CNAME), so a domain must resolve to that address itself.
+    pub hostname_is_address: bool,
     /// \"SHA256:\.\.\.\", to check on the first connection.
     pub ssh_host_key_fingerprint: ::std::string::String,
     /// The person's public keys: each logs in to every container. Empty = none yet: nobody can log in until [`RunMachineActionRequestAction::AddSshKey`](crate::types::RunMachineActionRequestAction::AddSshKey) adds one.
@@ -111,7 +113,7 @@ pub struct Machine {
     pub sessions: ::std::vec::Vec<MachineSession>,
     /// Where Pethost tells the person of incidents: the account's channels that are on, email first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty = alerts reach nobody.
     pub alert_channels: ::std::vec::Vec<AlertDestination>,
-    /// The databases the machine makes ([`Client::create_project`](crate::Client::create_project)\'s `database`), one per engine, with the sizes they may take. Empty = the machine's software predates databases.
+    /// The databases the machine makes ([`Client::create_database`](crate::Client::create_database)), one per engine, with the sizes they may take.
     pub database_engines: ::std::vec::Vec<DatabaseEngineOffer>,
     /// The sum of every service's memory limit (`mem_limit`): what the projects may take together, which `memory_total_bytes` does not reserve.
     pub memory_limits_bytes: u64,
@@ -324,7 +326,7 @@ pub struct ProjectSummary {
     pub pinned: bool,
     /// Its volumes, files, what its containers wrote outside volumes, and its images: one it shares with another project counts in both. Measured every few minutes.
     pub disk_used_bytes: u64,
-    /// Set = a database project ([`Client::create_project`](crate::Client::create_project) `database`).
+    /// Set = a database project ([`Client::create_database`](crate::Client::create_database)).
     pub database: ::core::option::Option<DatabaseSummary>,
 }
 
@@ -456,7 +458,7 @@ pub struct Project {
     pub source: ::core::option::Option<ProjectSource>,
     /// The `start_services`, `stop_services` or `restart_services` that runs now, whoever called it ([`Client::run_project_action`](crate::Client::run_project_action) waits for its end). Until then the project takes no other action or deploy, and [`Service::state`](crate::types::Service::state) is still what it was before. Absent = none.
     pub running_services_action: ::core::option::Option<RunningServicesAction>,
-    /// What Pethost watches and how each part stands. Absent = the machine's software predates alerts: they come with its next update.
+    /// What Pethost watches and how each part stands.
     pub alerts: ::core::option::Option<ProjectAlerts>,
     /// The newest 5 that [`GetProjectRequest::incidents_before`](crate::types::GetProjectRequest::incidents_before) selects, newest first: an open one in full but its evidence (`GetIncident`), a resolved one as its id, kind, times, message, `after_operation_id`, `quiet_reason` and flapping.
     pub incidents: ::std::vec::Vec<Incident>,
@@ -464,7 +466,7 @@ pub struct Project {
     pub more_incidents: bool,
     /// Oldest first, [`GetProjectRequest::uptime_day_count`](crate::types::GetProjectRequest::uptime_day_count) of them, today's last.
     pub uptime_days: ::std::vec::Vec<UptimeDay>,
-    /// Set = a database project ([`Client::create_project`](crate::Client::create_project) `database`): its engine, its state and how apps sign in.
+    /// Set = a database project ([`Client::create_database`](crate::Client::create_database)): its engine, its state and how apps sign in.
     pub database: ::core::option::Option<Database>,
     /// The database projects this one reaches ([`Client::link_database`](crate::Client::link_database)), each at the host of its `project_id`.
     pub linked_databases: ::std::vec::Vec<::std::string::String>,
@@ -591,8 +593,10 @@ pub struct Service {
     pub environment: ::std::vec::Vec<EnvironmentVariable>,
     /// The files its `env_file:` names, as compose.yaml writes them, e.g. \"./.env\": relative to the project directory. Change them with [`DeployProjectRequest::files`](crate::types::DeployProjectRequest::files).
     pub env_files: ::std::vec::Vec<::std::string::String>,
-    /// What the person runs in their own terminal for a shell in its container, e.g. \"ssh web.notes@m1.pethost.dev\"; scp, sftp, rsync and `ssh -L` tunnels take the same address. It works once one of their public keys is among [`Machine::ssh_keys`](crate::types::Machine::ssh_keys).
+    /// What the person runs in their own terminal for a shell in its container, e.g. \"ssh web.notes@m1.pethost.dev\". It works once one of their public keys is among [`Machine::ssh_keys`](crate::types::Machine::ssh_keys).
     pub ssh_command: ::std::string::String,
+    /// The address `ssh_command` logs in at, e.g. \"web.notes@m1.pethost.dev\": scp, sftp, rsync and `ssh -L` tunnels take it too. Empty when `ssh_command` is.
+    pub ssh_login: ::std::string::String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -1249,7 +1253,7 @@ pub struct DatabaseEngineOffer {
     pub major_version: u32,
     /// Smallest first.
     pub sizes: ::std::vec::Vec<DatabaseSizeChoice>,
-    /// The size [`Client::create_project`](crate::Client::create_project)\'s `database` gives.
+    /// The size [`Client::create_database`](crate::Client::create_database) gives when its `memory_limit_bytes` is 0, unless it copies a snapshot.
     pub default_memory_limit_bytes: u64,
 }
 
@@ -1998,11 +2002,6 @@ pub struct MachineUnreachable {
     /// Since when Pethost has not reached it, once that is over 3 minutes: then the person was told ([`Machine::alert_channels`](crate::types::Machine::alert_channels)). Absent = not known yet.
     pub since_time: ::core::option::Option<crate::Timestamp>,
 }
-
-/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
-#[derive(Debug, Clone, PartialEq, Default)]
-#[non_exhaustive]
-pub struct MachineUpdatePending {}
 
 /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or [`Client::create_database`](crate::Client::create_database): a project of `link` cannot be linked to the database. Nothing changed.
 #[derive(Debug, Clone, PartialEq, Default)]

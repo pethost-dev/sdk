@@ -4881,6 +4881,15 @@ pub struct Machine {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub hostname: ::core::option::Option<::buffa::alloc::string::String>,
+    /// True = hostname is an IP address, not a name (a test machine's): no DNS record can point at
+    /// it by name (a CNAME), so a domain must resolve to that address itself.
+    ///
+    /// Field 29: `hostname_is_address`
+    #[serde(
+        rename = "hostname_is_address",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub hostname_is_address: ::core::option::Option<bool>,
     /// "SHA256:...", to check on the first connection.
     ///
     /// Field 13: `ssh_host_key_fingerprint`
@@ -5032,8 +5041,8 @@ pub struct Machine {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub alert_channels: ::buffa::alloc::vec::Vec<AlertDestination>,
-    /// The databases the machine makes (CreateProject's `database`), one per engine, with the sizes
-    /// they may take. Empty = the machine's software predates databases.
+    /// The databases the machine makes (CreateDatabase), one per engine, with the sizes they may
+    /// take.
     ///
     /// Field 27: `database_engines`
     #[serde(
@@ -5070,6 +5079,7 @@ impl ::core::fmt::Debug for Machine {
             .field("disk_total_bytes", &self.disk_total_bytes)
             .field("disk_usage", &self.disk_usage)
             .field("hostname", &self.hostname)
+            .field("hostname_is_address", &self.hostname_is_address)
             .field("ssh_host_key_fingerprint", &self.ssh_host_key_fingerprint)
             .field("ssh_keys", &self.ssh_keys)
             .field("backups_enabled", &self.backups_enabled)
@@ -5168,6 +5178,13 @@ impl Machine {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.hostname = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::hostname_is_address`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_hostname_is_address(mut self, value: bool) -> Self {
+        self.hostname_is_address = Some(value);
         self
     }
     #[must_use = "with_* setters return `self` by value; assign or chain the result"]
@@ -5403,6 +5420,9 @@ impl ::buffa::Message for Machine {
         if let Some(v) = self.memory_limits_bytes {
             size += 2u64 + ::buffa::types::uint64_encoded_len(v) as u64;
         }
+        if self.hostname_is_address.is_some() {
+            size += 2u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -5546,6 +5566,9 @@ impl ::buffa::Message for Machine {
         }
         if let Some(v) = self.memory_limits_bytes {
             ::buffa::types::put_uint64_field(28u32, v, buf);
+        }
+        if let Some(v) = self.hostname_is_address {
+            ::buffa::types::put_bool_field(29u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -5858,6 +5881,15 @@ impl ::buffa::Message for Machine {
                     ::buffa::types::decode_uint64(buf)?,
                 );
             }
+            29u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.hostname_is_address = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -5894,6 +5926,7 @@ impl ::buffa::Message for Machine {
         self.alert_channels.clear();
         self.database_engines.clear();
         self.memory_limits_bytes = ::core::option::Option::None;
+        self.hostname_is_address = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -8955,7 +8988,7 @@ pub struct ProjectSummary {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub disk_used_bytes: ::core::option::Option<u64>,
-    /// Set = a database project (CreateProject `database`).
+    /// Set = a database project (CreateDatabase).
     ///
     /// Field 14: `database`
     #[serde(
@@ -10658,8 +10691,7 @@ pub struct Project {
         RunningServicesAction,
         ::buffa::Inline<RunningServicesAction>,
     >,
-    /// What Pethost watches and how each part stands. Absent = the machine's software predates
-    /// alerts: they come with its next update.
+    /// What Pethost watches and how each part stands.
     ///
     /// Field 23: `alerts`
     #[serde(
@@ -10695,8 +10727,7 @@ pub struct Project {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub uptime_days: ::buffa::alloc::vec::Vec<UptimeDay>,
-    /// Set = a database project (CreateProject `database`): its engine, its state and how apps sign
-    /// in.
+    /// Set = a database project (CreateDatabase): its engine, its state and how apps sign in.
     ///
     /// Field 27: `database`
     #[serde(
@@ -12878,8 +12909,8 @@ pub struct Service {
     )]
     pub env_files: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     /// What the person runs in their own terminal for a shell in its container, e.g.
-    /// "ssh web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address.
-    /// It works once one of their public keys is among Machine.ssh_keys.
+    /// "ssh web.notes@m1.pethost.dev". It works once one of their public keys is among
+    /// Machine.ssh_keys.
     ///
     /// Field 27: `ssh_command`
     #[serde(
@@ -12887,6 +12918,15 @@ pub struct Service {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub ssh_command: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The address ssh_command logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and
+    /// `ssh -L` tunnels take it too. Empty when ssh_command is.
+    ///
+    /// Field 29: `ssh_login`
+    #[serde(
+        rename = "ssh_login",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub ssh_login: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -12922,6 +12962,7 @@ impl ::core::fmt::Debug for Service {
             .field("environment", &self.environment)
             .field("env_files", &self.env_files)
             .field("ssh_command", &self.ssh_command)
+            .field("ssh_login", &self.ssh_login)
             .finish()
     }
 }
@@ -13080,6 +13121,16 @@ impl Service {
         self.ssh_command = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::ssh_login`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_ssh_login(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.ssh_login = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(Service);
 impl ::buffa::MessageName for Service {
@@ -13225,6 +13276,9 @@ impl ::buffa::Message for Service {
                 .sum::<u64>();
             size += 2u64 + ::buffa::encoding::varint_len(payload) as u64 + payload;
         }
+        if let Some(ref v) = self.ssh_login {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -13364,6 +13418,9 @@ impl ::buffa::Message for Service {
             for &v in &self.listening_ports {
                 ::buffa::types::encode_uint32(v, buf);
             }
+        }
+        if let Some(ref v) = self.ssh_login {
+            ::buffa::types::put_string_field(29u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -13722,6 +13779,18 @@ impl ::buffa::Message for Service {
                     );
                 }
             }
+            29u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .ssh_login
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -13758,6 +13827,7 @@ impl ::buffa::Message for Service {
         self.env_files.clear();
         self.ssh_command = ::core::option::Option::None;
         self.listening_ports.clear();
+        self.ssh_login = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -24000,7 +24070,7 @@ pub struct DatabaseEngineOffer {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub sizes: ::buffa::alloc::vec::Vec<DatabaseSizeChoice>,
-    /// The size CreateProject's `database` gives.
+    /// The size CreateDatabase gives when its memory_limit_bytes is 0, unless it copies a snapshot.
     ///
     /// Field 4: `default_memory_limit_bytes`
     #[serde(
@@ -42600,111 +42670,6 @@ pub const __MACHINE_UNREACHABLE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
     type_url: "type.googleapis.com/pethost.panel.v1.MachineUnreachable",
     to_json: ::buffa::type_registry::any_to_json::<MachineUnreachable>,
     from_json: ::buffa::type_registry::any_from_json::<MachineUnreachable>,
-    is_wkt: false,
-};
-/// Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
-/// with the machine's next update, which Pethost runs; nothing for the caller to do.
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct MachineUpdatePending {
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for MachineUpdatePending {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("MachineUpdatePending").finish()
-    }
-}
-impl MachineUpdatePending {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MachineUpdatePending";
-}
-::buffa::impl_default_instance!(MachineUpdatePending);
-impl ::buffa::MessageName for MachineUpdatePending {
-    const PACKAGE: &'static str = "pethost.panel.v1";
-    const NAME: &'static str = "MachineUpdatePending";
-    const FULL_NAME: &'static str = "pethost.panel.v1.MachineUpdatePending";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MachineUpdatePending";
-}
-impl ::buffa::Message for MachineUpdatePending {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for MachineUpdatePending {
-    const PROTO_FQN: &'static str = "pethost.panel.v1.MachineUpdatePending";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for MachineUpdatePending {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __MACHINE_UPDATE_PENDING_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.panel.v1.MachineUpdatePending",
-    to_json: ::buffa::type_registry::any_to_json::<MachineUpdatePending>,
-    from_json: ::buffa::type_registry::any_from_json::<MachineUpdatePending>,
     is_wkt: false,
 };
 /// Detail of a FAILED_PRECONDITION error from LinkDatabase or CreateDatabase: a project of `link`

@@ -42,12 +42,6 @@ type Error struct {
 	// nil = the API sent no such detail.
 	MachineUnreachable *MachineUnreachable
 
-	// Detail of a [CodeFailedPrecondition] error: the machine's software predates what was asked.
-	// It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
-	//
-	// nil = the API sent no such detail.
-	MachineUpdatePending *MachineUpdatePending
-
 	// Detail of a [CodeFailedPrecondition] error from [Client.LinkDatabase] or
 	// [Client.CreateDatabase]: a project of `link` cannot be linked to the database. Nothing
 	// changed.
@@ -85,8 +79,6 @@ func fromWireError(err error) error {
 			e.ProjectChanged = new(fromWireProjectChanged(w))
 		case *panelv1.MachineUnreachable:
 			e.MachineUnreachable = new(fromWireMachineUnreachable(w))
-		case *panelv1.MachineUpdatePending:
-			e.MachineUpdatePending = new(fromWireMachineUpdatePending(w))
 		case *panelv1.DatabaseLinkRefusal:
 			e.DatabaseLinkRefusal = new(fromWireDatabaseLinkRefusal(w))
 		case *panelv1.NoMachine:

@@ -739,12 +739,6 @@ json!(
     types::MachineUnreachable::from
 );
 json!(
-    types::MachineUpdatePending,
-    wire::MachineUpdatePending,
-    wire::MachineUpdatePending::from,
-    types::MachineUpdatePending::from
-);
-json!(
     types::DatabaseLinkRefusal,
     wire::DatabaseLinkRefusal,
     wire::DatabaseLinkRefusal::from,

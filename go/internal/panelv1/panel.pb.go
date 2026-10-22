@@ -1520,6 +1520,7 @@ type Machine struct {
 	xxx_hidden_DiskTotalBytes             uint64                  `protobuf:"varint,10,opt,name=disk_total_bytes,json=diskTotalBytes"`
 	xxx_hidden_DiskUsage                  *DiskUsage              `protobuf:"bytes,11,opt,name=disk_usage,json=diskUsage"`
 	xxx_hidden_Hostname                   *string                 `protobuf:"bytes,12,opt,name=hostname"`
+	xxx_hidden_HostnameIsAddress          bool                    `protobuf:"varint,29,opt,name=hostname_is_address,json=hostnameIsAddress"`
 	xxx_hidden_SshHostKeyFingerprint      *string                 `protobuf:"bytes,13,opt,name=ssh_host_key_fingerprint,json=sshHostKeyFingerprint"`
 	xxx_hidden_SshKeys                    *[]*SshKey              `protobuf:"bytes,14,rep,name=ssh_keys,json=sshKeys"`
 	xxx_hidden_BackupsEnabled             bool                    `protobuf:"varint,15,opt,name=backups_enabled,json=backupsEnabled"`
@@ -1652,6 +1653,13 @@ func (x *Machine) GetHostname() string {
 		return ""
 	}
 	return ""
+}
+
+func (x *Machine) GetHostnameIsAddress() bool {
+	if x != nil {
+		return x.xxx_hidden_HostnameIsAddress
+	}
+	return false
 }
 
 func (x *Machine) GetSshHostKeyFingerprint() string {
@@ -1798,12 +1806,12 @@ func (x *Machine) GetMemoryLimitsBytes() uint64 {
 
 func (x *Machine) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 29)
 }
 
 func (x *Machine) SetLocation(v string) {
 	x.xxx_hidden_Location = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 29)
 }
 
 func (x *Machine) SetSampleTime(v *timestamppb.Timestamp) {
@@ -1812,32 +1820,32 @@ func (x *Machine) SetSampleTime(v *timestamppb.Timestamp) {
 
 func (x *Machine) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 29)
 }
 
 func (x *Machine) SetCpuTotalCores(v float64) {
 	x.xxx_hidden_CpuTotalCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 29)
 }
 
 func (x *Machine) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 29)
 }
 
 func (x *Machine) SetMemoryTotalBytes(v uint64) {
 	x.xxx_hidden_MemoryTotalBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 29)
 }
 
 func (x *Machine) SetDiskUsedBytes(v uint64) {
 	x.xxx_hidden_DiskUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 29)
 }
 
 func (x *Machine) SetDiskTotalBytes(v uint64) {
 	x.xxx_hidden_DiskTotalBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 29)
 }
 
 func (x *Machine) SetDiskUsage(v *DiskUsage) {
@@ -1846,12 +1854,17 @@ func (x *Machine) SetDiskUsage(v *DiskUsage) {
 
 func (x *Machine) SetHostname(v string) {
 	x.xxx_hidden_Hostname = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 29)
+}
+
+func (x *Machine) SetHostnameIsAddress(v bool) {
+	x.xxx_hidden_HostnameIsAddress = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 29)
 }
 
 func (x *Machine) SetSshHostKeyFingerprint(v string) {
 	x.xxx_hidden_SshHostKeyFingerprint = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 29)
 }
 
 func (x *Machine) SetSshKeys(v []*SshKey) {
@@ -1860,7 +1873,7 @@ func (x *Machine) SetSshKeys(v []*SshKey) {
 
 func (x *Machine) SetBackupsEnabled(v bool) {
 	x.xxx_hidden_BackupsEnabled = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 29)
 }
 
 func (x *Machine) SetSnapshotListTime(v *timestamppb.Timestamp) {
@@ -1869,32 +1882,32 @@ func (x *Machine) SetSnapshotListTime(v *timestamppb.Timestamp) {
 
 func (x *Machine) SetSnapshotListFailureMessage(v string) {
 	x.xxx_hidden_SnapshotListFailureMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 29)
 }
 
 func (x *Machine) SetBackupRetentionHours(v uint32) {
 	x.xxx_hidden_BackupRetentionHours = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 29)
 }
 
 func (x *Machine) SetAcmeEnabled(v bool) {
 	x.xxx_hidden_AcmeEnabled = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 29)
 }
 
 func (x *Machine) SetAppsDomain(v string) {
 	x.xxx_hidden_AppsDomain = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 29)
 }
 
 func (x *Machine) SetDaemonVersion(v string) {
 	x.xxx_hidden_DaemonVersion = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 29)
 }
 
 func (x *Machine) SetDockerVersion(v string) {
 	x.xxx_hidden_DockerVersion = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 21, 29)
 }
 
 func (x *Machine) SetBootTime(v *timestamppb.Timestamp) {
@@ -1923,7 +1936,7 @@ func (x *Machine) SetDatabaseEngines(v []*DatabaseEngineOffer) {
 
 func (x *Machine) SetMemoryLimitsBytes(v uint64) {
 	x.xxx_hidden_MemoryLimitsBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 27, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 28, 29)
 }
 
 func (x *Machine) HasName() bool {
@@ -2003,18 +2016,25 @@ func (x *Machine) HasHostname() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
 }
 
-func (x *Machine) HasSshHostKeyFingerprint() bool {
+func (x *Machine) HasHostnameIsAddress() bool {
 	if x == nil {
 		return false
 	}
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 11)
 }
 
+func (x *Machine) HasSshHostKeyFingerprint() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+}
+
 func (x *Machine) HasBackupsEnabled() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
 }
 
 func (x *Machine) HasSnapshotListTime() bool {
@@ -2028,42 +2048,42 @@ func (x *Machine) HasSnapshotListFailureMessage() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 15)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 16)
 }
 
 func (x *Machine) HasBackupRetentionHours() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 16)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 17)
 }
 
 func (x *Machine) HasAcmeEnabled() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 17)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 18)
 }
 
 func (x *Machine) HasAppsDomain() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 18)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 19)
 }
 
 func (x *Machine) HasDaemonVersion() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 19)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 20)
 }
 
 func (x *Machine) HasDockerVersion() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 20)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 21)
 }
 
 func (x *Machine) HasBootTime() bool {
@@ -2091,7 +2111,7 @@ func (x *Machine) HasMemoryLimitsBytes() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 27)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 28)
 }
 
 func (x *Machine) ClearName() {
@@ -2147,13 +2167,18 @@ func (x *Machine) ClearHostname() {
 	x.xxx_hidden_Hostname = nil
 }
 
-func (x *Machine) ClearSshHostKeyFingerprint() {
+func (x *Machine) ClearHostnameIsAddress() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 11)
+	x.xxx_hidden_HostnameIsAddress = false
+}
+
+func (x *Machine) ClearSshHostKeyFingerprint() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
 	x.xxx_hidden_SshHostKeyFingerprint = nil
 }
 
 func (x *Machine) ClearBackupsEnabled() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
 	x.xxx_hidden_BackupsEnabled = false
 }
 
@@ -2162,32 +2187,32 @@ func (x *Machine) ClearSnapshotListTime() {
 }
 
 func (x *Machine) ClearSnapshotListFailureMessage() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 15)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 16)
 	x.xxx_hidden_SnapshotListFailureMessage = nil
 }
 
 func (x *Machine) ClearBackupRetentionHours() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 16)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 17)
 	x.xxx_hidden_BackupRetentionHours = 0
 }
 
 func (x *Machine) ClearAcmeEnabled() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 17)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 18)
 	x.xxx_hidden_AcmeEnabled = false
 }
 
 func (x *Machine) ClearAppsDomain() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 18)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 19)
 	x.xxx_hidden_AppsDomain = nil
 }
 
 func (x *Machine) ClearDaemonVersion() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 19)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 20)
 	x.xxx_hidden_DaemonVersion = nil
 }
 
 func (x *Machine) ClearDockerVersion() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 20)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 21)
 	x.xxx_hidden_DockerVersion = nil
 }
 
@@ -2204,7 +2229,7 @@ func (x *Machine) ClearScheduledRestartTime() {
 }
 
 func (x *Machine) ClearMemoryLimitsBytes() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 27)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 28)
 	x.xxx_hidden_MemoryLimitsBytes = 0
 }
 
@@ -2226,7 +2251,10 @@ type Machine_builder struct {
 	// The machine's name: what the person's own domains point at (a CNAME), and where they log in
 	// to a service's container (Service.ssh_command). CreateTransfer's URLs are on it as well, and
 	// no route can take it.
-	Hostname              *string
+	Hostname *string
+	// True = hostname is an IP address, not a name (a test machine's): no DNS record can point at
+	// it by name (a CNAME), so a domain must resolve to that address itself.
+	HostnameIsAddress     *bool
 	SshHostKeyFingerprint *string
 	// The person's public keys: each logs in to every container. Empty = none yet: nobody can
 	// log in until RunMachineAction.add_ssh_key adds one.
@@ -2272,8 +2300,8 @@ type Machine_builder struct {
 	// then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
 	// alerts reach nobody.
 	AlertChannels []*AlertDestination
-	// The databases the machine makes (CreateProject's `database`), one per engine, with the sizes
-	// they may take. Empty = the machine's software predates databases.
+	// The databases the machine makes (CreateDatabase), one per engine, with the sizes they may
+	// take.
 	DatabaseEngines []*DatabaseEngineOffer
 	// The sum of every service's memory limit (`mem_limit`): what the projects may take together,
 	// which memory_total_bytes does not reserve.
@@ -2285,75 +2313,79 @@ func (b0 Machine_builder) Build() *Machine {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 29)
 		x.xxx_hidden_Name = b.Name
 	}
 	if b.Location != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 29)
 		x.xxx_hidden_Location = b.Location
 	}
 	x.xxx_hidden_SampleTime = b.SampleTime
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 29)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.CpuTotalCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 29)
 		x.xxx_hidden_CpuTotalCores = *b.CpuTotalCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 29)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	if b.MemoryTotalBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 29)
 		x.xxx_hidden_MemoryTotalBytes = *b.MemoryTotalBytes
 	}
 	if b.DiskUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 29)
 		x.xxx_hidden_DiskUsedBytes = *b.DiskUsedBytes
 	}
 	if b.DiskTotalBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 29)
 		x.xxx_hidden_DiskTotalBytes = *b.DiskTotalBytes
 	}
 	x.xxx_hidden_DiskUsage = b.DiskUsage
 	if b.Hostname != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 29)
 		x.xxx_hidden_Hostname = b.Hostname
 	}
+	if b.HostnameIsAddress != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 29)
+		x.xxx_hidden_HostnameIsAddress = *b.HostnameIsAddress
+	}
 	if b.SshHostKeyFingerprint != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 29)
 		x.xxx_hidden_SshHostKeyFingerprint = b.SshHostKeyFingerprint
 	}
 	x.xxx_hidden_SshKeys = &b.SshKeys
 	if b.BackupsEnabled != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 29)
 		x.xxx_hidden_BackupsEnabled = *b.BackupsEnabled
 	}
 	x.xxx_hidden_SnapshotListTime = b.SnapshotListTime
 	if b.SnapshotListFailureMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 29)
 		x.xxx_hidden_SnapshotListFailureMessage = b.SnapshotListFailureMessage
 	}
 	if b.BackupRetentionHours != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 29)
 		x.xxx_hidden_BackupRetentionHours = *b.BackupRetentionHours
 	}
 	if b.AcmeEnabled != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 29)
 		x.xxx_hidden_AcmeEnabled = *b.AcmeEnabled
 	}
 	if b.AppsDomain != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 29)
 		x.xxx_hidden_AppsDomain = b.AppsDomain
 	}
 	if b.DaemonVersion != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 29)
 		x.xxx_hidden_DaemonVersion = b.DaemonVersion
 	}
 	if b.DockerVersion != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 21, 29)
 		x.xxx_hidden_DockerVersion = b.DockerVersion
 	}
 	x.xxx_hidden_BootTime = b.BootTime
@@ -2363,7 +2395,7 @@ func (b0 Machine_builder) Build() *Machine {
 	x.xxx_hidden_AlertChannels = &b.AlertChannels
 	x.xxx_hidden_DatabaseEngines = &b.DatabaseEngines
 	if b.MemoryLimitsBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 27, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 28, 29)
 		x.xxx_hidden_MemoryLimitsBytes = *b.MemoryLimitsBytes
 	}
 	return m0
@@ -6147,8 +6179,7 @@ type Project_builder struct {
 	// (RunProjectAction waits for its end). Until then the project takes no other action or
 	// deploy, and Service.state is still what it was before. Absent = none.
 	RunningServicesAction *RunningServicesAction
-	// What Pethost watches and how each part stands. Absent = the machine's software predates
-	// alerts: they come with its next update.
+	// What Pethost watches and how each part stands.
 	Alerts *ProjectAlerts
 	// The newest 5 that GetProjectRequest.incidents_before selects, newest first: an open one in
 	// full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
@@ -6158,8 +6189,7 @@ type Project_builder struct {
 	MoreIncidents *bool
 	// Oldest first, GetProjectRequest.uptime_day_count of them, today's last.
 	UptimeDays []*UptimeDay
-	// Set = a database project (CreateProject `database`): its engine, its state and how apps sign
-	// in.
+	// Set = a database project (CreateDatabase): its engine, its state and how apps sign in.
 	Database *Database
 	// The database projects this one reaches (LinkDatabase), each at the host of its project_id.
 	LinkedDatabases []string
@@ -6983,6 +7013,7 @@ type Service struct {
 	xxx_hidden_Environment        *[]*EnvironmentVariable `protobuf:"bytes,24,rep,name=environment"`
 	xxx_hidden_EnvFiles           []string                `protobuf:"bytes,26,rep,name=env_files,json=envFiles"`
 	xxx_hidden_SshCommand         *string                 `protobuf:"bytes,27,opt,name=ssh_command,json=sshCommand"`
+	xxx_hidden_SshLogin           *string                 `protobuf:"bytes,29,opt,name=ssh_login,json=sshLogin"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
 	unknownFields                 protoimpl.UnknownFields
@@ -7235,39 +7266,49 @@ func (x *Service) GetSshCommand() string {
 	return ""
 }
 
+func (x *Service) GetSshLogin() string {
+	if x != nil {
+		if x.xxx_hidden_SshLogin != nil {
+			return *x.xxx_hidden_SshLogin
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *Service) SetService(v string) {
 	x.xxx_hidden_Service = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 29)
 }
 
 func (x *Service) SetState(v ServiceState) {
 	x.xxx_hidden_State = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 29)
 }
 
 func (x *Service) SetContainerRunning(v bool) {
 	x.xxx_hidden_ContainerRunning = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 29)
 }
 
 func (x *Service) SetImage(v string) {
 	x.xxx_hidden_Image = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 29)
 }
 
 func (x *Service) SetBuildsImage(v bool) {
 	x.xxx_hidden_BuildsImage = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 29)
 }
 
 func (x *Service) SetImageDigest(v string) {
 	x.xxx_hidden_ImageDigest = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 29)
 }
 
 func (x *Service) SetImageSizeBytes(v uint64) {
 	x.xxx_hidden_ImageSizeBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 29)
 }
 
 func (x *Service) SetCommand(v []string) {
@@ -7276,7 +7317,7 @@ func (x *Service) SetCommand(v []string) {
 
 func (x *Service) SetRunAsUser(v string) {
 	x.xxx_hidden_RunAsUser = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 29)
 }
 
 func (x *Service) SetStartTime(v *timestamppb.Timestamp) {
@@ -7289,42 +7330,42 @@ func (x *Service) SetFinishTime(v *timestamppb.Timestamp) {
 
 func (x *Service) SetExitCode(v int32) {
 	x.xxx_hidden_ExitCode = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 29)
 }
 
 func (x *Service) SetOutOfMemory(v bool) {
 	x.xxx_hidden_OutOfMemory = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 29)
 }
 
 func (x *Service) SetRestartCount(v uint32) {
 	x.xxx_hidden_RestartCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 29)
 }
 
 func (x *Service) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 29)
 }
 
 func (x *Service) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 15, 29)
 }
 
 func (x *Service) SetMemoryLimitBytes(v uint64) {
 	x.xxx_hidden_MemoryLimitBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 16, 29)
 }
 
 func (x *Service) SetCpuLimitCores(v float64) {
 	x.xxx_hidden_CpuLimitCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 29)
 }
 
 func (x *Service) SetWritableLayerBytes(v uint64) {
 	x.xxx_hidden_WritableLayerBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 29)
 }
 
 func (x *Service) SetPorts(v []uint32) {
@@ -7345,7 +7386,7 @@ func (x *Service) SetVolumeMounts(v []*VolumeMount) {
 
 func (x *Service) SetRestartPolicy(v RestartPolicy) {
 	x.xxx_hidden_RestartPolicy = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 23, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 23, 29)
 }
 
 func (x *Service) SetHealthCheck(v *HealthCheck) {
@@ -7362,7 +7403,12 @@ func (x *Service) SetEnvFiles(v []string) {
 
 func (x *Service) SetSshCommand(v string) {
 	x.xxx_hidden_SshCommand = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 27, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 27, 29)
+}
+
+func (x *Service) SetSshLogin(v string) {
+	x.xxx_hidden_SshLogin = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 28, 29)
 }
 
 func (x *Service) HasService() bool {
@@ -7512,6 +7558,13 @@ func (x *Service) HasSshCommand() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 27)
 }
 
+func (x *Service) HasSshLogin() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 28)
+}
+
 func (x *Service) ClearService() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_Service = nil
@@ -7614,6 +7667,11 @@ func (x *Service) ClearSshCommand() {
 	x.xxx_hidden_SshCommand = nil
 }
 
+func (x *Service) ClearSshLogin() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 28)
+	x.xxx_hidden_SshLogin = nil
+}
+
 type Service_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -7668,9 +7726,12 @@ type Service_builder struct {
 	// project directory. Change them with DeployProject.files.
 	EnvFiles []string
 	// What the person runs in their own terminal for a shell in its container, e.g.
-	// "ssh web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address.
-	// It works once one of their public keys is among Machine.ssh_keys.
+	// "ssh web.notes@m1.pethost.dev". It works once one of their public keys is among
+	// Machine.ssh_keys.
 	SshCommand *string
+	// The address ssh_command logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and
+	// `ssh -L` tunnels take it too. Empty when ssh_command is.
+	SshLogin *string
 }
 
 func (b0 Service_builder) Build() *Service {
@@ -7678,70 +7739,70 @@ func (b0 Service_builder) Build() *Service {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Service != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 29)
 		x.xxx_hidden_Service = b.Service
 	}
 	if b.State != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 29)
 		x.xxx_hidden_State = *b.State
 	}
 	if b.ContainerRunning != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 29)
 		x.xxx_hidden_ContainerRunning = *b.ContainerRunning
 	}
 	if b.Image != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 29)
 		x.xxx_hidden_Image = b.Image
 	}
 	if b.BuildsImage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 29)
 		x.xxx_hidden_BuildsImage = *b.BuildsImage
 	}
 	if b.ImageDigest != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 29)
 		x.xxx_hidden_ImageDigest = b.ImageDigest
 	}
 	if b.ImageSizeBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 29)
 		x.xxx_hidden_ImageSizeBytes = *b.ImageSizeBytes
 	}
 	x.xxx_hidden_Command = b.Command
 	if b.RunAsUser != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 29)
 		x.xxx_hidden_RunAsUser = b.RunAsUser
 	}
 	x.xxx_hidden_StartTime = b.StartTime
 	x.xxx_hidden_FinishTime = b.FinishTime
 	if b.ExitCode != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 29)
 		x.xxx_hidden_ExitCode = *b.ExitCode
 	}
 	if b.OutOfMemory != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 29)
 		x.xxx_hidden_OutOfMemory = *b.OutOfMemory
 	}
 	if b.RestartCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 29)
 		x.xxx_hidden_RestartCount = *b.RestartCount
 	}
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 29)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 15, 29)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	if b.MemoryLimitBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 16, 29)
 		x.xxx_hidden_MemoryLimitBytes = *b.MemoryLimitBytes
 	}
 	if b.CpuLimitCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 29)
 		x.xxx_hidden_CpuLimitCores = *b.CpuLimitCores
 	}
 	if b.WritableLayerBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 29)
 		x.xxx_hidden_WritableLayerBytes = *b.WritableLayerBytes
 	}
 	x.xxx_hidden_Ports = b.Ports
@@ -7749,15 +7810,19 @@ func (b0 Service_builder) Build() *Service {
 	x.xxx_hidden_PublishedPorts = &b.PublishedPorts
 	x.xxx_hidden_VolumeMounts = &b.VolumeMounts
 	if b.RestartPolicy != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 23, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 23, 29)
 		x.xxx_hidden_RestartPolicy = *b.RestartPolicy
 	}
 	x.xxx_hidden_HealthCheck = b.HealthCheck
 	x.xxx_hidden_Environment = &b.Environment
 	x.xxx_hidden_EnvFiles = b.EnvFiles
 	if b.SshCommand != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 27, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 27, 29)
 		x.xxx_hidden_SshCommand = b.SshCommand
+	}
+	if b.SshLogin != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 28, 29)
+		x.xxx_hidden_SshLogin = b.SshLogin
 	}
 	return m0
 }
@@ -14714,9 +14779,10 @@ func (x *DatabaseEngineOffer) ClearDefaultMemoryLimitBytes() {
 type DatabaseEngineOffer_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	Engine                  *DatabaseEngine
-	MajorVersion            *uint32
-	Sizes                   []*DatabaseSizeChoice
+	Engine       *DatabaseEngine
+	MajorVersion *uint32
+	Sizes        []*DatabaseSizeChoice
+	// The size CreateDatabase gives when its memory_limit_bytes is 0, unless it copies a snapshot.
 	DefaultMemoryLimitBytes *uint64
 }
 
@@ -27269,51 +27335,6 @@ func (b0 MachineUnreachable_builder) Build() *MachineUnreachable {
 	return m0
 }
 
-// Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
-// with the machine's next update, which Pethost runs; nothing for the caller to do.
-type MachineUpdatePending struct {
-	state         protoimpl.MessageState `protogen:"opaque.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MachineUpdatePending) Reset() {
-	*x = MachineUpdatePending{}
-	mi := &file_v1_panel_proto_msgTypes[119]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MachineUpdatePending) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MachineUpdatePending) ProtoMessage() {}
-
-func (x *MachineUpdatePending) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[119]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-type MachineUpdatePending_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-}
-
-func (b0 MachineUpdatePending_builder) Build() *MachineUpdatePending {
-	m0 := &MachineUpdatePending{}
-	b, x := &b0, m0
-	_, _ = b, x
-	return m0
-}
-
 // Detail of a FAILED_PRECONDITION error from LinkDatabase or CreateDatabase: a project of `link`
 // cannot be linked to the database. Nothing changed.
 type DatabaseLinkRefusal struct {
@@ -27329,7 +27350,7 @@ type DatabaseLinkRefusal struct {
 
 func (x *DatabaseLinkRefusal) Reset() {
 	*x = DatabaseLinkRefusal{}
-	mi := &file_v1_panel_proto_msgTypes[120]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27341,7 +27362,7 @@ func (x *DatabaseLinkRefusal) String() string {
 func (*DatabaseLinkRefusal) ProtoMessage() {}
 
 func (x *DatabaseLinkRefusal) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[120]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27472,7 +27493,7 @@ type NoMachine struct {
 
 func (x *NoMachine) Reset() {
 	*x = NoMachine{}
-	mi := &file_v1_panel_proto_msgTypes[121]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27484,7 +27505,7 @@ func (x *NoMachine) String() string {
 func (*NoMachine) ProtoMessage() {}
 
 func (x *NoMachine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[121]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27583,7 +27604,7 @@ type WatchOperationRequest struct {
 
 func (x *WatchOperationRequest) Reset() {
 	*x = WatchOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[122]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27595,7 +27616,7 @@ func (x *WatchOperationRequest) String() string {
 func (*WatchOperationRequest) ProtoMessage() {}
 
 func (x *WatchOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[122]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27691,7 +27712,7 @@ type WatchOperationResponse struct {
 
 func (x *WatchOperationResponse) Reset() {
 	*x = WatchOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[123]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27703,7 +27724,7 @@ func (x *WatchOperationResponse) String() string {
 func (*WatchOperationResponse) ProtoMessage() {}
 
 func (x *WatchOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[123]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27830,7 +27851,7 @@ func (b0 WatchOperationResponse_builder) Build() *WatchOperationResponse {
 type case_WatchOperationResponse_Message protoreflect.FieldNumber
 
 func (x case_WatchOperationResponse_Message) String() string {
-	md := file_v1_panel_proto_msgTypes[123].Descriptor()
+	md := file_v1_panel_proto_msgTypes[122].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -27866,7 +27887,7 @@ type TailContainerLogsRequest struct {
 
 func (x *TailContainerLogsRequest) Reset() {
 	*x = TailContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[124]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27878,7 +27899,7 @@ func (x *TailContainerLogsRequest) String() string {
 func (*TailContainerLogsRequest) ProtoMessage() {}
 
 func (x *TailContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[124]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28001,7 +28022,7 @@ type TailContainerLogsResponse struct {
 
 func (x *TailContainerLogsResponse) Reset() {
 	*x = TailContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[125]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28013,7 +28034,7 @@ func (x *TailContainerLogsResponse) String() string {
 func (*TailContainerLogsResponse) ProtoMessage() {}
 
 func (x *TailContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[125]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28105,7 +28126,7 @@ type TailHttpTrafficRequest struct {
 
 func (x *TailHttpTrafficRequest) Reset() {
 	*x = TailHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[126]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28117,7 +28138,7 @@ func (x *TailHttpTrafficRequest) String() string {
 func (*TailHttpTrafficRequest) ProtoMessage() {}
 
 func (x *TailHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[126]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28234,7 +28255,7 @@ type TailHttpTrafficResponse struct {
 
 func (x *TailHttpTrafficResponse) Reset() {
 	*x = TailHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[127]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28246,7 +28267,7 @@ func (x *TailHttpTrafficResponse) String() string {
 func (*TailHttpTrafficResponse) ProtoMessage() {}
 
 func (x *TailHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[127]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28309,7 +28330,7 @@ type OpenTerminalRequest struct {
 
 func (x *OpenTerminalRequest) Reset() {
 	*x = OpenTerminalRequest{}
-	mi := &file_v1_panel_proto_msgTypes[128]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28321,7 +28342,7 @@ func (x *OpenTerminalRequest) String() string {
 func (*OpenTerminalRequest) ProtoMessage() {}
 
 func (x *OpenTerminalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[128]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28522,7 +28543,7 @@ type TerminalSize struct {
 
 func (x *TerminalSize) Reset() {
 	*x = TerminalSize{}
-	mi := &file_v1_panel_proto_msgTypes[129]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28534,7 +28555,7 @@ func (x *TerminalSize) String() string {
 func (*TerminalSize) ProtoMessage() {}
 
 func (x *TerminalSize) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[129]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28627,7 +28648,7 @@ type OpenTerminalResponse struct {
 
 func (x *OpenTerminalResponse) Reset() {
 	*x = OpenTerminalResponse{}
-	mi := &file_v1_panel_proto_msgTypes[130]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28639,7 +28660,7 @@ func (x *OpenTerminalResponse) String() string {
 func (*OpenTerminalResponse) ProtoMessage() {}
 
 func (x *OpenTerminalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[130]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28730,7 +28751,7 @@ type OpenDatabaseClientRequest struct {
 
 func (x *OpenDatabaseClientRequest) Reset() {
 	*x = OpenDatabaseClientRequest{}
-	mi := &file_v1_panel_proto_msgTypes[131]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28742,7 +28763,7 @@ func (x *OpenDatabaseClientRequest) String() string {
 func (*OpenDatabaseClientRequest) ProtoMessage() {}
 
 func (x *OpenDatabaseClientRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[131]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28809,7 +28830,7 @@ type OpenDatabaseClientResponse struct {
 
 func (x *OpenDatabaseClientResponse) Reset() {
 	*x = OpenDatabaseClientResponse{}
-	mi := &file_v1_panel_proto_msgTypes[132]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28821,7 +28842,7 @@ func (x *OpenDatabaseClientResponse) String() string {
 func (*OpenDatabaseClientResponse) ProtoMessage() {}
 
 func (x *OpenDatabaseClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[132]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28911,7 +28932,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\amachine\x18\x01 \x01(\v2\x19.pethost.panel.v1.MachineR\amachine\x12<\n" +
 	"\bprojects\x18\x02 \x03(\v2 .pethost.panel.v1.ProjectSummaryR\bprojects\x12K\n" +
 	"\x10deleted_projects\x18\x03 \x03(\v2 .pethost.panel.v1.DeletedProjectR\x0fdeletedProjects\x12:\n" +
-	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\"\x9a\v\n" +
+	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\"\xca\v\n" +
 	"\aMachine\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12;\n" +
@@ -28926,7 +28947,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	" \x01(\x04R\x0ediskTotalBytes\x12:\n" +
 	"\n" +
 	"disk_usage\x18\v \x01(\v2\x1b.pethost.panel.v1.DiskUsageR\tdiskUsage\x12\x1a\n" +
-	"\bhostname\x18\f \x01(\tR\bhostname\x127\n" +
+	"\bhostname\x18\f \x01(\tR\bhostname\x12.\n" +
+	"\x13hostname_is_address\x18\x1d \x01(\bR\x11hostnameIsAddress\x127\n" +
 	"\x18ssh_host_key_fingerprint\x18\r \x01(\tR\x15sshHostKeyFingerprint\x123\n" +
 	"\bssh_keys\x18\x0e \x03(\v2\x18.pethost.panel.v1.SshKeyR\asshKeys\x12'\n" +
 	"\x0fbackups_enabled\x18\x0f \x01(\bR\x0ebackupsEnabled\x12H\n" +
@@ -29111,7 +29133,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\fGithubCommit\x12\x10\n" +
 	"\x03sha\x18\x01 \x01(\tR\x03sha\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x10\n" +
-	"\x03url\x18\x03 \x01(\tR\x03url\"\xe2\t\n" +
+	"\x03url\x18\x03 \x01(\tR\x03url\"\xff\t\n" +
 	"\aService\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x124\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\x12+\n" +
@@ -29144,7 +29166,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\venvironment\x18\x18 \x03(\v2%.pethost.panel.v1.EnvironmentVariableR\venvironment\x12\x1b\n" +
 	"\tenv_files\x18\x1a \x03(\tR\benvFiles\x12\x1f\n" +
 	"\vssh_command\x18\x1b \x01(\tR\n" +
-	"sshCommand\"\x89\x01\n" +
+	"sshCommand\x12\x1b\n" +
+	"\tssh_login\x18\x1d \x01(\tR\bsshLogin\"\x89\x01\n" +
 	"\rPublishedPort\x12!\n" +
 	"\fmachine_port\x18\x01 \x01(\rR\vmachinePort\x12%\n" +
 	"\x0econtainer_port\x18\x02 \x01(\rR\rcontainerPort\x12\x1a\n" +
@@ -29857,8 +29880,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0eProjectChanged\"O\n" +
 	"\x12MachineUnreachable\x129\n" +
 	"\n" +
-	"since_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tsinceTime\"\x16\n" +
-	"\x14MachineUpdatePending\"\x93\x01\n" +
+	"since_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tsinceTime\"\x93\x01\n" +
 	"\x13DatabaseLinkRefusal\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12C\n" +
@@ -30102,7 +30124,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
 var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 23)
-var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 133)
+var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 132)
 var file_v1_panel_proto_goTypes = []any{
 	(AlertChannelKind)(0),               // 0: pethost.panel.v1.AlertChannelKind
 	(MachineSessionKind)(0),             // 1: pethost.panel.v1.MachineSessionKind
@@ -30246,71 +30268,70 @@ var file_v1_panel_proto_goTypes = []any{
 	(*ProjectBusy)(nil),                 // 139: pethost.panel.v1.ProjectBusy
 	(*ProjectChanged)(nil),              // 140: pethost.panel.v1.ProjectChanged
 	(*MachineUnreachable)(nil),          // 141: pethost.panel.v1.MachineUnreachable
-	(*MachineUpdatePending)(nil),        // 142: pethost.panel.v1.MachineUpdatePending
-	(*DatabaseLinkRefusal)(nil),         // 143: pethost.panel.v1.DatabaseLinkRefusal
-	(*NoMachine)(nil),                   // 144: pethost.panel.v1.NoMachine
-	(*WatchOperationRequest)(nil),       // 145: pethost.panel.v1.WatchOperationRequest
-	(*WatchOperationResponse)(nil),      // 146: pethost.panel.v1.WatchOperationResponse
-	(*TailContainerLogsRequest)(nil),    // 147: pethost.panel.v1.TailContainerLogsRequest
-	(*TailContainerLogsResponse)(nil),   // 148: pethost.panel.v1.TailContainerLogsResponse
-	(*TailHttpTrafficRequest)(nil),      // 149: pethost.panel.v1.TailHttpTrafficRequest
-	(*TailHttpTrafficResponse)(nil),     // 150: pethost.panel.v1.TailHttpTrafficResponse
-	(*OpenTerminalRequest)(nil),         // 151: pethost.panel.v1.OpenTerminalRequest
-	(*TerminalSize)(nil),                // 152: pethost.panel.v1.TerminalSize
-	(*OpenTerminalResponse)(nil),        // 153: pethost.panel.v1.OpenTerminalResponse
-	(*OpenDatabaseClientRequest)(nil),   // 154: pethost.panel.v1.OpenDatabaseClientRequest
-	(*OpenDatabaseClientResponse)(nil),  // 155: pethost.panel.v1.OpenDatabaseClientResponse
-	(*timestamppb.Timestamp)(nil),       // 156: google.protobuf.Timestamp
+	(*DatabaseLinkRefusal)(nil),         // 142: pethost.panel.v1.DatabaseLinkRefusal
+	(*NoMachine)(nil),                   // 143: pethost.panel.v1.NoMachine
+	(*WatchOperationRequest)(nil),       // 144: pethost.panel.v1.WatchOperationRequest
+	(*WatchOperationResponse)(nil),      // 145: pethost.panel.v1.WatchOperationResponse
+	(*TailContainerLogsRequest)(nil),    // 146: pethost.panel.v1.TailContainerLogsRequest
+	(*TailContainerLogsResponse)(nil),   // 147: pethost.panel.v1.TailContainerLogsResponse
+	(*TailHttpTrafficRequest)(nil),      // 148: pethost.panel.v1.TailHttpTrafficRequest
+	(*TailHttpTrafficResponse)(nil),     // 149: pethost.panel.v1.TailHttpTrafficResponse
+	(*OpenTerminalRequest)(nil),         // 150: pethost.panel.v1.OpenTerminalRequest
+	(*TerminalSize)(nil),                // 151: pethost.panel.v1.TerminalSize
+	(*OpenTerminalResponse)(nil),        // 152: pethost.panel.v1.OpenTerminalResponse
+	(*OpenDatabaseClientRequest)(nil),   // 153: pethost.panel.v1.OpenDatabaseClientRequest
+	(*OpenDatabaseClientResponse)(nil),  // 154: pethost.panel.v1.OpenDatabaseClientResponse
+	(*timestamppb.Timestamp)(nil),       // 155: google.protobuf.Timestamp
 }
 var file_v1_panel_proto_depIdxs = []int32{
 	25,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
 	37,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
 	32,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
 	30,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
-	156, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
+	155, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
 	28,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
 	29,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
-	156, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	156, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
-	156, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
-	156, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
+	155, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	155, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
+	155, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
+	155, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
 	27,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
 	26,  // 12: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
 	81,  // 13: pethost.panel.v1.Machine.database_engines:type_name -> pethost.panel.v1.DatabaseEngineOffer
 	0,   // 14: pethost.panel.v1.AlertDestination.kind:type_name -> pethost.panel.v1.AlertChannelKind
 	1,   // 15: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
-	156, // 16: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
+	155, // 16: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
 	31,  // 17: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
-	156, // 18: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
+	155, // 18: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
 	57,  // 19: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
 	29,  // 20: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
 	34,  // 21: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
-	156, // 22: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
+	155, // 22: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
 	25,  // 23: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
 	36,  // 24: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
 	39,  // 25: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
 	38,  // 26: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
 	58,  // 27: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	156, // 28: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
+	155, // 28: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
 	56,  // 29: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
 	80,  // 30: pethost.panel.v1.ProjectSummary.database:type_name -> pethost.panel.v1.DatabaseSummary
 	4,   // 31: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
 	2,   // 32: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	156, // 33: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
-	156, // 34: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
-	156, // 35: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
+	155, // 33: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
+	155, // 34: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
+	155, // 35: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
 	42,  // 36: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
 	36,  // 37: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
 	39,  // 38: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
 	9,   // 39: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
-	156, // 40: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
+	155, // 40: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
 	47,  // 41: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
 	52,  // 42: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
 	55,  // 43: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
 	54,  // 44: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
 	56,  // 45: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
 	57,  // 46: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
-	156, // 47: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	155, // 47: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
 	58,  // 48: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
 	44,  // 49: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
 	43,  // 50: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
@@ -30319,13 +30340,13 @@ var file_v1_panel_proto_depIdxs = []int32{
 	110, // 53: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
 	78,  // 54: pethost.panel.v1.Project.database:type_name -> pethost.panel.v1.Database
 	3,   // 55: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
-	156, // 56: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
+	155, // 56: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
 	45,  // 57: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
 	46,  // 58: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
 	46,  // 59: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
 	4,   // 60: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
-	156, // 61: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
-	156, // 62: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
+	155, // 61: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
+	155, // 62: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
 	48,  // 63: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
 	49,  // 64: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
 	5,   // 65: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
@@ -30333,16 +30354,16 @@ var file_v1_panel_proto_depIdxs = []int32{
 	51,  // 67: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
 	6,   // 68: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
 	53,  // 69: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
-	156, // 70: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
+	155, // 70: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
 	7,   // 71: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
-	156, // 72: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
+	155, // 72: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
 	8,   // 73: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
 	9,   // 74: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
-	156, // 75: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
-	156, // 76: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
+	155, // 75: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
+	155, // 76: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
 	10,  // 77: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
 	46,  // 78: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
-	156, // 79: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
+	155, // 79: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
 	44,  // 80: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
 	64,  // 81: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
 	63,  // 82: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
@@ -30361,7 +30382,7 @@ var file_v1_panel_proto_depIdxs = []int32{
 	115, // 95: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
 	69,  // 96: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
 	46,  // 97: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
-	156, // 98: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
+	155, // 98: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
 	56,  // 99: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
 	71,  // 100: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
 	71,  // 101: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
@@ -30386,31 +30407,31 @@ var file_v1_panel_proto_depIdxs = []int32{
 	66,  // 120: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
 	42,  // 121: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
 	115, // 122: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	156, // 123: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 124: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
+	155, // 123: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
+	155, // 124: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
 	13,  // 125: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
-	156, // 126: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 127: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 128: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	155, // 126: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
+	155, // 127: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
+	155, // 128: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
 	90,  // 129: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
 	89,  // 130: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
 	94,  // 131: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
 	95,  // 132: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
-	156, // 133: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
+	155, // 133: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
 	90,  // 134: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
 	91,  // 135: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
 	92,  // 136: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
 	93,  // 137: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
 	12,  // 138: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
 	12,  // 139: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
-	156, // 140: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
+	155, // 140: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
 	96,  // 141: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
 	97,  // 142: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
 	14,  // 143: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
-	156, // 144: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
-	156, // 145: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
-	156, // 146: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
-	156, // 147: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
+	155, // 144: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
+	155, // 145: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
+	155, // 146: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
+	155, // 147: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
 	102, // 148: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
 	103, // 149: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
 	104, // 150: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
@@ -30418,57 +30439,57 @@ var file_v1_panel_proto_depIdxs = []int32{
 	116, // 152: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
 	105, // 153: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
 	107, // 154: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
-	156, // 155: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
+	155, // 155: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
 	102, // 156: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
 	16,  // 157: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
 	106, // 158: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
-	156, // 159: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
+	155, // 159: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
 	103, // 160: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
 	16,  // 161: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
 	2,   // 162: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
 	102, // 163: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
 	103, // 164: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
-	156, // 165: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
-	156, // 166: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
-	156, // 167: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
+	155, // 165: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
+	155, // 166: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
+	155, // 167: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
 	17,  // 168: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
 	109, // 169: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
 	106, // 170: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
 	125, // 171: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
 	120, // 172: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
-	156, // 173: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
+	155, // 173: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
 	108, // 174: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
 	108, // 175: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
 	56,  // 176: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
 	42,  // 177: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
 	115, // 178: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	156, // 179: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
+	155, // 179: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
 	116, // 180: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	156, // 181: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 182: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
-	156, // 183: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 184: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 185: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	155, // 181: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
+	155, // 182: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
+	155, // 183: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
+	155, // 184: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
+	155, // 185: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
 	58,  // 186: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
 	119, // 187: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
 	120, // 188: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
 	121, // 189: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
-	156, // 190: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
+	155, // 190: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
 	58,  // 191: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
 	58,  // 192: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	156, // 193: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
+	155, // 193: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
 	18,  // 194: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
 	122, // 195: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	156, // 196: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	156, // 197: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	156, // 198: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
-	156, // 199: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
-	156, // 200: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	155, // 196: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	155, // 197: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	155, // 198: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
+	155, // 199: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
+	155, // 200: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
 	125, // 201: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
-	156, // 202: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
+	155, // 202: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
 	18,  // 203: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
 	19,  // 204: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
-	156, // 205: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
+	155, // 205: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
 	128, // 206: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
 	20,  // 207: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
 	128, // 208: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
@@ -30476,11 +30497,11 @@ var file_v1_panel_proto_depIdxs = []int32{
 	133, // 210: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
 	134, // 211: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
 	135, // 212: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
-	156, // 213: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
+	155, // 213: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
 	66,  // 214: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
 	8,   // 215: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
-	156, // 216: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
-	156, // 217: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
+	155, // 216: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
+	155, // 217: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
 	21,  // 218: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
 	22,  // 219: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
 	115, // 220: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
@@ -30489,9 +30510,9 @@ var file_v1_panel_proto_depIdxs = []int32{
 	125, // 223: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
 	116, // 224: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
 	121, // 225: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
-	152, // 226: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
-	156, // 227: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
-	156, // 228: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
+	151, // 226: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
+	155, // 227: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
+	155, // 228: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
 	23,  // 229: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
 	33,  // 230: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
 	40,  // 231: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
@@ -30509,14 +30530,14 @@ var file_v1_panel_proto_depIdxs = []int32{
 	87,  // 243: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
 	98,  // 244: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
 	126, // 245: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
-	151, // 246: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
-	154, // 247: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
+	150, // 246: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
+	153, // 247: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
 	129, // 248: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
 	131, // 249: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
 	137, // 250: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
-	145, // 251: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
-	147, // 252: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
-	149, // 253: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
+	144, // 251: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
+	146, // 252: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
+	148, // 253: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
 	24,  // 254: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
 	35,  // 255: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
 	41,  // 256: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
@@ -30534,14 +30555,14 @@ var file_v1_panel_proto_depIdxs = []int32{
 	88,  // 268: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
 	99,  // 269: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
 	127, // 270: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
-	153, // 271: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
-	155, // 272: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
+	152, // 271: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
+	154, // 272: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
 	130, // 273: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
 	136, // 274: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
 	138, // 275: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
-	146, // 276: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
-	148, // 277: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
-	150, // 278: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
+	145, // 276: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
+	147, // 277: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
+	149, // 278: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
 	254, // [254:279] is the sub-list for method output_type
 	229, // [229:254] is the sub-list for method input_type
 	229, // [229:229] is the sub-list for extension type_name
@@ -30609,7 +30630,7 @@ func file_v1_panel_proto_init() {
 		(*pathDownload_Service)(nil),
 		(*pathDownload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[123].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[122].OneofWrappers = []any{
 		(*watchOperationResponse_Log)(nil),
 		(*watchOperationResponse_FinishedOperation)(nil),
 	}
@@ -30619,7 +30640,7 @@ func file_v1_panel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_panel_proto_rawDesc), len(file_v1_panel_proto_rawDesc)),
 			NumEnums:      23,
-			NumMessages:   133,
+			NumMessages:   132,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

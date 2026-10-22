@@ -1,10 +1,11 @@
 # Pethost SDK for TypeScript and JavaScript
 
-[Pethost](https://pethost.dev) is a small cloud for personal projects, easy to use for you and
-your agent: a machine of your own that runs Docker Compose projects, at one flat price. This
-package is its API as a typed client for Node 22, Bun and Deno. It reads the machine, deploys
-a project, queries its logs and requests or follows them as they come, and runs commands in
-its containers: the calls an agent makes, and the API's streams.
+[Pethost](https://pethost.dev) is the agent-first cloud for everything you build: your agent
+deploys and debugs your apps, and you see all of it in a simple panel. One flat price rents a
+machine of your own that runs Docker Compose projects. This package is its API as a typed
+client for Node 22, Bun and Deno. It reads the machine, deploys a project, queries its logs and
+requests or follows them as they come, and runs commands in its containers: the calls an agent
+makes, and the API's streams.
 
 ## Install
 
@@ -160,7 +161,6 @@ A call that fails rejects with a `PethostError`:
   - `error.projectBusy`: Detail of an UNAVAILABLE error: an operation, or a short action, holds the project. The message says the same in words.
   - `error.projectChanged`: Detail of an ABORTED error: baseDeployId is not the current deploy: the project was deployed since you read it. Read it again (Project.deployId) and redo your change on its files.
   - `error.machineUnreachable`: Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call again later.
-  - `error.machineUpdatePending`: Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes with the machine's next update, which Pethost runs; nothing for the caller to do.
   - `error.databaseLinkRefusal`: Detail of a FAILED_PRECONDITION error from linkDatabase or createDatabase: a project of `link` cannot be linked to the database. Nothing changed.
   - `error.noMachine`: Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 

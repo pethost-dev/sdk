@@ -563,6 +563,11 @@ export interface Machine {
    * are on it as well, and no route can take it.
    */
   hostname: string;
+  /**
+   * True = hostname is an IP address, not a name (a test machine's): no DNS record can point at it
+   * by name (a CNAME), so a domain must resolve to that address itself.
+   */
+  hostnameIsAddress: boolean;
   /** "SHA256:...", to check on the first connection. */
   sshHostKeyFingerprint: string;
   /**
@@ -629,8 +634,8 @@ export interface Machine {
    */
   alertChannels: AlertDestination[];
   /**
-   * The databases the machine makes ({@link Pethost.createProject | createProject}'s `database`),
-   * one per engine, with the sizes they may take. Empty = the machine's software predates databases.
+   * The databases the machine makes ({@link Pethost.createDatabase | createDatabase}), one per
+   * engine, with the sizes they may take.
    */
   databaseEngines: DatabaseEngineOffer[];
   /**
@@ -961,7 +966,7 @@ export interface ProjectSummary {
    * with another project counts in both. Measured every few minutes.
    */
   diskUsedBytes: bigint;
-  /** Set = a database project ({@link Pethost.createProject | createProject} `database`). */
+  /** Set = a database project ({@link Pethost.createDatabase | createDatabase}). */
   database?: DatabaseSummary;
 }
 
@@ -1129,10 +1134,7 @@ export interface Project {
    * takes no other action or deploy, and Service.state is still what it was before. Absent = none.
    */
   runningServicesAction?: RunningServicesAction;
-  /**
-   * What Pethost watches and how each part stands. Absent = the machine's software predates alerts:
-   * they come with its next update.
-   */
+  /** What Pethost watches and how each part stands. */
   alerts?: ProjectAlerts;
   /**
    * The newest 5 that GetProjectRequest.incidentsBefore selects, newest first: an open one in full
@@ -1145,8 +1147,8 @@ export interface Project {
   /** Oldest first, GetProjectRequest.uptimeDayCount of them, today's last. */
   uptimeDays: UptimeDay[];
   /**
-   * Set = a database project ({@link Pethost.createProject | createProject} `database`): its engine,
-   * its state and how apps sign in.
+   * Set = a database project ({@link Pethost.createDatabase | createDatabase}): its engine, its
+   * state and how apps sign in.
    */
   database?: Database;
   /**
@@ -1390,10 +1392,14 @@ export interface Service {
   envFiles: string[];
   /**
    * What the person runs in their own terminal for a shell in its container, e.g. "ssh
-   * web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address. It works
-   * once one of their public keys is among Machine.sshKeys.
+   * web.notes@m1.pethost.dev". It works once one of their public keys is among Machine.sshKeys.
    */
   sshCommand: string;
+  /**
+   * The address sshCommand logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and `ssh
+   * -L` tunnels take it too. Empty when sshCommand is.
+   */
+  sshLogin: string;
 }
 
 /** {@link Service} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2466,7 +2472,10 @@ export interface DatabaseEngineOffer {
   majorVersion: number;
   /** Smallest first. */
   sizes: DatabaseSizeChoice[];
-  /** The size {@link Pethost.createProject | createProject}'s `database` gives. */
+  /**
+   * The size {@link Pethost.createDatabase | createDatabase} gives when its memoryLimitBytes is 0,
+   * unless it copies a snapshot.
+   */
   defaultMemoryLimitBytes: bigint;
 }
 
@@ -3507,18 +3516,6 @@ export const MachineUnreachable: JsonCodec<MachineUnreachable, MachineUnreachabl
 };
 
 /**
- * Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
- * with the machine's next update, which Pethost runs; nothing for the caller to do.
- */
-export type MachineUpdatePending = Record<string, never>;
-
-/** {@link MachineUpdatePending} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const MachineUpdatePending: JsonCodec<MachineUpdatePending, MachineUpdatePending> = {
-  toJson: (value) => writeJson(wire.MachineUpdatePendingSchema, convert.toMachineUpdatePending(value)),
-  fromJson: (json) => convert.fromMachineUpdatePending(readJson(wire.MachineUpdatePendingSchema, json)),
-};
-
-/**
  * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
  * {@link Pethost.createDatabase | createDatabase}: a project of `link` cannot be linked to the
  * database. Nothing changed.
@@ -3738,11 +3735,6 @@ export class PethostError extends Error {
    */
   declare readonly machineUnreachable?: MachineUnreachable;
   /**
-   * Detail of a FAILED_PRECONDITION error: the machine's software predates what was asked. It comes
-   * with the machine's next update, which Pethost runs; nothing for the caller to do.
-   */
-  declare readonly machineUpdatePending?: MachineUpdatePending;
-  /**
    * Detail of a FAILED_PRECONDITION error from {@link Pethost.linkDatabase | linkDatabase} or
    * {@link Pethost.createDatabase | createDatabase}: a project of `link` cannot be linked to the
    * database. Nothing changed.
@@ -3754,7 +3746,7 @@ export class PethostError extends Error {
   constructor(
     code: ErrorCode,
     message: string,
-    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly machineUpdatePending?: MachineUpdatePending | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
+    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -3762,7 +3754,6 @@ export class PethostError extends Error {
     if (details.projectBusy) this.projectBusy = details.projectBusy;
     if (details.projectChanged) this.projectChanged = details.projectChanged;
     if (details.machineUnreachable) this.machineUnreachable = details.machineUnreachable;
-    if (details.machineUpdatePending) this.machineUpdatePending = details.machineUpdatePending;
     if (details.databaseLinkRefusal) this.databaseLinkRefusal = details.databaseLinkRefusal;
     if (details.noMachine) this.noMachine = details.noMachine;
   }
@@ -3788,11 +3779,11 @@ export interface CallOptions {
 }
 
 /**
- * The client of Pethost's API. Pethost (https://pethost.dev) is a small cloud for personal
- * projects: a machine of your own that runs Docker Compose projects. A method here is one call
- * of the API: it reads the machine, deploys a project, queries its logs and requests, or runs
- * a command in one of its containers. A stream's method returns what `for await` loops over:
- * its call is made when the loop starts, and lasts as long as the loop.
+ * The client of Pethost's API. Pethost (https://pethost.dev) is the agent-first cloud for
+ * everything you build: a machine of your own that runs Docker Compose projects. A method here
+ * is one call of the API: it reads the machine, deploys a project, queries its logs and
+ * requests, or runs a command in one of its containers. A stream's method returns what
+ * `for await` loops over: its call is made when the loop starts, and lasts as long as the loop.
  *
  * The API's own documentation follows; the comments of the methods and the types are its words.
  *
@@ -3863,7 +3854,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.3.0");
+      request.header.set("User-Agent", "pethost-typescript/0.4.0");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -4124,8 +4115,7 @@ export class Pethost {
    * given replaces the project's (send Project.alerts' with your change); remove_* empties it; a
    * scalar left out stays. Service crashes and failed backups are always watched. Answers with
    * Project.alerts. Where alerts go is the person's choice in the panel's Settings → Alerts
-   * (Machine.alertChannels): no tool sets it. FAILED_PRECONDITION + {@link MachineUpdatePending} =
-   * the machine's software predates alerts.
+   * (Machine.alertChannels): no tool sets it.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -4216,8 +4206,7 @@ export class Pethost {
    * Machine.databaseEngines does not offer, or a projectId with "_", that is a number or that every
    * container's /etc/hosts names (it is the host name apps use). NOT_FOUND = no such snapshot or
    * app. FAILED_PRECONDITION = the snapshot is of no database of that engine; +
-   * {@link DatabaseLinkRefusal} = an app of `link` cannot be linked, and nothing was created; +
-   * {@link MachineUpdatePending} = the machine's software predates databases.
+   * {@link DatabaseLinkRefusal} = an app of `link` cannot be linked, and nothing was created.
    *
    * @throws {@link PethostError} when the call fails.
    */
@@ -4238,9 +4227,8 @@ export class Pethost {
    * {@link Pethost.getProject | getProject} includeSecretValues). Takes effect at once and deploys
    * nothing. INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
    * FAILED_PRECONDITION = databaseProjectId is no database; + {@link DatabaseLinkRefusal} = the app
-   * is a database, has a service named or aliased like the database, or there are 20 links already;
-   * + {@link MachineUpdatePending} = the machine's software predates databases. Answers with the
-   * database's Project.
+   * is a database, has a service named or aliased like the database, or there are 20 links already.
+   * Answers with the database's Project.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -4498,7 +4486,6 @@ function toError(error: unknown): PethostError {
       projectBusy: failed.findDetails(wire.ProjectBusySchema).map(convert.fromProjectBusy)[0],
       projectChanged: failed.findDetails(wire.ProjectChangedSchema).map(convert.fromProjectChanged)[0],
       machineUnreachable: failed.findDetails(wire.MachineUnreachableSchema).map(convert.fromMachineUnreachable)[0],
-      machineUpdatePending: failed.findDetails(wire.MachineUpdatePendingSchema).map(convert.fromMachineUpdatePending)[0],
       databaseLinkRefusal: failed.findDetails(wire.DatabaseLinkRefusalSchema).map(convert.fromDatabaseLinkRefusal)[0],
       noMachine: failed.findDetails(wire.NoMachineSchema).map(convert.fromNoMachine)[0],
     },

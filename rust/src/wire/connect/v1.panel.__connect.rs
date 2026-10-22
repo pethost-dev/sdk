@@ -1592,8 +1592,7 @@ pub trait PanelService: Send + Sync + 'static {
     /// mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
     /// empties it; a scalar left out stays. Service crashes and failed backups are always watched.
     /// Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
-    /// Alerts (Machine.alert_channels): no tool sets it. FAILED_PRECONDITION + MachineUpdatePending
-    /// = the machine's software predates alerts.
+    /// Alerts (Machine.alert_channels): no tool sets it.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1727,9 +1726,8 @@ pub trait PanelService: Send + Sync + 'static {
     /// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
     /// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
     /// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
-    /// is of no database of that engine;
-    /// + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-    /// + MachineUpdatePending = the machine's software predates databases.
+    /// is of no database of that engine; + DatabaseLinkRefusal = an app of `link` cannot be linked,
+    /// and nothing was created.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1757,9 +1755,8 @@ pub trait PanelService: Send + Sync + 'static {
     /// password with GetProject include_secret_values). Takes effect at once and deploys nothing.
     /// INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
     /// FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
-    /// a database, has a service named or aliased like the database, or there are 20 links already;
-    /// + MachineUpdatePending = the machine's software predates databases. Answers with the
-    /// database's Project.
+    /// a database, has a service named or aliased like the database, or there are 20 links already.
+    /// Answers with the database's Project.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1786,10 +1783,9 @@ pub trait PanelService: Send + Sync + 'static {
     /// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
     /// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
     /// readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
-    /// database; + MachineUpdatePending = the machine's software predates the numbers.
-    /// INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of minutes, of
-    /// hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an MCP tool:
-    /// agents use RunServiceCommand with psql or valkey-cli.
+    /// database. INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of
+    /// minutes, of hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an
+    /// MCP tool: agents use RunServiceCommand with psql or valkey-cli.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1814,8 +1810,8 @@ pub trait PanelService: Send + Sync + 'static {
     > + Send;
     /// Cancels the statement a client session of a Postgres database runs, or ends the session
     /// (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
-    /// FAILED_PRECONDITION = it is no Postgres database, or its service does not run;
-    /// + MachineUpdatePending. UNAVAILABLE = the server does not answer. Not an MCP tool.
+    /// FAILED_PRECONDITION = it is no Postgres database, or its service does not run.
+    /// UNAVAILABLE = the server does not answer. Not an MCP tool.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1899,7 +1895,7 @@ pub trait PanelService: Send + Sync + 'static {
     /// panel. What passes on it is between the web panel and the machine, and no part of this API.
     /// It starts read only. While open, it is one of Machine.sessions. NOT_FOUND = no such project.
     /// FAILED_PRECONDITION = it is no database, its service does not run, or the hostname is not yet
-    /// certified; + MachineUpdatePending = the machine's software predates the database client.
+    /// certified.
     /// RESOURCE_EXHAUSTED = 4 clients of this database are open or waiting to open (a URL not yet
     /// opened counts for its 5 minutes), too many transfers, terminals and clients are waiting or
     /// open, or the machine holds too many sessions. Not an MCP tool: agents use RunServiceCommand.

@@ -591,6 +591,8 @@ class Machine:
         hostname: The machine's name: what the person's own domains point at (a CNAME), and where they log in
             to a service's container (Service.ssh_command). create_transfer's URLs are on it as well, and
             no route can take it.
+        hostname_is_address: True = hostname is an IP address, not a name (a test machine's): no DNS record can point at
+            it by name (a CNAME), so a domain must resolve to that address itself.
         ssh_host_key_fingerprint: "SHA256:...", to check on the first connection.
         ssh_keys: The person's public keys: each logs in to every container. Empty = none yet: nobody can
             log in until run_machine_action(add_ssh_key=) adds one.
@@ -622,8 +624,8 @@ class Machine:
         alert_channels: Where Pethost tells the person of incidents: the account's channels that are on, email first,
             then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
             alerts reach nobody.
-        database_engines: The databases the machine makes (create_project's `database`), one per engine, with the sizes
-            they may take. Empty = the machine's software predates databases.
+        database_engines: The databases the machine makes (create_database), one per engine, with the sizes they may
+            take.
         memory_limits_bytes: The sum of every service's memory limit (`mem_limit`): what the projects may take together,
             which memory_total_bytes does not reserve.
     """
@@ -661,6 +663,11 @@ class Machine:
     """The machine's name: what the person's own domains point at (a CNAME), and where they log in
     to a service's container (Service.ssh_command). create_transfer's URLs are on it as well, and
     no route can take it.
+    """
+
+    hostname_is_address: bool = False
+    """True = hostname is an IP address, not a name (a test machine's): no DNS record can point at
+    it by name (a CNAME), so a domain must resolve to that address itself.
     """
 
     ssh_host_key_fingerprint: str = ""
@@ -735,8 +742,8 @@ class Machine:
     """
 
     database_engines: Sequence[DatabaseEngineOffer] = ()
-    """The databases the machine makes (create_project's `database`), one per engine, with the sizes
-    they may take. Empty = the machine's software predates databases.
+    """The databases the machine makes (create_database), one per engine, with the sizes they may
+    take.
     """
 
     memory_limits_bytes: int = 0
@@ -1231,7 +1238,7 @@ class ProjectSummary:
         pinned: A github project stays on its commit: GithubSource.pinned.
         disk_used_bytes: Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
             with another project counts in both. Measured every few minutes.
-        database: Set = a database project (create_project `database`).
+        database: Set = a database project (create_database).
     """
 
     project_id: str = ""
@@ -1274,7 +1281,7 @@ class ProjectSummary:
     """
 
     database: DatabaseSummary | None = None
-    """Set = a database project (create_project `database`)."""
+    """Set = a database project (create_database)."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1457,15 +1464,13 @@ class Project:
         running_services_action: The start_services, stop_services or restart_services that runs now, whoever called it
             (run_project_action waits for its end). Until then the project takes no other action or
             deploy, and Service.state is still what it was before. Absent = none.
-        alerts: What Pethost watches and how each part stands. Absent = the machine's software predates
-            alerts: they come with its next update.
+        alerts: What Pethost watches and how each part stands.
         incidents: The newest 5 that get_project(incidents_before=) selects, newest first: an open one in
             full but its evidence (GetIncident), a resolved one as its id, kind, times, message,
             after_operation_id, quiet_reason and flapping.
         more_incidents: True = older ones remain: page with incidents_before and incidents_before_id.
         uptime_days: Oldest first, get_project(uptime_day_count=) of them, today's last.
-        database: Set = a database project (create_project `database`): its engine, its state and how apps sign
-            in.
+        database: Set = a database project (create_database): its engine, its state and how apps sign in.
         linked_databases: The database projects this one reaches (link_database), each at the host of its project_id.
     """
 
@@ -1554,9 +1559,7 @@ class Project:
     """
 
     alerts: ProjectAlerts | None = None
-    """What Pethost watches and how each part stands. Absent = the machine's software predates
-    alerts: they come with its next update.
-    """
+    """What Pethost watches and how each part stands."""
 
     incidents: Sequence[Incident] = ()
     """The newest 5 that get_project(incidents_before=) selects, newest first: an open one in
@@ -1571,9 +1574,7 @@ class Project:
     """Oldest first, get_project(uptime_day_count=) of them, today's last."""
 
     database: Database | None = None
-    """Set = a database project (create_project `database`): its engine, its state and how apps sign
-    in.
-    """
+    """Set = a database project (create_database): its engine, its state and how apps sign in."""
 
     linked_databases: Sequence[str] = ()
     """The database projects this one reaches (link_database), each at the host of its project_id."""
@@ -1858,8 +1859,10 @@ class Service:
         env_files: The files its `env_file:` names, as compose.yaml writes them, e.g. "./.env": relative to the
             project directory. Change them with deploy_project(files=).
         ssh_command: What the person runs in their own terminal for a shell in its container, e.g.
-            "ssh web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address.
-            It works once one of their public keys is among Machine.ssh_keys.
+            "ssh web.notes@m1.pethost.dev". It works once one of their public keys is among
+            Machine.ssh_keys.
+        ssh_login: The address ssh_command logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and
+            `ssh -L` tunnels take it too. Empty when ssh_command is.
     """
 
     service: str = ""
@@ -1955,8 +1958,13 @@ class Service:
 
     ssh_command: str = ""
     """What the person runs in their own terminal for a shell in its container, e.g.
-    "ssh web.notes@m1.pethost.dev"; scp, sftp, rsync and `ssh -L` tunnels take the same address.
-    It works once one of their public keys is among Machine.ssh_keys.
+    "ssh web.notes@m1.pethost.dev". It works once one of their public keys is among
+    Machine.ssh_keys.
+    """
+
+    ssh_login: str = ""
+    """The address ssh_command logs in at, e.g. "web.notes@m1.pethost.dev": scp, sftp, rsync and
+    `ssh -L` tunnels take it too. Empty when ssh_command is.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -3572,7 +3580,7 @@ class DatabaseEngineOffer:
     Attributes:
         major_version: The major a new database gets, e.g. 18.
         sizes: Smallest first.
-        default_memory_limit_bytes: The size create_project's `database` gives.
+        default_memory_limit_bytes: The size create_database gives when its memory_limit_bytes is 0, unless it copies a snapshot.
     """
 
     engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
@@ -3584,7 +3592,7 @@ class DatabaseEngineOffer:
     """Smallest first."""
 
     default_memory_limit_bytes: int = 0
-    """The size create_project's `database` gives."""
+    """The size create_database gives when its memory_limit_bytes is 0, unless it copies a snapshot."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5352,35 +5360,6 @@ class MachineUnreachable:
         from . import _convert
 
         return _convert.machine_unreachable_from_dict(data)
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class MachineUpdatePending:
-    """Detail of a FailedPreconditionError error: the machine's software predates what was asked. It comes
-    with the machine's next update, which Pethost runs; nothing for the caller to do.
-    """
-
-    def to_dict(self) -> dict[str, Any]:
-        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
-        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
-        absent is left out, a zero where the type has no None too, and an enum's value this version does
-        not know is its number.
-        """
-        from . import _convert
-
-        return _convert.machine_update_pending_to_dict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> MachineUpdatePending:
-        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
-        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
-        and so is an enum's name this version does not know; a value that is not of its field's kind is
-        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
-        """
-        from . import _convert
-
-        return _convert.machine_update_pending_from_dict(data)
 
 
 @final

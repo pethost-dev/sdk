@@ -1462,8 +1462,7 @@ class Pethost:
         mute. A list given replaces the project's (send Project.alerts' with your change); remove_*
         empties it; a scalar left out stays. Service crashes and failed backups are always watched.
         Answers with Project.alerts. Where alerts go is the person's choice in the panel's Settings →
-        Alerts (Machine.alert_channels): no tool sets it. FailedPreconditionError + MachineUpdatePending
-        = the machine's software predates alerts.
+        Alerts (Machine.alert_channels): no tool sets it.
 
         Destructive: it may delete or overwrite something.
 
@@ -1586,9 +1585,8 @@ class Pethost:
         InvalidArgumentError = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NotFoundError = no such snapshot or app. FailedPreconditionError = the snapshot
-        is of no database of that engine;
-        + DatabaseLinkRefusal = an app of `link` cannot be linked, and nothing was created;
-        + MachineUpdatePending = the machine's software predates databases.
+        is of no database of that engine; + DatabaseLinkRefusal = an app of `link` cannot be linked,
+        and nothing was created.
 
         Args:
             project_id: As create_project's, without "_", not a number and no name of /etc/hosts: it is the host name apps use.
@@ -1614,9 +1612,8 @@ class Pethost:
         password with get_project include_secret_values). Takes effect at once and deploys nothing.
         InvalidArgumentError = a project in both link and unlink. NotFoundError = no such project.
         FailedPreconditionError = database_project_id is no database; + DatabaseLinkRefusal = the app is
-        a database, has a service named or aliased like the database, or there are 20 links already;
-        + MachineUpdatePending = the machine's software predates databases. Answers with the
-        database's Project.
+        a database, has a service named or aliased like the database, or there are 20 links already.
+        Answers with the database's Project.
 
         Destructive: it may delete or overwrite something.
 

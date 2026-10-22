@@ -817,6 +817,7 @@ impl From<types::Machine> for wire::Machine {
             disk_total_bytes,
             disk_usage,
             hostname,
+            hostname_is_address,
             ssh_host_key_fingerprint,
             ssh_keys,
             backups_enabled,
@@ -848,6 +849,7 @@ impl From<types::Machine> for wire::Machine {
             disk_total_bytes: self::present(disk_total_bytes),
             disk_usage: disk_usage.map(wire::DiskUsage::from).into(),
             hostname: self::present(hostname),
+            hostname_is_address: self::present(hostname_is_address),
             ssh_host_key_fingerprint: self::present(ssh_host_key_fingerprint),
             ssh_keys: ssh_keys.into_iter().map(wire::SshKey::from).collect(),
             backups_enabled: self::present(backups_enabled),
@@ -887,6 +889,7 @@ impl From<wire::Machine> for types::Machine {
             disk_total_bytes,
             disk_usage,
             hostname,
+            hostname_is_address,
             ssh_host_key_fingerprint,
             ssh_keys,
             backups_enabled,
@@ -919,6 +922,7 @@ impl From<wire::Machine> for types::Machine {
             disk_total_bytes: disk_total_bytes.unwrap_or_default(),
             disk_usage: disk_usage.into_option().map(types::DiskUsage::from),
             hostname: hostname.unwrap_or_default(),
+            hostname_is_address: hostname_is_address.unwrap_or_default(),
             ssh_host_key_fingerprint: ssh_host_key_fingerprint.unwrap_or_default(),
             ssh_keys: ssh_keys.into_iter().map(types::SshKey::from).collect(),
             backups_enabled: backups_enabled.unwrap_or_default(),
@@ -1936,6 +1940,7 @@ impl From<types::Service> for wire::Service {
             environment,
             env_files,
             ssh_command,
+            ssh_login,
         } = message;
 
         Self {
@@ -1967,6 +1972,7 @@ impl From<types::Service> for wire::Service {
             environment: environment.into_iter().map(wire::EnvironmentVariable::from).collect(),
             env_files,
             ssh_command: self::present(ssh_command),
+            ssh_login: self::present(ssh_login),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2003,6 +2009,7 @@ impl From<wire::Service> for types::Service {
             environment,
             env_files,
             ssh_command,
+            ssh_login,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2035,6 +2042,7 @@ impl From<wire::Service> for types::Service {
             environment: environment.into_iter().map(types::EnvironmentVariable::from).collect(),
             env_files,
             ssh_command: ssh_command.unwrap_or_default(),
+            ssh_login: ssh_login.unwrap_or_default(),
         }
     }
 }
@@ -5408,26 +5416,6 @@ impl From<wire::MachineUnreachable> for types::MachineUnreachable {
         Self {
             since_time: since_time.into_option().map(crate::timestamp::from_wire),
         }
-    }
-}
-
-impl From<types::MachineUpdatePending> for wire::MachineUpdatePending {
-    fn from(message: types::MachineUpdatePending) -> Self {
-        let types::MachineUpdatePending {} = message;
-
-        Self {
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::MachineUpdatePending> for types::MachineUpdatePending {
-    fn from(message: wire::MachineUpdatePending) -> Self {
-        let wire::MachineUpdatePending {
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {}
     }
 }
 

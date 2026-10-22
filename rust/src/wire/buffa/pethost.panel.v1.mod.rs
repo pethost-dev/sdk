@@ -151,7 +151,6 @@ pub mod __buffa {
         reg.register_json_any(super::__PROJECT_BUSY_JSON_ANY);
         reg.register_json_any(super::__PROJECT_CHANGED_JSON_ANY);
         reg.register_json_any(super::__MACHINE_UNREACHABLE_JSON_ANY);
-        reg.register_json_any(super::__MACHINE_UPDATE_PENDING_JSON_ANY);
         reg.register_json_any(super::__DATABASE_LINK_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_REQUEST_JSON_ANY);
@@ -643,10 +642,6 @@ pub use self::__buffa::view::ProjectChangedOwnedView;
 pub use self::__buffa::view::MachineUnreachableView;
 #[doc(inline)]
 pub use self::__buffa::view::MachineUnreachableOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::MachineUpdatePendingView;
-#[doc(inline)]
-pub use self::__buffa::view::MachineUpdatePendingOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::DatabaseLinkRefusalView;
 #[doc(inline)]

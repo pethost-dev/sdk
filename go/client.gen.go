@@ -228,7 +228,6 @@ func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectAction
 // remove_* empties it; a scalar left out stays. Service crashes and failed backups are always
 // watched. Answers with [Project.Alerts]. Where alerts go is the person's choice in the
 // panel's Settings → Alerts ([Machine.AlertChannels]): no tool sets it.
-// [CodeFailedPrecondition] + [MachineUpdatePending] = the machine's software predates alerts.
 func (c *Client) SetProjectAlerts(ctx context.Context, request *SetProjectAlertsRequest) (*SetProjectAlertsResponse, error) {
 	response, err := c.wire.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(orZero(request)))
 	if err != nil {
@@ -291,8 +290,7 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 // [Machine.DatabaseEngines] does not offer, or a ProjectID with "_", that is a number or that
 // every container's /etc/hosts names (it is the host name apps use). [CodeNotFound] = no such
 // snapshot or app. [CodeFailedPrecondition] = the snapshot is of no database of that engine; +
-// [DatabaseLinkRefusal] = an app of Link cannot be linked, and nothing was created; +
-// [MachineUpdatePending] = the machine's software predates databases.
+// [DatabaseLinkRefusal] = an app of Link cannot be linked, and nothing was created.
 func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
 	response, err := c.wire.CreateDatabase(ctx, toWireCreateDatabaseRequest(orZero(request)))
 	if err != nil {
@@ -309,8 +307,7 @@ func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequ
 // once and deploys nothing. [CodeInvalidArgument] = a project in both link and unlink.
 // [CodeNotFound] = no such project. [CodeFailedPrecondition] = DatabaseProjectID is no
 // database; + [DatabaseLinkRefusal] = the app is a database, has a service named or aliased
-// like the database, or there are 20 links already; + [MachineUpdatePending] = the machine's
-// software predates databases. Answers with the database's Project.
+// like the database, or there are 20 links already. Answers with the database's Project.
 func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest) (*LinkDatabaseResponse, error) {
 	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(orZero(request)))
 	if err != nil {

@@ -410,6 +410,7 @@ export function fromMachine(m: w.Machine): p.Machine {
     diskTotalBytes: m.diskTotalBytes,
     diskUsage: m.diskUsage && fromDiskUsage(m.diskUsage),
     hostname: m.hostname,
+    hostnameIsAddress: m.hostnameIsAddress,
     sshHostKeyFingerprint: m.sshHostKeyFingerprint,
     sshKeys: m.sshKeys.map(fromSshKey),
     backupsEnabled: m.backupsEnabled,
@@ -443,6 +444,7 @@ export function toMachine(m: p.Machine): MessageInitShape<typeof w.MachineSchema
     diskTotalBytes: m.diskTotalBytes || undefined,
     diskUsage: m.diskUsage && toDiskUsage(m.diskUsage),
     hostname: m.hostname || undefined,
+    hostnameIsAddress: m.hostnameIsAddress || undefined,
     sshHostKeyFingerprint: m.sshHostKeyFingerprint || undefined,
     sshKeys: m.sshKeys?.map(toSshKey),
     backupsEnabled: m.backupsEnabled || undefined,
@@ -969,6 +971,7 @@ export function fromService(m: w.Service): p.Service {
     environment: m.environment.map(fromEnvironmentVariable),
     envFiles: m.envFiles,
     sshCommand: m.sshCommand,
+    sshLogin: m.sshLogin,
   });
 }
 
@@ -1002,6 +1005,7 @@ export function toService(m: p.Service): MessageInitShape<typeof w.ServiceSchema
     environment: m.environment?.map(toEnvironmentVariable),
     envFiles: m.envFiles && [...m.envFiles],
     sshCommand: m.sshCommand || undefined,
+    sshLogin: m.sshLogin || undefined,
   } satisfies Fields<w.Service>;
 }
 
@@ -2660,15 +2664,6 @@ export function toMachineUnreachable(m: p.MachineUnreachable): MessageInitShape<
   return {
     sinceTime: m.sinceTime && toTimestamp(m.sinceTime),
   } satisfies Fields<w.MachineUnreachable>;
-}
-
-export function fromMachineUpdatePending(_: w.MachineUpdatePending): p.MachineUpdatePending {
-  return {};
-}
-
-export function toMachineUpdatePending(_: p.MachineUpdatePending): MessageInitShape<typeof w.MachineUpdatePendingSchema> {
-  return {
-  } satisfies Fields<w.MachineUpdatePending>;
 }
 
 export function fromDatabaseLinkRefusal(m: w.DatabaseLinkRefusal): p.DatabaseLinkRefusal {

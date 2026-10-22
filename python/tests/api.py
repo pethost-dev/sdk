@@ -54,7 +54,6 @@ DETAILS = (
     "ProjectBusy",
     "ProjectChanged",
     "MachineUnreachable",
-    "MachineUpdatePending",
     "DatabaseLinkRefusal",
     "NoMachine",
 )

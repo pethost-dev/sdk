@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.3.0"),
+    ("user-agent", "pethost-rust/0.4.0"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -390,7 +390,7 @@ mod states {
     /// A field no message of the API has: what a later API would add.
     pub fn later_field() -> buffa::UnknownField {
         buffa::UnknownField {
-            number: 29,
+            number: 30,
             data: buffa::UnknownFieldData::LengthDelimited(b"later".to_vec()),
         }
     }
@@ -673,38 +673,39 @@ mod samples {
             message.disk_total_bytes = states::plain(k, u64::from(states::number(10, k)) << 44);
             message.disk_usage = states::maybe(k, samples::disk_usage(k + 9, later));
             message.hostname = states::plain(k, states::text("hostname", k));
+            message.hostname_is_address = states::flag(1, k);
             message.ssh_host_key_fingerprint = states::plain(k, states::text("ssh_host_key_fingerprint", k));
-            message.ssh_keys = states::many(k, [samples::ssh_key(k + 12, later), samples::ssh_key(k + 13, later)]);
-            message.backups_enabled = states::flag(1, k);
-            message.snapshot_list_time = states::maybe(k, states::time(states::number(22, k + 14)));
+            message.ssh_keys = states::many(k, [samples::ssh_key(k + 13, later), samples::ssh_key(k + 14, later)]);
+            message.backups_enabled = states::flag(2, k);
+            message.snapshot_list_time = states::maybe(k, states::time(states::number(22, k + 15)));
             message.snapshot_list_failure_message = states::plain(k, states::text("snapshot_list_failure_message", k));
             message.backup_retention_hours = states::plain(k, states::number(4, k));
-            message.acme_enabled = states::flag(2, k);
+            message.acme_enabled = states::flag(3, k);
             message.apps_domain = states::plain(k, states::text("apps_domain", k));
             message.daemon_version = states::plain(k, states::text("daemon_version", k));
             message.docker_version = states::plain(k, states::text("docker_version", k));
-            message.boot_time = states::maybe(k, states::time(states::number(18, k + 21)));
-            message.restart_required_time = states::maybe(k, states::time(states::number(19, k + 22)));
-            message.scheduled_restart_time = states::maybe(k, states::time(states::number(20, k + 23)));
+            message.boot_time = states::maybe(k, states::time(states::number(18, k + 22)));
+            message.restart_required_time = states::maybe(k, states::time(states::number(19, k + 23)));
+            message.scheduled_restart_time = states::maybe(k, states::time(states::number(20, k + 24)));
             message.sessions = states::many(
                 k,
                 [
-                    samples::machine_session(k + 24, later),
                     samples::machine_session(k + 25, later),
+                    samples::machine_session(k + 26, later),
                 ],
             );
             message.alert_channels = states::many(
                 k,
                 [
-                    samples::alert_destination(k + 25, later),
                     samples::alert_destination(k + 26, later),
+                    samples::alert_destination(k + 27, later),
                 ],
             );
             message.database_engines = states::many(
                 k,
                 [
-                    samples::database_engine_offer(k + 26, later),
                     samples::database_engine_offer(k + 27, later),
+                    samples::database_engine_offer(k + 28, later),
                 ],
             );
             message.memory_limits_bytes = states::plain(k, u64::from(states::number(28, k)) << 44);
@@ -1049,6 +1050,7 @@ mod samples {
             );
             message.env_files = states::many(k, [states::text("env_files", k), states::text("env_files", k + 1)]);
             message.ssh_command = states::plain(k, states::text("ssh_command", k));
+            message.ssh_login = states::plain(k, states::text("ssh_login", k));
         })
     }
 
@@ -2067,10 +2069,6 @@ mod samples {
         })
     }
 
-    pub fn machine_update_pending(_k: usize, later: bool) -> types::MachineUpdatePending {
-        types::MachineUpdatePending::default()
-    }
-
     pub fn database_link_refusal(k: usize, later: bool) -> types::DatabaseLinkRefusal {
         states::make(|message: &mut types::DatabaseLinkRefusal| {
             message.project_id = states::plain(k, states::text("project_id", k));
@@ -2466,44 +2464,45 @@ mod on_wire {
             disk_total_bytes: states::present(states::plain(k, u64::from(states::number(10, k)) << 44)),
             disk_usage: states::maybe(k, on_wire::disk_usage(k + 9, received)).into(),
             hostname: states::present(states::plain(k, states::text("hostname", k))),
+            hostname_is_address: states::present(states::flag(1, k)),
             ssh_host_key_fingerprint: states::present(states::plain(k, states::text("ssh_host_key_fingerprint", k))),
             ssh_keys: states::many(
                 k,
-                [on_wire::ssh_key(k + 12, received), on_wire::ssh_key(k + 13, received)],
+                [on_wire::ssh_key(k + 13, received), on_wire::ssh_key(k + 14, received)],
             ),
-            backups_enabled: states::present(states::flag(1, k)),
-            snapshot_list_time: states::maybe(k, states::time_on_wire(states::number(22, k + 14))).into(),
+            backups_enabled: states::present(states::flag(2, k)),
+            snapshot_list_time: states::maybe(k, states::time_on_wire(states::number(22, k + 15))).into(),
             snapshot_list_failure_message: states::present(states::plain(
                 k,
                 states::text("snapshot_list_failure_message", k),
             )),
             backup_retention_hours: states::present(states::plain(k, states::number(4, k))),
-            acme_enabled: states::present(states::flag(2, k)),
+            acme_enabled: states::present(states::flag(3, k)),
             apps_domain: states::present(states::plain(k, states::text("apps_domain", k))),
             daemon_version: states::present(states::plain(k, states::text("daemon_version", k))),
             docker_version: states::present(states::plain(k, states::text("docker_version", k))),
-            boot_time: states::maybe(k, states::time_on_wire(states::number(18, k + 21))).into(),
-            restart_required_time: states::maybe(k, states::time_on_wire(states::number(19, k + 22))).into(),
-            scheduled_restart_time: states::maybe(k, states::time_on_wire(states::number(20, k + 23))).into(),
+            boot_time: states::maybe(k, states::time_on_wire(states::number(18, k + 22))).into(),
+            restart_required_time: states::maybe(k, states::time_on_wire(states::number(19, k + 23))).into(),
+            scheduled_restart_time: states::maybe(k, states::time_on_wire(states::number(20, k + 24))).into(),
             sessions: states::many(
                 k,
                 [
-                    on_wire::machine_session(k + 24, received),
                     on_wire::machine_session(k + 25, received),
+                    on_wire::machine_session(k + 26, received),
                 ],
             ),
             alert_channels: states::many(
                 k,
                 [
-                    on_wire::alert_destination(k + 25, received),
                     on_wire::alert_destination(k + 26, received),
+                    on_wire::alert_destination(k + 27, received),
                 ],
             ),
             database_engines: states::many(
                 k,
                 [
-                    on_wire::database_engine_offer(k + 26, received),
                     on_wire::database_engine_offer(k + 27, received),
+                    on_wire::database_engine_offer(k + 28, received),
                 ],
             ),
             memory_limits_bytes: states::present(states::plain(k, u64::from(states::number(28, k)) << 44)),
@@ -2993,6 +2992,7 @@ mod on_wire {
             ),
             env_files: states::many(k, [states::text("env_files", k), states::text("env_files", k + 1)]),
             ssh_command: states::present(states::plain(k, states::text("ssh_command", k))),
+            ssh_login: states::present(states::plain(k, states::text("ssh_login", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4485,14 +4485,6 @@ mod on_wire {
         message
     }
 
-    pub fn machine_update_pending(k: usize, received: bool) -> wire::MachineUpdatePending {
-        let mut message = wire::MachineUpdatePending { ..Default::default() };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
     pub fn database_link_refusal(k: usize, received: bool) -> wire::DatabaseLinkRefusal {
         let mut message = wire::DatabaseLinkRefusal {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
@@ -5871,25 +5863,6 @@ async fn machine_unreachable_is_received() {
             "unavailable",
             503,
             &[("pethost.panel.v1.MachineUnreachable", detail.as_slice())],
-            &STANDARD_NO_PAD,
-        );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
-
-        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn machine_update_pending_is_received() {
-    for k in 0..2 {
-        let detail = on_wire::machine_update_pending(k, true).encode_to_vec();
-        let expected = ErrorDetail::MachineUpdatePending(samples::machine_update_pending(k, true));
-
-        let answer = failure(
-            "unavailable",
-            503,
-            &[("pethost.panel.v1.MachineUpdatePending", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
         let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
@@ -7487,6 +7460,7 @@ fn machine_is_json() {
         "disk_total_bytes",
         "disk_usage",
         "hostname",
+        "hostname_is_address",
         "ssh_host_key_fingerprint",
         "ssh_keys",
         "backups_enabled",
@@ -7783,6 +7757,7 @@ fn service_is_json() {
         "environment",
         "env_files",
         "ssh_command",
+        "ssh_login",
     ];
     a_message_is_json(10, &names, samples::service, on_wire::service);
 }
@@ -8661,17 +8636,6 @@ fn machine_unreachable_is_json() {
 }
 
 #[test]
-fn machine_update_pending_is_json() {
-    let names = [];
-    a_message_is_json(
-        2,
-        &names,
-        samples::machine_update_pending,
-        on_wire::machine_update_pending,
-    );
-}
-
-#[test]
 fn database_link_refusal_is_json() {
     let names = ["project_id", "reason", "service"];
     a_message_is_json(
@@ -9013,7 +8977,7 @@ async fn a_detail_is_read_with_padding_and_without() {
     for length in 0..3 {
         let mut detail = wire::ProjectBusy::default();
         detail.__buffa_unknown_fields.push(buffa::UnknownField {
-            number: 29,
+            number: 30,
             data: buffa::UnknownFieldData::LengthDelimited(vec![0; length]),
         });
         let detail = detail.encode_to_vec();

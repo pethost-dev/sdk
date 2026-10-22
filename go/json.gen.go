@@ -1159,17 +1159,6 @@ func (v *MachineUnreachable) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v MachineUpdatePending) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireMachineUpdatePending(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *MachineUpdatePending) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireMachineUpdatePending)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v DatabaseLinkRefusal) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireDatabaseLinkRefusal(v))
 }

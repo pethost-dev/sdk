@@ -47,6 +47,7 @@ func fromWireMachine(w *panelv1.Machine) Machine {
 		w.GetDiskTotalBytes(),
 		pointerFromWire(w.GetDiskUsage(), fromWireDiskUsage),
 		w.GetHostname(),
+		w.GetHostnameIsAddress(),
 		w.GetSshHostKeyFingerprint(),
 		sliceFromWire(w.GetSshKeys(), fromWireSSHKey),
 		w.GetBackupsEnabled(),
@@ -80,6 +81,7 @@ func toWireMachine(v Machine) *panelv1.Machine {
 		DiskTotalBytes:             nonZero(v.DiskTotalBytes),
 		DiskUsage:                  pointerToWire(v.DiskUsage, toWireDiskUsage),
 		Hostname:                   nonZero(v.Hostname),
+		HostnameIsAddress:          nonZero(v.HostnameIsAddress),
 		SshHostKeyFingerprint:      nonZero(v.SSHHostKeyFingerprint),
 		SshKeys:                    sliceToWire(v.SSHKeys, toWireSSHKey),
 		BackupsEnabled:             nonZero(v.BackupsEnabled),
@@ -669,6 +671,7 @@ func fromWireService(w *panelv1.Service) Service {
 		sliceFromWire(w.GetEnvironment(), fromWireEnvironmentVariable),
 		w.GetEnvFiles(),
 		w.GetSshCommand(),
+		w.GetSshLogin(),
 	}
 }
 
@@ -702,6 +705,7 @@ func toWireService(v Service) *panelv1.Service {
 		Environment:        sliceToWire(v.Environment, toWireEnvironmentVariable),
 		EnvFiles:           v.EnvFiles,
 		SshCommand:         nonZero(v.SSHCommand),
+		SshLogin:           nonZero(v.SSHLogin),
 	}
 	return b.Build()
 }
@@ -2582,15 +2586,6 @@ func toWireMachineUnreachable(v MachineUnreachable) *panelv1.MachineUnreachable 
 	b := panelv1.MachineUnreachable_builder{
 		SinceTime: timeToWire(v.SinceTime),
 	}
-	return b.Build()
-}
-
-func fromWireMachineUpdatePending(w *panelv1.MachineUpdatePending) MachineUpdatePending {
-	return MachineUpdatePending{}
-}
-
-func toWireMachineUpdatePending(v MachineUpdatePending) *panelv1.MachineUpdatePending {
-	b := panelv1.MachineUpdatePending_builder{}
 	return b.Build()
 }
 

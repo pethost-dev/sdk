@@ -217,6 +217,7 @@ def machine_from_wire(_w: _pb.Machine) -> _t.Machine:
         disk_total_bytes=_w.disk_total_bytes,
         disk_usage=disk_usage_from_wire(_w.disk_usage) if _w.disk_usage is not None else None,
         hostname=_w.hostname,
+        hostname_is_address=_w.hostname_is_address,
         ssh_host_key_fingerprint=_w.ssh_host_key_fingerprint,
         ssh_keys=tuple(ssh_key_from_wire(_x) for _x in _w.ssh_keys),
         backups_enabled=_w.backups_enabled,
@@ -250,6 +251,7 @@ def machine_to_wire(_v: _t.Machine) -> _pb.Machine:
         disk_total_bytes=_v.disk_total_bytes or None,
         disk_usage=disk_usage_to_wire(_v.disk_usage) if _v.disk_usage is not None else None,
         hostname=_v.hostname or None,
+        hostname_is_address=_v.hostname_is_address or None,
         ssh_host_key_fingerprint=_v.ssh_host_key_fingerprint or None,
         ssh_keys=[ssh_key_to_wire(_x) for _x in _v.ssh_keys],
         backups_enabled=_v.backups_enabled or None,
@@ -876,6 +878,7 @@ def service_from_wire(_w: _pb.Service) -> _t.Service:
         environment=tuple(environment_variable_from_wire(_x) for _x in _w.environment),
         env_files=tuple(_w.env_files),
         ssh_command=_w.ssh_command,
+        ssh_login=_w.ssh_login,
     )
 
 
@@ -909,6 +912,7 @@ def service_to_wire(_v: _t.Service) -> _pb.Service:
         environment=[environment_variable_to_wire(_x) for _x in _v.environment],
         env_files=_rt.strings("Service.env_files", _v.env_files),
         ssh_command=_v.ssh_command or None,
+        ssh_login=_v.ssh_login or None,
     )
 
 
@@ -2748,22 +2752,6 @@ def machine_unreachable_from_dict(_j: dict[str, _Any]) -> _t.MachineUnreachable:
     return machine_unreachable_from_wire(_rt.from_dict(_pb.MachineUnreachable, _j))
 
 
-def machine_update_pending_from_wire(_w: _pb.MachineUpdatePending) -> _t.MachineUpdatePending:
-    return _t.MachineUpdatePending()
-
-
-def machine_update_pending_to_wire(_v: _t.MachineUpdatePending) -> _pb.MachineUpdatePending:
-    return _pb.MachineUpdatePending()
-
-
-def machine_update_pending_to_dict(_v: _t.MachineUpdatePending) -> dict[str, _Any]:
-    return _rt.to_dict(machine_update_pending_to_wire(_v))
-
-
-def machine_update_pending_from_dict(_j: dict[str, _Any]) -> _t.MachineUpdatePending:
-    return machine_update_pending_from_wire(_rt.from_dict(_pb.MachineUpdatePending, _j))
-
-
 def database_link_refusal_from_wire(_w: _pb.DatabaseLinkRefusal) -> _t.DatabaseLinkRefusal:
     return _t.DatabaseLinkRefusal(
         project_id=_w.project_id,
@@ -3323,10 +3311,6 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wMachineUnreachable = _d.value(_pb.MachineUnreachable)
                 if _wMachineUnreachable is not None:
                     return machine_unreachable_from_wire(_wMachineUnreachable)
-            if _d.type_name == "pethost.panel.v1.MachineUpdatePending":
-                _wMachineUpdatePending = _d.value(_pb.MachineUpdatePending)
-                if _wMachineUpdatePending is not None:
-                    return machine_update_pending_from_wire(_wMachineUpdatePending)
             if _d.type_name == "pethost.panel.v1.DatabaseLinkRefusal":
                 _wDatabaseLinkRefusal = _d.value(_pb.DatabaseLinkRefusal)
                 if _wDatabaseLinkRefusal is not None:

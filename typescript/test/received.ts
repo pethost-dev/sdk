@@ -16,7 +16,7 @@ const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
 export const empty = {
   GetMachineRequest: () => ({}),
   GetMachineResponse: () => ({ projects: [], deletedProjects: [] }),
-  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [], databaseEngines: [], memoryLimitsBytes: 0n }),
+  Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", hostnameIsAddress: false, sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [], databaseEngines: [], memoryLimitsBytes: 0n }),
   AlertDestination: () => ({ label: "" }),
   MachineSession: () => ({ sessionId: "", projectId: "", service: "", port: 0, clientAddress: "", sshKeyLabel: "", sshKeyFingerprint: "" }),
   DiskUsage: () => ({ imagesBytes: 0n, volumesBytes: 0n, containerLayersBytes: 0n, projectFilesBytes: 0n, containerLogsBytes: 0n, httpTrafficBytes: 0n }),
@@ -38,7 +38,7 @@ export const empty = {
   ProjectSource: () => ({}),
   GithubSource: () => ({ pinned: false, autoDeployPending: false }),
   GithubCommit: () => ({ sha: "", title: "", url: "" }),
-  Service: () => ({ service: "", containerRunning: false, image: "", buildsImage: false, imageDigest: "", imageSizeBytes: 0n, command: [], runAsUser: "", outOfMemory: false, restartCount: 0, cpuUsedCores: 0, memoryUsedBytes: 0n, memoryLimitBytes: 0n, cpuLimitCores: 0, writableLayerBytes: 0n, ports: [], listeningPorts: [], publishedPorts: [], volumeMounts: [], environment: [], envFiles: [], sshCommand: "" }),
+  Service: () => ({ service: "", containerRunning: false, image: "", buildsImage: false, imageDigest: "", imageSizeBytes: 0n, command: [], runAsUser: "", outOfMemory: false, restartCount: 0, cpuUsedCores: 0, memoryUsedBytes: 0n, memoryLimitBytes: 0n, cpuLimitCores: 0, writableLayerBytes: 0n, ports: [], listeningPorts: [], publishedPorts: [], volumeMounts: [], environment: [], envFiles: [], sshCommand: "", sshLogin: "" }),
   PublishedPort: () => ({ machinePort: 0, containerPort: 0, protocol: "" }),
   VolumeMount: () => ({ volume: "", containerPath: "" }),
   HealthCheck: () => ({ command: [], intervalSeconds: 0, consecutiveFailureCount: 0, recentResultsPassed: [], lastFailureOutput: "" }),
@@ -116,7 +116,6 @@ export const empty = {
   ProjectBusy: () => ({ operationId: "" }),
   ProjectChanged: () => ({}),
   MachineUnreachable: () => ({}),
-  MachineUpdatePending: () => ({}),
   DatabaseLinkRefusal: () => ({ projectId: "", service: "" }),
   NoMachine: () => ({ url: "" }),
   WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
@@ -152,6 +151,7 @@ export const empty = {
   m.reads("Machine.disk_total_bytes", { diskTotalBytes: 9007199254740993n }, { ...empty.Machine(), diskTotalBytes: 9007199254740993n });
   m.reads("Machine.disk_usage", { diskUsage: {} }, { ...empty.Machine(), diskUsage: empty.DiskUsage() });
   m.reads("Machine.hostname", { hostname: "hostname" }, { ...empty.Machine(), hostname: "hostname" });
+  m.reads("Machine.hostname_is_address", { hostnameIsAddress: true }, { ...empty.Machine(), hostnameIsAddress: true });
   m.reads("Machine.ssh_host_key_fingerprint", { sshHostKeyFingerprint: "ssh_host_key_fingerprint" }, { ...empty.Machine(), sshHostKeyFingerprint: "ssh_host_key_fingerprint" });
   m.reads("Machine.ssh_keys", { sshKeys: [{}] }, { ...empty.Machine(), sshKeys: [empty.SshKey()] });
   m.reads("Machine.backups_enabled", { backupsEnabled: true }, { ...empty.Machine(), backupsEnabled: true });
@@ -477,6 +477,7 @@ export const empty = {
   m.reads("Service.environment", { environment: [{}] }, { ...empty.Service(), environment: [empty.EnvironmentVariable()] });
   m.reads("Service.env_files", { envFiles: ["env_files", ""] }, { ...empty.Service(), envFiles: ["env_files", ""] });
   m.reads("Service.ssh_command", { sshCommand: "ssh_command" }, { ...empty.Service(), sshCommand: "ssh_command" });
+  m.reads("Service.ssh_login", { sshLogin: "ssh_login" }, { ...empty.Service(), sshLogin: "ssh_login" });
 }
 
 {
@@ -1123,12 +1124,6 @@ export const empty = {
   m.reads("MachineUnreachable: nothing set", {}, empty.MachineUnreachable());
   m.reads("MachineUnreachable: a field newer than the SDK", newer(w.MachineUnreachableSchema), empty.MachineUnreachable());
   m.reads("MachineUnreachable.since_time", { sinceTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.MachineUnreachable(), sinceTime: new Date(1790000000999) });
-}
-
-{
-  const m = readingDetail(w.MachineUpdatePendingSchema, (leaf: Init<typeof w.MachineUpdatePendingSchema>): Init<typeof w.MachineUpdatePendingSchema> => (leaf), anyCall, (error) => error.machineUpdatePending);
-  m.reads("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
-  m.reads("MachineUpdatePending: a field newer than the SDK", newer(w.MachineUpdatePendingSchema), empty.MachineUpdatePending());
 }
 
 {

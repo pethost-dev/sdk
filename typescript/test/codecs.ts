@@ -46,6 +46,7 @@ import * as p from "pethost";
   m.reads("Machine.disk_total_bytes: as a number", { disk_total_bytes: 1010 }, { ...empty.Machine(), diskTotalBytes: 1010n });
   m.converts("Machine.disk_usage", { diskUsage: {} }, { ...empty.Machine(), diskUsage: empty.DiskUsage() });
   m.converts("Machine.hostname", { hostname: "hostname" }, { ...empty.Machine(), hostname: "hostname" });
+  m.converts("Machine.hostname_is_address", { hostnameIsAddress: true }, { ...empty.Machine(), hostnameIsAddress: true });
   m.converts("Machine.ssh_host_key_fingerprint", { sshHostKeyFingerprint: "ssh_host_key_fingerprint" }, { ...empty.Machine(), sshHostKeyFingerprint: "ssh_host_key_fingerprint" });
   m.converts("Machine.ssh_keys", { sshKeys: [{}] }, { ...empty.Machine(), sshKeys: [empty.SshKey()] });
   m.converts("Machine.backups_enabled", { backupsEnabled: true }, { ...empty.Machine(), backupsEnabled: true });
@@ -430,6 +431,7 @@ import * as p from "pethost";
   m.converts("Service.environment", { environment: [{}] }, { ...empty.Service(), environment: [empty.EnvironmentVariable()] });
   m.converts("Service.env_files", { envFiles: ["env_files", ""] }, { ...empty.Service(), envFiles: ["env_files", ""] });
   m.converts("Service.ssh_command", { sshCommand: "ssh_command" }, { ...empty.Service(), sshCommand: "ssh_command" });
+  m.converts("Service.ssh_login", { sshLogin: "ssh_login" }, { ...empty.Service(), sshLogin: "ssh_login" });
 }
 
 {
@@ -964,6 +966,7 @@ import * as p from "pethost";
   m.converts("TrafficRule.metric: SERVER_ERRORS", { metric: w.TrafficMetric.SERVER_ERRORS }, { ...empty.TrafficRule(), metric: "SERVER_ERRORS" });
   m.converts("TrafficRule.metric: SERVER_ERROR_PERCENT", { metric: w.TrafficMetric.SERVER_ERROR_PERCENT }, { ...empty.TrafficRule(), metric: "SERVER_ERROR_PERCENT" });
   m.converts("TrafficRule.metric: LATENCY_P95_MS", { metric: w.TrafficMetric.LATENCY_P95_MS }, { ...empty.TrafficRule(), metric: "LATENCY_P95_MS" });
+  m.converts("TrafficRule.metric: a value newer than the SDK", { metric: 9999 as w.TrafficMetric }, { ...empty.TrafficRule(), metric: 9999 });
   m.refuses("TrafficRule.metric: a name newer than the SDK", { metric: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("TrafficRule.filter", { filter: {} }, { ...empty.TrafficRule(), filter: empty.HttpTrafficFilter() });
   m.converts("TrafficRule.threshold", { threshold: 1003.5 }, { ...empty.TrafficRule(), threshold: 1003.5 });
@@ -1434,12 +1437,6 @@ import * as p from "pethost";
   m.converts("MachineUnreachable: nothing set", {}, empty.MachineUnreachable());
   m.refuses("MachineUnreachable: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("MachineUnreachable.since_time", { sinceTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.MachineUnreachable(), sinceTime: new Date(1790000000123) });
-}
-
-{
-  const m = json(p.MachineUpdatePending, w.MachineUpdatePendingSchema);
-  m.converts("MachineUpdatePending: nothing set", {}, empty.MachineUpdatePending());
-  m.refuses("MachineUpdatePending: a field the API does not have", { no_such_field: true }, "no_such_field");
 }
 
 {

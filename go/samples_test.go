@@ -132,7 +132,6 @@ var details = []detail{
 	{&panelv1.ProjectBusy{}, func(s seed) Error { return Error{ProjectBusy: new(sampleProjectBusy(s))} }},
 	{&panelv1.ProjectChanged{}, func(s seed) Error { return Error{ProjectChanged: new(sampleProjectChanged(s))} }},
 	{&panelv1.MachineUnreachable{}, func(s seed) Error { return Error{MachineUnreachable: new(sampleMachineUnreachable(s))} }},
-	{&panelv1.MachineUpdatePending{}, func(s seed) Error { return Error{MachineUpdatePending: new(sampleMachineUpdatePending(s))} }},
 	{&panelv1.DatabaseLinkRefusal{}, func(s seed) Error { return Error{DatabaseLinkRefusal: new(sampleDatabaseLinkRefusal(s))} }},
 	{&panelv1.NoMachine{}, func(s seed) Error { return Error{NoMachine: new(sampleNoMachine(s))} }},
 }
@@ -241,7 +240,6 @@ var shapes = []shape{
 	shapeOf(sampleProjectBusy, &panelv1.ProjectBusy{}),
 	shapeOf(sampleProjectChanged, &panelv1.ProjectChanged{}),
 	shapeOf(sampleMachineUnreachable, &panelv1.MachineUnreachable{}),
-	shapeOf(sampleMachineUpdatePending, &panelv1.MachineUpdatePending{}),
 	shapeOf(sampleDatabaseLinkRefusal, &panelv1.DatabaseLinkRefusal{}),
 	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
 	shapeOf(sampleWatchOperationRequest, &panelv1.WatchOperationRequest{}),
@@ -302,6 +300,7 @@ func sampleMachine(s seed) Machine {
 		DiskTotalBytes:             plain[uint64](s.at("pethost.panel.v1.Machine.disk_total_bytes")),
 		DiskUsage:                  pointer(s.at("pethost.panel.v1.Machine.disk_usage"), sampleDiskUsage),
 		Hostname:                   plain[string](s.at("pethost.panel.v1.Machine.hostname")),
+		HostnameIsAddress:          plain[bool](s.at("pethost.panel.v1.Machine.hostname_is_address")),
 		SSHHostKeyFingerprint:      plain[string](s.at("pethost.panel.v1.Machine.ssh_host_key_fingerprint")),
 		SSHKeys:                    list(s.at("pethost.panel.v1.Machine.ssh_keys"), sampleSSHKey),
 		BackupsEnabled:             plain[bool](s.at("pethost.panel.v1.Machine.backups_enabled")),
@@ -603,6 +602,7 @@ func sampleService(s seed) Service {
 		Environment:        list(s.at("pethost.panel.v1.Service.environment"), sampleEnvironmentVariable),
 		EnvFiles:           list(s.at("pethost.panel.v1.Service.env_files"), scalar[string]),
 		SSHCommand:         plain[string](s.at("pethost.panel.v1.Service.ssh_command")),
+		SSHLogin:           plain[string](s.at("pethost.panel.v1.Service.ssh_login")),
 	}
 }
 
@@ -1466,10 +1466,6 @@ func sampleMachineUnreachable(s seed) MachineUnreachable {
 	return MachineUnreachable{
 		SinceTime: instant(s.at("pethost.panel.v1.MachineUnreachable.since_time")),
 	}
-}
-
-func sampleMachineUpdatePending(s seed) MachineUpdatePending {
-	return MachineUpdatePending{}
 }
 
 func sampleDatabaseLinkRefusal(s seed) DatabaseLinkRefusal {
