@@ -2,7 +2,7 @@
 
 [package]
 name = "pethost"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 rust-version = "1.88"
 description = "Client for the API of Pethost, managed hosting for Docker Compose projects: deploy, logs, HTTP traffic, files"
@@ -30,7 +30,7 @@ buffa-types = { version = "0.9.2", features = ["json"] }
 serde_json = "1"
 http = "1"
 webpki-roots = "1"
-base64 = "0.22"
+base64 = "0.23"
 # What makes a ResponseStream of the wire layer's stream: private as well.
 futures-util = { version = "0.3", default-features = false }
 
