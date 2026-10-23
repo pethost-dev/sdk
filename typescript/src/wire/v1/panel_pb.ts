@@ -1963,8 +1963,10 @@ export type Host = Message<"pethost.panel.v1.Host"> & {
 
   /**
    * Why the host answers nobody: a name under the panel's domain that is not one label under
-   * Machine.apps_domain (another account's, a former apps_domain of this one, or two labels
-   * deep). Change its host. Empty = it answers, or it is the person's own domain.
+   * Machine.apps_domain (another account's, or two labels deep): change its host. One under a
+   * former apps_domain of this account moves by itself to the same name under the new one, within
+   * a minute of the change, unless the project's last deploy failed or another project has that
+   * name. Empty = it answers, or it is the person's own domain.
    *
    * @generated from field: string unavailable_message = 5;
    */

@@ -667,8 +667,10 @@ type Host struct {
 	// When the certificate served expires. Absent = none is served yet.
 	CertificateExpireTime time.Time
 	// Why the host answers nobody: a name under the panel's domain that is not one label under
-	// [Machine.AppsDomain] (another account's, a former [Machine.AppsDomain] of this one, or two
-	// labels deep). Change its host. Empty = it answers, or it is the person's own domain.
+	// [Machine.AppsDomain] (another account's, or two labels deep): change its host. One under a
+	// former [Machine.AppsDomain] of this account moves by itself to the same name under the new
+	// one, within a minute of the change, unless the project's last deploy failed or another
+	// project has that name. Empty = it answers, or it is the person's own domain.
 	UnavailableMessage string
 }
 

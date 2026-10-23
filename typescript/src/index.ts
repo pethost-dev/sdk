@@ -1551,8 +1551,10 @@ export interface Host {
   certificateExpireTime?: Date;
   /**
    * Why the host answers nobody: a name under the panel's domain that is not one label under
-   * Machine.appsDomain (another account's, a former appsDomain of this one, or two labels deep).
-   * Change its host. Empty = it answers, or it is the person's own domain.
+   * Machine.appsDomain (another account's, or two labels deep): change its host. One under a former
+   * appsDomain of this account moves by itself to the same name under the new one, within a minute
+   * of the change, unless the project's last deploy failed or another project has that name. Empty =
+   * it answers, or it is the person's own domain.
    */
   unavailableMessage: string;
 }
@@ -3854,7 +3856,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.1");
+      request.header.set("User-Agent", "pethost-typescript/0.4.2");
       return next(request);
     };
     this.#wire = connect.createClient(
