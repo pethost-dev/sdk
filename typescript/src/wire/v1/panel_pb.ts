@@ -8,11 +8,11 @@
 // stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
 // too, as methods of every SDK; an agent uses what is named beside each.
 
-// Pethost is the user's own hosting: their plan reserves CPU, memory and disk on one Linux machine,
-// where their Docker Compose projects run. Use it whenever the user wants to deploy, host, publish
-// or put online an app, site, bot, API or database, and for anything already running there: logs,
-// domains, secrets, rollbacks, files. Start with GetMachine: it lists what runs and what is wrong.
-// A first deploy is CreateProject: its description holds the compose.yaml rules.
+// Pethost is the user's own hosting: their plan sets the size (CPU, memory, disk) of one Linux
+// machine, where their Docker Compose projects run. Use it whenever the user wants to deploy, host,
+// publish or put online an app, site, bot, API or database, and for anything already running there:
+// logs, domains, secrets, rollbacks, files. Start with GetMachine: it lists what runs and what is
+// wrong. A first deploy is CreateProject: its description holds the compose.yaml rules.
 //
 // A site that fails or is slow: QueryHttpTraffic says which path, QueryContainerLogs what it
 // failed with, ReadPath shows the code at fault. Every tool here is a call you make yourself,

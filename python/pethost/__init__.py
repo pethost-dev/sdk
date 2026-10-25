@@ -1,9 +1,9 @@
 """Pethost's API for Python.
 
-Pethost (https://pethost.dev) is hosting for Docker Compose projects at one flat price, on the
-CPU, memory and disk your plan reserves. The package has the calls of its API, the ones an agent
-has through its MCP server: read the machine and its projects, deploy, read logs and HTTP
-requests, run commands, move files.
+Pethost (https://pethost.dev) is hosting for Docker Compose projects at one flat price, as many
+as fit in your plan. The package has the calls of its API, the ones an agent has through its MCP
+server: read the machine and its projects, deploy, read logs and HTTP requests, run commands,
+move files.
 
     from pethost import Pethost
 

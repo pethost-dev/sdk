@@ -3782,9 +3782,9 @@ export interface CallOptions {
 
 /**
  * The client of Pethost's API. Pethost (https://pethost.dev) is the agent-first cloud for
- * everything you build: Docker Compose projects on the CPU, memory and disk your plan reserves,
- * at one flat price. A method here is one call of the API: it reads the machine, deploys a
- * project, queries its logs and requests, or runs a command in one of its containers. A stream's method returns what
+ * everything you build: as many Docker Compose projects as fit in your plan, at one flat price.
+ * A method here is one call of the API: it reads the machine, deploys a project, queries its logs
+ * and requests, or runs a command in one of its containers. A stream's method returns what
  * `for await` loops over: its call is made when the loop starts, and lasts as long as the loop.
  *
  * The API's own documentation follows; the comments of the methods and the types are its words.
@@ -3856,7 +3856,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.3");
+      request.header.set("User-Agent", "pethost-typescript/0.4.4");
       return next(request);
     };
     this.#wire = connect.createClient(

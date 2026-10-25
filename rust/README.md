@@ -1,7 +1,7 @@
 # Pethost for Rust
 
 `pethost` is the Rust client of the API of [Pethost](https://pethost.dev), managed hosting for
-Docker Compose projects on the CPU, memory and disk your plan reserves. A program does with it
+Docker Compose projects at one flat price, as many as fit in your plan. A program does with it
 what the web panel and an agent do: it reads the machine and its projects, deploys, reads logs
 and HTTP traffic, runs commands in containers and moves files. The crate is generated from the API's definition, so
 every call, field and comment in it is the API's own.
@@ -77,31 +77,31 @@ PETHOST_TOKEN=pth_... cargo run
 
 ## The calls
 
-Each is a method of [`Client`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html):
+Each is a method of [`Client`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html):
 it takes the request's struct and returns the response's, or an `Error`; a stream returns its
 responses one by one, as "Streams" below shows.
 
 | Method | What it does | Effect |
 |---|---|---|
-| [`get_machine`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
-| [`run_machine_action`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
-| [`get_project`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
-| [`create_project`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.create_project) | Create a project |  |
-| [`deploy_project`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
-| [`list_commits`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
-| [`run_project_action`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
-| [`set_project_alerts`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.set_project_alerts) | Set a project's alerts | destructive |
-| [`get_operation`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
-| [`query_http_traffic`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
-| [`query_container_logs`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
-| [`create_database`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.create_database) | Create a database |  |
-| [`link_database`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.link_database) | Link projects to a database | destructive |
-| [`run_service_command`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
-| [`read_path`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
-| [`create_transfer`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
-| [`watch_operation`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.watch_operation) | Watch an operation | stream |
-| [`tail_container_logs`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.tail_container_logs) | Follow container logs | stream |
-| [`tail_http_traffic`](https://docs.rs/pethost/0.4.3/pethost/struct.Client.html#method.tail_http_traffic) | Follow HTTP traffic | stream |
+| [`get_machine`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.get_machine) | Get the machine | read-only |
+| [`run_machine_action`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.run_machine_action) | Run a machine action | destructive |
+| [`get_project`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.get_project) | Get a project | read-only |
+| [`create_project`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.create_project) | Create a project |  |
+| [`deploy_project`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.deploy_project) | Deploy a project | destructive |
+| [`list_commits`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.list_commits) | List a project's commits | read-only |
+| [`run_project_action`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.run_project_action) | Run a project action | destructive |
+| [`set_project_alerts`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.set_project_alerts) | Set a project's alerts | destructive |
+| [`get_operation`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.get_operation) | Get an operation | read-only |
+| [`query_http_traffic`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.query_http_traffic) | Query HTTP traffic | read-only |
+| [`query_container_logs`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.query_container_logs) | Query container logs | read-only |
+| [`create_database`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.create_database) | Create a database |  |
+| [`link_database`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.link_database) | Link projects to a database | destructive |
+| [`run_service_command`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.run_service_command) | Run a command in a service | destructive |
+| [`read_path`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.read_path) | Read a file or directory | read-only |
+| [`create_transfer`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.create_transfer) | Upload or download a file | destructive |
+| [`watch_operation`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.watch_operation) | Watch an operation | stream |
+| [`tail_container_logs`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.tail_container_logs) | Follow container logs | stream |
+| [`tail_http_traffic`](https://docs.rs/pethost/0.4.4/pethost/struct.Client.html#method.tail_http_traffic) | Follow HTTP traffic | stream |
 
 Read-only = it changes nothing. Destructive = it may delete or overwrite something. Stream =
 it returns its responses one by one.
@@ -109,7 +109,7 @@ it returns its responses one by one.
 ## Streams
 
 A stream's method returns a
-[`ResponseStream`](https://docs.rs/pethost/0.4.3/pethost/struct.ResponseStream.html) at
+[`ResponseStream`](https://docs.rs/pethost/0.4.4/pethost/struct.ResponseStream.html) at
 once: its `next` is each response as the API sends it, for as long as the program reads. This
 program prints a project's newest log lines, then follows them. The same program is
 `examples/logs.rs`.
@@ -219,19 +219,19 @@ with the cause as the error's `source()`.
 
 ## Links
 
-- [The crate's documentation](https://docs.rs/pethost/0.4.3): every call and message, with the API's own comments.
+- [The crate's documentation](https://docs.rs/pethost/0.4.4): every call and message, with the API's own comments.
 - [The API's reference](https://pethost.dev/docs/api/): the same API for any language.
 - [The panel](https://console.pethost.dev): where a token is made.
 
 ## Docker Compose hosting at one flat price
 
-Pethost is managed hosting for Docker Compose projects. A subscription reserves CPU, memory and
-disk for your projects, at one flat price. Pethost's software deploys them, gives them HTTPS
-addresses, keeps their request logs and backs them up every night. You run it through your
+Pethost is managed hosting for Docker Compose projects. A plan has a set size in CPU, memory and
+disk, at one flat price, for as many projects as fit. Pethost's software deploys them, gives
+them HTTPS addresses, keeps their request logs and backs them up every night. You run it through your
 agent or from a web panel: both show the same projects, logs and requests.
 
-- **Always on:** no cold starts, nothing sleeps, on the resources reserved for your projects.
-  Security updates install themselves.
+- **Always on:** no cold starts, nothing sleeps, on every plan. Security updates install
+  themselves.
 - **HTTPS addresses:** anything.yourname.pethost.app at once, or your own domain with one DNS
   record. Certificates renew themselves. A password page in front of the whole site: one
   sentence to your agent.
@@ -248,8 +248,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 
 **Pricing.** Starter is €9.99 a month for 2 vCPU, 3 GB of memory and 30 GB of SSD. Grow is
 €17.99 for 4 vCPU, 6 GB and 60 GB. Scale is €59 for 8 vCPU, 30 GB and 200 GB. Prices are without
-VAT. Each plan reserves its CPU, memory and disk for your projects, so you can try anything: as
-many projects, containers and databases as fit, nothing metered, and nothing billed on top. There is no free tier. [See the plans](https://pethost.dev/#pricing).
+VAT. Whatever the plan, you can try anything: as many projects, containers and databases as
+fit, nothing metered, and nothing billed on top. There is no free tier. [See the plans](https://pethost.dev/#pricing).
 
 **Who it is for.** Solo developers and early startups who host several projects, bots or small
 apps and want one fixed monthly bill, and people who build with an AI agent and want it to
@@ -288,6 +288,6 @@ No. The web panel does the same, and shows the same projects, logs and requests.
 Yes. One DNS record, and the certificate comes by itself.
 
 **Is there a free tier?**
-No: €9.99 a month reserves the resources your projects run on, so nothing sleeps. Cancel any time:
+No: plans start at €9.99 a month, and nothing sleeps. Cancel any time:
 [refunds and cancellation](https://pethost.dev/refunds/) has the rules.
 

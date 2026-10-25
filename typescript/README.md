@@ -1,8 +1,8 @@
 # Pethost SDK for TypeScript and JavaScript
 
 [Pethost](https://pethost.dev) is the agent-first cloud for everything you build: your agent
-deploys and debugs your apps, and you see all of it in a simple panel. One flat price reserves
-CPU, memory and disk for your Docker Compose projects. This package is its API as a typed
+deploys and debugs your apps, and you see all of it in a simple panel. One flat price covers
+as many Docker Compose projects as fit in your plan. This package is its API as a typed
 client for Node 22, Bun and Deno. It reads the machine, deploys a project, queries its logs and
 requests or follows them as they come, and runs commands in its containers: the calls an agent
 makes, and the API's streams.
@@ -172,13 +172,13 @@ A call that fails rejects with a `PethostError`:
 
 ## Docker Compose hosting at one flat price
 
-Pethost is managed hosting for Docker Compose projects. A subscription reserves CPU, memory and
-disk for your projects, at one flat price. Pethost's software deploys them, gives them HTTPS
-addresses, keeps their request logs and backs them up every night. You run it through your
+Pethost is managed hosting for Docker Compose projects. A plan has a set size in CPU, memory and
+disk, at one flat price, for as many projects as fit. Pethost's software deploys them, gives
+them HTTPS addresses, keeps their request logs and backs them up every night. You run it through your
 agent or from a web panel: both show the same projects, logs and requests.
 
-- **Always on:** no cold starts, nothing sleeps, on the resources reserved for your projects.
-  Security updates install themselves.
+- **Always on:** no cold starts, nothing sleeps, on every plan. Security updates install
+  themselves.
 - **HTTPS addresses:** anything.yourname.pethost.app at once, or your own domain with one DNS
   record. Certificates renew themselves. A password page in front of the whole site: one
   sentence to your agent.
@@ -195,8 +195,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 
 **Pricing.** Starter is €9.99 a month for 2 vCPU, 3 GB of memory and 30 GB of SSD. Grow is
 €17.99 for 4 vCPU, 6 GB and 60 GB. Scale is €59 for 8 vCPU, 30 GB and 200 GB. Prices are without
-VAT. Each plan reserves its CPU, memory and disk for your projects, so you can try anything: as
-many projects, containers and databases as fit, nothing metered, and nothing billed on top. There is no free tier. [See the plans](https://pethost.dev/#pricing).
+VAT. Whatever the plan, you can try anything: as many projects, containers and databases as
+fit, nothing metered, and nothing billed on top. There is no free tier. [See the plans](https://pethost.dev/#pricing).
 
 **Who it is for.** Solo developers and early startups who host several projects, bots or small
 apps and want one fixed monthly bill, and people who build with an AI agent and want it to
@@ -235,6 +235,6 @@ No. The web panel does the same, and shows the same projects, logs and requests.
 Yes. One DNS record, and the certificate comes by itself.
 
 **Is there a free tier?**
-No: €9.99 a month reserves the resources your projects run on, so nothing sleeps. Cancel any time:
+No: plans start at €9.99 a month, and nothing sleeps. Cancel any time:
 [refunds and cancellation](https://pethost.dev/refunds/) has the rules.
 
