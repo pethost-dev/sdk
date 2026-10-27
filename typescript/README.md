@@ -162,6 +162,7 @@ A call that fails rejects with a `PethostError`:
   - `error.projectChanged`: Detail of an ABORTED error: baseDeployId is not the current deploy: the project was deployed since you read it. Read it again (Project.deployId) and redo your change on its files.
   - `error.machineUnreachable`: Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call again later.
   - `error.databaseLinkRefusal`: Detail of a FAILED_PRECONDITION error from linkDatabase or createDatabase: a project of `link` cannot be linked to the database. Nothing changed.
+  - `error.databaseSizeRefusal`: Detail of a FAILED_PRECONDITION error from RunProjectActionRequest.setDatabaseSize: the database cannot take that size now. Nothing changed.
   - `error.noMachine`: Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
 
 ## Links

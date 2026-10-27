@@ -245,6 +245,7 @@ const fromDeployFailureReason: Record<w.DeployFailureReason, p.DeployFailureReas
   [w.DeployFailureReason.TIMED_OUT]: "TIMED_OUT",
   [w.DeployFailureReason.UNCOVERED_IMAGE_VOLUME]: "UNCOVERED_IMAGE_VOLUME",
   [w.DeployFailureReason.BUILD_MEMORY_UNAVAILABLE]: "BUILD_MEMORY_UNAVAILABLE",
+  [w.DeployFailureReason.DATABASE_USER_FAILED]: "DATABASE_USER_FAILED",
 };
 const toDeployFailureReason: Record<p.DeployFailureReason, w.DeployFailureReason> = {
   IMAGE_PULL_FAILED: w.DeployFailureReason.IMAGE_PULL_FAILED,
@@ -258,6 +259,7 @@ const toDeployFailureReason: Record<p.DeployFailureReason, w.DeployFailureReason
   TIMED_OUT: w.DeployFailureReason.TIMED_OUT,
   UNCOVERED_IMAGE_VOLUME: w.DeployFailureReason.UNCOVERED_IMAGE_VOLUME,
   BUILD_MEMORY_UNAVAILABLE: w.DeployFailureReason.BUILD_MEMORY_UNAVAILABLE,
+  DATABASE_USER_FAILED: w.DeployFailureReason.DATABASE_USER_FAILED,
 };
 
 const fromDatabaseEngine: Record<w.DatabaseEngine, p.DatabaseEngine | undefined> = {
@@ -353,11 +355,27 @@ const fromDatabaseLinkRefusalReason: Record<w.DatabaseLinkRefusalReason, p.Datab
   [w.DatabaseLinkRefusalReason.APP_IS_DATABASE]: "APP_IS_DATABASE",
   [w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN]: "SERVICE_NAME_TAKEN",
   [w.DatabaseLinkRefusalReason.TOO_MANY_LINKS]: "TOO_MANY_LINKS",
+  [w.DatabaseLinkRefusalReason.ONE_USER]: "ONE_USER",
+  [w.DatabaseLinkRefusalReason.USER_NAME_RESERVED]: "USER_NAME_RESERVED",
 };
 const toDatabaseLinkRefusalReason: Record<p.DatabaseLinkRefusalReason, w.DatabaseLinkRefusalReason> = {
   APP_IS_DATABASE: w.DatabaseLinkRefusalReason.APP_IS_DATABASE,
   SERVICE_NAME_TAKEN: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN,
   TOO_MANY_LINKS: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS,
+  ONE_USER: w.DatabaseLinkRefusalReason.ONE_USER,
+  USER_NAME_RESERVED: w.DatabaseLinkRefusalReason.USER_NAME_RESERVED,
+};
+
+const fromDatabaseSizeRefusalReason: Record<w.DatabaseSizeRefusalReason, p.DatabaseSizeRefusalReason | undefined> = {
+  [w.DatabaseSizeRefusalReason.UNSPECIFIED]: undefined,
+  [w.DatabaseSizeRefusalReason.DATA_TOO_LARGE]: "DATA_TOO_LARGE",
+  [w.DatabaseSizeRefusalReason.DATA_UNREAD]: "DATA_UNREAD",
+  [w.DatabaseSizeRefusalReason.VOLUME_MOVED]: "VOLUME_MOVED",
+};
+const toDatabaseSizeRefusalReason: Record<p.DatabaseSizeRefusalReason, w.DatabaseSizeRefusalReason> = {
+  DATA_TOO_LARGE: w.DatabaseSizeRefusalReason.DATA_TOO_LARGE,
+  DATA_UNREAD: w.DatabaseSizeRefusalReason.DATA_UNREAD,
+  VOLUME_MOVED: w.DatabaseSizeRefusalReason.VOLUME_MOVED,
 };
 
 const fromNoMachineReason: Record<w.NoMachineReason, p.NoMachineReason | undefined> = {
@@ -1181,6 +1199,7 @@ export function fromOperation(m: w.Operation): p.Operation {
     changedPathCount: m.changedPathCount,
     filesKept: m.filesKept,
     filesOperationId: m.filesOperationId,
+    databaseMemoryLimitBytes: m.databaseMemoryLimitBytes,
   });
 }
 
@@ -1206,6 +1225,7 @@ export function toOperation(m: p.Operation): MessageInitShape<typeof w.Operation
     changedPathCount: m.changedPathCount || undefined,
     filesKept: m.filesKept || undefined,
     filesOperationId: m.filesOperationId || undefined,
+    databaseMemoryLimitBytes: m.databaseMemoryLimitBytes || undefined,
   } satisfies Fields<w.Operation>;
 }
 
@@ -1255,6 +1275,7 @@ export function fromCreateProjectRequest(m: w.CreateProjectRequest): p.CreatePro
     timeoutSeconds: m.timeoutSeconds,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    linkDatabases: m.linkDatabases.map(fromDatabaseLinkRequest),
   });
 }
 
@@ -1268,7 +1289,24 @@ export function toCreateProjectRequest(m: p.CreateProjectRequest): MessageInitSh
     timeoutSeconds: m.timeoutSeconds || undefined,
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
+    linkDatabases: m.linkDatabases?.map(toDatabaseLinkRequest),
   } satisfies Fields<w.CreateProjectRequest>;
+}
+
+export function fromDatabaseLinkRequest(m: w.DatabaseLinkRequest): p.DatabaseLinkRequestInput {
+  return compact<p.DatabaseLinkRequestInput>({
+    databaseProjectId: m.databaseProjectId,
+    ownUser: m.ownUser,
+    envPrefix: m.envPrefix,
+  });
+}
+
+export function toDatabaseLinkRequest(m: p.DatabaseLinkRequestInput): MessageInitShape<typeof w.DatabaseLinkRequestSchema> {
+  return {
+    databaseProjectId: m.databaseProjectId || undefined,
+    ownUser: m.ownUser || undefined,
+    envPrefix: m.envPrefix || undefined,
+  } satisfies Fields<w.DatabaseLinkRequest>;
 }
 
 export function fromCreateProjectResponse(m: w.CreateProjectResponse): p.CreateProjectResponse {
@@ -1509,7 +1547,7 @@ export function fromRunProjectActionRequest(m: w.RunProjectActionRequest): p.Run
   }), ...fromRunProjectActionRequest_action(m.action) };
 }
 
-function fromRunProjectActionRequest_action(o: w.RunProjectActionRequest["action"]): Part<p.RunProjectActionRequest, "startServices" | "stopServices" | "restartServices" | "recreateService" | "backUp" | "restoreSnapshot" | "cancelOperation" | "deleteProject" | "setSource" | "deleteVolume"> {
+function fromRunProjectActionRequest_action(o: w.RunProjectActionRequest["action"]): Part<p.RunProjectActionRequest, "startServices" | "stopServices" | "restartServices" | "recreateService" | "backUp" | "restoreSnapshot" | "cancelOperation" | "deleteProject" | "setSource" | "deleteVolume" | "setDatabaseSize"> {
   switch (o.case) {
     case "startServices": return { startServices: fromServicesAction(o.value) };
     case "stopServices": return { stopServices: fromServicesAction(o.value) };
@@ -1521,6 +1559,7 @@ function fromRunProjectActionRequest_action(o: w.RunProjectActionRequest["action
     case "deleteProject": return { deleteProject: fromDeleteProjectAction(o.value) };
     case "setSource": return { setSource: fromProjectSource(o.value) };
     case "deleteVolume": return { deleteVolume: o.value };
+    case "setDatabaseSize": return { setDatabaseSize: fromSetDatabaseSizeAction(o.value) };
     case undefined: return {};
     default: o satisfies never; return {};
   }
@@ -1536,7 +1575,7 @@ export function toRunProjectActionRequest(m: p.RunProjectActionRequest): Message
 }
 
 function toRunProjectActionRequest_action(m: p.RunProjectActionRequest): MessageInitShape<typeof w.RunProjectActionRequestSchema>["action"] {
-  written<Unwritten<MessageInitShape<typeof w.RunProjectActionRequestSchema>["action"], "startServices" | "stopServices" | "restartServices" | "recreateService" | "backUp" | "restoreSnapshot" | "cancelOperation" | "deleteProject" | "setSource" | "deleteVolume">>();
+  written<Unwritten<MessageInitShape<typeof w.RunProjectActionRequestSchema>["action"], "startServices" | "stopServices" | "restartServices" | "recreateService" | "backUp" | "restoreSnapshot" | "cancelOperation" | "deleteProject" | "setSource" | "deleteVolume" | "setDatabaseSize">>();
   const set: NonNullable<MessageInitShape<typeof w.RunProjectActionRequestSchema>["action"]>[] = [];
   if (m.startServices !== undefined) set.push({ case: "startServices", value: toServicesAction(m.startServices) });
   if (m.stopServices !== undefined) set.push({ case: "stopServices", value: toServicesAction(m.stopServices) });
@@ -1548,6 +1587,7 @@ function toRunProjectActionRequest_action(m: p.RunProjectActionRequest): Message
   if (m.deleteProject !== undefined) set.push({ case: "deleteProject", value: toDeleteProjectAction(m.deleteProject) });
   if (m.setSource !== undefined) set.push({ case: "setSource", value: toProjectSource(m.setSource) });
   if (m.deleteVolume !== undefined) set.push({ case: "deleteVolume", value: m.deleteVolume });
+  if (m.setDatabaseSize !== undefined) set.push({ case: "setDatabaseSize", value: toSetDatabaseSizeAction(m.setDatabaseSize) });
   return only("action", set);
 }
 
@@ -1624,6 +1664,18 @@ export function toDeleteProjectAction(m: p.DeleteProjectActionInput): MessageIni
   } satisfies Fields<w.DeleteProjectAction>;
 }
 
+export function fromSetDatabaseSizeAction(m: w.SetDatabaseSizeAction): p.SetDatabaseSizeActionInput {
+  return compact<p.SetDatabaseSizeActionInput>({
+    memoryLimitBytes: m.memoryLimitBytes,
+  });
+}
+
+export function toSetDatabaseSizeAction(m: p.SetDatabaseSizeActionInput): MessageInitShape<typeof w.SetDatabaseSizeActionSchema> {
+  return {
+    memoryLimitBytes: m.memoryLimitBytes || undefined,
+  } satisfies Fields<w.SetDatabaseSizeAction>;
+}
+
 export function fromRunProjectActionResponse(m: w.RunProjectActionResponse): p.RunProjectActionResponse {
   return compact<p.RunProjectActionResponse>({
     operation: m.operation && fromOperation(m.operation),
@@ -1654,6 +1706,7 @@ export function fromDatabase(m: w.Database): p.Database {
     service: m.service,
     volume: m.volume,
     consoleCommand: m.consoleCommand,
+    ownUserProjects: m.ownUserProjects,
   });
 }
 
@@ -1671,6 +1724,7 @@ export function toDatabase(m: p.Database): MessageInitShape<typeof w.DatabaseSch
     service: m.service || undefined,
     volume: m.volume || undefined,
     consoleCommand: m.consoleCommand && [...m.consoleCommand],
+    ownUserProjects: m.ownUserProjects && [...m.ownUserProjects],
   } satisfies Fields<w.Database>;
 }
 
@@ -1706,6 +1760,8 @@ export function fromDatabaseSummary(m: w.DatabaseSummary): p.DatabaseSummary {
     connections: m.connections,
     linkedProjects: m.linkedProjects,
     serverVersion: m.serverVersion,
+    memoryLimitBytes: m.memoryLimitBytes,
+    ownUserProjects: m.ownUserProjects,
   });
 }
 
@@ -1717,6 +1773,8 @@ export function toDatabaseSummary(m: p.DatabaseSummary): MessageInitShape<typeof
     connections: m.connections || undefined,
     linkedProjects: m.linkedProjects && [...m.linkedProjects],
     serverVersion: m.serverVersion || undefined,
+    memoryLimitBytes: m.memoryLimitBytes || undefined,
+    ownUserProjects: m.ownUserProjects && [...m.ownUserProjects],
   } satisfies Fields<w.DatabaseSummary>;
 }
 
@@ -1726,6 +1784,7 @@ export function fromDatabaseEngineOffer(m: w.DatabaseEngineOffer): p.DatabaseEng
     majorVersion: m.majorVersion,
     sizes: m.sizes.map(fromDatabaseSizeChoice),
     defaultMemoryLimitBytes: m.defaultMemoryLimitBytes,
+    ownUsers: m.ownUsers,
   });
 }
 
@@ -1735,6 +1794,7 @@ export function toDatabaseEngineOffer(m: p.DatabaseEngineOffer): MessageInitShap
     majorVersion: m.majorVersion || undefined,
     sizes: m.sizes?.map(toDatabaseSizeChoice),
     defaultMemoryLimitBytes: m.defaultMemoryLimitBytes || undefined,
+    ownUsers: m.ownUsers || undefined,
   } satisfies Fields<w.DatabaseEngineOffer>;
 }
 
@@ -1787,6 +1847,7 @@ export function fromCreateDatabaseRequest(m: w.CreateDatabaseRequest): p.CreateD
     link: m.link,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateDatabaseRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    metadata: m.metadata && fromProjectMetadata(m.metadata),
   });
 }
 
@@ -1799,6 +1860,7 @@ export function toCreateDatabaseRequest(m: p.CreateDatabaseRequest): MessageInit
     link: m.link && [...m.link],
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
+    metadata: m.metadata && toProjectMetadata(m.metadata),
   } satisfies Fields<w.CreateDatabaseRequest>;
 }
 
@@ -2671,6 +2733,7 @@ export function fromDatabaseLinkRefusal(m: w.DatabaseLinkRefusal): p.DatabaseLin
     projectId: m.projectId,
     reason: known(fromDatabaseLinkRefusalReason, m.reason),
     service: m.service,
+    databaseProjectId: m.databaseProjectId,
   });
 }
 
@@ -2679,7 +2742,26 @@ export function toDatabaseLinkRefusal(m: p.DatabaseLinkRefusal): MessageInitShap
     projectId: m.projectId || undefined,
     reason: numbered(toDatabaseLinkRefusalReason, m.reason),
     service: m.service || undefined,
+    databaseProjectId: m.databaseProjectId || undefined,
   } satisfies Fields<w.DatabaseLinkRefusal>;
+}
+
+export function fromDatabaseSizeRefusal(m: w.DatabaseSizeRefusal): p.DatabaseSizeRefusal {
+  return compact<p.DatabaseSizeRefusal>({
+    reason: known(fromDatabaseSizeRefusalReason, m.reason),
+    dataBytes: m.dataBytes,
+    keepsBytes: m.keepsBytes,
+    volume: m.volume,
+  });
+}
+
+export function toDatabaseSizeRefusal(m: p.DatabaseSizeRefusal): MessageInitShape<typeof w.DatabaseSizeRefusalSchema> {
+  return {
+    reason: numbered(toDatabaseSizeRefusalReason, m.reason),
+    dataBytes: m.dataBytes || undefined,
+    keepsBytes: m.keepsBytes || undefined,
+    volume: m.volume || undefined,
+  } satisfies Fields<w.DatabaseSizeRefusal>;
 }
 
 export function fromNoMachine(m: w.NoMachine): p.NoMachine {

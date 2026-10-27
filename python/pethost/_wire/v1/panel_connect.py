@@ -73,7 +73,16 @@ class PanelService(Protocol):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey) is CreateDatabase's.
+        A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
+        with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
+        compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
+        from its first start (its deploy waits for one still being made). own_user, Postgres only (a
+        Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
+        named as the project, which they cannot reach; all are restored together. Only link_databases
+        makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+        DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+        A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+        `files` with a /.env without it beside `upload_id`.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -128,7 +137,9 @@ class PanelService(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
+        linked to it (database_project_id says which), and nothing was created. A deleted project's
+        id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -173,12 +184,33 @@ class PanelService(Protocol):
     async def run_project_action(self, request: RunProjectActionRequest, ctx: RequestContext[RunProjectActionRequest, RunProjectActionResponse], /) -> RunProjectActionResponse:
         """
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is CreateDatabase's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachine.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (GetMachine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FAILED_PRECONDITION + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FAILED_PRECONDITION alone = the project is no database. INVALID_ARGUMENT = a size its engine
+        does not offer (the message lists them).
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -232,9 +264,11 @@ class PanelService(Protocol):
         """
         A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
         deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
-        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
-        its own and none of its links. Answers as CreateProject does.
+        host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
+        once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
+        apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
+        a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+        CreateProject does.
         INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -245,9 +279,12 @@ class PanelService(Protocol):
 
     async def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
         """
-        Lets projects reach a database project: inside each linked project the database is the
-        host `<database_project_id>` at its port, and Project.database says how to sign in (its
-        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        Lets projects that exist reach a database project: inside each linked project the database is
+        the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+        writes nothing into a project's /.env: put Project.database.connection's url there (GetProject
+        include_secret_values) with DeployProject `files`. A project it links signs in as the apps'
+        user, `app` (a Valkey's one user), or as its user of its own if CreateProject's link_databases
+        made it one there (own_user), which nothing else makes.
         INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
         FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
         a database, has a service named or aliased like the database, or there are 20 links already.
@@ -765,7 +802,16 @@ class PanelServiceClient(ConnectClient):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey) is CreateDatabase's.
+        A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
+        with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
+        compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
+        from its first start (its deploy waits for one still being made). own_user, Postgres only (a
+        Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
+        named as the project, which they cannot reach; all are restored together. Only link_databases
+        makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+        DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+        A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+        `files` with a /.env without it beside `upload_id`.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -820,7 +866,9 @@ class PanelServiceClient(ConnectClient):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
+        linked to it (database_project_id says which), and nothing was created. A deleted project's
+        id inherits its snapshots.
         """
         return await self.execute_unary(
             request=request,
@@ -918,12 +966,33 @@ class PanelServiceClient(ConnectClient):
     ) -> RunProjectActionResponse:
         """
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is CreateDatabase's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachine.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (GetMachine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FAILED_PRECONDITION + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FAILED_PRECONDITION alone = the project is no database. INVALID_ARGUMENT = a size its engine
+        does not offer (the message lists them).
         """
         return await self.execute_unary(
             request=request,
@@ -1087,9 +1156,11 @@ class PanelServiceClient(ConnectClient):
         """
         A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
         deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
-        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
-        its own and none of its links. Answers as CreateProject does.
+        host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
+        once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
+        apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
+        a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+        CreateProject does.
         INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -1117,9 +1188,12 @@ class PanelServiceClient(ConnectClient):
         timeout_ms: int | None = None,
     ) -> LinkDatabaseResponse:
         """
-        Lets projects reach a database project: inside each linked project the database is the
-        host `<database_project_id>` at its port, and Project.database says how to sign in (its
-        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        Lets projects that exist reach a database project: inside each linked project the database is
+        the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+        writes nothing into a project's /.env: put Project.database.connection's url there (GetProject
+        include_secret_values) with DeployProject `files`. A project it links signs in as the apps'
+        user, `app` (a Valkey's one user), or as its user of its own if CreateProject's link_databases
+        made it one there (own_user), which nothing else makes.
         INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
         FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
         a database, has a service named or aliased like the database, or there are 20 links already.
@@ -1499,7 +1573,16 @@ class PanelServiceSync(Protocol):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey) is CreateDatabase's.
+        A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
+        with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
+        compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
+        from its first start (its deploy waits for one still being made). own_user, Postgres only (a
+        Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
+        named as the project, which they cannot reach; all are restored together. Only link_databases
+        makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+        DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+        A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+        `files` with a /.env without it beside `upload_id`.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -1554,7 +1637,9 @@ class PanelServiceSync(Protocol):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
+        linked to it (database_project_id says which), and nothing was created. A deleted project's
+        id inherits its snapshots.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1599,12 +1684,33 @@ class PanelServiceSync(Protocol):
     def run_project_action(self, request: RunProjectActionRequest, ctx: RequestContext[RunProjectActionRequest, RunProjectActionResponse], /) -> RunProjectActionResponse:
         """
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is CreateDatabase's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachine.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (GetMachine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FAILED_PRECONDITION + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FAILED_PRECONDITION alone = the project is no database. INVALID_ARGUMENT = a size its engine
+        does not offer (the message lists them).
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1658,9 +1764,11 @@ class PanelServiceSync(Protocol):
         """
         A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
         deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
-        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
-        its own and none of its links. Answers as CreateProject does.
+        host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
+        once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
+        apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
+        a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+        CreateProject does.
         INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -1671,9 +1779,12 @@ class PanelServiceSync(Protocol):
 
     def link_database(self, request: LinkDatabaseRequest, ctx: RequestContext[LinkDatabaseRequest, LinkDatabaseResponse], /) -> LinkDatabaseResponse:
         """
-        Lets projects reach a database project: inside each linked project the database is the
-        host `<database_project_id>` at its port, and Project.database says how to sign in (its
-        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        Lets projects that exist reach a database project: inside each linked project the database is
+        the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+        writes nothing into a project's /.env: put Project.database.connection's url there (GetProject
+        include_secret_values) with DeployProject `files`. A project it links signs in as the apps'
+        user, `app` (a Valkey's one user), or as its user of its own if CreateProject's link_databases
+        made it one there (own_user), which nothing else makes.
         INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
         FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
         a database, has a service named or aliased like the database, or there are 20 links already.
@@ -2186,7 +2297,16 @@ class PanelServiceClientSync(ConnectClientSync):
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey) is CreateDatabase's.
+        A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
+        with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
+        compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
+        from its first start (its deploy waits for one still being made). own_user, Postgres only (a
+        Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
+        named as the project, which they cannot reach; all are restored together. Only link_databases
+        makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+        DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+        A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+        `files` with a /.env without it beside `upload_id`.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -2241,7 +2361,9 @@ class PanelServiceClientSync(ConnectClientSync):
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
+        linked to it (database_project_id says which), and nothing was created. A deleted project's
+        id inherits its snapshots.
         """
         return self.execute_unary(
             request=request,
@@ -2336,12 +2458,33 @@ class PanelServiceClientSync(ConnectClientSync):
     ) -> RunProjectActionResponse:
         """
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is CreateDatabase's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachine.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (GetMachine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FAILED_PRECONDITION + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FAILED_PRECONDITION alone = the project is no database. INVALID_ARGUMENT = a size its engine
+        does not offer (the message lists them).
         """
         return self.execute_unary(
             request=request,
@@ -2499,9 +2642,11 @@ class PanelServiceClientSync(ConnectClientSync):
         """
         A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
         deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-        host `<project_id>` once linked (`link`, or LinkDatabase after the app's CreateProject), and
-        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
-        its own and none of its links. Answers as CreateProject does.
+        host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
+        once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
+        apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
+        a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+        CreateProject does.
         INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -2528,9 +2673,12 @@ class PanelServiceClientSync(ConnectClientSync):
         timeout_ms: int | None = None,
     ) -> LinkDatabaseResponse:
         """
-        Lets projects reach a database project: inside each linked project the database is the
-        host `<database_project_id>` at its port, and Project.database says how to sign in (its
-        password with GetProject include_secret_values). Takes effect at once and deploys nothing.
+        Lets projects that exist reach a database project: inside each linked project the database is
+        the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+        writes nothing into a project's /.env: put Project.database.connection's url there (GetProject
+        include_secret_values) with DeployProject `files`. A project it links signs in as the apps'
+        user, `app` (a Valkey's one user), or as its user of its own if CreateProject's link_databases
+        made it one there (own_user), which nothing else makes.
         INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
         FAILED_PRECONDITION = database_project_id is no database; + DatabaseLinkRefusal = the app is
         a database, has a service named or aliased like the database, or there are 20 links already.

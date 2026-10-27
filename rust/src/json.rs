@@ -160,6 +160,12 @@ json!(
     convert::database_link_refusal_reason_from_wire
 );
 json!(
+    types::DatabaseSizeRefusalReason,
+    buffa::EnumValue<wire::DatabaseSizeRefusalReason>,
+    convert::database_size_refusal_reason_to_wire,
+    convert::database_size_refusal_reason_from_wire
+);
+json!(
     types::NoMachineReason,
     buffa::EnumValue<wire::NoMachineReason>,
     convert::no_machine_reason_to_wire,
@@ -354,6 +360,12 @@ json!(
     types::CreateProjectRequest::from
 );
 json!(
+    types::DatabaseLinkRequest,
+    wire::DatabaseLinkRequest,
+    wire::DatabaseLinkRequest::from,
+    types::DatabaseLinkRequest::from
+);
+json!(
     types::CreateProjectResponse,
     wire::CreateProjectResponse,
     wire::CreateProjectResponse::from,
@@ -454,6 +466,12 @@ json!(
     wire::DeleteProjectAction,
     wire::DeleteProjectAction::from,
     types::DeleteProjectAction::from
+);
+json!(
+    types::SetDatabaseSizeAction,
+    wire::SetDatabaseSizeAction,
+    wire::SetDatabaseSizeAction::from,
+    types::SetDatabaseSizeAction::from
 );
 json!(
     types::RunProjectActionResponse,
@@ -743,6 +761,12 @@ json!(
     wire::DatabaseLinkRefusal,
     wire::DatabaseLinkRefusal::from,
     types::DatabaseLinkRefusal::from
+);
+json!(
+    types::DatabaseSizeRefusal,
+    wire::DatabaseSizeRefusal,
+    wire::DatabaseSizeRefusal::from,
+    types::DatabaseSizeRefusal::from
 );
 json!(
     types::NoMachine,

@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.4.4"),
+    ("user-agent", "pethost-rust/0.4.5"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -527,7 +527,7 @@ mod samples {
     }
 
     pub fn deploy_failure_reason(k: usize) -> types::DeployFailureReason {
-        match k % 13 {
+        match k % 14 {
             0 => types::DeployFailureReason::Unspecified,
             1 => types::DeployFailureReason::ImagePullFailed,
             2 => types::DeployFailureReason::ImageBuildFailed,
@@ -540,7 +540,8 @@ mod samples {
             9 => types::DeployFailureReason::TimedOut,
             10 => types::DeployFailureReason::UncoveredImageVolume,
             11 => types::DeployFailureReason::BuildMemoryUnavailable,
-            _ => types::DeployFailureReason::Unrecognized(12),
+            12 => types::DeployFailureReason::DatabaseUserFailed,
+            _ => types::DeployFailureReason::Unrecognized(13),
         }
     }
 
@@ -617,12 +618,24 @@ mod samples {
     }
 
     pub fn database_link_refusal_reason(k: usize) -> types::DatabaseLinkRefusalReason {
-        match k % 5 {
+        match k % 7 {
             0 => types::DatabaseLinkRefusalReason::Unspecified,
             1 => types::DatabaseLinkRefusalReason::AppIsDatabase,
             2 => types::DatabaseLinkRefusalReason::ServiceNameTaken,
             3 => types::DatabaseLinkRefusalReason::TooManyLinks,
-            _ => types::DatabaseLinkRefusalReason::Unrecognized(4),
+            4 => types::DatabaseLinkRefusalReason::OneUser,
+            5 => types::DatabaseLinkRefusalReason::UserNameReserved,
+            _ => types::DatabaseLinkRefusalReason::Unrecognized(6),
+        }
+    }
+
+    pub fn database_size_refusal_reason(k: usize) -> types::DatabaseSizeRefusalReason {
+        match k % 5 {
+            0 => types::DatabaseSizeRefusalReason::Unspecified,
+            1 => types::DatabaseSizeRefusalReason::DataTooLarge,
+            2 => types::DatabaseSizeRefusalReason::DataUnread,
+            3 => types::DatabaseSizeRefusalReason::VolumeMoved,
+            _ => types::DatabaseSizeRefusalReason::Unrecognized(4),
         }
     }
 
@@ -1172,6 +1185,7 @@ mod samples {
             message.changed_path_count = states::plain(k, states::number(18, k));
             message.files_kept = states::flag(2, k);
             message.files_operation_id = states::plain(k, states::text("files_operation_id", k));
+            message.database_memory_limit_bytes = states::plain(k, u64::from(states::number(21, k)) << 44);
         })
     }
 
@@ -1206,6 +1220,21 @@ mod samples {
             timeout_seconds: states::plain(k, states::number(6, k)),
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(9, k)),
+            link_databases: states::many(
+                k,
+                [
+                    samples::database_link_request(k + 8, later),
+                    samples::database_link_request(k + 9, later),
+                ],
+            ),
+        }
+    }
+
+    pub fn database_link_request(k: usize, later: bool) -> types::DatabaseLinkRequest {
+        types::DatabaseLinkRequest {
+            database_project_id: states::plain(k, states::text("database_project_id", k)),
+            own_user: states::flag(1, k),
+            env_prefix: states::plain(k, states::text("env_prefix", k)),
         }
     }
 
@@ -1367,7 +1396,7 @@ mod samples {
     pub fn run_project_action_request(k: usize, later: bool) -> types::RunProjectActionRequest {
         types::RunProjectActionRequest {
             project_id: states::plain(k, states::text("project_id", k)),
-            action: match k % 22 {
+            action: match k % 24 {
                 0 => None,
                 1 => None,
                 2 => Some(types::RunProjectActionRequestAction::StartServices(
@@ -1401,16 +1430,20 @@ mod samples {
                     "delete_volume",
                     k,
                 ))),
-                12 => Some(types::RunProjectActionRequestAction::StartServices(Default::default())),
-                13 => Some(types::RunProjectActionRequestAction::StopServices(Default::default())),
-                14 => Some(types::RunProjectActionRequestAction::RestartServices(Default::default())),
-                15 => Some(types::RunProjectActionRequestAction::RecreateService(Default::default())),
-                16 => Some(types::RunProjectActionRequestAction::BackUp(Default::default())),
-                17 => Some(types::RunProjectActionRequestAction::RestoreSnapshot(Default::default())),
-                18 => Some(types::RunProjectActionRequestAction::CancelOperation(Default::default())),
-                19 => Some(types::RunProjectActionRequestAction::DeleteProject(Default::default())),
-                20 => Some(types::RunProjectActionRequestAction::SetSource(Default::default())),
-                _ => Some(types::RunProjectActionRequestAction::DeleteVolume(Default::default())),
+                12 => Some(types::RunProjectActionRequestAction::SetDatabaseSize(
+                    samples::set_database_size_action(k, later),
+                )),
+                13 => Some(types::RunProjectActionRequestAction::StartServices(Default::default())),
+                14 => Some(types::RunProjectActionRequestAction::StopServices(Default::default())),
+                15 => Some(types::RunProjectActionRequestAction::RestartServices(Default::default())),
+                16 => Some(types::RunProjectActionRequestAction::RecreateService(Default::default())),
+                17 => Some(types::RunProjectActionRequestAction::BackUp(Default::default())),
+                18 => Some(types::RunProjectActionRequestAction::RestoreSnapshot(Default::default())),
+                19 => Some(types::RunProjectActionRequestAction::CancelOperation(Default::default())),
+                20 => Some(types::RunProjectActionRequestAction::DeleteProject(Default::default())),
+                21 => Some(types::RunProjectActionRequestAction::SetSource(Default::default())),
+                22 => Some(types::RunProjectActionRequestAction::DeleteVolume(Default::default())),
+                _ => Some(types::RunProjectActionRequestAction::SetDatabaseSize(Default::default())),
             },
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(13, k)),
@@ -1450,6 +1483,12 @@ mod samples {
     pub fn delete_project_action(k: usize, later: bool) -> types::DeleteProjectAction {
         types::DeleteProjectAction {
             skip_final_backup: states::flag(1, k),
+        }
+    }
+
+    pub fn set_database_size_action(k: usize, later: bool) -> types::SetDatabaseSizeAction {
+        types::SetDatabaseSizeAction {
+            memory_limit_bytes: states::plain(k, u64::from(states::number(1, k)) << 44),
         }
     }
 
@@ -1493,6 +1532,13 @@ mod samples {
                     states::text("console_command", k + 1),
                 ],
             );
+            message.own_user_projects = states::many(
+                k,
+                [
+                    states::text("own_user_projects", k),
+                    states::text("own_user_projects", k + 1),
+                ],
+            );
         })
     }
 
@@ -1522,6 +1568,14 @@ mod samples {
                 ],
             );
             message.server_version = states::plain(k, states::text("server_version", k));
+            message.memory_limit_bytes = states::plain(k, u64::from(states::number(7, k)) << 44);
+            message.own_user_projects = states::many(
+                k,
+                [
+                    states::text("own_user_projects", k),
+                    states::text("own_user_projects", k + 1),
+                ],
+            );
         })
     }
 
@@ -1537,6 +1591,7 @@ mod samples {
                 ],
             );
             message.default_memory_limit_bytes = states::plain(k, u64::from(states::number(4, k)) << 44);
+            message.own_users = states::flag(1, k);
         })
     }
 
@@ -1569,6 +1624,7 @@ mod samples {
             link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(7, k)),
+            metadata: states::maybe(k, samples::project_metadata(k + 7, later)),
         }
     }
 
@@ -2074,6 +2130,16 @@ mod samples {
             message.project_id = states::plain(k, states::text("project_id", k));
             message.reason = samples::database_link_refusal_reason(k + 1);
             message.service = states::plain(k, states::text("service", k));
+            message.database_project_id = states::plain(k, states::text("database_project_id", k));
+        })
+    }
+
+    pub fn database_size_refusal(k: usize, later: bool) -> types::DatabaseSizeRefusal {
+        states::make(|message: &mut types::DatabaseSizeRefusal| {
+            message.reason = samples::database_size_refusal_reason(k);
+            message.data_bytes = states::plain(k, u64::from(states::number(2, k)) << 44);
+            message.keeps_bytes = states::plain(k, u64::from(states::number(3, k)) << 44);
+            message.volume = states::plain(k, states::text("volume", k));
         })
     }
 
@@ -2290,7 +2356,7 @@ mod on_wire {
 
     pub fn deploy_failure_reason(k: usize) -> buffa::EnumValue<wire::DeployFailureReason> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 13 {
+        let number = match k % 14 {
             0 => 0,
             1 => 1,
             2 => 2,
@@ -2303,7 +2369,8 @@ mod on_wire {
             9 => 9,
             10 => 10,
             11 => 11,
-            _ => 12,
+            12 => 12,
+            _ => 13,
         };
         buffa::EnumValue::from(number)
     }
@@ -2395,6 +2462,20 @@ mod on_wire {
     }
 
     pub fn database_link_refusal_reason(k: usize) -> buffa::EnumValue<wire::DatabaseLinkRefusalReason> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 7 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            _ => 6,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn database_size_refusal_reason(k: usize) -> buffa::EnumValue<wire::DatabaseSizeRefusalReason> {
         // By the proto's numbers: the variants' names are the converters' to get right.
         let number = match k % 5 {
             0 => 0,
@@ -3159,6 +3240,7 @@ mod on_wire {
             changed_path_count: states::present(states::plain(k, states::number(18, k))),
             files_kept: states::present(states::flag(2, k)),
             files_operation_id: states::present(states::plain(k, states::text("files_operation_id", k))),
+            database_memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(21, k)) << 44)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3211,6 +3293,26 @@ mod on_wire {
             timeout_seconds: states::present(states::plain(k, states::number(6, k))),
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(9, k)),
+            link_databases: states::many(
+                k,
+                [
+                    on_wire::database_link_request(k + 8, received),
+                    on_wire::database_link_request(k + 9, received),
+                ],
+            ),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_link_request(k: usize, received: bool) -> wire::DatabaseLinkRequest {
+        let mut message = wire::DatabaseLinkRequest {
+            database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
+            own_user: states::present(states::flag(1, k)),
+            env_prefix: states::present(states::plain(k, states::text("env_prefix", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3448,7 +3550,7 @@ mod on_wire {
     pub fn run_project_action_request(k: usize, received: bool) -> wire::RunProjectActionRequest {
         let mut message = wire::RunProjectActionRequest {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
-            action: match k % 22 {
+            action: match k % 24 {
                 0 | 1 => None,
                 2 => Some(wire::__buffa::oneof::run_project_action_request::Action::StartServices(
                     Box::new(on_wire::services_action(k, received)),
@@ -3488,36 +3590,44 @@ mod on_wire {
                 11 => Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteVolume(
                     states::text("delete_volume", k),
                 )),
-                12 => Some(wire::__buffa::oneof::run_project_action_request::Action::StartServices(
+                12 => Some(
+                    wire::__buffa::oneof::run_project_action_request::Action::SetDatabaseSize(Box::new(
+                        on_wire::set_database_size_action(k, received),
+                    )),
+                ),
+                13 => Some(wire::__buffa::oneof::run_project_action_request::Action::StartServices(
                     Default::default(),
                 )),
-                13 => Some(wire::__buffa::oneof::run_project_action_request::Action::StopServices(
+                14 => Some(wire::__buffa::oneof::run_project_action_request::Action::StopServices(
                     Default::default(),
                 )),
-                14 => {
+                15 => {
                     Some(wire::__buffa::oneof::run_project_action_request::Action::RestartServices(Default::default()))
                 }
-                15 => {
+                16 => {
                     Some(wire::__buffa::oneof::run_project_action_request::Action::RecreateService(Default::default()))
                 }
-                16 => Some(wire::__buffa::oneof::run_project_action_request::Action::BackUp(
+                17 => Some(wire::__buffa::oneof::run_project_action_request::Action::BackUp(
                     Default::default(),
                 )),
-                17 => {
+                18 => {
                     Some(wire::__buffa::oneof::run_project_action_request::Action::RestoreSnapshot(Default::default()))
                 }
-                18 => {
+                19 => {
                     Some(wire::__buffa::oneof::run_project_action_request::Action::CancelOperation(Default::default()))
                 }
-                19 => Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteProject(
+                20 => Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteProject(
                     Default::default(),
                 )),
-                20 => Some(wire::__buffa::oneof::run_project_action_request::Action::SetSource(
+                21 => Some(wire::__buffa::oneof::run_project_action_request::Action::SetSource(
                     Default::default(),
                 )),
-                _ => Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteVolume(
+                22 => Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteVolume(
                     Default::default(),
                 )),
+                _ => {
+                    Some(wire::__buffa::oneof::run_project_action_request::Action::SetDatabaseSize(Default::default()))
+                }
             },
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(13, k)),
@@ -3594,6 +3704,17 @@ mod on_wire {
         message
     }
 
+    pub fn set_database_size_action(k: usize, received: bool) -> wire::SetDatabaseSizeAction {
+        let mut message = wire::SetDatabaseSizeAction {
+            memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(1, k)) << 44)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
     pub fn run_project_action_response(k: usize, received: bool) -> wire::RunProjectActionResponse {
         let mut message = wire::RunProjectActionResponse {
             operation: states::maybe(k, on_wire::operation(k, received)).into(),
@@ -3639,6 +3760,13 @@ mod on_wire {
                     states::text("console_command", k + 1),
                 ],
             ),
+            own_user_projects: states::many(
+                k,
+                [
+                    states::text("own_user_projects", k),
+                    states::text("own_user_projects", k + 1),
+                ],
+            ),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3678,6 +3806,14 @@ mod on_wire {
                 ],
             ),
             server_version: states::present(states::plain(k, states::text("server_version", k))),
+            memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(7, k)) << 44)),
+            own_user_projects: states::many(
+                k,
+                [
+                    states::text("own_user_projects", k),
+                    states::text("own_user_projects", k + 1),
+                ],
+            ),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3698,6 +3834,7 @@ mod on_wire {
                 ],
             ),
             default_memory_limit_bytes: states::present(states::plain(k, u64::from(states::number(4, k)) << 44)),
+            own_users: states::present(states::flag(1, k)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3750,6 +3887,7 @@ mod on_wire {
             link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(7, k)),
+            metadata: states::maybe(k, on_wire::project_metadata(k + 7, received)).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4490,6 +4628,21 @@ mod on_wire {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             reason: states::set(on_wire::database_link_refusal_reason(k + 1)),
             service: states::present(states::plain(k, states::text("service", k))),
+            database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_size_refusal(k: usize, received: bool) -> wire::DatabaseSizeRefusal {
+        let mut message = wire::DatabaseSizeRefusal {
+            reason: states::set(on_wire::database_size_refusal_reason(k)),
+            data_bytes: states::present(states::plain(k, u64::from(states::number(2, k)) << 44)),
+            keeps_bytes: states::present(states::plain(k, u64::from(states::number(3, k)) << 44)),
+            volume: states::present(states::plain(k, states::text("volume", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4697,7 +4850,7 @@ async fn list_commits_request_is_sent() {
 
 #[tokio::test]
 async fn run_project_action_request_is_sent() {
-    for k in 0..22 {
+    for k in 0..24 {
         let request = samples::run_project_action_request(k, true);
         let expected = on_wire::run_project_action_request(k, false);
 
@@ -5044,6 +5197,25 @@ async fn project_extension_is_sent() {
 }
 
 #[tokio::test]
+async fn database_link_request_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::CreateProjectRequest| {
+            message.link_databases = vec![samples::database_link_request(k, true)]
+        });
+        let expected = states::make(|message: &mut wire::CreateProjectRequest| {
+            message.link_databases = vec![on_wire::database_link_request(k, false)]
+        });
+
+        let answer = ok(&wire::CreateProjectResponse::default());
+        let call = |client: Client| async move { client.create_project(request).await };
+        let (sent, response): (wire::CreateProjectRequest, _) = exchange("CreateProject", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(response.unwrap(), types::CreateProjectResponse::default(), "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn mount_volume_is_sent() {
     for k in 0..2 {
         let request = states::make(|message: &mut types::DeployProjectRequest| {
@@ -5231,6 +5403,35 @@ async fn delete_project_action_is_sent() {
 }
 
 #[tokio::test]
+async fn set_database_size_action_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::RunProjectActionRequest| {
+            message.action = Some(types::RunProjectActionRequestAction::SetDatabaseSize(
+                samples::set_database_size_action(k, true),
+            ))
+        });
+        let expected = states::make(|message: &mut wire::RunProjectActionRequest| {
+            message.action = Some(
+                wire::__buffa::oneof::run_project_action_request::Action::SetDatabaseSize(Box::new(
+                    on_wire::set_database_size_action(k, false),
+                )),
+            )
+        });
+
+        let answer = ok(&wire::RunProjectActionResponse::default());
+        let call = |client: Client| async move { client.run_project_action(request).await };
+        let (sent, response): (wire::RunProjectActionRequest, _) = exchange("RunProjectAction", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::RunProjectActionResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn site_check_is_sent() {
     for k in 0..2 {
         let request = states::make(|message: &mut types::SetProjectAlertsRequest| {
@@ -5317,6 +5518,29 @@ async fn container_log_filter_is_sent() {
         assert_eq!(
             response.unwrap(),
             types::QueryContainerLogsResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn project_metadata_is_sent() {
+    for k in 0..3 {
+        let request = states::make(|message: &mut types::CreateDatabaseRequest| {
+            message.metadata = Some(samples::project_metadata(k, true))
+        });
+        let expected = states::make(|message: &mut wire::CreateDatabaseRequest| {
+            message.metadata = Some(on_wire::project_metadata(k, false)).into()
+        });
+
+        let answer = ok(&wire::CreateDatabaseResponse::default());
+        let call = |client: Client| async move { client.create_database(request).await };
+        let (sent, response): (wire::CreateDatabaseRequest, _) = exchange("CreateDatabase", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::CreateDatabaseResponse::default(),
             "at k = {k}"
         );
     }
@@ -5445,30 +5669,6 @@ async fn github_source_is_sent() {
                 message.kind = Some(wire::__buffa::oneof::project_source::Kind::Github(Box::new(
                     on_wire::github_source(k, false),
                 )))
-            }))
-            .into()
-        });
-
-        let answer = ok(&wire::CreateProjectResponse::default());
-        let call = |client: Client| async move { client.create_project(request).await };
-        let (sent, response): (wire::CreateProjectRequest, _) = exchange("CreateProject", answer, call).await;
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::CreateProjectResponse::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn project_metadata_is_sent() {
-    for k in 0..3 {
-        let request = states::make(|message: &mut types::CreateProjectRequest| {
-            message.x_pethost = Some(states::make(|message: &mut types::ProjectExtension| {
-                message.metadata = Some(samples::project_metadata(k, true))
-            }))
-        });
-        let expected = states::make(|message: &mut wire::CreateProjectRequest| {
-            message.x_pethost = Some(states::make(|message: &mut wire::ProjectExtension| {
-                message.metadata = Some(on_wire::project_metadata(k, false)).into()
             }))
             .into()
         });
@@ -5874,7 +6074,7 @@ async fn machine_unreachable_is_received() {
 
 #[tokio::test]
 async fn database_link_refusal_is_received() {
-    for k in 0..5 {
+    for k in 0..7 {
         let detail = on_wire::database_link_refusal(k, true).encode_to_vec();
         let expected = ErrorDetail::DatabaseLinkRefusal(samples::database_link_refusal(k, true));
 
@@ -5882,6 +6082,25 @@ async fn database_link_refusal_is_received() {
             "unavailable",
             503,
             &[("pethost.panel.v1.DatabaseLinkRefusal", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_size_refusal_is_received() {
+    for k in 0..5 {
+        let detail = on_wire::database_size_refusal(k, true).encode_to_vec();
+        let expected = ErrorDetail::DatabaseSizeRefusal(samples::database_size_refusal(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.DatabaseSizeRefusal", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
         let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
@@ -5995,7 +6214,7 @@ async fn project_is_received() {
 
 #[tokio::test]
 async fn operation_is_received() {
-    for k in 0..13 {
+    for k in 0..14 {
         let answer = ok(&states::make(|message: &mut wire::CreateProjectResponse| {
             message.operation = Some(on_wire::operation(k, true)).into()
         }));
@@ -7330,8 +7549,9 @@ fn deploy_failure_reason_is_json() {
         "DEPLOY_FAILURE_REASON_TIMED_OUT",
         "DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME",
         "DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE",
+        "DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED",
     ];
-    an_enum_is_json(&names, 12, samples::deploy_failure_reason);
+    an_enum_is_json(&names, 13, samples::deploy_failure_reason);
 }
 
 #[test]
@@ -7420,8 +7640,21 @@ fn database_link_refusal_reason_is_json() {
         "DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE",
         "DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN",
         "DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS",
+        "DATABASE_LINK_REFUSAL_REASON_ONE_USER",
+        "DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED",
     ];
-    an_enum_is_json(&names, 4, samples::database_link_refusal_reason);
+    an_enum_is_json(&names, 6, samples::database_link_refusal_reason);
+}
+
+#[test]
+fn database_size_refusal_reason_is_json() {
+    let names = [
+        "DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED",
+        "DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE",
+        "DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD",
+        "DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED",
+    ];
+    an_enum_is_json(&names, 4, samples::database_size_refusal_reason);
 }
 
 #[test]
@@ -7860,8 +8093,9 @@ fn operation_is_json() {
         "changed_path_count",
         "files_kept",
         "files_operation_id",
+        "database_memory_limit_bytes",
     ];
-    a_message_is_json(13, &names, samples::operation, on_wire::operation);
+    a_message_is_json(14, &names, samples::operation, on_wire::operation);
 }
 
 #[test]
@@ -7892,12 +8126,24 @@ fn create_project_request_is_json() {
         "timeout_seconds",
         "operation_id",
         "wait_seconds",
+        "link_databases",
     ];
     a_message_is_json(
         3,
         &names,
         samples::create_project_request,
         on_wire::create_project_request,
+    );
+}
+
+#[test]
+fn database_link_request_is_json() {
+    let names = ["database_project_id", "own_user", "env_prefix"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::database_link_request,
+        on_wire::database_link_request,
     );
 }
 
@@ -8017,11 +8263,12 @@ fn run_project_action_request_is_json() {
         "delete_project",
         "set_source",
         "delete_volume",
+        "set_database_size",
         "operation_id",
         "wait_seconds",
     ];
     a_message_is_json(
-        22,
+        24,
         &names,
         samples::run_project_action_request,
         on_wire::run_project_action_request,
@@ -8085,6 +8332,17 @@ fn delete_project_action_is_json() {
 }
 
 #[test]
+fn set_database_size_action_is_json() {
+    let names = ["memory_limit_bytes"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::set_database_size_action,
+        on_wire::set_database_size_action,
+    );
+}
+
+#[test]
 fn run_project_action_response_is_json() {
     let names = ["operation", "project", "log"];
     a_message_is_json(
@@ -8110,6 +8368,7 @@ fn database_is_json() {
         "service",
         "volume",
         "console_command",
+        "own_user_projects",
     ];
     a_message_is_json(4, &names, samples::database, on_wire::database);
 }
@@ -8129,13 +8388,21 @@ fn database_summary_is_json() {
         "connections",
         "linked_projects",
         "server_version",
+        "memory_limit_bytes",
+        "own_user_projects",
     ];
     a_message_is_json(4, &names, samples::database_summary, on_wire::database_summary);
 }
 
 #[test]
 fn database_engine_offer_is_json() {
-    let names = ["engine", "major_version", "sizes", "default_memory_limit_bytes"];
+    let names = [
+        "engine",
+        "major_version",
+        "sizes",
+        "default_memory_limit_bytes",
+        "own_users",
+    ];
     a_message_is_json(
         4,
         &names,
@@ -8182,6 +8449,7 @@ fn create_database_request_is_json() {
         "link",
         "operation_id",
         "wait_seconds",
+        "metadata",
     ];
     a_message_is_json(
         4,
@@ -8637,12 +8905,23 @@ fn machine_unreachable_is_json() {
 
 #[test]
 fn database_link_refusal_is_json() {
-    let names = ["project_id", "reason", "service"];
+    let names = ["project_id", "reason", "service", "database_project_id"];
     a_message_is_json(
-        5,
+        7,
         &names,
         samples::database_link_refusal,
         on_wire::database_link_refusal,
+    );
+}
+
+#[test]
+fn database_size_refusal_is_json() {
+    let names = ["reason", "data_bytes", "keeps_bytes", "volume"];
+    a_message_is_json(
+        5,
+        &names,
+        samples::database_size_refusal,
+        on_wire::database_size_refusal,
     );
 }
 

@@ -70,10 +70,11 @@ optional<p.Host>({ host: false, url: false, certificateSource: true, certificate
 accepts<p.RouteInput>(a<p.Route>());
 optional<p.Route>({ host: false, path: false, service: false, port: false, stripPath: false });
 optional<p.RouteInput>({ host: true, path: true, service: true, port: true, stripPath: true });
-optional<p.Operation>({ operationId: false, kind: true, status: true, startTime: true, finishTime: true, failureMessage: false, deployFailureReason: true, madeCurrent: false, service: false, failedExitCode: false, snapshotId: false, restoredVolumes: false, undoSnapshotId: false, githubCommit: true, archiveName: false, adjustments: false, changedPaths: false, changedPathCount: false, filesKept: false, filesOperationId: false });
+optional<p.Operation>({ operationId: false, kind: true, status: true, startTime: true, finishTime: true, failureMessage: false, deployFailureReason: true, madeCurrent: false, service: false, failedExitCode: false, snapshotId: false, restoredVolumes: false, undoSnapshotId: false, githubCommit: true, archiveName: false, adjustments: false, changedPaths: false, changedPathCount: false, filesKept: false, filesOperationId: false, databaseMemoryLimitBytes: false });
 optional<p.Snapshot>({ snapshotId: false, createTime: true, sizeBytes: false, volumes: false });
 optional<p.HttpTrafficSummary>({ requestCount: false, serverErrorCount: false, latencyP50Ms: false, latencyP95Ms: false });
-optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true });
+optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true, linkDatabases: true });
+optional<p.DatabaseLinkRequestInput>({ databaseProjectId: true, ownUser: true, envPrefix: true });
 optional<p.CreateProjectResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 // @ts-expect-error two members of pethost.panel.v1.DeployProjectRequest.version
 accepts<p.DeployProjectRequest>({ uploadId: "upload_id", commit: "commit" });
@@ -93,15 +94,16 @@ optional<p.RecreateServiceActionInput>({ service: true, pullLatestImage: true })
 optional<p.RestoreSnapshotActionInput>({ snapshotId: true, volumes: true });
 optional<p.CancelOperationActionInput>({ operationId: true });
 optional<p.DeleteProjectActionInput>({ skipFinalBackup: true });
+optional<p.SetDatabaseSizeActionInput>({ memoryLimitBytes: true });
 optional<p.RunProjectActionResponse>({ operation: true, project: true, log: false });
-optional<p.Database>({ engine: true, majorVersion: false, serverVersion: false, memoryLimitBytes: false, dataBytes: false, connections: false, maxConnections: false, linkedProjects: false, connection: true, service: false, volume: false, consoleCommand: false });
+optional<p.Database>({ engine: true, majorVersion: false, serverVersion: false, memoryLimitBytes: false, dataBytes: false, connections: false, maxConnections: false, linkedProjects: false, connection: true, service: false, volume: false, consoleCommand: false, ownUserProjects: false });
 optional<p.DatabaseConnection>({ host: false, port: false, user: false, database: false, password: false, url: false, localUrl: false });
-optional<p.DatabaseSummary>({ engine: true, majorVersion: false, dataBytes: false, connections: false, linkedProjects: false, serverVersion: false });
-optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: false, defaultMemoryLimitBytes: false });
+optional<p.DatabaseSummary>({ engine: true, majorVersion: false, dataBytes: false, connections: false, linkedProjects: false, serverVersion: false, memoryLimitBytes: false, ownUserProjects: false });
+optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: false, defaultMemoryLimitBytes: false, ownUsers: false });
 optional<p.DatabaseSizeChoice>({ memoryLimitBytes: false });
 optional<p.LinkDatabaseRequest>({ databaseProjectId: true, link: true, unlink: true });
 optional<p.LinkDatabaseResponse>({ project: true });
-optional<p.CreateDatabaseRequest>({ projectId: true, engine: true, memoryLimitBytes: true, fromSnapshotId: true, link: true, operationId: true, waitSeconds: true });
+optional<p.CreateDatabaseRequest>({ projectId: true, engine: true, memoryLimitBytes: true, fromSnapshotId: true, link: true, operationId: true, waitSeconds: true, metadata: true });
 optional<p.CreateDatabaseResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 optional<p.SetProjectAlertsRequest>({ projectId: true, checks: true, removeChecks: true, trafficRules: true, removeTrafficRules: true, off: true, muteMinutes: true });
 optional<p.SetProjectAlertsResponse>({ alerts: true });
@@ -150,7 +152,8 @@ optional<p.DatabaseDumpInput>({ projectId: true, database: true });
 optional<p.CreateTransferResponse>({ url: false, httpMethod: false, expireTime: true, command: false, uploadId: false, replaces: false, fileName: false, excludeNames: false });
 optional<p.ProjectBusy>({ operationId: false, kind: true, startTime: true });
 optional<p.MachineUnreachable>({ sinceTime: true });
-optional<p.DatabaseLinkRefusal>({ projectId: false, reason: true, service: false });
+optional<p.DatabaseLinkRefusal>({ projectId: false, reason: true, service: false, databaseProjectId: false });
+optional<p.DatabaseSizeRefusal>({ reason: true, dataBytes: false, keepsBytes: false, volume: false });
 optional<p.NoMachine>({ reason: true, url: false });
 optional<p.WatchOperationRequest>({ projectId: true, operationId: true });
 {

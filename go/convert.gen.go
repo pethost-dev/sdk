@@ -891,31 +891,33 @@ func fromWireOperation(w *panelv1.Operation) Operation {
 		w.GetChangedPathCount(),
 		w.GetFilesKept(),
 		w.GetFilesOperationId(),
+		w.GetDatabaseMemoryLimitBytes(),
 	}
 }
 
 func toWireOperation(v Operation) *panelv1.Operation {
 	b := panelv1.Operation_builder{
-		OperationId:         nonZero(v.OperationID),
-		Kind:                nonZero(toWireOperationKind(v.Kind)),
-		Status:              nonZero(toWireOperationStatus(v.Status)),
-		StartTime:           timeToWire(v.StartTime),
-		FinishTime:          timeToWire(v.FinishTime),
-		FailureMessage:      nonZero(v.FailureMessage),
-		DeployFailureReason: nonZero(toWireDeployFailureReason(v.DeployFailureReason)),
-		MadeCurrent:         nonZero(v.MadeCurrent),
-		Service:             nonZero(v.Service),
-		FailedExitCode:      nonZero(v.FailedExitCode),
-		SnapshotId:          nonZero(v.SnapshotID),
-		RestoredVolumes:     v.RestoredVolumes,
-		UndoSnapshotId:      nonZero(v.UndoSnapshotID),
-		GithubCommit:        pointerToWire(v.GithubCommit, toWireGithubCommit),
-		ArchiveName:         nonZero(v.ArchiveName),
-		Adjustments:         v.Adjustments,
-		ChangedPaths:        v.ChangedPaths,
-		ChangedPathCount:    nonZero(v.ChangedPathCount),
-		FilesKept:           nonZero(v.FilesKept),
-		FilesOperationId:    nonZero(v.FilesOperationID),
+		OperationId:              nonZero(v.OperationID),
+		Kind:                     nonZero(toWireOperationKind(v.Kind)),
+		Status:                   nonZero(toWireOperationStatus(v.Status)),
+		StartTime:                timeToWire(v.StartTime),
+		FinishTime:               timeToWire(v.FinishTime),
+		FailureMessage:           nonZero(v.FailureMessage),
+		DeployFailureReason:      nonZero(toWireDeployFailureReason(v.DeployFailureReason)),
+		MadeCurrent:              nonZero(v.MadeCurrent),
+		Service:                  nonZero(v.Service),
+		FailedExitCode:           nonZero(v.FailedExitCode),
+		SnapshotId:               nonZero(v.SnapshotID),
+		RestoredVolumes:          v.RestoredVolumes,
+		UndoSnapshotId:           nonZero(v.UndoSnapshotID),
+		GithubCommit:             pointerToWire(v.GithubCommit, toWireGithubCommit),
+		ArchiveName:              nonZero(v.ArchiveName),
+		Adjustments:              v.Adjustments,
+		ChangedPaths:             v.ChangedPaths,
+		ChangedPathCount:         nonZero(v.ChangedPathCount),
+		FilesKept:                nonZero(v.FilesKept),
+		FilesOperationId:         nonZero(v.FilesOperationID),
+		DatabaseMemoryLimitBytes: nonZero(v.DatabaseMemoryLimitBytes),
 	}
 	return b.Build()
 }
@@ -968,6 +970,7 @@ func fromWireCreateProjectRequest(w *panelv1.CreateProjectRequest) CreateProject
 		w.GetTimeoutSeconds(),
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		sliceFromWire(w.GetLinkDatabases(), fromWireDatabaseLinkRequest),
 	}
 }
 
@@ -981,6 +984,24 @@ func toWireCreateProjectRequest(v CreateProjectRequest) *panelv1.CreateProjectRe
 		TimeoutSeconds: nonZero(v.TimeoutSeconds),
 		OperationId:    nonZero(v.OperationID),
 		WaitSeconds:    v.WaitSeconds,
+		LinkDatabases:  sliceToWire(v.LinkDatabases, toWireDatabaseLinkRequest),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseLinkRequest(w *panelv1.DatabaseLinkRequest) DatabaseLinkRequest {
+	return DatabaseLinkRequest{
+		w.GetDatabaseProjectId(),
+		w.GetOwnUser(),
+		w.GetEnvPrefix(),
+	}
+}
+
+func toWireDatabaseLinkRequest(v DatabaseLinkRequest) *panelv1.DatabaseLinkRequest {
+	b := panelv1.DatabaseLinkRequest_builder{
+		DatabaseProjectId: nonZero(v.DatabaseProjectID),
+		OwnUser:           nonZero(v.OwnUser),
+		EnvPrefix:         nonZero(v.EnvPrefix),
 	}
 	return b.Build()
 }
@@ -1316,6 +1337,8 @@ func fromWireRunProjectActionAction(w *panelv1.RunProjectActionRequest) RunProje
 		return RunProjectActionSetSource(fromWireProjectSource(w.GetSetSource()))
 	case panelv1.RunProjectActionRequest_DeleteVolume_case:
 		return RunProjectActionDeleteVolume(w.GetDeleteVolume())
+	case panelv1.RunProjectActionRequest_SetDatabaseSize_case:
+		return RunProjectActionSetDatabaseSize(fromWireSetDatabaseSizeAction(w.GetSetDatabaseSize()))
 	}
 	return nil
 }
@@ -1360,6 +1383,10 @@ func (v RunProjectActionDeleteVolume) toRunProjectActionAction(b *panelv1.RunPro
 	b.DeleteVolume = new(string(v))
 }
 
+func (v RunProjectActionSetDatabaseSize) toRunProjectActionAction(b *panelv1.RunProjectActionRequest_builder) {
+	b.SetDatabaseSize = toWireSetDatabaseSizeAction(SetDatabaseSizeAction(v))
+}
+
 var (
 	_ RunProjectActionAction = RunProjectActionStartServices{}
 	_ RunProjectActionAction = RunProjectActionStopServices{}
@@ -1371,6 +1398,7 @@ var (
 	_ RunProjectActionAction = RunProjectActionDeleteProject{}
 	_ RunProjectActionAction = RunProjectActionSetSource{}
 	_ RunProjectActionAction = RunProjectActionDeleteVolume("")
+	_ RunProjectActionAction = RunProjectActionSetDatabaseSize{}
 )
 
 func fromWireServicesAction(w *panelv1.ServicesAction) ServicesAction {
@@ -1451,6 +1479,19 @@ func toWireDeleteProjectAction(v DeleteProjectAction) *panelv1.DeleteProjectActi
 	return b.Build()
 }
 
+func fromWireSetDatabaseSizeAction(w *panelv1.SetDatabaseSizeAction) SetDatabaseSizeAction {
+	return SetDatabaseSizeAction{
+		w.GetMemoryLimitBytes(),
+	}
+}
+
+func toWireSetDatabaseSizeAction(v SetDatabaseSizeAction) *panelv1.SetDatabaseSizeAction {
+	b := panelv1.SetDatabaseSizeAction_builder{
+		MemoryLimitBytes: nonZero(v.MemoryLimitBytes),
+	}
+	return b.Build()
+}
+
 func fromWireRunProjectActionResponse(w *panelv1.RunProjectActionResponse) RunProjectActionResponse {
 	return RunProjectActionResponse{
 		pointerFromWire(w.GetOperation(), fromWireOperation),
@@ -1482,6 +1523,7 @@ func fromWireDatabase(w *panelv1.Database) Database {
 		w.GetService(),
 		w.GetVolume(),
 		w.GetConsoleCommand(),
+		w.GetOwnUserProjects(),
 	}
 }
 
@@ -1499,6 +1541,7 @@ func toWireDatabase(v Database) *panelv1.Database {
 		Service:          nonZero(v.Service),
 		Volume:           nonZero(v.Volume),
 		ConsoleCommand:   v.ConsoleCommand,
+		OwnUserProjects:  v.OwnUserProjects,
 	}
 	return b.Build()
 }
@@ -1536,17 +1579,21 @@ func fromWireDatabaseSummary(w *panelv1.DatabaseSummary) DatabaseSummary {
 		w.GetConnections(),
 		w.GetLinkedProjects(),
 		w.GetServerVersion(),
+		w.GetMemoryLimitBytes(),
+		w.GetOwnUserProjects(),
 	}
 }
 
 func toWireDatabaseSummary(v DatabaseSummary) *panelv1.DatabaseSummary {
 	b := panelv1.DatabaseSummary_builder{
-		Engine:         nonZero(toWireDatabaseEngine(v.Engine)),
-		MajorVersion:   nonZero(v.MajorVersion),
-		DataBytes:      nonZero(v.DataBytes),
-		Connections:    nonZero(v.Connections),
-		LinkedProjects: v.LinkedProjects,
-		ServerVersion:  nonZero(v.ServerVersion),
+		Engine:           nonZero(toWireDatabaseEngine(v.Engine)),
+		MajorVersion:     nonZero(v.MajorVersion),
+		DataBytes:        nonZero(v.DataBytes),
+		Connections:      nonZero(v.Connections),
+		LinkedProjects:   v.LinkedProjects,
+		ServerVersion:    nonZero(v.ServerVersion),
+		MemoryLimitBytes: nonZero(v.MemoryLimitBytes),
+		OwnUserProjects:  v.OwnUserProjects,
 	}
 	return b.Build()
 }
@@ -1557,6 +1604,7 @@ func fromWireDatabaseEngineOffer(w *panelv1.DatabaseEngineOffer) DatabaseEngineO
 		w.GetMajorVersion(),
 		sliceFromWire(w.GetSizes(), fromWireDatabaseSizeChoice),
 		w.GetDefaultMemoryLimitBytes(),
+		w.GetOwnUsers(),
 	}
 }
 
@@ -1566,6 +1614,7 @@ func toWireDatabaseEngineOffer(v DatabaseEngineOffer) *panelv1.DatabaseEngineOff
 		MajorVersion:            nonZero(v.MajorVersion),
 		Sizes:                   sliceToWire(v.Sizes, toWireDatabaseSizeChoice),
 		DefaultMemoryLimitBytes: nonZero(v.DefaultMemoryLimitBytes),
+		OwnUsers:                nonZero(v.OwnUsers),
 	}
 	return b.Build()
 }
@@ -1622,6 +1671,7 @@ func fromWireCreateDatabaseRequest(w *panelv1.CreateDatabaseRequest) CreateDatab
 		w.GetLink(),
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		pointerFromWire(w.GetMetadata(), fromWireProjectMetadata),
 	}
 }
 
@@ -1634,6 +1684,7 @@ func toWireCreateDatabaseRequest(v CreateDatabaseRequest) *panelv1.CreateDatabas
 		Link:             v.Link,
 		OperationId:      nonZero(v.OperationID),
 		WaitSeconds:      v.WaitSeconds,
+		Metadata:         pointerToWire(v.Metadata, toWireProjectMetadata),
 	}
 	return b.Build()
 }
@@ -2594,14 +2645,35 @@ func fromWireDatabaseLinkRefusal(w *panelv1.DatabaseLinkRefusal) DatabaseLinkRef
 		w.GetProjectId(),
 		fromWireDatabaseLinkRefusalReason(w.GetReason()),
 		w.GetService(),
+		w.GetDatabaseProjectId(),
 	}
 }
 
 func toWireDatabaseLinkRefusal(v DatabaseLinkRefusal) *panelv1.DatabaseLinkRefusal {
 	b := panelv1.DatabaseLinkRefusal_builder{
-		ProjectId: nonZero(v.ProjectID),
-		Reason:    nonZero(toWireDatabaseLinkRefusalReason(v.Reason)),
-		Service:   nonZero(v.Service),
+		ProjectId:         nonZero(v.ProjectID),
+		Reason:            nonZero(toWireDatabaseLinkRefusalReason(v.Reason)),
+		Service:           nonZero(v.Service),
+		DatabaseProjectId: nonZero(v.DatabaseProjectID),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseSizeRefusal(w *panelv1.DatabaseSizeRefusal) DatabaseSizeRefusal {
+	return DatabaseSizeRefusal{
+		fromWireDatabaseSizeRefusalReason(w.GetReason()),
+		w.GetDataBytes(),
+		w.GetKeepsBytes(),
+		w.GetVolume(),
+	}
+}
+
+func toWireDatabaseSizeRefusal(v DatabaseSizeRefusal) *panelv1.DatabaseSizeRefusal {
+	b := panelv1.DatabaseSizeRefusal_builder{
+		Reason:     nonZero(toWireDatabaseSizeRefusalReason(v.Reason)),
+		DataBytes:  nonZero(v.DataBytes),
+		KeepsBytes: nonZero(v.KeepsBytes),
+		Volume:     nonZero(v.Volume),
 	}
 	return b.Build()
 }
@@ -2845,6 +2917,14 @@ func toWireDatabaseLinkRefusalReason(v DatabaseLinkRefusalReason) panelv1.Databa
 	return panelv1.DatabaseLinkRefusalReason(v)
 }
 
+func fromWireDatabaseSizeRefusalReason(w panelv1.DatabaseSizeRefusalReason) DatabaseSizeRefusalReason {
+	return DatabaseSizeRefusalReason(w)
+}
+
+func toWireDatabaseSizeRefusalReason(v DatabaseSizeRefusalReason) panelv1.DatabaseSizeRefusalReason {
+	return panelv1.DatabaseSizeRefusalReason(v)
+}
+
 func fromWireNoMachineReason(w panelv1.NoMachineReason) NoMachineReason { return NoMachineReason(w) }
 
 func toWireNoMachineReason(v NoMachineReason) panelv1.NoMachineReason {
@@ -2929,6 +3009,7 @@ func _() {
 	_ = same[DeployFailureReasonTimedOut-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_TIMED_OUT)]
 	_ = same[DeployFailureReasonUncoveredImageVolume-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME)]
 	_ = same[DeployFailureReasonBuildMemoryUnavailable-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE)]
+	_ = same[DeployFailureReasonDatabaseUserFailed-DeployFailureReason(panelv1.DeployFailureReason_DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED)]
 	_ = same[DatabaseEngineUnspecified-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED)]
 	_ = same[DatabaseEnginePostgres-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_POSTGRES)]
 	_ = same[DatabaseEngineValkey-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_VALKEY)]
@@ -2963,6 +3044,12 @@ func _() {
 	_ = same[DatabaseLinkRefusalReasonAppIsDatabase-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE)]
 	_ = same[DatabaseLinkRefusalReasonServiceNameTaken-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN)]
 	_ = same[DatabaseLinkRefusalReasonTooManyLinks-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS)]
+	_ = same[DatabaseLinkRefusalReasonOneUser-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_ONE_USER)]
+	_ = same[DatabaseLinkRefusalReasonUserNameReserved-DatabaseLinkRefusalReason(panelv1.DatabaseLinkRefusalReason_DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED)]
+	_ = same[DatabaseSizeRefusalReasonUnspecified-DatabaseSizeRefusalReason(panelv1.DatabaseSizeRefusalReason_DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED)]
+	_ = same[DatabaseSizeRefusalReasonDataTooLarge-DatabaseSizeRefusalReason(panelv1.DatabaseSizeRefusalReason_DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE)]
+	_ = same[DatabaseSizeRefusalReasonDataUnread-DatabaseSizeRefusalReason(panelv1.DatabaseSizeRefusalReason_DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD)]
+	_ = same[DatabaseSizeRefusalReasonVolumeMoved-DatabaseSizeRefusalReason(panelv1.DatabaseSizeRefusalReason_DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED)]
 	_ = same[NoMachineReasonUnspecified-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_UNSPECIFIED)]
 	_ = same[NoMachineReasonNoPlan-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_NO_PLAN)]
 	_ = same[NoMachineReasonBeingPrepared-NoMachineReason(panelv1.NoMachineReason_NO_MACHINE_REASON_BEING_PREPARED)]

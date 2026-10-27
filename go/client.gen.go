@@ -86,7 +86,17 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of
 // its last stage).
 //
-// A database (Postgres or Valkey) is [Client.CreateDatabase]'s.
+// A database (Postgres or Valkey) is [Client.CreateDatabase]'s: make the app's first, then
+// link it here with LinkDatabases, e.g. {database_project_id: "recipes-db", env_prefix:
+// "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host
+// <DatabaseProjectID> from its first start (its deploy waits for one still being made).
+// [DatabaseLinkRequest.OwnUser], Postgres only (a Valkey has one user), to share a Postgres
+// other apps use: a user and a database of its own, named as the project, which they cannot
+// reach; all are restored together. Only LinkDatabases makes one: [Client.LinkDatabase] links
+// as the apps' user. [DatabaseLinkRequest.EnvPrefix] "DATABASE": the machine writes
+// DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+// A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+// Files with a /.env without it beside UploadID.
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -142,8 +152,9 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 //
 // [CodeAlreadyExists] = the id is taken (a retry with its OperationID returns that operation).
 // [CodeFailedPrecondition] = the GitHub App cannot read the repository (see
-// [GetMachineResponse.Github]), or no such branch or directory. A deleted project's id
-// inherits its snapshots.
+// [GetMachineResponse.Github]), or no such branch or directory; + [DatabaseLinkRefusal] = a
+// database of LinkDatabases cannot be linked to it (DatabaseProjectID says which), and nothing
+// was created. A deleted project's id inherits its snapshots.
 func (c *Client) CreateProject(ctx context.Context, request *CreateProjectRequest) (*CreateProjectResponse, error) {
 	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(orZero(request)))
 	if err != nil {
@@ -206,12 +217,36 @@ func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (
 // RunProjectAction: run a project action. It may delete or overwrite.
 //
 // One project action: start, stop or restart services, recreate one, back up, restore, cancel
-// an operation, change the source, delete an undeclared volume or the project. Recreate, back
-// up, restore, delete and [RunProjectActionSetSource]'s deploy run as operations, waited for
+// an operation, change the source or a database's size, delete an undeclared volume or the
+// project. Recreate, back up, restore, [RunProjectActionSetDatabaseSize], delete and
+// [RunProjectActionSetSource]'s deploy run as operations (OperationID), waited for
 // (WaitSeconds), as is the end of a cancelled one; the others are done on return. Answers with
-// the project as it then is. [RunProjectActionRestoreSnapshot] takes the project's own
-// snapshots only. A database's snapshot as a new database is the person's to make, in the
-// panel (the database's Backups tab, Restore as a new database): no tool makes one.
+// the project as it then is. With no services, [RunProjectActionStartServices] starts those
+// with a container and [RunProjectActionRestartServices] the running ones.
+// [RunProjectActionRestoreSnapshot] takes the project's own snapshots only: a deleted app's
+// data in a shared Postgres is in that Postgres's snapshots. A database's snapshot as a new
+// database beside it is [Client.CreateDatabase]'s, with
+// [CreateDatabaseRequest.FromSnapshotID].
+//
+// [RunProjectActionDeleteProject]: a final backup while backups are on, then containers,
+// volumes, files, hosts, logs, and an app's user and database of its own in a shared Postgres,
+// data and all. Snapshots stay ([GetMachineResponse.DeletedProjects]), and restoring one
+// brings the project back, source included; with backups off there is none, and it is gone for
+// good. The databases it was linked to stay: delete each with its own
+// [RunProjectActionDeleteProject].
+//
+// [RunProjectActionSetDatabaseSize] gives a database another of its engine's sizes
+// ([Machine.DatabaseEngines]; its size now is [Project.Database].MemoryLimitBytes): the
+// machine writes its compose.yaml anew for that size, with the settings that follow from it
+// and the image it runs, so never edit them by hand; what else was written there goes. The
+// database restarts, and its apps lose their connections for a few seconds: one that does not
+// connect again shows as restarting ([Client.GetMachine]). A size changes nothing on the bill:
+// a smaller one only leaves memory to the other projects. A Valkey whose data is more than the
+// size keeps (its maxmemory, 70 % of the size) is refused before anything changes, and the
+// refusal gives both figures: [CodeFailedPrecondition] + [DatabaseSizeRefusal], as for a
+// Valkey that does not answer now, asked to shrink, and a database whose data is in another
+// volume than the one the file names. [CodeFailedPrecondition] alone = the project is no
+// database. [CodeInvalidArgument] = a size its engine does not offer (the message lists them).
 func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectActionRequest) (*RunProjectActionResponse, error) {
 	response, err := c.wire.RunProjectAction(ctx, toWireRunProjectActionRequest(orZero(request)))
 	if err != nil {
@@ -283,8 +318,10 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 //
 // A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
 // deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-// host `<project_id>` once linked (Link, or [Client.LinkDatabase] after the app's
-// [Client.CreateProject]), and [Project.Database] says how to sign in. Or a copy of a
+// host `<project_id>` once linked (the app's [Client.CreateProject]
+// [CreateProjectRequest.LinkDatabases], which may follow at once, as its deploy waits for this
+// one; Link or [Client.LinkDatabase] for an app that exists, as the apps' user and writing
+// nothing into its /.env), and [Project.Database] says how to sign in. Or a copy of a
 // database's snapshot, with passwords of its own and none of its links. Answers as
 // [Client.CreateProject] does. [CodeInvalidArgument] = an engine or a size
 // [Machine.DatabaseEngines] does not offer, or a ProjectID with "_", that is a number or that
@@ -301,13 +338,17 @@ func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequ
 
 // LinkDatabase: link projects to a database. It may delete or overwrite.
 //
-// Lets projects reach a database project: inside each linked project the database is the host
-// `<database_project_id>` at its port, and [Project.Database] says how to sign in (its
-// password with [Client.GetProject] [GetProjectRequest.IncludeSecretValues]). Takes effect at
-// once and deploys nothing. [CodeInvalidArgument] = a project in both link and unlink.
-// [CodeNotFound] = no such project. [CodeFailedPrecondition] = DatabaseProjectID is no
-// database; + [DatabaseLinkRefusal] = the app is a database, has a service named or aliased
-// like the database, or there are 20 links already. Answers with the database's Project.
+// Lets projects that exist reach a database project: inside each linked project the database
+// is the host `<database_project_id>` at its port. Takes effect at once and deploys nothing,
+// and writes nothing into a project's /.env: put [Project.Database].Connection's url there
+// ([Client.GetProject] [GetProjectRequest.IncludeSecretValues]) with [Client.DeployProject]
+// `files`. A project it links signs in as the apps' user, `app` (a Valkey's one user), or as
+// its user of its own if [Client.CreateProject]'s [CreateProjectRequest.LinkDatabases] made it
+// one there ([DatabaseLinkRequest.OwnUser]), which nothing else makes. [CodeInvalidArgument] =
+// a project in both link and unlink. [CodeNotFound] = no such project.
+// [CodeFailedPrecondition] = DatabaseProjectID is no database; + [DatabaseLinkRefusal] = the
+// app is a database, has a service named or aliased like the database, or there are 20 links
+// already. Answers with the database's Project.
 func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest) (*LinkDatabaseResponse, error) {
 	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(orZero(request)))
 	if err != nil {

@@ -69,6 +69,7 @@ pub mod __buffa {
         reg.register_json_any(super::__SNAPSHOT_JSON_ANY);
         reg.register_json_any(super::__HTTP_TRAFFIC_SUMMARY_JSON_ANY);
         reg.register_json_any(super::__CREATE_PROJECT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_LINK_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CREATE_PROJECT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DEPLOY_PROJECT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MOUNT_VOLUME_JSON_ANY);
@@ -86,6 +87,7 @@ pub mod __buffa {
         reg.register_json_any(super::__RESTORE_SNAPSHOT_ACTION_JSON_ANY);
         reg.register_json_any(super::__CANCEL_OPERATION_ACTION_JSON_ANY);
         reg.register_json_any(super::__DELETE_PROJECT_ACTION_JSON_ANY);
+        reg.register_json_any(super::__SET_DATABASE_SIZE_ACTION_JSON_ANY);
         reg.register_json_any(super::__RUN_PROJECT_ACTION_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DATABASE_JSON_ANY);
         reg.register_json_any(super::__DATABASE_CONNECTION_JSON_ANY);
@@ -152,6 +154,7 @@ pub mod __buffa {
         reg.register_json_any(super::__PROJECT_CHANGED_JSON_ANY);
         reg.register_json_any(super::__MACHINE_UNREACHABLE_JSON_ANY);
         reg.register_json_any(super::__DATABASE_LINK_REFUSAL_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SIZE_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_RESPONSE_JSON_ANY);
@@ -315,6 +318,10 @@ pub use self::__buffa::view::CreateProjectRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateProjectRequestOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::DatabaseLinkRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseLinkRequestOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::CreateProjectResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateProjectResponseOwnedView;
@@ -382,6 +389,10 @@ pub use self::__buffa::view::CancelOperationActionOwnedView;
 pub use self::__buffa::view::DeleteProjectActionView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteProjectActionOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::SetDatabaseSizeActionView;
+#[doc(inline)]
+pub use self::__buffa::view::SetDatabaseSizeActionOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::RunProjectActionResponseView;
 #[doc(inline)]
@@ -646,6 +657,10 @@ pub use self::__buffa::view::MachineUnreachableOwnedView;
 pub use self::__buffa::view::DatabaseLinkRefusalView;
 #[doc(inline)]
 pub use self::__buffa::view::DatabaseLinkRefusalOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSizeRefusalView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSizeRefusalOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::NoMachineView;
 #[doc(inline)]

@@ -21,6 +21,7 @@ from pethost._types import (
     CreateTransferResponse,
     DatabaseDump,
     DatabaseEngine,
+    DatabaseLinkRequest,
     DeleteProjectAction,
     DeployProjectResponse,
     FileChange,
@@ -34,6 +35,7 @@ from pethost._types import (
     MountVolume,
     PathDownload,
     ProjectExtension,
+    ProjectMetadata,
     ProjectSource,
     QueryContainerLogsResponse,
     QueryHttpTrafficResponse,
@@ -45,6 +47,7 @@ from pethost._types import (
     RunProjectActionResponse,
     RunServiceCommandResponse,
     ServicesAction,
+    SetDatabaseSizeAction,
     SetProjectAlertsResponse,
     SiteCheck,
     SshKey,
@@ -379,6 +382,7 @@ class Pethost:
         timeout_seconds: int = 0,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        link_databases: Sequence[DatabaseLinkRequest] = (),
     ) -> CreateProjectResponse:
         """Create a project.
 
@@ -397,7 +401,16 @@ class Pethost:
         Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
         named volume per VOLUME of its last stage).
 
-        A database (Postgres or Valkey) is create_database's.
+        A database (Postgres or Valkey) is create_database's: make the app's first, then link it here
+        with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
+        compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
+        from its first start (its deploy waits for one still being made). own_user, Postgres only (a
+        Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
+        named as the project, which they cannot reach; all are restored together. Only link_databases
+        makes one: link_database links as the apps' user. env_prefix "DATABASE": the machine writes
+        DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
+        A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
+        `files` with a /.env without it beside `upload_id`.
 
         compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
         is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -452,7 +465,9 @@ class Pethost:
 
         AlreadyExistsError = the id is taken (a retry with its operation_id returns that operation).
         FailedPreconditionError = the GitHub App cannot read the repository (see GetMachineResponse.github), or no
-        such branch or directory. A deleted project's id inherits its snapshots.
+        such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
+        linked to it (database_project_id says which), and nothing was created. A deleted project's
+        id inherits its snapshots.
 
         Args:
             project_id: New, [a-z0-9][a-z0-9_-]*, ≤63 chars; immutable.
@@ -464,7 +479,7 @@ class Pethost:
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
         """
-        return _convert.create_project_response_from_wire(self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds)))
+        return _convert.create_project_response_from_wire(self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds, link_databases=link_databases)))
 
     @overload
     def deploy_project(
@@ -884,22 +899,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -909,11 +946,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -932,22 +970,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -957,11 +1017,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -980,22 +1041,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1005,11 +1088,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1028,22 +1112,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1053,11 +1159,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1076,22 +1183,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1101,11 +1230,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1124,22 +1254,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1149,11 +1301,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1172,22 +1325,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1197,11 +1372,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1220,22 +1396,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1245,11 +1443,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1268,22 +1467,44 @@ class Pethost:
         delete_project: DeleteProjectAction,
         set_source: None = None,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1293,11 +1514,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1316,22 +1538,44 @@ class Pethost:
         delete_project: None = None,
         set_source: ProjectSource,
         delete_volume: None = None,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1341,11 +1585,12 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1364,22 +1609,44 @@ class Pethost:
         delete_project: None = None,
         set_source: None = None,
         delete_volume: str,
+        set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1389,11 +1656,83 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
+        """
+        ...
+
+    @overload
+    def run_project_action(
+        self,
+        project_id: str,
+        *,
+        start_services: None = None,
+        stop_services: None = None,
+        restart_services: None = None,
+        recreate_service: None = None,
+        back_up: None = None,
+        restore_snapshot: None = None,
+        cancel_operation: None = None,
+        delete_project: None = None,
+        set_source: None = None,
+        delete_volume: None = None,
+        set_database_size: SetDatabaseSizeAction,
+        operation_id: str = "",
+        wait_seconds: int | None = None,
+    ) -> RunProjectActionResponse:
+        """Run a project action.
+
+        One project action: start, stop or restart services, recreate one, back up, restore, cancel an
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
+
+        Destructive: it may delete or overwrite something.
+
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
+
+        Args:
+            start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
+            stop_services: Stops services, each with its grace period. A machine restart may start them, per restart policy.
+            restart_services: Restarts processes in the same containers. Codes as start_services.
+            recreate_service: A new container: a fresh filesystem outside volumes. An operation.
+            back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
+            restore_snapshot: From a snapshot of this project. An operation.
+            cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
+            set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
+            delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
         ...
 
@@ -1411,22 +1750,44 @@ class Pethost:
         delete_project: DeleteProjectAction | None = None,
         set_source: ProjectSource | None = None,
         delete_volume: str | None = None,
+        set_database_size: SetDatabaseSizeAction | None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
     ) -> RunProjectActionResponse:
         """Run a project action.
 
         One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-        operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-        restore, delete and set_source's deploy run as operations, waited for (wait_seconds), as is
-        the end of a cancelled one; the others are done on return. Answers with the project as it
-        then is. restore_snapshot takes the project's own snapshots only. A database's snapshot as a
-        new database is the person's to make, in the panel (the database's Backups tab, Restore as a
-        new database): no tool makes one.
+        operation, change the source or a database's size, delete an undeclared volume or the project.
+        Recreate, back up, restore, set_database_size, delete and set_source's deploy run as
+        operations (operation_id), waited for (wait_seconds), as is the end of a cancelled one; the
+        others are done on return. Answers with the project as it then is. With no services,
+        start_services starts those with a container and restart_services the running ones.
+        restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
+        Postgres is in that Postgres's snapshots. A database's snapshot as a new
+        database beside it is create_database's, with from_snapshot_id.
+
+        delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
+        logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+        stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source
+        included; with backups off there is none, and it is gone for good. The databases it was
+        linked to stay: delete each with its own delete_project.
+
+        set_database_size gives a database another of its engine's sizes (Machine.database_engines;
+        its size now is Project.database.memory_limit_bytes): the machine writes its compose.yaml
+        anew for that size, with the settings that follow from it and the image it runs, so never edit
+        them by hand; what else was written there goes. The database restarts, and its apps lose their
+        connections for a few seconds: one that does not connect again shows as restarting
+        (get_machine). A size changes nothing on the bill: a smaller one only leaves memory to the
+        other projects. A Valkey whose data is more than the size keeps (its maxmemory, 70 % of the
+        size) is refused before anything changes, and the refusal gives both figures:
+        FailedPreconditionError + DatabaseSizeRefusal, as for a Valkey that does not answer now, asked to
+        shrink, and a database whose data is in another volume than the one the file names.
+        FailedPreconditionError alone = the project is no database. InvalidArgumentError = a size its engine
+        does not offer (the message lists them).
 
         Destructive: it may delete or overwrite something.
 
-        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`.
+        At most one of `start_services`, `stop_services`, `restart_services`, `recreate_service`, `back_up`, `restore_snapshot`, `cancel_operation`, `delete_project`, `set_source`, `delete_volume`, `set_database_size`.
 
         Args:
             start_services: Starts stopped services and reruns jobs, not their dependencies. FailedPreconditionError = no container yet (deploy or recreate_service), or a published machine port is taken.
@@ -1436,13 +1797,14 @@ class Pethost:
             back_up: Backs up the directory and volumes now, live. An operation. FailedPreconditionError = backups off (Machine.backups_enabled).
             restore_snapshot: From a snapshot of this project. An operation.
             cancel_operation: Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. FailedPreconditionError = a delete past its final backup.
-            delete_project: An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay (GetMachineResponse.deleted_projects), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+            delete_project: An operation: run_project_action's description says what goes and what stays.
             set_source: Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {auto_deploy: true}} follows pushes again; from files, repository is required. Deploys the newest commit if auto_deploy is on and the files are not at it. FailedPreconditionError = as create_project.
             delete_volume: A volume compose.yaml no longer declares (Volume.declared false). Its data then lives only in snapshots. FailedPreconditionError = declared or in use.
-            operation_id: As deploy_project's, for the actions that run as operations.
-            wait_seconds: As deploy_project's, for the actions that run as operations.
+            set_database_size: A database's size. An operation: it restarts.
+            operation_id: As deploy_project's.
+            wait_seconds: As deploy_project's.
         """
-        return _convert.run_project_action_response_from_wire(self._call(self._wire.run_project_action, _convert.run_project_action_request(project_id=project_id, start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, operation_id=operation_id, wait_seconds=wait_seconds)))
+        return _convert.run_project_action_response_from_wire(self._call(self._wire.run_project_action, _convert.run_project_action_request(project_id=project_id, start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, set_database_size=set_database_size, operation_id=operation_id, wait_seconds=wait_seconds)))
 
     def set_project_alerts(
         self,
@@ -1574,14 +1936,17 @@ class Pethost:
         link: Sequence[str] = (),
         operation_id: str = "",
         wait_seconds: int | None = None,
+        metadata: ProjectMetadata | None = None,
     ) -> CreateDatabaseResponse:
         """Create a database.
 
         A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
         deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-        host `<project_id>` once linked (`link`, or link_database after the app's create_project), and
-        Project.database says how to sign in. Or a copy of a database's snapshot, with passwords of
-        its own and none of its links. Answers as create_project does.
+        host `<project_id>` once linked (the app's create_project `link_databases`, which may follow at
+        once, as its deploy waits for this one; `link` or link_database for an app that exists, as the
+        apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
+        a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+        create_project does.
         InvalidArgumentError = an engine or a size Machine.database_engines does not offer, or a
         project_id with "_", that is a number or that every container's /etc/hosts names (it is the
         host name apps use). NotFoundError = no such snapshot or app. FailedPreconditionError = the snapshot
@@ -1595,8 +1960,9 @@ class Pethost:
             link: App project_ids, linked before its operation ends.
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
+            metadata: What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
         """
-        return _convert.create_database_response_from_wire(self._call(self._wire.create_database, _convert.create_database_request(project_id=project_id, engine=engine, memory_limit_bytes=memory_limit_bytes, from_snapshot_id=from_snapshot_id, link=link, operation_id=operation_id, wait_seconds=wait_seconds)))
+        return _convert.create_database_response_from_wire(self._call(self._wire.create_database, _convert.create_database_request(project_id=project_id, engine=engine, memory_limit_bytes=memory_limit_bytes, from_snapshot_id=from_snapshot_id, link=link, operation_id=operation_id, wait_seconds=wait_seconds, metadata=metadata)))
 
     def link_database(
         self,
@@ -1607,9 +1973,12 @@ class Pethost:
     ) -> LinkDatabaseResponse:
         """Link projects to a database.
 
-        Lets projects reach a database project: inside each linked project the database is the
-        host `<database_project_id>` at its port, and Project.database says how to sign in (its
-        password with get_project include_secret_values). Takes effect at once and deploys nothing.
+        Lets projects that exist reach a database project: inside each linked project the database is
+        the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+        writes nothing into a project's /.env: put Project.database.connection's url there (get_project
+        include_secret_values) with deploy_project `files`. A project it links signs in as the apps'
+        user, `app` (a Valkey's one user), or as its user of its own if create_project's link_databases
+        made it one there (own_user), which nothing else makes.
         InvalidArgumentError = a project in both link and unlink. NotFoundError = no such project.
         FailedPreconditionError = database_project_id is no database; + DatabaseLinkRefusal = the app is
         a database, has a service named or aliased like the database, or there are 20 links already.

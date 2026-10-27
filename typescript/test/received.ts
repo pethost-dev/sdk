@@ -47,10 +47,11 @@ export const empty = {
   VolumeMountedBy: () => ({ service: "", containerPath: "" }),
   Host: () => ({ host: "", url: "", unavailableMessage: "" }),
   Route: () => ({ host: "", path: "", service: "", port: 0, stripPath: false }),
-  Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false, filesOperationId: "" }),
+  Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false, filesOperationId: "", databaseMemoryLimitBytes: 0n }),
   Snapshot: () => ({ snapshotId: "", sizeBytes: 0n, volumes: [] }),
   HttpTrafficSummary: () => ({ requestCount: 0n, serverErrorCount: 0n, latencyP50Ms: 0, latencyP95Ms: 0 }),
-  CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "" }),
+  CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "", linkDatabases: [] }),
+  DatabaseLinkRequest: () => ({ databaseProjectId: "", ownUser: false, envPrefix: "" }),
   CreateProjectResponse: () => ({ violations: [], adjustments: [], log: [] }),
   DeployProjectRequest: () => ({ projectId: "", baseDeployId: "", files: [], timeoutSeconds: 0, operationId: "" }),
   MountVolume: () => ({ service: "", volume: "", containerPath: "" }),
@@ -68,11 +69,12 @@ export const empty = {
   RestoreSnapshotAction: () => ({ snapshotId: "", volumes: [] }),
   CancelOperationAction: () => ({ operationId: "" }),
   DeleteProjectAction: () => ({ skipFinalBackup: false }),
+  SetDatabaseSizeAction: () => ({ memoryLimitBytes: 0n }),
   RunProjectActionResponse: () => ({ log: [] }),
-  Database: () => ({ majorVersion: 0, serverVersion: "", memoryLimitBytes: 0n, dataBytes: 0n, connections: 0, maxConnections: 0, linkedProjects: [], service: "", volume: "", consoleCommand: [] }),
+  Database: () => ({ majorVersion: 0, serverVersion: "", memoryLimitBytes: 0n, dataBytes: 0n, connections: 0, maxConnections: 0, linkedProjects: [], service: "", volume: "", consoleCommand: [], ownUserProjects: [] }),
   DatabaseConnection: () => ({ host: "", port: 0, user: "", database: "", password: "", url: "", localUrl: "" }),
-  DatabaseSummary: () => ({ majorVersion: 0, dataBytes: 0n, connections: 0, linkedProjects: [], serverVersion: "" }),
-  DatabaseEngineOffer: () => ({ majorVersion: 0, sizes: [], defaultMemoryLimitBytes: 0n }),
+  DatabaseSummary: () => ({ majorVersion: 0, dataBytes: 0n, connections: 0, linkedProjects: [], serverVersion: "", memoryLimitBytes: 0n, ownUserProjects: [] }),
+  DatabaseEngineOffer: () => ({ majorVersion: 0, sizes: [], defaultMemoryLimitBytes: 0n, ownUsers: false }),
   DatabaseSizeChoice: () => ({ memoryLimitBytes: 0n }),
   LinkDatabaseRequest: () => ({ databaseProjectId: "", link: [], unlink: [] }),
   LinkDatabaseResponse: () => ({}),
@@ -116,7 +118,8 @@ export const empty = {
   ProjectBusy: () => ({ operationId: "" }),
   ProjectChanged: () => ({}),
   MachineUnreachable: () => ({}),
-  DatabaseLinkRefusal: () => ({ projectId: "", service: "" }),
+  DatabaseLinkRefusal: () => ({ projectId: "", service: "", databaseProjectId: "" }),
+  DatabaseSizeRefusal: () => ({ dataBytes: 0n, keepsBytes: 0n, volume: "" }),
   NoMachine: () => ({ url: "" }),
   WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
   WatchOperationResponse: () => ({}),
@@ -599,6 +602,7 @@ export const empty = {
   m.reads("Operation.deploy_failure_reason: TIMED_OUT", { deployFailureReason: w.DeployFailureReason.TIMED_OUT }, { ...empty.Operation(), deployFailureReason: "TIMED_OUT" });
   m.reads("Operation.deploy_failure_reason: UNCOVERED_IMAGE_VOLUME", { deployFailureReason: w.DeployFailureReason.UNCOVERED_IMAGE_VOLUME }, { ...empty.Operation(), deployFailureReason: "UNCOVERED_IMAGE_VOLUME" });
   m.reads("Operation.deploy_failure_reason: BUILD_MEMORY_UNAVAILABLE", { deployFailureReason: w.DeployFailureReason.BUILD_MEMORY_UNAVAILABLE }, { ...empty.Operation(), deployFailureReason: "BUILD_MEMORY_UNAVAILABLE" });
+  m.reads("Operation.deploy_failure_reason: DATABASE_USER_FAILED", { deployFailureReason: w.DeployFailureReason.DATABASE_USER_FAILED }, { ...empty.Operation(), deployFailureReason: "DATABASE_USER_FAILED" });
   m.reads("Operation.deploy_failure_reason: a value newer than the SDK", { deployFailureReason: 9999 as w.DeployFailureReason }, { ...empty.Operation(), deployFailureReason: 9999 });
   m.reads("Operation.made_current", { madeCurrent: true }, { ...empty.Operation(), madeCurrent: true });
   m.reads("Operation.service", { service: "service" }, { ...empty.Operation(), service: "service" });
@@ -613,6 +617,7 @@ export const empty = {
   m.reads("Operation.changed_path_count", { changedPathCount: 1018 }, { ...empty.Operation(), changedPathCount: 1018 });
   m.reads("Operation.files_kept", { filesKept: true }, { ...empty.Operation(), filesKept: true });
   m.reads("Operation.files_operation_id", { filesOperationId: "files_operation_id" }, { ...empty.Operation(), filesOperationId: "files_operation_id" });
+  m.reads("Operation.database_memory_limit_bytes", { databaseMemoryLimitBytes: 9007199254740993n }, { ...empty.Operation(), databaseMemoryLimitBytes: 9007199254740993n });
 }
 
 {
@@ -713,6 +718,7 @@ export const empty = {
   m.reads("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
   m.reads("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
   m.reads("Database.console_command", { consoleCommand: ["console_command", ""] }, { ...empty.Database(), consoleCommand: ["console_command", ""] });
+  m.reads("Database.own_user_projects", { ownUserProjects: ["own_user_projects", ""] }, { ...empty.Database(), ownUserProjects: ["own_user_projects", ""] });
 }
 
 {
@@ -740,6 +746,8 @@ export const empty = {
   m.reads("DatabaseSummary.connections", { connections: 1004 }, { ...empty.DatabaseSummary(), connections: 1004 });
   m.reads("DatabaseSummary.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.DatabaseSummary(), linkedProjects: ["linked_projects", ""] });
   m.reads("DatabaseSummary.server_version", { serverVersion: "server_version" }, { ...empty.DatabaseSummary(), serverVersion: "server_version" });
+  m.reads("DatabaseSummary.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseSummary(), memoryLimitBytes: 9007199254740993n });
+  m.reads("DatabaseSummary.own_user_projects", { ownUserProjects: ["own_user_projects", ""] }, { ...empty.DatabaseSummary(), ownUserProjects: ["own_user_projects", ""] });
 }
 
 {
@@ -752,6 +760,7 @@ export const empty = {
   m.reads("DatabaseEngineOffer.major_version", { majorVersion: 1002 }, { ...empty.DatabaseEngineOffer(), majorVersion: 1002 });
   m.reads("DatabaseEngineOffer.sizes", { sizes: [{}] }, { ...empty.DatabaseEngineOffer(), sizes: [empty.DatabaseSizeChoice()] });
   m.reads("DatabaseEngineOffer.default_memory_limit_bytes", { defaultMemoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 9007199254740993n });
+  m.reads("DatabaseEngineOffer.own_users", { ownUsers: true }, { ...empty.DatabaseEngineOffer(), ownUsers: true });
 }
 
 {
@@ -1134,8 +1143,24 @@ export const empty = {
   m.reads("DatabaseLinkRefusal.reason: APP_IS_DATABASE", { reason: w.DatabaseLinkRefusalReason.APP_IS_DATABASE }, { ...empty.DatabaseLinkRefusal(), reason: "APP_IS_DATABASE" });
   m.reads("DatabaseLinkRefusal.reason: SERVICE_NAME_TAKEN", { reason: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN }, { ...empty.DatabaseLinkRefusal(), reason: "SERVICE_NAME_TAKEN" });
   m.reads("DatabaseLinkRefusal.reason: TOO_MANY_LINKS", { reason: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS }, { ...empty.DatabaseLinkRefusal(), reason: "TOO_MANY_LINKS" });
+  m.reads("DatabaseLinkRefusal.reason: ONE_USER", { reason: w.DatabaseLinkRefusalReason.ONE_USER }, { ...empty.DatabaseLinkRefusal(), reason: "ONE_USER" });
+  m.reads("DatabaseLinkRefusal.reason: USER_NAME_RESERVED", { reason: w.DatabaseLinkRefusalReason.USER_NAME_RESERVED }, { ...empty.DatabaseLinkRefusal(), reason: "USER_NAME_RESERVED" });
   m.reads("DatabaseLinkRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseLinkRefusalReason }, { ...empty.DatabaseLinkRefusal(), reason: 9999 });
   m.reads("DatabaseLinkRefusal.service", { service: "service" }, { ...empty.DatabaseLinkRefusal(), service: "service" });
+  m.reads("DatabaseLinkRefusal.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.DatabaseLinkRefusal(), databaseProjectId: "database_project_id" });
+}
+
+{
+  const m = readingDetail(w.DatabaseSizeRefusalSchema, (leaf: Init<typeof w.DatabaseSizeRefusalSchema>): Init<typeof w.DatabaseSizeRefusalSchema> => (leaf), anyCall, (error) => error.databaseSizeRefusal);
+  m.reads("DatabaseSizeRefusal: nothing set", {}, empty.DatabaseSizeRefusal());
+  m.reads("DatabaseSizeRefusal: a field newer than the SDK", newer(w.DatabaseSizeRefusalSchema), empty.DatabaseSizeRefusal());
+  m.reads("DatabaseSizeRefusal.reason: DATA_TOO_LARGE", { reason: w.DatabaseSizeRefusalReason.DATA_TOO_LARGE }, { ...empty.DatabaseSizeRefusal(), reason: "DATA_TOO_LARGE" });
+  m.reads("DatabaseSizeRefusal.reason: DATA_UNREAD", { reason: w.DatabaseSizeRefusalReason.DATA_UNREAD }, { ...empty.DatabaseSizeRefusal(), reason: "DATA_UNREAD" });
+  m.reads("DatabaseSizeRefusal.reason: VOLUME_MOVED", { reason: w.DatabaseSizeRefusalReason.VOLUME_MOVED }, { ...empty.DatabaseSizeRefusal(), reason: "VOLUME_MOVED" });
+  m.reads("DatabaseSizeRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseSizeRefusalReason }, { ...empty.DatabaseSizeRefusal(), reason: 9999 });
+  m.reads("DatabaseSizeRefusal.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.DatabaseSizeRefusal(), dataBytes: 9007199254740993n });
+  m.reads("DatabaseSizeRefusal.keeps_bytes", { keepsBytes: 9007199254740993n }, { ...empty.DatabaseSizeRefusal(), keepsBytes: 9007199254740993n });
+  m.reads("DatabaseSizeRefusal.volume", { volume: "volume" }, { ...empty.DatabaseSizeRefusal(), volume: "volume" });
 }
 
 {

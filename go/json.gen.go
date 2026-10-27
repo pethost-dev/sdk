@@ -378,6 +378,17 @@ func (v *CreateProjectRequest) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseLinkRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseLinkRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseLinkRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseLinkRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v CreateProjectResponse) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireCreateProjectResponse(v))
 }
@@ -578,6 +589,16 @@ func (v *RunProjectActionSetSource) UnmarshalJSON(data []byte) error {
 	return (*ProjectSource)(v).UnmarshalJSON(data)
 }
 
+// MarshalJSON writes the member alone as the API's JSON of a [SetDatabaseSizeAction].
+func (v RunProjectActionSetDatabaseSize) MarshalJSON() ([]byte, error) {
+	return SetDatabaseSizeAction(v).MarshalJSON()
+}
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [SetDatabaseSizeAction].
+func (v *RunProjectActionSetDatabaseSize) UnmarshalJSON(data []byte) error {
+	return (*SetDatabaseSizeAction)(v).UnmarshalJSON(data)
+}
+
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v ServicesAction) MarshalJSON() ([]byte, error) { return marshalJSON(toWireServicesAction(v)) }
 
@@ -638,6 +659,17 @@ func (v DeleteProjectAction) MarshalJSON() ([]byte, error) {
 // API does not have is refused.
 func (v *DeleteProjectAction) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireDeleteProjectAction)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v SetDatabaseSizeAction) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireSetDatabaseSizeAction(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *SetDatabaseSizeAction) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireSetDatabaseSizeAction)
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
@@ -1170,6 +1202,17 @@ func (v *DatabaseLinkRefusal) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseSizeRefusal) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireDatabaseSizeRefusal(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseSizeRefusal) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseSizeRefusal)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v NoMachine) MarshalJSON() ([]byte, error) { return marshalJSON(toWireNoMachine(v)) }
 
 // UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
@@ -1377,9 +1420,8 @@ func (v *OperationStatus) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE" for
-// [DeployFailureReasonBuildMemoryUnavailable], or its number when the package has no name for
-// it.
+// "DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED" for [DeployFailureReasonDatabaseUserFailed], or
+// its number when the package has no name for it.
 func (v DeployFailureReason) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireDeployFailureReason(v))
 }
@@ -1463,8 +1505,9 @@ func (v *FileLocation) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS" for [DatabaseLinkRefusalReasonTooManyLinks],
-// or its number when the package has no name for it.
+// "DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED" for
+// [DatabaseLinkRefusalReasonUserNameReserved], or its number when the package has no name for
+// it.
 func (v DatabaseLinkRefusalReason) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireDatabaseLinkRefusalReason(v))
 }
@@ -1472,6 +1515,18 @@ func (v DatabaseLinkRefusalReason) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
 func (v *DatabaseLinkRefusalReason) UnmarshalJSON(data []byte) error {
 	return unmarshalEnumJSON(data, v, panelv1.DatabaseLinkRefusalReason(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED" for [DatabaseSizeRefusalReasonVolumeMoved], or
+// its number when the package has no name for it.
+func (v DatabaseSizeRefusalReason) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireDatabaseSizeRefusalReason(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *DatabaseSizeRefusalReason) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.DatabaseSizeRefusalReason(0).Descriptor())
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,

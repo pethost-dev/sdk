@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
-from ._types import DatabaseLinkRefusal, MachineUnreachable, NoMachine, ProjectBusy, ProjectChanged
+from ._types import DatabaseLinkRefusal, DatabaseSizeRefusal, MachineUnreachable, NoMachine, ProjectBusy, ProjectChanged
 
-ErrorDetail: TypeAlias = ProjectBusy | ProjectChanged | MachineUnreachable | DatabaseLinkRefusal | NoMachine
+ErrorDetail: TypeAlias = ProjectBusy | ProjectChanged | MachineUnreachable | DatabaseLinkRefusal | DatabaseSizeRefusal | NoMachine
 """What an error may carry beside its message: `match` on its class."""
 
 
@@ -16,7 +16,7 @@ class PethostError(Exception):
 
     Attributes:
         message: Prose for people: branch on the class and on `detail`, never on this.
-        detail: What to branch on, when the API sent one: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `NoMachine`.
+        detail: What to branch on, when the API sent one: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`.
             None = none, or one this version does not know.
     """
 
@@ -24,7 +24,7 @@ class PethostError(Exception):
     """Prose for people: branch on the class and on `detail`, never on this."""
 
     detail: ErrorDetail | None
-    """What to branch on, when the API sent one: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `NoMachine`.
+    """What to branch on, when the API sent one: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`.
     None = none, or one this version does not know.
     """
 

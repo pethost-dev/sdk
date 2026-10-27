@@ -319,6 +319,9 @@ class DeployFailureReason(OpenEnum):
         UNCOVERED_IMAGE_VOLUME: The image declares a VOLUME no mount covers: it would never be backed up. Mount a named
             volume there.
         BUILD_MEMORY_UNAVAILABLE: The running projects leave too little memory for a build; the message says how much.
+        DATABASE_USER_FAILED: Its user of its own in a linked database (DatabaseLinkRequest.own_user) could not be made:
+            the database does not run or answer, or refused; the message says which. Start it, then
+            deploy again.
     """
 
     UNSPECIFIED = 0
@@ -353,6 +356,12 @@ class DeployFailureReason(OpenEnum):
 
     BUILD_MEMORY_UNAVAILABLE = 11
     """The running projects leave too little memory for a build; the message says how much."""
+
+    DATABASE_USER_FAILED = 12
+    """Its user of its own in a linked database (DatabaseLinkRequest.own_user) could not be made:
+    the database does not run or answer, or refused; the message says which. Start it, then
+    deploy again.
+    """
 
 
 class DatabaseEngine(OpenEnum):
@@ -492,6 +501,10 @@ class DatabaseLinkRefusalReason(OpenEnum):
         SERVICE_NAME_TAKEN: A service of it is named or aliased like the database, whose host it would hide: rename
             the service or its alias.
         TOO_MANY_LINKS: The database has 20: unlink one first.
+        ONE_USER: own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey.
+        USER_NAME_RESERVED: own_user for a project whose id Postgres or the machine keeps as a user or a database
+            (postgres, app, public, none, template0, template1, current_user, current_role,
+            session_user, pg_…): give it another id.
     """
 
     UNSPECIFIED = 0
@@ -506,6 +519,43 @@ class DatabaseLinkRefusalReason(OpenEnum):
 
     TOO_MANY_LINKS = 3
     """The database has 20: unlink one first."""
+
+    ONE_USER = 4
+    """own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey."""
+
+    USER_NAME_RESERVED = 5
+    """own_user for a project whose id Postgres or the machine keeps as a user or a database
+    (postgres, app, public, none, template0, template1, current_user, current_role,
+    session_user, pg_…): give it another id.
+    """
+
+
+class DatabaseSizeRefusalReason(OpenEnum):
+    """
+    Attributes:
+        DATA_TOO_LARGE: A Valkey whose data is more than the size keeps: take a larger size, or delete data first.
+        DATA_UNREAD: A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try
+            again once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can
+            be given more.
+        VOLUME_MOVED: Its data is in another volume (`volume`) than `data`, which the file the size writes keeps
+            it in, so the database would start without it: change the size in its compose.yaml instead.
+    """
+
+    UNSPECIFIED = 0
+
+    DATA_TOO_LARGE = 1
+    """A Valkey whose data is more than the size keeps: take a larger size, or delete data first."""
+
+    DATA_UNREAD = 2
+    """A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try
+    again once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can
+    be given more.
+    """
+
+    VOLUME_MOVED = 3
+    """Its data is in another volume (`volume`) than `data`, which the file the size writes keeps
+    it in, so the database would start without it: change the size in its compose.yaml instead.
+    """
 
 
 class NoMachineReason(OpenEnum):
@@ -625,9 +675,9 @@ class Machine:
             then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty =
             alerts reach nobody.
         database_engines: The databases the machine makes (create_database), one per engine, with the sizes they may
-            take.
-        memory_limits_bytes: The sum of every service's memory limit (`mem_limit`): what the projects may take together,
-            which memory_total_bytes does not reserve.
+            take (run_project_action(set_database_size=)).
+        memory_limits_bytes: The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more
+            than memory_total_bytes. What the projects use is memory_used_bytes.
     """
 
     name: str = ""
@@ -743,12 +793,12 @@ class Machine:
 
     database_engines: Sequence[DatabaseEngineOffer] = ()
     """The databases the machine makes (create_database), one per engine, with the sizes they may
-    take.
+    take (run_project_action(set_database_size=)).
     """
 
     memory_limits_bytes: int = 0
-    """The sum of every service's memory limit (`mem_limit`): what the projects may take together,
-    which memory_total_bytes does not reserve.
+    """The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more
+    than memory_total_bytes. What the projects use is memory_used_bytes.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -2439,6 +2489,7 @@ class Operation:
         files_operation_id: DEPLOY: the deploy that first deployed its files: itself when its request brought or changed
             files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
             that changed only /.env or x-pethost.
+        database_memory_limit_bytes: DEPLOY of a size change (run_project_action(set_database_size=)): the size it gave the database.
     """
 
     operation_id: str = ""
@@ -2520,6 +2571,9 @@ class Operation:
     files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy
     that changed only /.env or x-pethost.
     """
+
+    database_memory_limit_bytes: int = 0
+    """DEPLOY of a size change (run_project_action(set_database_size=)): the size it gave the database."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -2623,6 +2677,37 @@ class HttpTrafficSummary:
         from . import _convert
 
         return _convert.http_traffic_summary_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseLinkRequest:
+    database_project_id: str = ""
+
+    own_user: bool = False
+
+    env_prefix: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_link_request_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseLinkRequest:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_link_request_from_dict(data)
 
 
 @final
@@ -3152,11 +3237,11 @@ class BranchCommit:
 class ServicesAction:
     """
     Attributes:
-        services: Empty = all (start: those with a container; restart: running ones).
+        services: Empty = all.
     """
 
     services: Sequence[str] = ()
-    """Empty = all (start: those with a container; restart: running ones)."""
+    """Empty = all."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3348,6 +3433,39 @@ class DeleteProjectAction:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class SetDatabaseSizeAction:
+    """
+    Attributes:
+        memory_limit_bytes: One of Machine.database_engines[].sizes.
+    """
+
+    memory_limit_bytes: int = 0
+    """One of Machine.database_engines[].sizes."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.set_database_size_action_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SetDatabaseSizeAction:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.set_database_size_action_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class RunProjectActionResponse:
     """
     Attributes:
@@ -3405,14 +3523,20 @@ class Database:
     Attributes:
         major_version: As it was made, e.g. 18.
         server_version: What the server says it runs, e.g. "18.6". Empty = not answering.
-        memory_limit_bytes: Its size: its service's `mem_limit` in compose.yaml.
+        memory_limit_bytes: Its size: its service's `mem_limit` in compose.yaml. run_project_action(set_database_size=)
+            changes it.
         data_bytes: Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
         connections: Open now.
         max_connections: Valkey: maxclients.
-        linked_projects: The projects that reach it (link_database).
+        linked_projects: The projects that reach it: create_project's link_databases or link_database linked them. Each
+            signs in as the apps' user (connection), but those of own_user_projects.
         service: The service of Project.services that runs the database.
         volume: The volume of Project.volumes that holds its data.
         console_command: The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+        own_user_projects: Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
+            of its own, to a database of its own, both named as it, with the password in its /.env. The
+            others sign in as the apps' user, `app` (a Valkey's `default`), whether link_databases or
+            link_database linked them; only link_databases wrote how into an app's /.env.
     """
 
     engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
@@ -3424,7 +3548,9 @@ class Database:
     """What the server says it runs, e.g. "18.6". Empty = not answering."""
 
     memory_limit_bytes: int = 0
-    """Its size: its service's `mem_limit` in compose.yaml."""
+    """Its size: its service's `mem_limit` in compose.yaml. run_project_action(set_database_size=)
+    changes it.
+    """
 
     data_bytes: int = 0
     """Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes."""
@@ -3436,7 +3562,9 @@ class Database:
     """Valkey: maxclients."""
 
     linked_projects: Sequence[str] = ()
-    """The projects that reach it (link_database)."""
+    """The projects that reach it: create_project's link_databases or link_database linked them. Each
+    signs in as the apps' user (connection), but those of own_user_projects.
+    """
 
     connection: DatabaseConnection | None = None
 
@@ -3448,6 +3576,13 @@ class Database:
 
     console_command: Sequence[str] = ()
     """The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli."""
+
+    own_user_projects: Sequence[str] = ()
+    """Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
+    of its own, to a database of its own, both named as it, with the password in its /.env. The
+    others sign in as the apps' user, `app` (a Valkey's `default`), whether link_databases or
+    link_database linked them; only link_databases wrote how into an app's /.env.
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3537,7 +3672,10 @@ class DatabaseSummary:
 
     Attributes:
         data_bytes: As in Database.
+        linked_projects: As in Database: all but own_user_projects sign in as the apps' user.
         server_version: As in Database: empty = not answering, its figures are zero.
+        memory_limit_bytes: Its size, as in Database.
+        own_user_projects: Of linked_projects, those with own_user, as in Database.
     """
 
     engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
@@ -3550,9 +3688,16 @@ class DatabaseSummary:
     connections: int = 0
 
     linked_projects: Sequence[str] = ()
+    """As in Database: all but own_user_projects sign in as the apps' user."""
 
     server_version: str = ""
     """As in Database: empty = not answering, its figures are zero."""
+
+    memory_limit_bytes: int = 0
+    """Its size, as in Database."""
+
+    own_user_projects: Sequence[str] = ()
+    """Of linked_projects, those with own_user, as in Database."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3585,6 +3730,9 @@ class DatabaseEngineOffer:
         major_version: The major a new database gets, e.g. 18.
         sizes: Smallest first.
         default_memory_limit_bytes: The size create_database gives when its memory_limit_bytes is 0, unless it copies a snapshot.
+        own_users: A project linked with own_user (DatabaseLinkRequest) gets a user and a database of its own in
+            one of its databases, so several apps can share one. False = every app signs in as its one
+            user, and own_user is refused (ONE_USER).
     """
 
     engine: DatabaseEngine = DatabaseEngine.UNSPECIFIED
@@ -3597,6 +3745,12 @@ class DatabaseEngineOffer:
 
     default_memory_limit_bytes: int = 0
     """The size create_database gives when its memory_limit_bytes is 0, unless it copies a snapshot."""
+
+    own_users: bool = False
+    """A project linked with own_user (DatabaseLinkRequest) gets a user and a database of its own in
+    one of its databases, so several apps can share one. False = every app signs in as its one
+    user, and own_user is refused (ONE_USER).
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5375,6 +5529,7 @@ class DatabaseLinkRefusal:
     Attributes:
         project_id: The first one refused.
         service: SERVICE_NAME_TAKEN: its service.
+        database_project_id: create_project's link_databases: the database refused, of those it names.
     """
 
     project_id: str = ""
@@ -5384,6 +5539,9 @@ class DatabaseLinkRefusal:
 
     service: str = ""
     """SERVICE_NAME_TAKEN: its service."""
+
+    database_project_id: str = ""
+    """create_project's link_databases: the database refused, of those it names."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5405,6 +5563,51 @@ class DatabaseLinkRefusal:
         from . import _convert
 
         return _convert.database_link_refusal_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseSizeRefusal:
+    """Detail of a FailedPreconditionError error from run_project_action(set_database_size=): the database
+    cannot take that size now. Nothing changed.
+
+    Attributes:
+        data_bytes: DATA_TOO_LARGE: the Valkey's data in memory.
+        keeps_bytes: DATA_TOO_LARGE: what the size keeps, its maxmemory: 70 % of it.
+        volume: VOLUME_MOVED: the volume its data is in.
+    """
+
+    reason: DatabaseSizeRefusalReason = DatabaseSizeRefusalReason.UNSPECIFIED
+
+    data_bytes: int = 0
+    """DATA_TOO_LARGE: the Valkey's data in memory."""
+
+    keeps_bytes: int = 0
+    """DATA_TOO_LARGE: what the size keeps, its maxmemory: 70 % of it."""
+
+    volume: str = ""
+    """VOLUME_MOVED: the volume its data is in."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_size_refusal_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseSizeRefusal:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_size_refusal_from_dict(data)
 
 
 @final

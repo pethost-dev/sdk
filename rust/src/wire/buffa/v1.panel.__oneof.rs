@@ -206,6 +206,9 @@ pub mod run_project_action_request {
         ),
         SetSource(::buffa::alloc::boxed::Box<super::super::super::ProjectSource>),
         DeleteVolume(::buffa::alloc::string::String),
+        SetDatabaseSize(
+            ::buffa::alloc::boxed::Box<super::super::super::SetDatabaseSizeAction>,
+        ),
     }
     impl ::buffa::Oneof for Action {}
     impl From<super::super::super::RecreateServiceAction> for Action {
@@ -272,6 +275,17 @@ pub mod run_project_action_request {
             Self::Some(Action::from(v))
         }
     }
+    impl From<super::super::super::SetDatabaseSizeAction> for Action {
+        fn from(v: super::super::super::SetDatabaseSizeAction) -> Self {
+            Self::SetDatabaseSize(::buffa::alloc::boxed::Box::new(v))
+        }
+    }
+    impl From<super::super::super::SetDatabaseSizeAction>
+    for ::core::option::Option<Action> {
+        fn from(v: super::super::super::SetDatabaseSizeAction) -> Self {
+            Self::Some(Action::from(v))
+        }
+    }
     impl ::serde::Serialize for Action {
         fn serialize<S: ::serde::Serializer>(
             &self,
@@ -309,6 +323,9 @@ pub mod run_project_action_request {
                 }
                 Self::DeleteVolume(v) => {
                     map.serialize_entry("delete_volume", v)?;
+                }
+                Self::SetDatabaseSize(v) => {
+                    map.serialize_entry("set_database_size", &**v)?;
                 }
             }
             map.end()

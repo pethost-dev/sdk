@@ -192,6 +192,8 @@ pub enum ErrorDetail {
     MachineUnreachable(types::MachineUnreachable),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`Client::link_database`](crate::Client::link_database) or [`Client::create_database`](crate::Client::create_database): a project of `link` cannot be linked to the database. Nothing changed.
     DatabaseLinkRefusal(types::DatabaseLinkRefusal),
+    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize): the database cannot take that size now. Nothing changed.
+    DatabaseSizeRefusal(types::DatabaseSizeRefusal),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
     NoMachine(types::NoMachine),
 }
@@ -214,6 +216,9 @@ fn detail_of(detail: &connectrpc::ErrorDetail) -> Option<ErrorDetail> {
         "pethost.panel.v1.DatabaseLinkRefusal" => wire::DatabaseLinkRefusal::decode_from_slice(&bytes)
             .ok()
             .map(|message| ErrorDetail::DatabaseLinkRefusal(message.into())),
+        "pethost.panel.v1.DatabaseSizeRefusal" => wire::DatabaseSizeRefusal::decode_from_slice(&bytes)
+            .ok()
+            .map(|message| ErrorDetail::DatabaseSizeRefusal(message.into())),
         "pethost.panel.v1.NoMachine" => wire::NoMachine::decode_from_slice(&bytes)
             .ok()
             .map(|message| ErrorDetail::NoMachine(message.into())),

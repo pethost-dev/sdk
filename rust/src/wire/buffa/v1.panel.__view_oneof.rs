@@ -109,6 +109,11 @@ pub mod run_project_action_request {
             >,
         ),
         DeleteVolume(&'a str),
+        SetDatabaseSize(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::SetDatabaseSizeActionView<'a>,
+            >,
+        ),
     }
 }
 pub mod read_path_request {

@@ -447,6 +447,9 @@ pub(crate) fn deploy_failure_reason_from_wire(
         buffa::EnumValue::Known(wire::DeployFailureReason::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE) => {
             types::DeployFailureReason::BuildMemoryUnavailable
         }
+        buffa::EnumValue::Known(wire::DeployFailureReason::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED) => {
+            types::DeployFailureReason::DatabaseUserFailed
+        }
         buffa::EnumValue::Unknown(number) => types::DeployFailureReason::Unrecognized(number),
     }
 }
@@ -490,6 +493,9 @@ pub(crate) fn deploy_failure_reason_to_wire(
         }
         types::DeployFailureReason::BuildMemoryUnavailable => {
             buffa::EnumValue::Known(wire::DeployFailureReason::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE)
+        }
+        types::DeployFailureReason::DatabaseUserFailed => {
+            buffa::EnumValue::Known(wire::DeployFailureReason::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED)
         }
         types::DeployFailureReason::Unrecognized(number) => buffa::EnumValue::from(number),
     }
@@ -695,6 +701,12 @@ pub(crate) fn database_link_refusal_reason_from_wire(
         buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS) => {
             types::DatabaseLinkRefusalReason::TooManyLinks
         }
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_ONE_USER) => {
+            types::DatabaseLinkRefusalReason::OneUser
+        }
+        buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED) => {
+            types::DatabaseLinkRefusalReason::UserNameReserved
+        }
         buffa::EnumValue::Unknown(number) => types::DatabaseLinkRefusalReason::Unrecognized(number),
     }
 }
@@ -715,7 +727,53 @@ pub(crate) fn database_link_refusal_reason_to_wire(
         types::DatabaseLinkRefusalReason::TooManyLinks => {
             buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS)
         }
+        types::DatabaseLinkRefusalReason::OneUser => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_ONE_USER)
+        }
+        types::DatabaseLinkRefusalReason::UserNameReserved => {
+            buffa::EnumValue::Known(wire::DatabaseLinkRefusalReason::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED)
+        }
         types::DatabaseLinkRefusalReason::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
+pub(crate) fn database_size_refusal_reason_from_wire(
+    value: buffa::EnumValue<wire::DatabaseSizeRefusalReason>,
+) -> types::DatabaseSizeRefusalReason {
+    match value {
+        buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED) => {
+            types::DatabaseSizeRefusalReason::Unspecified
+        }
+        buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE) => {
+            types::DatabaseSizeRefusalReason::DataTooLarge
+        }
+        buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD) => {
+            types::DatabaseSizeRefusalReason::DataUnread
+        }
+        buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED) => {
+            types::DatabaseSizeRefusalReason::VolumeMoved
+        }
+        buffa::EnumValue::Unknown(number) => types::DatabaseSizeRefusalReason::Unrecognized(number),
+    }
+}
+
+pub(crate) fn database_size_refusal_reason_to_wire(
+    value: types::DatabaseSizeRefusalReason,
+) -> buffa::EnumValue<wire::DatabaseSizeRefusalReason> {
+    match value {
+        types::DatabaseSizeRefusalReason::Unspecified => {
+            buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED)
+        }
+        types::DatabaseSizeRefusalReason::DataTooLarge => {
+            buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE)
+        }
+        types::DatabaseSizeRefusalReason::DataUnread => {
+            buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD)
+        }
+        types::DatabaseSizeRefusalReason::VolumeMoved => {
+            buffa::EnumValue::Known(wire::DatabaseSizeRefusalReason::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED)
+        }
+        types::DatabaseSizeRefusalReason::Unrecognized(number) => buffa::EnumValue::from(number),
     }
 }
 
@@ -2383,6 +2441,7 @@ impl From<types::Operation> for wire::Operation {
             changed_path_count,
             files_kept,
             files_operation_id,
+            database_memory_limit_bytes,
         } = message;
 
         Self {
@@ -2406,6 +2465,7 @@ impl From<types::Operation> for wire::Operation {
             changed_path_count: self::present(changed_path_count),
             files_kept: self::present(files_kept),
             files_operation_id: self::present(files_operation_id),
+            database_memory_limit_bytes: self::present(database_memory_limit_bytes),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2434,6 +2494,7 @@ impl From<wire::Operation> for types::Operation {
             changed_path_count,
             files_kept,
             files_operation_id,
+            database_memory_limit_bytes,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2460,6 +2521,7 @@ impl From<wire::Operation> for types::Operation {
             changed_path_count: changed_path_count.unwrap_or_default(),
             files_kept: files_kept.unwrap_or_default(),
             files_operation_id: files_operation_id.unwrap_or_default(),
+            database_memory_limit_bytes: database_memory_limit_bytes.unwrap_or_default(),
         }
     }
 }
@@ -2551,6 +2613,7 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
+            link_databases,
         } = message;
 
         Self {
@@ -2562,6 +2625,10 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             timeout_seconds: self::present(timeout_seconds),
             operation_id: self::present(operation_id),
             wait_seconds,
+            link_databases: link_databases
+                .into_iter()
+                .map(wire::DatabaseLinkRequest::from)
+                .collect(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2578,6 +2645,7 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds,
             operation_id,
             wait_seconds,
+            link_databases,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2590,6 +2658,44 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             timeout_seconds: timeout_seconds.unwrap_or_default(),
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
+            link_databases: link_databases
+                .into_iter()
+                .map(types::DatabaseLinkRequest::from)
+                .collect(),
+        }
+    }
+}
+
+impl From<types::DatabaseLinkRequest> for wire::DatabaseLinkRequest {
+    fn from(message: types::DatabaseLinkRequest) -> Self {
+        let types::DatabaseLinkRequest {
+            database_project_id,
+            own_user,
+            env_prefix,
+        } = message;
+
+        Self {
+            database_project_id: self::present(database_project_id),
+            own_user: self::present(own_user),
+            env_prefix: self::present(env_prefix),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseLinkRequest> for types::DatabaseLinkRequest {
+    fn from(message: wire::DatabaseLinkRequest) -> Self {
+        let wire::DatabaseLinkRequest {
+            database_project_id,
+            own_user,
+            env_prefix,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            database_project_id: database_project_id.unwrap_or_default(),
+            own_user: own_user.unwrap_or_default(),
+            env_prefix: env_prefix.unwrap_or_default(),
         }
     }
 }
@@ -3111,6 +3217,11 @@ impl From<types::RunProjectActionRequest> for wire::RunProjectActionRequest {
                 Some(types::RunProjectActionRequestAction::DeleteVolume(value)) => Some(
                     wire::__buffa::oneof::run_project_action_request::Action::DeleteVolume(value),
                 ),
+                Some(types::RunProjectActionRequestAction::SetDatabaseSize(value)) => Some(
+                    wire::__buffa::oneof::run_project_action_request::Action::SetDatabaseSize(Box::new(
+                        wire::SetDatabaseSizeAction::from(value),
+                    )),
+                ),
                 None => None,
             },
             operation_id: self::present(operation_id),
@@ -3163,6 +3274,9 @@ impl From<wire::RunProjectActionRequest> for types::RunProjectActionRequest {
                 Some(wire::__buffa::oneof::run_project_action_request::Action::DeleteVolume(value)) => {
                     Some(types::RunProjectActionRequestAction::DeleteVolume(value))
                 }
+                Some(wire::__buffa::oneof::run_project_action_request::Action::SetDatabaseSize(value)) => Some(
+                    types::RunProjectActionRequestAction::SetDatabaseSize(types::SetDatabaseSizeAction::from(*value)),
+                ),
                 None => None,
             },
             operation_id: operation_id.unwrap_or_default(),
@@ -3318,6 +3432,30 @@ impl From<wire::DeleteProjectAction> for types::DeleteProjectAction {
     }
 }
 
+impl From<types::SetDatabaseSizeAction> for wire::SetDatabaseSizeAction {
+    fn from(message: types::SetDatabaseSizeAction) -> Self {
+        let types::SetDatabaseSizeAction { memory_limit_bytes } = message;
+
+        Self {
+            memory_limit_bytes: self::present(memory_limit_bytes),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::SetDatabaseSizeAction> for types::SetDatabaseSizeAction {
+    fn from(message: wire::SetDatabaseSizeAction) -> Self {
+        let wire::SetDatabaseSizeAction {
+            memory_limit_bytes,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            memory_limit_bytes: memory_limit_bytes.unwrap_or_default(),
+        }
+    }
+}
+
 impl From<types::RunProjectActionResponse> for wire::RunProjectActionResponse {
     fn from(message: types::RunProjectActionResponse) -> Self {
         let types::RunProjectActionResponse {
@@ -3367,6 +3505,7 @@ impl From<types::Database> for wire::Database {
             service,
             volume,
             console_command,
+            own_user_projects,
         } = message;
 
         Self {
@@ -3382,6 +3521,7 @@ impl From<types::Database> for wire::Database {
             service: self::present(service),
             volume: self::present(volume),
             console_command,
+            own_user_projects,
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3402,6 +3542,7 @@ impl From<wire::Database> for types::Database {
             service,
             volume,
             console_command,
+            own_user_projects,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3418,6 +3559,7 @@ impl From<wire::Database> for types::Database {
             service: service.unwrap_or_default(),
             volume: volume.unwrap_or_default(),
             console_command,
+            own_user_projects,
         }
     }
 }
@@ -3481,6 +3623,8 @@ impl From<types::DatabaseSummary> for wire::DatabaseSummary {
             connections,
             linked_projects,
             server_version,
+            memory_limit_bytes,
+            own_user_projects,
         } = message;
 
         Self {
@@ -3490,6 +3634,8 @@ impl From<types::DatabaseSummary> for wire::DatabaseSummary {
             connections: self::present(connections),
             linked_projects,
             server_version: self::present(server_version),
+            memory_limit_bytes: self::present(memory_limit_bytes),
+            own_user_projects,
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3504,6 +3650,8 @@ impl From<wire::DatabaseSummary> for types::DatabaseSummary {
             connections,
             linked_projects,
             server_version,
+            memory_limit_bytes,
+            own_user_projects,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3514,6 +3662,8 @@ impl From<wire::DatabaseSummary> for types::DatabaseSummary {
             connections: connections.unwrap_or_default(),
             linked_projects,
             server_version: server_version.unwrap_or_default(),
+            memory_limit_bytes: memory_limit_bytes.unwrap_or_default(),
+            own_user_projects,
         }
     }
 }
@@ -3525,6 +3675,7 @@ impl From<types::DatabaseEngineOffer> for wire::DatabaseEngineOffer {
             major_version,
             sizes,
             default_memory_limit_bytes,
+            own_users,
         } = message;
 
         Self {
@@ -3532,6 +3683,7 @@ impl From<types::DatabaseEngineOffer> for wire::DatabaseEngineOffer {
             major_version: self::present(major_version),
             sizes: sizes.into_iter().map(wire::DatabaseSizeChoice::from).collect(),
             default_memory_limit_bytes: self::present(default_memory_limit_bytes),
+            own_users: self::present(own_users),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3544,6 +3696,7 @@ impl From<wire::DatabaseEngineOffer> for types::DatabaseEngineOffer {
             major_version,
             sizes,
             default_memory_limit_bytes,
+            own_users,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3552,6 +3705,7 @@ impl From<wire::DatabaseEngineOffer> for types::DatabaseEngineOffer {
             major_version: major_version.unwrap_or_default(),
             sizes: sizes.into_iter().map(types::DatabaseSizeChoice::from).collect(),
             default_memory_limit_bytes: default_memory_limit_bytes.unwrap_or_default(),
+            own_users: own_users.unwrap_or_default(),
         }
     }
 }
@@ -3648,6 +3802,7 @@ impl From<types::CreateDatabaseRequest> for wire::CreateDatabaseRequest {
             link,
             operation_id,
             wait_seconds,
+            metadata,
         } = message;
 
         Self {
@@ -3658,6 +3813,7 @@ impl From<types::CreateDatabaseRequest> for wire::CreateDatabaseRequest {
             link,
             operation_id: self::present(operation_id),
             wait_seconds,
+            metadata: metadata.map(wire::ProjectMetadata::from).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3673,6 +3829,7 @@ impl From<wire::CreateDatabaseRequest> for types::CreateDatabaseRequest {
             link,
             operation_id,
             wait_seconds,
+            metadata,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3684,6 +3841,7 @@ impl From<wire::CreateDatabaseRequest> for types::CreateDatabaseRequest {
             link,
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
+            metadata: metadata.into_option().map(types::ProjectMetadata::from),
         }
     }
 }
@@ -5425,12 +5583,14 @@ impl From<types::DatabaseLinkRefusal> for wire::DatabaseLinkRefusal {
             project_id,
             reason,
             service,
+            database_project_id,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             reason: self::present(reason).map(database_link_refusal_reason_to_wire),
             service: self::present(service),
+            database_project_id: self::present(database_project_id),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5442,6 +5602,7 @@ impl From<wire::DatabaseLinkRefusal> for types::DatabaseLinkRefusal {
             project_id,
             reason,
             service,
+            database_project_id,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5449,6 +5610,45 @@ impl From<wire::DatabaseLinkRefusal> for types::DatabaseLinkRefusal {
             project_id: project_id.unwrap_or_default(),
             reason: reason.map(database_link_refusal_reason_from_wire).unwrap_or_default(),
             service: service.unwrap_or_default(),
+            database_project_id: database_project_id.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseSizeRefusal> for wire::DatabaseSizeRefusal {
+    fn from(message: types::DatabaseSizeRefusal) -> Self {
+        let types::DatabaseSizeRefusal {
+            reason,
+            data_bytes,
+            keeps_bytes,
+            volume,
+        } = message;
+
+        Self {
+            reason: self::present(reason).map(database_size_refusal_reason_to_wire),
+            data_bytes: self::present(data_bytes),
+            keeps_bytes: self::present(keeps_bytes),
+            volume: self::present(volume),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseSizeRefusal> for types::DatabaseSizeRefusal {
+    fn from(message: wire::DatabaseSizeRefusal) -> Self {
+        let wire::DatabaseSizeRefusal {
+            reason,
+            data_bytes,
+            keeps_bytes,
+            volume,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            reason: reason.map(database_size_refusal_reason_from_wire).unwrap_or_default(),
+            data_bytes: data_bytes.unwrap_or_default(),
+            keeps_bytes: keeps_bytes.unwrap_or_default(),
+            volume: volume.unwrap_or_default(),
         }
     }
 }

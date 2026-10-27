@@ -2005,6 +2005,10 @@ pub enum DeployFailureReason {
     DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME = 10i32,
     /// The running projects leave too little memory for a build; the message says how much.
     DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE = 11i32,
+    /// Its user of its own in a linked database (DatabaseLinkRequest.own_user) could not be made:
+    /// the database does not run or answer, or refused; the message says which. Start it, then
+    /// deploy again.
+    DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED = 12i32,
 }
 impl DeployFailureReason {
     ///Idiomatic alias for [`Self::DEPLOY_FAILURE_REASON_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -2043,6 +2047,9 @@ impl DeployFailureReason {
     ///Idiomatic alias for [`Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const BuildMemoryUnavailable: Self = Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE;
+    ///Idiomatic alias for [`Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const DatabaseUserFailed: Self = Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED;
 }
 impl ::core::default::Default for DeployFailureReason {
     fn default() -> Self {
@@ -2185,6 +2192,11 @@ impl ::buffa::Enumeration for DeployFailureReason {
                     Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE,
                 )
             }
+            12i32 => {
+                ::core::option::Option::Some(
+                    Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED,
+                )
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -2222,6 +2234,9 @@ impl ::buffa::Enumeration for DeployFailureReason {
             }
             Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE => {
                 "DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE"
+            }
+            Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED => {
+                "DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED"
             }
         }
     }
@@ -2279,6 +2294,11 @@ impl ::buffa::Enumeration for DeployFailureReason {
                     Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE,
                 )
             }
+            "DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED" => {
+                ::core::option::Option::Some(
+                    Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED,
+                )
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -2296,6 +2316,7 @@ impl ::buffa::Enumeration for DeployFailureReason {
             Self::DEPLOY_FAILURE_REASON_TIMED_OUT,
             Self::DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME,
             Self::DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE,
+            Self::DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED,
         ]
     }
 }
@@ -4080,6 +4101,12 @@ pub enum DatabaseLinkRefusalReason {
     DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN = 2i32,
     /// The database has 20: unlink one first.
     DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS = 3i32,
+    /// own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey.
+    DATABASE_LINK_REFUSAL_REASON_ONE_USER = 4i32,
+    /// own_user for a project whose id Postgres or the machine keeps as a user or a database
+    /// (postgres, app, public, none, template0, template1, current_user, current_role,
+    /// session_user, pg_…): give it another id.
+    DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED = 5i32,
 }
 impl DatabaseLinkRefusalReason {
     ///Idiomatic alias for [`Self::DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -4094,6 +4121,12 @@ impl DatabaseLinkRefusalReason {
     ///Idiomatic alias for [`Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const TooManyLinks: Self = Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS;
+    ///Idiomatic alias for [`Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const OneUser: Self = Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER;
+    ///Idiomatic alias for [`Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const UserNameReserved: Self = Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED;
 }
 impl ::core::default::Default for DatabaseLinkRefusalReason {
     fn default() -> Self {
@@ -4212,6 +4245,14 @@ impl ::buffa::Enumeration for DatabaseLinkRefusalReason {
                     Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS,
                 )
             }
+            4i32 => {
+                ::core::option::Option::Some(Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER)
+            }
+            5i32 => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED,
+                )
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -4231,6 +4272,12 @@ impl ::buffa::Enumeration for DatabaseLinkRefusalReason {
             }
             Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS => {
                 "DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS"
+            }
+            Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER => {
+                "DATABASE_LINK_REFUSAL_REASON_ONE_USER"
+            }
+            Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED => {
+                "DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED"
             }
         }
     }
@@ -4256,6 +4303,14 @@ impl ::buffa::Enumeration for DatabaseLinkRefusalReason {
                     Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS,
                 )
             }
+            "DATABASE_LINK_REFUSAL_REASON_ONE_USER" => {
+                ::core::option::Option::Some(Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER)
+            }
+            "DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED" => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED,
+                )
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -4265,6 +4320,210 @@ impl ::buffa::Enumeration for DatabaseLinkRefusalReason {
             Self::DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE,
             Self::DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN,
             Self::DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS,
+            Self::DATABASE_LINK_REFUSAL_REASON_ONE_USER,
+            Self::DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED,
+        ]
+    }
+}
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(i32)]
+pub enum DatabaseSizeRefusalReason {
+    DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED = 0i32,
+    /// A Valkey whose data is more than the size keeps: take a larger size, or delete data first.
+    DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE = 1i32,
+    /// A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try
+    /// again once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can
+    /// be given more.
+    DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD = 2i32,
+    /// Its data is in another volume (`volume`) than `data`, which the file the size writes keeps
+    /// it in, so the database would start without it: change the size in its compose.yaml instead.
+    DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED = 3i32,
+}
+impl DatabaseSizeRefusalReason {
+    ///Idiomatic alias for [`Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Unspecified: Self = Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED;
+    ///Idiomatic alias for [`Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const DataTooLarge: Self = Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE;
+    ///Idiomatic alias for [`Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const DataUnread: Self = Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD;
+    ///Idiomatic alias for [`Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const VolumeMoved: Self = Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED;
+}
+impl ::core::default::Default for DatabaseSizeRefusalReason {
+    fn default() -> Self {
+        Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED
+    }
+}
+impl ::serde::Serialize for DatabaseSizeRefusalReason {
+    fn serialize<S: ::serde::Serializer>(
+        &self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        s.serialize_str(::buffa::Enumeration::proto_name(self))
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for DatabaseSizeRefusalReason {
+    fn deserialize<D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        struct _V;
+        impl ::serde::de::Visitor<'_> for _V {
+            type Value = DatabaseSizeRefusalReason;
+            fn expecting(
+                &self,
+                f: &mut ::core::fmt::Formatter<'_>,
+            ) -> ::core::fmt::Result {
+                f.write_str(
+                    concat!(
+                        "a string, integer, or null for ",
+                        stringify!(DatabaseSizeRefusalReason)
+                    ),
+                )
+            }
+            fn visit_str<E: ::serde::de::Error>(
+                self,
+                v: &str,
+            ) -> ::core::result::Result<DatabaseSizeRefusalReason, E> {
+                <DatabaseSizeRefusalReason as ::buffa::Enumeration>::from_proto_name(v)
+                    .ok_or_else(|| { ::serde::de::Error::unknown_variant(v, &[]) })
+            }
+            fn visit_i64<E: ::serde::de::Error>(
+                self,
+                v: i64,
+            ) -> ::core::result::Result<DatabaseSizeRefusalReason, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <DatabaseSizeRefusalReason as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_u64<E: ::serde::de::Error>(
+                self,
+                v: u64,
+            ) -> ::core::result::Result<DatabaseSizeRefusalReason, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <DatabaseSizeRefusalReason as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_unit<E: ::serde::de::Error>(
+                self,
+            ) -> ::core::result::Result<DatabaseSizeRefusalReason, E> {
+                ::core::result::Result::Ok(::core::default::Default::default())
+            }
+        }
+        d.deserialize_any(_V)
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DatabaseSizeRefusalReason {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+impl ::buffa::Enumeration for DatabaseSizeRefusalReason {
+    fn from_i32(value: i32) -> ::core::option::Option<Self> {
+        match value {
+            0i32 => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED,
+                )
+            }
+            1i32 => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE,
+                )
+            }
+            2i32 => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD,
+                )
+            }
+            3i32 => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED,
+                )
+            }
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn to_i32(&self) -> i32 {
+        *self as i32
+    }
+    fn proto_name(&self) -> &'static str {
+        match self {
+            Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED => {
+                "DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED"
+            }
+            Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE => {
+                "DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE"
+            }
+            Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD => {
+                "DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD"
+            }
+            Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED => {
+                "DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED"
+            }
+        }
+    }
+    fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+        match name {
+            "DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED" => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED,
+                )
+            }
+            "DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE" => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE,
+                )
+            }
+            "DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD" => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD,
+                )
+            }
+            "DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED" => {
+                ::core::option::Option::Some(
+                    Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED,
+                )
+            }
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn values() -> &'static [Self] {
+        &[
+            Self::DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED,
+            Self::DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE,
+            Self::DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD,
+            Self::DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED,
         ]
     }
 }
@@ -5042,7 +5301,7 @@ pub struct Machine {
     )]
     pub alert_channels: ::buffa::alloc::vec::Vec<AlertDestination>,
     /// The databases the machine makes (CreateDatabase), one per engine, with the sizes they may
-    /// take.
+    /// take (RunProjectAction.set_database_size).
     ///
     /// Field 27: `database_engines`
     #[serde(
@@ -5051,8 +5310,8 @@ pub struct Machine {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub database_engines: ::buffa::alloc::vec::Vec<DatabaseEngineOffer>,
-    /// The sum of every service's memory limit (`mem_limit`): what the projects may take together,
-    /// which memory_total_bytes does not reserve.
+    /// The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more
+    /// than memory_total_bytes. What the projects use is memory_used_bytes.
     ///
     /// Field 28: `memory_limits_bytes`
     #[serde(
@@ -16132,6 +16391,15 @@ pub struct Operation {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub files_operation_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// DEPLOY of a size change (RunProjectAction.set_database_size): the size it gave the database.
+    ///
+    /// Field 21: `database_memory_limit_bytes`
+    #[serde(
+        rename = "database_memory_limit_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_memory_limit_bytes: ::core::option::Option<u64>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -16159,6 +16427,7 @@ impl ::core::fmt::Debug for Operation {
             .field("changed_path_count", &self.changed_path_count)
             .field("files_kept", &self.files_kept)
             .field("files_operation_id", &self.files_operation_id)
+            .field("database_memory_limit_bytes", &self.database_memory_limit_bytes)
             .finish()
     }
 }
@@ -16298,6 +16567,13 @@ impl Operation {
         self.files_operation_id = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_memory_limit_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_memory_limit_bytes(mut self, value: u64) -> Self {
+        self.database_memory_limit_bytes = Some(value);
+        self
+    }
 }
 ::buffa::impl_default_instance!(Operation);
 impl ::buffa::MessageName for Operation {
@@ -16394,6 +16670,9 @@ impl ::buffa::Message for Operation {
         if let Some(ref v) = self.files_operation_id {
             size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(v) = self.database_memory_limit_bytes {
+            size += 2u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -16478,6 +16757,9 @@ impl ::buffa::Message for Operation {
         }
         if let Some(ref v) = self.files_operation_id {
             ::buffa::types::put_string_field(20u32, v, buf);
+        }
+        if let Some(v) = self.database_memory_limit_bytes {
+            ::buffa::types::put_uint64_field(21u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -16703,6 +16985,15 @@ impl ::buffa::Message for Operation {
                     buf,
                 )?;
             }
+            21u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.database_memory_limit_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -16731,6 +17022,7 @@ impl ::buffa::Message for Operation {
         self.changed_path_count = ::core::option::Option::None;
         self.files_kept = ::core::option::Option::None;
         self.files_operation_id = ::core::option::Option::None;
+        self.database_memory_limit_bytes = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -17316,6 +17608,13 @@ pub struct CreateProjectRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub wait_seconds: ::core::option::Option<u32>,
+    /// Field 11: `link_databases`
+    #[serde(
+        rename = "link_databases",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub link_databases: ::buffa::alloc::vec::Vec<DatabaseLinkRequest>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -17331,6 +17630,7 @@ impl ::core::fmt::Debug for CreateProjectRequest {
             .field("timeout_seconds", &self.timeout_seconds)
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
+            .field("link_databases", &self.link_databases)
             .finish()
     }
 }
@@ -17446,6 +17746,14 @@ impl ::buffa::Message for CreateProjectRequest {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        for v in &self.link_databases {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -17494,6 +17802,14 @@ impl ::buffa::Message for CreateProjectRequest {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(9u32, v, buf);
+        }
+        for v in &self.link_databases {
+            ::buffa::types::put_len_delimited_header(
+                11u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -17596,6 +17912,18 @@ impl ::buffa::Message for CreateProjectRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            11u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.link_databases.push(elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -17612,6 +17940,7 @@ impl ::buffa::Message for CreateProjectRequest {
         self.timeout_seconds = ::core::option::Option::None;
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
+        self.link_databases.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -17642,6 +17971,214 @@ pub const __CREATE_PROJECT_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntr
     type_url: "type.googleapis.com/pethost.panel.v1.CreateProjectRequest",
     to_json: ::buffa::type_registry::any_to_json::<CreateProjectRequest>,
     from_json: ::buffa::type_registry::any_from_json::<CreateProjectRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct DatabaseLinkRequest {
+    /// Field 1: `database_project_id`
+    #[serde(
+        rename = "database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 2: `own_user`
+    #[serde(
+        rename = "own_user",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub own_user: ::core::option::Option<bool>,
+    /// Field 3: `env_prefix`
+    #[serde(
+        rename = "env_prefix",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub env_prefix: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DatabaseLinkRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DatabaseLinkRequest")
+            .field("database_project_id", &self.database_project_id)
+            .field("own_user", &self.own_user)
+            .field("env_prefix", &self.env_prefix)
+            .finish()
+    }
+}
+impl DatabaseLinkRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseLinkRequest";
+}
+impl DatabaseLinkRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::own_user`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_own_user(mut self, value: bool) -> Self {
+        self.own_user = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::env_prefix`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_env_prefix(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.env_prefix = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(DatabaseLinkRequest);
+impl ::buffa::MessageName for DatabaseLinkRequest {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "DatabaseLinkRequest";
+    const FULL_NAME: &'static str = "pethost.panel.v1.DatabaseLinkRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseLinkRequest";
+}
+impl ::buffa::Message for DatabaseLinkRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.own_user.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        if let Some(ref v) = self.env_prefix {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.database_project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(v) = self.own_user {
+            ::buffa::types::put_bool_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.env_prefix {
+            ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.own_user = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .env_prefix
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.database_project_id = ::core::option::Option::None;
+        self.own_user = ::core::option::Option::None;
+        self.env_prefix = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DatabaseLinkRequest {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.DatabaseLinkRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DatabaseLinkRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DATABASE_LINK_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.DatabaseLinkRequest",
+    to_json: ::buffa::type_registry::any_to_json::<DatabaseLinkRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<DatabaseLinkRequest>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]
@@ -20882,7 +21419,7 @@ pub struct RunProjectActionRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// As DeployProject's, for the actions that run as operations.
+    /// As DeployProject's.
     ///
     /// Field 10: `operation_id`
     #[serde(
@@ -20890,7 +21427,7 @@ pub struct RunProjectActionRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// As DeployProject's, for the actions that run as operations.
+    /// As DeployProject's.
     ///
     /// Field 13: `wait_seconds`
     #[serde(
@@ -21061,6 +21598,16 @@ impl ::buffa::Message for RunProjectActionRequest {
                 __buffa::oneof::run_project_action_request::Action::DeleteVolume(x) => {
                     size += 1u64 + ::buffa::types::string_encoded_len(x) as u64;
                 }
+                __buffa::oneof::run_project_action_request::Action::SetDatabaseSize(
+                    x,
+                ) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
             }
         }
         if let Some(ref v) = self.operation_id {
@@ -21166,6 +21713,16 @@ impl ::buffa::Message for RunProjectActionRequest {
                 }
                 __buffa::oneof::run_project_action_request::Action::DeleteVolume(x) => {
                     ::buffa::types::put_string_field(12u32, x, buf);
+                }
+                __buffa::oneof::run_project_action_request::Action::SetDatabaseSize(
+                    x,
+                ) => {
+                    ::buffa::types::put_len_delimited_header(
+                        14u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
                 }
             }
         }
@@ -21408,6 +21965,28 @@ impl ::buffa::Message for RunProjectActionRequest {
                         ::buffa::types::decode_string(buf)?,
                     ),
                 );
+            }
+            14u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::run_project_action_request::Action::SetDatabaseSize(
+                        ref mut existing,
+                    ),
+                ) = self.action
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.action = ::core::option::Option::Some(
+                        __buffa::oneof::run_project_action_request::Action::SetDatabaseSize(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
             }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -21762,6 +22341,30 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 );
                             }
                         }
+                        "set_database_size" => {
+                            let v: ::core::option::Option<SetDatabaseSizeAction> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            SetDatabaseSizeAction,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_action.is_some() {
+                                    return Err(
+                                        ::serde::de::Error::custom(
+                                            "multiple oneof fields set for 'action'",
+                                        ),
+                                    );
+                                }
+                                __oneof_action = Some(
+                                    __buffa::oneof::run_project_action_request::Action::SetDatabaseSize(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
                         _ => {
                             map.next_value::<::serde::de::IgnoredAny>()?;
                         }
@@ -21816,7 +22419,7 @@ pub mod run_project_action_request {
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct ServicesAction {
-    /// Empty = all (start: those with a container; restart: running ones).
+    /// Empty = all.
     ///
     /// Field 1: `services`
     #[serde(
@@ -22671,6 +23274,145 @@ pub const __DELETE_PROJECT_ACTION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
+pub struct SetDatabaseSizeAction {
+    /// One of Machine.database_engines\[\].sizes.
+    ///
+    /// Field 1: `memory_limit_bytes`
+    #[serde(
+        rename = "memory_limit_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub memory_limit_bytes: ::core::option::Option<u64>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for SetDatabaseSizeAction {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("SetDatabaseSizeAction")
+            .field("memory_limit_bytes", &self.memory_limit_bytes)
+            .finish()
+    }
+}
+impl SetDatabaseSizeAction {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.SetDatabaseSizeAction";
+}
+impl SetDatabaseSizeAction {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::memory_limit_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_memory_limit_bytes(mut self, value: u64) -> Self {
+        self.memory_limit_bytes = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(SetDatabaseSizeAction);
+impl ::buffa::MessageName for SetDatabaseSizeAction {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "SetDatabaseSizeAction";
+    const FULL_NAME: &'static str = "pethost.panel.v1.SetDatabaseSizeAction";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.SetDatabaseSizeAction";
+}
+impl ::buffa::Message for SetDatabaseSizeAction {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(v) = self.memory_limit_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.memory_limit_bytes {
+            ::buffa::types::put_uint64_field(1u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.memory_limit_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.memory_limit_bytes = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for SetDatabaseSizeAction {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.SetDatabaseSizeAction";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for SetDatabaseSizeAction {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __SET_DATABASE_SIZE_ACTION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.SetDatabaseSizeAction",
+    to_json: ::buffa::type_registry::any_to_json::<SetDatabaseSizeAction>,
+    from_json: ::buffa::type_registry::any_from_json::<SetDatabaseSizeAction>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
 pub struct RunProjectActionResponse {
     /// Set when the action runs as an operation: finished, or IN_PROGRESS when wait_seconds ran out
     /// (then GetOperation); for set_source, the deploy it started, if any; for cancel_operation,
@@ -22918,7 +23660,8 @@ pub struct Database {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub server_version: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Its size: its service's `mem_limit` in compose.yaml.
+    /// Its size: its service's `mem_limit` in compose.yaml. RunProjectAction.set_database_size
+    /// changes it.
     ///
     /// Field 4: `memory_limit_bytes`
     #[serde(
@@ -22954,7 +23697,8 @@ pub struct Database {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub max_connections: ::core::option::Option<u32>,
-    /// The projects that reach it (LinkDatabase).
+    /// The projects that reach it: CreateProject's link_databases or LinkDatabase linked them. Each
+    /// signs in as the apps' user (connection), but those of own_user_projects.
     ///
     /// Field 8: `linked_projects`
     #[serde(
@@ -22991,6 +23735,18 @@ pub struct Database {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub console_command: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    /// Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
+    /// of its own, to a database of its own, both named as it, with the password in its /.env. The
+    /// others sign in as the apps' user, `app` (a Valkey's `default`), whether link_databases or
+    /// LinkDatabase linked them; only link_databases wrote how into an app's /.env.
+    ///
+    /// Field 13: `own_user_projects`
+    #[serde(
+        rename = "own_user_projects",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub own_user_projects: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -23010,6 +23766,7 @@ impl ::core::fmt::Debug for Database {
             .field("service", &self.service)
             .field("volume", &self.volume)
             .field("console_command", &self.console_command)
+            .field("own_user_projects", &self.own_user_projects)
             .finish()
     }
 }
@@ -23158,6 +23915,9 @@ impl ::buffa::Message for Database {
         for v in &self.console_command {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        for v in &self.own_user_projects {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -23208,6 +23968,9 @@ impl ::buffa::Message for Database {
         }
         for v in &self.console_command {
             ::buffa::types::put_string_field(12u32, v, buf);
+        }
+        for v in &self.own_user_projects {
+            ::buffa::types::put_string_field(13u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -23341,6 +24104,17 @@ impl ::buffa::Message for Database {
                 )?;
                 self.console_command.push(__elem);
             }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.own_user_projects.push(__elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -23361,6 +24135,7 @@ impl ::buffa::Message for Database {
         self.service = ::core::option::Option::None;
         self.volume = ::core::option::Option::None;
         self.console_command.clear();
+        self.own_user_projects.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -23777,6 +24552,8 @@ pub struct DatabaseSummary {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub connections: ::core::option::Option<u32>,
+    /// As in Database: all but own_user_projects sign in as the apps' user.
+    ///
     /// Field 5: `linked_projects`
     #[serde(
         rename = "linked_projects",
@@ -23792,6 +24569,24 @@ pub struct DatabaseSummary {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub server_version: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Its size, as in Database.
+    ///
+    /// Field 7: `memory_limit_bytes`
+    #[serde(
+        rename = "memory_limit_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub memory_limit_bytes: ::core::option::Option<u64>,
+    /// Of linked_projects, those with own_user, as in Database.
+    ///
+    /// Field 8: `own_user_projects`
+    #[serde(
+        rename = "own_user_projects",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub own_user_projects: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -23805,6 +24600,8 @@ impl ::core::fmt::Debug for DatabaseSummary {
             .field("connections", &self.connections)
             .field("linked_projects", &self.linked_projects)
             .field("server_version", &self.server_version)
+            .field("memory_limit_bytes", &self.memory_limit_bytes)
+            .field("own_user_projects", &self.own_user_projects)
             .finish()
     }
 }
@@ -23857,6 +24654,13 @@ impl DatabaseSummary {
         self.server_version = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::memory_limit_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_memory_limit_bytes(mut self, value: u64) -> Self {
+        self.memory_limit_bytes = Some(value);
+        self
+    }
 }
 ::buffa::impl_default_instance!(DatabaseSummary);
 impl ::buffa::MessageName for DatabaseSummary {
@@ -23896,6 +24700,12 @@ impl ::buffa::Message for DatabaseSummary {
         if let Some(ref v) = self.server_version {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(v) = self.memory_limit_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        for v in &self.own_user_projects {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -23923,6 +24733,12 @@ impl ::buffa::Message for DatabaseSummary {
         }
         if let Some(ref v) = self.server_version {
             ::buffa::types::put_string_field(6u32, v, buf);
+        }
+        if let Some(v) = self.memory_limit_bytes {
+            ::buffa::types::put_uint64_field(7u32, v, buf);
+        }
+        for v in &self.own_user_projects {
+            ::buffa::types::put_string_field(8u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -23996,6 +24812,26 @@ impl ::buffa::Message for DatabaseSummary {
                     buf,
                 )?;
             }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.memory_limit_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.own_user_projects.push(__elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -24010,6 +24846,8 @@ impl ::buffa::Message for DatabaseSummary {
         self.connections = ::core::option::Option::None;
         self.linked_projects.clear();
         self.server_version = ::core::option::Option::None;
+        self.memory_limit_bytes = ::core::option::Option::None;
+        self.own_user_projects.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -24081,6 +24919,16 @@ pub struct DatabaseEngineOffer {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub default_memory_limit_bytes: ::core::option::Option<u64>,
+    /// A project linked with own_user (DatabaseLinkRequest) gets a user and a database of its own in
+    /// one of its databases, so several apps can share one. False = every app signs in as its one
+    /// user, and own_user is refused (ONE_USER).
+    ///
+    /// Field 5: `own_users`
+    #[serde(
+        rename = "own_users",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub own_users: ::core::option::Option<bool>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -24092,6 +24940,7 @@ impl ::core::fmt::Debug for DatabaseEngineOffer {
             .field("major_version", &self.major_version)
             .field("sizes", &self.sizes)
             .field("default_memory_limit_bytes", &self.default_memory_limit_bytes)
+            .field("own_users", &self.own_users)
             .finish()
     }
 }
@@ -24125,6 +24974,13 @@ impl DatabaseEngineOffer {
     ///Sets [`Self::default_memory_limit_bytes`] to `Some(value)`, consuming and returning `self`.
     pub fn with_default_memory_limit_bytes(mut self, value: u64) -> Self {
         self.default_memory_limit_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::own_users`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_own_users(mut self, value: bool) -> Self {
+        self.own_users = Some(value);
         self
     }
 }
@@ -24165,6 +25021,9 @@ impl ::buffa::Message for DatabaseEngineOffer {
         if let Some(v) = self.default_memory_limit_bytes {
             size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
         }
+        if self.own_users.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -24191,6 +25050,9 @@ impl ::buffa::Message for DatabaseEngineOffer {
         }
         if let Some(v) = self.default_memory_limit_bytes {
             ::buffa::types::put_uint64_field(4u32, v, buf);
+        }
+        if let Some(v) = self.own_users {
+            ::buffa::types::put_bool_field(5u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -24244,6 +25106,15 @@ impl ::buffa::Message for DatabaseEngineOffer {
                     ::buffa::types::decode_uint64(buf)?,
                 );
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.own_users = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -24256,6 +25127,7 @@ impl ::buffa::Message for DatabaseEngineOffer {
         self.major_version = ::core::option::Option::None;
         self.sizes.clear();
         self.default_memory_limit_bytes = ::core::option::Option::None;
+        self.own_users = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -24828,6 +25700,17 @@ pub struct CreateDatabaseRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub wait_seconds: ::core::option::Option<u32>,
+    /// What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
+    ///
+    /// Field 8: `metadata`
+    #[serde(
+        rename = "metadata",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub metadata: ::buffa::MessageField<
+        ProjectMetadata,
+        ::buffa::Inline<ProjectMetadata>,
+    >,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -24842,6 +25725,7 @@ impl ::core::fmt::Debug for CreateDatabaseRequest {
             .field("link", &self.link)
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
+            .field("metadata", &self.metadata)
             .finish()
     }
 }
@@ -24924,7 +25808,7 @@ impl ::buffa::Message for CreateDatabaseRequest {
     /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
     /// points reject, never a silently wrapped size.
     #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
@@ -24949,12 +25833,20 @@ impl ::buffa::Message for CreateDatabaseRequest {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if self.metadata.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.metadata.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::EncodeSink,
     ) {
         #[allow(unused_imports)]
@@ -24979,6 +25871,14 @@ impl ::buffa::Message for CreateDatabaseRequest {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(7u32, v, buf);
+        }
+        if self.metadata.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                8u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.metadata.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -25067,6 +25967,17 @@ impl ::buffa::Message for CreateDatabaseRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.metadata.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -25082,6 +25993,7 @@ impl ::buffa::Message for CreateDatabaseRequest {
         self.link.clear();
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
+        self.metadata = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -42700,6 +43612,14 @@ pub struct DatabaseLinkRefusal {
     /// Field 3: `service`
     #[serde(rename = "service", skip_serializing_if = "::core::option::Option::is_none")]
     pub service: ::core::option::Option<::buffa::alloc::string::String>,
+    /// CreateProject's link_databases: the database refused, of those it names.
+    ///
+    /// Field 4: `database_project_id`
+    #[serde(
+        rename = "database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -42710,6 +43630,7 @@ impl ::core::fmt::Debug for DatabaseLinkRefusal {
             .field("project_id", &self.project_id)
             .field("reason", &self.reason)
             .field("service", &self.service)
+            .field("database_project_id", &self.database_project_id)
             .finish()
     }
 }
@@ -42751,6 +43672,16 @@ impl DatabaseLinkRefusal {
         self.service = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.database_project_id = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(DatabaseLinkRefusal);
 impl ::buffa::MessageName for DatabaseLinkRefusal {
@@ -42781,6 +43712,9 @@ impl ::buffa::Message for DatabaseLinkRefusal {
         if let Some(ref v) = self.service {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -42799,6 +43733,9 @@ impl ::buffa::Message for DatabaseLinkRefusal {
         }
         if let Some(ref v) = self.service {
             ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.database_project_id {
+            ::buffa::types::put_string_field(4u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -42844,6 +43781,18 @@ impl ::buffa::Message for DatabaseLinkRefusal {
                     buf,
                 )?;
             }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -42855,6 +43804,7 @@ impl ::buffa::Message for DatabaseLinkRefusal {
         self.project_id = ::core::option::Option::None;
         self.reason = ::core::option::Option::None;
         self.service = ::core::option::Option::None;
+        self.database_project_id = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -42885,6 +43835,247 @@ pub const __DATABASE_LINK_REFUSAL_JSON_ANY: ::buffa::type_registry::JsonAnyEntry
     type_url: "type.googleapis.com/pethost.panel.v1.DatabaseLinkRefusal",
     to_json: ::buffa::type_registry::any_to_json::<DatabaseLinkRefusal>,
     from_json: ::buffa::type_registry::any_from_json::<DatabaseLinkRefusal>,
+    is_wkt: false,
+};
+/// Detail of a FAILED_PRECONDITION error from RunProjectAction.set_database_size: the database
+/// cannot take that size now. Nothing changed.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct DatabaseSizeRefusal {
+    /// Field 1: `reason`
+    #[serde(
+        rename = "reason",
+        with = "::buffa::json_helpers::opt_enum",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub reason: ::core::option::Option<::buffa::EnumValue<DatabaseSizeRefusalReason>>,
+    /// DATA_TOO_LARGE: the Valkey's data in memory.
+    ///
+    /// Field 2: `data_bytes`
+    #[serde(
+        rename = "data_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub data_bytes: ::core::option::Option<u64>,
+    /// DATA_TOO_LARGE: what the size keeps, its maxmemory: 70 % of it.
+    ///
+    /// Field 3: `keeps_bytes`
+    #[serde(
+        rename = "keeps_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub keeps_bytes: ::core::option::Option<u64>,
+    /// VOLUME_MOVED: the volume its data is in.
+    ///
+    /// Field 4: `volume`
+    #[serde(rename = "volume", skip_serializing_if = "::core::option::Option::is_none")]
+    pub volume: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DatabaseSizeRefusal {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DatabaseSizeRefusal")
+            .field("reason", &self.reason)
+            .field("data_bytes", &self.data_bytes)
+            .field("keeps_bytes", &self.keeps_bytes)
+            .field("volume", &self.volume)
+            .finish()
+    }
+}
+impl DatabaseSizeRefusal {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseSizeRefusal";
+}
+impl DatabaseSizeRefusal {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::reason`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_reason(
+        mut self,
+        value: impl Into<::buffa::EnumValue<DatabaseSizeRefusalReason>>,
+    ) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::data_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_data_bytes(mut self, value: u64) -> Self {
+        self.data_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::keeps_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_keeps_bytes(mut self, value: u64) -> Self {
+        self.keeps_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::volume`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_volume(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.volume = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(DatabaseSizeRefusal);
+impl ::buffa::MessageName for DatabaseSizeRefusal {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "DatabaseSizeRefusal";
+    const FULL_NAME: &'static str = "pethost.panel.v1.DatabaseSizeRefusal";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseSizeRefusal";
+}
+impl ::buffa::Message for DatabaseSizeRefusal {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.reason {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        if let Some(v) = self.data_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.keeps_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.volume {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.reason {
+            ::buffa::types::put_int32_field(1u32, v.to_i32(), buf);
+        }
+        if let Some(v) = self.data_bytes {
+            ::buffa::types::put_uint64_field(2u32, v, buf);
+        }
+        if let Some(v) = self.keeps_bytes {
+            ::buffa::types::put_uint64_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.volume {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.reason = ::core::option::Option::Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
+                );
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.data_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.keeps_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.volume.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.reason = ::core::option::Option::None;
+        self.data_bytes = ::core::option::Option::None;
+        self.keeps_bytes = ::core::option::Option::None;
+        self.volume = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DatabaseSizeRefusal {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.DatabaseSizeRefusal";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DatabaseSizeRefusal {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DATABASE_SIZE_REFUSAL_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.DatabaseSizeRefusal",
+    to_json: ::buffa::type_registry::any_to_json::<DatabaseSizeRefusal>,
+    from_json: ::buffa::type_registry::any_from_json::<DatabaseSizeRefusal>,
     is_wkt: false,
 };
 /// Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.

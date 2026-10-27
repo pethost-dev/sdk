@@ -49,6 +49,12 @@ type Error struct {
 	// nil = the API sent no such detail.
 	DatabaseLinkRefusal *DatabaseLinkRefusal
 
+	// Detail of a [CodeFailedPrecondition] error from [RunProjectActionSetDatabaseSize]: the
+	// database cannot take that size now. Nothing changed.
+	//
+	// nil = the API sent no such detail.
+	DatabaseSizeRefusal *DatabaseSizeRefusal
+
 	// Detail of a [CodeFailedPrecondition] error: the account has no machine to run projects on
 	// yet.
 	//
@@ -81,6 +87,8 @@ func fromWireError(err error) error {
 			e.MachineUnreachable = new(fromWireMachineUnreachable(w))
 		case *panelv1.DatabaseLinkRefusal:
 			e.DatabaseLinkRefusal = new(fromWireDatabaseLinkRefusal(w))
+		case *panelv1.DatabaseSizeRefusal:
+			e.DatabaseSizeRefusal = new(fromWireDatabaseSizeRefusal(w))
 		case *panelv1.NoMachine:
 			e.NoMachine = new(fromWireNoMachine(w))
 		}

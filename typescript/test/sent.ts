@@ -49,7 +49,7 @@ import type * as p from "pethost";
 }
 
 {
-  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.ProjectMetadataSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ xPethost: { metadata: leaf } }), async (api, given: p.ProjectMetadataInput) => api.createProject({ xPethost: { metadata: given } }));
+  const m = sending(w.CreateDatabaseRequestSchema, (leaf: Init<typeof w.ProjectMetadataSchema>): Init<typeof w.CreateDatabaseRequestSchema> => ({ metadata: leaf }), async (api, given: p.ProjectMetadataInput) => api.createDatabase({ metadata: given }));
   m.sends("ProjectMetadata: nothing set", {}, {});
   m.sends("ProjectMetadata.name", { name: "name" }, { name: "name" });
   m.sends("ProjectMetadata.name: zero", { name: "" }, { name: "" });
@@ -157,6 +157,18 @@ import type * as p from "pethost";
   m.sends("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { waitSeconds: 1009 });
   m.sends("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("CreateProjectRequest.link_databases", { linkDatabases: [{}] }, { linkDatabases: [{}] });
+}
+
+{
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.DatabaseLinkRequestSchema>): Init<typeof w.CreateProjectRequestSchema> => ({ linkDatabases: [leaf] }), async (api, given: p.DatabaseLinkRequestInput) => api.createProject({ linkDatabases: [given] }));
+  m.sends("DatabaseLinkRequest: nothing set", {}, {});
+  m.sends("DatabaseLinkRequest.database_project_id", { databaseProjectId: "database_project_id" }, { databaseProjectId: "database_project_id" });
+  m.sends("DatabaseLinkRequest.database_project_id: zero is not sent", { databaseProjectId: "" }, {});
+  m.sends("DatabaseLinkRequest.own_user", { ownUser: true }, { ownUser: true });
+  m.sends("DatabaseLinkRequest.own_user: zero is not sent", { ownUser: false }, {});
+  m.sends("DatabaseLinkRequest.env_prefix", { envPrefix: "env_prefix" }, { envPrefix: "env_prefix" });
+  m.sends("DatabaseLinkRequest.env_prefix: zero is not sent", { envPrefix: "" }, {});
 }
 
 {
@@ -258,6 +270,7 @@ import type * as p from "pethost";
   m.sends("RunProjectActionRequest.set_source", { setSource: {} }, { action: { case: "setSource", value: {} } });
   m.sends("RunProjectActionRequest.delete_volume", { deleteVolume: "delete_volume" }, { action: { case: "deleteVolume", value: "delete_volume" } });
   m.sends("RunProjectActionRequest.delete_volume: zero", { deleteVolume: "" }, { action: { case: "deleteVolume", value: "" } });
+  m.sends("RunProjectActionRequest.set_database_size", { setDatabaseSize: {} }, { action: { case: "setDatabaseSize", value: {} } });
   m.sends("RunProjectActionRequest.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
   m.sends("RunProjectActionRequest.operation_id: zero is not sent", { operationId: "" }, {});
   m.sends("RunProjectActionRequest.wait_seconds", { waitSeconds: 1013 }, { waitSeconds: 1013 });
@@ -309,6 +322,13 @@ import type * as p from "pethost";
 }
 
 {
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.SetDatabaseSizeActionSchema>): Init<typeof w.RunProjectActionRequestSchema> => ({ action: { case: "setDatabaseSize", value: leaf } }), async (api, given: p.SetDatabaseSizeActionInput) => api.runProjectAction({ setDatabaseSize: given }));
+  m.sends("SetDatabaseSizeAction: nothing set", {}, {});
+  m.sends("SetDatabaseSizeAction.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { memoryLimitBytes: 9007199254740993n });
+  m.sends("SetDatabaseSizeAction.memory_limit_bytes: zero is not sent", { memoryLimitBytes: 0n }, {});
+}
+
+{
   const m = sending(w.LinkDatabaseRequestSchema, (leaf: Init<typeof w.LinkDatabaseRequestSchema>): Init<typeof w.LinkDatabaseRequestSchema> => (leaf), async (api, given: p.LinkDatabaseRequest) => api.linkDatabase(given));
   m.sends("LinkDatabaseRequest: nothing set", {}, {});
   m.sends("LinkDatabaseRequest.database_project_id", { databaseProjectId: "database_project_id" }, { databaseProjectId: "database_project_id" });
@@ -334,6 +354,7 @@ import type * as p from "pethost";
   m.sends("CreateDatabaseRequest.wait_seconds", { waitSeconds: 1007 }, { waitSeconds: 1007 });
   m.sends("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateDatabaseRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("CreateDatabaseRequest.metadata", { metadata: {} }, { metadata: {} });
 }
 
 {

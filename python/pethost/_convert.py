@@ -170,6 +170,14 @@ def database_link_refusal_reason_to_wire(_v: _t.DatabaseLinkRefusalReason) -> _p
     return _pb.DatabaseLinkRefusalReason(_v.value)
 
 
+def database_size_refusal_reason_from_wire(_w: _pb.DatabaseSizeRefusalReason) -> _t.DatabaseSizeRefusalReason:
+    return _t.DatabaseSizeRefusalReason(_w.value)
+
+
+def database_size_refusal_reason_to_wire(_v: _t.DatabaseSizeRefusalReason) -> _pb.DatabaseSizeRefusalReason:
+    return _pb.DatabaseSizeRefusalReason(_v.value)
+
+
 def no_machine_reason_from_wire(_w: _pb.NoMachineReason) -> _t.NoMachineReason:
     return _t.NoMachineReason(_w.value)
 
@@ -1160,6 +1168,7 @@ def operation_from_wire(_w: _pb.Operation) -> _t.Operation:
         changed_path_count=_w.changed_path_count,
         files_kept=_w.files_kept,
         files_operation_id=_w.files_operation_id,
+        database_memory_limit_bytes=_w.database_memory_limit_bytes,
     )
 
 
@@ -1185,6 +1194,7 @@ def operation_to_wire(_v: _t.Operation) -> _pb.Operation:
         changed_path_count=_v.changed_path_count or None,
         files_kept=_v.files_kept or None,
         files_operation_id=_v.files_operation_id or None,
+        database_memory_limit_bytes=_v.database_memory_limit_bytes or None,
     )
 
 
@@ -1246,6 +1256,30 @@ def http_traffic_summary_to_dict(_v: _t.HttpTrafficSummary) -> dict[str, _Any]:
 
 def http_traffic_summary_from_dict(_j: dict[str, _Any]) -> _t.HttpTrafficSummary:
     return http_traffic_summary_from_wire(_rt.from_dict(_pb.HttpTrafficSummary, _j))
+
+
+def database_link_request_from_wire(_w: _pb.DatabaseLinkRequest) -> _t.DatabaseLinkRequest:
+    return _t.DatabaseLinkRequest(
+        database_project_id=_w.database_project_id,
+        own_user=_w.own_user,
+        env_prefix=_w.env_prefix,
+    )
+
+
+def database_link_request_to_wire(_v: _t.DatabaseLinkRequest) -> _pb.DatabaseLinkRequest:
+    return _pb.DatabaseLinkRequest(
+        database_project_id=_v.database_project_id or None,
+        own_user=_v.own_user or None,
+        env_prefix=_v.env_prefix or None,
+    )
+
+
+def database_link_request_to_dict(_v: _t.DatabaseLinkRequest) -> dict[str, _Any]:
+    return _rt.to_dict(database_link_request_to_wire(_v))
+
+
+def database_link_request_from_dict(_j: dict[str, _Any]) -> _t.DatabaseLinkRequest:
+    return database_link_request_from_wire(_rt.from_dict(_pb.DatabaseLinkRequest, _j))
 
 
 def create_project_response_from_wire(_w: _pb.CreateProjectResponse) -> _t.CreateProjectResponse:
@@ -1626,6 +1660,26 @@ def delete_project_action_from_dict(_j: dict[str, _Any]) -> _t.DeleteProjectActi
     return delete_project_action_from_wire(_rt.from_dict(_pb.DeleteProjectAction, _j))
 
 
+def set_database_size_action_from_wire(_w: _pb.SetDatabaseSizeAction) -> _t.SetDatabaseSizeAction:
+    return _t.SetDatabaseSizeAction(
+        memory_limit_bytes=_w.memory_limit_bytes,
+    )
+
+
+def set_database_size_action_to_wire(_v: _t.SetDatabaseSizeAction) -> _pb.SetDatabaseSizeAction:
+    return _pb.SetDatabaseSizeAction(
+        memory_limit_bytes=_v.memory_limit_bytes or None,
+    )
+
+
+def set_database_size_action_to_dict(_v: _t.SetDatabaseSizeAction) -> dict[str, _Any]:
+    return _rt.to_dict(set_database_size_action_to_wire(_v))
+
+
+def set_database_size_action_from_dict(_j: dict[str, _Any]) -> _t.SetDatabaseSizeAction:
+    return set_database_size_action_from_wire(_rt.from_dict(_pb.SetDatabaseSizeAction, _j))
+
+
 def run_project_action_response_from_wire(_w: _pb.RunProjectActionResponse) -> _t.RunProjectActionResponse:
     return _t.RunProjectActionResponse(
         operation=operation_from_wire(_w.operation) if _w.operation is not None else None,
@@ -1664,6 +1718,7 @@ def database_from_wire(_w: _pb.Database) -> _t.Database:
         service=_w.service,
         volume=_w.volume,
         console_command=tuple(_w.console_command),
+        own_user_projects=tuple(_w.own_user_projects),
     )
 
 
@@ -1681,6 +1736,7 @@ def database_to_wire(_v: _t.Database) -> _pb.Database:
         service=_v.service or None,
         volume=_v.volume or None,
         console_command=_rt.strings("Database.console_command", _v.console_command),
+        own_user_projects=_rt.strings("Database.own_user_projects", _v.own_user_projects),
     )
 
 
@@ -1732,6 +1788,8 @@ def database_summary_from_wire(_w: _pb.DatabaseSummary) -> _t.DatabaseSummary:
         connections=_w.connections,
         linked_projects=tuple(_w.linked_projects),
         server_version=_w.server_version,
+        memory_limit_bytes=_w.memory_limit_bytes,
+        own_user_projects=tuple(_w.own_user_projects),
     )
 
 
@@ -1743,6 +1801,8 @@ def database_summary_to_wire(_v: _t.DatabaseSummary) -> _pb.DatabaseSummary:
         connections=_v.connections or None,
         linked_projects=_rt.strings("DatabaseSummary.linked_projects", _v.linked_projects),
         server_version=_v.server_version or None,
+        memory_limit_bytes=_v.memory_limit_bytes or None,
+        own_user_projects=_rt.strings("DatabaseSummary.own_user_projects", _v.own_user_projects),
     )
 
 
@@ -1760,6 +1820,7 @@ def database_engine_offer_from_wire(_w: _pb.DatabaseEngineOffer) -> _t.DatabaseE
         major_version=_w.major_version,
         sizes=tuple(database_size_choice_from_wire(_x) for _x in _w.sizes),
         default_memory_limit_bytes=_w.default_memory_limit_bytes,
+        own_users=_w.own_users,
     )
 
 
@@ -1769,6 +1830,7 @@ def database_engine_offer_to_wire(_v: _t.DatabaseEngineOffer) -> _pb.DatabaseEng
         major_version=_v.major_version or None,
         sizes=[database_size_choice_to_wire(_x) for _x in _v.sizes],
         default_memory_limit_bytes=_v.default_memory_limit_bytes or None,
+        own_users=_v.own_users or None,
     )
 
 
@@ -2757,6 +2819,7 @@ def database_link_refusal_from_wire(_w: _pb.DatabaseLinkRefusal) -> _t.DatabaseL
         project_id=_w.project_id,
         reason=database_link_refusal_reason_from_wire(_w.reason),
         service=_w.service,
+        database_project_id=_w.database_project_id,
     )
 
 
@@ -2765,6 +2828,7 @@ def database_link_refusal_to_wire(_v: _t.DatabaseLinkRefusal) -> _pb.DatabaseLin
         project_id=_v.project_id or None,
         reason=database_link_refusal_reason_to_wire(_v.reason) if _v.reason.value else None,
         service=_v.service or None,
+        database_project_id=_v.database_project_id or None,
     )
 
 
@@ -2774,6 +2838,32 @@ def database_link_refusal_to_dict(_v: _t.DatabaseLinkRefusal) -> dict[str, _Any]
 
 def database_link_refusal_from_dict(_j: dict[str, _Any]) -> _t.DatabaseLinkRefusal:
     return database_link_refusal_from_wire(_rt.from_dict(_pb.DatabaseLinkRefusal, _j))
+
+
+def database_size_refusal_from_wire(_w: _pb.DatabaseSizeRefusal) -> _t.DatabaseSizeRefusal:
+    return _t.DatabaseSizeRefusal(
+        reason=database_size_refusal_reason_from_wire(_w.reason),
+        data_bytes=_w.data_bytes,
+        keeps_bytes=_w.keeps_bytes,
+        volume=_w.volume,
+    )
+
+
+def database_size_refusal_to_wire(_v: _t.DatabaseSizeRefusal) -> _pb.DatabaseSizeRefusal:
+    return _pb.DatabaseSizeRefusal(
+        reason=database_size_refusal_reason_to_wire(_v.reason) if _v.reason.value else None,
+        data_bytes=_v.data_bytes or None,
+        keeps_bytes=_v.keeps_bytes or None,
+        volume=_v.volume or None,
+    )
+
+
+def database_size_refusal_to_dict(_v: _t.DatabaseSizeRefusal) -> dict[str, _Any]:
+    return _rt.to_dict(database_size_refusal_to_wire(_v))
+
+
+def database_size_refusal_from_dict(_j: dict[str, _Any]) -> _t.DatabaseSizeRefusal:
+    return database_size_refusal_from_wire(_rt.from_dict(_pb.DatabaseSizeRefusal, _j))
 
 
 def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
@@ -2933,6 +3023,7 @@ def create_project_request(
     timeout_seconds: int,
     operation_id: str,
     wait_seconds: int | None,
+    link_databases: Sequence[_t.DatabaseLinkRequest],
 ) -> _pb.CreateProjectRequest:
     _w = _pb.CreateProjectRequest(
         project_id=project_id or None,
@@ -2943,6 +3034,7 @@ def create_project_request(
         timeout_seconds=timeout_seconds or None,
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
+        link_databases=[database_link_request_to_wire(_x) for _x in link_databases],
     )
     return _rt.checked(_w)
 
@@ -3009,10 +3101,11 @@ def run_project_action_request(
     delete_project: _t.DeleteProjectAction | None,
     set_source: _t.ProjectSource | None,
     delete_volume: str | None,
+    set_database_size: _t.SetDatabaseSizeAction | None,
     operation_id: str,
     wait_seconds: int | None,
 ) -> _pb.RunProjectActionRequest:
-    _rt.one_of("run_project_action", start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume)
+    _rt.one_of("run_project_action", start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, set_database_size=set_database_size)
     _w = _pb.RunProjectActionRequest(
         project_id=project_id or None,
         operation_id=operation_id or None,
@@ -3038,6 +3131,8 @@ def run_project_action_request(
         _w.action = _Oneof[_Literal["set_source"], _pb.ProjectSource]("set_source", project_source_to_wire(set_source))
     elif delete_volume is not None:
         _w.action = _Oneof[_Literal["delete_volume"], str]("delete_volume", delete_volume)
+    elif set_database_size is not None:
+        _w.action = _Oneof[_Literal["set_database_size"], _pb.SetDatabaseSizeAction]("set_database_size", set_database_size_action_to_wire(set_database_size))
     return _rt.checked(_w)
 
 
@@ -3138,6 +3233,7 @@ def create_database_request(
     link: Sequence[str],
     operation_id: str,
     wait_seconds: int | None,
+    metadata: _t.ProjectMetadata | None,
 ) -> _pb.CreateDatabaseRequest:
     _w = _pb.CreateDatabaseRequest(
         project_id=project_id or None,
@@ -3147,6 +3243,7 @@ def create_database_request(
         link=_rt.strings("create_database(link=)", link),
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
+        metadata=project_metadata_to_wire(metadata) if metadata is not None else None,
     )
     return _rt.checked(_w)
 
@@ -3315,6 +3412,10 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wDatabaseLinkRefusal = _d.value(_pb.DatabaseLinkRefusal)
                 if _wDatabaseLinkRefusal is not None:
                     return database_link_refusal_from_wire(_wDatabaseLinkRefusal)
+            if _d.type_name == "pethost.panel.v1.DatabaseSizeRefusal":
+                _wDatabaseSizeRefusal = _d.value(_pb.DatabaseSizeRefusal)
+                if _wDatabaseSizeRefusal is not None:
+                    return database_size_refusal_from_wire(_wDatabaseSizeRefusal)
             if _d.type_name == "pethost.panel.v1.NoMachine":
                 _wNoMachine = _d.value(_pb.NoMachine)
                 if _wNoMachine is not None:

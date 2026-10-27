@@ -55,6 +55,7 @@ DETAILS = (
     "ProjectChanged",
     "MachineUnreachable",
     "DatabaseLinkRefusal",
+    "DatabaseSizeRefusal",
     "NoMachine",
 )
 

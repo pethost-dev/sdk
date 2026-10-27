@@ -29,8 +29,15 @@ Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
   deployed whole. People see metadata.name.
 - Database: a project create_database made (Postgres or Valkey). The machine wrote its files and
-  knows the engine. Apps reach it at the host <project_id> once linked (its `link`, or
-  link_database); Project.database says how to sign in.
+  knows the engine. An app gets one of its own: create_database, then the app's create_project
+  with `link_databases`, which writes how it signs in into its /.env. Apps that belong together
+  may share a Postgres, each with a user of its own (own_user, Postgres only: a Valkey has one
+  user), and are then backed up and restored together. Apps reach it at the host <project_id>. A
+  linked app signs in as the apps' user (`app`, or a Valkey's one user), whether link_databases
+  or link_database linked it, unless link_databases' own_user gave it one of its own
+  (Database.own_user_projects); only link_databases writes how it signs in into its /.env. An
+  app that exists: link_database, then put Project.database.connection's url into its /.env
+  (get_project include_secret_values).
 - Service (service): one container. The person opens a shell in it from their terminal with `ssh
   <service>.<project_id>@<Machine.hostname>` (Service.ssh_command), once
   run_machine_action(add_ssh_key=) added their public key. Nobody logs in to the machine itself.
@@ -122,7 +129,10 @@ from ._types import (
     DatabaseEngineOffer,
     DatabaseLinkRefusal,
     DatabaseLinkRefusalReason,
+    DatabaseLinkRequest,
     DatabaseSizeChoice,
+    DatabaseSizeRefusal,
+    DatabaseSizeRefusalReason,
     DatabaseSummary,
     DeleteProjectAction,
     DeletedProject,
@@ -197,6 +207,7 @@ from ._types import (
     ServiceSummary,
     ServicesAction,
     ServicesActionKind,
+    SetDatabaseSizeAction,
     SetProjectAlertsResponse,
     SiteCheck,
     SiteCheckResult,
@@ -241,7 +252,10 @@ __all__ = [
     "DatabaseEngineOffer",
     "DatabaseLinkRefusal",
     "DatabaseLinkRefusalReason",
+    "DatabaseLinkRequest",
     "DatabaseSizeChoice",
+    "DatabaseSizeRefusal",
+    "DatabaseSizeRefusalReason",
     "DatabaseSummary",
     "DeadlineExceededError",
     "DeleteProjectAction",
@@ -327,6 +341,7 @@ __all__ = [
     "ServiceSummary",
     "ServicesAction",
     "ServicesActionKind",
+    "SetDatabaseSizeAction",
     "SetProjectAlertsResponse",
     "SiteCheck",
     "SiteCheckResult",

@@ -113,9 +113,9 @@ pub struct Machine {
     pub sessions: ::std::vec::Vec<MachineSession>,
     /// Where Pethost tells the person of incidents: the account's channels that are on, email first, then the oldest. The person sets them in the panel's Settings → Alerts; no tool does. Empty = alerts reach nobody.
     pub alert_channels: ::std::vec::Vec<AlertDestination>,
-    /// The databases the machine makes ([`Client::create_database`](crate::Client::create_database)), one per engine, with the sizes they may take.
+    /// The databases the machine makes ([`Client::create_database`](crate::Client::create_database)), one per engine, with the sizes they may take ([`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize)).
     pub database_engines: ::std::vec::Vec<DatabaseEngineOffer>,
-    /// The sum of every service's memory limit (`mem_limit`): what the projects may take together, which `memory_total_bytes` does not reserve.
+    /// The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more than `memory_total_bytes`. What the projects use is `memory_used_bytes`.
     pub memory_limits_bytes: u64,
 }
 
@@ -814,6 +814,8 @@ pub struct Operation {
     pub files_kept: bool,
     /// DEPLOY: the deploy that first deployed its files: itself when its request brought or changed files (a commit, an archive, a file other than /.env); else an earlier one, as after a deploy that changed only /.env or x-pethost.
     pub files_operation_id: ::std::string::String,
+    /// DEPLOY of a size change ([`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize)): the size it gave the database.
+    pub database_memory_limit_bytes: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -869,6 +871,8 @@ pub enum DeployFailureReason {
     UncoveredImageVolume,
     /// The running projects leave too little memory for a build; the message says how much.
     BuildMemoryUnavailable,
+    /// Its user of its own in a linked database ([`DatabaseLinkRequest::own_user`](crate::types::DatabaseLinkRequest::own_user)) could not be made: the database does not run or answer, or refused; the message says which. Start it, then deploy again.
+    DatabaseUserFailed,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -914,6 +918,14 @@ pub struct CreateProjectRequest {
     pub operation_id: ::std::string::String,
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
     pub wait_seconds: ::core::option::Option<u32>,
+    pub link_databases: ::std::vec::Vec<DatabaseLinkRequest>,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct DatabaseLinkRequest {
+    pub database_project_id: ::std::string::String,
+    pub own_user: bool,
+    pub env_prefix: ::std::string::String,
 }
 
 /// What [`Client::create_project`](crate::Client::create_project) returns.
@@ -1091,9 +1103,9 @@ pub struct BranchCommit {
 pub struct RunProjectActionRequest {
     pub project_id: ::std::string::String,
     pub action: ::core::option::Option<RunProjectActionRequestAction>,
-    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s, for the actions that run as operations.
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s.
     pub operation_id: ::std::string::String,
-    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s, for the actions that run as operations.
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s.
     pub wait_seconds: ::core::option::Option<u32>,
 }
 
@@ -1116,17 +1128,19 @@ pub enum RunProjectActionRequestAction {
     RestoreSnapshot(RestoreSnapshotAction),
     /// Stops a running or starting operation: it ends CANCELLED, leaving what a failure would; one only starting answers CANCELLED from its own call. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = a delete past its final backup.
     CancelOperation(CancelOperationAction),
-    /// An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs. Snapshots stay ([`GetMachineResponse::deleted_projects`](crate::types::GetMachineResponse::deleted_projects)), and restoring one brings the project back, source included; with backups off there is none, and it is gone for good.
+    /// An operation: [`Client::run_project_action`](crate::Client::run_project_action)\'s description says what goes and what stays.
     DeleteProject(DeleteProjectAction),
     /// Changes the source. To files: keeps the current files. To github: only the fields set change, e.g. {github: {`auto_deploy`: true}} follows pushes again; from files, repository is required. Deploys the newest commit if `auto_deploy` is on and the files are not at it. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = as [`Client::create_project`](crate::Client::create_project).
     SetSource(ProjectSource),
     /// A volume compose.yaml no longer declares ([`Volume::declared`](crate::types::Volume::declared) false). Its data then lives only in snapshots. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = declared or in use.
     DeleteVolume(::std::string::String),
+    /// A database's size. An operation: it restarts.
+    SetDatabaseSize(SetDatabaseSizeAction),
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ServicesAction {
-    /// Empty = all (start: those with a container; restart: running ones).
+    /// Empty = all.
     pub services: ::std::vec::Vec<::std::string::String>,
 }
 
@@ -1157,6 +1171,12 @@ pub struct CancelOperationAction {
 pub struct DeleteProjectAction {
     /// True = no final backup, while backups are on: changes since the newest snapshot are lost.
     pub skip_final_backup: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct SetDatabaseSizeAction {
+    /// One of [`Machine::database_engines`](crate::types::Machine::database_engines)\[\].sizes.
+    pub memory_limit_bytes: u64,
 }
 
 /// What [`Client::run_project_action`](crate::Client::run_project_action) returns.
@@ -1192,7 +1212,7 @@ pub struct Database {
     pub major_version: u32,
     /// What the server says it runs, e.g. \"18.6\". Empty = not answering.
     pub server_version: ::std::string::String,
-    /// Its size: its service's `mem_limit` in compose.yaml.
+    /// Its size: its service's `mem_limit` in compose.yaml. [`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize) changes it.
     pub memory_limit_bytes: u64,
     /// Postgres: its databases\' size; Valkey: its data in memory. On disk: [`Project::volumes`](crate::types::Project::volumes).
     pub data_bytes: u64,
@@ -1200,7 +1220,7 @@ pub struct Database {
     pub connections: u32,
     /// Valkey: maxclients.
     pub max_connections: u32,
-    /// The projects that reach it ([`Client::link_database`](crate::Client::link_database)).
+    /// The projects that reach it: [`Client::create_project`](crate::Client::create_project)\'s `link_databases` or [`Client::link_database`](crate::Client::link_database) linked them. Each signs in as the apps\' user (connection), but those of `own_user_projects`.
     pub linked_projects: ::std::vec::Vec<::std::string::String>,
     pub connection: ::core::option::Option<DatabaseConnection>,
     /// The service of [`Project::services`](crate::types::Project::services) that runs the database.
@@ -1209,6 +1229,8 @@ pub struct Database {
     pub volume: ::std::string::String,
     /// The console, for `OpenTerminal` in `service`: psql signed in as the superuser, or valkey-cli.
     pub console_command: ::std::vec::Vec<::std::string::String>,
+    /// Of `linked_projects`, those linked with `own_user` ([`DatabaseLinkRequest`](crate::types::DatabaseLinkRequest)): each signs in as a user of its own, to a database of its own, both named as it, with the password in its /.env. The others sign in as the apps\' user, `app` (a Valkey's `default`), whether `link_databases` or [`Client::link_database`](crate::Client::link_database) linked them; only `link_databases` wrote how into an app's /.env.
+    pub own_user_projects: ::std::vec::Vec<::std::string::String>,
 }
 
 /// How a linked project signs in, as the apps\' user.
@@ -1239,9 +1261,14 @@ pub struct DatabaseSummary {
     /// As in Database.
     pub data_bytes: u64,
     pub connections: u32,
+    /// As in Database: all but `own_user_projects` sign in as the apps\' user.
     pub linked_projects: ::std::vec::Vec<::std::string::String>,
     /// As in Database: empty = not answering, its figures are zero.
     pub server_version: ::std::string::String,
+    /// Its size, as in Database.
+    pub memory_limit_bytes: u64,
+    /// Of `linked_projects`, those with `own_user`, as in Database.
+    pub own_user_projects: ::std::vec::Vec<::std::string::String>,
 }
 
 /// An engine the machine makes databases of ([`Machine::database_engines`](crate::types::Machine::database_engines)).
@@ -1255,6 +1282,8 @@ pub struct DatabaseEngineOffer {
     pub sizes: ::std::vec::Vec<DatabaseSizeChoice>,
     /// The size [`Client::create_database`](crate::Client::create_database) gives when its `memory_limit_bytes` is 0, unless it copies a snapshot.
     pub default_memory_limit_bytes: u64,
+    /// A project linked with `own_user` ([`DatabaseLinkRequest`](crate::types::DatabaseLinkRequest)) gets a user and a database of its own in one of its databases, so several apps can share one. False = every app signs in as its one user, and `own_user` is refused (`ONE_USER`).
+    pub own_users: bool,
 }
 
 /// A size a database may take.
@@ -1298,6 +1327,8 @@ pub struct CreateDatabaseRequest {
     pub operation_id: ::std::string::String,
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
     pub wait_seconds: ::core::option::Option<u32>,
+    /// What people see, e.g. {name: \"Postgres for Recipes\"}. Absent = the machine's (the id).
+    pub metadata: ::core::option::Option<ProjectMetadata>,
 }
 
 /// What [`Client::create_database`](crate::Client::create_database) returns.
@@ -2012,6 +2043,8 @@ pub struct DatabaseLinkRefusal {
     pub reason: DatabaseLinkRefusalReason,
     /// `SERVICE_NAME_TAKEN`: its service.
     pub service: ::std::string::String,
+    /// [`Client::create_project`](crate::Client::create_project)\'s `link_databases`: the database refused, of those it names.
+    pub database_project_id: ::std::string::String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -2026,6 +2059,39 @@ pub enum DatabaseLinkRefusalReason {
     ServiceNameTaken,
     /// The database has 20: unlink one first.
     TooManyLinks,
+    /// `own_user` for a database whose engine has one user ([`DatabaseEngineOffer::own_users`](crate::types::DatabaseEngineOffer::own_users) false): Valkey.
+    OneUser,
+    /// `own_user` for a project whose id Postgres or the machine keeps as a user or a database (postgres, app, public, none, template0, template1, `current_user`, `current_role`, `session_user`, `pg_`…): give it another id.
+    UserNameReserved,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize): the database cannot take that size now. Nothing changed.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct DatabaseSizeRefusal {
+    pub reason: DatabaseSizeRefusalReason,
+    /// `DATA_TOO_LARGE`: the Valkey's data in memory.
+    pub data_bytes: u64,
+    /// `DATA_TOO_LARGE`: what the size keeps, its maxmemory: 70 % of it.
+    pub keeps_bytes: u64,
+    /// `VOLUME_MOVED`: the volume its data is in.
+    pub volume: ::std::string::String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum DatabaseSizeRefusalReason {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// A Valkey whose data is more than the size keeps: take a larger size, or delete data first.
+    DataTooLarge,
+    /// A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try again once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can be given more.
+    DataUnread,
+    /// Its data is in another volume (`volume`) than `data`, which the file the size writes keeps it in, so the database would start without it: change the size in its compose.yaml instead.
+    VolumeMoved,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }

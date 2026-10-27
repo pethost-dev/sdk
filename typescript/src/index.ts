@@ -312,6 +312,9 @@ export const OperationStatus = {
  *   backed up. Mount a named volume there.
  * - `BUILD_MEMORY_UNAVAILABLE`: The running projects leave too little memory for a build; the
  *   message says how much.
+ * - `DATABASE_USER_FAILED`: Its user of its own in a linked database
+ *   (DatabaseLinkRequestInput.ownUser) could not be made: the database does not run or answer, or
+ *   refused; the message says which. Start it, then deploy again.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -338,6 +341,12 @@ export const DeployFailureReason = {
   UNCOVERED_IMAGE_VOLUME: "UNCOVERED_IMAGE_VOLUME",
   /** The running projects leave too little memory for a build; the message says how much. */
   BUILD_MEMORY_UNAVAILABLE: "BUILD_MEMORY_UNAVAILABLE",
+  /**
+   * Its user of its own in a linked database (DatabaseLinkRequestInput.ownUser) could not be made:
+   * the database does not run or answer, or refused; the message says which. Start it, then deploy
+   * again.
+   */
+  DATABASE_USER_FAILED: "DATABASE_USER_FAILED",
 } as const;
 
 /**
@@ -474,6 +483,11 @@ export const FileLocation = {
  * - `SERVICE_NAME_TAKEN`: A service of it is named or aliased like the database, whose host it
  *   would hide: rename the service or its alias.
  * - `TOO_MANY_LINKS`: The database has 20: unlink one first.
+ * - `ONE_USER`: ownUser for a database whose engine has one user (DatabaseEngineOffer.ownUsers
+ *   false): Valkey.
+ * - `USER_NAME_RESERVED`: ownUser for a project whose id Postgres or the machine keeps as a user
+ *   or a database (postgres, app, public, none, template0, template1, current_user, current_role,
+ *   session_user, pg_…): give it another id.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -488,6 +502,43 @@ export const DatabaseLinkRefusalReason = {
   SERVICE_NAME_TAKEN: "SERVICE_NAME_TAKEN",
   /** The database has 20: unlink one first. */
   TOO_MANY_LINKS: "TOO_MANY_LINKS",
+  /** ownUser for a database whose engine has one user (DatabaseEngineOffer.ownUsers false): Valkey. */
+  ONE_USER: "ONE_USER",
+  /**
+   * ownUser for a project whose id Postgres or the machine keeps as a user or a database (postgres,
+   * app, public, none, template0, template1, current_user, current_role, session_user, pg_…): give
+   * it another id.
+   */
+  USER_NAME_RESERVED: "USER_NAME_RESERVED",
+} as const;
+
+/**
+ * - `DATA_TOO_LARGE`: A Valkey whose data is more than the size keeps: take a larger size, or
+ *   delete data first.
+ * - `DATA_UNREAD`: A Valkey that does not answer now, asked to shrink: how much it holds is
+ *   unknown, so try again once it runs. A larger size is never refused so: a Valkey its limit
+ *   keeps stopping can be given more.
+ * - `VOLUME_MOVED`: Its data is in another volume (`volume`) than `data`, which the file the size
+ *   writes keeps it in, so the database would start without it: change the size in its
+ *   compose.yaml instead.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type DatabaseSizeRefusalReason = (typeof DatabaseSizeRefusalReason)[keyof typeof DatabaseSizeRefusalReason];
+export const DatabaseSizeRefusalReason = {
+  /** A Valkey whose data is more than the size keeps: take a larger size, or delete data first. */
+  DATA_TOO_LARGE: "DATA_TOO_LARGE",
+  /**
+   * A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try again
+   * once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can be given
+   * more.
+   */
+  DATA_UNREAD: "DATA_UNREAD",
+  /**
+   * Its data is in another volume (`volume`) than `data`, which the file the size writes keeps it
+   * in, so the database would start without it: change the size in its compose.yaml instead.
+   */
+  VOLUME_MOVED: "VOLUME_MOVED",
 } as const;
 
 /**
@@ -635,12 +686,12 @@ export interface Machine {
   alertChannels: AlertDestination[];
   /**
    * The databases the machine makes ({@link Pethost.createDatabase | createDatabase}), one per
-   * engine, with the sizes they may take.
+   * engine, with the sizes they may take (RunProjectActionRequest.setDatabaseSize).
    */
   databaseEngines: DatabaseEngineOffer[];
   /**
-   * The sum of every service's memory limit (`mem_limit`): what the projects may take together,
-   * which memoryTotalBytes does not reserve.
+   * The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more than
+   * memoryTotalBytes. What the projects use is memoryUsedBytes.
    */
   memoryLimitsBytes: bigint;
 }
@@ -1682,6 +1733,11 @@ export interface Operation {
    * that changed only /.env or x-pethost.
    */
   filesOperationId: string;
+  /**
+   * DEPLOY of a size change (RunProjectActionRequest.setDatabaseSize): the size it gave the
+   * database.
+   */
+  databaseMemoryLimitBytes: bigint;
 }
 
 /** {@link Operation} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1744,12 +1800,25 @@ export interface CreateProjectRequest {
   operationId?: string | undefined;
   /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
   waitSeconds?: number | undefined;
+  linkDatabases?: readonly DatabaseLinkRequestInput[] | undefined;
 }
 
 /** {@link CreateProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const CreateProjectRequest: JsonCodec<CreateProjectRequest, CreateProjectRequest> = {
   toJson: (value) => writeJson(wire.CreateProjectRequestSchema, convert.toCreateProjectRequest(value)),
   fromJson: (json) => convert.fromCreateProjectRequest(readJson(wire.CreateProjectRequestSchema, json)),
+};
+
+export interface DatabaseLinkRequestInput {
+  databaseProjectId?: string | undefined;
+  ownUser?: boolean | undefined;
+  envPrefix?: string | undefined;
+}
+
+/** {@link DatabaseLinkRequestInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseLinkRequest: JsonCodec<DatabaseLinkRequestInput, DatabaseLinkRequestInput> = {
+  toJson: (value) => writeJson(wire.DatabaseLinkRequestSchema, convert.toDatabaseLinkRequest(value)),
+  fromJson: (json) => convert.fromDatabaseLinkRequest(readJson(wire.DatabaseLinkRequestSchema, json)),
 };
 
 export interface CreateProjectResponse {
@@ -2094,9 +2163,9 @@ export const BranchCommit: JsonCodec<BranchCommit, BranchCommit> = {
 
 export type RunProjectActionRequest = {
   projectId?: string | undefined;
-  /** As {@link Pethost.deployProject | deployProject}'s, for the actions that run as operations. */
+  /** As {@link Pethost.deployProject | deployProject}'s. */
   operationId?: string | undefined;
-  /** As {@link Pethost.deployProject | deployProject}'s, for the actions that run as operations. */
+  /** As {@link Pethost.deployProject | deployProject}'s. */
   waitSeconds?: number | undefined;
 } & (
   | {
@@ -2105,7 +2174,8 @@ export type RunProjectActionRequest = {
        * container yet (deploy or recreateService), or a published machine port is taken.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       startServices?: ServicesActionInput | undefined;
       stopServices?: undefined;
@@ -2117,6 +2187,7 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
@@ -2124,7 +2195,8 @@ export type RunProjectActionRequest = {
        * policy.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       stopServices?: ServicesActionInput | undefined;
       startServices?: undefined;
@@ -2136,13 +2208,15 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
        * Restarts processes in the same containers. Codes as startServices.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       restartServices?: ServicesActionInput | undefined;
       startServices?: undefined;
@@ -2154,13 +2228,15 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
        * A new container: a fresh filesystem outside volumes. An operation.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       recreateService?: RecreateServiceActionInput | undefined;
       startServices?: undefined;
@@ -2172,6 +2248,7 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
@@ -2179,7 +2256,8 @@ export type RunProjectActionRequest = {
        * (Machine.backupsEnabled).
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       backUp?: BackUpActionInput | undefined;
       startServices?: undefined;
@@ -2191,13 +2269,15 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
        * From a snapshot of this project. An operation.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       restoreSnapshot?: RestoreSnapshotActionInput | undefined;
       startServices?: undefined;
@@ -2209,6 +2289,7 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
@@ -2217,7 +2298,8 @@ export type RunProjectActionRequest = {
        * backup.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       cancelOperation?: CancelOperationActionInput | undefined;
       startServices?: undefined;
@@ -2229,15 +2311,16 @@ export type RunProjectActionRequest = {
       deleteProject?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
-       * An operation: a final backup while backups are on, then containers, volumes, files, hosts, logs.
-       * Snapshots stay (GetMachineResponse.deletedProjects), and restoring one brings the project back,
-       * source included; with backups off there is none, and it is gone for good.
+       * An operation: {@link Pethost.runProjectAction | runProjectAction}'s description says what goes
+       * and what stays.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       deleteProject?: DeleteProjectActionInput | undefined;
       startServices?: undefined;
@@ -2249,6 +2332,7 @@ export type RunProjectActionRequest = {
       cancelOperation?: undefined;
       setSource?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
@@ -2258,7 +2342,8 @@ export type RunProjectActionRequest = {
        * as {@link Pethost.createProject | createProject}.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       setSource?: ProjectSourceInput | undefined;
       startServices?: undefined;
@@ -2270,6 +2355,7 @@ export type RunProjectActionRequest = {
       cancelOperation?: undefined;
       deleteProject?: undefined;
       deleteVolume?: undefined;
+      setDatabaseSize?: undefined;
     }
   | {
       /**
@@ -2277,7 +2363,8 @@ export type RunProjectActionRequest = {
        * snapshots. FAILED_PRECONDITION = declared or in use.
        *
        * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
-       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`.
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
        */
       deleteVolume?: string | undefined;
       startServices?: undefined;
@@ -2289,6 +2376,27 @@ export type RunProjectActionRequest = {
       cancelOperation?: undefined;
       deleteProject?: undefined;
       setSource?: undefined;
+      setDatabaseSize?: undefined;
+    }
+  | {
+      /**
+       * A database's size. An operation: it restarts.
+       *
+       * `action`: at most one of `startServices`, `stopServices`, `restartServices`, `recreateService`,
+       * `backUp`, `restoreSnapshot`, `cancelOperation`, `deleteProject`, `setSource`, `deleteVolume`,
+       * `setDatabaseSize`.
+       */
+      setDatabaseSize?: SetDatabaseSizeActionInput | undefined;
+      startServices?: undefined;
+      stopServices?: undefined;
+      restartServices?: undefined;
+      recreateService?: undefined;
+      backUp?: undefined;
+      restoreSnapshot?: undefined;
+      cancelOperation?: undefined;
+      deleteProject?: undefined;
+      setSource?: undefined;
+      deleteVolume?: undefined;
     }
 );
 
@@ -2299,7 +2407,7 @@ export const RunProjectActionRequest: JsonCodec<RunProjectActionRequest, RunProj
 };
 
 export interface ServicesActionInput {
-  /** Empty = all (start: those with a container; restart: running ones). */
+  /** Empty = all. */
   services?: readonly string[] | undefined;
 }
 
@@ -2367,6 +2475,17 @@ export const DeleteProjectAction: JsonCodec<DeleteProjectActionInput, DeleteProj
   fromJson: (json) => convert.fromDeleteProjectAction(readJson(wire.DeleteProjectActionSchema, json)),
 };
 
+export interface SetDatabaseSizeActionInput {
+  /** One of Machine.databaseEngines[].sizes. */
+  memoryLimitBytes?: bigint | undefined;
+}
+
+/** {@link SetDatabaseSizeActionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const SetDatabaseSizeAction: JsonCodec<SetDatabaseSizeActionInput, SetDatabaseSizeActionInput> = {
+  toJson: (value) => writeJson(wire.SetDatabaseSizeActionSchema, convert.toSetDatabaseSizeAction(value)),
+  fromJson: (json) => convert.fromSetDatabaseSizeAction(readJson(wire.SetDatabaseSizeActionSchema, json)),
+};
+
 export interface RunProjectActionResponse {
   /**
    * Set when the action runs as an operation: finished, or IN_PROGRESS when waitSeconds ran out
@@ -2398,7 +2517,10 @@ export interface Database {
   majorVersion: number;
   /** What the server says it runs, e.g. "18.6". Empty = not answering. */
   serverVersion: string;
-  /** Its size: its service's `mem_limit` in compose.yaml. */
+  /**
+   * Its size: its service's `mem_limit` in compose.yaml. RunProjectActionRequest.setDatabaseSize
+   * changes it.
+   */
   memoryLimitBytes: bigint;
   /** Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes. */
   dataBytes: bigint;
@@ -2406,7 +2528,11 @@ export interface Database {
   connections: number;
   /** Valkey: maxclients. */
   maxConnections: number;
-  /** The projects that reach it ({@link Pethost.linkDatabase | linkDatabase}). */
+  /**
+   * The projects that reach it: {@link Pethost.createProject | createProject}'s linkDatabases or
+   * {@link Pethost.linkDatabase | linkDatabase} linked them. Each signs in as the apps' user
+   * (connection), but those of ownUserProjects.
+   */
   linkedProjects: string[];
   connection?: DatabaseConnection;
   /** The service of Project.services that runs the database. */
@@ -2415,6 +2541,14 @@ export interface Database {
   volume: string;
   /** The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli. */
   consoleCommand: string[];
+  /**
+   * Of linkedProjects, those linked with ownUser ({@link DatabaseLinkRequestInput}): each signs in
+   * as a user of its own, to a database of its own, both named as it, with the password in its
+   * /.env. The others sign in as the apps' user, `app` (a Valkey's `default`), whether linkDatabases
+   * or {@link Pethost.linkDatabase | linkDatabase} linked them; only linkDatabases wrote how into an
+   * app's /.env.
+   */
+  ownUserProjects: string[];
 }
 
 /** {@link Database} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2456,9 +2590,14 @@ export interface DatabaseSummary {
   /** As in Database. */
   dataBytes: bigint;
   connections: number;
+  /** As in Database: all but ownUserProjects sign in as the apps' user. */
   linkedProjects: string[];
   /** As in Database: empty = not answering, its figures are zero. */
   serverVersion: string;
+  /** Its size, as in Database. */
+  memoryLimitBytes: bigint;
+  /** Of linkedProjects, those with ownUser, as in Database. */
+  ownUserProjects: string[];
 }
 
 /** {@link DatabaseSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2479,6 +2618,12 @@ export interface DatabaseEngineOffer {
    * unless it copies a snapshot.
    */
   defaultMemoryLimitBytes: bigint;
+  /**
+   * A project linked with ownUser ({@link DatabaseLinkRequestInput}) gets a user and a database of
+   * its own in one of its databases, so several apps can share one. False = every app signs in as
+   * its one user, and ownUser is refused (ONE_USER).
+   */
+  ownUsers: boolean;
 }
 
 /** {@link DatabaseEngineOffer} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2546,6 +2691,8 @@ export interface CreateDatabaseRequest {
   operationId?: string | undefined;
   /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
   waitSeconds?: number | undefined;
+  /** What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id). */
+  metadata?: ProjectMetadataInput | undefined;
 }
 
 /** {@link CreateDatabaseRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3528,12 +3675,37 @@ export interface DatabaseLinkRefusal {
   reason?: DatabaseLinkRefusalReason | number;
   /** SERVICE_NAME_TAKEN: its service. */
   service: string;
+  /**
+   * {@link Pethost.createProject | createProject}'s linkDatabases: the database refused, of those it
+   * names.
+   */
+  databaseProjectId: string;
 }
 
 /** {@link DatabaseLinkRefusal} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const DatabaseLinkRefusal: JsonCodec<DatabaseLinkRefusal, DatabaseLinkRefusal> = {
   toJson: (value) => writeJson(wire.DatabaseLinkRefusalSchema, convert.toDatabaseLinkRefusal(value)),
   fromJson: (json) => convert.fromDatabaseLinkRefusal(readJson(wire.DatabaseLinkRefusalSchema, json)),
+};
+
+/**
+ * Detail of a FAILED_PRECONDITION error from RunProjectActionRequest.setDatabaseSize: the database
+ * cannot take that size now. Nothing changed.
+ */
+export interface DatabaseSizeRefusal {
+  reason?: DatabaseSizeRefusalReason | number;
+  /** DATA_TOO_LARGE: the Valkey's data in memory. */
+  dataBytes: bigint;
+  /** DATA_TOO_LARGE: what the size keeps, its maxmemory: 70 % of it. */
+  keepsBytes: bigint;
+  /** VOLUME_MOVED: the volume its data is in. */
+  volume: string;
+}
+
+/** {@link DatabaseSizeRefusal} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseSizeRefusal: JsonCodec<DatabaseSizeRefusal, DatabaseSizeRefusal> = {
+  toJson: (value) => writeJson(wire.DatabaseSizeRefusalSchema, convert.toDatabaseSizeRefusal(value)),
+  fromJson: (json) => convert.fromDatabaseSizeRefusal(readJson(wire.DatabaseSizeRefusalSchema, json)),
 };
 
 /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
@@ -3742,13 +3914,18 @@ export class PethostError extends Error {
    * database. Nothing changed.
    */
   declare readonly databaseLinkRefusal?: DatabaseLinkRefusal;
+  /**
+   * Detail of a FAILED_PRECONDITION error from RunProjectActionRequest.setDatabaseSize: the database
+   * cannot take that size now. Nothing changed.
+   */
+  declare readonly databaseSizeRefusal?: DatabaseSizeRefusal;
   /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
   declare readonly noMachine?: NoMachine;
 
   constructor(
     code: ErrorCode,
     message: string,
-    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
+    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly databaseSizeRefusal?: DatabaseSizeRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -3757,6 +3934,7 @@ export class PethostError extends Error {
     if (details.projectChanged) this.projectChanged = details.projectChanged;
     if (details.machineUnreachable) this.machineUnreachable = details.machineUnreachable;
     if (details.databaseLinkRefusal) this.databaseLinkRefusal = details.databaseLinkRefusal;
+    if (details.databaseSizeRefusal) this.databaseSizeRefusal = details.databaseSizeRefusal;
     if (details.noMachine) this.noMachine = details.noMachine;
   }
 }
@@ -3796,9 +3974,17 @@ export interface CallOptions {
  * - Project (projectId): a Docker Compose project, a directory with compose.yaml at its root,
  *   deployed whole. People see metadata.name.
  * - Database: a project {@link Pethost.createDatabase | createDatabase} made (Postgres or Valkey).
- *   The machine wrote its files and knows the engine. Apps reach it at the host \<projectId> once
- *   linked (its `link`, or {@link Pethost.linkDatabase | linkDatabase}); Project.database says how
- *   to sign in.
+ *   The machine wrote its files and knows the engine. An app gets one of its own:
+ *   {@link Pethost.createDatabase | createDatabase}, then the app's
+ *   {@link Pethost.createProject | createProject} with `linkDatabases`, which writes how it signs
+ *   in into its /.env. Apps that belong together may share a Postgres, each with a user of its own
+ *   (ownUser, Postgres only: a Valkey has one user), and are then backed up and restored together.
+ *   Apps reach it at the host \<projectId>. A linked app signs in as the apps' user (`app`, or a
+ *   Valkey's one user), whether linkDatabases or {@link Pethost.linkDatabase | linkDatabase}
+ *   linked it, unless linkDatabases' ownUser gave it one of its own (Database.ownUserProjects);
+ *   only linkDatabases writes how it signs in into its /.env. An app that exists:
+ *   {@link Pethost.linkDatabase | linkDatabase}, then put Project.database.connection's url into
+ *   its /.env ({@link Pethost.getProject | getProject} includeSecretValues).
  * - Service (service): one container. The person opens a shell in it from their terminal with `ssh
  *   <service>.<project_id>@<Machine.hostname>` (Service.sshCommand), once
  *   RunMachineActionRequest.addSshKey added their public key. Nobody logs in to the machine
@@ -3856,7 +4042,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.4");
+      request.header.set("User-Agent", "pethost-typescript/0.4.5");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -3950,7 +4136,16 @@ export class Pethost {
    * other compose and override files are dropped. Without one, a Dockerfile yields service `app`
    * (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
    *
-   * A database (Postgres or Valkey) is {@link Pethost.createDatabase | createDatabase}'s.
+   * A database (Postgres or Valkey) is {@link Pethost.createDatabase | createDatabase}'s: make the
+   * app's first, then link it here with `linkDatabases`, e.g. {databaseProjectId: "recipes-db",
+   * envPrefix: "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the
+   * host \<databaseProjectId> from its first start (its deploy waits for one still being made).
+   * ownUser, Postgres only (a Valkey has one user), to share a Postgres other apps use: a user and a
+   * database of its own, named as the project, which they cannot reach; all are restored together.
+   * Only linkDatabases makes one: {@link Pethost.linkDatabase | linkDatabase} links as the apps'
+   * user. envPrefix "DATABASE": the machine writes DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and
+   * _NAME into /.env, so no password is copied. A name /.env sets already is refused, as a laptop's
+   * .env in an archive may set one: send `files` with a /.env without it beside `uploadId`.
    *
    * compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is
    * recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of
@@ -4007,7 +4202,9 @@ export class Pethost {
    *
    * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation).
    * FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachineResponse.github),
-   * or no such branch or directory. A deleted project's id inherits its snapshots.
+   * or no such branch or directory; + {@link DatabaseLinkRefusal} = a database of `linkDatabases`
+   * cannot be linked to it (databaseProjectId says which), and nothing was created. A deleted
+   * project's id inherits its snapshots.
    *
    * @throws {@link PethostError} when the call fails.
    */
@@ -4089,12 +4286,33 @@ export class Pethost {
    * Run a project action.
    *
    * One project action: start, stop or restart services, recreate one, back up, restore, cancel an
-   * operation, change the source, delete an undeclared volume or the project. Recreate, back up,
-   * restore, delete and setSource's deploy run as operations, waited for (waitSeconds), as is the
-   * end of a cancelled one; the others are done on return. Answers with the project as it then is.
-   * restoreSnapshot takes the project's own snapshots only. A database's snapshot as a new database
-   * is the person's to make, in the panel (the database's Backups tab, Restore as a new database):
-   * no tool makes one.
+   * operation, change the source or a database's size, delete an undeclared volume or the project.
+   * Recreate, back up, restore, setDatabaseSize, delete and setSource's deploy run as operations
+   * (operationId), waited for (waitSeconds), as is the end of a cancelled one; the others are done
+   * on return. Answers with the project as it then is. With no services, startServices starts those
+   * with a container and restartServices the running ones. restoreSnapshot takes the project's own
+   * snapshots only: a deleted app's data in a shared Postgres is in that Postgres's snapshots. A
+   * database's snapshot as a new database beside it is
+   * {@link Pethost.createDatabase | createDatabase}'s, with fromSnapshotId.
+   *
+   * deleteProject: a final backup while backups are on, then containers, volumes, files, hosts,
+   * logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+   * stay (GetMachineResponse.deletedProjects), and restoring one brings the project back, source
+   * included; with backups off there is none, and it is gone for good. The databases it was linked
+   * to stay: delete each with its own deleteProject.
+   *
+   * setDatabaseSize gives a database another of its engine's sizes (Machine.databaseEngines; its
+   * size now is Project.database.memoryLimitBytes): the machine writes its compose.yaml anew for
+   * that size, with the settings that follow from it and the image it runs, so never edit them by
+   * hand; what else was written there goes. The database restarts, and its apps lose their
+   * connections for a few seconds: one that does not connect again shows as restarting
+   * ({@link Pethost.getMachine | getMachine}). A size changes nothing on the bill: a smaller one
+   * only leaves memory to the other projects. A Valkey whose data is more than the size keeps (its
+   * maxmemory, 70 % of the size) is refused before anything changes, and the refusal gives both
+   * figures: FAILED_PRECONDITION + {@link DatabaseSizeRefusal}, as for a Valkey that does not answer
+   * now, asked to shrink, and a database whose data is in another volume than the one the file
+   * names. FAILED_PRECONDITION alone = the project is no database. INVALID_ARGUMENT = a size its
+   * engine does not offer (the message lists them).
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -4201,9 +4419,11 @@ export class Pethost {
    *
    * A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
    * deploys it, with no address. Make it before the app that uses it: the app reaches it at the host
-   * `<project_id>` once linked (`link`, or {@link Pethost.linkDatabase | linkDatabase} after the
-   * app's {@link Pethost.createProject | createProject}), and Project.database says how to sign in.
-   * Or a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
+   * `<project_id>` once linked (the app's {@link Pethost.createProject | createProject}
+   * `linkDatabases`, which may follow at once, as its deploy waits for this one; `link` or
+   * {@link Pethost.linkDatabase | linkDatabase} for an app that exists, as the apps' user and
+   * writing nothing into its /.env), and Project.database says how to sign in. Or a copy of a
+   * database's snapshot, with passwords of its own and none of its links. Answers as
    * {@link Pethost.createProject | createProject} does. INVALID_ARGUMENT = an engine or a size
    * Machine.databaseEngines does not offer, or a projectId with "_", that is a number or that every
    * container's /etc/hosts names (it is the host name apps use). NOT_FOUND = no such snapshot or
@@ -4224,13 +4444,17 @@ export class Pethost {
   /**
    * Link projects to a database.
    *
-   * Lets projects reach a database project: inside each linked project the database is the host
-   * `<database_project_id>` at its port, and Project.database says how to sign in (its password with
-   * {@link Pethost.getProject | getProject} includeSecretValues). Takes effect at once and deploys
-   * nothing. INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such project.
-   * FAILED_PRECONDITION = databaseProjectId is no database; + {@link DatabaseLinkRefusal} = the app
-   * is a database, has a service named or aliased like the database, or there are 20 links already.
-   * Answers with the database's Project.
+   * Lets projects that exist reach a database project: inside each linked project the database is
+   * the host `<database_project_id>` at its port. Takes effect at once and deploys nothing, and
+   * writes nothing into a project's /.env: put Project.database.connection's url there
+   * ({@link Pethost.getProject | getProject} includeSecretValues) with
+   * {@link Pethost.deployProject | deployProject} `files`. A project it links signs in as the apps'
+   * user, `app` (a Valkey's one user), or as its user of its own if
+   * {@link Pethost.createProject | createProject}'s linkDatabases made it one there (ownUser), which
+   * nothing else makes. INVALID_ARGUMENT = a project in both link and unlink. NOT_FOUND = no such
+   * project. FAILED_PRECONDITION = databaseProjectId is no database; + {@link DatabaseLinkRefusal} =
+   * the app is a database, has a service named or aliased like the database, or there are 20 links
+   * already. Answers with the database's Project.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -4489,6 +4713,7 @@ function toError(error: unknown): PethostError {
       projectChanged: failed.findDetails(wire.ProjectChangedSchema).map(convert.fromProjectChanged)[0],
       machineUnreachable: failed.findDetails(wire.MachineUnreachableSchema).map(convert.fromMachineUnreachable)[0],
       databaseLinkRefusal: failed.findDetails(wire.DatabaseLinkRefusalSchema).map(convert.fromDatabaseLinkRefusal)[0],
+      databaseSizeRefusal: failed.findDetails(wire.DatabaseSizeRefusalSchema).map(convert.fromDatabaseSizeRefusal)[0],
       noMachine: failed.findDetails(wire.NoMachineSchema).map(convert.fromNoMachine)[0],
     },
     { cause: failed.cause ?? failed },

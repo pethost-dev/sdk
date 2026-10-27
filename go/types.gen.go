@@ -100,10 +100,10 @@ type Machine struct {
 	// does. Empty = alerts reach nobody.
 	AlertChannels []AlertDestination
 	// The databases the machine makes ([Client.CreateDatabase]), one per engine, with the sizes
-	// they may take.
+	// they may take ([RunProjectActionSetDatabaseSize]).
 	DatabaseEngines []DatabaseEngineOffer
-	// The sum of every service's memory limit (`mem_limit`): what the projects may take together,
-	// which MemoryTotalBytes does not reserve.
+	// The sum of every service's `mem_limit`. Limits, not a reservation: they may add up to more
+	// than MemoryTotalBytes. What the projects use is MemoryUsedBytes.
 	MemoryLimitsBytes uint64
 }
 
@@ -749,6 +749,8 @@ type Operation struct {
 	// files (a commit, an archive, a file other than /.env); else an earlier one, as after a
 	// deploy that changed only /.env or x-pethost.
 	FilesOperationID string
+	// DEPLOY of a size change ([RunProjectActionSetDatabaseSize]): the size it gave the database.
+	DatabaseMemoryLimitBytes uint64
 }
 
 type Snapshot struct {
@@ -790,7 +792,14 @@ type CreateProjectRequest struct {
 	// As [Client.DeployProject]'s OperationID.
 	OperationID string
 	// As [Client.DeployProject]'s WaitSeconds.
-	WaitSeconds *uint32
+	WaitSeconds   *uint32
+	LinkDatabases []DatabaseLinkRequest
+}
+
+type DatabaseLinkRequest struct {
+	DatabaseProjectID string
+	OwnUser           bool
+	EnvPrefix         string
 }
 
 // CreateProjectResponse is the response of [Client.CreateProject].
@@ -1009,11 +1018,12 @@ type RunProjectActionRequest struct {
 	// [RunProjectActionRestartServices], [RunProjectActionRecreateService],
 	// [RunProjectActionBackUp], [RunProjectActionRestoreSnapshot],
 	// [RunProjectActionCancelOperation], [RunProjectActionDeleteProject],
-	// [RunProjectActionSetSource] or [RunProjectActionDeleteVolume]; nil = none.
+	// [RunProjectActionSetSource], [RunProjectActionDeleteVolume] or
+	// [RunProjectActionSetDatabaseSize]; nil = none.
 	Action RunProjectActionAction
-	// As [Client.DeployProject]'s, for the actions that run as operations.
+	// As [Client.DeployProject]'s.
 	OperationID string
-	// As [Client.DeployProject]'s, for the actions that run as operations.
+	// As [Client.DeployProject]'s.
 	WaitSeconds *uint32
 }
 
@@ -1022,7 +1032,8 @@ type RunProjectActionRequest struct {
 // [RunProjectActionRestartServices], [RunProjectActionRecreateService],
 // [RunProjectActionBackUp], [RunProjectActionRestoreSnapshot],
 // [RunProjectActionCancelOperation], [RunProjectActionDeleteProject],
-// [RunProjectActionSetSource] or [RunProjectActionDeleteVolume].
+// [RunProjectActionSetSource], [RunProjectActionDeleteVolume] or
+// [RunProjectActionSetDatabaseSize].
 //
 // nil = none.
 type RunProjectActionAction interface {
@@ -1080,9 +1091,7 @@ type RunProjectActionCancelOperation CancelOperationAction
 // RunProjectActionDeleteProject is a member of [RunProjectActionAction], with the fields of
 // [DeleteProjectAction].
 //
-// An operation: a final backup while backups are on, then containers, volumes, files, hosts,
-// logs. Snapshots stay ([GetMachineResponse.DeletedProjects]), and restoring one brings the
-// project back, source included; with backups off there is none, and it is gone for good.
+// An operation: [Client.RunProjectAction]'s description says what goes and what stays.
 type RunProjectActionDeleteProject DeleteProjectAction
 
 // RunProjectActionSetSource is a member of [RunProjectActionAction], with the fields of
@@ -1100,8 +1109,14 @@ type RunProjectActionSetSource ProjectSource
 // in snapshots. [CodeFailedPrecondition] = declared or in use.
 type RunProjectActionDeleteVolume string
 
+// RunProjectActionSetDatabaseSize is a member of [RunProjectActionAction], with the fields of
+// [SetDatabaseSizeAction].
+//
+// A database's size. An operation: it restarts.
+type RunProjectActionSetDatabaseSize SetDatabaseSizeAction
+
 type ServicesAction struct {
-	// Empty = all (start: those with a container; restart: running ones).
+	// Empty = all.
 	Services []string
 }
 
@@ -1131,6 +1146,11 @@ type DeleteProjectAction struct {
 	SkipFinalBackup bool
 }
 
+type SetDatabaseSizeAction struct {
+	// One of [Machine.DatabaseEngines][].sizes.
+	MemoryLimitBytes uint64
+}
+
 // RunProjectActionResponse is the response of [Client.RunProjectAction].
 type RunProjectActionResponse struct {
 	// Set when the action runs as an operation: finished, or IN_PROGRESS when WaitSeconds ran out
@@ -1153,7 +1173,8 @@ type Database struct {
 	MajorVersion uint32
 	// What the server says it runs, e.g. "18.6". Empty = not answering.
 	ServerVersion string
-	// Its size: its service's `mem_limit` in compose.yaml.
+	// Its size: its service's `mem_limit` in compose.yaml. [RunProjectActionSetDatabaseSize]
+	// changes it.
 	MemoryLimitBytes uint64
 	// Postgres: its databases' size; Valkey: its data in memory. On disk: [Project.Volumes].
 	DataBytes uint64
@@ -1161,7 +1182,9 @@ type Database struct {
 	Connections uint32
 	// Valkey: maxclients.
 	MaxConnections uint32
-	// The projects that reach it ([Client.LinkDatabase]).
+	// The projects that reach it: [Client.CreateProject]'s [CreateProjectRequest.LinkDatabases] or
+	// [Client.LinkDatabase] linked them. Each signs in as the apps' user (connection), but those
+	// of OwnUserProjects.
 	LinkedProjects []string
 	Connection     *DatabaseConnection
 	// The service of [Project.Services] that runs the database.
@@ -1170,6 +1193,12 @@ type Database struct {
 	Volume string
 	// The console, for OpenTerminal in Service: psql signed in as the superuser, or valkey-cli.
 	ConsoleCommand []string
+	// Of LinkedProjects, those linked with [DatabaseLinkRequest.OwnUser] ([DatabaseLinkRequest]):
+	// each signs in as a user of its own, to a database of its own, both named as it, with the
+	// password in its /.env. The others sign in as the apps' user, `app` (a Valkey's `default`),
+	// whether [CreateProjectRequest.LinkDatabases] or [Client.LinkDatabase] linked them; only
+	// [CreateProjectRequest.LinkDatabases] wrote how into an app's /.env.
+	OwnUserProjects []string
 }
 
 // How a linked project signs in, as the apps' user.
@@ -1195,11 +1224,16 @@ type DatabaseSummary struct {
 	Engine       DatabaseEngine
 	MajorVersion uint32
 	// As in Database.
-	DataBytes      uint64
-	Connections    uint32
+	DataBytes   uint64
+	Connections uint32
+	// As in Database: all but OwnUserProjects sign in as the apps' user.
 	LinkedProjects []string
 	// As in Database: empty = not answering, its figures are zero.
 	ServerVersion string
+	// Its size, as in Database.
+	MemoryLimitBytes uint64
+	// Of LinkedProjects, those with [DatabaseLinkRequest.OwnUser], as in Database.
+	OwnUserProjects []string
 }
 
 // An engine the machine makes databases of ([Machine.DatabaseEngines]).
@@ -1212,6 +1246,10 @@ type DatabaseEngineOffer struct {
 	// The size [Client.CreateDatabase] gives when its MemoryLimitBytes is 0, unless it copies a
 	// snapshot.
 	DefaultMemoryLimitBytes uint64
+	// A project linked with [DatabaseLinkRequest.OwnUser] ([DatabaseLinkRequest]) gets a user and
+	// a database of its own in one of its databases, so several apps can share one. False = every
+	// app signs in as its one user, and [DatabaseLinkRequest.OwnUser] is refused (ONE_USER).
+	OwnUsers bool
 }
 
 // A size a database may take.
@@ -1253,6 +1291,8 @@ type CreateDatabaseRequest struct {
 	OperationID string
 	// As [Client.DeployProject]'s WaitSeconds.
 	WaitSeconds *uint32
+	// What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
+	Metadata *ProjectMetadata
 }
 
 // CreateDatabaseResponse is the response of [Client.CreateDatabase].
@@ -1926,6 +1966,23 @@ type DatabaseLinkRefusal struct {
 	Reason    DatabaseLinkRefusalReason
 	// SERVICE_NAME_TAKEN: its service.
 	Service string
+	// [Client.CreateProject]'s [CreateProjectRequest.LinkDatabases]: the database refused, of
+	// those it names.
+	DatabaseProjectID string
+}
+
+// DatabaseSizeRefusal is a detail of an [Error]: [Error.DatabaseSizeRefusal].
+//
+// Detail of a [CodeFailedPrecondition] error from [RunProjectActionSetDatabaseSize]: the
+// database cannot take that size now. Nothing changed.
+type DatabaseSizeRefusal struct {
+	Reason DatabaseSizeRefusalReason
+	// DATA_TOO_LARGE: the Valkey's data in memory.
+	DataBytes uint64
+	// DATA_TOO_LARGE: what the size keeps, its maxmemory: 70 % of it.
+	KeepsBytes uint64
+	// VOLUME_MOVED: the volume its data is in.
+	Volume string
 }
 
 // NoMachine is a detail of an [Error]: [Error.NoMachine].
@@ -2399,7 +2456,7 @@ func (v OperationStatus) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "DeployFailureReason(12)".
+// and prints as "DeployFailureReason(13)".
 type DeployFailureReason int32
 
 const (
@@ -2423,10 +2480,14 @@ const (
 	DeployFailureReasonUncoveredImageVolume DeployFailureReason = 10
 	// The running projects leave too little memory for a build; the message says how much.
 	DeployFailureReasonBuildMemoryUnavailable DeployFailureReason = 11
+	// Its user of its own in a linked database ([DatabaseLinkRequest.OwnUser]) could not be made:
+	// the database does not run or answer, or refused; the message says which. Start it, then
+	// deploy again.
+	DeployFailureReasonDatabaseUserFailed DeployFailureReason = 12
 )
 
-// String is the value's name as the API's documentation writes it: "BUILD_MEMORY_UNAVAILABLE"
-// for [DeployFailureReasonBuildMemoryUnavailable].
+// String is the value's name as the API's documentation writes it: "DATABASE_USER_FAILED" for
+// [DeployFailureReasonDatabaseUserFailed].
 func (v DeployFailureReason) String() string {
 	switch v {
 	case DeployFailureReasonUnspecified:
@@ -2453,6 +2514,8 @@ func (v DeployFailureReason) String() string {
 		return "UNCOVERED_IMAGE_VOLUME"
 	case DeployFailureReasonBuildMemoryUnavailable:
 		return "BUILD_MEMORY_UNAVAILABLE"
+	case DeployFailureReasonDatabaseUserFailed:
+		return "DATABASE_USER_FAILED"
 	}
 	return "DeployFailureReason(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2671,7 +2734,7 @@ func (v FileLocation) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "DatabaseLinkRefusalReason(4)".
+// and prints as "DatabaseLinkRefusalReason(6)".
 type DatabaseLinkRefusalReason int32
 
 const (
@@ -2683,10 +2746,17 @@ const (
 	DatabaseLinkRefusalReasonServiceNameTaken DatabaseLinkRefusalReason = 2
 	// The database has 20: unlink one first.
 	DatabaseLinkRefusalReasonTooManyLinks DatabaseLinkRefusalReason = 3
+	// [DatabaseLinkRequest.OwnUser] for a database whose engine has one user
+	// ([DatabaseEngineOffer.OwnUsers] false): Valkey.
+	DatabaseLinkRefusalReasonOneUser DatabaseLinkRefusalReason = 4
+	// [DatabaseLinkRequest.OwnUser] for a project whose id Postgres or the machine keeps as a user
+	// or a database (postgres, app, public, none, template0, template1, current_user,
+	// current_role, session_user, pg_…): give it another id.
+	DatabaseLinkRefusalReasonUserNameReserved DatabaseLinkRefusalReason = 5
 )
 
-// String is the value's name as the API's documentation writes it: "TOO_MANY_LINKS" for
-// [DatabaseLinkRefusalReasonTooManyLinks].
+// String is the value's name as the API's documentation writes it: "USER_NAME_RESERVED" for
+// [DatabaseLinkRefusalReasonUserNameReserved].
 func (v DatabaseLinkRefusalReason) String() string {
 	switch v {
 	case DatabaseLinkRefusalReasonUnspecified:
@@ -2697,8 +2767,45 @@ func (v DatabaseLinkRefusalReason) String() string {
 		return "SERVICE_NAME_TAKEN"
 	case DatabaseLinkRefusalReasonTooManyLinks:
 		return "TOO_MANY_LINKS"
+	case DatabaseLinkRefusalReasonOneUser:
+		return "ONE_USER"
+	case DatabaseLinkRefusalReasonUserNameReserved:
+		return "USER_NAME_RESERVED"
 	}
 	return "DatabaseLinkRefusalReason(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "DatabaseSizeRefusalReason(4)".
+type DatabaseSizeRefusalReason int32
+
+const (
+	DatabaseSizeRefusalReasonUnspecified DatabaseSizeRefusalReason = 0
+	// A Valkey whose data is more than the size keeps: take a larger size, or delete data first.
+	DatabaseSizeRefusalReasonDataTooLarge DatabaseSizeRefusalReason = 1
+	// A Valkey that does not answer now, asked to shrink: how much it holds is unknown, so try
+	// again once it runs. A larger size is never refused so: a Valkey its limit keeps stopping can
+	// be given more.
+	DatabaseSizeRefusalReasonDataUnread DatabaseSizeRefusalReason = 2
+	// Its data is in another volume (`volume`) than `data`, which the file the size writes keeps
+	// it in, so the database would start without it: change the size in its compose.yaml instead.
+	DatabaseSizeRefusalReasonVolumeMoved DatabaseSizeRefusalReason = 3
+)
+
+// String is the value's name as the API's documentation writes it: "VOLUME_MOVED" for
+// [DatabaseSizeRefusalReasonVolumeMoved].
+func (v DatabaseSizeRefusalReason) String() string {
+	switch v {
+	case DatabaseSizeRefusalReasonUnspecified:
+		return "UNSPECIFIED"
+	case DatabaseSizeRefusalReasonDataTooLarge:
+		return "DATA_TOO_LARGE"
+	case DatabaseSizeRefusalReasonDataUnread:
+		return "DATA_UNREAD"
+	case DatabaseSizeRefusalReasonVolumeMoved:
+		return "VOLUME_MOVED"
+	}
+	return "DatabaseSizeRefusalReason(" + strconv.Itoa(int(v)) + ")"
 }
 
 // The API may add values: one that this version of the package does not know keeps its number

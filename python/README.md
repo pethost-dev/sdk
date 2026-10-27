@@ -162,7 +162,7 @@ around it.
 A failed call raises a `PethostError`, and its class is the code:
 `CanceledError`, `UnknownError`, `InvalidArgumentError`, `DeadlineExceededError`, `NotFoundError`, `AlreadyExistsError`, `PermissionDeniedError`, `ResourceExhaustedError`, `FailedPreconditionError`, `AbortedError`, `OutOfRangeError`, `UnimplementedError`, `InternalError`, `UnavailableError`, `DataLossError`, `UnauthenticatedError`.
 `error.message` is prose for people. What a program branches on, beside the class, is
-`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `NoMachine`, or `None`.
+`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, or `None`.
 
 ```python
 from pethost import NotFoundError, Pethost, PethostError

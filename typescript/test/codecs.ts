@@ -558,6 +558,7 @@ import * as p from "pethost";
   m.converts("Operation.deploy_failure_reason: TIMED_OUT", { deployFailureReason: w.DeployFailureReason.TIMED_OUT }, { ...empty.Operation(), deployFailureReason: "TIMED_OUT" });
   m.converts("Operation.deploy_failure_reason: UNCOVERED_IMAGE_VOLUME", { deployFailureReason: w.DeployFailureReason.UNCOVERED_IMAGE_VOLUME }, { ...empty.Operation(), deployFailureReason: "UNCOVERED_IMAGE_VOLUME" });
   m.converts("Operation.deploy_failure_reason: BUILD_MEMORY_UNAVAILABLE", { deployFailureReason: w.DeployFailureReason.BUILD_MEMORY_UNAVAILABLE }, { ...empty.Operation(), deployFailureReason: "BUILD_MEMORY_UNAVAILABLE" });
+  m.converts("Operation.deploy_failure_reason: DATABASE_USER_FAILED", { deployFailureReason: w.DeployFailureReason.DATABASE_USER_FAILED }, { ...empty.Operation(), deployFailureReason: "DATABASE_USER_FAILED" });
   m.converts("Operation.deploy_failure_reason: a value newer than the SDK", { deployFailureReason: 9999 as w.DeployFailureReason }, { ...empty.Operation(), deployFailureReason: 9999 });
   m.refuses("Operation.deploy_failure_reason: a name newer than the SDK", { deploy_failure_reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("Operation.made_current", { madeCurrent: true }, { ...empty.Operation(), madeCurrent: true });
@@ -573,6 +574,8 @@ import * as p from "pethost";
   m.converts("Operation.changed_path_count", { changedPathCount: 1018 }, { ...empty.Operation(), changedPathCount: 1018 });
   m.converts("Operation.files_kept", { filesKept: true }, { ...empty.Operation(), filesKept: true });
   m.converts("Operation.files_operation_id", { filesOperationId: "files_operation_id" }, { ...empty.Operation(), filesOperationId: "files_operation_id" });
+  m.converts("Operation.database_memory_limit_bytes", { databaseMemoryLimitBytes: 9007199254740993n }, { ...empty.Operation(), databaseMemoryLimitBytes: 9007199254740993n });
+  m.reads("Operation.database_memory_limit_bytes: as a number", { database_memory_limit_bytes: 1021 }, { ...empty.Operation(), databaseMemoryLimitBytes: 1021n });
 }
 
 {
@@ -611,6 +614,16 @@ import * as p from "pethost";
   m.converts("CreateProjectRequest.operation_id", { operationId: "operation_id" }, { ...empty.CreateProjectRequest(), operationId: "operation_id" });
   m.converts("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { ...empty.CreateProjectRequest(), waitSeconds: 1009 });
   m.converts("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateProjectRequest(), waitSeconds: 0 });
+  m.converts("CreateProjectRequest.link_databases", { linkDatabases: [{}] }, { ...empty.CreateProjectRequest(), linkDatabases: [empty.DatabaseLinkRequest()] });
+}
+
+{
+  const m = json(p.DatabaseLinkRequest, w.DatabaseLinkRequestSchema);
+  m.converts("DatabaseLinkRequest: nothing set", {}, empty.DatabaseLinkRequest());
+  m.refuses("DatabaseLinkRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseLinkRequest.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.DatabaseLinkRequest(), databaseProjectId: "database_project_id" });
+  m.converts("DatabaseLinkRequest.own_user", { ownUser: true }, { ...empty.DatabaseLinkRequest(), ownUser: true });
+  m.converts("DatabaseLinkRequest.env_prefix", { envPrefix: "env_prefix" }, { ...empty.DatabaseLinkRequest(), envPrefix: "env_prefix" });
 }
 
 {
@@ -751,6 +764,7 @@ import * as p from "pethost";
   m.converts("RunProjectActionRequest.set_source", { action: { case: "setSource", value: {} } }, { ...empty.RunProjectActionRequest(), setSource: empty.ProjectSource() });
   m.converts("RunProjectActionRequest.delete_volume", { action: { case: "deleteVolume", value: "delete_volume" } }, { ...empty.RunProjectActionRequest(), deleteVolume: "delete_volume" });
   m.converts("RunProjectActionRequest.delete_volume: zero", { action: { case: "deleteVolume", value: "" } }, { ...empty.RunProjectActionRequest(), deleteVolume: "" });
+  m.converts("RunProjectActionRequest.set_database_size", { action: { case: "setDatabaseSize", value: {} } }, { ...empty.RunProjectActionRequest(), setDatabaseSize: empty.SetDatabaseSizeAction() });
   m.converts("RunProjectActionRequest.operation_id", { operationId: "operation_id" }, { ...empty.RunProjectActionRequest(), operationId: "operation_id" });
   m.converts("RunProjectActionRequest.wait_seconds", { waitSeconds: 1013 }, { ...empty.RunProjectActionRequest(), waitSeconds: 1013 });
   m.converts("RunProjectActionRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.RunProjectActionRequest(), waitSeconds: 0 });
@@ -800,6 +814,14 @@ import * as p from "pethost";
 }
 
 {
+  const m = json(p.SetDatabaseSizeAction, w.SetDatabaseSizeActionSchema);
+  m.converts("SetDatabaseSizeAction: nothing set", {}, empty.SetDatabaseSizeAction());
+  m.refuses("SetDatabaseSizeAction: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("SetDatabaseSizeAction.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.SetDatabaseSizeAction(), memoryLimitBytes: 9007199254740993n });
+  m.reads("SetDatabaseSizeAction.memory_limit_bytes: as a number", { memory_limit_bytes: 1001 }, { ...empty.SetDatabaseSizeAction(), memoryLimitBytes: 1001n });
+}
+
+{
   const m = json(p.RunProjectActionResponse, w.RunProjectActionResponseSchema);
   m.converts("RunProjectActionResponse: nothing set", {}, empty.RunProjectActionResponse());
   m.refuses("RunProjectActionResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
@@ -829,6 +851,7 @@ import * as p from "pethost";
   m.converts("Database.service", { service: "service" }, { ...empty.Database(), service: "service" });
   m.converts("Database.volume", { volume: "volume" }, { ...empty.Database(), volume: "volume" });
   m.converts("Database.console_command", { consoleCommand: ["console_command", ""] }, { ...empty.Database(), consoleCommand: ["console_command", ""] });
+  m.converts("Database.own_user_projects", { ownUserProjects: ["own_user_projects", ""] }, { ...empty.Database(), ownUserProjects: ["own_user_projects", ""] });
 }
 
 {
@@ -858,6 +881,9 @@ import * as p from "pethost";
   m.converts("DatabaseSummary.connections", { connections: 1004 }, { ...empty.DatabaseSummary(), connections: 1004 });
   m.converts("DatabaseSummary.linked_projects", { linkedProjects: ["linked_projects", ""] }, { ...empty.DatabaseSummary(), linkedProjects: ["linked_projects", ""] });
   m.converts("DatabaseSummary.server_version", { serverVersion: "server_version" }, { ...empty.DatabaseSummary(), serverVersion: "server_version" });
+  m.converts("DatabaseSummary.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseSummary(), memoryLimitBytes: 9007199254740993n });
+  m.reads("DatabaseSummary.memory_limit_bytes: as a number", { memory_limit_bytes: 1007 }, { ...empty.DatabaseSummary(), memoryLimitBytes: 1007n });
+  m.converts("DatabaseSummary.own_user_projects", { ownUserProjects: ["own_user_projects", ""] }, { ...empty.DatabaseSummary(), ownUserProjects: ["own_user_projects", ""] });
 }
 
 {
@@ -872,6 +898,7 @@ import * as p from "pethost";
   m.converts("DatabaseEngineOffer.sizes", { sizes: [{}] }, { ...empty.DatabaseEngineOffer(), sizes: [empty.DatabaseSizeChoice()] });
   m.converts("DatabaseEngineOffer.default_memory_limit_bytes", { defaultMemoryLimitBytes: 9007199254740993n }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 9007199254740993n });
   m.reads("DatabaseEngineOffer.default_memory_limit_bytes: as a number", { default_memory_limit_bytes: 1004 }, { ...empty.DatabaseEngineOffer(), defaultMemoryLimitBytes: 1004n });
+  m.converts("DatabaseEngineOffer.own_users", { ownUsers: true }, { ...empty.DatabaseEngineOffer(), ownUsers: true });
 }
 
 {
@@ -914,6 +941,7 @@ import * as p from "pethost";
   m.converts("CreateDatabaseRequest.operation_id", { operationId: "operation_id" }, { ...empty.CreateDatabaseRequest(), operationId: "operation_id" });
   m.converts("CreateDatabaseRequest.wait_seconds", { waitSeconds: 1007 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 1007 });
   m.converts("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 0 });
+  m.converts("CreateDatabaseRequest.metadata", { metadata: {} }, { ...empty.CreateDatabaseRequest(), metadata: empty.ProjectMetadata() });
 }
 
 {
@@ -1447,9 +1475,28 @@ import * as p from "pethost";
   m.converts("DatabaseLinkRefusal.reason: APP_IS_DATABASE", { reason: w.DatabaseLinkRefusalReason.APP_IS_DATABASE }, { ...empty.DatabaseLinkRefusal(), reason: "APP_IS_DATABASE" });
   m.converts("DatabaseLinkRefusal.reason: SERVICE_NAME_TAKEN", { reason: w.DatabaseLinkRefusalReason.SERVICE_NAME_TAKEN }, { ...empty.DatabaseLinkRefusal(), reason: "SERVICE_NAME_TAKEN" });
   m.converts("DatabaseLinkRefusal.reason: TOO_MANY_LINKS", { reason: w.DatabaseLinkRefusalReason.TOO_MANY_LINKS }, { ...empty.DatabaseLinkRefusal(), reason: "TOO_MANY_LINKS" });
+  m.converts("DatabaseLinkRefusal.reason: ONE_USER", { reason: w.DatabaseLinkRefusalReason.ONE_USER }, { ...empty.DatabaseLinkRefusal(), reason: "ONE_USER" });
+  m.converts("DatabaseLinkRefusal.reason: USER_NAME_RESERVED", { reason: w.DatabaseLinkRefusalReason.USER_NAME_RESERVED }, { ...empty.DatabaseLinkRefusal(), reason: "USER_NAME_RESERVED" });
   m.converts("DatabaseLinkRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseLinkRefusalReason }, { ...empty.DatabaseLinkRefusal(), reason: 9999 });
   m.refuses("DatabaseLinkRefusal.reason: a name newer than the SDK", { reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("DatabaseLinkRefusal.service", { service: "service" }, { ...empty.DatabaseLinkRefusal(), service: "service" });
+  m.converts("DatabaseLinkRefusal.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.DatabaseLinkRefusal(), databaseProjectId: "database_project_id" });
+}
+
+{
+  const m = json(p.DatabaseSizeRefusal, w.DatabaseSizeRefusalSchema);
+  m.converts("DatabaseSizeRefusal: nothing set", {}, empty.DatabaseSizeRefusal());
+  m.refuses("DatabaseSizeRefusal: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseSizeRefusal.reason: DATA_TOO_LARGE", { reason: w.DatabaseSizeRefusalReason.DATA_TOO_LARGE }, { ...empty.DatabaseSizeRefusal(), reason: "DATA_TOO_LARGE" });
+  m.converts("DatabaseSizeRefusal.reason: DATA_UNREAD", { reason: w.DatabaseSizeRefusalReason.DATA_UNREAD }, { ...empty.DatabaseSizeRefusal(), reason: "DATA_UNREAD" });
+  m.converts("DatabaseSizeRefusal.reason: VOLUME_MOVED", { reason: w.DatabaseSizeRefusalReason.VOLUME_MOVED }, { ...empty.DatabaseSizeRefusal(), reason: "VOLUME_MOVED" });
+  m.converts("DatabaseSizeRefusal.reason: a value newer than the SDK", { reason: 9999 as w.DatabaseSizeRefusalReason }, { ...empty.DatabaseSizeRefusal(), reason: 9999 });
+  m.refuses("DatabaseSizeRefusal.reason: a name newer than the SDK", { reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("DatabaseSizeRefusal.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.DatabaseSizeRefusal(), dataBytes: 9007199254740993n });
+  m.reads("DatabaseSizeRefusal.data_bytes: as a number", { data_bytes: 1002 }, { ...empty.DatabaseSizeRefusal(), dataBytes: 1002n });
+  m.converts("DatabaseSizeRefusal.keeps_bytes", { keepsBytes: 9007199254740993n }, { ...empty.DatabaseSizeRefusal(), keepsBytes: 9007199254740993n });
+  m.reads("DatabaseSizeRefusal.keeps_bytes: as a number", { keeps_bytes: 1003 }, { ...empty.DatabaseSizeRefusal(), keepsBytes: 1003n });
+  m.converts("DatabaseSizeRefusal.volume", { volume: "volume" }, { ...empty.DatabaseSizeRefusal(), volume: "volume" });
 }
 
 {
