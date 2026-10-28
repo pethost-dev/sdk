@@ -189,8 +189,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 - **Nightly backups:** encrypted, stored off the machine, kept for 14 days.
 - **SSH and SFTP** into any container, and a terminal in the panel.
 - **Docker Compose, as written:** a project is a Compose file, and the same file runs anywhere
-  else Docker does. A database is one click, Postgres or Valkey, with a page for connecting
-  your apps, at no extra cost.
+  else Docker does. A database is one click, Postgres, MariaDB or Valkey, with a page for
+  connecting your apps, at no extra cost.
 - **In the EU:** your data lives on your machine, and requests to your sites go straight to
   it, never through our panel.
 

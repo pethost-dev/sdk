@@ -352,6 +352,7 @@ export const DeployFailureReason = {
 /**
  * - `POSTGRES`
  * - `VALKEY`
+ * - `MARIADB`: MySQL's protocol: for an app that asks for MySQL or MariaDB.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -359,6 +360,8 @@ export type DatabaseEngine = (typeof DatabaseEngine)[keyof typeof DatabaseEngine
 export const DatabaseEngine = {
   POSTGRES: "POSTGRES",
   VALKEY: "VALKEY",
+  /** MySQL's protocol: for an app that asks for MySQL or MariaDB. */
+  MARIADB: "MARIADB",
 } as const;
 
 /**
@@ -485,9 +488,8 @@ export const FileLocation = {
  * - `TOO_MANY_LINKS`: The database has 20: unlink one first.
  * - `ONE_USER`: ownUser for a database whose engine has one user (DatabaseEngineOffer.ownUsers
  *   false): Valkey.
- * - `USER_NAME_RESERVED`: ownUser for a project whose id Postgres or the machine keeps as a user
- *   or a database (postgres, app, public, none, template0, template1, current_user, current_role,
- *   session_user, pg_…): give it another id.
+ * - `USER_NAME_RESERVED`: ownUser for a project whose id the database's engine or the machine
+ *   keeps as a user or a database of its own, as `app` (the message names it): give it another id.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -505,9 +507,8 @@ export const DatabaseLinkRefusalReason = {
   /** ownUser for a database whose engine has one user (DatabaseEngineOffer.ownUsers false): Valkey. */
   ONE_USER: "ONE_USER",
   /**
-   * ownUser for a project whose id Postgres or the machine keeps as a user or a database (postgres,
-   * app, public, none, template0, template1, current_user, current_role, session_user, pg_…): give
-   * it another id.
+   * ownUser for a project whose id the database's engine or the machine keeps as a user or a
+   * database of its own, as `app` (the message names it): give it another id.
    */
   USER_NAME_RESERVED: "USER_NAME_RESERVED",
 } as const;
@@ -2510,7 +2511,10 @@ export const RunProjectActionResponse: JsonCodec<RunProjectActionResponse, RunPr
   fromJson: (json) => convert.fromRunProjectActionResponse(readJson(wire.RunProjectActionResponseSchema, json)),
 };
 
-/** A database project: one service running Postgres or Valkey, whose files the machine wrote. */
+/**
+ * A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+ * wrote.
+ */
 export interface Database {
   engine?: DatabaseEngine | number;
   /** As it was made, e.g. 18. */
@@ -2522,7 +2526,7 @@ export interface Database {
    * changes it.
    */
   memoryLimitBytes: bigint;
-  /** Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes. */
+  /** Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes. */
   dataBytes: bigint;
   /** Open now. */
   connections: number;
@@ -2539,7 +2543,10 @@ export interface Database {
   service: string;
   /** The volume of Project.volumes that holds its data. */
   volume: string;
-  /** The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli. */
+  /**
+   * The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+   * valkey-cli.
+   */
   consoleCommand: string[];
   /**
    * Of linkedProjects, those linked with ownUser ({@link DatabaseLinkRequestInput}): each signs in
@@ -2573,7 +2580,10 @@ export interface DatabaseConnection {
    * password.
    */
   url: string;
-  /** As url, at localhost: what the SSH tunnel to its service gives (Service.sshCommand). */
+  /**
+   * As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+   * socket): what the SSH tunnel to its service gives (Service.sshCommand).
+   */
   localUrl: string;
 }
 
@@ -3557,10 +3567,10 @@ export const PathDownload: JsonCodec<PathDownloadInput, PathDownloadInput> = {
   fromJson: (json) => convert.fromPathDownload(readJson(wire.PathDownloadSchema, json)),
 };
 
-/** A database project's dump: Postgres's in its custom format, Valkey's .rdb. */
+/** A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb. */
 export interface DatabaseDumpInput {
   projectId?: string | undefined;
-  /** Postgres: the database to dump. Empty = "app", the apps'. */
+  /** Postgres, MariaDB: the database to dump. Empty = "app", the apps'. */
   database?: string | undefined;
 }
 
@@ -3595,7 +3605,7 @@ export interface CreateTransferResponse {
   /**
    * download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
    * after the project and its service or volume. downloadDatabase: "\<projectId>-\<database>.dump"
-   * or "\<projectId>.rdb". Empty for an upload.
+   * (Postgres), "\<projectId>-\<database>.sql" (MariaDB) or "\<projectId>.rdb". Empty for an upload.
    */
   fileName: string;
   /**
@@ -3973,18 +3983,19 @@ export interface CallOptions {
  *
  * - Project (projectId): a Docker Compose project, a directory with compose.yaml at its root,
  *   deployed whole. People see metadata.name.
- * - Database: a project {@link Pethost.createDatabase | createDatabase} made (Postgres or Valkey).
- *   The machine wrote its files and knows the engine. An app gets one of its own:
- *   {@link Pethost.createDatabase | createDatabase}, then the app's
- *   {@link Pethost.createProject | createProject} with `linkDatabases`, which writes how it signs
- *   in into its /.env. Apps that belong together may share a Postgres, each with a user of its own
- *   (ownUser, Postgres only: a Valkey has one user), and are then backed up and restored together.
- *   Apps reach it at the host \<projectId>. A linked app signs in as the apps' user (`app`, or a
- *   Valkey's one user), whether linkDatabases or {@link Pethost.linkDatabase | linkDatabase}
- *   linked it, unless linkDatabases' ownUser gave it one of its own (Database.ownUserProjects);
- *   only linkDatabases writes how it signs in into its /.env. An app that exists:
- *   {@link Pethost.linkDatabase | linkDatabase}, then put Project.database.connection's url into
- *   its /.env ({@link Pethost.getProject | getProject} includeSecretValues).
+ * - Database: a project {@link Pethost.createDatabase | createDatabase} made (Postgres; MariaDB,
+ *   for an app that asks for MySQL or MariaDB; or Valkey). The machine wrote its files and knows
+ *   the engine. An app gets one of its own: {@link Pethost.createDatabase | createDatabase}, then
+ *   the app's {@link Pethost.createProject | createProject} with `linkDatabases`, which writes how
+ *   it signs in into its /.env. Apps that belong together may share one, each with a user of its
+ *   own (ownUser, on an engine whose offer has ownUsers: Postgres, MariaDB; a Valkey has one
+ *   user), and are then backed up and restored together. Apps reach it at the host \<projectId>. A
+ *   linked app signs in as the apps' user (`app`, or a Valkey's one user), whether linkDatabases
+ *   or {@link Pethost.linkDatabase | linkDatabase} linked it, unless linkDatabases' ownUser gave
+ *   it one of its own (Database.ownUserProjects); only linkDatabases writes how it signs in into
+ *   its /.env. An app that exists: {@link Pethost.linkDatabase | linkDatabase}, then put
+ *   Project.database.connection's url into its /.env ({@link Pethost.getProject | getProject}
+ *   includeSecretValues).
  * - Service (service): one container. The person opens a shell in it from their terminal with `ssh
  *   <service>.<project_id>@<Machine.hostname>` (Service.sshCommand), once
  *   RunMachineActionRequest.addSshKey added their public key. Nobody logs in to the machine
@@ -4042,7 +4053,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.5");
+      request.header.set("User-Agent", "pethost-typescript/0.4.6");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -4136,16 +4147,17 @@ export class Pethost {
    * other compose and override files are dropped. Without one, a Dockerfile yields service `app`
    * (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of its last stage).
    *
-   * A database (Postgres or Valkey) is {@link Pethost.createDatabase | createDatabase}'s: make the
-   * app's first, then link it here with `linkDatabases`, e.g. {databaseProjectId: "recipes-db",
-   * envPrefix: "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the
-   * host \<databaseProjectId> from its first start (its deploy waits for one still being made).
-   * ownUser, Postgres only (a Valkey has one user), to share a Postgres other apps use: a user and a
-   * database of its own, named as the project, which they cannot reach; all are restored together.
-   * Only linkDatabases makes one: {@link Pethost.linkDatabase | linkDatabase} links as the apps'
-   * user. envPrefix "DATABASE": the machine writes DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and
-   * _NAME into /.env, so no password is copied. A name /.env sets already is refused, as a laptop's
-   * .env in an archive may set one: send `files` with a /.env without it beside `uploadId`.
+   * A database (Postgres, MariaDB or Valkey) is {@link Pethost.createDatabase | createDatabase}'s:
+   * make the app's first, then link it here with `linkDatabases`, e.g. {databaseProjectId:
+   * "recipes-db", envPrefix: "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches
+   * each at the host \<databaseProjectId> from its first start (its deploy waits for one still being
+   * made). ownUser, on an engine whose offer has ownUsers (Postgres, MariaDB; a Valkey has one
+   * user), to share a database other apps use: a user and a database of its own, named as the
+   * project, which they cannot reach; all are restored together. Only linkDatabases makes one:
+   * {@link Pethost.linkDatabase | linkDatabase} links as the apps' user. envPrefix "DATABASE": the
+   * machine writes DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password
+   * is copied. A name /.env sets already is refused, as a laptop's .env in an archive may set one:
+   * send `files` with a /.env without it beside `uploadId`.
    *
    * compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it is
    * recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a host of
@@ -4291,12 +4303,12 @@ export class Pethost {
    * (operationId), waited for (waitSeconds), as is the end of a cancelled one; the others are done
    * on return. Answers with the project as it then is. With no services, startServices starts those
    * with a container and restartServices the running ones. restoreSnapshot takes the project's own
-   * snapshots only: a deleted app's data in a shared Postgres is in that Postgres's snapshots. A
+   * snapshots only: a deleted app's data in a shared database is in that database's snapshots. A
    * database's snapshot as a new database beside it is
    * {@link Pethost.createDatabase | createDatabase}'s, with fromSnapshotId.
    *
    * deleteProject: a final backup while backups are on, then containers, volumes, files, hosts,
-   * logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+   * logs, and an app's user and database of its own in a shared database, data and all. Snapshots
    * stay (GetMachineResponse.deletedProjects), and restoring one brings the project back, source
    * included; with backups off there is none, and it is gone for good. The databases it was linked
    * to stay: delete each with its own deleteProject.
@@ -4417,17 +4429,17 @@ export class Pethost {
   /**
    * Create a database.
    *
-   * A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
-   * deploys it, with no address. Make it before the app that uses it: the app reaches it at the host
-   * `<project_id>` once linked (the app's {@link Pethost.createProject | createProject}
-   * `linkDatabases`, which may follow at once, as its deploy waits for this one; `link` or
-   * {@link Pethost.linkDatabase | linkDatabase} for an app that exists, as the apps' user and
-   * writing nothing into its /.env), and Project.database says how to sign in. Or a copy of a
-   * database's snapshot, with passwords of its own and none of its links. Answers as
-   * {@link Pethost.createProject | createProject} does. INVALID_ARGUMENT = an engine or a size
-   * Machine.databaseEngines does not offer, or a projectId with "_", that is a number or that every
-   * container's /etc/hosts names (it is the host name apps use). NOT_FOUND = no such snapshot or
-   * app. FAILED_PRECONDITION = the snapshot is of no database of that engine; +
+   * A database project, Postgres, MariaDB (for an app that asks for MySQL or MariaDB) or Valkey: the
+   * machine writes its compose.yaml and /.env and deploys it, with no address. Make it before the
+   * app that uses it: the app reaches it at the host `<project_id>` once linked (the app's
+   * {@link Pethost.createProject | createProject} `linkDatabases`, which may follow at once, as its
+   * deploy waits for this one; `link` or {@link Pethost.linkDatabase | linkDatabase} for an app that
+   * exists, as the apps' user and writing nothing into its /.env), and Project.database says how to
+   * sign in. Or a copy of a database's snapshot, with passwords of its own and none of its links.
+   * Answers as {@link Pethost.createProject | createProject} does. INVALID_ARGUMENT = an engine or a
+   * size Machine.databaseEngines does not offer, or a projectId with "_", that is a number or that
+   * every container's /etc/hosts names (it is the host name apps use). NOT_FOUND = no such snapshot
+   * or app. FAILED_PRECONDITION = the snapshot is of no database of that engine; +
    * {@link DatabaseLinkRefusal} = an app of `link` cannot be linked, and nothing was created.
    *
    * @throws {@link PethostError} when the call fails.
@@ -4528,16 +4540,18 @@ export class Pethost {
    *   parents.
    * - download: a file, or a directory as a .tar (fileName).
    * - downloadDatabase: a database project's dump, made as it downloads: Postgres's for pg_restore
-   *   (roles are not in it), Valkey's .rdb. One at a time per database.
+   *   (roles are not in it), MariaDB's SQL of one database for its console, `mariadb <database> <
+   *   file` (users are not in it), Valkey's .rdb. One at a time per database.
    *
    * Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2 GiB,
    * 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed transfer keeps
    * nothing: get a new URL. Errors as {@link Pethost.readPath | readPath}; FAILED_PRECONDITION also
    * = downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc or
    * /sys, the hostname not yet certified, or a dump of a project that is no database or is not
-   * running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
-   * databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres runs
-   * but does not answer yet: try again shortly.
+   * running, or of a MariaDB that refuses the machine's sign-in (the message says how to let it in
+   * again). NOT_FOUND also = a Postgres or MariaDB database the server lacks (the message lists its
+   * databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres or
+   * MariaDB runs but does not answer yet: try again shortly.
    *
    * Destructive: it may delete or overwrite something.
    *

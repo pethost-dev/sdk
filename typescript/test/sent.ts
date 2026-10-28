@@ -344,6 +344,7 @@ import type * as p from "pethost";
   m.sends("CreateDatabaseRequest.project_id: zero is not sent", { projectId: "" }, {});
   m.sends("CreateDatabaseRequest.engine: POSTGRES", { engine: "POSTGRES" }, { engine: w.DatabaseEngine.POSTGRES });
   m.sends("CreateDatabaseRequest.engine: VALKEY", { engine: "VALKEY" }, { engine: w.DatabaseEngine.VALKEY });
+  m.sends("CreateDatabaseRequest.engine: MARIADB", { engine: "MARIADB" }, { engine: w.DatabaseEngine.MARIADB });
   m.sends("CreateDatabaseRequest.memory_limit_bytes", { memoryLimitBytes: 9007199254740993n }, { memoryLimitBytes: 9007199254740993n });
   m.sends("CreateDatabaseRequest.memory_limit_bytes: zero is not sent", { memoryLimitBytes: 0n }, {});
   m.sends("CreateDatabaseRequest.from_snapshot_id", { fromSnapshotId: "from_snapshot_id" }, { fromSnapshotId: "from_snapshot_id" });

@@ -28,13 +28,14 @@ Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 
 - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
   deployed whole. People see metadata.name.
-- Database: a project create_database made (Postgres or Valkey). The machine wrote its files and
-  knows the engine. An app gets one of its own: create_database, then the app's create_project
-  with `link_databases`, which writes how it signs in into its /.env. Apps that belong together
-  may share a Postgres, each with a user of its own (own_user, Postgres only: a Valkey has one
-  user), and are then backed up and restored together. Apps reach it at the host <project_id>. A
-  linked app signs in as the apps' user (`app`, or a Valkey's one user), whether link_databases
-  or link_database linked it, unless link_databases' own_user gave it one of its own
+- Database: a project create_database made (Postgres; MariaDB, for an app that asks for MySQL or
+  MariaDB; or Valkey). The machine wrote its files and knows the engine. An app gets one of its
+  own: create_database, then the app's create_project with `link_databases`, which writes how it
+  signs in into its /.env. Apps that belong together may share one, each with a user of its own
+  (own_user, on an engine whose offer has own_users: Postgres, MariaDB; a Valkey has one user),
+  and are then backed up and restored together. Apps reach it at the host <project_id>. A linked
+  app signs in as the apps' user (`app`, or a Valkey's one user), whether link_databases or
+  link_database linked it, unless link_databases' own_user gave it one of its own
   (Database.own_user_projects); only link_databases writes how it signs in into its /.env. An
   app that exists: link_database, then put Project.database.connection's url into its /.env
   (get_project include_secret_values).

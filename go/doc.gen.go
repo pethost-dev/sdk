@@ -67,14 +67,16 @@
 //
 //   - Project (ProjectID): a Docker Compose project, a directory with compose.yaml at its
 //     root, deployed whole. People see Metadata.Name.
-//   - Database: a project [Client.CreateDatabase] made (Postgres or Valkey). The machine wrote
-//     its files and knows the engine. An app gets one of its own: [Client.CreateDatabase],
-//     then the app's [Client.CreateProject] with [CreateProjectRequest.LinkDatabases], which
-//     writes how it signs in into its /.env. Apps that belong together may share a Postgres,
-//     each with a user of its own ([DatabaseLinkRequest.OwnUser], Postgres only: a Valkey has
-//     one user), and are then backed up and restored together. Apps reach it at the host
-//     <ProjectID>. A linked app signs in as the apps' user (`app`, or a Valkey's one user),
-//     whether [CreateProjectRequest.LinkDatabases] or [Client.LinkDatabase] linked it, unless
+//   - Database: a project [Client.CreateDatabase] made (Postgres; MariaDB, for an app that
+//     asks for MySQL or MariaDB; or Valkey). The machine wrote its files and knows the engine.
+//     An app gets one of its own: [Client.CreateDatabase], then the app's
+//     [Client.CreateProject] with [CreateProjectRequest.LinkDatabases], which writes how it
+//     signs in into its /.env. Apps that belong together may share one, each with a user of
+//     its own ([DatabaseLinkRequest.OwnUser], on an engine whose offer has
+//     [DatabaseEngineOffer.OwnUsers]: Postgres, MariaDB; a Valkey has one user), and are then
+//     backed up and restored together. Apps reach it at the host <ProjectID>. A linked app
+//     signs in as the apps' user (`app`, or a Valkey's one user), whether
+//     [CreateProjectRequest.LinkDatabases] or [Client.LinkDatabase] linked it, unless
 //     [CreateProjectRequest.LinkDatabases]' [DatabaseLinkRequest.OwnUser] gave it one of its
 //     own ([Database.OwnUserProjects]); only [CreateProjectRequest.LinkDatabases] writes how
 //     it signs in into its /.env. An app that exists: [Client.LinkDatabase], then put

@@ -365,11 +365,19 @@ class DeployFailureReason(OpenEnum):
 
 
 class DatabaseEngine(OpenEnum):
+    """
+    Attributes:
+        MARIADB: MySQL's protocol: for an app that asks for MySQL or MariaDB.
+    """
+
     UNSPECIFIED = 0
 
     POSTGRES = 1
 
     VALKEY = 2
+
+    MARIADB = 3
+    """MySQL's protocol: for an app that asks for MySQL or MariaDB."""
 
 
 class TrafficMetric(OpenEnum):
@@ -502,9 +510,8 @@ class DatabaseLinkRefusalReason(OpenEnum):
             the service or its alias.
         TOO_MANY_LINKS: The database has 20: unlink one first.
         ONE_USER: own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey.
-        USER_NAME_RESERVED: own_user for a project whose id Postgres or the machine keeps as a user or a database
-            (postgres, app, public, none, template0, template1, current_user, current_role,
-            session_user, pg_…): give it another id.
+        USER_NAME_RESERVED: own_user for a project whose id the database's engine or the machine keeps as a user or a
+            database of its own, as `app` (the message names it): give it another id.
     """
 
     UNSPECIFIED = 0
@@ -524,9 +531,8 @@ class DatabaseLinkRefusalReason(OpenEnum):
     """own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey."""
 
     USER_NAME_RESERVED = 5
-    """own_user for a project whose id Postgres or the machine keeps as a user or a database
-    (postgres, app, public, none, template0, template1, current_user, current_role,
-    session_user, pg_…): give it another id.
+    """own_user for a project whose id the database's engine or the machine keeps as a user or a
+    database of its own, as `app` (the message names it): give it another id.
     """
 
 
@@ -3518,21 +3524,23 @@ class RunProjectActionResponse:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Database:
-    """A database project: one service running Postgres or Valkey, whose files the machine wrote.
+    """A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+    wrote.
 
     Attributes:
         major_version: As it was made, e.g. 18.
         server_version: What the server says it runs, e.g. "18.6". Empty = not answering.
         memory_limit_bytes: Its size: its service's `mem_limit` in compose.yaml. run_project_action(set_database_size=)
             changes it.
-        data_bytes: Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+        data_bytes: Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
         connections: Open now.
         max_connections: Valkey: maxclients.
         linked_projects: The projects that reach it: create_project's link_databases or link_database linked them. Each
             signs in as the apps' user (connection), but those of own_user_projects.
         service: The service of Project.services that runs the database.
         volume: The volume of Project.volumes that holds its data.
-        console_command: The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+        console_command: The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+            valkey-cli.
         own_user_projects: Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
             of its own, to a database of its own, both named as it, with the password in its /.env. The
             others sign in as the apps' user, `app` (a Valkey's `default`), whether link_databases or
@@ -3553,7 +3561,7 @@ class Database:
     """
 
     data_bytes: int = 0
-    """Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes."""
+    """Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes."""
 
     connections: int = 0
     """Open now."""
@@ -3575,7 +3583,9 @@ class Database:
     """The volume of Project.volumes that holds its data."""
 
     console_command: Sequence[str] = ()
-    """The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli."""
+    """The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+    valkey-cli.
+    """
 
     own_user_projects: Sequence[str] = ()
     """Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
@@ -3618,7 +3628,8 @@ class DatabaseConnection:
         password: Only with get_project's include_secret_values.
         url: For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
             the password.
-        local_url: As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+        local_url: As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+            socket): what the SSH tunnel to its service gives (Service.ssh_command).
     """
 
     host: str = ""
@@ -3641,7 +3652,9 @@ class DatabaseConnection:
     """
 
     local_url: str = ""
-    """As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command)."""
+    """As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+    socket): what the SSH tunnel to its service gives (Service.ssh_command).
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5291,16 +5304,16 @@ class PathDownload:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DatabaseDump:
-    """A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+    """A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 
     Attributes:
-        database: Postgres: the database to dump. Empty = "app", the apps'.
+        database: Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
     """
 
     project_id: str = ""
 
     database: str = ""
-    """Postgres: the database to dump. Empty = "app", the apps'."""
+    """Postgres, MariaDB: the database to dump. Empty = "app", the apps'."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5342,7 +5355,8 @@ class CreateTransferResponse:
         replaces: upload_file: a file is at path now; the upload replaces it.
         file_name: download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
             after the project and its service or volume. download_database: "<project_id>-<database>.dump"
-            or "<project_id>.rdb". Empty for an upload.
+            (Postgres), "<project_id>-<database>.sql" (MariaDB) or "<project_id>.rdb". Empty for an
+            upload.
         exclude_names: upload_archive: the names `command` leaves out of the archive, wherever they lie in the
             directory. A program that packs the directory itself leaves out the same.
     """
@@ -5375,7 +5389,8 @@ class CreateTransferResponse:
     file_name: str = ""
     """download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
     after the project and its service or volume. download_database: "<project_id>-<database>.dump"
-    or "<project_id>.rdb". Empty for an upload.
+    (Postgres), "<project_id>-<database>.sql" (MariaDB) or "<project_id>.rdb". Empty for an
+    upload.
     """
 
     exclude_names: Sequence[str] = ()

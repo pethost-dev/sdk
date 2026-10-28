@@ -26496,7 +26496,8 @@ impl ::serde::Serialize for RunProjectActionResponseOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-/// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+/// A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+/// wrote.
 #[derive(Clone, Debug, Default)]
 pub struct DatabaseView<'a> {
     /// Field 1: `engine`
@@ -26514,7 +26515,7 @@ pub struct DatabaseView<'a> {
     ///
     /// Field 4: `memory_limit_bytes`
     pub memory_limit_bytes: ::core::option::Option<u64>,
-    /// Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+    /// Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
     ///
     /// Field 5: `data_bytes`
     pub data_bytes: ::core::option::Option<u64>,
@@ -26543,7 +26544,8 @@ pub struct DatabaseView<'a> {
     ///
     /// Field 11: `volume`
     pub volume: ::core::option::Option<&'a str>,
-    /// The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+    /// The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+    /// valkey-cli.
     ///
     /// Field 12: `console_command`
     pub console_command: ::buffa::RepeatedView<'a, &'a str>,
@@ -27067,7 +27069,7 @@ impl DatabaseOwnedView {
     pub fn memory_limit_bytes(&self) -> ::core::option::Option<u64> {
         self.0.reborrow().memory_limit_bytes
     }
-    /// Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+    /// Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
     ///
     /// Field 5: `data_bytes`
     #[must_use]
@@ -27119,7 +27121,8 @@ impl DatabaseOwnedView {
     pub fn volume(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().volume
     }
-    /// The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+    /// The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+    /// valkey-cli.
     ///
     /// Field 12: `console_command`
     #[must_use]
@@ -27193,7 +27196,8 @@ pub struct DatabaseConnectionView<'a> {
     ///
     /// Field 6: `url`
     pub url: ::core::option::Option<&'a str>,
-    /// As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+    /// As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+    /// socket): what the SSH tunnel to its service gives (Service.ssh_command).
     ///
     /// Field 7: `local_url`
     pub local_url: ::core::option::Option<&'a str>,
@@ -27549,7 +27553,8 @@ impl DatabaseConnectionOwnedView {
     pub fn url(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().url
     }
-    /// As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+    /// As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+    /// socket): what the SSH tunnel to its service gives (Service.ssh_command).
     ///
     /// Field 7: `local_url`
     #[must_use]
@@ -30874,15 +30879,18 @@ pub struct GetDatabaseStatsResponseView<'a> {
         'a,
         super::super::__buffa::view::DatabaseStatsBucketView<'a>,
     >,
-    /// The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
-    /// $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+    /// The 10 busiest of the range in statement_order. Postgres's and MariaDB's text is normalized,
+    /// its values $1, $2… or ?, and empty for one the server no longer has, for all while it does not
+    /// answer, and for MariaDB's prepared ones (kind PREPARED); Valkey's is the command. Untrusted.
     ///
     /// Field 6: `statements`
     pub statements: ::buffa::RepeatedView<
         'a,
         super::super::__buffa::view::DatabaseStatementView<'a>,
     >,
-    /// False = Postgres's pg_stat_statements does not answer.
+    /// False = the server says it counts no statements now: Postgres's pg_stat_statements does not
+    /// answer, or MariaDB's performance_schema or its digests are off. False too while the server
+    /// does not answer (activity absent), which says nothing of them.
     ///
     /// Field 7: `statements_tracked`
     pub statements_tracked: ::core::option::Option<bool>,
@@ -31501,8 +31509,9 @@ impl GetDatabaseStatsResponseOwnedView {
     > {
         &self.0.reborrow().buckets
     }
-    /// The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
-    /// $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+    /// The 10 busiest of the range in statement_order. Postgres's and MariaDB's text is normalized,
+    /// its values $1, $2… or ?, and empty for one the server no longer has, for all while it does not
+    /// answer, and for MariaDB's prepared ones (kind PREPARED); Valkey's is the command. Untrusted.
     ///
     /// Field 6: `statements`
     #[must_use]
@@ -31514,7 +31523,9 @@ impl GetDatabaseStatsResponseOwnedView {
     > {
         &self.0.reborrow().statements
     }
-    /// False = Postgres's pg_stat_statements does not answer.
+    /// False = the server says it counts no statements now: Postgres's pg_stat_statements does not
+    /// answer, or MariaDB's performance_schema or its digests are off. False too while the server
+    /// does not answer (activity absent), which says nothing of them.
     ///
     /// Field 7: `statements_tracked`
     #[must_use]
@@ -31967,6 +31978,10 @@ pub struct DatabaseStatsView<'a> {
     pub valkey: ::buffa::MessageFieldView<
         super::super::__buffa::view::ValkeyStatsView<'a>,
     >,
+    /// Field 13: `mariadb`
+    pub mariadb: ::buffa::MessageFieldView<
+        super::super::__buffa::view::MariadbStatsView<'a>,
+    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for DatabaseStatsView<'a> {
@@ -32106,6 +32121,27 @@ impl<'a> ::buffa::MessageView<'a> for DatabaseStatsView<'a> {
                     }
                 }
             }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.mariadb.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.mariadb = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::MariadbStatsView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -32180,6 +32216,15 @@ impl<'a> ::buffa::MessageView<'a> for DatabaseStatsView<'a> {
                 }
                 None => ::buffa::MessageField::none(),
             },
+            mariadb: match self.mariadb.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::MariadbStats,
+                        ::buffa::Inline<super::super::MariadbStats>,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -32237,6 +32282,14 @@ impl<'a> ::buffa::ViewEncode<'a> for DatabaseStatsView<'a> {
         if self.valkey.is_set() {
             let __slot = __cache.reserve();
             let inner_size = self.valkey.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if self.mariadb.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.mariadb.compute_size(__cache);
             __cache.set(__slot, inner_size);
             size
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
@@ -32303,6 +32356,14 @@ impl<'a> ::buffa::ViewEncode<'a> for DatabaseStatsView<'a> {
                 buf,
             );
             self.valkey.write_to(__cache, buf);
+        }
+        if self.mariadb.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                13u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.mariadb.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -32396,6 +32457,11 @@ impl<'__a> ::serde::Serialize for DatabaseStatsView<'__a> {
         {
             if let ::core::option::Option::Some(__v) = self.valkey.as_option() {
                 __map.serialize_entry("valkey", __v)?;
+            }
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.mariadb.as_option() {
+                __map.serialize_entry("mariadb", __v)?;
             }
         }
         __map.end()
@@ -32566,6 +32632,13 @@ impl DatabaseStatsOwnedView {
     ) -> &::buffa::MessageFieldView<super::super::__buffa::view::ValkeyStatsView<'_>> {
         &self.0.reborrow().valkey
     }
+    /// Field 13: `mariadb`
+    #[must_use]
+    pub fn mariadb(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::MariadbStatsView<'_>> {
+        &self.0.reborrow().mariadb
+    }
 }
 impl ::core::convert::From<::buffa::OwnedView<DatabaseStatsView<'static>>>
 for DatabaseStatsOwnedView {
@@ -32607,11 +32680,11 @@ pub struct DatabaseCommandStatsView<'a> {
     pub calls: ::core::option::Option<u64>,
     /// Field 3: `total_time_ms`
     pub total_time_ms: ::core::option::Option<f64>,
-    /// Postgres.
+    /// Postgres, MariaDB.
     ///
     /// Field 4: `rows`
     pub rows: ::core::option::Option<u64>,
-    /// Valkey.
+    /// Valkey, MariaDB.
     ///
     /// Field 5: `failed_calls`
     pub failed_calls: ::core::option::Option<u64>,
@@ -32925,14 +32998,14 @@ impl DatabaseCommandStatsOwnedView {
     pub fn total_time_ms(&self) -> ::core::option::Option<f64> {
         self.0.reborrow().total_time_ms
     }
-    /// Postgres.
+    /// Postgres, MariaDB.
     ///
     /// Field 4: `rows`
     #[must_use]
     pub fn rows(&self) -> ::core::option::Option<u64> {
         self.0.reborrow().rows
     }
-    /// Valkey.
+    /// Valkey, MariaDB.
     ///
     /// Field 5: `failed_calls`
     #[must_use]
@@ -34179,9 +34252,639 @@ impl ::serde::Serialize for ValkeyStatsOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
+/// The whole server's counters; rows_read and tmp_disk_tables count its statements but the
+/// machine's, the prepared ones' included, while statements are tracked.
+#[derive(Clone, Debug, Default)]
+pub struct MariadbStatsView<'a> {
+    /// Read from its buffer pool.
+    ///
+    /// Field 1: `pages_hit`
+    pub pages_hit: ::core::option::Option<u64>,
+    /// Read from disk.
+    ///
+    /// Field 2: `pages_read`
+    pub pages_read: ::core::option::Option<u64>,
+    /// Examined by its statements.
+    ///
+    /// Field 3: `rows_read`
+    pub rows_read: ::core::option::Option<u64>,
+    /// The rows written to its tables, by how.
+    ///
+    /// Field 4: `rows_inserted`
+    pub rows_inserted: ::core::option::Option<u64>,
+    /// Field 5: `rows_updated`
+    pub rows_updated: ::core::option::Option<u64>,
+    /// Field 6: `rows_deleted`
+    pub rows_deleted: ::core::option::Option<u64>,
+    /// Field 7: `deadlocks`
+    pub deadlocks: ::core::option::Option<u64>,
+    /// Field 8: `row_lock_waits`
+    pub row_lock_waits: ::core::option::Option<u64>,
+    /// Written to the redo log.
+    ///
+    /// Field 9: `redo_bytes`
+    pub redo_bytes: ::core::option::Option<u64>,
+    /// Temporary tables written to disk.
+    ///
+    /// Field 10: `tmp_disk_tables`
+    pub tmp_disk_tables: ::core::option::Option<u64>,
+    /// Sessions running a statement.
+    ///
+    /// Field 11: `active_max`
+    pub active_max: ::core::option::Option<u32>,
+    /// Field 12: `idle_in_transaction_max`
+    pub idle_in_transaction_max: ::core::option::Option<u32>,
+    /// On a lock.
+    ///
+    /// Field 13: `waiting_max`
+    pub waiting_max: ::core::option::Option<u32>,
+    /// Field 14: `longest_transaction_seconds_max`
+    pub longest_transaction_seconds_max: ::core::option::Option<u32>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for MariadbStatsView<'a> {
+    type Owned = super::super::MariadbStats;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.pages_hit = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.pages_read = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.rows_read = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.rows_inserted = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.rows_updated = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.rows_deleted = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.deadlocks = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.row_lock_waits = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.redo_bytes = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            10u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.tmp_disk_tables = Some(::buffa::types::decode_uint64(&mut cur)?);
+            }
+            11u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.active_max = Some(::buffa::types::decode_uint32(&mut cur)?);
+            }
+            12u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.idle_in_transaction_max = Some(
+                    ::buffa::types::decode_uint32(&mut cur)?,
+                );
+            }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.waiting_max = Some(::buffa::types::decode_uint32(&mut cur)?);
+            }
+            14u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.longest_transaction_seconds_max = Some(
+                    ::buffa::types::decode_uint32(&mut cur)?,
+                );
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::MariadbStats, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::MariadbStats, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::MariadbStats {
+            pages_hit: self.pages_hit,
+            pages_read: self.pages_read,
+            rows_read: self.rows_read,
+            rows_inserted: self.rows_inserted,
+            rows_updated: self.rows_updated,
+            rows_deleted: self.rows_deleted,
+            deadlocks: self.deadlocks,
+            row_lock_waits: self.row_lock_waits,
+            redo_bytes: self.redo_bytes,
+            tmp_disk_tables: self.tmp_disk_tables,
+            active_max: self.active_max,
+            idle_in_transaction_max: self.idle_in_transaction_max,
+            waiting_max: self.waiting_max,
+            longest_transaction_seconds_max: self.longest_transaction_seconds_max,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for MariadbStatsView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(v) = self.pages_hit {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.pages_read {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_read {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_inserted {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_updated {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_deleted {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.deadlocks {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.row_lock_waits {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.redo_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.tmp_disk_tables {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.active_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.idle_in_transaction_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.waiting_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.longest_transaction_seconds_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.pages_hit {
+            ::buffa::types::put_uint64_field(1u32, v, buf);
+        }
+        if let Some(v) = self.pages_read {
+            ::buffa::types::put_uint64_field(2u32, v, buf);
+        }
+        if let Some(v) = self.rows_read {
+            ::buffa::types::put_uint64_field(3u32, v, buf);
+        }
+        if let Some(v) = self.rows_inserted {
+            ::buffa::types::put_uint64_field(4u32, v, buf);
+        }
+        if let Some(v) = self.rows_updated {
+            ::buffa::types::put_uint64_field(5u32, v, buf);
+        }
+        if let Some(v) = self.rows_deleted {
+            ::buffa::types::put_uint64_field(6u32, v, buf);
+        }
+        if let Some(v) = self.deadlocks {
+            ::buffa::types::put_uint64_field(7u32, v, buf);
+        }
+        if let Some(v) = self.row_lock_waits {
+            ::buffa::types::put_uint64_field(8u32, v, buf);
+        }
+        if let Some(v) = self.redo_bytes {
+            ::buffa::types::put_uint64_field(9u32, v, buf);
+        }
+        if let Some(v) = self.tmp_disk_tables {
+            ::buffa::types::put_uint64_field(10u32, v, buf);
+        }
+        if let Some(v) = self.active_max {
+            ::buffa::types::put_uint32_field(11u32, v, buf);
+        }
+        if let Some(v) = self.idle_in_transaction_max {
+            ::buffa::types::put_uint32_field(12u32, v, buf);
+        }
+        if let Some(v) = self.waiting_max {
+            ::buffa::types::put_uint32_field(13u32, v, buf);
+        }
+        if let Some(v) = self.longest_transaction_seconds_max {
+            ::buffa::types::put_uint32_field(14u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for MariadbStatsView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if let ::core::option::Option::Some(__v) = self.pages_hit {
+            __map.serialize_entry("pages_hit", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.pages_read {
+            __map
+                .serialize_entry("pages_read", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.rows_read {
+            __map.serialize_entry("rows_read", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.rows_inserted {
+            __map
+                .serialize_entry(
+                    "rows_inserted",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.rows_updated {
+            __map
+                .serialize_entry(
+                    "rows_updated",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.rows_deleted {
+            __map
+                .serialize_entry(
+                    "rows_deleted",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.deadlocks {
+            __map.serialize_entry("deadlocks", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.row_lock_waits {
+            __map
+                .serialize_entry(
+                    "row_lock_waits",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.redo_bytes {
+            __map
+                .serialize_entry("redo_bytes", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.tmp_disk_tables {
+            __map
+                .serialize_entry(
+                    "tmp_disk_tables",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.active_max {
+            __map
+                .serialize_entry("active_max", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.idle_in_transaction_max {
+            __map
+                .serialize_entry(
+                    "idle_in_transaction_max",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.waiting_max {
+            __map
+                .serialize_entry(
+                    "waiting_max",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.longest_transaction_seconds_max {
+            __map
+                .serialize_entry(
+                    "longest_transaction_seconds_max",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for MariadbStatsView<'a> {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MariadbStats";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MariadbStats";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MariadbStats";
+}
+::buffa::impl_default_view_instance!(MariadbStatsView);
+::buffa::impl_view_reborrow!(MariadbStatsView);
+/** Self-contained, `'static` owned view of a `MariadbStats` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`MariadbStatsView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`MariadbStatsView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct MariadbStatsOwnedView(::buffa::OwnedView<MariadbStatsView<'static>>);
+impl MariadbStatsOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MariadbStatsOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MariadbStatsOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::MariadbStats,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MariadbStatsOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`MariadbStatsView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &MariadbStatsView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::MariadbStats {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Read from its buffer pool.
+    ///
+    /// Field 1: `pages_hit`
+    #[must_use]
+    pub fn pages_hit(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().pages_hit
+    }
+    /// Read from disk.
+    ///
+    /// Field 2: `pages_read`
+    #[must_use]
+    pub fn pages_read(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().pages_read
+    }
+    /// Examined by its statements.
+    ///
+    /// Field 3: `rows_read`
+    #[must_use]
+    pub fn rows_read(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().rows_read
+    }
+    /// The rows written to its tables, by how.
+    ///
+    /// Field 4: `rows_inserted`
+    #[must_use]
+    pub fn rows_inserted(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().rows_inserted
+    }
+    /// Field 5: `rows_updated`
+    #[must_use]
+    pub fn rows_updated(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().rows_updated
+    }
+    /// Field 6: `rows_deleted`
+    #[must_use]
+    pub fn rows_deleted(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().rows_deleted
+    }
+    /// Field 7: `deadlocks`
+    #[must_use]
+    pub fn deadlocks(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().deadlocks
+    }
+    /// Field 8: `row_lock_waits`
+    #[must_use]
+    pub fn row_lock_waits(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().row_lock_waits
+    }
+    /// Written to the redo log.
+    ///
+    /// Field 9: `redo_bytes`
+    #[must_use]
+    pub fn redo_bytes(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().redo_bytes
+    }
+    /// Temporary tables written to disk.
+    ///
+    /// Field 10: `tmp_disk_tables`
+    #[must_use]
+    pub fn tmp_disk_tables(&self) -> ::core::option::Option<u64> {
+        self.0.reborrow().tmp_disk_tables
+    }
+    /// Sessions running a statement.
+    ///
+    /// Field 11: `active_max`
+    #[must_use]
+    pub fn active_max(&self) -> ::core::option::Option<u32> {
+        self.0.reborrow().active_max
+    }
+    /// Field 12: `idle_in_transaction_max`
+    #[must_use]
+    pub fn idle_in_transaction_max(&self) -> ::core::option::Option<u32> {
+        self.0.reborrow().idle_in_transaction_max
+    }
+    /// On a lock.
+    ///
+    /// Field 13: `waiting_max`
+    #[must_use]
+    pub fn waiting_max(&self) -> ::core::option::Option<u32> {
+        self.0.reborrow().waiting_max
+    }
+    /// Field 14: `longest_transaction_seconds_max`
+    #[must_use]
+    pub fn longest_transaction_seconds_max(&self) -> ::core::option::Option<u32> {
+        self.0.reborrow().longest_transaction_seconds_max
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<MariadbStatsView<'static>>>
+for MariadbStatsOwnedView {
+    fn from(inner: ::buffa::OwnedView<MariadbStatsView<'static>>) -> Self {
+        MariadbStatsOwnedView(inner)
+    }
+}
+impl ::core::convert::From<MariadbStatsOwnedView>
+for ::buffa::OwnedView<MariadbStatsView<'static>> {
+    fn from(wrapper: MariadbStatsOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<MariadbStatsView<'static>>>
+for MariadbStatsOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<MariadbStatsView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::MariadbStats {
+    type View<'a> = MariadbStatsView<'a>;
+    type ViewHandle = MariadbStatsOwnedView;
+}
+impl ::serde::Serialize for MariadbStatsOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
 #[derive(Clone, Debug, Default)]
 pub struct DatabaseStatementView<'a> {
-    /// Postgres's queryid, or Valkey's command.
+    /// Postgres's queryid, MariaDB's digest or "prepared" (kind PREPARED), or Valkey's command.
     ///
     /// Field 1: `id`
     pub id: ::core::option::Option<&'a str>,
@@ -34520,7 +35223,7 @@ impl DatabaseStatementOwnedView {
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
     }
-    /// Postgres's queryid, or Valkey's command.
+    /// Postgres's queryid, MariaDB's digest or "prepared" (kind PREPARED), or Valkey's command.
     ///
     /// Field 1: `id`
     #[must_use]
@@ -34597,8 +35300,8 @@ pub struct DatabaseActivityView<'a> {
     pub read_time: ::buffa::MessageFieldView<
         ::buffa_types::google::protobuf::__buffa::view::TimestampView<'a>,
     >,
-    /// Postgres: its client sessions but the machine's, those in a transaction first, the longest
-    /// first; at most 50.
+    /// Postgres, MariaDB: its client sessions but the machine's, those in a transaction first, the
+    /// longest first; at most 50.
     ///
     /// Field 2: `sessions`
     pub sessions: ::buffa::RepeatedView<
@@ -34975,8 +35678,8 @@ impl DatabaseActivityOwnedView {
     > {
         &self.0.reborrow().read_time
     }
-    /// Postgres: its client sessions but the machine's, those in a transaction first, the longest
-    /// first; at most 50.
+    /// Postgres, MariaDB: its client sessions but the machine's, those in a transaction first, the
+    /// longest first; at most 50.
     ///
     /// Field 2: `sessions`
     #[must_use]
@@ -35038,9 +35741,10 @@ impl ::serde::Serialize for DatabaseActivityOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
+/// A MariaDB session has no application_name or backend_start_time, and no query while idle.
 #[derive(Clone, Debug, Default)]
 pub struct DatabaseSessionView<'a> {
-    /// For CancelDatabaseQuery.
+    /// For CancelDatabaseQuery. Absent for a MariaDB session whose id is past 2147483647.
     ///
     /// Field 1: `pid`
     pub pid: ::core::option::Option<i32>,
@@ -35084,7 +35788,7 @@ pub struct DatabaseSessionView<'a> {
     pub wait_event: ::core::option::Option<&'a str>,
     /// Field 12: `blocked_by_pids`
     pub blocked_by_pids: ::buffa::RepeatedView<'a, i32>,
-    /// Running, or the last that ran; ≤2000 characters. Untrusted.
+    /// Running, or Postgres's last that ran; ≤2000 characters. Untrusted.
     ///
     /// Field 13: `query`
     pub query: ::core::option::Option<&'a str>,
@@ -35639,7 +36343,7 @@ impl DatabaseSessionOwnedView {
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
     }
-    /// For CancelDatabaseQuery.
+    /// For CancelDatabaseQuery. Absent for a MariaDB session whose id is past 2147483647.
     ///
     /// Field 1: `pid`
     #[must_use]
@@ -35725,7 +36429,7 @@ impl DatabaseSessionOwnedView {
     pub fn blocked_by_pids(&self) -> &::buffa::RepeatedView<'_, i32> {
         &self.0.reborrow().blocked_by_pids
     }
-    /// Running, or the last that ran; ≤2000 characters. Untrusted.
+    /// Running, or Postgres's last that ran; ≤2000 characters. Untrusted.
     ///
     /// Field 13: `query`
     #[must_use]
@@ -52394,12 +53098,12 @@ impl ::serde::Serialize for PathDownloadOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-/// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+/// A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 #[derive(Clone, Debug, Default)]
 pub struct DatabaseDumpView<'a> {
     /// Field 1: `project_id`
     pub project_id: ::core::option::Option<&'a str>,
-    /// Postgres: the database to dump. Empty = "app", the apps'.
+    /// Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
     ///
     /// Field 2: `database`
     pub database: ::core::option::Option<&'a str>,
@@ -52630,7 +53334,7 @@ impl DatabaseDumpOwnedView {
     pub fn project_id(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().project_id
     }
-    /// Postgres: the database to dump. Empty = "app", the apps'.
+    /// Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
     ///
     /// Field 2: `database`
     #[must_use]
@@ -52703,7 +53407,8 @@ pub struct CreateTransferResponseView<'a> {
     pub replaces: ::core::option::Option<bool>,
     /// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
     /// after the project and its service or volume. download_database: "\<project_id\>-\<database\>.dump"
-    /// or "\<project_id\>.rdb". Empty for an upload.
+    /// (Postgres), "\<project_id\>-\<database\>.sql" (MariaDB) or "\<project_id\>.rdb". Empty for an
+    /// upload.
     ///
     /// Field 7: `file_name`
     pub file_name: ::core::option::Option<&'a str>,
@@ -53137,7 +53842,8 @@ impl CreateTransferResponseOwnedView {
     }
     /// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
     /// after the project and its service or volume. download_database: "\<project_id\>-\<database\>.dump"
-    /// or "\<project_id\>.rdb". Empty for an upload.
+    /// (Postgres), "\<project_id\>-\<database\>.sql" (MariaDB) or "\<project_id\>.rdb". Empty for an
+    /// upload.
     ///
     /// Field 7: `file_name`
     #[must_use]

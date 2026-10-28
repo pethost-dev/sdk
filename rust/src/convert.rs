@@ -508,6 +508,7 @@ pub(crate) fn database_engine_from_wire(value: buffa::EnumValue<wire::DatabaseEn
         }
         buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_POSTGRES) => types::DatabaseEngine::Postgres,
         buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_VALKEY) => types::DatabaseEngine::Valkey,
+        buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_MARIADB) => types::DatabaseEngine::Mariadb,
         buffa::EnumValue::Unknown(number) => types::DatabaseEngine::Unrecognized(number),
     }
 }
@@ -519,6 +520,7 @@ pub(crate) fn database_engine_to_wire(value: types::DatabaseEngine) -> buffa::En
         }
         types::DatabaseEngine::Postgres => buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_POSTGRES),
         types::DatabaseEngine::Valkey => buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_VALKEY),
+        types::DatabaseEngine::Mariadb => buffa::EnumValue::Known(wire::DatabaseEngine::DATABASE_ENGINE_MARIADB),
         types::DatabaseEngine::Unrecognized(number) => buffa::EnumValue::from(number),
     }
 }

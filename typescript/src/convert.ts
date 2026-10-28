@@ -266,10 +266,12 @@ const fromDatabaseEngine: Record<w.DatabaseEngine, p.DatabaseEngine | undefined>
   [w.DatabaseEngine.UNSPECIFIED]: undefined,
   [w.DatabaseEngine.POSTGRES]: "POSTGRES",
   [w.DatabaseEngine.VALKEY]: "VALKEY",
+  [w.DatabaseEngine.MARIADB]: "MARIADB",
 };
 const toDatabaseEngine: Record<p.DatabaseEngine, w.DatabaseEngine> = {
   POSTGRES: w.DatabaseEngine.POSTGRES,
   VALKEY: w.DatabaseEngine.VALKEY,
+  MARIADB: w.DatabaseEngine.MARIADB,
 };
 
 const fromTrafficMetric: Record<w.TrafficMetric, p.TrafficMetric | undefined> = {

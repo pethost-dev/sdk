@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.4.5"),
+    ("user-agent", "pethost-rust/0.4.6"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -546,11 +546,12 @@ mod samples {
     }
 
     pub fn database_engine(k: usize) -> types::DatabaseEngine {
-        match k % 4 {
+        match k % 5 {
             0 => types::DatabaseEngine::Unspecified,
             1 => types::DatabaseEngine::Postgres,
             2 => types::DatabaseEngine::Valkey,
-            _ => types::DatabaseEngine::Unrecognized(3),
+            3 => types::DatabaseEngine::Mariadb,
+            _ => types::DatabaseEngine::Unrecognized(4),
         }
     }
 
@@ -2377,11 +2378,12 @@ mod on_wire {
 
     pub fn database_engine(k: usize) -> buffa::EnumValue<wire::DatabaseEngine> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 4 {
+        let number = match k % 5 {
             0 => 0,
             1 => 1,
             2 => 2,
-            _ => 3,
+            3 => 3,
+            _ => 4,
         };
         buffa::EnumValue::from(number)
     }
@@ -4941,7 +4943,7 @@ async fn query_container_logs_request_is_sent() {
 
 #[tokio::test]
 async fn create_database_request_is_sent() {
-    for k in 0..4 {
+    for k in 0..5 {
         let request = samples::create_database_request(k, true);
         let expected = on_wire::create_database_request(k, false);
 
@@ -6512,7 +6514,7 @@ async fn alert_destination_is_received() {
 
 #[tokio::test]
 async fn database_engine_offer_is_received() {
-    for k in 0..4 {
+    for k in 0..5 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
             message.machine = Some(states::make(|message: &mut wire::Machine| {
                 message.database_engines = vec![on_wire::database_engine_offer(k, true)]
@@ -6597,7 +6599,7 @@ async fn service_summary_is_received() {
 
 #[tokio::test]
 async fn database_summary_is_received() {
-    for k in 0..4 {
+    for k in 0..5 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
             message.projects = vec![states::make(|message: &mut wire::ProjectSummary| {
                 message.database = Some(on_wire::database_summary(k, true)).into()
@@ -6837,7 +6839,7 @@ async fn uptime_day_is_received() {
 
 #[tokio::test]
 async fn database_is_received() {
-    for k in 0..4 {
+    for k in 0..5 {
         let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
             message.project = Some(states::make(|message: &mut wire::Project| {
                 message.database = Some(on_wire::database(k, true)).into()
@@ -7560,8 +7562,9 @@ fn database_engine_is_json() {
         "DATABASE_ENGINE_UNSPECIFIED",
         "DATABASE_ENGINE_POSTGRES",
         "DATABASE_ENGINE_VALKEY",
+        "DATABASE_ENGINE_MARIADB",
     ];
-    an_enum_is_json(&names, 3, samples::database_engine);
+    an_enum_is_json(&names, 4, samples::database_engine);
 }
 
 #[test]
@@ -8370,7 +8373,7 @@ fn database_is_json() {
         "console_command",
         "own_user_projects",
     ];
-    a_message_is_json(4, &names, samples::database, on_wire::database);
+    a_message_is_json(5, &names, samples::database, on_wire::database);
 }
 
 #[test]
@@ -8391,7 +8394,7 @@ fn database_summary_is_json() {
         "memory_limit_bytes",
         "own_user_projects",
     ];
-    a_message_is_json(4, &names, samples::database_summary, on_wire::database_summary);
+    a_message_is_json(5, &names, samples::database_summary, on_wire::database_summary);
 }
 
 #[test]
@@ -8404,7 +8407,7 @@ fn database_engine_offer_is_json() {
         "own_users",
     ];
     a_message_is_json(
-        4,
+        5,
         &names,
         samples::database_engine_offer,
         on_wire::database_engine_offer,
@@ -8452,7 +8455,7 @@ fn create_database_request_is_json() {
         "metadata",
     ];
     a_message_is_json(
-        4,
+        5,
         &names,
         samples::create_database_request,
         on_wire::create_database_request,

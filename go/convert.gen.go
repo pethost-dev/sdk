@@ -3013,6 +3013,7 @@ func _() {
 	_ = same[DatabaseEngineUnspecified-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED)]
 	_ = same[DatabaseEnginePostgres-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_POSTGRES)]
 	_ = same[DatabaseEngineValkey-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_VALKEY)]
+	_ = same[DatabaseEngineMariadb-DatabaseEngine(panelv1.DatabaseEngine_DATABASE_ENGINE_MARIADB)]
 	_ = same[TrafficMetricUnspecified-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_UNSPECIFIED)]
 	_ = same[TrafficMetricServerErrors-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERRORS)]
 	_ = same[TrafficMetricServerErrorPercent-TrafficMetric(panelv1.TrafficMetric_TRAFFIC_METRIC_SERVER_ERROR_PERCENT)]

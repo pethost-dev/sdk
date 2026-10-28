@@ -1432,7 +1432,7 @@ func (v *DeployFailureReason) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "DATABASE_ENGINE_VALKEY" for [DatabaseEngineValkey], or its number when the package has no
+// "DATABASE_ENGINE_MARIADB" for [DatabaseEngineMariadb], or its number when the package has no
 // name for it.
 func (v DatabaseEngine) MarshalJSON() ([]byte, error) {
 	return marshalEnumJSON(toWireDatabaseEngine(v))

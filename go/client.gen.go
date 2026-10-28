@@ -86,17 +86,18 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // yields service `app` (reading /.env if any, its EXPOSE ports, a named volume per VOLUME of
 // its last stage).
 //
-// A database (Postgres or Valkey) is [Client.CreateDatabase]'s: make the app's first, then
-// link it here with LinkDatabases, e.g. {database_project_id: "recipes-db", env_prefix:
+// A database (Postgres, MariaDB or Valkey) is [Client.CreateDatabase]'s: make the app's first,
+// then link it here with LinkDatabases, e.g. {database_project_id: "recipes-db", env_prefix:
 // "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host
 // <DatabaseProjectID> from its first start (its deploy waits for one still being made).
-// [DatabaseLinkRequest.OwnUser], Postgres only (a Valkey has one user), to share a Postgres
-// other apps use: a user and a database of its own, named as the project, which they cannot
-// reach; all are restored together. Only LinkDatabases makes one: [Client.LinkDatabase] links
-// as the apps' user. [DatabaseLinkRequest.EnvPrefix] "DATABASE": the machine writes
-// DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
-// A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
-// Files with a /.env without it beside UploadID.
+// [DatabaseLinkRequest.OwnUser], on an engine whose offer has [DatabaseEngineOffer.OwnUsers]
+// (Postgres, MariaDB; a Valkey has one user), to share a database other apps use: a user and a
+// database of its own, named as the project, which they cannot reach; all are restored
+// together. Only LinkDatabases makes one: [Client.LinkDatabase] links as the apps' user.
+// [DatabaseLinkRequest.EnvPrefix] "DATABASE": the machine writes DATABASE_URL, _HOST, _PORT,
+// _USER, _PASSWORD and _NAME into /.env, so no password is copied. A name /.env sets already
+// is refused, as a laptop's .env in an archive may set one: send Files with a /.env without it
+// beside UploadID.
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -224,12 +225,12 @@ func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (
 // the project as it then is. With no services, [RunProjectActionStartServices] starts those
 // with a container and [RunProjectActionRestartServices] the running ones.
 // [RunProjectActionRestoreSnapshot] takes the project's own snapshots only: a deleted app's
-// data in a shared Postgres is in that Postgres's snapshots. A database's snapshot as a new
+// data in a shared database is in that database's snapshots. A database's snapshot as a new
 // database beside it is [Client.CreateDatabase]'s, with
 // [CreateDatabaseRequest.FromSnapshotID].
 //
 // [RunProjectActionDeleteProject]: a final backup while backups are on, then containers,
-// volumes, files, hosts, logs, and an app's user and database of its own in a shared Postgres,
+// volumes, files, hosts, logs, and an app's user and database of its own in a shared database,
 // data and all. Snapshots stay ([GetMachineResponse.DeletedProjects]), and restoring one
 // brings the project back, source included; with backups off there is none, and it is gone for
 // good. The databases it was linked to stay: delete each with its own
@@ -316,14 +317,14 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 
 // CreateDatabase: create a database.
 //
-// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
-// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-// host `<project_id>` once linked (the app's [Client.CreateProject]
-// [CreateProjectRequest.LinkDatabases], which may follow at once, as its deploy waits for this
-// one; Link or [Client.LinkDatabase] for an app that exists, as the apps' user and writing
-// nothing into its /.env), and [Project.Database] says how to sign in. Or a copy of a
-// database's snapshot, with passwords of its own and none of its links. Answers as
-// [Client.CreateProject] does. [CodeInvalidArgument] = an engine or a size
+// A database project, Postgres, MariaDB (for an app that asks for MySQL or MariaDB) or Valkey:
+// the machine writes its compose.yaml and /.env and deploys it, with no address. Make it
+// before the app that uses it: the app reaches it at the host `<project_id>` once linked (the
+// app's [Client.CreateProject] [CreateProjectRequest.LinkDatabases], which may follow at once,
+// as its deploy waits for this one; Link or [Client.LinkDatabase] for an app that exists, as
+// the apps' user and writing nothing into its /.env), and [Project.Database] says how to sign
+// in. Or a copy of a database's snapshot, with passwords of its own and none of its links.
+// Answers as [Client.CreateProject] does. [CodeInvalidArgument] = an engine or a size
 // [Machine.DatabaseEngines] does not offer, or a ProjectID with "_", that is a number or that
 // every container's /etc/hosts names (it is the host name apps use). [CodeNotFound] = no such
 // snapshot or app. [CodeFailedPrecondition] = the snapshot is of no database of that engine; +
@@ -400,18 +401,20 @@ func (c *Client) ReadPath(ctx context.Context, request *ReadPathRequest) (*ReadP
 //     there (replaces), creating parents.
 //   - download: a file, or a directory as a .tar (FileName).
 //   - [CreateTransferDownloadDatabase]: a database project's dump, made as it downloads:
-//     Postgres's for pg_restore (roles are not in it), Valkey's .rdb. One at a time per
-//     database.
+//     Postgres's for pg_restore (roles are not in it), MariaDB's SQL of one database for its
+//     console, `mariadb <database> < file` (users are not in it), Valkey's .rdb. One at a time
+//     per database.
 //
 // Plain-text answers: 404 used or expired URL, 409 [CodeFailedPrecondition], 413 archive over
 // 2 GiB, 422 unsafe archive (a reason per line), 503 [CodeUnavailable], 507 disk full. A
 // failed transfer keeps nothing: get a new URL. Errors as [Client.ReadPath];
 // [CodeFailedPrecondition] also = downloading neither a file nor a directory, uploading onto a
 // non-file, a mount point, /proc or /sys, the hostname not yet certified, or a dump of a
-// project that is no database or is not running. [CodeNotFound] also = a Postgres database the
-// server lacks (the message lists its databases). [CodeResourceExhausted] = disk full, or too
-// many transfers. [CodeUnavailable] = Postgres runs but does not answer yet: try again
-// shortly.
+// project that is no database or is not running, or of a MariaDB that refuses the machine's
+// sign-in (the message says how to let it in again). [CodeNotFound] also = a Postgres or
+// MariaDB database the server lacks (the message lists its databases). [CodeResourceExhausted]
+// = disk full, or too many transfers. [CodeUnavailable] = Postgres or MariaDB runs but does
+// not answer yet: try again shortly.
 func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequest) (*CreateTransferResponse, error) {
 	response, err := c.wire.CreateTransfer(ctx, toWireCreateTransferRequest(orZero(request)))
 	if err != nil {

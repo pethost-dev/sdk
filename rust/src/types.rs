@@ -1199,11 +1199,13 @@ pub enum DatabaseEngine {
     Unspecified,
     Postgres,
     Valkey,
+    /// MySQL's protocol: for an app that asks for MySQL or MariaDB.
+    Mariadb,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
 
-/// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+/// A database project: one service running Postgres, MariaDB or Valkey, whose files the machine wrote.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Database {
@@ -1214,7 +1216,7 @@ pub struct Database {
     pub server_version: ::std::string::String,
     /// Its size: its service's `mem_limit` in compose.yaml. [`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize) changes it.
     pub memory_limit_bytes: u64,
-    /// Postgres: its databases\' size; Valkey: its data in memory. On disk: [`Project::volumes`](crate::types::Project::volumes).
+    /// Postgres, MariaDB: its databases\' size; Valkey: its data in memory. On disk: [`Project::volumes`](crate::types::Project::volumes).
     pub data_bytes: u64,
     /// Open now.
     pub connections: u32,
@@ -1227,7 +1229,7 @@ pub struct Database {
     pub service: ::std::string::String,
     /// The volume of [`Project::volumes`](crate::types::Project::volumes) that holds its data.
     pub volume: ::std::string::String,
-    /// The console, for `OpenTerminal` in `service`: psql signed in as the superuser, or valkey-cli.
+    /// The console, for `OpenTerminal` in `service`: psql or mariadb signed in as the superuser, or valkey-cli.
     pub console_command: ::std::vec::Vec<::std::string::String>,
     /// Of `linked_projects`, those linked with `own_user` ([`DatabaseLinkRequest`](crate::types::DatabaseLinkRequest)): each signs in as a user of its own, to a database of its own, both named as it, with the password in its /.env. The others sign in as the apps\' user, `app` (a Valkey's `default`), whether `link_databases` or [`Client::link_database`](crate::Client::link_database) linked them; only `link_databases` wrote how into an app's /.env.
     pub own_user_projects: ::std::vec::Vec<::std::string::String>,
@@ -1248,7 +1250,7 @@ pub struct DatabaseConnection {
     pub password: ::std::string::String,
     /// For the app's .env, e.g. `DATABASE_URL`=\<url\>. Without `include_secret_values`, \*\*\*\* stands for the password.
     pub url: ::std::string::String,
-    /// As url, at localhost: what the SSH tunnel to its service gives ([`Service::ssh_command`](crate::types::Service::ssh_command)).
+    /// As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its socket): what the SSH tunnel to its service gives ([`Service::ssh_command`](crate::types::Service::ssh_command)).
     pub local_url: ::std::string::String,
 }
 
@@ -1979,11 +1981,11 @@ pub enum PathDownloadRoot {
     Volume(::std::string::String),
 }
 
-/// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+/// A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct DatabaseDump {
     pub project_id: ::std::string::String,
-    /// Postgres: the database to dump. Empty = \"app\", the apps\'.
+    /// Postgres, MariaDB: the database to dump. Empty = \"app\", the apps\'.
     pub database: ::std::string::String,
 }
 
@@ -2003,7 +2005,7 @@ pub struct CreateTransferResponse {
     pub upload_id: ::std::string::String,
     /// `upload_file`: a file is at path now; the upload replaces it.
     pub replaces: bool,
-    /// download: the name it saves as: a file's own; a directory's ends in \".tar\", and \"/\" is named after the project and its service or volume. `download_database`: \"\<`project_id`\>-\<database\>.dump\" or \"\<`project_id`\>.rdb\". Empty for an upload.
+    /// download: the name it saves as: a file's own; a directory's ends in \".tar\", and \"/\" is named after the project and its service or volume. `download_database`: \"\<`project_id`\>-\<database\>.dump\" (Postgres), \"\<`project_id`\>-\<database\>.sql\" (MariaDB) or \"\<`project_id`\>.rdb\". Empty for an upload.
     pub file_name: ::std::string::String,
     /// `upload_archive`: the names `command` leaves out of the archive, wherever they lie in the directory. A program that packs the directory itself leaves out the same.
     pub exclude_names: ::std::vec::Vec<::std::string::String>,
@@ -2061,7 +2063,7 @@ pub enum DatabaseLinkRefusalReason {
     TooManyLinks,
     /// `own_user` for a database whose engine has one user ([`DatabaseEngineOffer::own_users`](crate::types::DatabaseEngineOffer::own_users) false): Valkey.
     OneUser,
-    /// `own_user` for a project whose id Postgres or the machine keeps as a user or a database (postgres, app, public, none, template0, template1, `current_user`, `current_role`, `session_user`, `pg_`…): give it another id.
+    /// `own_user` for a project whose id the database's engine or the machine keeps as a user or a database of its own, as `app` (the message names it): give it another id.
     UserNameReserved,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),

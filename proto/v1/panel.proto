@@ -20,12 +20,13 @@ edition = "2024";
 //   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
-//   - Database: a project CreateDatabase made (Postgres or Valkey). The machine wrote its files
-//     and knows the engine. An app gets one of its own: CreateDatabase, then the app's
-//     CreateProject with `link_databases`, which writes how it signs in into its /.env. Apps that
-//     belong together may share a Postgres, each with a user of its own (own_user, Postgres
-//     only: a Valkey has one user), and are then backed up and restored together. Apps reach it
-//     at the host <project_id>. A linked app signs in as the apps' user (`app`, or a Valkey's one
+//   - Database: a project CreateDatabase made (Postgres; MariaDB, for an app that asks for MySQL
+//     or MariaDB; or Valkey). The machine wrote its files and knows the engine. An app gets one
+//     of its own: CreateDatabase, then the app's CreateProject with `link_databases`, which
+//     writes how it signs in into its /.env. Apps that belong together may share one, each with a
+//     user of its own (own_user, on an engine whose offer has own_users: Postgres, MariaDB; a
+//     Valkey has one user), and are then backed up and restored together. Apps reach it at the
+//     host <project_id>. A linked app signs in as the apps' user (`app`, or a Valkey's one
 //     user), whether link_databases or LinkDatabase linked it, unless link_databases' own_user
 //     gave it one of its own (Database.own_user_projects); only link_databases writes how it
 //     signs in into its /.env. An app that exists: LinkDatabase, then put
@@ -122,13 +123,14 @@ service PanelService {
   // Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
   // named volume per VOLUME of its last stage).
   //
-  // A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
-  // with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
-  // compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host <database_project_id>
-  // from its first start (its deploy waits for one still being made). own_user, Postgres only (a
-  // Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
-  // named as the project, which they cannot reach; all are restored together. Only link_databases
-  // makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+  // A database (Postgres, MariaDB or Valkey) is CreateDatabase's: make the app's first, then link
+  // it here with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix:
+  // "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host
+  // <database_project_id> from its first start (its deploy waits for one still being made).
+  // own_user, on an engine whose offer has own_users (Postgres, MariaDB; a Valkey has one user),
+  // to share a database other apps use: a user and a database of its own, named as the project,
+  // which they cannot reach; all are restored together. Only link_databases makes one:
+  // LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
   // DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
   // A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
   // `files` with a /.env without it beside `upload_id`.
@@ -237,11 +239,11 @@ service PanelService {
   // others are done on return. Answers with the project as it then is. With no services,
   // start_services starts those with a container and restart_services the running ones.
   // restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
-  // Postgres is in that Postgres's snapshots. A database's snapshot as a new
+  // database is in that database's snapshots. A database's snapshot as a new
   // database beside it is CreateDatabase's, with from_snapshot_id.
   //
   // delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
-  // logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+  // logs, and an app's user and database of its own in a shared database, data and all. Snapshots
   // stay (GetMachine.deleted_projects), and restoring one brings the project back, source
   // included; with backups off there is none, and it is gone for good. The databases it was
   // linked to stay: delete each with its own delete_project.
@@ -309,13 +311,13 @@ service PanelService {
 
   // ── Database ─────────────────────────────────────────────────────────────
 
-  // A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
-  // deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-  // host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
-  // once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
-  // apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
-  // a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
-  // CreateProject does.
+  // A database project, Postgres, MariaDB (for an app that asks for MySQL or MariaDB) or Valkey:
+  // the machine writes its compose.yaml and /.env and deploys it, with no address. Make it before
+  // the app that uses it: the app reaches it at the host `<project_id>` once linked (the app's
+  // CreateProject `link_databases`, which may follow at once, as its deploy waits for this one;
+  // `link` or LinkDatabase for an app that exists, as the apps' user and writing nothing into its
+  // /.env), and Project.database says how to sign in. Or a copy of a database's snapshot, with
+  // passwords of its own and none of its links. Answers as CreateProject does.
   // INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
   // project_id with "_", that is a number or that every container's /etc/hosts names (it is the
   // host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -341,19 +343,20 @@ service PanelService {
   }
 
   // A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
-  // totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
-  // now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
-  // readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+  // totals, its 10 busiest statements (Postgres, MariaDB) or commands (Valkey), and what the
+  // server runs now. The machine reads them each minute and keeps a minute 7 days and an hour 90;
+  // its own readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
   // database. INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of
   // minutes, of hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an
-  // MCP tool: agents use RunServiceCommand with psql or valkey-cli.
+  // MCP tool: agents use RunServiceCommand with psql, mariadb or valkey-cli.
   rpc GetDatabaseStats(GetDatabaseStatsRequest) returns (GetDatabaseStatsResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
   }
 
-  // Cancels the statement a client session of a Postgres database runs, or ends the session
-  // (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
-  // FAILED_PRECONDITION = it is no Postgres database, or its service does not run.
+  // Cancels the statement a client session of a Postgres or MariaDB database runs, or ends the
+  // session (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+  // FAILED_PRECONDITION = it is no Postgres or MariaDB database, its service does not run, or a
+  // MariaDB refuses the machine's sign-in (the message says how to let it in again).
   // UNAVAILABLE = the server does not answer. Not an MCP tool.
   rpc CancelDatabaseQuery(CancelDatabaseQueryRequest) returns (CancelDatabaseQueryResponse);
 
@@ -410,15 +413,18 @@ service PanelService {
   //   creating parents.
   // - download: a file, or a directory as a .tar (file_name).
   // - download_database: a database project's dump, made as it downloads: Postgres's for
-  //   pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
+  //   pg_restore (roles are not in it), MariaDB's SQL of one database for its console,
+  //   `mariadb <database> < file` (users are not in it), Valkey's .rdb. One at a time per
+  //   database.
   // Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
   // GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
   // transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
   // downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
   // or /sys, the hostname not yet certified, or a dump of a project that is no database or is
-  // not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
-  // databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
-  // runs but does not answer yet: try again shortly.
+  // not running, or of a MariaDB that refuses the machine's sign-in (the message says how to let
+  // it in again). NOT_FOUND also = a Postgres or MariaDB database the server lacks (the message
+  // lists its databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE =
+  // Postgres or MariaDB runs but does not answer yet: try again shortly.
   rpc CreateTransfer(CreateTransferRequest) returns (CreateTransferResponse) {
     option (mcp_tool) = {title: "Upload or download a file", destructive: true};
   }
@@ -1465,9 +1471,11 @@ enum DatabaseEngine {
   DATABASE_ENGINE_UNSPECIFIED = 0;
   DATABASE_ENGINE_POSTGRES = 1;
   DATABASE_ENGINE_VALKEY = 2;
+  DATABASE_ENGINE_MARIADB = 3; // MySQL's protocol: for an app that asks for MySQL or MariaDB.
 }
 
-// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+// A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+// wrote.
 message Database {
   DatabaseEngine engine = 1;
   uint32 major_version = 2; // As it was made, e.g. 18.
@@ -1475,7 +1483,7 @@ message Database {
   // Its size: its service's `mem_limit` in compose.yaml. RunProjectAction.set_database_size
   // changes it.
   uint64 memory_limit_bytes = 4;
-  // Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+  // Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
   uint64 data_bytes = 5;
   uint32 connections = 6; // Open now.
   uint32 max_connections = 7; // Valkey: maxclients.
@@ -1485,7 +1493,8 @@ message Database {
   DatabaseConnection connection = 9;
   string service = 10; // The service of Project.services that runs the database.
   string volume = 11; // The volume of Project.volumes that holds its data.
-  // The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+  // The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+  // valkey-cli.
   repeated string console_command = 12;
   // Of linked_projects, those linked with own_user (DatabaseLinkRequest): each signs in as a user
   // of its own, to a database of its own, both named as it, with the password in its /.env. The
@@ -1504,7 +1513,8 @@ message DatabaseConnection {
   // For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
   // the password.
   string url = 6;
-  // As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+  // As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+  // socket): what the SSH tunnel to its service gives (Service.ssh_command).
   string local_url = 7;
 }
 
@@ -1596,10 +1606,14 @@ message GetDatabaseStatsResponse {
   DatabaseStats overall = 4;
   // Oldest first, every bucket of the range, aligned to the clock.
   repeated DatabaseStatsBucket buckets = 5;
-  // The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
-  // $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+  // The 10 busiest of the range in statement_order. Postgres's and MariaDB's text is normalized,
+  // its values $1, $2… or ?, and empty for one the server no longer has, for all while it does not
+  // answer, and for MariaDB's prepared ones (kind PREPARED); Valkey's is the command. Untrusted.
   repeated DatabaseStatement statements = 6;
-  bool statements_tracked = 7; // False = Postgres's pg_stat_statements does not answer.
+  // False = the server says it counts no statements now: Postgres's pg_stat_statements does not
+  // answer, or MariaDB's performance_schema or its digests are off. False too while the server
+  // does not answer (activity absent), which says nothing of them.
+  bool statements_tracked = 7;
   DatabaseActivity activity = 8; // Absent = the server did not answer.
 }
 
@@ -1623,14 +1637,15 @@ message DatabaseStats {
   repeated DatabaseCommandStats commands = 10; // By kind.
   PostgresStats postgres = 11;
   ValkeyStats valkey = 12;
+  MariadbStats mariadb = 13;
 }
 
 message DatabaseCommandStats {
   DatabaseCommandKind kind = 1;
   uint64 calls = 2;
   double total_time_ms = 3;
-  uint64 rows = 4; // Postgres.
-  uint64 failed_calls = 5; // Valkey.
+  uint64 rows = 4; // Postgres, MariaDB.
+  uint64 failed_calls = 5; // Valkey, MariaDB.
 }
 
 enum DatabaseCommandKind {
@@ -1642,6 +1657,10 @@ enum DatabaseCommandKind {
   DATABASE_COMMAND_KIND_DELETE = 5;
   DATABASE_COMMAND_KIND_READ = 6; // Valkey.
   DATABASE_COMMAND_KIND_WRITE = 7; // Valkey.
+  // MariaDB: the executions of prepared statements, as Go's driver, PHP's PDO without emulated
+  // prepares (Laravel's) and mysql2's execute() send a query with values, which the server counts
+  // together, with no text, whatever their verb.
+  DATABASE_COMMAND_KIND_PREPARED = 8;
 }
 
 // Of every database of the server but postgres, where the machine reads them,
@@ -1679,8 +1698,29 @@ message ValkeyStats {
   uint32 blocked_clients_max = 11;
 }
 
+// The whole server's counters; rows_read and tmp_disk_tables count its statements but the
+// machine's, the prepared ones' included, while statements are tracked.
+message MariadbStats {
+  uint64 pages_hit = 1; // Read from its buffer pool.
+  uint64 pages_read = 2; // Read from disk.
+  uint64 rows_read = 3; // Examined by its statements.
+  // The rows written to its tables, by how.
+  uint64 rows_inserted = 4;
+  uint64 rows_updated = 5;
+  uint64 rows_deleted = 6;
+  uint64 deadlocks = 7;
+  uint64 row_lock_waits = 8;
+  uint64 redo_bytes = 9; // Written to the redo log.
+  uint64 tmp_disk_tables = 10; // Temporary tables written to disk.
+  uint32 active_max = 11; // Sessions running a statement.
+  uint32 idle_in_transaction_max = 12;
+  uint32 waiting_max = 13; // On a lock.
+  uint32 longest_transaction_seconds_max = 14;
+}
+
 message DatabaseStatement {
-  string id = 1; // Postgres's queryid, or Valkey's command.
+  // Postgres's queryid, MariaDB's digest or "prepared" (kind PREPARED), or Valkey's command.
+  string id = 1;
   string text = 2;
   DatabaseCommandKind kind = 3;
   uint64 calls = 4;
@@ -1699,15 +1739,17 @@ enum DatabaseStatementOrder {
 // What the server runs now.
 message DatabaseActivity {
   google.protobuf.Timestamp read_time = 1;
-  // Postgres: its client sessions but the machine's, those in a transaction first, the longest
-  // first; at most 50.
+  // Postgres, MariaDB: its client sessions but the machine's, those in a transaction first, the
+  // longest first; at most 50.
   repeated DatabaseSession sessions = 2;
   uint32 session_count = 3; // Of which sessions are a part.
   repeated DatabaseSlowCommand slow_commands = 4; // Valkey's slow log, newest first; at most 20.
 }
 
+// A MariaDB session has no application_name or backend_start_time, and no query while idle.
 message DatabaseSession {
-  int32 pid = 1; // For CancelDatabaseQuery.
+  // For CancelDatabaseQuery. Absent for a MariaDB session whose id is past 2147483647.
+  int32 pid = 1;
   string user = 2;
   string database = 3;
   string application_name = 4; // Untrusted.
@@ -1719,7 +1761,7 @@ message DatabaseSession {
   string wait_event_type = 10; // E.g. "Lock". Empty = not waiting.
   string wait_event = 11;
   repeated int32 blocked_by_pids = 12;
-  string query = 13; // Running, or the last that ran; ≤2000 characters. Untrusted.
+  string query = 13; // Running, or Postgres's last that ran; ≤2000 characters. Untrusted.
 }
 
 enum DatabaseSessionState {
@@ -2214,10 +2256,10 @@ message PathDownload {
   string path = 5; // From the root. Empty = "/": the whole root.
 }
 
-// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+// A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 message DatabaseDump {
   string project_id = 1;
-  string database = 2; // Postgres: the database to dump. Empty = "app", the apps'.
+  string database = 2; // Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
 }
 
 message CreateTransferResponse {
@@ -2236,7 +2278,8 @@ message CreateTransferResponse {
   bool replaces = 6; // upload_file: a file is at path now; the upload replaces it.
   // download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
   // after the project and its service or volume. download_database: "<project_id>-<database>.dump"
-  // or "<project_id>.rdb". Empty for an upload.
+  // (Postgres), "<project_id>-<database>.sql" (MariaDB) or "<project_id>.rdb". Empty for an
+  // upload.
   string file_name = 7;
   // upload_archive: the names `command` leaves out of the archive, wherever they lie in the
   // directory. A program that packs the directory itself leaves out the same.
@@ -2306,9 +2349,8 @@ enum DatabaseLinkRefusalReason {
   DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS = 3; // The database has 20: unlink one first.
   // own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey.
   DATABASE_LINK_REFUSAL_REASON_ONE_USER = 4;
-  // own_user for a project whose id Postgres or the machine keeps as a user or a database
-  // (postgres, app, public, none, template0, template1, current_user, current_role,
-  // session_user, pg_…): give it another id.
+  // own_user for a project whose id the database's engine or the machine keeps as a user or a
+  // database of its own, as `app` (the message names it): give it another id.
   DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED = 5;
 }
 

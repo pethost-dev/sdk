@@ -706,6 +706,7 @@ export const empty = {
   m.reads("Database: a field newer than the SDK", newer(w.DatabaseSchema), empty.Database());
   m.reads("Database.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.Database(), engine: "POSTGRES" });
   m.reads("Database.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.Database(), engine: "VALKEY" });
+  m.reads("Database.engine: MARIADB", { engine: w.DatabaseEngine.MARIADB }, { ...empty.Database(), engine: "MARIADB" });
   m.reads("Database.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.Database(), engine: 9999 });
   m.reads("Database.major_version", { majorVersion: 1002 }, { ...empty.Database(), majorVersion: 1002 });
   m.reads("Database.server_version", { serverVersion: "server_version" }, { ...empty.Database(), serverVersion: "server_version" });
@@ -740,6 +741,7 @@ export const empty = {
   m.reads("DatabaseSummary: a field newer than the SDK", newer(w.DatabaseSummarySchema), empty.DatabaseSummary());
   m.reads("DatabaseSummary.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseSummary(), engine: "POSTGRES" });
   m.reads("DatabaseSummary.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseSummary(), engine: "VALKEY" });
+  m.reads("DatabaseSummary.engine: MARIADB", { engine: w.DatabaseEngine.MARIADB }, { ...empty.DatabaseSummary(), engine: "MARIADB" });
   m.reads("DatabaseSummary.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseSummary(), engine: 9999 });
   m.reads("DatabaseSummary.major_version", { majorVersion: 1002 }, { ...empty.DatabaseSummary(), majorVersion: 1002 });
   m.reads("DatabaseSummary.data_bytes", { dataBytes: 9007199254740993n }, { ...empty.DatabaseSummary(), dataBytes: 9007199254740993n });
@@ -756,6 +758,7 @@ export const empty = {
   m.reads("DatabaseEngineOffer: a field newer than the SDK", newer(w.DatabaseEngineOfferSchema), empty.DatabaseEngineOffer());
   m.reads("DatabaseEngineOffer.engine: POSTGRES", { engine: w.DatabaseEngine.POSTGRES }, { ...empty.DatabaseEngineOffer(), engine: "POSTGRES" });
   m.reads("DatabaseEngineOffer.engine: VALKEY", { engine: w.DatabaseEngine.VALKEY }, { ...empty.DatabaseEngineOffer(), engine: "VALKEY" });
+  m.reads("DatabaseEngineOffer.engine: MARIADB", { engine: w.DatabaseEngine.MARIADB }, { ...empty.DatabaseEngineOffer(), engine: "MARIADB" });
   m.reads("DatabaseEngineOffer.engine: a value newer than the SDK", { engine: 9999 as w.DatabaseEngine }, { ...empty.DatabaseEngineOffer(), engine: 9999 });
   m.reads("DatabaseEngineOffer.major_version", { majorVersion: 1002 }, { ...empty.DatabaseEngineOffer(), majorVersion: 1002 });
   m.reads("DatabaseEngineOffer.sizes", { sizes: [{}] }, { ...empty.DatabaseEngineOffer(), sizes: [empty.DatabaseSizeChoice()] });

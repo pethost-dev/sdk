@@ -105,6 +105,7 @@ pub mod __buffa {
         reg.register_json_any(super::__DATABASE_COMMAND_STATS_JSON_ANY);
         reg.register_json_any(super::__POSTGRES_STATS_JSON_ANY);
         reg.register_json_any(super::__VALKEY_STATS_JSON_ANY);
+        reg.register_json_any(super::__MARIADB_STATS_JSON_ANY);
         reg.register_json_any(super::__DATABASE_STATEMENT_JSON_ANY);
         reg.register_json_any(super::__DATABASE_ACTIVITY_JSON_ANY);
         reg.register_json_any(super::__DATABASE_SESSION_JSON_ANY);
@@ -461,6 +462,10 @@ pub use self::__buffa::view::PostgresStatsOwnedView;
 pub use self::__buffa::view::ValkeyStatsView;
 #[doc(inline)]
 pub use self::__buffa::view::ValkeyStatsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MariadbStatsView;
+#[doc(inline)]
+pub use self::__buffa::view::MariadbStatsOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::DatabaseStatementView;
 #[doc(inline)]

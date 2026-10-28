@@ -2328,6 +2328,8 @@ pub enum DatabaseEngine {
     DATABASE_ENGINE_UNSPECIFIED = 0i32,
     DATABASE_ENGINE_POSTGRES = 1i32,
     DATABASE_ENGINE_VALKEY = 2i32,
+    /// MySQL's protocol: for an app that asks for MySQL or MariaDB.
+    DATABASE_ENGINE_MARIADB = 3i32,
 }
 impl DatabaseEngine {
     ///Idiomatic alias for [`Self::DATABASE_ENGINE_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -2339,6 +2341,9 @@ impl DatabaseEngine {
     ///Idiomatic alias for [`Self::DATABASE_ENGINE_VALKEY`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Valkey: Self = Self::DATABASE_ENGINE_VALKEY;
+    ///Idiomatic alias for [`Self::DATABASE_ENGINE_MARIADB`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Mariadb: Self = Self::DATABASE_ENGINE_MARIADB;
 }
 impl ::core::default::Default for DatabaseEngine {
     fn default() -> Self {
@@ -2439,6 +2444,7 @@ impl ::buffa::Enumeration for DatabaseEngine {
             0i32 => ::core::option::Option::Some(Self::DATABASE_ENGINE_UNSPECIFIED),
             1i32 => ::core::option::Option::Some(Self::DATABASE_ENGINE_POSTGRES),
             2i32 => ::core::option::Option::Some(Self::DATABASE_ENGINE_VALKEY),
+            3i32 => ::core::option::Option::Some(Self::DATABASE_ENGINE_MARIADB),
             _ => ::core::option::Option::None,
         }
     }
@@ -2450,6 +2456,7 @@ impl ::buffa::Enumeration for DatabaseEngine {
             Self::DATABASE_ENGINE_UNSPECIFIED => "DATABASE_ENGINE_UNSPECIFIED",
             Self::DATABASE_ENGINE_POSTGRES => "DATABASE_ENGINE_POSTGRES",
             Self::DATABASE_ENGINE_VALKEY => "DATABASE_ENGINE_VALKEY",
+            Self::DATABASE_ENGINE_MARIADB => "DATABASE_ENGINE_MARIADB",
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -2463,6 +2470,9 @@ impl ::buffa::Enumeration for DatabaseEngine {
             "DATABASE_ENGINE_VALKEY" => {
                 ::core::option::Option::Some(Self::DATABASE_ENGINE_VALKEY)
             }
+            "DATABASE_ENGINE_MARIADB" => {
+                ::core::option::Option::Some(Self::DATABASE_ENGINE_MARIADB)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -2471,6 +2481,7 @@ impl ::buffa::Enumeration for DatabaseEngine {
             Self::DATABASE_ENGINE_UNSPECIFIED,
             Self::DATABASE_ENGINE_POSTGRES,
             Self::DATABASE_ENGINE_VALKEY,
+            Self::DATABASE_ENGINE_MARIADB,
         ]
     }
 }
@@ -2488,6 +2499,10 @@ pub enum DatabaseCommandKind {
     DATABASE_COMMAND_KIND_READ = 6i32,
     /// Valkey.
     DATABASE_COMMAND_KIND_WRITE = 7i32,
+    /// MariaDB: the executions of prepared statements, as Go's driver, PHP's PDO without emulated
+    /// prepares (Laravel's) and mysql2's execute() send a query with values, which the server counts
+    /// together, with no text, whatever their verb.
+    DATABASE_COMMAND_KIND_PREPARED = 8i32,
 }
 impl DatabaseCommandKind {
     ///Idiomatic alias for [`Self::DATABASE_COMMAND_KIND_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -2514,6 +2529,9 @@ impl DatabaseCommandKind {
     ///Idiomatic alias for [`Self::DATABASE_COMMAND_KIND_WRITE`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Write: Self = Self::DATABASE_COMMAND_KIND_WRITE;
+    ///Idiomatic alias for [`Self::DATABASE_COMMAND_KIND_PREPARED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Prepared: Self = Self::DATABASE_COMMAND_KIND_PREPARED;
 }
 impl ::core::default::Default for DatabaseCommandKind {
     fn default() -> Self {
@@ -2620,6 +2638,7 @@ impl ::buffa::Enumeration for DatabaseCommandKind {
             5i32 => ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_DELETE),
             6i32 => ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_READ),
             7i32 => ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_WRITE),
+            8i32 => ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_PREPARED),
             _ => ::core::option::Option::None,
         }
     }
@@ -2638,6 +2657,7 @@ impl ::buffa::Enumeration for DatabaseCommandKind {
             Self::DATABASE_COMMAND_KIND_DELETE => "DATABASE_COMMAND_KIND_DELETE",
             Self::DATABASE_COMMAND_KIND_READ => "DATABASE_COMMAND_KIND_READ",
             Self::DATABASE_COMMAND_KIND_WRITE => "DATABASE_COMMAND_KIND_WRITE",
+            Self::DATABASE_COMMAND_KIND_PREPARED => "DATABASE_COMMAND_KIND_PREPARED",
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -2666,6 +2686,9 @@ impl ::buffa::Enumeration for DatabaseCommandKind {
             "DATABASE_COMMAND_KIND_WRITE" => {
                 ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_WRITE)
             }
+            "DATABASE_COMMAND_KIND_PREPARED" => {
+                ::core::option::Option::Some(Self::DATABASE_COMMAND_KIND_PREPARED)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -2679,6 +2702,7 @@ impl ::buffa::Enumeration for DatabaseCommandKind {
             Self::DATABASE_COMMAND_KIND_DELETE,
             Self::DATABASE_COMMAND_KIND_READ,
             Self::DATABASE_COMMAND_KIND_WRITE,
+            Self::DATABASE_COMMAND_KIND_PREPARED,
         ]
     }
 }
@@ -4103,9 +4127,8 @@ pub enum DatabaseLinkRefusalReason {
     DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS = 3i32,
     /// own_user for a database whose engine has one user (DatabaseEngineOffer.own_users false): Valkey.
     DATABASE_LINK_REFUSAL_REASON_ONE_USER = 4i32,
-    /// own_user for a project whose id Postgres or the machine keeps as a user or a database
-    /// (postgres, app, public, none, template0, template1, current_user, current_role,
-    /// session_user, pg_…): give it another id.
+    /// own_user for a project whose id the database's engine or the machine keeps as a user or a
+    /// database of its own, as `app` (the message names it): give it another id.
     DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED = 5i32,
 }
 impl DatabaseLinkRefusalReason {
@@ -23631,7 +23654,8 @@ pub const __RUN_PROJECT_ACTION_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAn
     from_json: ::buffa::type_registry::any_from_json::<RunProjectActionResponse>,
     is_wkt: false,
 };
-/// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+/// A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+/// wrote.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -23670,7 +23694,7 @@ pub struct Database {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub memory_limit_bytes: ::core::option::Option<u64>,
-    /// Postgres: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
+    /// Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk: Project.volumes.
     ///
     /// Field 5: `data_bytes`
     #[serde(
@@ -23726,7 +23750,8 @@ pub struct Database {
     /// Field 11: `volume`
     #[serde(rename = "volume", skip_serializing_if = "::core::option::Option::is_none")]
     pub volume: ::core::option::Option<::buffa::alloc::string::String>,
-    /// The console, for OpenTerminal in `service`: psql signed in as the superuser, or valkey-cli.
+    /// The console, for OpenTerminal in `service`: psql or mariadb signed in as the superuser, or
+    /// valkey-cli.
     ///
     /// Field 12: `console_command`
     #[serde(
@@ -24212,7 +24237,8 @@ pub struct DatabaseConnection {
     /// Field 6: `url`
     #[serde(rename = "url", skip_serializing_if = "::core::option::Option::is_none")]
     pub url: ::core::option::Option<::buffa::alloc::string::String>,
-    /// As url, at localhost: what the SSH tunnel to its service gives (Service.ssh_command).
+    /// As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+    /// socket): what the SSH tunnel to its service gives (Service.ssh_command).
     ///
     /// Field 7: `local_url`
     #[serde(
@@ -26676,8 +26702,9 @@ pub struct GetDatabaseStatsResponse {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub buckets: ::buffa::alloc::vec::Vec<DatabaseStatsBucket>,
-    /// The 10 busiest of the range in statement_order. Postgres's text is normalized, its values
-    /// $1, $2…, and empty for one the server no longer has; Valkey's is the command. Untrusted.
+    /// The 10 busiest of the range in statement_order. Postgres's and MariaDB's text is normalized,
+    /// its values $1, $2… or ?, and empty for one the server no longer has, for all while it does not
+    /// answer, and for MariaDB's prepared ones (kind PREPARED); Valkey's is the command. Untrusted.
     ///
     /// Field 6: `statements`
     #[serde(
@@ -26686,7 +26713,9 @@ pub struct GetDatabaseStatsResponse {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub statements: ::buffa::alloc::vec::Vec<DatabaseStatement>,
-    /// False = Postgres's pg_stat_statements does not answer.
+    /// False = the server says it counts no statements now: Postgres's pg_stat_statements does not
+    /// answer, or MariaDB's performance_schema or its digests are off. False too while the server
+    /// does not answer (activity absent), which says nothing of them.
     ///
     /// Field 7: `statements_tracked`
     #[serde(
@@ -27311,6 +27340,12 @@ pub struct DatabaseStats {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub valkey: ::buffa::MessageField<ValkeyStats, ::buffa::Inline<ValkeyStats>>,
+    /// Field 13: `mariadb`
+    #[serde(
+        rename = "mariadb",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub mariadb: ::buffa::MessageField<MariadbStats, ::buffa::Inline<MariadbStats>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -27330,6 +27365,7 @@ impl ::core::fmt::Debug for DatabaseStats {
             .field("commands", &self.commands)
             .field("postgres", &self.postgres)
             .field("valkey", &self.valkey)
+            .field("mariadb", &self.mariadb)
             .finish()
     }
 }
@@ -27476,6 +27512,14 @@ impl ::buffa::Message for DatabaseStats {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if self.mariadb.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.mariadb.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -27536,6 +27580,14 @@ impl ::buffa::Message for DatabaseStats {
                 buf,
             );
             self.valkey.write_to(__cache, buf);
+        }
+        if self.mariadb.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                13u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.mariadb.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -27665,6 +27717,17 @@ impl ::buffa::Message for DatabaseStats {
                     ctx,
                 )?;
             }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.mariadb.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -27685,6 +27748,7 @@ impl ::buffa::Message for DatabaseStats {
         self.commands.clear();
         self.postgres = ::buffa::MessageField::none();
         self.valkey = ::buffa::MessageField::none();
+        self.mariadb = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -27742,7 +27806,7 @@ pub struct DatabaseCommandStats {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub total_time_ms: ::core::option::Option<f64>,
-    /// Postgres.
+    /// Postgres, MariaDB.
     ///
     /// Field 4: `rows`
     #[serde(
@@ -27751,7 +27815,7 @@ pub struct DatabaseCommandStats {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub rows: ::core::option::Option<u64>,
-    /// Valkey.
+    /// Valkey, MariaDB.
     ///
     /// Field 5: `failed_calls`
     #[serde(
@@ -29053,11 +29117,572 @@ pub const __VALKEY_STATS_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buff
     from_json: ::buffa::type_registry::any_from_json::<ValkeyStats>,
     is_wkt: false,
 };
+/// The whole server's counters; rows_read and tmp_disk_tables count its statements but the
+/// machine's, the prepared ones' included, while statements are tracked.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MariadbStats {
+    /// Read from its buffer pool.
+    ///
+    /// Field 1: `pages_hit`
+    #[serde(
+        rename = "pages_hit",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub pages_hit: ::core::option::Option<u64>,
+    /// Read from disk.
+    ///
+    /// Field 2: `pages_read`
+    #[serde(
+        rename = "pages_read",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub pages_read: ::core::option::Option<u64>,
+    /// Examined by its statements.
+    ///
+    /// Field 3: `rows_read`
+    #[serde(
+        rename = "rows_read",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub rows_read: ::core::option::Option<u64>,
+    /// The rows written to its tables, by how.
+    ///
+    /// Field 4: `rows_inserted`
+    #[serde(
+        rename = "rows_inserted",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub rows_inserted: ::core::option::Option<u64>,
+    /// Field 5: `rows_updated`
+    #[serde(
+        rename = "rows_updated",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub rows_updated: ::core::option::Option<u64>,
+    /// Field 6: `rows_deleted`
+    #[serde(
+        rename = "rows_deleted",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub rows_deleted: ::core::option::Option<u64>,
+    /// Field 7: `deadlocks`
+    #[serde(
+        rename = "deadlocks",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub deadlocks: ::core::option::Option<u64>,
+    /// Field 8: `row_lock_waits`
+    #[serde(
+        rename = "row_lock_waits",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub row_lock_waits: ::core::option::Option<u64>,
+    /// Written to the redo log.
+    ///
+    /// Field 9: `redo_bytes`
+    #[serde(
+        rename = "redo_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub redo_bytes: ::core::option::Option<u64>,
+    /// Temporary tables written to disk.
+    ///
+    /// Field 10: `tmp_disk_tables`
+    #[serde(
+        rename = "tmp_disk_tables",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub tmp_disk_tables: ::core::option::Option<u64>,
+    /// Sessions running a statement.
+    ///
+    /// Field 11: `active_max`
+    #[serde(
+        rename = "active_max",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub active_max: ::core::option::Option<u32>,
+    /// Field 12: `idle_in_transaction_max`
+    #[serde(
+        rename = "idle_in_transaction_max",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub idle_in_transaction_max: ::core::option::Option<u32>,
+    /// On a lock.
+    ///
+    /// Field 13: `waiting_max`
+    #[serde(
+        rename = "waiting_max",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub waiting_max: ::core::option::Option<u32>,
+    /// Field 14: `longest_transaction_seconds_max`
+    #[serde(
+        rename = "longest_transaction_seconds_max",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub longest_transaction_seconds_max: ::core::option::Option<u32>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MariadbStats {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MariadbStats")
+            .field("pages_hit", &self.pages_hit)
+            .field("pages_read", &self.pages_read)
+            .field("rows_read", &self.rows_read)
+            .field("rows_inserted", &self.rows_inserted)
+            .field("rows_updated", &self.rows_updated)
+            .field("rows_deleted", &self.rows_deleted)
+            .field("deadlocks", &self.deadlocks)
+            .field("row_lock_waits", &self.row_lock_waits)
+            .field("redo_bytes", &self.redo_bytes)
+            .field("tmp_disk_tables", &self.tmp_disk_tables)
+            .field("active_max", &self.active_max)
+            .field("idle_in_transaction_max", &self.idle_in_transaction_max)
+            .field("waiting_max", &self.waiting_max)
+            .field(
+                "longest_transaction_seconds_max",
+                &self.longest_transaction_seconds_max,
+            )
+            .finish()
+    }
+}
+impl MariadbStats {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MariadbStats";
+}
+impl MariadbStats {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::pages_hit`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_pages_hit(mut self, value: u64) -> Self {
+        self.pages_hit = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::pages_read`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_pages_read(mut self, value: u64) -> Self {
+        self.pages_read = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::rows_read`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_rows_read(mut self, value: u64) -> Self {
+        self.rows_read = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::rows_inserted`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_rows_inserted(mut self, value: u64) -> Self {
+        self.rows_inserted = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::rows_updated`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_rows_updated(mut self, value: u64) -> Self {
+        self.rows_updated = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::rows_deleted`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_rows_deleted(mut self, value: u64) -> Self {
+        self.rows_deleted = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::deadlocks`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_deadlocks(mut self, value: u64) -> Self {
+        self.deadlocks = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::row_lock_waits`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_row_lock_waits(mut self, value: u64) -> Self {
+        self.row_lock_waits = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::redo_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_redo_bytes(mut self, value: u64) -> Self {
+        self.redo_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::tmp_disk_tables`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_tmp_disk_tables(mut self, value: u64) -> Self {
+        self.tmp_disk_tables = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::active_max`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_active_max(mut self, value: u32) -> Self {
+        self.active_max = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::idle_in_transaction_max`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_idle_in_transaction_max(mut self, value: u32) -> Self {
+        self.idle_in_transaction_max = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::waiting_max`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_waiting_max(mut self, value: u32) -> Self {
+        self.waiting_max = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::longest_transaction_seconds_max`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_longest_transaction_seconds_max(mut self, value: u32) -> Self {
+        self.longest_transaction_seconds_max = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(MariadbStats);
+impl ::buffa::MessageName for MariadbStats {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MariadbStats";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MariadbStats";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MariadbStats";
+}
+impl ::buffa::Message for MariadbStats {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(v) = self.pages_hit {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.pages_read {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_read {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_inserted {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_updated {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.rows_deleted {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.deadlocks {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.row_lock_waits {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.redo_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.tmp_disk_tables {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.active_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.idle_in_transaction_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.waiting_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.longest_transaction_seconds_max {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.pages_hit {
+            ::buffa::types::put_uint64_field(1u32, v, buf);
+        }
+        if let Some(v) = self.pages_read {
+            ::buffa::types::put_uint64_field(2u32, v, buf);
+        }
+        if let Some(v) = self.rows_read {
+            ::buffa::types::put_uint64_field(3u32, v, buf);
+        }
+        if let Some(v) = self.rows_inserted {
+            ::buffa::types::put_uint64_field(4u32, v, buf);
+        }
+        if let Some(v) = self.rows_updated {
+            ::buffa::types::put_uint64_field(5u32, v, buf);
+        }
+        if let Some(v) = self.rows_deleted {
+            ::buffa::types::put_uint64_field(6u32, v, buf);
+        }
+        if let Some(v) = self.deadlocks {
+            ::buffa::types::put_uint64_field(7u32, v, buf);
+        }
+        if let Some(v) = self.row_lock_waits {
+            ::buffa::types::put_uint64_field(8u32, v, buf);
+        }
+        if let Some(v) = self.redo_bytes {
+            ::buffa::types::put_uint64_field(9u32, v, buf);
+        }
+        if let Some(v) = self.tmp_disk_tables {
+            ::buffa::types::put_uint64_field(10u32, v, buf);
+        }
+        if let Some(v) = self.active_max {
+            ::buffa::types::put_uint32_field(11u32, v, buf);
+        }
+        if let Some(v) = self.idle_in_transaction_max {
+            ::buffa::types::put_uint32_field(12u32, v, buf);
+        }
+        if let Some(v) = self.waiting_max {
+            ::buffa::types::put_uint32_field(13u32, v, buf);
+        }
+        if let Some(v) = self.longest_transaction_seconds_max {
+            ::buffa::types::put_uint32_field(14u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.pages_hit = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.pages_read = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.rows_read = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.rows_inserted = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.rows_updated = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.rows_deleted = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.deadlocks = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.row_lock_waits = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.redo_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            10u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.tmp_disk_tables = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            11u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.active_max = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            12u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.idle_in_transaction_max = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.waiting_max = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            14u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.longest_transaction_seconds_max = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.pages_hit = ::core::option::Option::None;
+        self.pages_read = ::core::option::Option::None;
+        self.rows_read = ::core::option::Option::None;
+        self.rows_inserted = ::core::option::Option::None;
+        self.rows_updated = ::core::option::Option::None;
+        self.rows_deleted = ::core::option::Option::None;
+        self.deadlocks = ::core::option::Option::None;
+        self.row_lock_waits = ::core::option::Option::None;
+        self.redo_bytes = ::core::option::Option::None;
+        self.tmp_disk_tables = ::core::option::Option::None;
+        self.active_max = ::core::option::Option::None;
+        self.idle_in_transaction_max = ::core::option::Option::None;
+        self.waiting_max = ::core::option::Option::None;
+        self.longest_transaction_seconds_max = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MariadbStats {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MariadbStats";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MariadbStats {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MARIADB_STATS_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MariadbStats",
+    to_json: ::buffa::type_registry::any_to_json::<MariadbStats>,
+    from_json: ::buffa::type_registry::any_from_json::<MariadbStats>,
+    is_wkt: false,
+};
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct DatabaseStatement {
-    /// Postgres's queryid, or Valkey's command.
+    /// Postgres's queryid, MariaDB's digest or "prepared" (kind PREPARED), or Valkey's command.
     ///
     /// Field 1: `id`
     #[serde(rename = "id", skip_serializing_if = "::core::option::Option::is_none")]
@@ -29392,8 +30017,8 @@ pub struct DatabaseActivity {
         ::buffa_types::google::protobuf::Timestamp,
         ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
     >,
-    /// Postgres: its client sessions but the machine's, those in a transaction first, the longest
-    /// first; at most 50.
+    /// Postgres, MariaDB: its client sessions but the machine's, those in a transaction first, the
+    /// longest first; at most 50.
     ///
     /// Field 2: `sessions`
     #[serde(
@@ -29635,11 +30260,12 @@ pub const __DATABASE_ACTIVITY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = :
     from_json: ::buffa::type_registry::any_from_json::<DatabaseActivity>,
     is_wkt: false,
 };
+/// A MariaDB session has no application_name or backend_start_time, and no query while idle.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct DatabaseSession {
-    /// For CancelDatabaseQuery.
+    /// For CancelDatabaseQuery. Absent for a MariaDB session whose id is past 2147483647.
     ///
     /// Field 1: `pid`
     #[serde(
@@ -29732,7 +30358,7 @@ pub struct DatabaseSession {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub blocked_by_pids: ::buffa::alloc::vec::Vec<i32>,
-    /// Running, or the last that ran; ≤2000 characters. Untrusted.
+    /// Running, or Postgres's last that ran; ≤2000 characters. Untrusted.
     ///
     /// Field 13: `query`
     #[serde(rename = "query", skip_serializing_if = "::core::option::Option::is_none")]
@@ -42066,7 +42692,7 @@ pub mod path_download {
     #[doc(inline)]
     pub use super::__buffa::view::oneof::path_download::Root as RootView;
 }
-/// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+/// A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -42077,7 +42703,7 @@ pub struct DatabaseDump {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Postgres: the database to dump. Empty = "app", the apps'.
+    /// Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
     ///
     /// Field 2: `database`
     #[serde(
@@ -42303,7 +42929,8 @@ pub struct CreateTransferResponse {
     pub replaces: ::core::option::Option<bool>,
     /// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
     /// after the project and its service or volume. download_database: "\<project_id\>-\<database\>.dump"
-    /// or "\<project_id\>.rdb". Empty for an upload.
+    /// (Postgres), "\<project_id\>-\<database\>.sql" (MariaDB) or "\<project_id\>.rdb". Empty for an
+    /// upload.
     ///
     /// Field 7: `file_name`
     #[serde(

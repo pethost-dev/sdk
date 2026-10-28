@@ -1406,13 +1406,14 @@ pub trait PanelService: Send + Sync + 'static {
     /// Without one, a Dockerfile yields service `app` (reading /.env if any, its EXPOSE ports, a
     /// named volume per VOLUME of its last stage).
     ///
-    /// A database (Postgres or Valkey) is CreateDatabase's: make the app's first, then link it here
-    /// with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix: "DATABASE"}, and
-    /// compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host \<database_project_id\>
-    /// from its first start (its deploy waits for one still being made). own_user, Postgres only (a
-    /// Valkey has one user), to share a Postgres other apps use: a user and a database of its own,
-    /// named as the project, which they cannot reach; all are restored together. Only link_databases
-    /// makes one: LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
+    /// A database (Postgres, MariaDB or Valkey) is CreateDatabase's: make the app's first, then link
+    /// it here with `link_databases`, e.g. {database_project_id: "recipes-db", env_prefix:
+    /// "DATABASE"}, and compose.yaml reads ${DATABASE_URL:?}. The app reaches each at the host
+    /// \<database_project_id\> from its first start (its deploy waits for one still being made).
+    /// own_user, on an engine whose offer has own_users (Postgres, MariaDB; a Valkey has one user),
+    /// to share a database other apps use: a user and a database of its own, named as the project,
+    /// which they cannot reach; all are restored together. Only link_databases makes one:
+    /// LinkDatabase links as the apps' user. env_prefix "DATABASE": the machine writes
     /// DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME into /.env, so no password is copied.
     /// A name /.env sets already is refused, as a laptop's .env in an archive may set one: send
     /// `files` with a /.env without it beside `upload_id`.
@@ -1576,11 +1577,11 @@ pub trait PanelService: Send + Sync + 'static {
     /// others are done on return. Answers with the project as it then is. With no services,
     /// start_services starts those with a container and restart_services the running ones.
     /// restore_snapshot takes the project's own snapshots only: a deleted app's data in a shared
-    /// Postgres is in that Postgres's snapshots. A database's snapshot as a new
+    /// database is in that database's snapshots. A database's snapshot as a new
     /// database beside it is CreateDatabase's, with from_snapshot_id.
     ///
     /// delete_project: a final backup while backups are on, then containers, volumes, files, hosts,
-    /// logs, and an app's user and database of its own in a shared Postgres, data and all. Snapshots
+    /// logs, and an app's user and database of its own in a shared database, data and all. Snapshots
     /// stay (GetMachine.deleted_projects), and restoring one brings the project back, source
     /// included; with backups off there is none, and it is gone for good. The databases it was
     /// linked to stay: delete each with its own delete_project.
@@ -1750,13 +1751,13 @@ pub trait PanelService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// A database project, Postgres or Valkey: the machine writes its compose.yaml and /.env and
-    /// deploys it, with no address. Make it before the app that uses it: the app reaches it at the
-    /// host `<project_id>` once linked (the app's CreateProject `link_databases`, which may follow at
-    /// once, as its deploy waits for this one; `link` or LinkDatabase for an app that exists, as the
-    /// apps' user and writing nothing into its /.env), and Project.database says how to sign in. Or
-    /// a copy of a database's snapshot, with passwords of its own and none of its links. Answers as
-    /// CreateProject does.
+    /// A database project, Postgres, MariaDB (for an app that asks for MySQL or MariaDB) or Valkey:
+    /// the machine writes its compose.yaml and /.env and deploys it, with no address. Make it before
+    /// the app that uses it: the app reaches it at the host `<project_id>` once linked (the app's
+    /// CreateProject `link_databases`, which may follow at once, as its deploy waits for this one;
+    /// `link` or LinkDatabase for an app that exists, as the apps' user and writing nothing into its
+    /// /.env), and Project.database says how to sign in. Or a copy of a database's snapshot, with
+    /// passwords of its own and none of its links. Answers as CreateProject does.
     /// INVALID_ARGUMENT = an engine or a size Machine.database_engines does not offer, or a
     /// project_id with "_", that is a number or that every container's /etc/hosts names (it is the
     /// host name apps use). NOT_FOUND = no such snapshot or app. FAILED_PRECONDITION = the snapshot
@@ -1817,12 +1818,12 @@ pub trait PanelService: Send + Sync + 'static {
         >,
     > + Send;
     /// A database's numbers over a range, for the web panel's Monitoring: every bucket of it, its
-    /// totals, its 10 busiest statements (Postgres) or commands (Valkey), and what the server runs
-    /// now. The machine reads them each minute and keeps a minute 7 days and an hour 90; its own
-    /// readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
+    /// totals, its 10 busiest statements (Postgres, MariaDB) or commands (Valkey), and what the
+    /// server runs now. The machine reads them each minute and keeps a minute 7 days and an hour 90;
+    /// its own readings count in none. NOT_FOUND = no such project. FAILED_PRECONDITION = it is no
     /// database. INVALID_ARGUMENT = a malformed range, or a bucket width that is no whole number of
     /// minutes, of hours for a range that starts over 7 days ago, or makes over 500 buckets. Not an
-    /// MCP tool: agents use RunServiceCommand with psql or valkey-cli.
+    /// MCP tool: agents use RunServiceCommand with psql, mariadb or valkey-cli.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1845,9 +1846,10 @@ pub trait PanelService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Cancels the statement a client session of a Postgres database runs, or ends the session
-    /// (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
-    /// FAILED_PRECONDITION = it is no Postgres database, or its service does not run.
+    /// Cancels the statement a client session of a Postgres or MariaDB database runs, or ends the
+    /// session (GetDatabaseStats' activity), for the web panel. NOT_FOUND = no such project.
+    /// FAILED_PRECONDITION = it is no Postgres or MariaDB database, its service does not run, or a
+    /// MariaDB refuses the machine's sign-in (the message says how to let it in again).
     /// UNAVAILABLE = the server does not answer. Not an MCP tool.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
@@ -1995,15 +1997,18 @@ pub trait PanelService: Send + Sync + 'static {
     ///   creating parents.
     /// - download: a file, or a directory as a .tar (file_name).
     /// - download_database: a database project's dump, made as it downloads: Postgres's for
-    ///   pg_restore (roles are not in it), Valkey's .rdb. One at a time per database.
+    ///   pg_restore (roles are not in it), MariaDB's SQL of one database for its console,
+    ///   `mariadb <database> < file` (users are not in it), Valkey's .rdb. One at a time per
+    ///   database.
     /// Plain-text answers: 404 used or expired URL, 409 FAILED_PRECONDITION, 413 archive over 2
     /// GiB, 422 unsafe archive (a reason per line), 503 UNAVAILABLE, 507 disk full. A failed
     /// transfer keeps nothing: get a new URL. Errors as ReadPath; FAILED_PRECONDITION also =
     /// downloading neither a file nor a directory, uploading onto a non-file, a mount point, /proc
     /// or /sys, the hostname not yet certified, or a dump of a project that is no database or is
-    /// not running. NOT_FOUND also = a Postgres database the server lacks (the message lists its
-    /// databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE = Postgres
-    /// runs but does not answer yet: try again shortly.
+    /// not running, or of a MariaDB that refuses the machine's sign-in (the message says how to let
+    /// it in again). NOT_FOUND also = a Postgres or MariaDB database the server lacks (the message
+    /// lists its databases). RESOURCE_EXHAUSTED = disk full, or too many transfers. UNAVAILABLE =
+    /// Postgres or MariaDB runs but does not answer yet: try again shortly.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///

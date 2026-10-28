@@ -1166,7 +1166,8 @@ type RunProjectActionResponse struct {
 	Log []OperationLogLine
 }
 
-// A database project: one service running Postgres or Valkey, whose files the machine wrote.
+// A database project: one service running Postgres, MariaDB or Valkey, whose files the machine
+// wrote.
 type Database struct {
 	Engine DatabaseEngine
 	// As it was made, e.g. 18.
@@ -1176,7 +1177,8 @@ type Database struct {
 	// Its size: its service's `mem_limit` in compose.yaml. [RunProjectActionSetDatabaseSize]
 	// changes it.
 	MemoryLimitBytes uint64
-	// Postgres: its databases' size; Valkey: its data in memory. On disk: [Project.Volumes].
+	// Postgres, MariaDB: its databases' size; Valkey: its data in memory. On disk:
+	// [Project.Volumes].
 	DataBytes uint64
 	// Open now.
 	Connections uint32
@@ -1191,7 +1193,8 @@ type Database struct {
 	Service string
 	// The volume of [Project.Volumes] that holds its data.
 	Volume string
-	// The console, for OpenTerminal in Service: psql signed in as the superuser, or valkey-cli.
+	// The console, for OpenTerminal in Service: psql or mariadb signed in as the superuser, or
+	// valkey-cli.
 	ConsoleCommand []string
 	// Of LinkedProjects, those linked with [DatabaseLinkRequest.OwnUser] ([DatabaseLinkRequest]):
 	// each signs in as a user of its own, to a database of its own, both named as it, with the
@@ -1215,7 +1218,8 @@ type DatabaseConnection struct {
 	// For the app's .env, e.g. DATABASE_URL=<url>. Without
 	// [GetProjectRequest.IncludeSecretValues], **** stands for the password.
 	URL string
-	// As url, at localhost: what the SSH tunnel to its service gives ([Service.SSHCommand]).
+	// As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
+	// socket): what the SSH tunnel to its service gives ([Service.SSHCommand]).
 	LocalURL string
 }
 
@@ -1887,10 +1891,10 @@ type PathDownloadService string
 // In the volume, from its root.
 type PathDownloadVolume string
 
-// A database project's dump: Postgres's in its custom format, Valkey's .rdb.
+// A database project's dump: Postgres's in its custom format, MariaDB's as SQL, Valkey's .rdb.
 type DatabaseDump struct {
 	ProjectID string
-	// Postgres: the database to dump. Empty = "app", the apps'.
+	// Postgres, MariaDB: the database to dump. Empty = "app", the apps'.
 	Database string
 }
 
@@ -1916,7 +1920,8 @@ type CreateTransferResponse struct {
 	Replaces bool
 	// download: the name it saves as: a file's own; a directory's ends in ".tar", and "/" is named
 	// after the project and its service or volume. [CreateTransferDownloadDatabase]:
-	// "<ProjectID>-<database>.dump" or "<ProjectID>.rdb". Empty for an upload.
+	// "<ProjectID>-<database>.dump" (Postgres), "<ProjectID>-<database>.sql" (MariaDB) or
+	// "<ProjectID>.rdb". Empty for an upload.
 	FileName string
 	// [CreateTransferUploadArchive]: the names Command leaves out of the archive, wherever they
 	// lie in the directory. A program that packs the directory itself leaves out the same.
@@ -2521,17 +2526,19 @@ func (v DeployFailureReason) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "DatabaseEngine(3)".
+// and prints as "DatabaseEngine(4)".
 type DatabaseEngine int32
 
 const (
 	DatabaseEngineUnspecified DatabaseEngine = 0
 	DatabaseEnginePostgres    DatabaseEngine = 1
 	DatabaseEngineValkey      DatabaseEngine = 2
+	// MySQL's protocol: for an app that asks for MySQL or MariaDB.
+	DatabaseEngineMariadb DatabaseEngine = 3
 )
 
-// String is the value's name as the API's documentation writes it: "VALKEY" for
-// [DatabaseEngineValkey].
+// String is the value's name as the API's documentation writes it: "MARIADB" for
+// [DatabaseEngineMariadb].
 func (v DatabaseEngine) String() string {
 	switch v {
 	case DatabaseEngineUnspecified:
@@ -2540,6 +2547,8 @@ func (v DatabaseEngine) String() string {
 		return "POSTGRES"
 	case DatabaseEngineValkey:
 		return "VALKEY"
+	case DatabaseEngineMariadb:
+		return "MARIADB"
 	}
 	return "DatabaseEngine(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2749,9 +2758,9 @@ const (
 	// [DatabaseLinkRequest.OwnUser] for a database whose engine has one user
 	// ([DatabaseEngineOffer.OwnUsers] false): Valkey.
 	DatabaseLinkRefusalReasonOneUser DatabaseLinkRefusalReason = 4
-	// [DatabaseLinkRequest.OwnUser] for a project whose id Postgres or the machine keeps as a user
-	// or a database (postgres, app, public, none, template0, template1, current_user,
-	// current_role, session_user, pg_…): give it another id.
+	// [DatabaseLinkRequest.OwnUser] for a project whose id the database's engine or the machine
+	// keeps as a user or a database of its own, as `app` (the message names it): give it another
+	// id.
 	DatabaseLinkRefusalReasonUserNameReserved DatabaseLinkRefusalReason = 5
 )
 

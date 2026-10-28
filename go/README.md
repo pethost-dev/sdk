@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.4.5
+go get github.com/pethost-dev/sdk/go@v0.4.6
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -279,8 +279,8 @@ agent or from a web panel: both show the same projects, logs and requests.
 - **Nightly backups:** encrypted, stored off the machine, kept for 14 days.
 - **SSH and SFTP** into any container, and a terminal in the panel.
 - **Docker Compose, as written:** a project is a Compose file, and the same file runs anywhere
-  else Docker does. A database is one click, Postgres or Valkey, with a page for connecting
-  your apps, at no extra cost.
+  else Docker does. A database is one click, Postgres, MariaDB or Valkey, with a page for
+  connecting your apps, at no extra cost.
 - **In the EU:** your data lives on your machine, and requests to your sites go straight to
   it, never through our panel.
 
