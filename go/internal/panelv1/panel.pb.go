@@ -11691,8 +11691,9 @@ type ProjectExtension_builder struct {
 	Metadata *ProjectMetadata
 	// The project's routes from now on: these replace all it has, so send Project.routes with your
 	// change to add, change or remove one. Empty = they stay.
-	Routes         []*Route
-	RemoveRoutes   *bool
+	Routes       []*Route
+	RemoveRoutes *bool
+	// Visitors of every route must enter it. Empty = it stays.
 	Password       *string
 	RemovePassword *bool
 }
@@ -15789,9 +15790,10 @@ type CreateDatabaseRequest_builder struct {
 	// A snapshot of a database of `engine` (Project.snapshots, GetMachine.deleted_projects): the new
 	// one starts with its data. Empty = an empty database.
 	FromSnapshotId *string
-	Link           []string
-	OperationId    *string
-	WaitSeconds    *uint32
+	// App project_ids, linked before its operation ends.
+	Link        []string
+	OperationId *string
+	WaitSeconds *uint32
 	// What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
 	Metadata *ProjectMetadata
 }
@@ -30405,10 +30407,10 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x06status\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.HealthStatusR\x06status\x12:\n" +
 	"\x19consecutive_failure_count\x18\x04 \x01(\rR\x17consecutiveFailureCount\x122\n" +
 	"\x15recent_results_passed\x18\x05 \x03(\bR\x13recentResultsPassed\x12.\n" +
-	"\x13last_failure_output\x18\x06 \x01(\tR\x11lastFailureOutput\"\xd5\x01\n" +
+	"\x13last_failure_output\x18\x06 \x01(\tR\x11lastFailureOutput\"\xda\x01\n" +
 	"\x13EnvironmentVariable\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\x12\x16\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
+	"\x05value\x18\x02 \x01(\tB\x03\x80\x01\x01R\x05value\x12\x16\n" +
 	"\x06secret\x18\x03 \x01(\bR\x06secret\x12\x1f\n" +
 	"\vsource_file\x18\x04 \x01(\tR\n" +
 	"sourceFile\x125\n" +
@@ -30478,12 +30480,12 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rrequest_count\x18\x01 \x01(\x04R\frequestCount\x12,\n" +
 	"\x12server_error_count\x18\x02 \x01(\x04R\x10serverErrorCount\x12$\n" +
 	"\x0elatency_p50_ms\x18\x03 \x01(\rR\flatencyP50Ms\x12$\n" +
-	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\xd3\x03\n" +
+	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\xd9\x03\n" +
 	"\x14CreateProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x127\n" +
-	"\x06source\x18\x02 \x01(\v2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12\x1b\n" +
-	"\tupload_id\x18\x03 \x01(\tR\buploadId\x122\n" +
+	"\x06source\x18\x02 \x01(\v2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12!\n" +
+	"\tupload_id\x18\x03 \x01(\tB\x04\xa8\xb5\x18\x01R\buploadId\x122\n" +
 	"\x05files\x18\x04 \x03(\v2\x1c.pethost.panel.v1.FileChangeR\x05files\x12?\n" +
 	"\tx_pethost\x18\x05 \x01(\v2\".pethost.panel.v1.ProjectExtensionR\bxPethost\x12'\n" +
 	"\x0ftimeout_seconds\x18\x06 \x01(\rR\x0etimeoutSeconds\x12!\n" +
@@ -30503,12 +30505,12 @@ const file_v1_panel_proto_rawDesc = "" +
 	"violations\x12 \n" +
 	"\vadjustments\x18\x03 \x03(\tR\vadjustments\x123\n" +
 	"\aproject\x18\x05 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
-	"\x03log\x18\x06 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xa2\x04\n" +
+	"\x03log\x18\x06 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xa8\x04\n" +
 	"\x14DeployProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12$\n" +
-	"\x0ebase_deploy_id\x18\x02 \x01(\tR\fbaseDeployId\x122\n" +
-	"\x05files\x18\x03 \x03(\v2\x1c.pethost.panel.v1.FileChangeR\x05files\x12?\n" +
+	"\x0ebase_deploy_id\x18\x02 \x01(\tR\fbaseDeployId\x128\n" +
+	"\x05files\x18\x03 \x03(\v2\x1c.pethost.panel.v1.FileChangeB\x04\xb0\xb5\x18\x01R\x05files\x12?\n" +
 	"\tx_pethost\x18\n" +
 	" \x01(\v2\".pethost.panel.v1.ProjectExtensionR\bxPethost\x12@\n" +
 	"\fmount_volume\x18\v \x01(\v2\x1d.pethost.panel.v1.MountVolumeR\vmountVolume\x12'\n" +
@@ -30523,12 +30525,12 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\vMountVolume\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x16\n" +
 	"\x06volume\x18\x02 \x01(\tR\x06volume\x12%\n" +
-	"\x0econtainer_path\x18\x03 \x01(\tR\rcontainerPath\"\xec\x01\n" +
+	"\x0econtainer_path\x18\x03 \x01(\tR\rcontainerPath\"\xf1\x01\n" +
 	"\x10ProjectExtension\x12=\n" +
 	"\bmetadata\x18\x01 \x01(\v2!.pethost.panel.v1.ProjectMetadataR\bmetadata\x12/\n" +
 	"\x06routes\x18\x02 \x03(\v2\x17.pethost.panel.v1.RouteR\x06routes\x12#\n" +
-	"\rremove_routes\x18\x03 \x01(\bR\fremoveRoutes\x12\x1a\n" +
-	"\bpassword\x18\x04 \x01(\tR\bpassword\x12'\n" +
+	"\rremove_routes\x18\x03 \x01(\bR\fremoveRoutes\x12\x1f\n" +
+	"\bpassword\x18\x04 \x01(\tB\x03\x80\x01\x01R\bpassword\x12'\n" +
 	"\x0fremove_password\x18\x05 \x01(\bR\x0eremovePassword\"\xfb\x01\n" +
 	"\n" +
 	"FileChange\x12\x12\n" +
@@ -30628,15 +30630,15 @@ const file_v1_panel_proto_rawDesc = "" +
 	" \x01(\tR\aservice\x12\x16\n" +
 	"\x06volume\x18\v \x01(\tR\x06volume\x12'\n" +
 	"\x0fconsole_command\x18\f \x03(\tR\x0econsoleCommand\x12*\n" +
-	"\x11own_user_projects\x18\r \x03(\tR\x0fownUserProjects\"\xb7\x01\n" +
+	"\x11own_user_projects\x18\r \x03(\tR\x0fownUserProjects\"\xc6\x01\n" +
 	"\x12DatabaseConnection\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\rR\x04port\x12\x12\n" +
 	"\x04user\x18\x03 \x01(\tR\x04user\x12\x1a\n" +
-	"\bdatabase\x18\x04 \x01(\tR\bdatabase\x12\x1a\n" +
-	"\bpassword\x18\x05 \x01(\tR\bpassword\x12\x10\n" +
-	"\x03url\x18\x06 \x01(\tR\x03url\x12\x1b\n" +
-	"\tlocal_url\x18\a \x01(\tR\blocalUrl\"\xdb\x02\n" +
+	"\bdatabase\x18\x04 \x01(\tR\bdatabase\x12\x1f\n" +
+	"\bpassword\x18\x05 \x01(\tB\x03\x80\x01\x01R\bpassword\x12\x15\n" +
+	"\x03url\x18\x06 \x01(\tB\x03\x80\x01\x01R\x03url\x12 \n" +
+	"\tlocal_url\x18\a \x01(\tB\x03\x80\x01\x01R\blocalUrl\"\xdb\x02\n" +
 	"\x0fDatabaseSummary\x128\n" +
 	"\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n" +
 	"\rmajor_version\x18\x02 \x01(\rR\fmajorVersion\x12\x1d\n" +
@@ -30660,17 +30662,17 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04link\x18\x02 \x03(\tR\x04link\x12\x16\n" +
 	"\x06unlink\x18\x03 \x03(\tR\x06unlink\"K\n" +
 	"\x14LinkDatabaseResponse\x123\n" +
-	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xe7\x02\n" +
+	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xf3\x02\n" +
 	"\x15CreateDatabaseRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x128\n" +
 	"\x06engine\x18\x02 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12,\n" +
 	"\x12memory_limit_bytes\x18\x03 \x01(\x04R\x10memoryLimitBytes\x12(\n" +
-	"\x10from_snapshot_id\x18\x04 \x01(\tR\x0efromSnapshotId\x12\x12\n" +
-	"\x04link\x18\x05 \x03(\tR\x04link\x12!\n" +
+	"\x10from_snapshot_id\x18\x04 \x01(\tR\x0efromSnapshotId\x12\x18\n" +
+	"\x04link\x18\x05 \x03(\tB\x04\xa8\xb5\x18\x01R\x04link\x12!\n" +
 	"\foperation_id\x18\x06 \x01(\tR\voperationId\x12'\n" +
-	"\fwait_seconds\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12=\n" +
-	"\bmetadata\x18\b \x01(\v2!.pethost.panel.v1.ProjectMetadataR\bmetadata\"\xa1\x02\n" +
+	"\fwait_seconds\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12C\n" +
+	"\bmetadata\x18\b \x01(\v2!.pethost.panel.v1.ProjectMetadataB\x04\xa8\xb5\x18\x01R\bmetadata\"\xa1\x02\n" +
 	"\x16CreateDatabaseResponse\x129\n" +
 	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n" +
 	"\n" +
@@ -31066,7 +31068,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\foffset_bytes\x18\a \x01(\x04R\voffsetBytes\x12!\n" +
 	"\flength_bytes\x18\b \x01(\rR\vlengthBytes\x12(\n" +
 	"\x10entry_page_token\x18\t \x01(\tR\x0eentryPageTokenB\x06\n" +
-	"\x04root\"\x99\x03\n" +
+	"\x04root\"\x9e\x03\n" +
 	"\x10ReadPathResponse\x121\n" +
 	"\x05entry\x18\x01 \x01(\v2\x1b.pethost.panel.v1.FileEntryR\x05entry\x12:\n" +
 	"\blocation\x18\n" +
@@ -31075,8 +31077,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\aentries\x18\x03 \x03(\v2\x1b.pethost.panel.v1.FileEntryR\aentries\x12\x1f\n" +
 	"\ventry_count\x18\x04 \x01(\rR\n" +
 	"entryCount\x121\n" +
-	"\x15next_entry_page_token\x18\b \x01(\tR\x12nextEntryPageToken\x12\x12\n" +
-	"\x04text\x18\x05 \x01(\tR\x04text\x12\x16\n" +
+	"\x15next_entry_page_token\x18\b \x01(\tR\x12nextEntryPageToken\x12\x17\n" +
+	"\x04text\x18\x05 \x01(\tB\x03\x80\x01\x01R\x04text\x12\x16\n" +
 	"\x06binary\x18\x06 \x01(\bR\x06binary\x12*\n" +
 	"\x11next_offset_bytes\x18\a \x01(\x04R\x0fnextOffsetBytes\x12\x1b\n" +
 	"\tdeploy_id\x18\t \x01(\tR\bdeployId\"\xbb\x02\n" +
@@ -31366,23 +31368,33 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\xbb\x18\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x93\x1a\n" +
 	"\fPanelService\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
-	"\x10RunMachineAction\x12).pethost.panel.v1.RunMachineActionRequest\x1a*.pethost.panel.v1.RunMachineActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a machine action\x12o\n" +
+	"\x10RunMachineAction\x12).pethost.panel.v1.RunMachineActionRequest\x1a*.pethost.panel.v1.RunMachineActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a machine action\x12\x8e\x01\n" +
 	"\n" +
-	"GetProject\x12#.pethost.panel.v1.GetProjectRequest\x1a$.pethost.panel.v1.GetProjectResponse\"\x16\x90\x02\x01\x8a\xb5\x18\x0f\x12\rGet a project\x12x\n" +
-	"\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a'.pethost.panel.v1.CreateProjectResponse\"\x16\x8a\xb5\x18\x12\x12\x10Create a project\x12z\n" +
-	"\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a'.pethost.panel.v1.DeployProjectResponse\"\x18\x8a\xb5\x18\x14\b\x01\x12\x10Deploy a project\x12}\n" +
-	"\vListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project's commits\x12\x87\x01\n" +
-	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\x12\x8c\x01\n" +
+	"GetProject\x12#.pethost.panel.v1.GetProjectRequest\x1a$.pethost.panel.v1.GetProjectResponse\"5\x90\x02\x01\x8a\xb5\x18\x0f\x12\rGet a project\xa2\xb5\x18\v\n" +
+	"\aProject\x10\x02\xa2\xb5\x18\f\n" +
+	"\bDatabase\x10\x02\x12\x87\x01\n" +
+	"\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a'.pethost.panel.v1.CreateProjectResponse\"%\x8a\xb5\x18\x12\x12\x10Create a project\xa2\xb5\x18\v\n" +
+	"\aProject\x10\x01\x12\xa8\x01\n" +
+	"\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a'.pethost.panel.v1.DeployProjectResponse\"F\x8a\xb5\x18\x14\b\x01\x12\x10Deploy a project\xa2\xb5\x18\v\n" +
+	"\aProject\x10\x03\xa2\xb5\x18\v\n" +
+	"\aProject\x10\x06\xa2\xb5\x18\f\n" +
+	"\bDatabase\x10\x06\x12}\n" +
+	"\vListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project's commits\x12\xe9\x01\n" +
+	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"~\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\xa2\xb5\x18\x1b\n" +
+	"\aProject\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1c\n" +
+	"\bDatabase\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1f\n" +
+	"\bDatabase\x10\x03\x1a\x11set_database_size\x12\x8c\x01\n" +
 	"\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse\"!\x90\x02\x02\x8a\xb5\x18\x1a\b\x01\x12\x16Set a project's alerts\x12_\n" +
-	"\vGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse\"\x03\x90\x02\x01\x12x\n" +
-	"\fGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse\"\x19\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\x12\x86\x01\n" +
+	"\vGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse\"\x03\x90\x02\x01\x12~\n" +
+	"\fGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse\"\x1f\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\xa2\xb5\x18\x02\x10\x05\x12\x86\x01\n" +
 	"\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n" +
-	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12|\n" +
-	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\"\x17\x8a\xb5\x18\x13\x12\x11Create a database\x12\x85\x01\n" +
+	"\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse\"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x8c\x01\n" +
+	"\x0eCreateDatabase\x12'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse\"'\x8a\xb5\x18\x13\x12\x11Create a database\xa2\xb5\x18\f\n" +
+	"\bDatabase\x10\x01\x12\x85\x01\n" +
 	"\fLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bLink projects to a database\x12n\n" +
 	"\x10GetDatabaseStats\x12).pethost.panel.v1.GetDatabaseStatsRequest\x1a*.pethost.panel.v1.GetDatabaseStatsResponse\"\x03\x90\x02\x01\x12r\n" +
 	"\x13CancelDatabaseQuery\x12,.pethost.panel.v1.CancelDatabaseQueryRequest\x1a-.pethost.panel.v1.CancelDatabaseQueryResponse\x12\x90\x01\n" +
@@ -31399,7 +31411,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fTailHttpTraffic\x12(.pethost.panel.v1.TailHttpTrafficRequest\x1a).pethost.panel.v1.TailHttpTrafficResponse\"\x19\x9a\xb5\x18\x15\n" +
 	"\x13Follow HTTP traffic0\x01B\xba\x01\n" +
 	"\x14com.pethost.panel.v1B\n" +
-	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
+	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\x0fv1/pulumi.protoz\fv1/sdk.proto"
 
 var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 24)
 var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 136)

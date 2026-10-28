@@ -1,0 +1,73 @@
+edition = "2024";
+
+// The options that make the Pulumi provider, the package `pethost` of the Pulumi Registry
+// (sdk/pulumi/README.md). protoc-gen-panel-pulumi (cmd/protoc-gen-panel-pulumi) reads them and
+// writes the provider whole: a resource is something the API creates, and each step of its life
+// is an RPC marked here, which the provider calls as it is, with the resource's inputs in the
+// request's fields of the same names. Nothing on the wire and nothing in the panel's own code
+// depends on the options.
+//
+// What the generator derives, so that the proto alone says it:
+// - A resource's inputs are its create request's fields but operation_id and wait_seconds, which
+//   are the provider's own, and those marked (pulumi_omit). Its id is the one input that its read
+//   and delete requests have too, by name and type. Its outputs are the read response's fields.
+// - An update step carries the inputs that its request has, or its action's message, by name and
+//   type, and is called when one of them changed, given or taken out, with those it carries that
+//   are given: a list of edits (pulumi_edits) with only the edits its last value lacks, as the
+//   others were made. A change of the id, or of an input that no update step carries, replaces
+//   the resource: Pulumi deletes it and then creates it anew, so whatever data it held goes with
+//   it.
+// - Pulumi's next run sends a resource whose create's operation failed, or whose end the provider
+//   did not see, its RETRY step: the resource is kept, with what failed, until that succeeds.
+// - A field marked debug_redact, descriptor.proto's own option, holds a secret: Pulumi is given its
+//   value as a secret, in an input as in an output or a function's answer.
+// - A step whose request has operation_id starts an operation: the provider gives it an id of its
+//   own, sends it again with that id while the API answers UNAVAILABLE, waits for its end with the
+//   RPC marked WAIT, and fails as the operation failed.
+package pethost.panel.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// What a marked RPC is in a resource's life.
+enum PulumiStepKind {
+  PULUMI_STEP_KIND_UNSPECIFIED = 0;
+  PULUMI_STEP_KIND_CREATE = 1; // Makes the resource. One per resource.
+  PULUMI_STEP_KIND_READ = 2; // Reads it by its id. One per resource.
+  PULUMI_STEP_KIND_UPDATE = 3; // Changes the inputs it carries. Any number per resource.
+  PULUMI_STEP_KIND_DELETE = 4; // Deletes it by its id. One per resource.
+  // Waits for an operation's end, by its resource's id and its operation_id, and answers as the
+  // step that started it does. One in the service, of no resource.
+  PULUMI_STEP_KIND_WAIT = 5;
+  // Deploys the resource again as it is, by its id, with the inputs it carries that are given but
+  // a list of edits: what Pulumi's next run sends a resource whose create did not succeed. One per
+  // resource whose create starts an operation.
+  PULUMI_STEP_KIND_RETRY = 6;
+}
+
+// One step of a resource's life.
+message PulumiStep {
+  // The resource as Pulumi's type names it: "Project" is pethost:index:Project. Empty for WAIT.
+  string resource = 1;
+  PulumiStepKind kind = 2;
+  // UPDATE or DELETE: the member of the request's oneof that the step sets, a message. An update
+  // fills it with the inputs it carries; a delete sends it empty. Empty = the step carries its
+  // request's own fields.
+  string action = 3;
+}
+
+extend google.protobuf.MethodOptions {
+  // The steps the RPC is, of one resource or of several. Only a unary RPC that the SDKs have
+  // (v1/sdk.proto) can be one.
+  repeated PulumiStep pulumi = 50004;
+}
+
+extend google.protobuf.FieldOptions {
+  // True = the field of a create request is no input of its resource: a value a program cannot
+  // keep from one run to the next (an upload's id, good for one call), or one whose change no
+  // update step carries and should not replace the resource with its data.
+  bool pulumi_omit = 50005;
+  // True = the list of an update step's request is edits, made in order over what the resource
+  // holds, not its whole value: the step sends an input of it with only the edits its last value
+  // lacks, as the others were made, and never sends one again.
+  bool pulumi_edits = 50006;
+}

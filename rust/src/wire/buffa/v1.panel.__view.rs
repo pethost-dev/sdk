@@ -14235,7 +14235,7 @@ impl ::serde::Serialize for HealthCheckOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct EnvironmentVariableView<'a> {
     /// Field 1: `name`
     pub name: ::core::option::Option<&'a str>,
@@ -14267,6 +14267,18 @@ pub struct EnvironmentVariableView<'a> {
     /// Field 6: `value_left_out`
     pub value_left_out: ::core::option::Option<bool>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for EnvironmentVariableView<'a> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("EnvironmentVariableView")
+            .field("name", &self.name)
+            .field("value", &::core::format_args!("[REDACTED]"))
+            .field("secret", &self.secret)
+            .field("source_file", &self.source_file)
+            .field("from_env_file_variables", &self.from_env_file_variables)
+            .field("value_left_out", &self.value_left_out)
+            .finish()
+    }
 }
 impl<'a> ::buffa::MessageView<'a> for EnvironmentVariableView<'a> {
     type Owned = super::super::EnvironmentVariable;
@@ -20371,7 +20383,7 @@ impl ::serde::Serialize for MountVolumeOwnedView {
     }
 }
 /// x-pethost as data. Absent parts stay.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct ProjectExtensionView<'a> {
     /// Sets the fields given; an empty one is removed.
     ///
@@ -20397,6 +20409,17 @@ pub struct ProjectExtensionView<'a> {
     /// Field 5: `remove_password`
     pub remove_password: ::core::option::Option<bool>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for ProjectExtensionView<'a> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ProjectExtensionView")
+            .field("metadata", &self.metadata)
+            .field("routes", &self.routes)
+            .field("remove_routes", &self.remove_routes)
+            .field("password", &::core::format_args!("[REDACTED]"))
+            .field("remove_password", &self.remove_password)
+            .finish()
+    }
 }
 impl<'a> ::buffa::MessageView<'a> for ProjectExtensionView<'a> {
     type Owned = super::super::ProjectExtension;
@@ -27171,7 +27194,7 @@ impl ::serde::Serialize for DatabaseOwnedView {
     }
 }
 /// How a linked project signs in, as the apps' user.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct DatabaseConnectionView<'a> {
     /// The database's project_id.
     ///
@@ -27202,6 +27225,19 @@ pub struct DatabaseConnectionView<'a> {
     /// Field 7: `local_url`
     pub local_url: ::core::option::Option<&'a str>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for DatabaseConnectionView<'a> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DatabaseConnectionView")
+            .field("host", &self.host)
+            .field("port", &self.port)
+            .field("user", &self.user)
+            .field("database", &self.database)
+            .field("password", &::core::format_args!("[REDACTED]"))
+            .field("url", &::core::format_args!("[REDACTED]"))
+            .field("local_url", &::core::format_args!("[REDACTED]"))
+            .finish()
+    }
 }
 impl<'a> ::buffa::MessageView<'a> for DatabaseConnectionView<'a> {
     type Owned = super::super::DatabaseConnection;
@@ -51028,7 +51064,7 @@ impl ::serde::Serialize for ReadPathRequestOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct ReadPathResponseView<'a> {
     /// The path itself, symlinks followed; a symlink whose target does not exist is its own entry.
     ///
@@ -51076,6 +51112,22 @@ pub struct ReadPathResponseView<'a> {
     /// Field 9: `deploy_id`
     pub deploy_id: ::core::option::Option<&'a str>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for ReadPathResponseView<'a> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ReadPathResponseView")
+            .field("entry", &self.entry)
+            .field("location", &self.location)
+            .field("volume", &self.volume)
+            .field("entries", &self.entries)
+            .field("entry_count", &self.entry_count)
+            .field("next_entry_page_token", &self.next_entry_page_token)
+            .field("text", &::core::format_args!("[REDACTED]"))
+            .field("binary", &self.binary)
+            .field("next_offset_bytes", &self.next_offset_bytes)
+            .field("deploy_id", &self.deploy_id)
+            .finish()
+    }
 }
 impl<'a> ::buffa::MessageView<'a> for ReadPathResponseView<'a> {
     type Owned = super::super::ReadPathResponse;

@@ -14924,7 +14924,7 @@ impl ::core::fmt::Debug for EnvironmentVariable {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("EnvironmentVariable")
             .field("name", &self.name)
-            .field("value", &self.value)
+            .field("value", &::core::format_args!("[REDACTED]"))
             .field("secret", &self.secret)
             .field("source_file", &self.source_file)
             .field("from_env_file_variables", &self.from_env_file_variables)
@@ -19536,7 +19536,7 @@ impl ::core::fmt::Debug for ProjectExtension {
             .field("metadata", &self.metadata)
             .field("routes", &self.routes)
             .field("remove_routes", &self.remove_routes)
-            .field("password", &self.password)
+            .field("password", &::core::format_args!("[REDACTED]"))
             .field("remove_password", &self.remove_password)
             .finish()
     }
@@ -24257,9 +24257,9 @@ impl ::core::fmt::Debug for DatabaseConnection {
             .field("port", &self.port)
             .field("user", &self.user)
             .field("database", &self.database)
-            .field("password", &self.password)
-            .field("url", &self.url)
-            .field("local_url", &self.local_url)
+            .field("password", &::core::format_args!("[REDACTED]"))
+            .field("url", &::core::format_args!("[REDACTED]"))
+            .field("local_url", &::core::format_args!("[REDACTED]"))
             .finish()
     }
 }
@@ -41087,7 +41087,7 @@ impl ::core::fmt::Debug for ReadPathResponse {
             .field("entries", &self.entries)
             .field("entry_count", &self.entry_count)
             .field("next_entry_page_token", &self.next_entry_page_token)
-            .field("text", &self.text)
+            .field("text", &::core::format_args!("[REDACTED]"))
             .field("binary", &self.binary)
             .field("next_offset_bytes", &self.next_offset_bytes)
             .field("deploy_id", &self.deploy_id)

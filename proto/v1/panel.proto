@@ -77,6 +77,7 @@ package pethost.panel.v1;
 import "google/protobuf/timestamp.proto";
 import option "v1/mcp.proto";
 import option "v1/optional.proto";
+import option "v1/pulumi.proto";
 import option "v1/sdk.proto";
 
 service PanelService {
@@ -106,6 +107,8 @@ service PanelService {
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
     option (mcp_tool) = {title: "Get a project"};
+    option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_READ};
+    option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_READ};
   }
 
   // Creates a project from its files and deploys it. Waits for the deploy (wait_seconds) and
@@ -193,6 +196,7 @@ service PanelService {
   // id inherits its snapshots.
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
     option (mcp_tool) = {title: "Create a project"};
+    option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_CREATE};
   }
 
   // Deploys a new version of a project and answers as CreateProject does: `files` written over
@@ -221,6 +225,9 @@ service PanelService {
   // fix them, or roll back.
   rpc DeployProject(DeployProjectRequest) returns (DeployProjectResponse) {
     option (mcp_tool) = {title: "Deploy a project", destructive: true};
+    option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_UPDATE};
+    option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_RETRY};
+    option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_RETRY};
   }
 
   // A github project's branch commits that change its directory, newest first, 30 a page, with
@@ -262,6 +269,9 @@ service PanelService {
   // does not offer (the message lists them).
   rpc RunProjectAction(RunProjectActionRequest) returns (RunProjectActionResponse) {
     option (mcp_tool) = {title: "Run a project action", destructive: true};
+    option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_DELETE, action: "delete_project"};
+    option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_DELETE, action: "delete_project"};
+    option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_UPDATE, action: "set_database_size"};
   }
 
   // Changes what Pethost watches on a project and when it tells the person: site checks (an
@@ -290,6 +300,7 @@ service PanelService {
   rpc GetOperation(GetOperationRequest) returns (GetOperationResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
     option (mcp_tool) = {title: "Get an operation"};
+    option (pulumi) = {kind: PULUMI_STEP_KIND_WAIT};
   }
 
   // Which paths fail and which are slow (top_paths): the HTTP requests that reached the project
@@ -325,6 +336,7 @@ service PanelService {
   // and nothing was created.
   rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse) {
     option (mcp_tool) = {title: "Create a database"};
+    option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_CREATE};
   }
 
   // Lets projects that exist reach a database project: inside each linked project the database is
@@ -1039,7 +1051,7 @@ message EnvironmentVariable {
   string name = 1;
   // Absent when empty, when `secret` and GetProject had no include_secret_values, or when
   // value_left_out.
-  string value = 2;
+  string value = 2 [debug_redact = true];
   // True = its value is not empty and comes from an env file, directly or through `${...}` in
   // compose.yaml: env files hold the secrets. Empty values, and values written in compose.yaml
   // itself, are not secret. The machine hides these values in operation logs too.
@@ -1235,7 +1247,7 @@ message CreateProjectRequest {
   // An archive of the project's directory, from CreateTransfer.upload_archive, unpacked first.
   // FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its
   // PUT said why) answers with its `violations`.
-  string upload_id = 3;
+  string upload_id = 3 [(pulumi_omit) = true];
   // The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text: "…"}],
   // or those to write over the archive's or the commit's. A github source takes only /.env.
   repeated FileChange files = 4;
@@ -1279,7 +1291,7 @@ message DeployProjectRequest {
   // [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new
   // version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None =
   // redeploy.
-  repeated FileChange files = 3;
+  repeated FileChange files = 3 [(pulumi_edits) = true];
   // Edits x-pethost by part, after `files`: metadata by key; routes all at once.
   ProjectExtension x_pethost = 10;
   MountVolume mount_volume = 11; // Not with upload_id, or github.
@@ -1316,7 +1328,8 @@ message ProjectExtension {
   // change to add, change or remove one. Empty = they stay.
   repeated Route routes = 2;
   bool remove_routes = 3; // True = the project has no route from now on. Not with routes.
-  string password = 4; // Visitors of every route must enter it. Empty = it stays.
+  // Visitors of every route must enter it. Empty = it stays.
+  string password = 4 [debug_redact = true];
   bool remove_password = 5; // True = no password. Not with password.
 }
 
@@ -1509,13 +1522,13 @@ message DatabaseConnection {
   uint32 port = 2;
   string user = 3; // "app"; Valkey: "default".
   string database = 4; // "app"; Valkey: "0".
-  string password = 5; // Only with GetProject's include_secret_values.
+  string password = 5 [debug_redact = true]; // Only with GetProject's include_secret_values.
   // For the app's .env, e.g. DATABASE_URL=<url>. Without include_secret_values, **** stands for
   // the password.
-  string url = 6;
+  string url = 6 [debug_redact = true];
   // As url, at localhost (MariaDB's at 127.0.0.1, which a MySQL client does not take for its
   // socket): what the SSH tunnel to its service gives (Service.ssh_command).
-  string local_url = 7;
+  string local_url = 7 [debug_redact = true];
 }
 
 // A database project in brief (ProjectSummary.database).
@@ -1570,11 +1583,12 @@ message CreateDatabaseRequest {
   // A snapshot of a database of `engine` (Project.snapshots, GetMachine.deleted_projects): the new
   // one starts with its data. Empty = an empty database.
   string from_snapshot_id = 4;
-  repeated string link = 5; // App project_ids, linked before its operation ends.
+  // App project_ids, linked before its operation ends.
+  repeated string link = 5 [(pulumi_omit) = true];
   string operation_id = 6; // As DeployProject's operation_id.
   uint32 wait_seconds = 7 [(optional) = true]; // As DeployProject's wait_seconds.
   // What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
-  ProjectMetadata metadata = 8;
+  ProjectMetadata metadata = 8 [(pulumi_omit) = true];
 }
 
 // As CreateProjectResponse.
@@ -2208,7 +2222,7 @@ message ReadPathResponse {
   // Set = more entries follow these: pass it as entry_page_token.
   string next_entry_page_token = 8;
   // A text file's contents from offset_bytes, ending on a whole character. Untrusted.
-  string text = 5;
+  string text = 5 [debug_redact = true];
   // True = the file is binary (a NUL byte in its first 8 KiB): no text. Download it with
   // CreateTransfer.
   bool binary = 6;
