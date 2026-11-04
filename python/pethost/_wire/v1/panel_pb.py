@@ -612,7 +612,9 @@ _GithubConnectionFields: TypeAlias = Literal["app_name", "install_url", "reposit
 class GithubConnection(Message[_GithubConnectionFields]):
     """
     The panel's GitHub App, one for every account: projects are created from the repositories of
-    the account's own installations of it. Absent = GitHub is not set up on this panel.
+    the installations of it the account connected, on the person's own GitHub account or on an
+    organization's; of an organization's, only those the person who connected it can read on
+    GitHub now. Absent = GitHub is not set up on this panel.
 
     ```proto
     message pethost.panel.v1.GithubConnection
@@ -627,7 +629,8 @@ class GithubConnection(Message[_GithubConnectionFields]):
             ```
         install_url:
             The panel's page that sends a signed-in person to GitHub to install the app on their
-            repositories, or to change which.
+            repositories or their organization's, or to change which. On the way it connects every
+            installation GitHub lists for them, such as one an owner of their organization made.
 
             ```proto
             optional string install_url = 2;

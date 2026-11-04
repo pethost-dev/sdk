@@ -1030,12 +1030,15 @@ class SshKey:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GithubConnection:
     """The panel's GitHub App, one for every account: projects are created from the repositories of
-    the account's own installations of it. Absent = GitHub is not set up on this panel.
+    the installations of it the account connected, on the person's own GitHub account or on an
+    organization's; of an organization's, only those the person who connected it can read on
+    GitHub now. Absent = GitHub is not set up on this panel.
 
     Attributes:
         app_name: As in https://github.com/apps/<app_name>.
         install_url: The panel's page that sends a signed-in person to GitHub to install the app on their
-            repositories, or to change which.
+            repositories or their organization's, or to change which. On the way it connects every
+            installation GitHub lists for them, such as one an owner of their organization made.
         repositories: The repositories of the account's installations, most recently pushed first, at most 200.
         repository_count: In all.
         webhooks_enabled: False = pushes reach the panel only by its check every 5 minutes, not at once.
@@ -1046,7 +1049,8 @@ class GithubConnection:
 
     install_url: str = ""
     """The panel's page that sends a signed-in person to GitHub to install the app on their
-    repositories, or to change which.
+    repositories or their organization's, or to change which. On the way it connects every
+    installation GitHub lists for them, such as one an owner of their organization made.
     """
 
     repositories: Sequence[GithubRepository] = ()

@@ -804,14 +804,17 @@ export const SshKey: JsonCodec<SshKeyInput, SshKey> = {
 
 /**
  * The panel's GitHub App, one for every account: projects are created from the repositories of the
- * account's own installations of it. Absent = GitHub is not set up on this panel.
+ * installations of it the account connected, on the person's own GitHub account or on an
+ * organization's; of an organization's, only those the person who connected it can read on GitHub
+ * now. Absent = GitHub is not set up on this panel.
  */
 export interface GithubConnection {
   /** As in https://github.com/apps/\<appName>. */
   appName: string;
   /**
    * The panel's page that sends a signed-in person to GitHub to install the app on their
-   * repositories, or to change which.
+   * repositories or their organization's, or to change which. On the way it connects every
+   * installation GitHub lists for them, such as one an owner of their organization made.
    */
   installUrl: string;
   /** The repositories of the account's installations, most recently pushed first, at most 200. */
@@ -4053,7 +4056,7 @@ export class Pethost {
   constructor(options: PethostOptions) {
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.7");
+      request.header.set("User-Agent", "pethost-typescript/0.4.8");
       return next(request);
     };
     this.#wire = connect.createClient(

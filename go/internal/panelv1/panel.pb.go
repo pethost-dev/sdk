@@ -3339,7 +3339,9 @@ func (b0 SshKey_builder) Build() *SshKey {
 }
 
 // The panel's GitHub App, one for every account: projects are created from the repositories of
-// the account's own installations of it. Absent = GitHub is not set up on this panel.
+// the installations of it the account connected, on the person's own GitHub account or on an
+// organization's; of an organization's, only those the person who connected it can read on
+// GitHub now. Absent = GitHub is not set up on this panel.
 type GithubConnection struct {
 	state                      protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_AppName         *string                `protobuf:"bytes,1,opt,name=app_name,json=appName"`
@@ -3498,7 +3500,8 @@ type GithubConnection_builder struct {
 
 	AppName *string
 	// The panel's page that sends a signed-in person to GitHub to install the app on their
-	// repositories, or to change which.
+	// repositories or their organization's, or to change which. On the way it connects every
+	// installation GitHub lists for them, such as one an owner of their organization made.
 	InstallUrl *string
 	// The repositories of the account's installations, most recently pushed first, at most 200.
 	Repositories    []*GithubRepository

@@ -213,13 +213,13 @@ pub struct SshKey {
     pub fingerprint: ::std::string::String,
 }
 
-/// The panel's GitHub App, one for every account: projects are created from the repositories of the account's own installations of it. Absent = GitHub is not set up on this panel.
+/// The panel's GitHub App, one for every account: projects are created from the repositories of the installations of it the account connected, on the person's own GitHub account or on an organization's; of an organization's, only those the person who connected it can read on GitHub now. Absent = GitHub is not set up on this panel.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct GithubConnection {
     /// As in https://github.com/apps/\<`app_name`\>.
     pub app_name: ::std::string::String,
-    /// The panel's page that sends a signed-in person to GitHub to install the app on their repositories, or to change which.
+    /// The panel's page that sends a signed-in person to GitHub to install the app on their repositories or their organization's, or to change which. On the way it connects every installation GitHub lists for them, such as one an owner of their organization made.
     pub install_url: ::std::string::String,
     /// The repositories of the account's installations, most recently pushed first, at most 200.
     pub repositories: ::std::vec::Vec<GithubRepository>,

@@ -3722,7 +3722,9 @@ impl ::serde::Serialize for SshKeyOwnedView {
     }
 }
 /// The panel's GitHub App, one for every account: projects are created from the repositories of
-/// the account's own installations of it. Absent = GitHub is not set up on this panel.
+/// the installations of it the account connected, on the person's own GitHub account or on an
+/// organization's; of an organization's, only those the person who connected it can read on
+/// GitHub now. Absent = GitHub is not set up on this panel.
 #[derive(Clone, Debug, Default)]
 pub struct GithubConnectionView<'a> {
     /// As in <https://github.com/apps/<app_name>.>
@@ -3730,7 +3732,8 @@ pub struct GithubConnectionView<'a> {
     /// Field 1: `app_name`
     pub app_name: ::core::option::Option<&'a str>,
     /// The panel's page that sends a signed-in person to GitHub to install the app on their
-    /// repositories, or to change which.
+    /// repositories or their organization's, or to change which. On the way it connects every
+    /// installation GitHub lists for them, such as one an owner of their organization made.
     ///
     /// Field 2: `install_url`
     pub install_url: ::core::option::Option<&'a str>,
@@ -4063,7 +4066,8 @@ impl GithubConnectionOwnedView {
         self.0.reborrow().app_name
     }
     /// The panel's page that sends a signed-in person to GitHub to install the app on their
-    /// repositories, or to change which.
+    /// repositories or their organization's, or to change which. On the way it connects every
+    /// installation GitHub lists for them, such as one an owner of their organization made.
     ///
     /// Field 2: `install_url`
     #[must_use]
