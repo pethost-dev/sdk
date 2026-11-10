@@ -1,7 +1,7 @@
 # Pethost for Python
 
 The Python SDK for [Pethost](https://pethost.dev), hosting for Docker Compose projects at one
-flat price, as many as fit in your plan. It has the 16 calls of
+flat price, as many as fit in your plan. It has the 18 calls of
 Pethost's API, the ones an agent has through its MCP server: read the machine and its projects,
 deploy, read logs and HTTP requests, run commands, move files. It has the API's streams too, which follow an operation, the logs
 and the requests as they happen. Everything is typed, there is a synchronous client and an
@@ -22,6 +22,13 @@ The SDK signs in with an API token. Make one in [the panel](https://console.peth
 Settings, under "API tokens", and give it to the SDK in the environment variable
 `PETHOST_TOKEN`, or as the client's first argument. A token acts as you: keep it out of your
 code and your repository.
+
+## Workspaces
+
+Each plan the account buys is a workspace: one machine of the plan's size, with its projects. A
+call's `workspace` names one, by its id or its name; a client made with `Pethost(workspace="...")`
+sends that in every call that names none. With neither, a call goes to the account's only
+workspace, and is refused, with the workspaces in the error, when the account has several.
 
 ## A first program
 
@@ -64,7 +71,7 @@ from pethost import AsyncPethost
 
 async def main() -> None:
     async with AsyncPethost() as pethost:
-        print(await pethost.get_machine())
+        print(await pethost.list_workspaces("..."))
 
 
 asyncio.run(main())
@@ -74,11 +81,13 @@ asyncio.run(main())
 
 | Method | What it does | |
 |---|---|---|
-| `get_machine()` | Get the machine | read-only |
+| `list_workspaces(project_id, ...)` | List workspaces | read-only |
+| `get_machine(...)` | Get the machine | read-only |
 | `run_machine_action(...)` | Run a machine action | destructive |
 | `get_project(project_id, ...)` | Get a project | read-only |
 | `create_project(project_id, ...)` | Create a project |  |
 | `deploy_project(project_id, ...)` | Deploy a project | destructive |
+| `move_project(project_id, ...)` | Move a project to another workspace | destructive |
 | `list_commits(project_id, ...)` | List a project's commits | read-only |
 | `run_project_action(project_id, ...)` | Run a project action | destructive |
 | `set_project_alerts(project_id, ...)` | Set a project's alerts | destructive |
@@ -162,7 +171,7 @@ around it.
 A failed call raises a `PethostError`, and its class is the code:
 `CanceledError`, `UnknownError`, `InvalidArgumentError`, `DeadlineExceededError`, `NotFoundError`, `AlreadyExistsError`, `PermissionDeniedError`, `ResourceExhaustedError`, `FailedPreconditionError`, `AbortedError`, `OutOfRangeError`, `UnimplementedError`, `InternalError`, `UnavailableError`, `DataLossError`, `UnauthenticatedError`.
 `error.message` is prose for people. What a program branches on, beside the class, is
-`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, or `None`.
+`error.detail`: `ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, `WorkspaceChoice`, `WorkspaceNotGranted`, `ProjectMoved`, or `None`.
 
 ```python
 from pethost import NotFoundError, Pethost, PethostError
@@ -211,7 +220,7 @@ this form: it keeps a `datetime` and an enum's member as Python has them.
 ## Links
 
 - [The API's reference](https://pethost.dev/docs/api/): every call, message and field.
-- [The panel](https://console.pethost.dev): your machine, your projects and your API tokens.
+- [The panel](https://console.pethost.dev): your workspaces, your projects and your API tokens.
 - [pethost.dev](https://pethost.dev): what Pethost is and what it costs.
 
 ## Docker Compose hosting at one flat price

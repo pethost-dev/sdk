@@ -194,8 +194,14 @@ pub enum ErrorDetail {
     DatabaseLinkRefusal(types::DatabaseLinkRefusal),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error from [`RunProjectActionRequestAction::SetDatabaseSize`](crate::types::RunProjectActionRequestAction::SetDatabaseSize): the database cannot take that size now. Nothing changed.
     DatabaseSizeRefusal(types::DatabaseSizeRefusal),
-    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
+    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: there is no machine to run projects on yet, since the caller has no workspace, or the workspace's machine is being prepared.
     NoMachine(types::NoMachine),
+    /// Detail of an error that needs `workspace`: [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) when the call named none and the caller has several, [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) when it named none of theirs. Name one of these, by what the person asked for: a project that exists is in those of `holding_project`; for something new, ask the person, showing each one's size and what is free.
+    WorkspaceChoice(types::WorkspaceChoice),
+    /// Detail of a [`ErrorCode::PermissionDenied`](crate::ErrorCode::PermissionDenied) error: the account has the workspace `workspace` named (or the connection is pinned to), but the person has not let this token reach it; or the call named none and the token reaches none of the account's workspaces.
+    WorkspaceNotGranted(types::WorkspaceNotGranted),
+    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the project moved to another workspace ([`Client::move_project`](crate::Client::move_project)). Call there, naming it as `workspace`; ids of operations and snapshots from before stay behind.
+    ProjectMoved(types::ProjectMoved),
 }
 
 /// A detail of a kind this version of the crate knows; `None` = of a later kind, or unreadable.
@@ -222,6 +228,15 @@ fn detail_of(detail: &connectrpc::ErrorDetail) -> Option<ErrorDetail> {
         "pethost.panel.v1.NoMachine" => wire::NoMachine::decode_from_slice(&bytes)
             .ok()
             .map(|message| ErrorDetail::NoMachine(message.into())),
+        "pethost.panel.v1.WorkspaceChoice" => wire::WorkspaceChoice::decode_from_slice(&bytes)
+            .ok()
+            .map(|message| ErrorDetail::WorkspaceChoice(message.into())),
+        "pethost.panel.v1.WorkspaceNotGranted" => wire::WorkspaceNotGranted::decode_from_slice(&bytes)
+            .ok()
+            .map(|message| ErrorDetail::WorkspaceNotGranted(message.into())),
+        "pethost.panel.v1.ProjectMoved" => wire::ProjectMoved::decode_from_slice(&bytes)
+            .ok()
+            .map(|message| ErrorDetail::ProjectMoved(message.into())),
         _ => None,
     }
 }

@@ -55,11 +55,33 @@ type Error struct {
 	// nil = the API sent no such detail.
 	DatabaseSizeRefusal *DatabaseSizeRefusal
 
-	// Detail of a [CodeFailedPrecondition] error: the account has no machine to run projects on
-	// yet.
+	// Detail of a [CodeFailedPrecondition] error: there is no machine to run projects on yet,
+	// since the caller has no workspace, or the workspace's machine is being prepared.
 	//
 	// nil = the API sent no such detail.
 	NoMachine *NoMachine
+
+	// Detail of an error that needs `workspace`: [CodeFailedPrecondition] when the call named none
+	// and the caller has several, [CodeInvalidArgument] when it named none of theirs. Name one of
+	// these, by what the person asked for: a project that exists is in those of HoldingProject;
+	// for something new, ask the person, showing each one's size and what is free.
+	//
+	// nil = the API sent no such detail.
+	WorkspaceChoice *WorkspaceChoice
+
+	// Detail of a [CodePermissionDenied] error: the account has the workspace `workspace` named
+	// (or the connection is pinned to), but the person has not let this token reach it; or the
+	// call named none and the token reaches none of the account's workspaces.
+	//
+	// nil = the API sent no such detail.
+	WorkspaceNotGranted *WorkspaceNotGranted
+
+	// Detail of a [CodeFailedPrecondition] error: the project moved to another workspace
+	// ([Client.MoveProject]). Call there, naming it as `workspace`; ids of operations and
+	// snapshots from before stay behind.
+	//
+	// nil = the API sent no such detail.
+	ProjectMoved *ProjectMoved
 
 	cause error // What failed below the API, for Unwrap.
 }
@@ -91,6 +113,12 @@ func fromWireError(err error) error {
 			e.DatabaseSizeRefusal = new(fromWireDatabaseSizeRefusal(w))
 		case *panelv1.NoMachine:
 			e.NoMachine = new(fromWireNoMachine(w))
+		case *panelv1.WorkspaceChoice:
+			e.WorkspaceChoice = new(fromWireWorkspaceChoice(w))
+		case *panelv1.WorkspaceNotGranted:
+			e.WorkspaceNotGranted = new(fromWireWorkspaceNotGranted(w))
+		case *panelv1.ProjectMoved:
+			e.ProjectMoved = new(fromWireProjectMoved(w))
 		}
 	}
 	return e

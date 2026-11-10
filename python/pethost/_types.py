@@ -11,6 +11,37 @@ from ._runtime import OpenEnum
 from ._runtime import one_of as _one_of
 
 
+class WorkspaceStatus(OpenEnum):
+    """
+    Attributes:
+        READY: Its machine answers calls.
+        BEING_PREPARED: Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+            that names it is FailedPreconditionError + NoMachine until then.
+    """
+
+    UNSPECIFIED = 0
+
+    READY = 1
+    """Its machine answers calls."""
+
+    BEING_PREPARED = 2
+    """Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+    that names it is FailedPreconditionError + NoMachine until then.
+    """
+
+
+class WorkspaceRole(OpenEnum):
+    """
+    Attributes:
+        OWNER: Pays for it, and may do everything in it.
+    """
+
+    UNSPECIFIED = 0
+
+    OWNER = 1
+    """Pays for it, and may do everything in it."""
+
+
 class AlertChannelKind(OpenEnum):
     """
     Attributes:
@@ -283,6 +314,13 @@ class CertificateSource(OpenEnum):
 
 
 class OperationKind(OpenEnum):
+    """
+    Attributes:
+        MOVE: move_project's, of the project it moves, in both workspaces. Its operation_id is the move's,
+            which get_operation and watch_operation answer in either, also with the project_id of a database
+            the move holds.
+    """
+
     UNSPECIFIED = 0
 
     DEPLOY = 1
@@ -294,6 +332,12 @@ class OperationKind(OpenEnum):
     RESTORE = 4
 
     DELETE = 5
+
+    MOVE = 6
+    """move_project's, of the project it moves, in both workspaces. Its operation_id is the move's,
+    which get_operation and watch_operation answer in either, also with the project_id of a database
+    the move holds.
+    """
 
 
 class OperationStatus(OpenEnum):
@@ -568,8 +612,8 @@ class NoMachineReason(OpenEnum):
     """
     Attributes:
         NO_PLAN: The person has not chosen and paid for a plan: they do it at url.
-        BEING_PREPARED: The plan is paid and a machine is being prepared for the account: Pethost emails the person
-            when it is ready. Call again later.
+        BEING_PREPARED: The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+            person when it is ready. Call again later.
     """
 
     UNSPECIFIED = 0
@@ -578,9 +622,168 @@ class NoMachineReason(OpenEnum):
     """The person has not chosen and paid for a plan: they do it at url."""
 
     BEING_PREPARED = 2
-    """The plan is paid and a machine is being prepared for the account: Pethost emails the person
-    when it is ready. Call again later.
+    """The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+    person when it is ready. Call again later.
     """
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ListWorkspacesResponse:
+    """
+    Attributes:
+        workspaces: By name.
+        next_page_token: Empty = the last page.
+        total: Workspaces in all, on every page.
+        holding_project: With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+            none of those that answered (see incomplete).
+        incomplete: True = a machine did not answer in time: its free figures and project count are absent, and
+            holding_project may lack it.
+    """
+
+    workspaces: Sequence[Workspace] = ()
+    """By name."""
+
+    next_page_token: str = ""
+    """Empty = the last page."""
+
+    total: int = 0
+    """Workspaces in all, on every page."""
+
+    holding_project: Sequence[str] = ()
+    """With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+    none of those that answered (see incomplete).
+    """
+
+    incomplete: bool = False
+    """True = a machine did not answer in time: its free figures and project count are absent, and
+    holding_project may lack it.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.list_workspaces_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ListWorkspacesResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.list_workspaces_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Workspace:
+    """What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+    projects on it. A call names it as `workspace`, by workspace_id or name.
+
+    Attributes:
+        workspace_id: 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+            never another workspace's.
+        name: The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+            change it.
+        location: Where its machine runs, e.g. "Europe".
+        plan: Its plan's name, e.g. "Starter".
+        cpu_total_cores: The plan's.
+        memory_total_bytes: The plan's, as Machine.memory_total_bytes.
+        memory_free_bytes: What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+            known: BEING_PREPARED, or the machine did not answer in time.
+        disk_total_bytes: The plan's, as Machine.disk_total_bytes.
+        disk_free_bytes: Likewise. Absent as memory_free_bytes.
+        project_count: Absent as memory_free_bytes.
+        hostname: Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+            own points (CNAME). Empty while BEING_PREPARED.
+        apps_domain: As Machine.apps_domain. Empty = none.
+        end_time: When it ends: the person removed it, and it works until then, its projects with it. Absent
+            = it is not ending.
+        role: The caller's.
+    """
+
+    workspace_id: str = ""
+    """8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+    never another workspace's.
+    """
+
+    name: str = ""
+    """The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+    change it.
+    """
+
+    status: WorkspaceStatus = WorkspaceStatus.UNSPECIFIED
+
+    location: str = ""
+    """Where its machine runs, e.g. "Europe"."""
+
+    plan: str = ""
+    """Its plan's name, e.g. "Starter"."""
+
+    cpu_total_cores: float = 0.0
+    """The plan's."""
+
+    memory_total_bytes: int = 0
+    """The plan's, as Machine.memory_total_bytes."""
+
+    memory_free_bytes: int | None = None
+    """What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+    known: BEING_PREPARED, or the machine did not answer in time.
+    """
+
+    disk_total_bytes: int = 0
+    """The plan's, as Machine.disk_total_bytes."""
+
+    disk_free_bytes: int | None = None
+    """Likewise. Absent as memory_free_bytes."""
+
+    project_count: int | None = None
+    """Absent as memory_free_bytes."""
+
+    hostname: str = ""
+    """Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+    own points (CNAME). Empty while BEING_PREPARED.
+    """
+
+    apps_domain: str = ""
+    """As Machine.apps_domain. Empty = none."""
+
+    end_time: datetime | None = None
+    """When it ends: the person removed it, and it works until then, its projects with it. Absent
+    = it is not ending.
+    """
+
+    role: WorkspaceRole = WorkspaceRole.UNSPECIFIED
+    """The caller's."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.workspace_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Workspace:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.workspace_from_dict(data)
 
 
 @final
@@ -593,6 +796,7 @@ class GetMachineResponse:
             restore one with run_project_action(restore_snapshot=) and its project_id. Current after the
             machine's own backups and deletes; changes made to the backup repository elsewhere show
             later. Not known while Machine.snapshot_list_time is absent.
+        workspace: The workspace whose machine this is.
     """
 
     machine: Machine | None = None
@@ -608,6 +812,9 @@ class GetMachineResponse:
     """
 
     github: GithubConnection | None = None
+
+    workspace: Workspace | None = None
+    """The workspace whose machine this is."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1131,6 +1338,11 @@ class DeletedProject:
         newest_snapshot: Restore it to bring the project back as it was last backed up; get_project then pages the
             older ones (snapshots_before).
         snapshot_count: In all.
+        moved_to: Set when the latest move of the project from or to this workspace took it to another one,
+            and this workspace has had no other project of the id since, as a call for it here would
+            answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+            restore here makes another copy here, as it was last backed up here, and calls here then
+            act on that copy.
     """
 
     project_id: str = ""
@@ -1142,6 +1354,14 @@ class DeletedProject:
 
     snapshot_count: int = 0
     """In all."""
+
+    moved_to: MovedTo | None = None
+    """Set when the latest move of the project from or to this workspace took it to another one,
+    and this workspace has had no other project of the id since, as a call for it here would
+    answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+    restore here makes another copy here, as it was last backed up here, and calls here then
+    act on that copy.
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1163,6 +1383,39 @@ class DeletedProject:
         from . import _convert
 
         return _convert.deleted_project_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MovedTo:
+    """Where a move took a project (move_project), and when."""
+
+    workspace_id: str = ""
+
+    workspace_name: str = ""
+
+    move_time: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.moved_to_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MovedTo:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.moved_to_from_dict(data)
 
 
 @final
@@ -1299,6 +1552,7 @@ class ProjectSummary:
         disk_used_bytes: Its volumes, files, what its containers wrote outside volumes, and its images: one it shares
             with another project counts in both. Measured every few minutes.
         database: Set = a database project (create_database).
+        uid: As Project.uid.
     """
 
     project_id: str = ""
@@ -1342,6 +1596,9 @@ class ProjectSummary:
 
     database: DatabaseSummary | None = None
     """Set = a database project (create_database)."""
+
+    uid: str = ""
+    """As Project.uid."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -1532,6 +1789,12 @@ class Project:
         uptime_days: Oldest first, get_project(uptime_day_count=) of them, today's last.
         database: Set = a database project (create_database): its engine, its state and how apps sign in.
         linked_databases: The database projects this one reaches (link_database), each at the host of its project_id.
+        workspace_id: The workspace it is in (Workspace.workspace_id): what a later call for it names as
+            `workspace`.
+        uid: Made when it was created, and kept by its backups, restores and moves: a project deleted
+            and created again under the same project_id has another. Empty = not known yet.
+        dependencies: The databases it is linked to (linked_databases), each with what move_project may do with it
+            (switch_databases).
     """
 
     project_id: str = ""
@@ -1639,6 +1902,21 @@ class Project:
     linked_databases: Sequence[str] = ()
     """The database projects this one reaches (link_database), each at the host of its project_id."""
 
+    workspace_id: str = ""
+    """The workspace it is in (Workspace.workspace_id): what a later call for it names as
+    `workspace`.
+    """
+
+    uid: str = ""
+    """Made when it was created, and kept by its backups, restores and moves: a project deleted
+    and created again under the same project_id has another. Empty = not known yet.
+    """
+
+    dependencies: Sequence[ProjectDependency] = ()
+    """The databases it is linked to (linked_databases), each with what move_project may do with it
+    (switch_databases).
+    """
+
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
         enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
@@ -1659,6 +1937,62 @@ class Project:
         from . import _convert
 
         return _convert.project_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ProjectDependency:
+    """A database a project is linked to, as move_project of the project sees it.
+
+    Attributes:
+        copy_database: The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+            project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+            `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+            own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+            new one starts empty and one there is shared.
+        env_prefix: The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+            (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+            destination writes anew. Empty = a person wrote them (link_database linked it): a move needs
+            DatabaseSwitch.env_prefix.
+    """
+
+    database_project_id: str = ""
+
+    copy_database: str = ""
+    """The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+    project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+    `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+    own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+    new one starts empty and one there is shared.
+    """
+
+    env_prefix: str = ""
+    """The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+    (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+    destination writes anew. Empty = a person wrote them (link_database linked it): a move needs
+    DatabaseSwitch.env_prefix.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_dependency_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectDependency:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_dependency_from_dict(data)
 
 
 @final
@@ -3150,6 +3484,135 @@ class SpecViolation:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class DatabaseSwitch:
+    """A database the moved project is linked to, which stays here with its other apps, if any, and
+    what the project uses instead in the destination: a database of the same engine, the lines of
+    how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+    user of its own, to a database of its own, which gets the data of ProjectDependency
+    .copy_database unless empty; a Valkey's it shares as its one user, and so does a project whose
+    id the engine keeps as a name of its own (copy_database empty) on Postgres and MariaDB. Once the
+    move succeeded, the user and database the project had of its own here, if it had them, are
+    dropped with it, as any delete does: so empty, where it had them, deletes that data.
+
+    Attributes:
+        database_project_id: A database it is linked to, which stays.
+        into_database_project_id: A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+            a user of its own there, it has no user or database named as the project. Empty = the
+            destination's database of database_project_id's id and engine, if it has one, else a new one,
+            made by the move under that id at that one's size where to_workspace offers it for the engine,
+            else at the engine's default.
+        empty: True = nothing is copied: the project starts there with an empty database of its own, or, as
+            the apps' user, with what a database there holds that it shares (a new one: nothing). A
+            MariaDB database with a view, trigger, routine or event made by another account than the
+            project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+            undone; start it empty, or make those objects again as the project's own user.
+        env_prefix: Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+            signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+            destination writes anew as a link with that env_prefix writes them, each of its names that
+            /.env sets taking the new value, for the database copy_database names. Required there;
+            refused elsewhere.
+    """
+
+    database_project_id: str = ""
+    """A database it is linked to, which stays."""
+
+    into_database_project_id: str = ""
+    """A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+    a user of its own there, it has no user or database named as the project. Empty = the
+    destination's database of database_project_id's id and engine, if it has one, else a new one,
+    made by the move under that id at that one's size where to_workspace offers it for the engine,
+    else at the engine's default.
+    """
+
+    empty: bool = False
+    """True = nothing is copied: the project starts there with an empty database of its own, or, as
+    the apps' user, with what a database there holds that it shares (a new one: nothing). A
+    MariaDB database with a view, trigger, routine or event made by another account than the
+    project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+    undone; start it empty, or make those objects again as the project's own user.
+    """
+
+    env_prefix: str = ""
+    """Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+    signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+    destination writes anew as a link with that env_prefix writes them, each of its names that
+    /.env sets taking the new value, for the database copy_database names. Required there;
+    refused elsewhere.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.database_switch_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DatabaseSwitch:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.database_switch_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MoveProjectResponse:
+    """
+    Attributes:
+        operation: The move: finished, or IN_PROGRESS when wait_seconds ran out (then get_operation).
+        project: Once the project is in the destination: as it is there, as get_project returns it. A move that
+            FAILED after that has it too: it runs there, and its failure says what the source still
+            holds. Absent while it runs, and when nothing moved.
+        move_message: What changed and what stayed behind, for people: the new hosts, the domains of the person's
+            own to point at the destination's hostname, the SSH command.
+    """
+
+    operation: Operation | None = None
+    """The move: finished, or IN_PROGRESS when wait_seconds ran out (then get_operation)."""
+
+    project: Project | None = None
+    """Once the project is in the destination: as it is there, as get_project returns it. A move that
+    FAILED after that has it too: it runs there, and its failure says what the source still
+    holds. Absent while it runs, and when nothing moved.
+    """
+
+    move_message: str = ""
+    """What changed and what stayed behind, for people: the new hosts, the domains of the person's
+    own to point at the destination's hostname, the SSH command.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.move_project_response_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MoveProjectResponse:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.move_project_response_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ListCommitsResponse:
     """
     Attributes:
@@ -4422,6 +4885,8 @@ class GetOperationResponse:
         log_line_count: Lines in the whole log so far.
         next_after_log_line: Pass it as after_log_line to get the lines after these; absent = 0. The machine keeps every
             line of the log.
+        move_message: A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+            behind, or why nothing moved.
     """
 
     operation: Operation | None = None
@@ -4442,6 +4907,11 @@ class GetOperationResponse:
     next_after_log_line: int = 0
     """Pass it as after_log_line to get the lines after these; absent = 0. The machine keeps every
     line of the log.
+    """
+
+    move_message: str = ""
+    """A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+    behind, or why nothing moved.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -5632,16 +6102,24 @@ class DatabaseSizeRefusal:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class NoMachine:
-    """Detail of a FailedPreconditionError error: the account has no machine to run projects on yet.
+    """Detail of a FailedPreconditionError error: there is no machine to run projects on yet, since the
+    caller has no workspace, or the workspace's machine is being prepared.
 
     Attributes:
-        url: Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+        url: Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+            the workspace's page, which says it is. An MCP tool leaves it out.
+        workspace_id: BEING_PREPARED: the workspace. Empty for NO_PLAN.
     """
 
     reason: NoMachineReason = NoMachineReason.UNSPECIFIED
 
     url: str = ""
-    """Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out."""
+    """Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+    the workspace's page, which says it is. An MCP tool leaves it out.
+    """
+
+    workspace_id: str = ""
+    """BEING_PREPARED: the workspace. Empty for NO_PLAN."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -5666,12 +6144,147 @@ class NoMachine:
 
 
 @final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WorkspaceChoice:
+    """Detail of an error that needs `workspace`: FailedPreconditionError when the call named none and
+    the caller has several, InvalidArgumentError when it named none of theirs. Name one of these, by
+    what the person asked for: a project that exists is in those of holding_project; for
+    something new, ask the person, showing each one's size and what is free.
+
+    Attributes:
+        workspaces: By name, at most 20: list_workspaces lists all.
+        total: The workspaces the call may act on (this token's), in all.
+        holding_project: The call names a project: the workspaces that have a project of that id, by workspace_id.
+        incomplete: As ListWorkspacesResponse's.
+    """
+
+    workspaces: Sequence[Workspace] = ()
+    """By name, at most 20: list_workspaces lists all."""
+
+    total: int = 0
+    """The workspaces the call may act on (this token's), in all."""
+
+    holding_project: Sequence[str] = ()
+    """The call names a project: the workspaces that have a project of that id, by workspace_id."""
+
+    incomplete: bool = False
+    """As ListWorkspacesResponse's."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.workspace_choice_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> WorkspaceChoice:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.workspace_choice_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WorkspaceNotGranted:
+    """Detail of a PermissionDeniedError error: the account has the workspace `workspace` named (or the
+    connection is pinned to), but the person has not let this token reach it; or the call named
+    none and the token reaches none of the account's workspaces.
+
+    Attributes:
+        workspace_id: The workspace it may not reach: the one named, else the account's only one. Empty = the call
+            named none and the account has several.
+        url: The panel's page where the person lets the token reach it.
+    """
+
+    workspace_id: str = ""
+    """The workspace it may not reach: the one named, else the account's only one. Empty = the call
+    named none and the account has several.
+    """
+
+    url: str = ""
+    """The panel's page where the person lets the token reach it."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.workspace_not_granted_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> WorkspaceNotGranted:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.workspace_not_granted_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ProjectMoved:
+    """Detail of a FailedPreconditionError error: the project moved to another workspace (move_project).
+    Call there, naming it as `workspace`; ids of operations and snapshots from before stay
+    behind.
+
+    Attributes:
+        workspace_id: Where the move took it, which answers for it as it is now.
+    """
+
+    project_id: str = ""
+
+    workspace_id: str = ""
+    """Where the move took it, which answers for it as it is now."""
+
+    workspace_name: str = ""
+
+    move_time: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.project_moved_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectMoved:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.project_moved_from_dict(data)
+
+
+@final
 @dataclass(frozen=True, slots=True, kw_only=True, init=False)
 class WatchOperationResponse:
     """At most one of `log`, `finished_operation`. The others are None.
 
     Attributes:
         finished_operation: Always the last message.
+        move_message: With a MOVE's finished_operation: MoveProjectResponse.move_message.
     """
 
     log: OperationLogLine | None = None
@@ -5679,12 +6292,16 @@ class WatchOperationResponse:
     finished_operation: Operation | None = None
     """Always the last message."""
 
+    move_message: str = ""
+    """With a MOVE's finished_operation: MoveProjectResponse.move_message."""
+
     @overload
     def __init__(
         self,
         *,
         log: None = None,
         finished_operation: None = None,
+        move_message: str = "",
     ) -> None: ...
 
     @overload
@@ -5693,6 +6310,7 @@ class WatchOperationResponse:
         *,
         log: OperationLogLine,
         finished_operation: None = None,
+        move_message: str = "",
     ) -> None: ...
 
     @overload
@@ -5701,6 +6319,7 @@ class WatchOperationResponse:
         *,
         log: None = None,
         finished_operation: Operation,
+        move_message: str = "",
     ) -> None: ...
 
     def __init__(
@@ -5708,10 +6327,12 @@ class WatchOperationResponse:
         *,
         log: OperationLogLine | None = None,
         finished_operation: Operation | None = None,
+        move_message: str = "",
     ) -> None:
         _one_of("WatchOperationResponse", log=log, finished_operation=finished_operation)
         object.__setattr__(self, "log", log)
         object.__setattr__(self, "finished_operation", finished_operation)
+        object.__setattr__(self, "move_message", move_message)
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an

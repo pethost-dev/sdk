@@ -20,6 +20,14 @@ In [the panel](https://console.pethost.dev), open Settings and make a token unde
 tokens". It starts with `pth_` and acts as your account, so keep it out of the code: the
 program below reads it from the environment, as `PETHOST_TOKEN`.
 
+## Workspaces
+
+Each plan the account buys is a workspace: one machine of the plan's size, with its projects. A
+request's `workspace` names one, by its id or its name; a client made with `new Pethost({ token,
+workspace: "..." })` sends that in every request that names none. With neither, a call goes to the
+account's only workspace, and is refused, with the workspaces in the error, when the account has
+several.
+
 ## A first program
 
 It reads the machine and its projects, then deploys to the project `notes` by writing one
@@ -60,11 +68,13 @@ editor shows. A stream answers with its responses one by one, as "Streams" below
 
 | Method | What it does | Effect |
 |---|---|---|
+| `listWorkspaces` | List workspaces | Reads only |
 | `getMachine` | Get the machine | Reads only |
 | `runMachineAction` | Run a machine action | Destructive |
 | `getProject` | Get a project | Reads only |
 | `createProject` | Create a project |  |
 | `deployProject` | Deploy a project | Destructive |
+| `moveProject` | Move a project to another workspace | Destructive |
 | `listCommits` | List a project's commits | Reads only |
 | `runProjectAction` | Run a project action | Destructive |
 | `setProjectAlerts` | Set a project's alerts | Destructive |
@@ -163,7 +173,10 @@ A call that fails rejects with a `PethostError`:
   - `error.machineUnreachable`: Detail of an UNAVAILABLE error: the machine does not answer now, as while it restarts. Call again later.
   - `error.databaseLinkRefusal`: Detail of a FAILED_PRECONDITION error from linkDatabase or createDatabase: a project of `link` cannot be linked to the database. Nothing changed.
   - `error.databaseSizeRefusal`: Detail of a FAILED_PRECONDITION error from RunProjectActionRequest.setDatabaseSize: the database cannot take that size now. Nothing changed.
-  - `error.noMachine`: Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
+  - `error.noMachine`: Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the caller has no workspace, or the workspace's machine is being prepared.
+  - `error.workspaceChoice`: Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and the caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by what the person asked for: a project that exists is in those of holdingProject; for something new, ask the person, showing each one's size and what is free.
+  - `error.workspaceNotGranted`: Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the connection is pinned to), but the person has not let this token reach it; or the call named none and the token reaches none of the account's workspaces.
+  - `error.projectMoved`: Detail of a FAILED_PRECONDITION error: the project moved to another workspace (moveProject). Call there, naming it as `workspace`; ids of operations and snapshots from before stay behind.
 
 ## Links
 

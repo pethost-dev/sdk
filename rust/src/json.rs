@@ -46,6 +46,18 @@ json!(
 );
 
 json!(
+    types::WorkspaceStatus,
+    buffa::EnumValue<wire::WorkspaceStatus>,
+    convert::workspace_status_to_wire,
+    convert::workspace_status_from_wire
+);
+json!(
+    types::WorkspaceRole,
+    buffa::EnumValue<wire::WorkspaceRole>,
+    convert::workspace_role_to_wire,
+    convert::workspace_role_from_wire
+);
+json!(
     types::AlertChannelKind,
     buffa::EnumValue<wire::AlertChannelKind>,
     convert::alert_channel_kind_to_wire,
@@ -173,6 +185,24 @@ json!(
 );
 
 json!(
+    types::ListWorkspacesRequest,
+    wire::ListWorkspacesRequest,
+    wire::ListWorkspacesRequest::from,
+    types::ListWorkspacesRequest::from
+);
+json!(
+    types::ListWorkspacesResponse,
+    wire::ListWorkspacesResponse,
+    wire::ListWorkspacesResponse::from,
+    types::ListWorkspacesResponse::from
+);
+json!(
+    types::Workspace,
+    wire::Workspace,
+    wire::Workspace::from,
+    types::Workspace::from
+);
+json!(
     types::GetMachineRequest,
     wire::GetMachineRequest,
     wire::GetMachineRequest::from,
@@ -222,6 +252,7 @@ json!(
     wire::DeletedProject::from,
     types::DeletedProject::from
 );
+json!(types::MovedTo, wire::MovedTo, wire::MovedTo::from, types::MovedTo::from);
 json!(
     types::RunMachineActionRequest,
     wire::RunMachineActionRequest,
@@ -277,6 +308,12 @@ json!(
     types::GetProjectResponse::from
 );
 json!(types::Project, wire::Project, wire::Project::from, types::Project::from);
+json!(
+    types::ProjectDependency,
+    wire::ProjectDependency,
+    wire::ProjectDependency::from,
+    types::ProjectDependency::from
+);
 json!(
     types::RunningServicesAction,
     wire::RunningServicesAction,
@@ -406,6 +443,24 @@ json!(
     wire::SpecViolation,
     wire::SpecViolation::from,
     types::SpecViolation::from
+);
+json!(
+    types::MoveProjectRequest,
+    wire::MoveProjectRequest,
+    wire::MoveProjectRequest::from,
+    types::MoveProjectRequest::from
+);
+json!(
+    types::DatabaseSwitch,
+    wire::DatabaseSwitch,
+    wire::DatabaseSwitch::from,
+    types::DatabaseSwitch::from
+);
+json!(
+    types::MoveProjectResponse,
+    wire::MoveProjectResponse,
+    wire::MoveProjectResponse::from,
+    types::MoveProjectResponse::from
 );
 json!(
     types::ListCommitsRequest,
@@ -773,6 +828,24 @@ json!(
     wire::NoMachine,
     wire::NoMachine::from,
     types::NoMachine::from
+);
+json!(
+    types::WorkspaceChoice,
+    wire::WorkspaceChoice,
+    wire::WorkspaceChoice::from,
+    types::WorkspaceChoice::from
+);
+json!(
+    types::WorkspaceNotGranted,
+    wire::WorkspaceNotGranted,
+    wire::WorkspaceNotGranted::from,
+    types::WorkspaceNotGranted::from
+);
+json!(
+    types::ProjectMoved,
+    wire::ProjectMoved,
+    wire::ProjectMoved::from,
+    types::ProjectMoved::from
 );
 json!(
     types::WatchOperationRequest,

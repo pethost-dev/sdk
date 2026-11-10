@@ -12,9 +12,62 @@ import { empty } from "./received.ts";
 import * as p from "pethost";
 
 {
+  const m = json(p.ListWorkspacesRequest, w.ListWorkspacesRequestSchema);
+  m.converts("ListWorkspacesRequest: nothing set", {}, empty.ListWorkspacesRequest());
+  m.refuses("ListWorkspacesRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ListWorkspacesRequest.project_id", { projectId: "project_id" }, { ...empty.ListWorkspacesRequest(), projectId: "project_id" });
+  m.converts("ListWorkspacesRequest.page_token", { pageToken: "page_token" }, { ...empty.ListWorkspacesRequest(), pageToken: "page_token" });
+}
+
+{
+  const m = json(p.ListWorkspacesResponse, w.ListWorkspacesResponseSchema);
+  m.converts("ListWorkspacesResponse: nothing set", {}, empty.ListWorkspacesResponse());
+  m.refuses("ListWorkspacesResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ListWorkspacesResponse.workspaces", { workspaces: [{}] }, { ...empty.ListWorkspacesResponse(), workspaces: [empty.Workspace()] });
+  m.converts("ListWorkspacesResponse.next_page_token", { nextPageToken: "next_page_token" }, { ...empty.ListWorkspacesResponse(), nextPageToken: "next_page_token" });
+  m.converts("ListWorkspacesResponse.total", { total: 1003 }, { ...empty.ListWorkspacesResponse(), total: 1003 });
+  m.converts("ListWorkspacesResponse.holding_project", { holdingProject: ["holding_project", ""] }, { ...empty.ListWorkspacesResponse(), holdingProject: ["holding_project", ""] });
+  m.converts("ListWorkspacesResponse.incomplete", { incomplete: true }, { ...empty.ListWorkspacesResponse(), incomplete: true });
+}
+
+{
+  const m = json(p.Workspace, w.WorkspaceSchema);
+  m.converts("Workspace: nothing set", {}, empty.Workspace());
+  m.refuses("Workspace: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("Workspace.workspace_id", { workspaceId: "workspace_id" }, { ...empty.Workspace(), workspaceId: "workspace_id" });
+  m.converts("Workspace.name", { name: "name" }, { ...empty.Workspace(), name: "name" });
+  m.converts("Workspace.status: READY", { status: w.WorkspaceStatus.READY }, { ...empty.Workspace(), status: "READY" });
+  m.converts("Workspace.status: BEING_PREPARED", { status: w.WorkspaceStatus.BEING_PREPARED }, { ...empty.Workspace(), status: "BEING_PREPARED" });
+  m.converts("Workspace.status: a value newer than the SDK", { status: 9999 as w.WorkspaceStatus }, { ...empty.Workspace(), status: 9999 });
+  m.refuses("Workspace.status: a name newer than the SDK", { status: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.converts("Workspace.location", { location: "location" }, { ...empty.Workspace(), location: "location" });
+  m.converts("Workspace.plan", { plan: "plan" }, { ...empty.Workspace(), plan: "plan" });
+  m.converts("Workspace.cpu_total_cores", { cpuTotalCores: 1006.5 }, { ...empty.Workspace(), cpuTotalCores: 1006.5 });
+  m.converts("Workspace.memory_total_bytes", { memoryTotalBytes: 9007199254740993n }, { ...empty.Workspace(), memoryTotalBytes: 9007199254740993n });
+  m.reads("Workspace.memory_total_bytes: as a number", { memory_total_bytes: 1007 }, { ...empty.Workspace(), memoryTotalBytes: 1007n });
+  m.converts("Workspace.memory_free_bytes", { memoryFreeBytes: 9007199254740993n }, { ...empty.Workspace(), memoryFreeBytes: 9007199254740993n });
+  m.converts("Workspace.memory_free_bytes: zero", { memoryFreeBytes: 0n }, { ...empty.Workspace(), memoryFreeBytes: 0n });
+  m.reads("Workspace.memory_free_bytes: as a number", { memory_free_bytes: 1008 }, { ...empty.Workspace(), memoryFreeBytes: 1008n });
+  m.converts("Workspace.disk_total_bytes", { diskTotalBytes: 9007199254740993n }, { ...empty.Workspace(), diskTotalBytes: 9007199254740993n });
+  m.reads("Workspace.disk_total_bytes: as a number", { disk_total_bytes: 1009 }, { ...empty.Workspace(), diskTotalBytes: 1009n });
+  m.converts("Workspace.disk_free_bytes", { diskFreeBytes: 9007199254740993n }, { ...empty.Workspace(), diskFreeBytes: 9007199254740993n });
+  m.converts("Workspace.disk_free_bytes: zero", { diskFreeBytes: 0n }, { ...empty.Workspace(), diskFreeBytes: 0n });
+  m.reads("Workspace.disk_free_bytes: as a number", { disk_free_bytes: 1010 }, { ...empty.Workspace(), diskFreeBytes: 1010n });
+  m.converts("Workspace.project_count", { projectCount: 1011 }, { ...empty.Workspace(), projectCount: 1011 });
+  m.converts("Workspace.project_count: zero", { projectCount: 0 }, { ...empty.Workspace(), projectCount: 0 });
+  m.converts("Workspace.hostname", { hostname: "hostname" }, { ...empty.Workspace(), hostname: "hostname" });
+  m.converts("Workspace.apps_domain", { appsDomain: "apps_domain" }, { ...empty.Workspace(), appsDomain: "apps_domain" });
+  m.converts("Workspace.end_time", { endTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Workspace(), endTime: new Date(1790000000123) });
+  m.converts("Workspace.role: OWNER", { role: w.WorkspaceRole.OWNER }, { ...empty.Workspace(), role: "OWNER" });
+  m.converts("Workspace.role: a value newer than the SDK", { role: 9999 as w.WorkspaceRole }, { ...empty.Workspace(), role: 9999 });
+  m.refuses("Workspace.role: a name newer than the SDK", { role: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+}
+
+{
   const m = json(p.GetMachineRequest, w.GetMachineRequestSchema);
   m.converts("GetMachineRequest: nothing set", {}, empty.GetMachineRequest());
   m.refuses("GetMachineRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("GetMachineRequest.workspace", { workspace: "workspace" }, { ...empty.GetMachineRequest(), workspace: "workspace" });
 }
 
 {
@@ -25,6 +78,7 @@ import * as p from "pethost";
   m.converts("GetMachineResponse.projects", { projects: [{}] }, { ...empty.GetMachineResponse(), projects: [empty.ProjectSummary()] });
   m.converts("GetMachineResponse.deleted_projects", { deletedProjects: [{}] }, { ...empty.GetMachineResponse(), deletedProjects: [empty.DeletedProject()] });
   m.converts("GetMachineResponse.github", { github: {} }, { ...empty.GetMachineResponse(), github: empty.GithubConnection() });
+  m.converts("GetMachineResponse.workspace", { workspace: {} }, { ...empty.GetMachineResponse(), workspace: empty.Workspace() });
 }
 
 {
@@ -159,6 +213,16 @@ import * as p from "pethost";
   m.converts("DeletedProject.project_id", { projectId: "project_id" }, { ...empty.DeletedProject(), projectId: "project_id" });
   m.converts("DeletedProject.newest_snapshot", { newestSnapshot: {} }, { ...empty.DeletedProject(), newestSnapshot: empty.Snapshot() });
   m.converts("DeletedProject.snapshot_count", { snapshotCount: 1003 }, { ...empty.DeletedProject(), snapshotCount: 1003 });
+  m.converts("DeletedProject.moved_to", { movedTo: {} }, { ...empty.DeletedProject(), movedTo: empty.MovedTo() });
+}
+
+{
+  const m = json(p.MovedTo, w.MovedToSchema);
+  m.converts("MovedTo: nothing set", {}, empty.MovedTo());
+  m.refuses("MovedTo: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("MovedTo.workspace_id", { workspaceId: "workspace_id" }, { ...empty.MovedTo(), workspaceId: "workspace_id" });
+  m.converts("MovedTo.workspace_name", { workspaceName: "workspace_name" }, { ...empty.MovedTo(), workspaceName: "workspace_name" });
+  m.converts("MovedTo.move_time", { moveTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.MovedTo(), moveTime: new Date(1790000000123) });
 }
 
 {
@@ -173,6 +237,7 @@ import * as p from "pethost";
   m.converts("RunMachineActionRequest.cancel_restart: zero", { action: { case: "cancelRestart", value: false } }, { ...empty.RunMachineActionRequest(), cancelRestart: false });
   m.converts("RunMachineActionRequest.end_session_id", { action: { case: "endSessionId", value: "end_session_id" } }, { ...empty.RunMachineActionRequest(), endSessionId: "end_session_id" });
   m.converts("RunMachineActionRequest.end_session_id: zero", { action: { case: "endSessionId", value: "" } }, { ...empty.RunMachineActionRequest(), endSessionId: "" });
+  m.converts("RunMachineActionRequest.workspace", { workspace: "workspace" }, { ...empty.RunMachineActionRequest(), workspace: "workspace" });
 }
 
 {
@@ -225,6 +290,7 @@ import * as p from "pethost";
   m.converts("ProjectSummary.disk_used_bytes", { diskUsedBytes: 9007199254740993n }, { ...empty.ProjectSummary(), diskUsedBytes: 9007199254740993n });
   m.reads("ProjectSummary.disk_used_bytes: as a number", { disk_used_bytes: 1013 }, { ...empty.ProjectSummary(), diskUsedBytes: 1013n });
   m.converts("ProjectSummary.database", { database: {} }, { ...empty.ProjectSummary(), database: empty.DatabaseSummary() });
+  m.converts("ProjectSummary.uid", { uid: "uid" }, { ...empty.ProjectSummary(), uid: "uid" });
 }
 
 {
@@ -282,6 +348,7 @@ import * as p from "pethost";
   m.converts("GetProjectRequest.incidents_before", { incidentsBefore: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.GetProjectRequest(), incidentsBefore: new Date(1790000000123) });
   m.converts("GetProjectRequest.uptime_day_count", { uptimeDayCount: 1006 }, { ...empty.GetProjectRequest(), uptimeDayCount: 1006 });
   m.converts("GetProjectRequest.incidents_before_id", { incidentsBeforeId: "incidents_before_id" }, { ...empty.GetProjectRequest(), incidentsBeforeId: "incidents_before_id" });
+  m.converts("GetProjectRequest.workspace", { workspace: "workspace" }, { ...empty.GetProjectRequest(), workspace: "workspace" });
 }
 
 {
@@ -329,6 +396,18 @@ import * as p from "pethost";
   m.converts("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
   m.converts("Project.database", { database: {} }, { ...empty.Project(), database: empty.Database() });
   m.converts("Project.linked_databases", { linkedDatabases: ["linked_databases", ""] }, { ...empty.Project(), linkedDatabases: ["linked_databases", ""] });
+  m.converts("Project.workspace_id", { workspaceId: "workspace_id" }, { ...empty.Project(), workspaceId: "workspace_id" });
+  m.converts("Project.uid", { uid: "uid" }, { ...empty.Project(), uid: "uid" });
+  m.converts("Project.dependencies", { dependencies: [{}] }, { ...empty.Project(), dependencies: [empty.ProjectDependency()] });
+}
+
+{
+  const m = json(p.ProjectDependency, w.ProjectDependencySchema);
+  m.converts("ProjectDependency: nothing set", {}, empty.ProjectDependency());
+  m.refuses("ProjectDependency: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ProjectDependency.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.ProjectDependency(), databaseProjectId: "database_project_id" });
+  m.converts("ProjectDependency.copy_database", { copyDatabase: "copy_database" }, { ...empty.ProjectDependency(), copyDatabase: "copy_database" });
+  m.converts("ProjectDependency.env_prefix", { envPrefix: "env_prefix" }, { ...empty.ProjectDependency(), envPrefix: "env_prefix" });
 }
 
 {
@@ -536,6 +615,7 @@ import * as p from "pethost";
   m.converts("Operation.kind: BACKUP", { kind: w.OperationKind.BACKUP }, { ...empty.Operation(), kind: "BACKUP" });
   m.converts("Operation.kind: RESTORE", { kind: w.OperationKind.RESTORE }, { ...empty.Operation(), kind: "RESTORE" });
   m.converts("Operation.kind: DELETE", { kind: w.OperationKind.DELETE }, { ...empty.Operation(), kind: "DELETE" });
+  m.converts("Operation.kind: MOVE", { kind: w.OperationKind.MOVE }, { ...empty.Operation(), kind: "MOVE" });
   m.converts("Operation.kind: a value newer than the SDK", { kind: 9999 as w.OperationKind }, { ...empty.Operation(), kind: 9999 });
   m.refuses("Operation.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("Operation.status: IN_PROGRESS", { status: w.OperationStatus.IN_PROGRESS }, { ...empty.Operation(), status: "IN_PROGRESS" });
@@ -615,6 +695,7 @@ import * as p from "pethost";
   m.converts("CreateProjectRequest.wait_seconds", { waitSeconds: 1009 }, { ...empty.CreateProjectRequest(), waitSeconds: 1009 });
   m.converts("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateProjectRequest(), waitSeconds: 0 });
   m.converts("CreateProjectRequest.link_databases", { linkDatabases: [{}] }, { ...empty.CreateProjectRequest(), linkDatabases: [empty.DatabaseLinkRequest()] });
+  m.converts("CreateProjectRequest.workspace", { workspace: "workspace" }, { ...empty.CreateProjectRequest(), workspace: "workspace" });
 }
 
 {
@@ -658,6 +739,7 @@ import * as p from "pethost";
   m.converts("DeployProjectRequest.rollback_deploy_id: zero", { version: { case: "rollbackDeployId", value: "" } }, { ...empty.DeployProjectRequest(), rollbackDeployId: "" });
   m.converts("DeployProjectRequest.wait_seconds", { waitSeconds: 1013 }, { ...empty.DeployProjectRequest(), waitSeconds: 1013 });
   m.converts("DeployProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.DeployProjectRequest(), waitSeconds: 0 });
+  m.converts("DeployProjectRequest.workspace", { workspace: "workspace" }, { ...empty.DeployProjectRequest(), workspace: "workspace" });
 }
 
 {
@@ -721,11 +803,44 @@ import * as p from "pethost";
 }
 
 {
+  const m = json(p.MoveProjectRequest, w.MoveProjectRequestSchema);
+  m.converts("MoveProjectRequest: nothing set", {}, empty.MoveProjectRequest());
+  m.refuses("MoveProjectRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("MoveProjectRequest.project_id", { projectId: "project_id" }, { ...empty.MoveProjectRequest(), projectId: "project_id" });
+  m.converts("MoveProjectRequest.to_workspace", { toWorkspace: "to_workspace" }, { ...empty.MoveProjectRequest(), toWorkspace: "to_workspace" });
+  m.converts("MoveProjectRequest.operation_id", { operationId: "operation_id" }, { ...empty.MoveProjectRequest(), operationId: "operation_id" });
+  m.converts("MoveProjectRequest.wait_seconds", { waitSeconds: 1005 }, { ...empty.MoveProjectRequest(), waitSeconds: 1005 });
+  m.converts("MoveProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.MoveProjectRequest(), waitSeconds: 0 });
+  m.converts("MoveProjectRequest.switch_databases", { switchDatabases: [{}] }, { ...empty.MoveProjectRequest(), switchDatabases: [empty.DatabaseSwitch()] });
+  m.converts("MoveProjectRequest.workspace", { workspace: "workspace" }, { ...empty.MoveProjectRequest(), workspace: "workspace" });
+}
+
+{
+  const m = json(p.DatabaseSwitch, w.DatabaseSwitchSchema);
+  m.converts("DatabaseSwitch: nothing set", {}, empty.DatabaseSwitch());
+  m.refuses("DatabaseSwitch: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("DatabaseSwitch.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.DatabaseSwitch(), databaseProjectId: "database_project_id" });
+  m.converts("DatabaseSwitch.into_database_project_id", { intoDatabaseProjectId: "into_database_project_id" }, { ...empty.DatabaseSwitch(), intoDatabaseProjectId: "into_database_project_id" });
+  m.converts("DatabaseSwitch.empty", { empty: true }, { ...empty.DatabaseSwitch(), empty: true });
+  m.converts("DatabaseSwitch.env_prefix", { envPrefix: "env_prefix" }, { ...empty.DatabaseSwitch(), envPrefix: "env_prefix" });
+}
+
+{
+  const m = json(p.MoveProjectResponse, w.MoveProjectResponseSchema);
+  m.converts("MoveProjectResponse: nothing set", {}, empty.MoveProjectResponse());
+  m.refuses("MoveProjectResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("MoveProjectResponse.operation", { operation: {} }, { ...empty.MoveProjectResponse(), operation: empty.Operation() });
+  m.converts("MoveProjectResponse.project", { project: {} }, { ...empty.MoveProjectResponse(), project: empty.Project() });
+  m.converts("MoveProjectResponse.move_message", { moveMessage: "move_message" }, { ...empty.MoveProjectResponse(), moveMessage: "move_message" });
+}
+
+{
   const m = json(p.ListCommitsRequest, w.ListCommitsRequestSchema);
   m.converts("ListCommitsRequest: nothing set", {}, empty.ListCommitsRequest());
   m.refuses("ListCommitsRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("ListCommitsRequest.project_id", { projectId: "project_id" }, { ...empty.ListCommitsRequest(), projectId: "project_id" });
   m.converts("ListCommitsRequest.before_commit", { beforeCommit: "before_commit" }, { ...empty.ListCommitsRequest(), beforeCommit: "before_commit" });
+  m.converts("ListCommitsRequest.workspace", { workspace: "workspace" }, { ...empty.ListCommitsRequest(), workspace: "workspace" });
 }
 
 {
@@ -768,6 +883,7 @@ import * as p from "pethost";
   m.converts("RunProjectActionRequest.operation_id", { operationId: "operation_id" }, { ...empty.RunProjectActionRequest(), operationId: "operation_id" });
   m.converts("RunProjectActionRequest.wait_seconds", { waitSeconds: 1013 }, { ...empty.RunProjectActionRequest(), waitSeconds: 1013 });
   m.converts("RunProjectActionRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.RunProjectActionRequest(), waitSeconds: 0 });
+  m.converts("RunProjectActionRequest.workspace", { workspace: "workspace" }, { ...empty.RunProjectActionRequest(), workspace: "workspace" });
 }
 
 {
@@ -919,6 +1035,7 @@ import * as p from "pethost";
   m.converts("LinkDatabaseRequest.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.LinkDatabaseRequest(), databaseProjectId: "database_project_id" });
   m.converts("LinkDatabaseRequest.link", { link: ["link", ""] }, { ...empty.LinkDatabaseRequest(), link: ["link", ""] });
   m.converts("LinkDatabaseRequest.unlink", { unlink: ["unlink", ""] }, { ...empty.LinkDatabaseRequest(), unlink: ["unlink", ""] });
+  m.converts("LinkDatabaseRequest.workspace", { workspace: "workspace" }, { ...empty.LinkDatabaseRequest(), workspace: "workspace" });
 }
 
 {
@@ -946,6 +1063,7 @@ import * as p from "pethost";
   m.converts("CreateDatabaseRequest.wait_seconds", { waitSeconds: 1007 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 1007 });
   m.converts("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { ...empty.CreateDatabaseRequest(), waitSeconds: 0 });
   m.converts("CreateDatabaseRequest.metadata", { metadata: {} }, { ...empty.CreateDatabaseRequest(), metadata: empty.ProjectMetadata() });
+  m.converts("CreateDatabaseRequest.workspace", { workspace: "workspace" }, { ...empty.CreateDatabaseRequest(), workspace: "workspace" });
 }
 
 {
@@ -972,6 +1090,7 @@ import * as p from "pethost";
   m.converts("SetProjectAlertsRequest.off: zero", { off: false }, { ...empty.SetProjectAlertsRequest(), off: false });
   m.converts("SetProjectAlertsRequest.mute_minutes", { muteMinutes: 1007 }, { ...empty.SetProjectAlertsRequest(), muteMinutes: 1007 });
   m.converts("SetProjectAlertsRequest.mute_minutes: zero", { muteMinutes: 0 }, { ...empty.SetProjectAlertsRequest(), muteMinutes: 0 });
+  m.converts("SetProjectAlertsRequest.workspace", { workspace: "workspace" }, { ...empty.SetProjectAlertsRequest(), workspace: "workspace" });
 }
 
 {
@@ -1143,6 +1262,7 @@ import * as p from "pethost";
   m.converts("GetOperationRequest.after_log_line: zero", { afterLogLine: 0 }, { ...empty.GetOperationRequest(), afterLogLine: 0 });
   m.converts("GetOperationRequest.log_line_limit", { logLineLimit: 1005 }, { ...empty.GetOperationRequest(), logLineLimit: 1005 });
   m.converts("GetOperationRequest.log_line_limit: zero", { logLineLimit: 0 }, { ...empty.GetOperationRequest(), logLineLimit: 0 });
+  m.converts("GetOperationRequest.workspace", { workspace: "workspace" }, { ...empty.GetOperationRequest(), workspace: "workspace" });
 }
 
 {
@@ -1154,6 +1274,7 @@ import * as p from "pethost";
   m.converts("GetOperationResponse.log", { log: [{}] }, { ...empty.GetOperationResponse(), log: [empty.OperationLogLine()] });
   m.converts("GetOperationResponse.log_line_count", { logLineCount: 1003 }, { ...empty.GetOperationResponse(), logLineCount: 1003 });
   m.converts("GetOperationResponse.next_after_log_line", { nextAfterLogLine: 1004 }, { ...empty.GetOperationResponse(), nextAfterLogLine: 1004 });
+  m.converts("GetOperationResponse.move_message", { moveMessage: "move_message" }, { ...empty.GetOperationResponse(), moveMessage: "move_message" });
 }
 
 {
@@ -1187,6 +1308,7 @@ import * as p from "pethost";
   m.converts("QueryHttpTrafficRequest.bucket_width_seconds", { bucketWidthSeconds: 1005 }, { ...empty.QueryHttpTrafficRequest(), bucketWidthSeconds: 1005 });
   m.converts("QueryHttpTrafficRequest.request_limit", { requestLimit: 1006 }, { ...empty.QueryHttpTrafficRequest(), requestLimit: 1006 });
   m.converts("QueryHttpTrafficRequest.page_token", { pageToken: "page_token" }, { ...empty.QueryHttpTrafficRequest(), pageToken: "page_token" });
+  m.converts("QueryHttpTrafficRequest.workspace", { workspace: "workspace" }, { ...empty.QueryHttpTrafficRequest(), workspace: "workspace" });
 }
 
 {
@@ -1271,6 +1393,7 @@ import * as p from "pethost";
   m.converts("QueryContainerLogsRequest.limit", { limit: 1005 }, { ...empty.QueryContainerLogsRequest(), limit: 1005 });
   m.converts("QueryContainerLogsRequest.from_start", { fromStart: true }, { ...empty.QueryContainerLogsRequest(), fromStart: true });
   m.converts("QueryContainerLogsRequest.page_token", { pageToken: "page_token" }, { ...empty.QueryContainerLogsRequest(), pageToken: "page_token" });
+  m.converts("QueryContainerLogsRequest.workspace", { workspace: "workspace" }, { ...empty.QueryContainerLogsRequest(), workspace: "workspace" });
 }
 
 {
@@ -1309,6 +1432,7 @@ import * as p from "pethost";
   m.converts("RunServiceCommandRequest.run_as_user", { runAsUser: "run_as_user" }, { ...empty.RunServiceCommandRequest(), runAsUser: "run_as_user" });
   m.converts("RunServiceCommandRequest.working_directory", { workingDirectory: "working_directory" }, { ...empty.RunServiceCommandRequest(), workingDirectory: "working_directory" });
   m.converts("RunServiceCommandRequest.timeout_seconds", { timeoutSeconds: 1007 }, { ...empty.RunServiceCommandRequest(), timeoutSeconds: 1007 });
+  m.converts("RunServiceCommandRequest.workspace", { workspace: "workspace" }, { ...empty.RunServiceCommandRequest(), workspace: "workspace" });
 }
 
 {
@@ -1357,6 +1481,7 @@ import * as p from "pethost";
   m.reads("ReadPathRequest.offset_bytes: as a number", { offset_bytes: 1007 }, { ...empty.ReadPathRequest(), offsetBytes: 1007n });
   m.converts("ReadPathRequest.length_bytes", { lengthBytes: 1008 }, { ...empty.ReadPathRequest(), lengthBytes: 1008 });
   m.converts("ReadPathRequest.entry_page_token", { entryPageToken: "entry_page_token" }, { ...empty.ReadPathRequest(), entryPageToken: "entry_page_token" });
+  m.converts("ReadPathRequest.workspace", { workspace: "workspace" }, { ...empty.ReadPathRequest(), workspace: "workspace" });
 }
 
 {
@@ -1388,6 +1513,7 @@ import * as p from "pethost";
   m.converts("CreateTransferRequest.upload_file", { transfer: { case: "uploadFile", value: {} } }, { ...empty.CreateTransferRequest(), uploadFile: empty.FileUpload() });
   m.converts("CreateTransferRequest.download", { transfer: { case: "download", value: {} } }, { ...empty.CreateTransferRequest(), download: empty.PathDownload() });
   m.converts("CreateTransferRequest.download_database", { transfer: { case: "downloadDatabase", value: {} } }, { ...empty.CreateTransferRequest(), downloadDatabase: empty.DatabaseDump() });
+  m.converts("CreateTransferRequest.workspace", { workspace: "workspace" }, { ...empty.CreateTransferRequest(), workspace: "workspace" });
 }
 
 {
@@ -1453,6 +1579,7 @@ import * as p from "pethost";
   m.converts("ProjectBusy.kind: BACKUP", { kind: w.OperationKind.BACKUP }, { ...empty.ProjectBusy(), kind: "BACKUP" });
   m.converts("ProjectBusy.kind: RESTORE", { kind: w.OperationKind.RESTORE }, { ...empty.ProjectBusy(), kind: "RESTORE" });
   m.converts("ProjectBusy.kind: DELETE", { kind: w.OperationKind.DELETE }, { ...empty.ProjectBusy(), kind: "DELETE" });
+  m.converts("ProjectBusy.kind: MOVE", { kind: w.OperationKind.MOVE }, { ...empty.ProjectBusy(), kind: "MOVE" });
   m.converts("ProjectBusy.kind: a value newer than the SDK", { kind: 9999 as w.OperationKind }, { ...empty.ProjectBusy(), kind: 9999 });
   m.refuses("ProjectBusy.kind: a name newer than the SDK", { kind: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("ProjectBusy.start_time", { startTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.ProjectBusy(), startTime: new Date(1790000000123) });
@@ -1512,6 +1639,35 @@ import * as p from "pethost";
   m.converts("NoMachine.reason: a value newer than the SDK", { reason: 9999 as w.NoMachineReason }, { ...empty.NoMachine(), reason: 9999 });
   m.refuses("NoMachine.reason: a name newer than the SDK", { reason: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("NoMachine.url", { url: "url" }, { ...empty.NoMachine(), url: "url" });
+  m.converts("NoMachine.workspace_id", { workspaceId: "workspace_id" }, { ...empty.NoMachine(), workspaceId: "workspace_id" });
+}
+
+{
+  const m = json(p.WorkspaceChoice, w.WorkspaceChoiceSchema);
+  m.converts("WorkspaceChoice: nothing set", {}, empty.WorkspaceChoice());
+  m.refuses("WorkspaceChoice: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("WorkspaceChoice.workspaces", { workspaces: [{}] }, { ...empty.WorkspaceChoice(), workspaces: [empty.Workspace()] });
+  m.converts("WorkspaceChoice.total", { total: 1002 }, { ...empty.WorkspaceChoice(), total: 1002 });
+  m.converts("WorkspaceChoice.holding_project", { holdingProject: ["holding_project", ""] }, { ...empty.WorkspaceChoice(), holdingProject: ["holding_project", ""] });
+  m.converts("WorkspaceChoice.incomplete", { incomplete: true }, { ...empty.WorkspaceChoice(), incomplete: true });
+}
+
+{
+  const m = json(p.WorkspaceNotGranted, w.WorkspaceNotGrantedSchema);
+  m.converts("WorkspaceNotGranted: nothing set", {}, empty.WorkspaceNotGranted());
+  m.refuses("WorkspaceNotGranted: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("WorkspaceNotGranted.workspace_id", { workspaceId: "workspace_id" }, { ...empty.WorkspaceNotGranted(), workspaceId: "workspace_id" });
+  m.converts("WorkspaceNotGranted.url", { url: "url" }, { ...empty.WorkspaceNotGranted(), url: "url" });
+}
+
+{
+  const m = json(p.ProjectMoved, w.ProjectMovedSchema);
+  m.converts("ProjectMoved: nothing set", {}, empty.ProjectMoved());
+  m.refuses("ProjectMoved: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ProjectMoved.project_id", { projectId: "project_id" }, { ...empty.ProjectMoved(), projectId: "project_id" });
+  m.converts("ProjectMoved.workspace_id", { workspaceId: "workspace_id" }, { ...empty.ProjectMoved(), workspaceId: "workspace_id" });
+  m.converts("ProjectMoved.workspace_name", { workspaceName: "workspace_name" }, { ...empty.ProjectMoved(), workspaceName: "workspace_name" });
+  m.converts("ProjectMoved.move_time", { moveTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.ProjectMoved(), moveTime: new Date(1790000000123) });
 }
 
 {
@@ -1520,6 +1676,7 @@ import * as p from "pethost";
   m.refuses("WatchOperationRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("WatchOperationRequest.project_id", { projectId: "project_id" }, { ...empty.WatchOperationRequest(), projectId: "project_id" });
   m.converts("WatchOperationRequest.operation_id", { operationId: "operation_id" }, { ...empty.WatchOperationRequest(), operationId: "operation_id" });
+  m.converts("WatchOperationRequest.workspace", { workspace: "workspace" }, { ...empty.WatchOperationRequest(), workspace: "workspace" });
 }
 
 {
@@ -1528,6 +1685,7 @@ import * as p from "pethost";
   m.refuses("WatchOperationResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("WatchOperationResponse.log", { message: { case: "log", value: {} } }, { ...empty.WatchOperationResponse(), message: "log", log: empty.OperationLogLine() });
   m.converts("WatchOperationResponse.finished_operation", { message: { case: "finishedOperation", value: {} } }, { ...empty.WatchOperationResponse(), message: "finishedOperation", finishedOperation: empty.Operation() });
+  m.converts("WatchOperationResponse.move_message", { moveMessage: "move_message" }, { ...empty.WatchOperationResponse(), moveMessage: "move_message" });
 }
 
 {
@@ -1537,6 +1695,7 @@ import * as p from "pethost";
   m.converts("TailContainerLogsRequest.project_id", { projectId: "project_id" }, { ...empty.TailContainerLogsRequest(), projectId: "project_id" });
   m.converts("TailContainerLogsRequest.filter", { filter: {} }, { ...empty.TailContainerLogsRequest(), filter: empty.ContainerLogFilter() });
   m.converts("TailContainerLogsRequest.after_cursor", { afterCursor: "after_cursor" }, { ...empty.TailContainerLogsRequest(), afterCursor: "after_cursor" });
+  m.converts("TailContainerLogsRequest.workspace", { workspace: "workspace" }, { ...empty.TailContainerLogsRequest(), workspace: "workspace" });
 }
 
 {
@@ -1555,6 +1714,7 @@ import * as p from "pethost";
   m.converts("TailHttpTrafficRequest.filter", { filter: {} }, { ...empty.TailHttpTrafficRequest(), filter: empty.HttpTrafficFilter() });
   m.converts("TailHttpTrafficRequest.after_sequence", { afterSequence: 9007199254740993n }, { ...empty.TailHttpTrafficRequest(), afterSequence: 9007199254740993n });
   m.reads("TailHttpTrafficRequest.after_sequence: as a number", { after_sequence: 1003 }, { ...empty.TailHttpTrafficRequest(), afterSequence: 1003n });
+  m.converts("TailHttpTrafficRequest.workspace", { workspace: "workspace" }, { ...empty.TailHttpTrafficRequest(), workspace: "workspace" });
 }
 
 {

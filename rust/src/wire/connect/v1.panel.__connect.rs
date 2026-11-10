@@ -1,3 +1,11 @@
+///Shorthand for `OwnedView<ListWorkspacesRequestView<'static>>`.
+pub type OwnedListWorkspacesRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesRequestView<'static>,
+>;
+///Shorthand for `OwnedView<ListWorkspacesResponseView<'static>>`.
+pub type OwnedListWorkspacesResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesResponseView<'static>,
+>;
 ///Shorthand for `OwnedView<GetMachineRequestView<'static>>`.
 pub type OwnedGetMachineRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::GetMachineRequestView<'static>,
@@ -39,6 +47,22 @@ pub type OwnedDeployProjectRequestView = ::buffa::view::OwnedView<
 ///Shorthand for `OwnedView<DeployProjectResponseView<'static>>`.
 pub type OwnedDeployProjectResponseView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::DeployProjectResponseView<'static>,
+>;
+///Shorthand for `OwnedView<MoveProjectRequestView<'static>>`.
+pub type OwnedMoveProjectRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::MoveProjectRequestView<'static>,
+>;
+///Shorthand for `OwnedView<MoveProjectResponseView<'static>>`.
+pub type OwnedMoveProjectResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::MoveProjectResponseView<'static>,
+>;
+///Shorthand for `OwnedView<GetMoveChoicesRequestView<'static>>`.
+pub type OwnedGetMoveChoicesRequestView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesRequestView<'static>,
+>;
+///Shorthand for `OwnedView<GetMoveChoicesResponseView<'static>>`.
+pub type OwnedGetMoveChoicesResponseView = ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesResponseView<'static>,
 >;
 ///Shorthand for `OwnedView<ListCommitsRequestView<'static>>`.
 pub type OwnedListCommitsRequestView = ::buffa::view::OwnedView<
@@ -228,6 +252,40 @@ pub type OwnedTailHttpTrafficRequestView = ::buffa::view::OwnedView<
 pub type OwnedTailHttpTrafficResponseView = ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::TailHttpTrafficResponseView<'static>,
 >;
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::ListWorkspacesResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::ListWorkspacesResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
 impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetMachineResponse>
 for crate::proto::pethost::panel::v1::__buffa::view::GetMachineResponseView<'_> {
     fn encode(
@@ -378,6 +436,74 @@ for crate::proto::pethost::panel::v1::__buffa::view::DeployProjectResponseView<'
 impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::DeployProjectResponse>
 for ::buffa::view::OwnedView<
     crate::proto::pethost::panel::v1::__buffa::view::DeployProjectResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::MoveProjectResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::MoveProjectResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::MoveProjectResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::MoveProjectResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+    /// An `OwnedView` still holds the buffer it was decoded from, so
+    /// its large fields can be handed to the response body by
+    /// reference count instead of copied. The bare view impl above
+    /// cannot do this: it has borrows but no buffer to name.
+    fn encode_segments(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body_segments(
+            self.reborrow(),
+            self.bytes(),
+            codec,
+        )
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetMoveChoicesResponse>
+for crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::pethost::panel::v1::GetMoveChoicesResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -1114,6 +1240,12 @@ for ::buffa::view::OwnedView<
 }
 /// Full service name for this service.
 pub const PANEL_SERVICE_SERVICE_NAME: &str = "pethost.panel.v1.PanelService";
+/// Static [`Spec`](::connectrpc::Spec) for the `ListWorkspaces` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_LIST_WORKSPACES_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/ListWorkspaces",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
 /// Static [`Spec`](::connectrpc::Spec) for the `GetMachine` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_GET_MACHINE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/GetMachine",
@@ -1144,6 +1276,18 @@ pub const PANEL_SERVICE_DEPLOY_PROJECT_SPEC: ::connectrpc::Spec = ::connectrpc::
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `MoveProject` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_MOVE_PROJECT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/MoveProject",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the `GetMoveChoices` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
+pub const PANEL_SERVICE_GET_MOVE_CHOICES_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/pethost.panel.v1.PanelService/GetMoveChoices",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
 /// Static [`Spec`](::connectrpc::Spec) for the `ListCommits` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const PANEL_SERVICE_LIST_COMMITS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.panel.v1.PanelService/ListCommits",
@@ -1264,7 +1408,7 @@ pub const PANEL_SERVICE_TAIL_HTTP_TRAFFIC_SPEC: ::connectrpc::Spec = ::connectrp
         ::connectrpc::StreamType::ServerStream,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// ── Machine ──────────────────────────────────────────────────────────────
+/// ── Workspace ────────────────────────────────────────────────────────────
 ///
 /// # Implementing handlers
 ///
@@ -1315,9 +1459,39 @@ pub const PANEL_SERVICE_TAIL_HTTP_TRAFFIC_SPEC: ::connectrpc::Spec = ::connectrp
 /// example` doc.
 #[allow(clippy::type_complexity)]
 pub trait PanelService: Send + Sync + 'static {
+    /// The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+    /// is free, location, hostname and apps domain. With project_id, also which of them hold a
+    /// project of that id (holding_project). Free figures and project counts are each machine's
+    /// latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+    /// The one call that takes no `workspace`. A caller that reaches none is refused as a call
+    /// naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn list_workspaces<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::ListWorkspacesResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
     /// Start here: the machine (resources, the person's domain, backups, SSH), every project with
     /// its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-    /// from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+    /// from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+    /// traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+    /// WorkspaceChoice, which lists them.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1472,6 +1646,8 @@ pub trait PanelService: Send + Sync + 'static {
     /// named volume or a tmpfs there.
     ///
     /// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+    /// An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+    /// refused (its PUT said why) answers with its `violations`.
     /// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
     /// such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
     /// linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -1500,8 +1676,10 @@ pub trait PanelService: Send + Sync + 'static {
     > + Send;
     /// Deploys a new version of a project and answers as CreateProject does: `files` written over
     /// its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-    /// `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-    /// (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+    /// `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+    /// x-pethost), a commit, or an earlier deploy's files again as a new version
+    /// (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+    /// CreateProject's.
     ///
     /// It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
     /// until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -1541,6 +1719,93 @@ pub trait PanelService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::panel::v1::DeployProjectResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Moves a project to another workspace of the same person, as one operation (OperationKind
+    /// MOVE): it is stopped here, backed up into the destination's backups, restored and started
+    /// there under the same project_id, then deleted here. Each database it is linked to
+    /// (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+    /// uses one of the same engine instead, one the destination has or a new one, with the data of
+    /// the database it signs in to copied, or none (DatabaseSwitch). A database project
+    /// moves only when no app is linked to it.
+    /// `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+    /// either workspace, which once it ended answers the same move_message and the project.
+    /// Answers, once it ended, with the project as it is in the destination, and `move_message`:
+    /// what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+    /// point at its hostname, a new SSH command, which database it uses there instead of each, and
+    /// with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+    /// snapshots, and what each database it left still holds). Until the restore succeeded, a
+    /// failure undoes it: the source's services run again as they did, unless its failure says they
+    /// did not start again; the move's snapshot stays in the destination's backups, as a deleted
+    /// project's. After that it only goes forward: one that FAILED then moved the project, and its
+    /// failure names what the source still holds.
+    /// While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+    /// workspace, and so is a read where it is not then (before its restore, after its deletion from
+    /// the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+    /// until the source has a project of that id again. While it runs, a change to a database it
+    /// leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+    /// before the move made it; GetOperation answers the move with any of their project_ids.
+    /// INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+    /// an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+    /// takes or one two switches share, or an `into` the destination lacks or of another engine, or
+    /// one two switches share, copies of more than 32 databases, or to_workspace is the source
+    /// or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+    /// reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+    /// database takes, or operation_id is an operation of the project's or another move's already.
+    /// FAILED_PRECONDITION = a database project with apps linked to it (the message
+    /// names them: move each, or unlink it), a machine needs an update first (the message names it),
+    /// the project has no deploy yet, or the destination's backups are off (its
+    /// Machine.backups_enabled), which a move goes through.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn move_project<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::MoveProjectRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::MoveProjectResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// What MoveProject may do with each database the project is linked to, for the web panel's move
+    /// dialog: for each of Project.dependencies, the databases of to_workspace that
+    /// DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+    /// choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+    /// MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+    /// out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+    /// as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+    /// yet.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn get_move_choices<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::pethost::panel::v1::GetMoveChoicesResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2164,6 +2429,35 @@ impl<S: PanelService> PanelServiceExt for S {
         router
             .route_view_idempotent(
                 PANEL_SERVICE_SERVICE_NAME,
+                "ListWorkspaces",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.list_workspaces(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::ListWorkspacesResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_LIST_WORKSPACES_SPEC)
+            .route_view_idempotent(
+                PANEL_SERVICE_SERVICE_NAME,
                 "GetMachine",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -2307,6 +2601,64 @@ impl<S: PanelService> PanelServiceExt for S {
                 },
             )
             .with_spec(PANEL_SERVICE_DEPLOY_PROJECT_SPEC)
+            .route_view(
+                PANEL_SERVICE_SERVICE_NAME,
+                "MoveProject",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::MoveProjectRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::MoveProjectRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.move_project(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::MoveProjectResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_MOVE_PROJECT_SPEC)
+            .route_view_idempotent(
+                PANEL_SERVICE_SERVICE_NAME,
+                "GetMoveChoices",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.get_move_choices(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::pethost::panel::v1::GetMoveChoicesResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(PANEL_SERVICE_GET_MOVE_CHOICES_SPEC)
             .route_view_idempotent(
                 PANEL_SERVICE_SERVICE_NAME,
                 "ListCommits",
@@ -2938,6 +3290,12 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
     ) -> Option<::connectrpc::dispatcher::codegen::MethodDescriptor> {
         let method = path.strip_prefix("pethost.panel.v1.PanelService/")?;
         match method {
+            "ListWorkspaces" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
+                        .with_spec(PANEL_SERVICE_LIST_WORKSPACES_SPEC),
+                )
+            }
             "GetMachine" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
@@ -2966,6 +3324,18 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(PANEL_SERVICE_DEPLOY_PROJECT_SPEC),
+                )
+            }
+            "MoveProject" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(PANEL_SERVICE_MOVE_PROJECT_SPEC),
+                )
+            }
+            "GetMoveChoices" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
+                        .with_spec(PANEL_SERVICE_GET_MOVE_CHOICES_SPEC),
                 )
             }
             "ListCommits" => {
@@ -3103,6 +3473,28 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
         };
         let _ = (&ctx, &request, &format);
         match method {
+            "ListWorkspaces" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+                    >::from_parts(&req, &body);
+                    svc.list_workspaces(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::ListWorkspacesResponse,
+                        >(format)
+                })
+            }
             "GetMachine" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
@@ -3210,6 +3602,50 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::pethost::panel::v1::DeployProjectResponse,
+                        >(format)
+                })
+            }
+            "MoveProject" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::MoveProjectRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::MoveProjectRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::MoveProjectRequest,
+                    >::from_parts(&req, &body);
+                    svc.move_project(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::MoveProjectResponse,
+                        >(format)
+                })
+            }
+            "GetMoveChoices" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                        ctx.decode_options(),
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+                    >::from_parts(&req, &body);
+                    svc.get_move_choices(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::pethost::panel::v1::GetMoveChoicesResponse,
                         >(format)
                 })
             }
@@ -3732,7 +4168,7 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
 /// let config = ClientConfig::new(uri).with_protocol(Protocol::Grpc);
 ///
 /// let client = PanelServiceClient::new(conn, config);
-/// let response = client.get_machine(request).await?;
+/// let response = client.list_workspaces(request).await?;
 /// ```
 ///
 /// # Example (Connect / HTTP/1.1 or ALPN)
@@ -3744,7 +4180,7 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
 /// let config = ClientConfig::new("http://localhost:8080".parse()?);
 ///
 /// let client = PanelServiceClient::new(http, config);
-/// let response = client.get_machine(request).await?;
+/// let response = client.list_workspaces(request).await?;
 /// ```
 ///
 /// # Working with the response
@@ -3754,7 +4190,7 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
 /// message, so field access is zero-copy:
 ///
 /// ```rust,ignore
-/// let resp = client.get_machine(request).await?;
+/// let resp = client.list_workspaces(request).await?;
 /// let name: &str = resp.view().name;  // borrow into the response buffer
 /// ```
 ///
@@ -3762,7 +4198,7 @@ impl<T: PanelService> ::connectrpc::Dispatcher for PanelServiceServer<T> {
 /// [`into_owned()`](::connectrpc::client::UnaryResponse::into_owned):
 ///
 /// ```rust,ignore
-/// let owned = client.get_machine(request).await?.into_owned();
+/// let owned = client.list_workspaces(request).await?.into_owned();
 /// ```
 ///
 /// [`into_view()`](::connectrpc::client::UnaryResponse::into_view) keeps the
@@ -3792,6 +4228,51 @@ where
     /// Get a mutable reference to the client configuration.
     pub fn config_mut(&mut self) -> &mut ::connectrpc::client::ClientConfig {
         &mut self.config
+    }
+    /// Call the ListWorkspaces RPC. Sends a request to /pethost.panel.v1.PanelService/ListWorkspaces.
+    pub async fn list_workspaces(
+        &self,
+        request: crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.list_workspaces_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the ListWorkspaces RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn list_workspaces_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::ListWorkspacesRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::ListWorkspacesResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_LIST_WORKSPACES_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
     }
     /// Call the GetMachine RPC. Sends a request to /pethost.panel.v1.PanelService/GetMachine.
     pub async fn get_machine(
@@ -4012,6 +4493,96 @@ where
                 &self.transport,
                 &self.config,
                 PANEL_SERVICE_DEPLOY_PROJECT_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the MoveProject RPC. Sends a request to /pethost.panel.v1.PanelService/MoveProject.
+    pub async fn move_project(
+        &self,
+        request: crate::proto::pethost::panel::v1::MoveProjectRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::MoveProjectResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.move_project_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the MoveProject RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn move_project_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::MoveProjectRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::MoveProjectResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_MOVE_PROJECT_SPEC
+                    .with_origin(::connectrpc::SpecOrigin::Client),
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the GetMoveChoices RPC. Sends a request to /pethost.panel.v1.PanelService/GetMoveChoices.
+    pub async fn get_move_choices(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.get_move_choices_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the GetMoveChoices RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_move_choices_with_options(
+        &self,
+        request: crate::proto::pethost::panel::v1::GetMoveChoicesRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::pethost::panel::v1::__buffa::view::GetMoveChoicesResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                PANEL_SERVICE_GET_MOVE_CHOICES_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

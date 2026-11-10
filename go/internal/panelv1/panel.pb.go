@@ -10,18 +10,24 @@
 // stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
 // too, as methods of every SDK; an agent uses what is named beside each.
 
-// Pethost is the user's own hosting: their plan sets the size (CPU, memory, disk) of one Linux
-// machine, where their Docker Compose projects run. Use it whenever the user wants to deploy, host,
-// publish or put online an app, site, bot, API or database, and for anything already running there:
-// logs, domains, secrets, rollbacks, files. Start with GetMachine: it lists what runs and what is
-// wrong. A first deploy is CreateProject: its description holds the compose.yaml rules.
+// Pethost is the user's own hosting: each plan they buy is a workspace, a Linux machine of that
+// size for their Docker Compose projects. Use it whenever the user wants to deploy, host, publish
+// or put online an app, site, bot, API or database, and for anything running there: logs,
+// domains, secrets, rollbacks, files. Start with GetMachine: what runs, what is wrong. Several
+// workspaces: ListWorkspaces first, then `workspace` in each call. CreateProject's description
+// holds the compose.yaml rules.
 //
 // A site that fails or is slow: QueryHttpTraffic says which path, QueryContainerLogs what it
 // failed with, ReadPath shows the code at fault. Every tool here is a call you make yourself,
 // never a shell command.
 //
 // MODEL
-//   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
+//   Workspace (workspace): what one plan buys: a machine of the plan's size, its apps_domain, its
+//     backups. A call acts on the workspace its `workspace` names, by id or name; without one, on
+//     the only one the caller has, and with several it is refused (WorkspaceChoice). Keep the id
+//     from an answer (workspace_id), never the name: the person may rename it.
+//   Machine: one VDS running the daemon, petnode: the one of the workspace a call acts on. Ids
+//     below are unique within it: the same project_id in two workspaces is two projects.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
 //   - Database: a project CreateDatabase made (Postgres; MariaDB, for an app that asks for MySQL
@@ -63,13 +69,18 @@
 //   - Units are in field names (_bytes, _cores, _seconds, _ms). Times are RFC 3339. Absent = 0,
 //     false or empty. *_message fields are prose for people: branch on enums and ids.
 //   - Errors: NOT_FOUND = no such entity (the message lists what exists). INVALID_ARGUMENT = a
-//     bad or unknown field (named, with what it takes). FAILED_PRECONDITION = the container is
-//     not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
-//     do). UNAVAILABLE = retry later: the project is busy (ProjectBusy names the operation: wait
-//     with GetOperation), or the machine (MachineUnreachable), GitHub or backup storage is down.
-//     ABORTED = changed since read (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit
-//     (named). OUT_OF_RANGE = before the oldest record kept. PERMISSION_DENIED = a read-only
-//     path (project files: use DeployProject). UNAUTHENTICATED = sign in again.
+//     bad or unknown field (named, with what it takes; a `workspace` of none of the caller's:
+//     WorkspaceChoice lists theirs). FAILED_PRECONDITION = the container is not running, or as
+//     the RPC says; with NoMachine = no machine yet (the message says what to do); with
+//     WorkspaceChoice = `workspace` is needed: name one it lists, by what the person said or
+//     where the project is (holding_project); with ProjectMoved = the project moved to the
+//     workspace it names: call there. UNAVAILABLE = retry later: the project is busy
+//     (ProjectBusy names the operation: wait with GetOperation), or the machine
+//     (MachineUnreachable), GitHub or backup storage is down. ABORTED = changed since read
+//     (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit (named). OUT_OF_RANGE =
+//     before the oldest record kept. PERMISSION_DENIED = a read-only path (project files: use
+//     DeployProject); with WorkspaceNotGranted = the person has not let this token reach that
+//     workspace (they can, at its url). UNAUTHENTICATED = sign in again.
 //   - A response holds ~64 KiB at most (ReadPath.length_bytes: ≤1 MiB; CreateTransfer: any
 //     size); a cut list says so and pages. A limit over its maximum counts as the maximum.
 //   - An operation runs on after its call returns, even if the caller leaves; a retry with the
@@ -93,6 +104,93 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type WorkspaceStatus int32
+
+const (
+	WorkspaceStatus_WORKSPACE_STATUS_UNSPECIFIED WorkspaceStatus = 0
+	WorkspaceStatus_WORKSPACE_STATUS_READY       WorkspaceStatus = 1 // Its machine answers calls.
+	// Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+	// that names it is FAILED_PRECONDITION + NoMachine until then.
+	WorkspaceStatus_WORKSPACE_STATUS_BEING_PREPARED WorkspaceStatus = 2
+)
+
+// Enum value maps for WorkspaceStatus.
+var (
+	WorkspaceStatus_name = map[int32]string{
+		0: "WORKSPACE_STATUS_UNSPECIFIED",
+		1: "WORKSPACE_STATUS_READY",
+		2: "WORKSPACE_STATUS_BEING_PREPARED",
+	}
+	WorkspaceStatus_value = map[string]int32{
+		"WORKSPACE_STATUS_UNSPECIFIED":    0,
+		"WORKSPACE_STATUS_READY":          1,
+		"WORKSPACE_STATUS_BEING_PREPARED": 2,
+	}
+)
+
+func (x WorkspaceStatus) Enum() *WorkspaceStatus {
+	p := new(WorkspaceStatus)
+	*p = x
+	return p
+}
+
+func (x WorkspaceStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WorkspaceStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[0].Descriptor()
+}
+
+func (WorkspaceStatus) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[0]
+}
+
+func (x WorkspaceStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+type WorkspaceRole int32
+
+const (
+	WorkspaceRole_WORKSPACE_ROLE_UNSPECIFIED WorkspaceRole = 0
+	WorkspaceRole_WORKSPACE_ROLE_OWNER       WorkspaceRole = 1 // Pays for it, and may do everything in it.
+)
+
+// Enum value maps for WorkspaceRole.
+var (
+	WorkspaceRole_name = map[int32]string{
+		0: "WORKSPACE_ROLE_UNSPECIFIED",
+		1: "WORKSPACE_ROLE_OWNER",
+	}
+	WorkspaceRole_value = map[string]int32{
+		"WORKSPACE_ROLE_UNSPECIFIED": 0,
+		"WORKSPACE_ROLE_OWNER":       1,
+	}
+)
+
+func (x WorkspaceRole) Enum() *WorkspaceRole {
+	p := new(WorkspaceRole)
+	*p = x
+	return p
+}
+
+func (x WorkspaceRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WorkspaceRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_panel_proto_enumTypes[1].Descriptor()
+}
+
+func (WorkspaceRole) Type() protoreflect.EnumType {
+	return &file_v1_panel_proto_enumTypes[1]
+}
+
+func (x WorkspaceRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
 
 type AlertChannelKind int32
 
@@ -130,11 +228,11 @@ func (x AlertChannelKind) String() string {
 }
 
 func (AlertChannelKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[0].Descriptor()
+	return file_v1_panel_proto_enumTypes[2].Descriptor()
 }
 
 func (AlertChannelKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[0]
+	return &file_v1_panel_proto_enumTypes[2]
 }
 
 func (x AlertChannelKind) Number() protoreflect.EnumNumber {
@@ -187,11 +285,11 @@ func (x MachineSessionKind) String() string {
 }
 
 func (MachineSessionKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[1].Descriptor()
+	return file_v1_panel_proto_enumTypes[3].Descriptor()
 }
 
 func (MachineSessionKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[1]
+	return &file_v1_panel_proto_enumTypes[3]
 }
 
 func (x MachineSessionKind) Number() protoreflect.EnumNumber {
@@ -293,11 +391,11 @@ func (x ProjectProblemKind) String() string {
 }
 
 func (ProjectProblemKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[2].Descriptor()
+	return file_v1_panel_proto_enumTypes[4].Descriptor()
 }
 
 func (ProjectProblemKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[2]
+	return &file_v1_panel_proto_enumTypes[4]
 }
 
 func (x ProjectProblemKind) Number() protoreflect.EnumNumber {
@@ -340,11 +438,11 @@ func (x ServicesActionKind) String() string {
 }
 
 func (ServicesActionKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[3].Descriptor()
+	return file_v1_panel_proto_enumTypes[5].Descriptor()
 }
 
 func (ServicesActionKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[3]
+	return &file_v1_panel_proto_enumTypes[5]
 }
 
 func (x ServicesActionKind) Number() protoreflect.EnumNumber {
@@ -406,11 +504,11 @@ func (x ServiceState) String() string {
 }
 
 func (ServiceState) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[4].Descriptor()
+	return file_v1_panel_proto_enumTypes[6].Descriptor()
 }
 
 func (ServiceState) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[4]
+	return &file_v1_panel_proto_enumTypes[6]
 }
 
 func (x ServiceState) Number() protoreflect.EnumNumber {
@@ -461,11 +559,11 @@ func (x RestartPolicy) String() string {
 }
 
 func (RestartPolicy) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[5].Descriptor()
+	return file_v1_panel_proto_enumTypes[7].Descriptor()
 }
 
 func (RestartPolicy) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[5]
+	return &file_v1_panel_proto_enumTypes[7]
 }
 
 func (x RestartPolicy) Number() protoreflect.EnumNumber {
@@ -508,11 +606,11 @@ func (x HealthStatus) String() string {
 }
 
 func (HealthStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[6].Descriptor()
+	return file_v1_panel_proto_enumTypes[8].Descriptor()
 }
 
 func (HealthStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[6]
+	return &file_v1_panel_proto_enumTypes[8]
 }
 
 func (x HealthStatus) Number() protoreflect.EnumNumber {
@@ -557,11 +655,11 @@ func (x CertificateSource) String() string {
 }
 
 func (CertificateSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[7].Descriptor()
+	return file_v1_panel_proto_enumTypes[9].Descriptor()
 }
 
 func (CertificateSource) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[7]
+	return &file_v1_panel_proto_enumTypes[9]
 }
 
 func (x CertificateSource) Number() protoreflect.EnumNumber {
@@ -577,6 +675,10 @@ const (
 	OperationKind_OPERATION_KIND_BACKUP           OperationKind = 3
 	OperationKind_OPERATION_KIND_RESTORE          OperationKind = 4
 	OperationKind_OPERATION_KIND_DELETE           OperationKind = 5
+	// MoveProject's, of the project it moves, in both workspaces. Its operation_id is the move's,
+	// which GetOperation and WatchOperation answer in either, also with the project_id of a database
+	// the move holds.
+	OperationKind_OPERATION_KIND_MOVE OperationKind = 6
 )
 
 // Enum value maps for OperationKind.
@@ -588,6 +690,7 @@ var (
 		3: "OPERATION_KIND_BACKUP",
 		4: "OPERATION_KIND_RESTORE",
 		5: "OPERATION_KIND_DELETE",
+		6: "OPERATION_KIND_MOVE",
 	}
 	OperationKind_value = map[string]int32{
 		"OPERATION_KIND_UNSPECIFIED":      0,
@@ -596,6 +699,7 @@ var (
 		"OPERATION_KIND_BACKUP":           3,
 		"OPERATION_KIND_RESTORE":          4,
 		"OPERATION_KIND_DELETE":           5,
+		"OPERATION_KIND_MOVE":             6,
 	}
 )
 
@@ -610,11 +714,11 @@ func (x OperationKind) String() string {
 }
 
 func (OperationKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[8].Descriptor()
+	return file_v1_panel_proto_enumTypes[10].Descriptor()
 }
 
 func (OperationKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[8]
+	return &file_v1_panel_proto_enumTypes[10]
 }
 
 func (x OperationKind) Number() protoreflect.EnumNumber {
@@ -660,11 +764,11 @@ func (x OperationStatus) String() string {
 }
 
 func (OperationStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[9].Descriptor()
+	return file_v1_panel_proto_enumTypes[11].Descriptor()
 }
 
 func (OperationStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[9]
+	return &file_v1_panel_proto_enumTypes[11]
 }
 
 func (x OperationStatus) Number() protoreflect.EnumNumber {
@@ -740,11 +844,11 @@ func (x DeployFailureReason) String() string {
 }
 
 func (DeployFailureReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[10].Descriptor()
+	return file_v1_panel_proto_enumTypes[12].Descriptor()
 }
 
 func (DeployFailureReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[10]
+	return &file_v1_panel_proto_enumTypes[12]
 }
 
 func (x DeployFailureReason) Number() protoreflect.EnumNumber {
@@ -787,11 +891,11 @@ func (x DatabaseEngine) String() string {
 }
 
 func (DatabaseEngine) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[11].Descriptor()
+	return file_v1_panel_proto_enumTypes[13].Descriptor()
 }
 
 func (DatabaseEngine) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[11]
+	return &file_v1_panel_proto_enumTypes[13]
 }
 
 func (x DatabaseEngine) Number() protoreflect.EnumNumber {
@@ -852,11 +956,11 @@ func (x DatabaseCommandKind) String() string {
 }
 
 func (DatabaseCommandKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[12].Descriptor()
+	return file_v1_panel_proto_enumTypes[14].Descriptor()
 }
 
 func (DatabaseCommandKind) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[12]
+	return &file_v1_panel_proto_enumTypes[14]
 }
 
 func (x DatabaseCommandKind) Number() protoreflect.EnumNumber {
@@ -899,11 +1003,11 @@ func (x DatabaseStatementOrder) String() string {
 }
 
 func (DatabaseStatementOrder) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[13].Descriptor()
+	return file_v1_panel_proto_enumTypes[15].Descriptor()
 }
 
 func (DatabaseStatementOrder) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[13]
+	return &file_v1_panel_proto_enumTypes[15]
 }
 
 func (x DatabaseStatementOrder) Number() protoreflect.EnumNumber {
@@ -952,11 +1056,11 @@ func (x DatabaseSessionState) String() string {
 }
 
 func (DatabaseSessionState) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[14].Descriptor()
+	return file_v1_panel_proto_enumTypes[16].Descriptor()
 }
 
 func (DatabaseSessionState) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[14]
+	return &file_v1_panel_proto_enumTypes[16]
 }
 
 func (x DatabaseSessionState) Number() protoreflect.EnumNumber {
@@ -999,11 +1103,11 @@ func (x TrafficMetric) String() string {
 }
 
 func (TrafficMetric) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[15].Descriptor()
+	return file_v1_panel_proto_enumTypes[17].Descriptor()
 }
 
 func (TrafficMetric) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[15]
+	return &file_v1_panel_proto_enumTypes[17]
 }
 
 func (x TrafficMetric) Number() protoreflect.EnumNumber {
@@ -1054,11 +1158,11 @@ func (x AlertStatus) String() string {
 }
 
 func (AlertStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[16].Descriptor()
+	return file_v1_panel_proto_enumTypes[18].Descriptor()
 }
 
 func (AlertStatus) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[16]
+	return &file_v1_panel_proto_enumTypes[18]
 }
 
 func (x AlertStatus) Number() protoreflect.EnumNumber {
@@ -1105,11 +1209,11 @@ func (x IncidentQuietReason) String() string {
 }
 
 func (IncidentQuietReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[17].Descriptor()
+	return file_v1_panel_proto_enumTypes[19].Descriptor()
 }
 
 func (IncidentQuietReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[17]
+	return &file_v1_panel_proto_enumTypes[19]
 }
 
 func (x IncidentQuietReason) Number() protoreflect.EnumNumber {
@@ -1149,11 +1253,11 @@ func (x OutputStream) String() string {
 }
 
 func (OutputStream) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[18].Descriptor()
+	return file_v1_panel_proto_enumTypes[20].Descriptor()
 }
 
 func (OutputStream) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[18]
+	return &file_v1_panel_proto_enumTypes[20]
 }
 
 func (x OutputStream) Number() protoreflect.EnumNumber {
@@ -1199,11 +1303,11 @@ func (x FileType) String() string {
 }
 
 func (FileType) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[19].Descriptor()
+	return file_v1_panel_proto_enumTypes[21].Descriptor()
 }
 
 func (FileType) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[19]
+	return &file_v1_panel_proto_enumTypes[21]
 }
 
 func (x FileType) Number() protoreflect.EnumNumber {
@@ -1252,11 +1356,11 @@ func (x FileLocation) String() string {
 }
 
 func (FileLocation) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[20].Descriptor()
+	return file_v1_panel_proto_enumTypes[22].Descriptor()
 }
 
 func (FileLocation) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[20]
+	return &file_v1_panel_proto_enumTypes[22]
 }
 
 func (x FileLocation) Number() protoreflect.EnumNumber {
@@ -1310,11 +1414,11 @@ func (x DatabaseLinkRefusalReason) String() string {
 }
 
 func (DatabaseLinkRefusalReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[21].Descriptor()
+	return file_v1_panel_proto_enumTypes[23].Descriptor()
 }
 
 func (DatabaseLinkRefusalReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[21]
+	return &file_v1_panel_proto_enumTypes[23]
 }
 
 func (x DatabaseLinkRefusalReason) Number() protoreflect.EnumNumber {
@@ -1363,11 +1467,11 @@ func (x DatabaseSizeRefusalReason) String() string {
 }
 
 func (DatabaseSizeRefusalReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[22].Descriptor()
+	return file_v1_panel_proto_enumTypes[24].Descriptor()
 }
 
 func (DatabaseSizeRefusalReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[22]
+	return &file_v1_panel_proto_enumTypes[24]
 }
 
 func (x DatabaseSizeRefusalReason) Number() protoreflect.EnumNumber {
@@ -1379,8 +1483,8 @@ type NoMachineReason int32
 const (
 	NoMachineReason_NO_MACHINE_REASON_UNSPECIFIED NoMachineReason = 0
 	NoMachineReason_NO_MACHINE_REASON_NO_PLAN     NoMachineReason = 1 // The person has not chosen and paid for a plan: they do it at url.
-	// The plan is paid and a machine is being prepared for the account: Pethost emails the person
-	// when it is ready. Call again later.
+	// The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+	// person when it is ready. Call again later.
 	NoMachineReason_NO_MACHINE_REASON_BEING_PREPARED NoMachineReason = 2
 )
 
@@ -1409,37 +1513,41 @@ func (x NoMachineReason) String() string {
 }
 
 func (NoMachineReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_panel_proto_enumTypes[23].Descriptor()
+	return file_v1_panel_proto_enumTypes[25].Descriptor()
 }
 
 func (NoMachineReason) Type() protoreflect.EnumType {
-	return &file_v1_panel_proto_enumTypes[23]
+	return &file_v1_panel_proto_enumTypes[25]
 }
 
 func (x NoMachineReason) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-type GetMachineRequest struct {
-	state         protoimpl.MessageState `protogen:"opaque.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+type ListWorkspacesRequest struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_PageToken   *string                `protobuf:"bytes,2,opt,name=page_token,json=pageToken"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
-func (x *GetMachineRequest) Reset() {
-	*x = GetMachineRequest{}
+func (x *ListWorkspacesRequest) Reset() {
+	*x = ListWorkspacesRequest{}
 	mi := &file_v1_panel_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetMachineRequest) String() string {
+func (x *ListWorkspacesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetMachineRequest) ProtoMessage() {}
+func (*ListWorkspacesRequest) ProtoMessage() {}
 
-func (x *GetMachineRequest) ProtoReflect() protoreflect.Message {
+func (x *ListWorkspacesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_v1_panel_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1451,15 +1559,854 @@ func (x *GetMachineRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
+func (x *ListWorkspacesRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ListWorkspacesRequest) GetPageToken() string {
+	if x != nil {
+		if x.xxx_hidden_PageToken != nil {
+			return *x.xxx_hidden_PageToken
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ListWorkspacesRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *ListWorkspacesRequest) SetPageToken(v string) {
+	x.xxx_hidden_PageToken = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *ListWorkspacesRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ListWorkspacesRequest) HasPageToken() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ListWorkspacesRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *ListWorkspacesRequest) ClearPageToken() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_PageToken = nil
+}
+
+type ListWorkspacesRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// A project_id: holding_project then says which workspaces have a project of that id.
+	ProjectId *string
+	PageToken *string
+}
+
+func (b0 ListWorkspacesRequest_builder) Build() *ListWorkspacesRequest {
+	m0 := &ListWorkspacesRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.PageToken != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_PageToken = b.PageToken
+	}
+	return m0
+}
+
+type ListWorkspacesResponse struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Workspaces     *[]*Workspace          `protobuf:"bytes,1,rep,name=workspaces"`
+	xxx_hidden_NextPageToken  *string                `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken"`
+	xxx_hidden_Total          uint32                 `protobuf:"varint,3,opt,name=total"`
+	xxx_hidden_HoldingProject []string               `protobuf:"bytes,4,rep,name=holding_project,json=holdingProject"`
+	xxx_hidden_Incomplete     bool                   `protobuf:"varint,5,opt,name=incomplete"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *ListWorkspacesResponse) Reset() {
+	*x = ListWorkspacesResponse{}
+	mi := &file_v1_panel_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListWorkspacesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListWorkspacesResponse) ProtoMessage() {}
+
+func (x *ListWorkspacesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ListWorkspacesResponse) GetWorkspaces() []*Workspace {
+	if x != nil {
+		if x.xxx_hidden_Workspaces != nil {
+			return *x.xxx_hidden_Workspaces
+		}
+	}
+	return nil
+}
+
+func (x *ListWorkspacesResponse) GetNextPageToken() string {
+	if x != nil {
+		if x.xxx_hidden_NextPageToken != nil {
+			return *x.xxx_hidden_NextPageToken
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ListWorkspacesResponse) GetTotal() uint32 {
+	if x != nil {
+		return x.xxx_hidden_Total
+	}
+	return 0
+}
+
+func (x *ListWorkspacesResponse) GetHoldingProject() []string {
+	if x != nil {
+		return x.xxx_hidden_HoldingProject
+	}
+	return nil
+}
+
+func (x *ListWorkspacesResponse) GetIncomplete() bool {
+	if x != nil {
+		return x.xxx_hidden_Incomplete
+	}
+	return false
+}
+
+func (x *ListWorkspacesResponse) SetWorkspaces(v []*Workspace) {
+	x.xxx_hidden_Workspaces = &v
+}
+
+func (x *ListWorkspacesResponse) SetNextPageToken(v string) {
+	x.xxx_hidden_NextPageToken = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
+}
+
+func (x *ListWorkspacesResponse) SetTotal(v uint32) {
+	x.xxx_hidden_Total = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+}
+
+func (x *ListWorkspacesResponse) SetHoldingProject(v []string) {
+	x.xxx_hidden_HoldingProject = v
+}
+
+func (x *ListWorkspacesResponse) SetIncomplete(v bool) {
+	x.xxx_hidden_Incomplete = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+}
+
+func (x *ListWorkspacesResponse) HasNextPageToken() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ListWorkspacesResponse) HasTotal() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ListWorkspacesResponse) HasIncomplete() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *ListWorkspacesResponse) ClearNextPageToken() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_NextPageToken = nil
+}
+
+func (x *ListWorkspacesResponse) ClearTotal() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Total = 0
+}
+
+func (x *ListWorkspacesResponse) ClearIncomplete() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_Incomplete = false
+}
+
+type ListWorkspacesResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Workspaces    []*Workspace
+	NextPageToken *string
+	Total         *uint32
+	// With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+	// none of those that answered (see incomplete).
+	HoldingProject []string
+	// True = a machine did not answer in time: its free figures and project count are absent, and
+	// holding_project may lack it.
+	Incomplete *bool
+}
+
+func (b0 ListWorkspacesResponse_builder) Build() *ListWorkspacesResponse {
+	m0 := &ListWorkspacesResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Workspaces = &b.Workspaces
+	if b.NextPageToken != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		x.xxx_hidden_NextPageToken = b.NextPageToken
+	}
+	if b.Total != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		x.xxx_hidden_Total = *b.Total
+	}
+	x.xxx_hidden_HoldingProject = b.HoldingProject
+	if b.Incomplete != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_Incomplete = *b.Incomplete
+	}
+	return m0
+}
+
+// What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+// projects on it. A call names it as `workspace`, by workspace_id or name.
+type Workspace struct {
+	state                       protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_WorkspaceId      *string                `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId"`
+	xxx_hidden_Name             *string                `protobuf:"bytes,2,opt,name=name"`
+	xxx_hidden_Status           WorkspaceStatus        `protobuf:"varint,3,opt,name=status,enum=pethost.panel.v1.WorkspaceStatus"`
+	xxx_hidden_Location         *string                `protobuf:"bytes,4,opt,name=location"`
+	xxx_hidden_Plan             *string                `protobuf:"bytes,5,opt,name=plan"`
+	xxx_hidden_CpuTotalCores    float64                `protobuf:"fixed64,6,opt,name=cpu_total_cores,json=cpuTotalCores"`
+	xxx_hidden_MemoryTotalBytes uint64                 `protobuf:"varint,7,opt,name=memory_total_bytes,json=memoryTotalBytes"`
+	xxx_hidden_MemoryFreeBytes  uint64                 `protobuf:"varint,8,opt,name=memory_free_bytes,json=memoryFreeBytes"`
+	xxx_hidden_DiskTotalBytes   uint64                 `protobuf:"varint,9,opt,name=disk_total_bytes,json=diskTotalBytes"`
+	xxx_hidden_DiskFreeBytes    uint64                 `protobuf:"varint,10,opt,name=disk_free_bytes,json=diskFreeBytes"`
+	xxx_hidden_ProjectCount     uint32                 `protobuf:"varint,11,opt,name=project_count,json=projectCount"`
+	xxx_hidden_Hostname         *string                `protobuf:"bytes,12,opt,name=hostname"`
+	xxx_hidden_AppsDomain       *string                `protobuf:"bytes,13,opt,name=apps_domain,json=appsDomain"`
+	xxx_hidden_EndTime          *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=end_time,json=endTime"`
+	xxx_hidden_Role             WorkspaceRole          `protobuf:"varint,15,opt,name=role,enum=pethost.panel.v1.WorkspaceRole"`
+	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
+	XXX_presence                [1]uint32
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *Workspace) Reset() {
+	*x = Workspace{}
+	mi := &file_v1_panel_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Workspace) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Workspace) ProtoMessage() {}
+
+func (x *Workspace) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *Workspace) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetName() string {
+	if x != nil {
+		if x.xxx_hidden_Name != nil {
+			return *x.xxx_hidden_Name
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetStatus() WorkspaceStatus {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 2) {
+			return x.xxx_hidden_Status
+		}
+	}
+	return WorkspaceStatus_WORKSPACE_STATUS_UNSPECIFIED
+}
+
+func (x *Workspace) GetLocation() string {
+	if x != nil {
+		if x.xxx_hidden_Location != nil {
+			return *x.xxx_hidden_Location
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetPlan() string {
+	if x != nil {
+		if x.xxx_hidden_Plan != nil {
+			return *x.xxx_hidden_Plan
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetCpuTotalCores() float64 {
+	if x != nil {
+		return x.xxx_hidden_CpuTotalCores
+	}
+	return 0
+}
+
+func (x *Workspace) GetMemoryTotalBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MemoryTotalBytes
+	}
+	return 0
+}
+
+func (x *Workspace) GetMemoryFreeBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MemoryFreeBytes
+	}
+	return 0
+}
+
+func (x *Workspace) GetDiskTotalBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_DiskTotalBytes
+	}
+	return 0
+}
+
+func (x *Workspace) GetDiskFreeBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_DiskFreeBytes
+	}
+	return 0
+}
+
+func (x *Workspace) GetProjectCount() uint32 {
+	if x != nil {
+		return x.xxx_hidden_ProjectCount
+	}
+	return 0
+}
+
+func (x *Workspace) GetHostname() string {
+	if x != nil {
+		if x.xxx_hidden_Hostname != nil {
+			return *x.xxx_hidden_Hostname
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetAppsDomain() string {
+	if x != nil {
+		if x.xxx_hidden_AppsDomain != nil {
+			return *x.xxx_hidden_AppsDomain
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Workspace) GetEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_EndTime
+	}
+	return nil
+}
+
+func (x *Workspace) GetRole() WorkspaceRole {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 14) {
+			return x.xxx_hidden_Role
+		}
+	}
+	return WorkspaceRole_WORKSPACE_ROLE_UNSPECIFIED
+}
+
+func (x *Workspace) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 15)
+}
+
+func (x *Workspace) SetName(v string) {
+	x.xxx_hidden_Name = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 15)
+}
+
+func (x *Workspace) SetStatus(v WorkspaceStatus) {
+	x.xxx_hidden_Status = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 15)
+}
+
+func (x *Workspace) SetLocation(v string) {
+	x.xxx_hidden_Location = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 15)
+}
+
+func (x *Workspace) SetPlan(v string) {
+	x.xxx_hidden_Plan = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 15)
+}
+
+func (x *Workspace) SetCpuTotalCores(v float64) {
+	x.xxx_hidden_CpuTotalCores = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 15)
+}
+
+func (x *Workspace) SetMemoryTotalBytes(v uint64) {
+	x.xxx_hidden_MemoryTotalBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 15)
+}
+
+func (x *Workspace) SetMemoryFreeBytes(v uint64) {
+	x.xxx_hidden_MemoryFreeBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 15)
+}
+
+func (x *Workspace) SetDiskTotalBytes(v uint64) {
+	x.xxx_hidden_DiskTotalBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 15)
+}
+
+func (x *Workspace) SetDiskFreeBytes(v uint64) {
+	x.xxx_hidden_DiskFreeBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 15)
+}
+
+func (x *Workspace) SetProjectCount(v uint32) {
+	x.xxx_hidden_ProjectCount = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 15)
+}
+
+func (x *Workspace) SetHostname(v string) {
+	x.xxx_hidden_Hostname = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 15)
+}
+
+func (x *Workspace) SetAppsDomain(v string) {
+	x.xxx_hidden_AppsDomain = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 15)
+}
+
+func (x *Workspace) SetEndTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_EndTime = v
+}
+
+func (x *Workspace) SetRole(v WorkspaceRole) {
+	x.xxx_hidden_Role = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 15)
+}
+
+func (x *Workspace) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *Workspace) HasName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *Workspace) HasStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *Workspace) HasLocation() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *Workspace) HasPlan() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *Workspace) HasCpuTotalCores() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *Workspace) HasMemoryTotalBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *Workspace) HasMemoryFreeBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
+func (x *Workspace) HasDiskTotalBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
+func (x *Workspace) HasDiskFreeBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
+func (x *Workspace) HasProjectCount() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+}
+
+func (x *Workspace) HasHostname() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 11)
+}
+
+func (x *Workspace) HasAppsDomain() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+}
+
+func (x *Workspace) HasEndTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_EndTime != nil
+}
+
+func (x *Workspace) HasRole() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
+}
+
+func (x *Workspace) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
+func (x *Workspace) ClearName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Name = nil
+}
+
+func (x *Workspace) ClearStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Status = WorkspaceStatus_WORKSPACE_STATUS_UNSPECIFIED
+}
+
+func (x *Workspace) ClearLocation() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Location = nil
+}
+
+func (x *Workspace) ClearPlan() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_Plan = nil
+}
+
+func (x *Workspace) ClearCpuTotalCores() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_CpuTotalCores = 0
+}
+
+func (x *Workspace) ClearMemoryTotalBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_MemoryTotalBytes = 0
+}
+
+func (x *Workspace) ClearMemoryFreeBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_MemoryFreeBytes = 0
+}
+
+func (x *Workspace) ClearDiskTotalBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_DiskTotalBytes = 0
+}
+
+func (x *Workspace) ClearDiskFreeBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_DiskFreeBytes = 0
+}
+
+func (x *Workspace) ClearProjectCount() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	x.xxx_hidden_ProjectCount = 0
+}
+
+func (x *Workspace) ClearHostname() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 11)
+	x.xxx_hidden_Hostname = nil
+}
+
+func (x *Workspace) ClearAppsDomain() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
+	x.xxx_hidden_AppsDomain = nil
+}
+
+func (x *Workspace) ClearEndTime() {
+	x.xxx_hidden_EndTime = nil
+}
+
+func (x *Workspace) ClearRole() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
+	x.xxx_hidden_Role = WorkspaceRole_WORKSPACE_ROLE_UNSPECIFIED
+}
+
+type Workspace_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+	// never another workspace's.
+	WorkspaceId *string
+	// The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+	// change it.
+	Name             *string
+	Status           *WorkspaceStatus
+	Location         *string
+	Plan             *string
+	CpuTotalCores    *float64
+	MemoryTotalBytes *uint64
+	// What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+	// known: BEING_PREPARED, or the machine did not answer in time.
+	MemoryFreeBytes *uint64
+	DiskTotalBytes  *uint64
+	DiskFreeBytes   *uint64
+	ProjectCount    *uint32
+	// Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+	// own points (CNAME). Empty while BEING_PREPARED.
+	Hostname   *string
+	AppsDomain *string
+	// When it ends: the person removed it, and it works until then, its projects with it. Absent
+	// = it is not ending.
+	EndTime *timestamppb.Timestamp
+	Role    *WorkspaceRole
+}
+
+func (b0 Workspace_builder) Build() *Workspace {
+	m0 := &Workspace{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 15)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
+	}
+	if b.Name != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 15)
+		x.xxx_hidden_Name = b.Name
+	}
+	if b.Status != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 15)
+		x.xxx_hidden_Status = *b.Status
+	}
+	if b.Location != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 15)
+		x.xxx_hidden_Location = b.Location
+	}
+	if b.Plan != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 15)
+		x.xxx_hidden_Plan = b.Plan
+	}
+	if b.CpuTotalCores != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 15)
+		x.xxx_hidden_CpuTotalCores = *b.CpuTotalCores
+	}
+	if b.MemoryTotalBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 15)
+		x.xxx_hidden_MemoryTotalBytes = *b.MemoryTotalBytes
+	}
+	if b.MemoryFreeBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 15)
+		x.xxx_hidden_MemoryFreeBytes = *b.MemoryFreeBytes
+	}
+	if b.DiskTotalBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 15)
+		x.xxx_hidden_DiskTotalBytes = *b.DiskTotalBytes
+	}
+	if b.DiskFreeBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 15)
+		x.xxx_hidden_DiskFreeBytes = *b.DiskFreeBytes
+	}
+	if b.ProjectCount != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 15)
+		x.xxx_hidden_ProjectCount = *b.ProjectCount
+	}
+	if b.Hostname != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 15)
+		x.xxx_hidden_Hostname = b.Hostname
+	}
+	if b.AppsDomain != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 15)
+		x.xxx_hidden_AppsDomain = b.AppsDomain
+	}
+	x.xxx_hidden_EndTime = b.EndTime
+	if b.Role != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 15)
+		x.xxx_hidden_Role = *b.Role
+	}
+	return m0
+}
+
+type GetMachineRequest struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *GetMachineRequest) Reset() {
+	*x = GetMachineRequest{}
+	mi := &file_v1_panel_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMachineRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMachineRequest) ProtoMessage() {}
+
+func (x *GetMachineRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetMachineRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetMachineRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *GetMachineRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *GetMachineRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetMachineRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
+	Workspace *string
 }
 
 func (b0 GetMachineRequest_builder) Build() *GetMachineRequest {
 	m0 := &GetMachineRequest{}
 	b, x := &b0, m0
 	_, _ = b, x
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
@@ -1469,13 +2416,14 @@ type GetMachineResponse struct {
 	xxx_hidden_Projects        *[]*ProjectSummary     `protobuf:"bytes,2,rep,name=projects"`
 	xxx_hidden_DeletedProjects *[]*DeletedProject     `protobuf:"bytes,3,rep,name=deleted_projects,json=deletedProjects"`
 	xxx_hidden_Github          *GithubConnection      `protobuf:"bytes,4,opt,name=github"`
+	xxx_hidden_Workspace       *Workspace             `protobuf:"bytes,5,opt,name=workspace"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *GetMachineResponse) Reset() {
 	*x = GetMachineResponse{}
-	mi := &file_v1_panel_proto_msgTypes[1]
+	mi := &file_v1_panel_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1487,7 +2435,7 @@ func (x *GetMachineResponse) String() string {
 func (*GetMachineResponse) ProtoMessage() {}
 
 func (x *GetMachineResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[1]
+	mi := &file_v1_panel_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1530,6 +2478,13 @@ func (x *GetMachineResponse) GetGithub() *GithubConnection {
 	return nil
 }
 
+func (x *GetMachineResponse) GetWorkspace() *Workspace {
+	if x != nil {
+		return x.xxx_hidden_Workspace
+	}
+	return nil
+}
+
 func (x *GetMachineResponse) SetMachine(v *Machine) {
 	x.xxx_hidden_Machine = v
 }
@@ -1546,6 +2501,10 @@ func (x *GetMachineResponse) SetGithub(v *GithubConnection) {
 	x.xxx_hidden_Github = v
 }
 
+func (x *GetMachineResponse) SetWorkspace(v *Workspace) {
+	x.xxx_hidden_Workspace = v
+}
+
 func (x *GetMachineResponse) HasMachine() bool {
 	if x == nil {
 		return false
@@ -1560,12 +2519,23 @@ func (x *GetMachineResponse) HasGithub() bool {
 	return x.xxx_hidden_Github != nil
 }
 
+func (x *GetMachineResponse) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Workspace != nil
+}
+
 func (x *GetMachineResponse) ClearMachine() {
 	x.xxx_hidden_Machine = nil
 }
 
 func (x *GetMachineResponse) ClearGithub() {
 	x.xxx_hidden_Github = nil
+}
+
+func (x *GetMachineResponse) ClearWorkspace() {
+	x.xxx_hidden_Workspace = nil
 }
 
 type GetMachineResponse_builder struct {
@@ -1579,6 +2549,7 @@ type GetMachineResponse_builder struct {
 	// later. Not known while Machine.snapshot_list_time is absent.
 	DeletedProjects []*DeletedProject
 	Github          *GithubConnection
+	Workspace       *Workspace
 }
 
 func (b0 GetMachineResponse_builder) Build() *GetMachineResponse {
@@ -1589,6 +2560,7 @@ func (b0 GetMachineResponse_builder) Build() *GetMachineResponse {
 	x.xxx_hidden_Projects = &b.Projects
 	x.xxx_hidden_DeletedProjects = &b.DeletedProjects
 	x.xxx_hidden_Github = b.Github
+	x.xxx_hidden_Workspace = b.Workspace
 	return m0
 }
 
@@ -1631,7 +2603,7 @@ type Machine struct {
 
 func (x *Machine) Reset() {
 	*x = Machine{}
-	mi := &file_v1_panel_proto_msgTypes[2]
+	mi := &file_v1_panel_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1643,7 +2615,7 @@ func (x *Machine) String() string {
 func (*Machine) ProtoMessage() {}
 
 func (x *Machine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[2]
+	mi := &file_v1_panel_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2499,7 +3471,7 @@ type AlertDestination struct {
 
 func (x *AlertDestination) Reset() {
 	*x = AlertDestination{}
-	mi := &file_v1_panel_proto_msgTypes[3]
+	mi := &file_v1_panel_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2511,7 +3483,7 @@ func (x *AlertDestination) String() string {
 func (*AlertDestination) ProtoMessage() {}
 
 func (x *AlertDestination) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[3]
+	mi := &file_v1_panel_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2620,7 +3592,7 @@ type MachineSession struct {
 
 func (x *MachineSession) Reset() {
 	*x = MachineSession{}
-	mi := &file_v1_panel_proto_msgTypes[4]
+	mi := &file_v1_panel_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2632,7 +3604,7 @@ func (x *MachineSession) String() string {
 func (*MachineSession) ProtoMessage() {}
 
 func (x *MachineSession) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[4]
+	mi := &file_v1_panel_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2952,7 +3924,7 @@ type DiskUsage struct {
 
 func (x *DiskUsage) Reset() {
 	*x = DiskUsage{}
-	mi := &file_v1_panel_proto_msgTypes[5]
+	mi := &file_v1_panel_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2964,7 +3936,7 @@ func (x *DiskUsage) String() string {
 func (*DiskUsage) ProtoMessage() {}
 
 func (x *DiskUsage) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[5]
+	mi := &file_v1_panel_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3206,7 +4178,7 @@ type SshKey struct {
 
 func (x *SshKey) Reset() {
 	*x = SshKey{}
-	mi := &file_v1_panel_proto_msgTypes[6]
+	mi := &file_v1_panel_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3218,7 +4190,7 @@ func (x *SshKey) String() string {
 func (*SshKey) ProtoMessage() {}
 
 func (x *SshKey) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[6]
+	mi := &file_v1_panel_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3357,7 +4329,7 @@ type GithubConnection struct {
 
 func (x *GithubConnection) Reset() {
 	*x = GithubConnection{}
-	mi := &file_v1_panel_proto_msgTypes[7]
+	mi := &file_v1_panel_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3369,7 +4341,7 @@ func (x *GithubConnection) String() string {
 func (*GithubConnection) ProtoMessage() {}
 
 func (x *GithubConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[7]
+	mi := &file_v1_panel_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3548,7 +4520,7 @@ type GithubRepository struct {
 
 func (x *GithubRepository) Reset() {
 	*x = GithubRepository{}
-	mi := &file_v1_panel_proto_msgTypes[8]
+	mi := &file_v1_panel_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3560,7 +4532,7 @@ func (x *GithubRepository) String() string {
 func (*GithubRepository) ProtoMessage() {}
 
 func (x *GithubRepository) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[8]
+	mi := &file_v1_panel_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3705,6 +4677,7 @@ type DeletedProject struct {
 	xxx_hidden_ProjectId      *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_NewestSnapshot *Snapshot              `protobuf:"bytes,2,opt,name=newest_snapshot,json=newestSnapshot"`
 	xxx_hidden_SnapshotCount  uint32                 `protobuf:"varint,3,opt,name=snapshot_count,json=snapshotCount"`
+	xxx_hidden_MovedTo        *MovedTo               `protobuf:"bytes,4,opt,name=moved_to,json=movedTo"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -3713,7 +4686,7 @@ type DeletedProject struct {
 
 func (x *DeletedProject) Reset() {
 	*x = DeletedProject{}
-	mi := &file_v1_panel_proto_msgTypes[9]
+	mi := &file_v1_panel_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3725,7 +4698,7 @@ func (x *DeletedProject) String() string {
 func (*DeletedProject) ProtoMessage() {}
 
 func (x *DeletedProject) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[9]
+	mi := &file_v1_panel_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3760,9 +4733,16 @@ func (x *DeletedProject) GetSnapshotCount() uint32 {
 	return 0
 }
 
+func (x *DeletedProject) GetMovedTo() *MovedTo {
+	if x != nil {
+		return x.xxx_hidden_MovedTo
+	}
+	return nil
+}
+
 func (x *DeletedProject) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *DeletedProject) SetNewestSnapshot(v *Snapshot) {
@@ -3771,7 +4751,11 @@ func (x *DeletedProject) SetNewestSnapshot(v *Snapshot) {
 
 func (x *DeletedProject) SetSnapshotCount(v uint32) {
 	x.xxx_hidden_SnapshotCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *DeletedProject) SetMovedTo(v *MovedTo) {
+	x.xxx_hidden_MovedTo = v
 }
 
 func (x *DeletedProject) HasProjectId() bool {
@@ -3795,6 +4779,13 @@ func (x *DeletedProject) HasSnapshotCount() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
+func (x *DeletedProject) HasMovedTo() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_MovedTo != nil
+}
+
 func (x *DeletedProject) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -3809,6 +4800,10 @@ func (x *DeletedProject) ClearSnapshotCount() {
 	x.xxx_hidden_SnapshotCount = 0
 }
 
+func (x *DeletedProject) ClearMovedTo() {
+	x.xxx_hidden_MovedTo = nil
+}
+
 type DeletedProject_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -3817,6 +4812,12 @@ type DeletedProject_builder struct {
 	// older ones (snapshots_before).
 	NewestSnapshot *Snapshot
 	SnapshotCount  *uint32
+	// Set when the latest move of the project from or to this workspace took it to another one,
+	// and this workspace has had no other project of the id since, as a call for it here would
+	// answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+	// restore here makes another copy here, as it was last backed up here, and calls here then
+	// act on that copy.
+	MovedTo *MovedTo
 }
 
 func (b0 DeletedProject_builder) Build() *DeletedProject {
@@ -3824,27 +4825,168 @@ func (b0 DeletedProject_builder) Build() *DeletedProject {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_NewestSnapshot = b.NewestSnapshot
 	if b.SnapshotCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
 		x.xxx_hidden_SnapshotCount = *b.SnapshotCount
 	}
+	x.xxx_hidden_MovedTo = b.MovedTo
+	return m0
+}
+
+// Where a move took a project (MoveProject), and when.
+type MovedTo struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_WorkspaceId   *string                `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId"`
+	xxx_hidden_WorkspaceName *string                `protobuf:"bytes,2,opt,name=workspace_name,json=workspaceName"`
+	xxx_hidden_MoveTime      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=move_time,json=moveTime"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *MovedTo) Reset() {
+	*x = MovedTo{}
+	mi := &file_v1_panel_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MovedTo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MovedTo) ProtoMessage() {}
+
+func (x *MovedTo) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MovedTo) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MovedTo) GetWorkspaceName() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceName != nil {
+			return *x.xxx_hidden_WorkspaceName
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MovedTo) GetMoveTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_MoveTime
+	}
+	return nil
+}
+
+func (x *MovedTo) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *MovedTo) SetWorkspaceName(v string) {
+	x.xxx_hidden_WorkspaceName = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *MovedTo) SetMoveTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_MoveTime = v
+}
+
+func (x *MovedTo) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *MovedTo) HasWorkspaceName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *MovedTo) HasMoveTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_MoveTime != nil
+}
+
+func (x *MovedTo) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
+func (x *MovedTo) ClearWorkspaceName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_WorkspaceName = nil
+}
+
+func (x *MovedTo) ClearMoveTime() {
+	x.xxx_hidden_MoveTime = nil
+}
+
+type MovedTo_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	WorkspaceId   *string
+	WorkspaceName *string
+	MoveTime      *timestamppb.Timestamp
+}
+
+func (b0 MovedTo_builder) Build() *MovedTo {
+	m0 := &MovedTo{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
+	}
+	if b.WorkspaceName != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_WorkspaceName = b.WorkspaceName
+	}
+	x.xxx_hidden_MoveTime = b.MoveTime
 	return m0
 }
 
 type RunMachineActionRequest struct {
-	state             protoimpl.MessageState           `protogen:"opaque.v1"`
-	xxx_hidden_Action isRunMachineActionRequest_Action `protobuf_oneof:"action"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state                  protoimpl.MessageState           `protogen:"opaque.v1"`
+	xxx_hidden_Action      isRunMachineActionRequest_Action `protobuf_oneof:"action"`
+	xxx_hidden_Workspace   *string                          `protobuf:"bytes,100,opt,name=workspace"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *RunMachineActionRequest) Reset() {
 	*x = RunMachineActionRequest{}
-	mi := &file_v1_panel_proto_msgTypes[10]
+	mi := &file_v1_panel_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3856,7 +4998,7 @@ func (x *RunMachineActionRequest) String() string {
 func (*RunMachineActionRequest) ProtoMessage() {}
 
 func (x *RunMachineActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[10]
+	mi := &file_v1_panel_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3912,6 +5054,16 @@ func (x *RunMachineActionRequest) GetEndSessionId() string {
 	return ""
 }
 
+func (x *RunMachineActionRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *RunMachineActionRequest) SetAddSshKey(v *SshKey) {
 	if v == nil {
 		x.xxx_hidden_Action = nil
@@ -3938,6 +5090,11 @@ func (x *RunMachineActionRequest) SetCancelRestart(v bool) {
 
 func (x *RunMachineActionRequest) SetEndSessionId(v string) {
 	x.xxx_hidden_Action = &runMachineActionRequest_EndSessionId{v}
+}
+
+func (x *RunMachineActionRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
 }
 
 func (x *RunMachineActionRequest) HasAction() bool {
@@ -3987,6 +5144,13 @@ func (x *RunMachineActionRequest) HasEndSessionId() bool {
 	return ok
 }
 
+func (x *RunMachineActionRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
 func (x *RunMachineActionRequest) ClearAction() {
 	x.xxx_hidden_Action = nil
 }
@@ -4019,6 +5183,11 @@ func (x *RunMachineActionRequest) ClearEndSessionId() {
 	if _, ok := x.xxx_hidden_Action.(*runMachineActionRequest_EndSessionId); ok {
 		x.xxx_hidden_Action = nil
 	}
+}
+
+func (x *RunMachineActionRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Workspace = nil
 }
 
 const RunMachineActionRequest_Action_not_set_case case_RunMachineActionRequest_Action = 0
@@ -4064,6 +5233,7 @@ type RunMachineActionRequest_builder struct {
 	// ended.
 	EndSessionId *string
 	// -- end of xxx_hidden_Action
+	Workspace *string
 }
 
 func (b0 RunMachineActionRequest_builder) Build() *RunMachineActionRequest {
@@ -4085,13 +5255,17 @@ func (b0 RunMachineActionRequest_builder) Build() *RunMachineActionRequest {
 	if b.EndSessionId != nil {
 		x.xxx_hidden_Action = &runMachineActionRequest_EndSessionId{*b.EndSessionId}
 	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
 type case_RunMachineActionRequest_Action protoreflect.FieldNumber
 
 func (x case_RunMachineActionRequest_Action) String() string {
-	md := file_v1_panel_proto_msgTypes[10].Descriptor()
+	md := file_v1_panel_proto_msgTypes[14].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -4151,7 +5325,7 @@ type RestartMachineAction struct {
 
 func (x *RestartMachineAction) Reset() {
 	*x = RestartMachineAction{}
-	mi := &file_v1_panel_proto_msgTypes[11]
+	mi := &file_v1_panel_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4163,7 +5337,7 @@ func (x *RestartMachineAction) String() string {
 func (*RestartMachineAction) ProtoMessage() {}
 
 func (x *RestartMachineAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[11]
+	mi := &file_v1_panel_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4280,7 +5454,7 @@ type RunMachineActionResponse struct {
 
 func (x *RunMachineActionResponse) Reset() {
 	*x = RunMachineActionResponse{}
-	mi := &file_v1_panel_proto_msgTypes[12]
+	mi := &file_v1_panel_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4292,7 +5466,7 @@ func (x *RunMachineActionResponse) String() string {
 func (*RunMachineActionResponse) ProtoMessage() {}
 
 func (x *RunMachineActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[12]
+	mi := &file_v1_panel_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4353,7 +5527,7 @@ type ProjectMetadata struct {
 
 func (x *ProjectMetadata) Reset() {
 	*x = ProjectMetadata{}
-	mi := &file_v1_panel_proto_msgTypes[13]
+	mi := &file_v1_panel_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4365,7 +5539,7 @@ func (x *ProjectMetadata) String() string {
 func (*ProjectMetadata) ProtoMessage() {}
 
 func (x *ProjectMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[13]
+	mi := &file_v1_panel_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4532,6 +5706,7 @@ type ProjectSummary struct {
 	xxx_hidden_Pinned             bool                   `protobuf:"varint,12,opt,name=pinned"`
 	xxx_hidden_DiskUsedBytes      uint64                 `protobuf:"varint,13,opt,name=disk_used_bytes,json=diskUsedBytes"`
 	xxx_hidden_Database           *DatabaseSummary       `protobuf:"bytes,14,opt,name=database"`
+	xxx_hidden_Uid                *string                `protobuf:"bytes,15,opt,name=uid"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
 	unknownFields                 protoimpl.UnknownFields
@@ -4540,7 +5715,7 @@ type ProjectSummary struct {
 
 func (x *ProjectSummary) Reset() {
 	*x = ProjectSummary{}
-	mi := &file_v1_panel_proto_msgTypes[14]
+	mi := &file_v1_panel_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4552,7 +5727,7 @@ func (x *ProjectSummary) String() string {
 func (*ProjectSummary) ProtoMessage() {}
 
 func (x *ProjectSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[14]
+	mi := &file_v1_panel_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4673,9 +5848,19 @@ func (x *ProjectSummary) GetDatabase() *DatabaseSummary {
 	return nil
 }
 
+func (x *ProjectSummary) GetUid() string {
+	if x != nil {
+		if x.xxx_hidden_Uid != nil {
+			return *x.xxx_hidden_Uid
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *ProjectSummary) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 15)
 }
 
 func (x *ProjectSummary) SetMetadata(v *ProjectMetadata) {
@@ -4692,7 +5877,7 @@ func (x *ProjectSummary) SetServices(v []*ServiceSummary) {
 
 func (x *ProjectSummary) SetUrl(v string) {
 	x.xxx_hidden_Url = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 15)
 }
 
 func (x *ProjectSummary) SetHosts(v []string) {
@@ -4705,12 +5890,12 @@ func (x *ProjectSummary) SetHttpTrafficLastDay(v *HttpTrafficSummary) {
 
 func (x *ProjectSummary) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 15)
 }
 
 func (x *ProjectSummary) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 15)
 }
 
 func (x *ProjectSummary) SetDeployTime(v *timestamppb.Timestamp) {
@@ -4723,16 +5908,21 @@ func (x *ProjectSummary) SetRunningOperations(v []*Operation) {
 
 func (x *ProjectSummary) SetPinned(v bool) {
 	x.xxx_hidden_Pinned = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 15)
 }
 
 func (x *ProjectSummary) SetDiskUsedBytes(v uint64) {
 	x.xxx_hidden_DiskUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 14)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 15)
 }
 
 func (x *ProjectSummary) SetDatabase(v *DatabaseSummary) {
 	x.xxx_hidden_Database = v
+}
+
+func (x *ProjectSummary) SetUid(v string) {
+	x.xxx_hidden_Uid = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 15)
 }
 
 func (x *ProjectSummary) HasProjectId() bool {
@@ -4805,6 +5995,13 @@ func (x *ProjectSummary) HasDatabase() bool {
 	return x.xxx_hidden_Database != nil
 }
 
+func (x *ProjectSummary) HasUid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
+}
+
 func (x *ProjectSummary) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -4851,6 +6048,11 @@ func (x *ProjectSummary) ClearDatabase() {
 	x.xxx_hidden_Database = nil
 }
 
+func (x *ProjectSummary) ClearUid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
+	x.xxx_hidden_Uid = nil
+}
+
 type ProjectSummary_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -4874,6 +6076,7 @@ type ProjectSummary_builder struct {
 	// with another project counts in both. Measured every few minutes.
 	DiskUsedBytes *uint64
 	Database      *DatabaseSummary
+	Uid           *string
 }
 
 func (b0 ProjectSummary_builder) Build() *ProjectSummary {
@@ -4881,37 +6084,41 @@ func (b0 ProjectSummary_builder) Build() *ProjectSummary {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 15)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Metadata = b.Metadata
 	x.xxx_hidden_Problems = &b.Problems
 	x.xxx_hidden_Services = &b.Services
 	if b.Url != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 15)
 		x.xxx_hidden_Url = b.Url
 	}
 	x.xxx_hidden_Hosts = b.Hosts
 	x.xxx_hidden_HttpTrafficLastDay = b.HttpTrafficLastDay
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 15)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 15)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	x.xxx_hidden_DeployTime = b.DeployTime
 	x.xxx_hidden_RunningOperations = &b.RunningOperations
 	if b.Pinned != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 15)
 		x.xxx_hidden_Pinned = *b.Pinned
 	}
 	if b.DiskUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 14)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 15)
 		x.xxx_hidden_DiskUsedBytes = *b.DiskUsedBytes
 	}
 	x.xxx_hidden_Database = b.Database
+	if b.Uid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 15)
+		x.xxx_hidden_Uid = b.Uid
+	}
 	return m0
 }
 
@@ -4927,7 +6134,7 @@ type ServiceSummary struct {
 
 func (x *ServiceSummary) Reset() {
 	*x = ServiceSummary{}
-	mi := &file_v1_panel_proto_msgTypes[15]
+	mi := &file_v1_panel_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4939,7 +6146,7 @@ func (x *ServiceSummary) String() string {
 func (*ServiceSummary) ProtoMessage() {}
 
 func (x *ServiceSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[15]
+	mi := &file_v1_panel_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5042,7 +6249,7 @@ type ProjectProblem struct {
 
 func (x *ProjectProblem) Reset() {
 	*x = ProjectProblem{}
-	mi := &file_v1_panel_proto_msgTypes[16]
+	mi := &file_v1_panel_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5054,7 +6261,7 @@ func (x *ProjectProblem) String() string {
 func (*ProjectProblem) ProtoMessage() {}
 
 func (x *ProjectProblem) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[16]
+	mi := &file_v1_panel_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5280,6 +6487,7 @@ type GetProjectRequest struct {
 	xxx_hidden_IncidentsBefore     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=incidents_before,json=incidentsBefore"`
 	xxx_hidden_UptimeDayCount      uint32                 `protobuf:"varint,6,opt,name=uptime_day_count,json=uptimeDayCount"`
 	xxx_hidden_IncidentsBeforeId   *string                `protobuf:"bytes,7,opt,name=incidents_before_id,json=incidentsBeforeId"`
+	xxx_hidden_Workspace           *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData         protoimpl.RaceDetectHookData
 	XXX_presence                   [1]uint32
 	unknownFields                  protoimpl.UnknownFields
@@ -5288,7 +6496,7 @@ type GetProjectRequest struct {
 
 func (x *GetProjectRequest) Reset() {
 	*x = GetProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[17]
+	mi := &file_v1_panel_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5300,7 +6508,7 @@ func (x *GetProjectRequest) String() string {
 func (*GetProjectRequest) ProtoMessage() {}
 
 func (x *GetProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[17]
+	mi := &file_v1_panel_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5369,14 +6577,24 @@ func (x *GetProjectRequest) GetIncidentsBeforeId() string {
 	return ""
 }
 
+func (x *GetProjectRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetProjectRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *GetProjectRequest) SetIncludeSecretValues(v bool) {
 	x.xxx_hidden_IncludeSecretValues = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
 }
 
 func (x *GetProjectRequest) SetSnapshotsBefore(v *timestamppb.Timestamp) {
@@ -5385,7 +6603,7 @@ func (x *GetProjectRequest) SetSnapshotsBefore(v *timestamppb.Timestamp) {
 
 func (x *GetProjectRequest) SetSnapshotsVolume(v string) {
 	x.xxx_hidden_SnapshotsVolume = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
 }
 
 func (x *GetProjectRequest) SetIncidentsBefore(v *timestamppb.Timestamp) {
@@ -5394,12 +6612,17 @@ func (x *GetProjectRequest) SetIncidentsBefore(v *timestamppb.Timestamp) {
 
 func (x *GetProjectRequest) SetUptimeDayCount(v uint32) {
 	x.xxx_hidden_UptimeDayCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *GetProjectRequest) SetIncidentsBeforeId(v string) {
 	x.xxx_hidden_IncidentsBeforeId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *GetProjectRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
 }
 
 func (x *GetProjectRequest) HasProjectId() bool {
@@ -5451,6 +6674,13 @@ func (x *GetProjectRequest) HasIncidentsBeforeId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
 }
 
+func (x *GetProjectRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
 func (x *GetProjectRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -5484,6 +6714,11 @@ func (x *GetProjectRequest) ClearIncidentsBeforeId() {
 	x.xxx_hidden_IncidentsBeforeId = nil
 }
 
+func (x *GetProjectRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetProjectRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -5502,6 +6737,7 @@ type GetProjectRequest_builder struct {
 	// With incidents_before: the incident_id of the oldest seen, so that those that opened at the
 	// same time are not skipped.
 	IncidentsBeforeId *string
+	Workspace         *string
 }
 
 func (b0 GetProjectRequest_builder) Build() *GetProjectRequest {
@@ -5509,26 +6745,30 @@ func (b0 GetProjectRequest_builder) Build() *GetProjectRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.IncludeSecretValues != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
 		x.xxx_hidden_IncludeSecretValues = *b.IncludeSecretValues
 	}
 	x.xxx_hidden_SnapshotsBefore = b.SnapshotsBefore
 	if b.SnapshotsVolume != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
 		x.xxx_hidden_SnapshotsVolume = b.SnapshotsVolume
 	}
 	x.xxx_hidden_IncidentsBefore = b.IncidentsBefore
 	if b.UptimeDayCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_UptimeDayCount = *b.UptimeDayCount
 	}
 	if b.IncidentsBeforeId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_IncidentsBeforeId = b.IncidentsBeforeId
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -5542,7 +6782,7 @@ type GetProjectResponse struct {
 
 func (x *GetProjectResponse) Reset() {
 	*x = GetProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[18]
+	mi := &file_v1_panel_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5554,7 +6794,7 @@ func (x *GetProjectResponse) String() string {
 func (*GetProjectResponse) ProtoMessage() {}
 
 func (x *GetProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[18]
+	mi := &file_v1_panel_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5631,6 +6871,9 @@ type Project struct {
 	xxx_hidden_UptimeDays            *[]*UptimeDay          `protobuf:"bytes,26,rep,name=uptime_days,json=uptimeDays"`
 	xxx_hidden_Database              *Database              `protobuf:"bytes,27,opt,name=database"`
 	xxx_hidden_LinkedDatabases       []string               `protobuf:"bytes,28,rep,name=linked_databases,json=linkedDatabases"`
+	xxx_hidden_WorkspaceId           *string                `protobuf:"bytes,29,opt,name=workspace_id,json=workspaceId"`
+	xxx_hidden_Uid                   *string                `protobuf:"bytes,30,opt,name=uid"`
+	xxx_hidden_Dependencies          *[]*ProjectDependency  `protobuf:"bytes,32,rep,name=dependencies"`
 	XXX_raceDetectHookData           protoimpl.RaceDetectHookData
 	XXX_presence                     [1]uint32
 	unknownFields                    protoimpl.UnknownFields
@@ -5639,7 +6882,7 @@ type Project struct {
 
 func (x *Project) Reset() {
 	*x = Project{}
-	mi := &file_v1_panel_proto_msgTypes[19]
+	mi := &file_v1_panel_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5651,7 +6894,7 @@ func (x *Project) String() string {
 func (*Project) ProtoMessage() {}
 
 func (x *Project) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[19]
+	mi := &file_v1_panel_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5887,9 +7130,38 @@ func (x *Project) GetLinkedDatabases() []string {
 	return nil
 }
 
+func (x *Project) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Project) GetUid() string {
+	if x != nil {
+		if x.xxx_hidden_Uid != nil {
+			return *x.xxx_hidden_Uid
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *Project) GetDependencies() []*ProjectDependency {
+	if x != nil {
+		if x.xxx_hidden_Dependencies != nil {
+			return *x.xxx_hidden_Dependencies
+		}
+	}
+	return nil
+}
+
 func (x *Project) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 31)
 }
 
 func (x *Project) SetMetadata(v *ProjectMetadata) {
@@ -5902,27 +7174,27 @@ func (x *Project) SetProblems(v []*ProjectProblem) {
 
 func (x *Project) SetUrl(v string) {
 	x.xxx_hidden_Url = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 31)
 }
 
 func (x *Project) SetCpuUsedCores(v float64) {
 	x.xxx_hidden_CpuUsedCores = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 31)
 }
 
 func (x *Project) SetMemoryUsedBytes(v uint64) {
 	x.xxx_hidden_MemoryUsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 31)
 }
 
 func (x *Project) SetDeployId(v string) {
 	x.xxx_hidden_DeployId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 31)
 }
 
 func (x *Project) SetDeployStatus(v OperationStatus) {
 	x.xxx_hidden_DeployStatus = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 31)
 }
 
 func (x *Project) SetDeployTime(v *timestamppb.Timestamp) {
@@ -5931,7 +7203,7 @@ func (x *Project) SetDeployTime(v *timestamppb.Timestamp) {
 
 func (x *Project) SetXPethostAppliesAtOnce(v bool) {
 	x.xxx_hidden_XPethostAppliesAtOnce = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 31)
 }
 
 func (x *Project) SetServices(v []*Service) {
@@ -5952,7 +7224,7 @@ func (x *Project) SetHosts(v []*Host) {
 
 func (x *Project) SetPasswordProtected(v bool) {
 	x.xxx_hidden_PasswordProtected = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 31)
 }
 
 func (x *Project) SetOperations(v []*Operation) {
@@ -5965,7 +7237,7 @@ func (x *Project) SetSnapshots(v []*Snapshot) {
 
 func (x *Project) SetSnapshotCount(v uint32) {
 	x.xxx_hidden_SnapshotCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 31)
 }
 
 func (x *Project) SetSnapshotListTime(v *timestamppb.Timestamp) {
@@ -5994,7 +7266,7 @@ func (x *Project) SetIncidents(v []*Incident) {
 
 func (x *Project) SetMoreIncidents(v bool) {
 	x.xxx_hidden_MoreIncidents = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 24, 28)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 24, 31)
 }
 
 func (x *Project) SetUptimeDays(v []*UptimeDay) {
@@ -6007,6 +7279,20 @@ func (x *Project) SetDatabase(v *Database) {
 
 func (x *Project) SetLinkedDatabases(v []string) {
 	x.xxx_hidden_LinkedDatabases = v
+}
+
+func (x *Project) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 28, 31)
+}
+
+func (x *Project) SetUid(v string) {
+	x.xxx_hidden_Uid = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 29, 31)
+}
+
+func (x *Project) SetDependencies(v []*ProjectDependency) {
+	x.xxx_hidden_Dependencies = &v
 }
 
 func (x *Project) HasProjectId() bool {
@@ -6135,6 +7421,20 @@ func (x *Project) HasDatabase() bool {
 	return x.xxx_hidden_Database != nil
 }
 
+func (x *Project) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 28)
+}
+
+func (x *Project) HasUid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 29)
+}
+
 func (x *Project) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -6217,6 +7517,16 @@ func (x *Project) ClearDatabase() {
 	x.xxx_hidden_Database = nil
 }
 
+func (x *Project) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 28)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
+func (x *Project) ClearUid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 29)
+	x.xxx_hidden_Uid = nil
+}
+
 type Project_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -6281,6 +7591,15 @@ type Project_builder struct {
 	Database *Database
 	// The database projects this one reaches (LinkDatabase), each at the host of its project_id.
 	LinkedDatabases []string
+	// The workspace it is in (Workspace.workspace_id): what a later call for it names as
+	// `workspace`.
+	WorkspaceId *string
+	// Made when it was created, and kept by its backups, restores and moves: a project deleted
+	// and created again under the same project_id has another. Empty = not known yet.
+	Uid *string
+	// The databases it is linked to (linked_databases), each with what MoveProject may do with it
+	// (switch_databases).
+	Dependencies []*ProjectDependency
 }
 
 func (b0 Project_builder) Build() *Project {
@@ -6288,34 +7607,34 @@ func (b0 Project_builder) Build() *Project {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 31)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Metadata = b.Metadata
 	x.xxx_hidden_Problems = &b.Problems
 	if b.Url != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 31)
 		x.xxx_hidden_Url = b.Url
 	}
 	if b.CpuUsedCores != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 31)
 		x.xxx_hidden_CpuUsedCores = *b.CpuUsedCores
 	}
 	if b.MemoryUsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 31)
 		x.xxx_hidden_MemoryUsedBytes = *b.MemoryUsedBytes
 	}
 	if b.DeployId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 31)
 		x.xxx_hidden_DeployId = b.DeployId
 	}
 	if b.DeployStatus != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 31)
 		x.xxx_hidden_DeployStatus = *b.DeployStatus
 	}
 	x.xxx_hidden_DeployTime = b.DeployTime
 	if b.XPethostAppliesAtOnce != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 31)
 		x.xxx_hidden_XPethostAppliesAtOnce = *b.XPethostAppliesAtOnce
 	}
 	x.xxx_hidden_Services = &b.Services
@@ -6323,13 +7642,13 @@ func (b0 Project_builder) Build() *Project {
 	x.xxx_hidden_Routes = &b.Routes
 	x.xxx_hidden_Hosts = &b.Hosts
 	if b.PasswordProtected != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 31)
 		x.xxx_hidden_PasswordProtected = *b.PasswordProtected
 	}
 	x.xxx_hidden_Operations = &b.Operations
 	x.xxx_hidden_Snapshots = &b.Snapshots
 	if b.SnapshotCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 31)
 		x.xxx_hidden_SnapshotCount = *b.SnapshotCount
 	}
 	x.xxx_hidden_SnapshotListTime = b.SnapshotListTime
@@ -6339,12 +7658,175 @@ func (b0 Project_builder) Build() *Project {
 	x.xxx_hidden_Alerts = b.Alerts
 	x.xxx_hidden_Incidents = &b.Incidents
 	if b.MoreIncidents != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 24, 28)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 24, 31)
 		x.xxx_hidden_MoreIncidents = *b.MoreIncidents
 	}
 	x.xxx_hidden_UptimeDays = &b.UptimeDays
 	x.xxx_hidden_Database = b.Database
 	x.xxx_hidden_LinkedDatabases = b.LinkedDatabases
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 28, 31)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
+	}
+	if b.Uid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 29, 31)
+		x.xxx_hidden_Uid = b.Uid
+	}
+	x.xxx_hidden_Dependencies = &b.Dependencies
+	return m0
+}
+
+// A database a project is linked to, as MoveProject of the project sees it.
+type ProjectDependency struct {
+	state                        protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_DatabaseProjectId *string                `protobuf:"bytes,1,opt,name=database_project_id,json=databaseProjectId"`
+	xxx_hidden_CopyDatabase      *string                `protobuf:"bytes,4,opt,name=copy_database,json=copyDatabase"`
+	xxx_hidden_EnvPrefix         *string                `protobuf:"bytes,5,opt,name=env_prefix,json=envPrefix"`
+	XXX_raceDetectHookData       protoimpl.RaceDetectHookData
+	XXX_presence                 [1]uint32
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *ProjectDependency) Reset() {
+	*x = ProjectDependency{}
+	mi := &file_v1_panel_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectDependency) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectDependency) ProtoMessage() {}
+
+func (x *ProjectDependency) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ProjectDependency) GetDatabaseProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_DatabaseProjectId != nil {
+			return *x.xxx_hidden_DatabaseProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectDependency) GetCopyDatabase() string {
+	if x != nil {
+		if x.xxx_hidden_CopyDatabase != nil {
+			return *x.xxx_hidden_CopyDatabase
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectDependency) GetEnvPrefix() string {
+	if x != nil {
+		if x.xxx_hidden_EnvPrefix != nil {
+			return *x.xxx_hidden_EnvPrefix
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectDependency) SetDatabaseProjectId(v string) {
+	x.xxx_hidden_DatabaseProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *ProjectDependency) SetCopyDatabase(v string) {
+	x.xxx_hidden_CopyDatabase = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *ProjectDependency) SetEnvPrefix(v string) {
+	x.xxx_hidden_EnvPrefix = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *ProjectDependency) HasDatabaseProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ProjectDependency) HasCopyDatabase() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ProjectDependency) HasEnvPrefix() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ProjectDependency) ClearDatabaseProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_DatabaseProjectId = nil
+}
+
+func (x *ProjectDependency) ClearCopyDatabase() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_CopyDatabase = nil
+}
+
+func (x *ProjectDependency) ClearEnvPrefix() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_EnvPrefix = nil
+}
+
+type ProjectDependency_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	DatabaseProjectId *string
+	// The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+	// project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+	// `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+	// own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+	// new one starts empty and one there is shared.
+	CopyDatabase *string
+	// The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+	// (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+	// destination writes anew. Empty = a person wrote them (LinkDatabase linked it): a move needs
+	// DatabaseSwitch.env_prefix.
+	EnvPrefix *string
+}
+
+func (b0 ProjectDependency_builder) Build() *ProjectDependency {
+	m0 := &ProjectDependency{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.DatabaseProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_DatabaseProjectId = b.DatabaseProjectId
+	}
+	if b.CopyDatabase != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_CopyDatabase = b.CopyDatabase
+	}
+	if b.EnvPrefix != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_EnvPrefix = b.EnvPrefix
+	}
 	return m0
 }
 
@@ -6362,7 +7844,7 @@ type RunningServicesAction struct {
 
 func (x *RunningServicesAction) Reset() {
 	*x = RunningServicesAction{}
-	mi := &file_v1_panel_proto_msgTypes[20]
+	mi := &file_v1_panel_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6374,7 +7856,7 @@ func (x *RunningServicesAction) String() string {
 func (*RunningServicesAction) ProtoMessage() {}
 
 func (x *RunningServicesAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[20]
+	mi := &file_v1_panel_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6475,7 +7957,7 @@ type ProjectSource struct {
 
 func (x *ProjectSource) Reset() {
 	*x = ProjectSource{}
-	mi := &file_v1_panel_proto_msgTypes[21]
+	mi := &file_v1_panel_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6487,7 +7969,7 @@ func (x *ProjectSource) String() string {
 func (*ProjectSource) ProtoMessage() {}
 
 func (x *ProjectSource) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[21]
+	mi := &file_v1_panel_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6610,7 +8092,7 @@ func (b0 ProjectSource_builder) Build() *ProjectSource {
 type case_ProjectSource_Kind protoreflect.FieldNumber
 
 func (x case_ProjectSource_Kind) String() string {
-	md := file_v1_panel_proto_msgTypes[21].Descriptor()
+	md := file_v1_panel_proto_msgTypes[26].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -6652,7 +8134,7 @@ type GithubSource struct {
 
 func (x *GithubSource) Reset() {
 	*x = GithubSource{}
-	mi := &file_v1_panel_proto_msgTypes[22]
+	mi := &file_v1_panel_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6664,7 +8146,7 @@ func (x *GithubSource) String() string {
 func (*GithubSource) ProtoMessage() {}
 
 func (x *GithubSource) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[22]
+	mi := &file_v1_panel_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6940,7 +8422,7 @@ type GithubCommit struct {
 
 func (x *GithubCommit) Reset() {
 	*x = GithubCommit{}
-	mi := &file_v1_panel_proto_msgTypes[23]
+	mi := &file_v1_panel_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6952,7 +8434,7 @@ func (x *GithubCommit) String() string {
 func (*GithubCommit) ProtoMessage() {}
 
 func (x *GithubCommit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[23]
+	mi := &file_v1_panel_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7110,7 +8592,7 @@ type Service struct {
 
 func (x *Service) Reset() {
 	*x = Service{}
-	mi := &file_v1_panel_proto_msgTypes[24]
+	mi := &file_v1_panel_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7122,7 +8604,7 @@ func (x *Service) String() string {
 func (*Service) ProtoMessage() {}
 
 func (x *Service) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[24]
+	mi := &file_v1_panel_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7929,7 +9411,7 @@ type PublishedPort struct {
 
 func (x *PublishedPort) Reset() {
 	*x = PublishedPort{}
-	mi := &file_v1_panel_proto_msgTypes[25]
+	mi := &file_v1_panel_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7941,7 +9423,7 @@ func (x *PublishedPort) String() string {
 func (*PublishedPort) ProtoMessage() {}
 
 func (x *PublishedPort) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[25]
+	mi := &file_v1_panel_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8066,7 +9548,7 @@ type VolumeMount struct {
 
 func (x *VolumeMount) Reset() {
 	*x = VolumeMount{}
-	mi := &file_v1_panel_proto_msgTypes[26]
+	mi := &file_v1_panel_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8078,7 +9560,7 @@ func (x *VolumeMount) String() string {
 func (*VolumeMount) ProtoMessage() {}
 
 func (x *VolumeMount) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[26]
+	mi := &file_v1_panel_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8182,7 +9664,7 @@ type HealthCheck struct {
 
 func (x *HealthCheck) Reset() {
 	*x = HealthCheck{}
-	mi := &file_v1_panel_proto_msgTypes[27]
+	mi := &file_v1_panel_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8194,7 +9676,7 @@ func (x *HealthCheck) String() string {
 func (*HealthCheck) ProtoMessage() {}
 
 func (x *HealthCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[27]
+	mi := &file_v1_panel_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8383,7 +9865,7 @@ type EnvironmentVariable struct {
 
 func (x *EnvironmentVariable) Reset() {
 	*x = EnvironmentVariable{}
-	mi := &file_v1_panel_proto_msgTypes[28]
+	mi := &file_v1_panel_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8395,7 +9877,7 @@ func (x *EnvironmentVariable) String() string {
 func (*EnvironmentVariable) ProtoMessage() {}
 
 func (x *EnvironmentVariable) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[28]
+	mi := &file_v1_panel_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8613,7 +10095,7 @@ type Volume struct {
 
 func (x *Volume) Reset() {
 	*x = Volume{}
-	mi := &file_v1_panel_proto_msgTypes[29]
+	mi := &file_v1_panel_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8625,7 +10107,7 @@ func (x *Volume) String() string {
 func (*Volume) ProtoMessage() {}
 
 func (x *Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[29]
+	mi := &file_v1_panel_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8827,7 +10309,7 @@ type VolumeMountedBy struct {
 
 func (x *VolumeMountedBy) Reset() {
 	*x = VolumeMountedBy{}
-	mi := &file_v1_panel_proto_msgTypes[30]
+	mi := &file_v1_panel_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8839,7 +10321,7 @@ func (x *VolumeMountedBy) String() string {
 func (*VolumeMountedBy) ProtoMessage() {}
 
 func (x *VolumeMountedBy) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[30]
+	mi := &file_v1_panel_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8942,7 +10424,7 @@ type Host struct {
 
 func (x *Host) Reset() {
 	*x = Host{}
-	mi := &file_v1_panel_proto_msgTypes[31]
+	mi := &file_v1_panel_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8954,7 +10436,7 @@ func (x *Host) String() string {
 func (*Host) ProtoMessage() {}
 
 func (x *Host) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[31]
+	mi := &file_v1_panel_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9155,7 +10637,7 @@ type Route struct {
 
 func (x *Route) Reset() {
 	*x = Route{}
-	mi := &file_v1_panel_proto_msgTypes[32]
+	mi := &file_v1_panel_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9167,7 +10649,7 @@ func (x *Route) String() string {
 func (*Route) ProtoMessage() {}
 
 func (x *Route) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[32]
+	mi := &file_v1_panel_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9378,7 +10860,7 @@ type Operation struct {
 
 func (x *Operation) Reset() {
 	*x = Operation{}
-	mi := &file_v1_panel_proto_msgTypes[33]
+	mi := &file_v1_panel_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9390,7 +10872,7 @@ func (x *Operation) String() string {
 func (*Operation) ProtoMessage() {}
 
 func (x *Operation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[33]
+	mi := &file_v1_panel_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10028,7 +11510,7 @@ type Snapshot struct {
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_v1_panel_proto_msgTypes[34]
+	mi := &file_v1_panel_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10040,7 +11522,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[34]
+	mi := &file_v1_panel_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10175,7 +11657,7 @@ type HttpTrafficSummary struct {
 
 func (x *HttpTrafficSummary) Reset() {
 	*x = HttpTrafficSummary{}
-	mi := &file_v1_panel_proto_msgTypes[35]
+	mi := &file_v1_panel_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10187,7 +11669,7 @@ func (x *HttpTrafficSummary) String() string {
 func (*HttpTrafficSummary) ProtoMessage() {}
 
 func (x *HttpTrafficSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[35]
+	mi := &file_v1_panel_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10338,6 +11820,7 @@ type CreateProjectRequest struct {
 	xxx_hidden_OperationId    *string                 `protobuf:"bytes,7,opt,name=operation_id,json=operationId"`
 	xxx_hidden_WaitSeconds    uint32                  `protobuf:"varint,9,opt,name=wait_seconds,json=waitSeconds"`
 	xxx_hidden_LinkDatabases  *[]*DatabaseLinkRequest `protobuf:"bytes,11,rep,name=link_databases,json=linkDatabases"`
+	xxx_hidden_Workspace      *string                 `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -10346,7 +11829,7 @@ type CreateProjectRequest struct {
 
 func (x *CreateProjectRequest) Reset() {
 	*x = CreateProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[36]
+	mi := &file_v1_panel_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10358,7 +11841,7 @@ func (x *CreateProjectRequest) String() string {
 func (*CreateProjectRequest) ProtoMessage() {}
 
 func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[36]
+	mi := &file_v1_panel_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10445,9 +11928,19 @@ func (x *CreateProjectRequest) GetLinkDatabases() []*DatabaseLinkRequest {
 	return nil
 }
 
+func (x *CreateProjectRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *CreateProjectRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 10)
 }
 
 func (x *CreateProjectRequest) SetSource(v *ProjectSource) {
@@ -10456,7 +11949,7 @@ func (x *CreateProjectRequest) SetSource(v *ProjectSource) {
 
 func (x *CreateProjectRequest) SetUploadId(v string) {
 	x.xxx_hidden_UploadId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 10)
 }
 
 func (x *CreateProjectRequest) SetFiles(v []*FileChange) {
@@ -10469,21 +11962,26 @@ func (x *CreateProjectRequest) SetXPethost(v *ProjectExtension) {
 
 func (x *CreateProjectRequest) SetTimeoutSeconds(v uint32) {
 	x.xxx_hidden_TimeoutSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 10)
 }
 
 func (x *CreateProjectRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 10)
 }
 
 func (x *CreateProjectRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 10)
 }
 
 func (x *CreateProjectRequest) SetLinkDatabases(v []*DatabaseLinkRequest) {
 	x.xxx_hidden_LinkDatabases = &v
+}
+
+func (x *CreateProjectRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 10)
 }
 
 func (x *CreateProjectRequest) HasProjectId() bool {
@@ -10535,6 +12033,13 @@ func (x *CreateProjectRequest) HasWaitSeconds() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
 }
 
+func (x *CreateProjectRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
 func (x *CreateProjectRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -10568,6 +12073,11 @@ func (x *CreateProjectRequest) ClearWaitSeconds() {
 	x.xxx_hidden_WaitSeconds = 0
 }
 
+func (x *CreateProjectRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_Workspace = nil
+}
+
 type CreateProjectRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -10575,8 +12085,6 @@ type CreateProjectRequest_builder struct {
 	// Set = a GitHub project: {github: {repository}}. Absent = the files of this request.
 	Source *ProjectSource
 	// An archive of the project's directory, from CreateTransfer.upload_archive, unpacked first.
-	// FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its
-	// PUT said why) answers with its `violations`.
 	UploadId *string
 	// The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text: "…"}],
 	// or those to write over the archive's or the commit's. A github source takes only /.env.
@@ -10587,6 +12095,7 @@ type CreateProjectRequest_builder struct {
 	OperationId    *string
 	WaitSeconds    *uint32
 	LinkDatabases  []*DatabaseLinkRequest
+	Workspace      *string
 }
 
 func (b0 CreateProjectRequest_builder) Build() *CreateProjectRequest {
@@ -10594,29 +12103,33 @@ func (b0 CreateProjectRequest_builder) Build() *CreateProjectRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 10)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Source = b.Source
 	if b.UploadId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 10)
 		x.xxx_hidden_UploadId = b.UploadId
 	}
 	x.xxx_hidden_Files = &b.Files
 	x.xxx_hidden_XPethost = b.XPethost
 	if b.TimeoutSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 10)
 		x.xxx_hidden_TimeoutSeconds = *b.TimeoutSeconds
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 10)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 10)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
 	}
 	x.xxx_hidden_LinkDatabases = &b.LinkDatabases
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 10)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
@@ -10633,7 +12146,7 @@ type DatabaseLinkRequest struct {
 
 func (x *DatabaseLinkRequest) Reset() {
 	*x = DatabaseLinkRequest{}
-	mi := &file_v1_panel_proto_msgTypes[37]
+	mi := &file_v1_panel_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10645,7 +12158,7 @@ func (x *DatabaseLinkRequest) String() string {
 func (*DatabaseLinkRequest) ProtoMessage() {}
 
 func (x *DatabaseLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[37]
+	mi := &file_v1_panel_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10774,7 +12287,7 @@ type CreateProjectResponse struct {
 
 func (x *CreateProjectResponse) Reset() {
 	*x = CreateProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[38]
+	mi := &file_v1_panel_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10786,7 +12299,7 @@ func (x *CreateProjectResponse) String() string {
 func (*CreateProjectResponse) ProtoMessage() {}
 
 func (x *CreateProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[38]
+	mi := &file_v1_panel_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10917,6 +12430,7 @@ type DeployProjectRequest struct {
 	xxx_hidden_OperationId    *string                        `protobuf:"bytes,5,opt,name=operation_id,json=operationId"`
 	xxx_hidden_Version        isDeployProjectRequest_Version `protobuf_oneof:"version"`
 	xxx_hidden_WaitSeconds    uint32                         `protobuf:"varint,13,opt,name=wait_seconds,json=waitSeconds"`
+	xxx_hidden_Workspace      *string                        `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -10925,7 +12439,7 @@ type DeployProjectRequest struct {
 
 func (x *DeployProjectRequest) Reset() {
 	*x = DeployProjectRequest{}
-	mi := &file_v1_panel_proto_msgTypes[39]
+	mi := &file_v1_panel_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10937,7 +12451,7 @@ func (x *DeployProjectRequest) String() string {
 func (*DeployProjectRequest) ProtoMessage() {}
 
 func (x *DeployProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[39]
+	mi := &file_v1_panel_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11051,14 +12565,24 @@ func (x *DeployProjectRequest) GetWaitSeconds() uint32 {
 	return 0
 }
 
+func (x *DeployProjectRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *DeployProjectRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 10)
 }
 
 func (x *DeployProjectRequest) SetBaseDeployId(v string) {
 	x.xxx_hidden_BaseDeployId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 10)
 }
 
 func (x *DeployProjectRequest) SetFiles(v []*FileChange) {
@@ -11075,12 +12599,12 @@ func (x *DeployProjectRequest) SetMountVolume(v *MountVolume) {
 
 func (x *DeployProjectRequest) SetTimeoutSeconds(v uint32) {
 	x.xxx_hidden_TimeoutSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 10)
 }
 
 func (x *DeployProjectRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 10)
 }
 
 func (x *DeployProjectRequest) SetUploadId(v string) {
@@ -11101,7 +12625,12 @@ func (x *DeployProjectRequest) SetRollbackDeployId(v string) {
 
 func (x *DeployProjectRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 10)
+}
+
+func (x *DeployProjectRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 10)
 }
 
 func (x *DeployProjectRequest) HasProjectId() bool {
@@ -11192,6 +12721,13 @@ func (x *DeployProjectRequest) HasWaitSeconds() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
 }
 
+func (x *DeployProjectRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+}
+
 func (x *DeployProjectRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -11253,6 +12789,11 @@ func (x *DeployProjectRequest) ClearWaitSeconds() {
 	x.xxx_hidden_WaitSeconds = 0
 }
 
+func (x *DeployProjectRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	x.xxx_hidden_Workspace = nil
+}
+
 const DeployProjectRequest_Version_not_set_case case_DeployProjectRequest_Version = 0
 const DeployProjectRequest_UploadId_case case_DeployProjectRequest_Version = 6
 const DeployProjectRequest_Commit_case case_DeployProjectRequest_Version = 7
@@ -11280,8 +12821,7 @@ func (x *DeployProjectRequest) WhichVersion() case_DeployProjectRequest_Version 
 type DeployProjectRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	ProjectId *string
-	// Project.deploy_id as you read it: ABORTED if the project was deployed since. Empty = no check.
+	ProjectId    *string
 	BaseDeployId *string
 	// Written in order over the current files, or over the new version's: e.g.
 	// [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new
@@ -11298,17 +12838,17 @@ type DeployProjectRequest_builder struct {
 	// A new version of the files; none = the current one.
 
 	// Fields of oneof xxx_hidden_Version:
-	// files project: an archive from CreateTransfer; replaces all files but /.env and x-pethost.
 	UploadId     *string
 	Commit       *string
 	NewestCommit *bool
 	// files project, a rollback: the operation_id of an earlier deploy with files_kept
-	// (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+	// (Project.operations).
 	RollbackDeployId *string
 	// -- end of xxx_hidden_Version
 	// Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still
 	// IN_PROGRESS then: GetOperation waits on.
 	WaitSeconds *uint32
+	Workspace   *string
 }
 
 func (b0 DeployProjectRequest_builder) Build() *DeployProjectRequest {
@@ -11316,22 +12856,22 @@ func (b0 DeployProjectRequest_builder) Build() *DeployProjectRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 10)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.BaseDeployId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 10)
 		x.xxx_hidden_BaseDeployId = b.BaseDeployId
 	}
 	x.xxx_hidden_Files = &b.Files
 	x.xxx_hidden_XPethost = b.XPethost
 	x.xxx_hidden_MountVolume = b.MountVolume
 	if b.TimeoutSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 10)
 		x.xxx_hidden_TimeoutSeconds = *b.TimeoutSeconds
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 10)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.UploadId != nil {
@@ -11347,8 +12887,12 @@ func (b0 DeployProjectRequest_builder) Build() *DeployProjectRequest {
 		x.xxx_hidden_Version = &deployProjectRequest_RollbackDeployId{*b.RollbackDeployId}
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 10)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 10)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -11356,7 +12900,7 @@ func (b0 DeployProjectRequest_builder) Build() *DeployProjectRequest {
 type case_DeployProjectRequest_Version protoreflect.FieldNumber
 
 func (x case_DeployProjectRequest_Version) String() string {
-	md := file_v1_panel_proto_msgTypes[39].Descriptor()
+	md := file_v1_panel_proto_msgTypes[44].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -11368,8 +12912,7 @@ type isDeployProjectRequest_Version interface {
 }
 
 type deployProjectRequest_UploadId struct {
-	// files project: an archive from CreateTransfer; replaces all files but /.env and x-pethost.
-	UploadId string `protobuf:"bytes,6,opt,name=upload_id,json=uploadId,oneof"`
+	UploadId string `protobuf:"bytes,6,opt,name=upload_id,json=uploadId,oneof"` // files project: an archive from CreateTransfer.
 }
 
 type deployProjectRequest_Commit struct {
@@ -11382,7 +12925,7 @@ type deployProjectRequest_NewestCommit struct {
 
 type deployProjectRequest_RollbackDeployId struct {
 	// files project, a rollback: the operation_id of an earlier deploy with files_kept
-	// (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+	// (Project.operations).
 	RollbackDeployId string `protobuf:"bytes,12,opt,name=rollback_deploy_id,json=rollbackDeployId,oneof"`
 }
 
@@ -11408,7 +12951,7 @@ type MountVolume struct {
 
 func (x *MountVolume) Reset() {
 	*x = MountVolume{}
-	mi := &file_v1_panel_proto_msgTypes[40]
+	mi := &file_v1_panel_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11420,7 +12963,7 @@ func (x *MountVolume) String() string {
 func (*MountVolume) ProtoMessage() {}
 
 func (x *MountVolume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[40]
+	mi := &file_v1_panel_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11555,7 +13098,7 @@ type ProjectExtension struct {
 
 func (x *ProjectExtension) Reset() {
 	*x = ProjectExtension{}
-	mi := &file_v1_panel_proto_msgTypes[41]
+	mi := &file_v1_panel_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11567,7 +13110,7 @@ func (x *ProjectExtension) String() string {
 func (*ProjectExtension) ProtoMessage() {}
 
 func (x *ProjectExtension) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[41]
+	mi := &file_v1_panel_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11736,7 +13279,7 @@ type FileChange struct {
 
 func (x *FileChange) Reset() {
 	*x = FileChange{}
-	mi := &file_v1_panel_proto_msgTypes[42]
+	mi := &file_v1_panel_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11748,7 +13291,7 @@ func (x *FileChange) String() string {
 func (*FileChange) ProtoMessage() {}
 
 func (x *FileChange) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[42]
+	mi := &file_v1_panel_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12067,7 +13610,7 @@ func (b0 FileChange_builder) Build() *FileChange {
 type case_FileChange_Change protoreflect.FieldNumber
 
 func (x case_FileChange_Change) String() string {
-	md := file_v1_panel_proto_msgTypes[42].Descriptor()
+	md := file_v1_panel_proto_msgTypes[47].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -12127,7 +13670,7 @@ type DeployProjectResponse struct {
 
 func (x *DeployProjectResponse) Reset() {
 	*x = DeployProjectResponse{}
-	mi := &file_v1_panel_proto_msgTypes[43]
+	mi := &file_v1_panel_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12139,7 +13682,7 @@ func (x *DeployProjectResponse) String() string {
 func (*DeployProjectResponse) ProtoMessage() {}
 
 func (x *DeployProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[43]
+	mi := &file_v1_panel_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12271,7 +13814,7 @@ type SpecViolation struct {
 
 func (x *SpecViolation) Reset() {
 	*x = SpecViolation{}
-	mi := &file_v1_panel_proto_msgTypes[44]
+	mi := &file_v1_panel_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12283,7 +13826,7 @@ func (x *SpecViolation) String() string {
 func (*SpecViolation) ProtoMessage() {}
 
 func (x *SpecViolation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[44]
+	mi := &file_v1_panel_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12404,10 +13947,1150 @@ func (b0 SpecViolation_builder) Build() *SpecViolation {
 	return m0
 }
 
+type MoveProjectRequest struct {
+	state                      protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId       *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_ToWorkspace     *string                `protobuf:"bytes,2,opt,name=to_workspace,json=toWorkspace"`
+	xxx_hidden_OperationId     *string                `protobuf:"bytes,4,opt,name=operation_id,json=operationId"`
+	xxx_hidden_WaitSeconds     uint32                 `protobuf:"varint,5,opt,name=wait_seconds,json=waitSeconds"`
+	xxx_hidden_SwitchDatabases *[]*DatabaseSwitch     `protobuf:"bytes,6,rep,name=switch_databases,json=switchDatabases"`
+	xxx_hidden_Workspace       *string                `protobuf:"bytes,100,opt,name=workspace"`
+	XXX_raceDetectHookData     protoimpl.RaceDetectHookData
+	XXX_presence               [1]uint32
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *MoveProjectRequest) Reset() {
+	*x = MoveProjectRequest{}
+	mi := &file_v1_panel_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveProjectRequest) ProtoMessage() {}
+
+func (x *MoveProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MoveProjectRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveProjectRequest) GetToWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_ToWorkspace != nil {
+			return *x.xxx_hidden_ToWorkspace
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveProjectRequest) GetOperationId() string {
+	if x != nil {
+		if x.xxx_hidden_OperationId != nil {
+			return *x.xxx_hidden_OperationId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveProjectRequest) GetWaitSeconds() uint32 {
+	if x != nil {
+		return x.xxx_hidden_WaitSeconds
+	}
+	return 0
+}
+
+func (x *MoveProjectRequest) GetSwitchDatabases() []*DatabaseSwitch {
+	if x != nil {
+		if x.xxx_hidden_SwitchDatabases != nil {
+			return *x.xxx_hidden_SwitchDatabases
+		}
+	}
+	return nil
+}
+
+func (x *MoveProjectRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveProjectRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
+}
+
+func (x *MoveProjectRequest) SetToWorkspace(v string) {
+	x.xxx_hidden_ToWorkspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+}
+
+func (x *MoveProjectRequest) SetOperationId(v string) {
+	x.xxx_hidden_OperationId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+}
+
+func (x *MoveProjectRequest) SetWaitSeconds(v uint32) {
+	x.xxx_hidden_WaitSeconds = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+}
+
+func (x *MoveProjectRequest) SetSwitchDatabases(v []*DatabaseSwitch) {
+	x.xxx_hidden_SwitchDatabases = &v
+}
+
+func (x *MoveProjectRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+}
+
+func (x *MoveProjectRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *MoveProjectRequest) HasToWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *MoveProjectRequest) HasOperationId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *MoveProjectRequest) HasWaitSeconds() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *MoveProjectRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *MoveProjectRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *MoveProjectRequest) ClearToWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_ToWorkspace = nil
+}
+
+func (x *MoveProjectRequest) ClearOperationId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_OperationId = nil
+}
+
+func (x *MoveProjectRequest) ClearWaitSeconds() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_WaitSeconds = 0
+}
+
+func (x *MoveProjectRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_Workspace = nil
+}
+
+type MoveProjectRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId   *string
+	ToWorkspace *string
+	OperationId *string
+	WaitSeconds *uint32
+	// What it uses in to_workspace instead of each database it is linked to (Project.dependencies),
+	// which stays here. One left out: the destination's database of its id and engine, if it has
+	// one, else a new one, with the data of its copy_database.
+	SwitchDatabases []*DatabaseSwitch
+	Workspace       *string
+}
+
+func (b0 MoveProjectRequest_builder) Build() *MoveProjectRequest {
+	m0 := &MoveProjectRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.ToWorkspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		x.xxx_hidden_ToWorkspace = b.ToWorkspace
+	}
+	if b.OperationId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
+		x.xxx_hidden_OperationId = b.OperationId
+	}
+	if b.WaitSeconds != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
+	}
+	x.xxx_hidden_SwitchDatabases = &b.SwitchDatabases
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
+	return m0
+}
+
+// A database the moved project is linked to, which stays here with its other apps, if any, and
+// what the project uses instead in the destination: a database of the same engine, the lines of
+// how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+// user of its own, to a database of its own, which gets the data of ProjectDependency
+// .copy_database unless empty; a Valkey's it shares as its one user, and so does a project whose
+// id the engine keeps as a name of its own (copy_database empty) on Postgres and MariaDB. Once the
+// move succeeded, the user and database the project had of its own here, if it had them, are
+// dropped with it, as any delete does: so empty, where it had them, deletes that data.
+type DatabaseSwitch struct {
+	state                            protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_DatabaseProjectId     *string                `protobuf:"bytes,1,opt,name=database_project_id,json=databaseProjectId"`
+	xxx_hidden_IntoDatabaseProjectId *string                `protobuf:"bytes,2,opt,name=into_database_project_id,json=intoDatabaseProjectId"`
+	xxx_hidden_Empty                 bool                   `protobuf:"varint,3,opt,name=empty"`
+	xxx_hidden_EnvPrefix             *string                `protobuf:"bytes,5,opt,name=env_prefix,json=envPrefix"`
+	XXX_raceDetectHookData           protoimpl.RaceDetectHookData
+	XXX_presence                     [1]uint32
+	unknownFields                    protoimpl.UnknownFields
+	sizeCache                        protoimpl.SizeCache
+}
+
+func (x *DatabaseSwitch) Reset() {
+	*x = DatabaseSwitch{}
+	mi := &file_v1_panel_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseSwitch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseSwitch) ProtoMessage() {}
+
+func (x *DatabaseSwitch) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *DatabaseSwitch) GetDatabaseProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_DatabaseProjectId != nil {
+			return *x.xxx_hidden_DatabaseProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSwitch) GetIntoDatabaseProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_IntoDatabaseProjectId != nil {
+			return *x.xxx_hidden_IntoDatabaseProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSwitch) GetEmpty() bool {
+	if x != nil {
+		return x.xxx_hidden_Empty
+	}
+	return false
+}
+
+func (x *DatabaseSwitch) GetEnvPrefix() string {
+	if x != nil {
+		if x.xxx_hidden_EnvPrefix != nil {
+			return *x.xxx_hidden_EnvPrefix
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *DatabaseSwitch) SetDatabaseProjectId(v string) {
+	x.xxx_hidden_DatabaseProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+}
+
+func (x *DatabaseSwitch) SetIntoDatabaseProjectId(v string) {
+	x.xxx_hidden_IntoDatabaseProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *DatabaseSwitch) SetEmpty(v bool) {
+	x.xxx_hidden_Empty = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *DatabaseSwitch) SetEnvPrefix(v string) {
+	x.xxx_hidden_EnvPrefix = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+}
+
+func (x *DatabaseSwitch) HasDatabaseProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *DatabaseSwitch) HasIntoDatabaseProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *DatabaseSwitch) HasEmpty() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *DatabaseSwitch) HasEnvPrefix() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *DatabaseSwitch) ClearDatabaseProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_DatabaseProjectId = nil
+}
+
+func (x *DatabaseSwitch) ClearIntoDatabaseProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_IntoDatabaseProjectId = nil
+}
+
+func (x *DatabaseSwitch) ClearEmpty() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Empty = false
+}
+
+func (x *DatabaseSwitch) ClearEnvPrefix() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_EnvPrefix = nil
+}
+
+type DatabaseSwitch_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	DatabaseProjectId *string
+	// A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+	// a user of its own there, it has no user or database named as the project. Empty = the
+	// destination's database of database_project_id's id and engine, if it has one, else a new one,
+	// made by the move under that id at that one's size where to_workspace offers it for the engine,
+	// else at the engine's default.
+	IntoDatabaseProjectId *string
+	// True = nothing is copied: the project starts there with an empty database of its own, or, as
+	// the apps' user, with what a database there holds that it shares (a new one: nothing). A
+	// MariaDB database with a view, trigger, routine or event made by another account than the
+	// project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+	// undone; start it empty, or make those objects again as the project's own user.
+	Empty *bool
+	// Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+	// signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+	// destination writes anew as a link with that env_prefix writes them, each of its names that
+	// /.env sets taking the new value, for the database copy_database names. Required there;
+	// refused elsewhere.
+	EnvPrefix *string
+}
+
+func (b0 DatabaseSwitch_builder) Build() *DatabaseSwitch {
+	m0 := &DatabaseSwitch{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.DatabaseProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		x.xxx_hidden_DatabaseProjectId = b.DatabaseProjectId
+	}
+	if b.IntoDatabaseProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_IntoDatabaseProjectId = b.IntoDatabaseProjectId
+	}
+	if b.Empty != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_Empty = *b.Empty
+	}
+	if b.EnvPrefix != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_EnvPrefix = b.EnvPrefix
+	}
+	return m0
+}
+
+type MoveProjectResponse struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Operation   *Operation             `protobuf:"bytes,1,opt,name=operation"`
+	xxx_hidden_Project     *Project               `protobuf:"bytes,2,opt,name=project"`
+	xxx_hidden_MoveMessage *string                `protobuf:"bytes,3,opt,name=move_message,json=moveMessage"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *MoveProjectResponse) Reset() {
+	*x = MoveProjectResponse{}
+	mi := &file_v1_panel_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveProjectResponse) ProtoMessage() {}
+
+func (x *MoveProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MoveProjectResponse) GetOperation() *Operation {
+	if x != nil {
+		return x.xxx_hidden_Operation
+	}
+	return nil
+}
+
+func (x *MoveProjectResponse) GetProject() *Project {
+	if x != nil {
+		return x.xxx_hidden_Project
+	}
+	return nil
+}
+
+func (x *MoveProjectResponse) GetMoveMessage() string {
+	if x != nil {
+		if x.xxx_hidden_MoveMessage != nil {
+			return *x.xxx_hidden_MoveMessage
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveProjectResponse) SetOperation(v *Operation) {
+	x.xxx_hidden_Operation = v
+}
+
+func (x *MoveProjectResponse) SetProject(v *Project) {
+	x.xxx_hidden_Project = v
+}
+
+func (x *MoveProjectResponse) SetMoveMessage(v string) {
+	x.xxx_hidden_MoveMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *MoveProjectResponse) HasOperation() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Operation != nil
+}
+
+func (x *MoveProjectResponse) HasProject() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Project != nil
+}
+
+func (x *MoveProjectResponse) HasMoveMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *MoveProjectResponse) ClearOperation() {
+	x.xxx_hidden_Operation = nil
+}
+
+func (x *MoveProjectResponse) ClearProject() {
+	x.xxx_hidden_Project = nil
+}
+
+func (x *MoveProjectResponse) ClearMoveMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_MoveMessage = nil
+}
+
+type MoveProjectResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// The move: finished, or IN_PROGRESS when wait_seconds ran out (then GetOperation).
+	Operation *Operation
+	// Once the project is in the destination: as it is there, as GetProject returns it. A move that
+	// FAILED after that has it too: it runs there, and its failure says what the source still
+	// holds. Absent while it runs, and when nothing moved.
+	Project *Project
+	// What changed and what stayed behind, for people: the new hosts, the domains of the person's
+	// own to point at the destination's hostname, the SSH command.
+	MoveMessage *string
+}
+
+func (b0 MoveProjectResponse_builder) Build() *MoveProjectResponse {
+	m0 := &MoveProjectResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Operation = b.Operation
+	x.xxx_hidden_Project = b.Project
+	if b.MoveMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_MoveMessage = b.MoveMessage
+	}
+	return m0
+}
+
+type GetMoveChoicesRequest struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_ToWorkspace *string                `protobuf:"bytes,2,opt,name=to_workspace,json=toWorkspace"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *GetMoveChoicesRequest) Reset() {
+	*x = GetMoveChoicesRequest{}
+	mi := &file_v1_panel_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMoveChoicesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMoveChoicesRequest) ProtoMessage() {}
+
+func (x *GetMoveChoicesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetMoveChoicesRequest) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetMoveChoicesRequest) GetToWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_ToWorkspace != nil {
+			return *x.xxx_hidden_ToWorkspace
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetMoveChoicesRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *GetMoveChoicesRequest) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *GetMoveChoicesRequest) SetToWorkspace(v string) {
+	x.xxx_hidden_ToWorkspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *GetMoveChoicesRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *GetMoveChoicesRequest) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *GetMoveChoicesRequest) HasToWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *GetMoveChoicesRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *GetMoveChoicesRequest) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *GetMoveChoicesRequest) ClearToWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_ToWorkspace = nil
+}
+
+func (x *GetMoveChoicesRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Workspace = nil
+}
+
+type GetMoveChoicesRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId   *string
+	ToWorkspace *string
+	Workspace   *string
+}
+
+func (b0 GetMoveChoicesRequest_builder) Build() *GetMoveChoicesRequest {
+	m0 := &GetMoveChoicesRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.ToWorkspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_ToWorkspace = b.ToWorkspace
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
+	return m0
+}
+
+type GetMoveChoicesResponse struct {
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Choices *[]*MoveChoice         `protobuf:"bytes,1,rep,name=choices"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *GetMoveChoicesResponse) Reset() {
+	*x = GetMoveChoicesResponse{}
+	mi := &file_v1_panel_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMoveChoicesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMoveChoicesResponse) ProtoMessage() {}
+
+func (x *GetMoveChoicesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetMoveChoicesResponse) GetChoices() []*MoveChoice {
+	if x != nil {
+		if x.xxx_hidden_Choices != nil {
+			return *x.xxx_hidden_Choices
+		}
+	}
+	return nil
+}
+
+func (x *GetMoveChoicesResponse) SetChoices(v []*MoveChoice) {
+	x.xxx_hidden_Choices = &v
+}
+
+type GetMoveChoicesResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// One for each database the project is linked to, in Project.dependencies' order.
+	Choices []*MoveChoice
+}
+
+func (b0 GetMoveChoicesResponse_builder) Build() *GetMoveChoicesResponse {
+	m0 := &GetMoveChoicesResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Choices = &b.Choices
+	return m0
+}
+
+// What a move may use in to_workspace instead of a database the project is linked to.
+type MoveChoice struct {
+	state                                 protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Dependency                 *ProjectDependency     `protobuf:"bytes,1,opt,name=dependency"`
+	xxx_hidden_Engine                     DatabaseEngine         `protobuf:"varint,2,opt,name=engine,enum=pethost.panel.v1.DatabaseEngine"`
+	xxx_hidden_Owned                      bool                   `protobuf:"varint,3,opt,name=owned"`
+	xxx_hidden_Databases                  *[]*MoveTarget         `protobuf:"bytes,4,rep,name=databases"`
+	xxx_hidden_NewDatabase                bool                   `protobuf:"varint,5,opt,name=new_database,json=newDatabase"`
+	xxx_hidden_SuggestedDatabaseProjectId *string                `protobuf:"bytes,6,opt,name=suggested_database_project_id,json=suggestedDatabaseProjectId"`
+	XXX_raceDetectHookData                protoimpl.RaceDetectHookData
+	XXX_presence                          [1]uint32
+	unknownFields                         protoimpl.UnknownFields
+	sizeCache                             protoimpl.SizeCache
+}
+
+func (x *MoveChoice) Reset() {
+	*x = MoveChoice{}
+	mi := &file_v1_panel_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveChoice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveChoice) ProtoMessage() {}
+
+func (x *MoveChoice) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MoveChoice) GetDependency() *ProjectDependency {
+	if x != nil {
+		return x.xxx_hidden_Dependency
+	}
+	return nil
+}
+
+func (x *MoveChoice) GetEngine() DatabaseEngine {
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 1) {
+			return x.xxx_hidden_Engine
+		}
+	}
+	return DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED
+}
+
+func (x *MoveChoice) GetOwned() bool {
+	if x != nil {
+		return x.xxx_hidden_Owned
+	}
+	return false
+}
+
+func (x *MoveChoice) GetDatabases() []*MoveTarget {
+	if x != nil {
+		if x.xxx_hidden_Databases != nil {
+			return *x.xxx_hidden_Databases
+		}
+	}
+	return nil
+}
+
+func (x *MoveChoice) GetNewDatabase() bool {
+	if x != nil {
+		return x.xxx_hidden_NewDatabase
+	}
+	return false
+}
+
+func (x *MoveChoice) GetSuggestedDatabaseProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_SuggestedDatabaseProjectId != nil {
+			return *x.xxx_hidden_SuggestedDatabaseProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveChoice) SetDependency(v *ProjectDependency) {
+	x.xxx_hidden_Dependency = v
+}
+
+func (x *MoveChoice) SetEngine(v DatabaseEngine) {
+	x.xxx_hidden_Engine = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+}
+
+func (x *MoveChoice) SetOwned(v bool) {
+	x.xxx_hidden_Owned = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+}
+
+func (x *MoveChoice) SetDatabases(v []*MoveTarget) {
+	x.xxx_hidden_Databases = &v
+}
+
+func (x *MoveChoice) SetNewDatabase(v bool) {
+	x.xxx_hidden_NewDatabase = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *MoveChoice) SetSuggestedDatabaseProjectId(v string) {
+	x.xxx_hidden_SuggestedDatabaseProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+}
+
+func (x *MoveChoice) HasDependency() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Dependency != nil
+}
+
+func (x *MoveChoice) HasEngine() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *MoveChoice) HasOwned() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *MoveChoice) HasNewDatabase() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *MoveChoice) HasSuggestedDatabaseProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *MoveChoice) ClearDependency() {
+	x.xxx_hidden_Dependency = nil
+}
+
+func (x *MoveChoice) ClearEngine() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Engine = DatabaseEngine_DATABASE_ENGINE_UNSPECIFIED
+}
+
+func (x *MoveChoice) ClearOwned() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Owned = false
+}
+
+func (x *MoveChoice) ClearNewDatabase() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_NewDatabase = false
+}
+
+func (x *MoveChoice) ClearSuggestedDatabaseProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_SuggestedDatabaseProjectId = nil
+}
+
+type MoveChoice_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Dependency *ProjectDependency
+	Engine     *DatabaseEngine
+	// The project signs in to the dependency as a user of its own (Database.own_user_projects),
+	// which the move drops here with its database once it succeeded (DatabaseSwitch).
+	Owned *bool
+	// The databases of to_workspace of the engine, which into_database_project_id may name: each
+	// once among a move's switches.
+	Databases []*MoveTarget
+	// A new database may be made there, under the dependency's id: to_workspace has no project of
+	// that id.
+	NewDatabase *bool
+	// Where the dialog's switch goes first: the database of to_workspace of the dependency's id and
+	// engine, else its only one of the engine that no other choice suggests, else a new one where
+	// new_database, else the first of `databases` that no other choice suggests. Empty = a new one,
+	// or nothing fits (no `databases`, and no new_database).
+	SuggestedDatabaseProjectId *string
+}
+
+func (b0 MoveChoice_builder) Build() *MoveChoice {
+	m0 := &MoveChoice{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Dependency = b.Dependency
+	if b.Engine != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		x.xxx_hidden_Engine = *b.Engine
+	}
+	if b.Owned != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
+		x.xxx_hidden_Owned = *b.Owned
+	}
+	x.xxx_hidden_Databases = &b.Databases
+	if b.NewDatabase != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		x.xxx_hidden_NewDatabase = *b.NewDatabase
+	}
+	if b.SuggestedDatabaseProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_SuggestedDatabaseProjectId = b.SuggestedDatabaseProjectId
+	}
+	return m0
+}
+
+// A database of to_workspace that a switch may go to.
+type MoveTarget struct {
+	state                        protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_DatabaseProjectId *string                `protobuf:"bytes,1,opt,name=database_project_id,json=databaseProjectId"`
+	xxx_hidden_Name              *string                `protobuf:"bytes,2,opt,name=name"`
+	xxx_hidden_DataBytes         uint64                 `protobuf:"varint,3,opt,name=data_bytes,json=dataBytes"`
+	xxx_hidden_AppNames          []string               `protobuf:"bytes,4,rep,name=app_names,json=appNames"`
+	XXX_raceDetectHookData       protoimpl.RaceDetectHookData
+	XXX_presence                 [1]uint32
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *MoveTarget) Reset() {
+	*x = MoveTarget{}
+	mi := &file_v1_panel_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveTarget) ProtoMessage() {}
+
+func (x *MoveTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MoveTarget) GetDatabaseProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_DatabaseProjectId != nil {
+			return *x.xxx_hidden_DatabaseProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveTarget) GetName() string {
+	if x != nil {
+		if x.xxx_hidden_Name != nil {
+			return *x.xxx_hidden_Name
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MoveTarget) GetDataBytes() uint64 {
+	if x != nil {
+		return x.xxx_hidden_DataBytes
+	}
+	return 0
+}
+
+func (x *MoveTarget) GetAppNames() []string {
+	if x != nil {
+		return x.xxx_hidden_AppNames
+	}
+	return nil
+}
+
+func (x *MoveTarget) SetDatabaseProjectId(v string) {
+	x.xxx_hidden_DatabaseProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+}
+
+func (x *MoveTarget) SetName(v string) {
+	x.xxx_hidden_Name = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *MoveTarget) SetDataBytes(v uint64) {
+	x.xxx_hidden_DataBytes = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *MoveTarget) SetAppNames(v []string) {
+	x.xxx_hidden_AppNames = v
+}
+
+func (x *MoveTarget) HasDatabaseProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *MoveTarget) HasName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *MoveTarget) HasDataBytes() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *MoveTarget) ClearDatabaseProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_DatabaseProjectId = nil
+}
+
+func (x *MoveTarget) ClearName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Name = nil
+}
+
+func (x *MoveTarget) ClearDataBytes() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_DataBytes = 0
+}
+
+type MoveTarget_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	DatabaseProjectId *string
+	Name              *string
+	DataBytes         *uint64
+	AppNames          []string
+}
+
+func (b0 MoveTarget_builder) Build() *MoveTarget {
+	m0 := &MoveTarget{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.DatabaseProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		x.xxx_hidden_DatabaseProjectId = b.DatabaseProjectId
+	}
+	if b.Name != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_Name = b.Name
+	}
+	if b.DataBytes != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_DataBytes = *b.DataBytes
+	}
+	x.xxx_hidden_AppNames = b.AppNames
+	return m0
+}
+
 type ListCommitsRequest struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId    *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_BeforeCommit *string                `protobuf:"bytes,2,opt,name=before_commit,json=beforeCommit"`
+	xxx_hidden_Workspace    *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
 	XXX_presence            [1]uint32
 	unknownFields           protoimpl.UnknownFields
@@ -12416,7 +15099,7 @@ type ListCommitsRequest struct {
 
 func (x *ListCommitsRequest) Reset() {
 	*x = ListCommitsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[45]
+	mi := &file_v1_panel_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12428,7 +15111,7 @@ func (x *ListCommitsRequest) String() string {
 func (*ListCommitsRequest) ProtoMessage() {}
 
 func (x *ListCommitsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[45]
+	mi := &file_v1_panel_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12459,14 +15142,29 @@ func (x *ListCommitsRequest) GetBeforeCommit() string {
 	return ""
 }
 
+func (x *ListCommitsRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *ListCommitsRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
 }
 
 func (x *ListCommitsRequest) SetBeforeCommit(v string) {
 	x.xxx_hidden_BeforeCommit = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *ListCommitsRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
 }
 
 func (x *ListCommitsRequest) HasProjectId() bool {
@@ -12483,6 +15181,13 @@ func (x *ListCommitsRequest) HasBeforeCommit() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
+func (x *ListCommitsRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
 func (x *ListCommitsRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -12493,11 +15198,17 @@ func (x *ListCommitsRequest) ClearBeforeCommit() {
 	x.xxx_hidden_BeforeCommit = nil
 }
 
+func (x *ListCommitsRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Workspace = nil
+}
+
 type ListCommitsRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId    *string
 	BeforeCommit *string
+	Workspace    *string
 }
 
 func (b0 ListCommitsRequest_builder) Build() *ListCommitsRequest {
@@ -12505,12 +15216,16 @@ func (b0 ListCommitsRequest_builder) Build() *ListCommitsRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.BeforeCommit != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
 		x.xxx_hidden_BeforeCommit = b.BeforeCommit
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -12527,7 +15242,7 @@ type ListCommitsResponse struct {
 
 func (x *ListCommitsResponse) Reset() {
 	*x = ListCommitsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[46]
+	mi := &file_v1_panel_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12539,7 +15254,7 @@ func (x *ListCommitsResponse) String() string {
 func (*ListCommitsResponse) ProtoMessage() {}
 
 func (x *ListCommitsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[46]
+	mi := &file_v1_panel_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12622,7 +15337,7 @@ type BranchCommit struct {
 
 func (x *BranchCommit) Reset() {
 	*x = BranchCommit{}
-	mi := &file_v1_panel_proto_msgTypes[47]
+	mi := &file_v1_panel_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12634,7 +15349,7 @@ func (x *BranchCommit) String() string {
 func (*BranchCommit) ProtoMessage() {}
 
 func (x *BranchCommit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[47]
+	mi := &file_v1_panel_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12829,6 +15544,7 @@ type RunProjectActionRequest struct {
 	xxx_hidden_Action      isRunProjectActionRequest_Action `protobuf_oneof:"action"`
 	xxx_hidden_OperationId *string                          `protobuf:"bytes,10,opt,name=operation_id,json=operationId"`
 	xxx_hidden_WaitSeconds uint32                           `protobuf:"varint,13,opt,name=wait_seconds,json=waitSeconds"`
+	xxx_hidden_Workspace   *string                          `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -12837,7 +15553,7 @@ type RunProjectActionRequest struct {
 
 func (x *RunProjectActionRequest) Reset() {
 	*x = RunProjectActionRequest{}
-	mi := &file_v1_panel_proto_msgTypes[48]
+	mi := &file_v1_panel_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12849,7 +15565,7 @@ func (x *RunProjectActionRequest) String() string {
 func (*RunProjectActionRequest) ProtoMessage() {}
 
 func (x *RunProjectActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[48]
+	mi := &file_v1_panel_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12986,9 +15702,19 @@ func (x *RunProjectActionRequest) GetWaitSeconds() uint32 {
 	return 0
 }
 
+func (x *RunProjectActionRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *RunProjectActionRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
 }
 
 func (x *RunProjectActionRequest) SetStartServices(v *ServicesAction) {
@@ -13077,12 +15803,17 @@ func (x *RunProjectActionRequest) SetSetDatabaseSize(v *SetDatabaseSizeAction) {
 
 func (x *RunProjectActionRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
 }
 
 func (x *RunProjectActionRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+}
+
+func (x *RunProjectActionRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
 }
 
 func (x *RunProjectActionRequest) HasProjectId() bool {
@@ -13201,6 +15932,13 @@ func (x *RunProjectActionRequest) HasWaitSeconds() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
+func (x *RunProjectActionRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
 func (x *RunProjectActionRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -13286,6 +16024,11 @@ func (x *RunProjectActionRequest) ClearWaitSeconds() {
 	x.xxx_hidden_WaitSeconds = 0
 }
 
+func (x *RunProjectActionRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_Workspace = nil
+}
+
 const RunProjectActionRequest_Action_not_set_case case_RunProjectActionRequest_Action = 0
 const RunProjectActionRequest_StartServices_case case_RunProjectActionRequest_Action = 2
 const RunProjectActionRequest_StopServices_case case_RunProjectActionRequest_Action = 3
@@ -13368,6 +16111,7 @@ type RunProjectActionRequest_builder struct {
 	// -- end of xxx_hidden_Action
 	OperationId *string
 	WaitSeconds *uint32
+	Workspace   *string
 }
 
 func (b0 RunProjectActionRequest_builder) Build() *RunProjectActionRequest {
@@ -13375,7 +16119,7 @@ func (b0 RunProjectActionRequest_builder) Build() *RunProjectActionRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.StartServices != nil {
@@ -13412,12 +16156,16 @@ func (b0 RunProjectActionRequest_builder) Build() *RunProjectActionRequest {
 		x.xxx_hidden_Action = &runProjectActionRequest_SetDatabaseSize{b.SetDatabaseSize}
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -13425,7 +16173,7 @@ func (b0 RunProjectActionRequest_builder) Build() *RunProjectActionRequest {
 type case_RunProjectActionRequest_Action protoreflect.FieldNumber
 
 func (x case_RunProjectActionRequest_Action) String() string {
-	md := file_v1_panel_proto_msgTypes[48].Descriptor()
+	md := file_v1_panel_proto_msgTypes[60].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -13529,7 +16277,7 @@ type ServicesAction struct {
 
 func (x *ServicesAction) Reset() {
 	*x = ServicesAction{}
-	mi := &file_v1_panel_proto_msgTypes[49]
+	mi := &file_v1_panel_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13541,7 +16289,7 @@ func (x *ServicesAction) String() string {
 func (*ServicesAction) ProtoMessage() {}
 
 func (x *ServicesAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[49]
+	mi := &file_v1_panel_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13589,7 +16337,7 @@ type RecreateServiceAction struct {
 
 func (x *RecreateServiceAction) Reset() {
 	*x = RecreateServiceAction{}
-	mi := &file_v1_panel_proto_msgTypes[50]
+	mi := &file_v1_panel_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13601,7 +16349,7 @@ func (x *RecreateServiceAction) String() string {
 func (*RecreateServiceAction) ProtoMessage() {}
 
 func (x *RecreateServiceAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[50]
+	mi := &file_v1_panel_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13694,7 +16442,7 @@ type BackUpAction struct {
 
 func (x *BackUpAction) Reset() {
 	*x = BackUpAction{}
-	mi := &file_v1_panel_proto_msgTypes[51]
+	mi := &file_v1_panel_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13706,7 +16454,7 @@ func (x *BackUpAction) String() string {
 func (*BackUpAction) ProtoMessage() {}
 
 func (x *BackUpAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[51]
+	mi := &file_v1_panel_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13741,7 +16489,7 @@ type RestoreSnapshotAction struct {
 
 func (x *RestoreSnapshotAction) Reset() {
 	*x = RestoreSnapshotAction{}
-	mi := &file_v1_panel_proto_msgTypes[52]
+	mi := &file_v1_panel_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13753,7 +16501,7 @@ func (x *RestoreSnapshotAction) String() string {
 func (*RestoreSnapshotAction) ProtoMessage() {}
 
 func (x *RestoreSnapshotAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[52]
+	mi := &file_v1_panel_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13835,7 +16583,7 @@ type CancelOperationAction struct {
 
 func (x *CancelOperationAction) Reset() {
 	*x = CancelOperationAction{}
-	mi := &file_v1_panel_proto_msgTypes[53]
+	mi := &file_v1_panel_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13847,7 +16595,7 @@ func (x *CancelOperationAction) String() string {
 func (*CancelOperationAction) ProtoMessage() {}
 
 func (x *CancelOperationAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[53]
+	mi := &file_v1_panel_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13913,7 +16661,7 @@ type DeleteProjectAction struct {
 
 func (x *DeleteProjectAction) Reset() {
 	*x = DeleteProjectAction{}
-	mi := &file_v1_panel_proto_msgTypes[54]
+	mi := &file_v1_panel_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13925,7 +16673,7 @@ func (x *DeleteProjectAction) String() string {
 func (*DeleteProjectAction) ProtoMessage() {}
 
 func (x *DeleteProjectAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[54]
+	mi := &file_v1_panel_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13989,7 +16737,7 @@ type SetDatabaseSizeAction struct {
 
 func (x *SetDatabaseSizeAction) Reset() {
 	*x = SetDatabaseSizeAction{}
-	mi := &file_v1_panel_proto_msgTypes[55]
+	mi := &file_v1_panel_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14001,7 +16749,7 @@ func (x *SetDatabaseSizeAction) String() string {
 func (*SetDatabaseSizeAction) ProtoMessage() {}
 
 func (x *SetDatabaseSizeAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[55]
+	mi := &file_v1_panel_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14064,7 +16812,7 @@ type RunProjectActionResponse struct {
 
 func (x *RunProjectActionResponse) Reset() {
 	*x = RunProjectActionResponse{}
-	mi := &file_v1_panel_proto_msgTypes[56]
+	mi := &file_v1_panel_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14076,7 +16824,7 @@ func (x *RunProjectActionResponse) String() string {
 func (*RunProjectActionResponse) ProtoMessage() {}
 
 func (x *RunProjectActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[56]
+	mi := &file_v1_panel_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14194,7 +16942,7 @@ type Database struct {
 
 func (x *Database) Reset() {
 	*x = Database{}
-	mi := &file_v1_panel_proto_msgTypes[57]
+	mi := &file_v1_panel_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14206,7 +16954,7 @@ func (x *Database) String() string {
 func (*Database) ProtoMessage() {}
 
 func (x *Database) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[57]
+	mi := &file_v1_panel_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14593,7 +17341,7 @@ type DatabaseConnection struct {
 
 func (x *DatabaseConnection) Reset() {
 	*x = DatabaseConnection{}
-	mi := &file_v1_panel_proto_msgTypes[58]
+	mi := &file_v1_panel_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14605,7 +17353,7 @@ func (x *DatabaseConnection) String() string {
 func (*DatabaseConnection) ProtoMessage() {}
 
 func (x *DatabaseConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[58]
+	mi := &file_v1_panel_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14872,7 +17620,7 @@ type DatabaseSummary struct {
 
 func (x *DatabaseSummary) Reset() {
 	*x = DatabaseSummary{}
-	mi := &file_v1_panel_proto_msgTypes[59]
+	mi := &file_v1_panel_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14884,7 +17632,7 @@ func (x *DatabaseSummary) String() string {
 func (*DatabaseSummary) ProtoMessage() {}
 
 func (x *DatabaseSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[59]
+	mi := &file_v1_panel_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15129,7 +17877,7 @@ type DatabaseEngineOffer struct {
 
 func (x *DatabaseEngineOffer) Reset() {
 	*x = DatabaseEngineOffer{}
-	mi := &file_v1_panel_proto_msgTypes[60]
+	mi := &file_v1_panel_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15141,7 +17889,7 @@ func (x *DatabaseEngineOffer) String() string {
 func (*DatabaseEngineOffer) ProtoMessage() {}
 
 func (x *DatabaseEngineOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[60]
+	mi := &file_v1_panel_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15313,7 +18061,7 @@ type DatabaseSizeChoice struct {
 
 func (x *DatabaseSizeChoice) Reset() {
 	*x = DatabaseSizeChoice{}
-	mi := &file_v1_panel_proto_msgTypes[61]
+	mi := &file_v1_panel_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15325,7 +18073,7 @@ func (x *DatabaseSizeChoice) String() string {
 func (*DatabaseSizeChoice) ProtoMessage() {}
 
 func (x *DatabaseSizeChoice) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[61]
+	mi := &file_v1_panel_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15382,6 +18130,7 @@ type LinkDatabaseRequest struct {
 	xxx_hidden_DatabaseProjectId *string                `protobuf:"bytes,1,opt,name=database_project_id,json=databaseProjectId"`
 	xxx_hidden_Link              []string               `protobuf:"bytes,2,rep,name=link"`
 	xxx_hidden_Unlink            []string               `protobuf:"bytes,3,rep,name=unlink"`
+	xxx_hidden_Workspace         *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData       protoimpl.RaceDetectHookData
 	XXX_presence                 [1]uint32
 	unknownFields                protoimpl.UnknownFields
@@ -15390,7 +18139,7 @@ type LinkDatabaseRequest struct {
 
 func (x *LinkDatabaseRequest) Reset() {
 	*x = LinkDatabaseRequest{}
-	mi := &file_v1_panel_proto_msgTypes[62]
+	mi := &file_v1_panel_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15402,7 +18151,7 @@ func (x *LinkDatabaseRequest) String() string {
 func (*LinkDatabaseRequest) ProtoMessage() {}
 
 func (x *LinkDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[62]
+	mi := &file_v1_panel_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15437,9 +18186,19 @@ func (x *LinkDatabaseRequest) GetUnlink() []string {
 	return nil
 }
 
+func (x *LinkDatabaseRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *LinkDatabaseRequest) SetDatabaseProjectId(v string) {
 	x.xxx_hidden_DatabaseProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *LinkDatabaseRequest) SetLink(v []string) {
@@ -15450,6 +18209,11 @@ func (x *LinkDatabaseRequest) SetUnlink(v []string) {
 	x.xxx_hidden_Unlink = v
 }
 
+func (x *LinkDatabaseRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+}
+
 func (x *LinkDatabaseRequest) HasDatabaseProjectId() bool {
 	if x == nil {
 		return false
@@ -15457,9 +18221,21 @@ func (x *LinkDatabaseRequest) HasDatabaseProjectId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
 }
 
+func (x *LinkDatabaseRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
 func (x *LinkDatabaseRequest) ClearDatabaseProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_DatabaseProjectId = nil
+}
+
+func (x *LinkDatabaseRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Workspace = nil
 }
 
 type LinkDatabaseRequest_builder struct {
@@ -15468,6 +18244,7 @@ type LinkDatabaseRequest_builder struct {
 	DatabaseProjectId *string
 	Link              []string
 	Unlink            []string
+	Workspace         *string
 }
 
 func (b0 LinkDatabaseRequest_builder) Build() *LinkDatabaseRequest {
@@ -15475,11 +18252,15 @@ func (b0 LinkDatabaseRequest_builder) Build() *LinkDatabaseRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.DatabaseProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_DatabaseProjectId = b.DatabaseProjectId
 	}
 	x.xxx_hidden_Link = b.Link
 	x.xxx_hidden_Unlink = b.Unlink
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
@@ -15492,7 +18273,7 @@ type LinkDatabaseResponse struct {
 
 func (x *LinkDatabaseResponse) Reset() {
 	*x = LinkDatabaseResponse{}
-	mi := &file_v1_panel_proto_msgTypes[63]
+	mi := &file_v1_panel_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15504,7 +18285,7 @@ func (x *LinkDatabaseResponse) String() string {
 func (*LinkDatabaseResponse) ProtoMessage() {}
 
 func (x *LinkDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[63]
+	mi := &file_v1_panel_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15561,6 +18342,7 @@ type CreateDatabaseRequest struct {
 	xxx_hidden_OperationId      *string                `protobuf:"bytes,6,opt,name=operation_id,json=operationId"`
 	xxx_hidden_WaitSeconds      uint32                 `protobuf:"varint,7,opt,name=wait_seconds,json=waitSeconds"`
 	xxx_hidden_Metadata         *ProjectMetadata       `protobuf:"bytes,8,opt,name=metadata"`
+	xxx_hidden_Workspace        *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -15569,7 +18351,7 @@ type CreateDatabaseRequest struct {
 
 func (x *CreateDatabaseRequest) Reset() {
 	*x = CreateDatabaseRequest{}
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15581,7 +18363,7 @@ func (x *CreateDatabaseRequest) String() string {
 func (*CreateDatabaseRequest) ProtoMessage() {}
 
 func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[64]
+	mi := &file_v1_panel_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15659,24 +18441,34 @@ func (x *CreateDatabaseRequest) GetMetadata() *ProjectMetadata {
 	return nil
 }
 
+func (x *CreateDatabaseRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *CreateDatabaseRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
 }
 
 func (x *CreateDatabaseRequest) SetEngine(v DatabaseEngine) {
 	x.xxx_hidden_Engine = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 9)
 }
 
 func (x *CreateDatabaseRequest) SetMemoryLimitBytes(v uint64) {
 	x.xxx_hidden_MemoryLimitBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 9)
 }
 
 func (x *CreateDatabaseRequest) SetFromSnapshotId(v string) {
 	x.xxx_hidden_FromSnapshotId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 9)
 }
 
 func (x *CreateDatabaseRequest) SetLink(v []string) {
@@ -15685,16 +18477,21 @@ func (x *CreateDatabaseRequest) SetLink(v []string) {
 
 func (x *CreateDatabaseRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
 }
 
 func (x *CreateDatabaseRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
 }
 
 func (x *CreateDatabaseRequest) SetMetadata(v *ProjectMetadata) {
 	x.xxx_hidden_Metadata = v
+}
+
+func (x *CreateDatabaseRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
 }
 
 func (x *CreateDatabaseRequest) HasProjectId() bool {
@@ -15746,6 +18543,13 @@ func (x *CreateDatabaseRequest) HasMetadata() bool {
 	return x.xxx_hidden_Metadata != nil
 }
 
+func (x *CreateDatabaseRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
 func (x *CreateDatabaseRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -15780,6 +18584,11 @@ func (x *CreateDatabaseRequest) ClearMetadata() {
 	x.xxx_hidden_Metadata = nil
 }
 
+func (x *CreateDatabaseRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_Workspace = nil
+}
+
 type CreateDatabaseRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -15798,7 +18607,8 @@ type CreateDatabaseRequest_builder struct {
 	OperationId *string
 	WaitSeconds *uint32
 	// What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
-	Metadata *ProjectMetadata
+	Metadata  *ProjectMetadata
+	Workspace *string
 }
 
 func (b0 CreateDatabaseRequest_builder) Build() *CreateDatabaseRequest {
@@ -15806,31 +18616,35 @@ func (b0 CreateDatabaseRequest_builder) Build() *CreateDatabaseRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.Engine != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 9)
 		x.xxx_hidden_Engine = *b.Engine
 	}
 	if b.MemoryLimitBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 9)
 		x.xxx_hidden_MemoryLimitBytes = *b.MemoryLimitBytes
 	}
 	if b.FromSnapshotId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 9)
 		x.xxx_hidden_FromSnapshotId = b.FromSnapshotId
 	}
 	x.xxx_hidden_Link = b.Link
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
 	}
 	x.xxx_hidden_Metadata = b.Metadata
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
@@ -15848,7 +18662,7 @@ type CreateDatabaseResponse struct {
 
 func (x *CreateDatabaseResponse) Reset() {
 	*x = CreateDatabaseResponse{}
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15860,7 +18674,7 @@ func (x *CreateDatabaseResponse) String() string {
 func (*CreateDatabaseResponse) ProtoMessage() {}
 
 func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[65]
+	mi := &file_v1_panel_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15982,6 +18796,7 @@ type GetDatabaseStatsRequest struct {
 	xxx_hidden_LastSeconds        uint32                 `protobuf:"varint,4,opt,name=last_seconds,json=lastSeconds"`
 	xxx_hidden_BucketWidthSeconds uint32                 `protobuf:"varint,5,opt,name=bucket_width_seconds,json=bucketWidthSeconds"`
 	xxx_hidden_StatementOrder     DatabaseStatementOrder `protobuf:"varint,6,opt,name=statement_order,json=statementOrder,enum=pethost.panel.v1.DatabaseStatementOrder"`
+	xxx_hidden_Workspace          *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
 	unknownFields                 protoimpl.UnknownFields
@@ -15990,7 +18805,7 @@ type GetDatabaseStatsRequest struct {
 
 func (x *GetDatabaseStatsRequest) Reset() {
 	*x = GetDatabaseStatsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16002,7 +18817,7 @@ func (x *GetDatabaseStatsRequest) String() string {
 func (*GetDatabaseStatsRequest) ProtoMessage() {}
 
 func (x *GetDatabaseStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[66]
+	mi := &file_v1_panel_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16060,9 +18875,19 @@ func (x *GetDatabaseStatsRequest) GetStatementOrder() DatabaseStatementOrder {
 	return DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_UNSPECIFIED
 }
 
+func (x *GetDatabaseStatsRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetDatabaseStatsRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
 }
 
 func (x *GetDatabaseStatsRequest) SetStartTime(v *timestamppb.Timestamp) {
@@ -16075,17 +18900,22 @@ func (x *GetDatabaseStatsRequest) SetEndTime(v *timestamppb.Timestamp) {
 
 func (x *GetDatabaseStatsRequest) SetLastSeconds(v uint32) {
 	x.xxx_hidden_LastSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
 }
 
 func (x *GetDatabaseStatsRequest) SetBucketWidthSeconds(v uint32) {
 	x.xxx_hidden_BucketWidthSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
 }
 
 func (x *GetDatabaseStatsRequest) SetStatementOrder(v DatabaseStatementOrder) {
 	x.xxx_hidden_StatementOrder = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *GetDatabaseStatsRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
 }
 
 func (x *GetDatabaseStatsRequest) HasProjectId() bool {
@@ -16130,6 +18960,13 @@ func (x *GetDatabaseStatsRequest) HasStatementOrder() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
 }
 
+func (x *GetDatabaseStatsRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
 func (x *GetDatabaseStatsRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -16158,6 +18995,11 @@ func (x *GetDatabaseStatsRequest) ClearStatementOrder() {
 	x.xxx_hidden_StatementOrder = DatabaseStatementOrder_DATABASE_STATEMENT_ORDER_UNSPECIFIED
 }
 
+func (x *GetDatabaseStatsRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetDatabaseStatsRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -16168,6 +19010,7 @@ type GetDatabaseStatsRequest_builder struct {
 	// Whole minutes (hours, for a range that starts over 7 days ago); ≤500 buckets. 0 = no series.
 	BucketWidthSeconds *uint32
 	StatementOrder     *DatabaseStatementOrder
+	Workspace          *string
 }
 
 func (b0 GetDatabaseStatsRequest_builder) Build() *GetDatabaseStatsRequest {
@@ -16175,22 +19018,26 @@ func (b0 GetDatabaseStatsRequest_builder) Build() *GetDatabaseStatsRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_StartTime = b.StartTime
 	x.xxx_hidden_EndTime = b.EndTime
 	if b.LastSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
 		x.xxx_hidden_LastSeconds = *b.LastSeconds
 	}
 	if b.BucketWidthSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
 		x.xxx_hidden_BucketWidthSeconds = *b.BucketWidthSeconds
 	}
 	if b.StatementOrder != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
 		x.xxx_hidden_StatementOrder = *b.StatementOrder
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -16213,7 +19060,7 @@ type GetDatabaseStatsResponse struct {
 
 func (x *GetDatabaseStatsResponse) Reset() {
 	*x = GetDatabaseStatsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16225,7 +19072,7 @@ func (x *GetDatabaseStatsResponse) String() string {
 func (*GetDatabaseStatsResponse) ProtoMessage() {}
 
 func (x *GetDatabaseStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[67]
+	mi := &file_v1_panel_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16445,7 +19292,7 @@ type DatabaseStatsBucket struct {
 
 func (x *DatabaseStatsBucket) Reset() {
 	*x = DatabaseStatsBucket{}
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16457,7 +19304,7 @@ func (x *DatabaseStatsBucket) String() string {
 func (*DatabaseStatsBucket) ProtoMessage() {}
 
 func (x *DatabaseStatsBucket) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[68]
+	mi := &file_v1_panel_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16553,7 +19400,7 @@ type DatabaseStats struct {
 
 func (x *DatabaseStats) Reset() {
 	*x = DatabaseStats{}
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16565,7 +19412,7 @@ func (x *DatabaseStats) String() string {
 func (*DatabaseStats) ProtoMessage() {}
 
 func (x *DatabaseStats) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[69]
+	mi := &file_v1_panel_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16951,7 +19798,7 @@ type DatabaseCommandStats struct {
 
 func (x *DatabaseCommandStats) Reset() {
 	*x = DatabaseCommandStats{}
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16963,7 +19810,7 @@ func (x *DatabaseCommandStats) String() string {
 func (*DatabaseCommandStats) ProtoMessage() {}
 
 func (x *DatabaseCommandStats) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[70]
+	mi := &file_v1_panel_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17161,7 +20008,7 @@ type PostgresStats struct {
 
 func (x *PostgresStats) Reset() {
 	*x = PostgresStats{}
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17173,7 +20020,7 @@ func (x *PostgresStats) String() string {
 func (*PostgresStats) ProtoMessage() {}
 
 func (x *PostgresStats) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[71]
+	mi := &file_v1_panel_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17681,7 +20528,7 @@ type ValkeyStats struct {
 
 func (x *ValkeyStats) Reset() {
 	*x = ValkeyStats{}
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17693,7 +20540,7 @@ func (x *ValkeyStats) String() string {
 func (*ValkeyStats) ProtoMessage() {}
 
 func (x *ValkeyStats) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[72]
+	mi := &file_v1_panel_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18061,7 +20908,7 @@ type MariadbStats struct {
 
 func (x *MariadbStats) Reset() {
 	*x = MariadbStats{}
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18073,7 +20920,7 @@ func (x *MariadbStats) String() string {
 func (*MariadbStats) ProtoMessage() {}
 
 func (x *MariadbStats) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[73]
+	mi := &file_v1_panel_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18520,7 +21367,7 @@ type DatabaseStatement struct {
 
 func (x *DatabaseStatement) Reset() {
 	*x = DatabaseStatement{}
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18532,7 +21379,7 @@ func (x *DatabaseStatement) String() string {
 func (*DatabaseStatement) ProtoMessage() {}
 
 func (x *DatabaseStatement) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[74]
+	mi := &file_v1_panel_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18782,7 +21629,7 @@ type DatabaseActivity struct {
 
 func (x *DatabaseActivity) Reset() {
 	*x = DatabaseActivity{}
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18794,7 +21641,7 @@ func (x *DatabaseActivity) String() string {
 func (*DatabaseActivity) ProtoMessage() {}
 
 func (x *DatabaseActivity) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[75]
+	mi := &file_v1_panel_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18926,7 +21773,7 @@ type DatabaseSession struct {
 
 func (x *DatabaseSession) Reset() {
 	*x = DatabaseSession{}
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18938,7 +21785,7 @@ func (x *DatabaseSession) String() string {
 func (*DatabaseSession) ProtoMessage() {}
 
 func (x *DatabaseSession) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[76]
+	mi := &file_v1_panel_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19347,7 +22194,7 @@ type DatabaseSlowCommand struct {
 
 func (x *DatabaseSlowCommand) Reset() {
 	*x = DatabaseSlowCommand{}
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19359,7 +22206,7 @@ func (x *DatabaseSlowCommand) String() string {
 func (*DatabaseSlowCommand) ProtoMessage() {}
 
 func (x *DatabaseSlowCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[77]
+	mi := &file_v1_panel_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19568,6 +22415,7 @@ type CancelDatabaseQueryRequest struct {
 	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_Pid         int32                  `protobuf:"varint,2,opt,name=pid"`
 	xxx_hidden_EndSession  bool                   `protobuf:"varint,3,opt,name=end_session,json=endSession"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -19576,7 +22424,7 @@ type CancelDatabaseQueryRequest struct {
 
 func (x *CancelDatabaseQueryRequest) Reset() {
 	*x = CancelDatabaseQueryRequest{}
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19588,7 +22436,7 @@ func (x *CancelDatabaseQueryRequest) String() string {
 func (*CancelDatabaseQueryRequest) ProtoMessage() {}
 
 func (x *CancelDatabaseQueryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[78]
+	mi := &file_v1_panel_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19623,19 +22471,34 @@ func (x *CancelDatabaseQueryRequest) GetEndSession() bool {
 	return false
 }
 
+func (x *CancelDatabaseQueryRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *CancelDatabaseQueryRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *CancelDatabaseQueryRequest) SetPid(v int32) {
 	x.xxx_hidden_Pid = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
 }
 
 func (x *CancelDatabaseQueryRequest) SetEndSession(v bool) {
 	x.xxx_hidden_EndSession = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *CancelDatabaseQueryRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
 }
 
 func (x *CancelDatabaseQueryRequest) HasProjectId() bool {
@@ -19659,6 +22522,13 @@ func (x *CancelDatabaseQueryRequest) HasEndSession() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
+func (x *CancelDatabaseQueryRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
 func (x *CancelDatabaseQueryRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -19674,12 +22544,18 @@ func (x *CancelDatabaseQueryRequest) ClearEndSession() {
 	x.xxx_hidden_EndSession = false
 }
 
+func (x *CancelDatabaseQueryRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Workspace = nil
+}
+
 type CancelDatabaseQueryRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId  *string
 	Pid        *int32
 	EndSession *bool
+	Workspace  *string
 }
 
 func (b0 CancelDatabaseQueryRequest_builder) Build() *CancelDatabaseQueryRequest {
@@ -19687,16 +22563,20 @@ func (b0 CancelDatabaseQueryRequest_builder) Build() *CancelDatabaseQueryRequest
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.Pid != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
 		x.xxx_hidden_Pid = *b.Pid
 	}
 	if b.EndSession != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
 		x.xxx_hidden_EndSession = *b.EndSession
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -19712,7 +22592,7 @@ type CancelDatabaseQueryResponse struct {
 
 func (x *CancelDatabaseQueryResponse) Reset() {
 	*x = CancelDatabaseQueryResponse{}
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19724,7 +22604,7 @@ func (x *CancelDatabaseQueryResponse) String() string {
 func (*CancelDatabaseQueryResponse) ProtoMessage() {}
 
 func (x *CancelDatabaseQueryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[79]
+	mi := &file_v1_panel_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19785,6 +22665,7 @@ type SetProjectAlertsRequest struct {
 	xxx_hidden_RemoveTrafficRules bool                   `protobuf:"varint,5,opt,name=remove_traffic_rules,json=removeTrafficRules"`
 	xxx_hidden_Off                bool                   `protobuf:"varint,6,opt,name=off"`
 	xxx_hidden_MuteMinutes        uint32                 `protobuf:"varint,7,opt,name=mute_minutes,json=muteMinutes"`
+	xxx_hidden_Workspace          *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
 	unknownFields                 protoimpl.UnknownFields
@@ -19793,7 +22674,7 @@ type SetProjectAlertsRequest struct {
 
 func (x *SetProjectAlertsRequest) Reset() {
 	*x = SetProjectAlertsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19805,7 +22686,7 @@ func (x *SetProjectAlertsRequest) String() string {
 func (*SetProjectAlertsRequest) ProtoMessage() {}
 
 func (x *SetProjectAlertsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[80]
+	mi := &file_v1_panel_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19872,9 +22753,19 @@ func (x *SetProjectAlertsRequest) GetMuteMinutes() uint32 {
 	return 0
 }
 
+func (x *SetProjectAlertsRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *SetProjectAlertsRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *SetProjectAlertsRequest) SetChecks(v []*SiteCheck) {
@@ -19883,7 +22774,7 @@ func (x *SetProjectAlertsRequest) SetChecks(v []*SiteCheck) {
 
 func (x *SetProjectAlertsRequest) SetRemoveChecks(v bool) {
 	x.xxx_hidden_RemoveChecks = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 8)
 }
 
 func (x *SetProjectAlertsRequest) SetTrafficRules(v []*TrafficRule) {
@@ -19892,17 +22783,22 @@ func (x *SetProjectAlertsRequest) SetTrafficRules(v []*TrafficRule) {
 
 func (x *SetProjectAlertsRequest) SetRemoveTrafficRules(v bool) {
 	x.xxx_hidden_RemoveTrafficRules = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
 }
 
 func (x *SetProjectAlertsRequest) SetOff(v bool) {
 	x.xxx_hidden_Off = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *SetProjectAlertsRequest) SetMuteMinutes(v uint32) {
 	x.xxx_hidden_MuteMinutes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *SetProjectAlertsRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
 }
 
 func (x *SetProjectAlertsRequest) HasProjectId() bool {
@@ -19940,6 +22836,13 @@ func (x *SetProjectAlertsRequest) HasMuteMinutes() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
 }
 
+func (x *SetProjectAlertsRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
 func (x *SetProjectAlertsRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -19965,6 +22868,11 @@ func (x *SetProjectAlertsRequest) ClearMuteMinutes() {
 	x.xxx_hidden_MuteMinutes = 0
 }
 
+func (x *SetProjectAlertsRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_Workspace = nil
+}
+
 type SetProjectAlertsRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -19977,6 +22885,7 @@ type SetProjectAlertsRequest_builder struct {
 	Off *bool
 	// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
 	MuteMinutes *uint32
+	Workspace   *string
 }
 
 func (b0 SetProjectAlertsRequest_builder) Build() *SetProjectAlertsRequest {
@@ -19984,26 +22893,30 @@ func (b0 SetProjectAlertsRequest_builder) Build() *SetProjectAlertsRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Checks = &b.Checks
 	if b.RemoveChecks != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 8)
 		x.xxx_hidden_RemoveChecks = *b.RemoveChecks
 	}
 	x.xxx_hidden_TrafficRules = &b.TrafficRules
 	if b.RemoveTrafficRules != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
 		x.xxx_hidden_RemoveTrafficRules = *b.RemoveTrafficRules
 	}
 	if b.Off != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_Off = *b.Off
 	}
 	if b.MuteMinutes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_MuteMinutes = *b.MuteMinutes
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -20017,7 +22930,7 @@ type SetProjectAlertsResponse struct {
 
 func (x *SetProjectAlertsResponse) Reset() {
 	*x = SetProjectAlertsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20029,7 +22942,7 @@ func (x *SetProjectAlertsResponse) String() string {
 func (*SetProjectAlertsResponse) ProtoMessage() {}
 
 func (x *SetProjectAlertsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[81]
+	mi := &file_v1_panel_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20093,7 +23006,7 @@ type SiteCheck struct {
 
 func (x *SiteCheck) Reset() {
 	*x = SiteCheck{}
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20105,7 +23018,7 @@ func (x *SiteCheck) String() string {
 func (*SiteCheck) ProtoMessage() {}
 
 func (x *SiteCheck) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[82]
+	mi := &file_v1_panel_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20271,7 +23184,7 @@ type TrafficRule struct {
 
 func (x *TrafficRule) Reset() {
 	*x = TrafficRule{}
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20283,7 +23196,7 @@ func (x *TrafficRule) String() string {
 func (*TrafficRule) ProtoMessage() {}
 
 func (x *TrafficRule) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[83]
+	mi := &file_v1_panel_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20467,7 +23380,7 @@ type ProjectAlerts struct {
 
 func (x *ProjectAlerts) Reset() {
 	*x = ProjectAlerts{}
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20479,7 +23392,7 @@ func (x *ProjectAlerts) String() string {
 func (*ProjectAlerts) ProtoMessage() {}
 
 func (x *ProjectAlerts) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[84]
+	mi := &file_v1_panel_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20634,7 +23547,7 @@ type SiteCheckState struct {
 
 func (x *SiteCheckState) Reset() {
 	*x = SiteCheckState{}
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20646,7 +23559,7 @@ func (x *SiteCheckState) String() string {
 func (*SiteCheckState) ProtoMessage() {}
 
 func (x *SiteCheckState) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[85]
+	mi := &file_v1_panel_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20823,7 +23736,7 @@ type SiteCheckResult struct {
 
 func (x *SiteCheckResult) Reset() {
 	*x = SiteCheckResult{}
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20835,7 +23748,7 @@ func (x *SiteCheckResult) String() string {
 func (*SiteCheckResult) ProtoMessage() {}
 
 func (x *SiteCheckResult) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[86]
+	mi := &file_v1_panel_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20989,7 +23902,7 @@ type TrafficRuleState struct {
 
 func (x *TrafficRuleState) Reset() {
 	*x = TrafficRuleState{}
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21001,7 +23914,7 @@ func (x *TrafficRuleState) String() string {
 func (*TrafficRuleState) ProtoMessage() {}
 
 func (x *TrafficRuleState) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[87]
+	mi := &file_v1_panel_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21227,7 +24140,7 @@ type Incident struct {
 
 func (x *Incident) Reset() {
 	*x = Incident{}
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21239,7 +24152,7 @@ func (x *Incident) String() string {
 func (*Incident) ProtoMessage() {}
 
 func (x *Incident) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[88]
+	mi := &file_v1_panel_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21771,7 +24684,7 @@ type IncidentEvidence struct {
 
 func (x *IncidentEvidence) Reset() {
 	*x = IncidentEvidence{}
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21783,7 +24696,7 @@ func (x *IncidentEvidence) String() string {
 func (*IncidentEvidence) ProtoMessage() {}
 
 func (x *IncidentEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[89]
+	mi := &file_v1_panel_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22004,7 +24917,7 @@ type UptimeDay struct {
 
 func (x *UptimeDay) Reset() {
 	*x = UptimeDay{}
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22016,7 +24929,7 @@ func (x *UptimeDay) String() string {
 func (*UptimeDay) ProtoMessage() {}
 
 func (x *UptimeDay) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[90]
+	mi := &file_v1_panel_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22125,6 +25038,7 @@ type GetIncidentRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_IncidentId  *string                `protobuf:"bytes,2,opt,name=incident_id,json=incidentId"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -22133,7 +25047,7 @@ type GetIncidentRequest struct {
 
 func (x *GetIncidentRequest) Reset() {
 	*x = GetIncidentRequest{}
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22145,7 +25059,7 @@ func (x *GetIncidentRequest) String() string {
 func (*GetIncidentRequest) ProtoMessage() {}
 
 func (x *GetIncidentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[91]
+	mi := &file_v1_panel_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22176,14 +25090,29 @@ func (x *GetIncidentRequest) GetIncidentId() string {
 	return ""
 }
 
+func (x *GetIncidentRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetIncidentRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
 }
 
 func (x *GetIncidentRequest) SetIncidentId(v string) {
 	x.xxx_hidden_IncidentId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *GetIncidentRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
 }
 
 func (x *GetIncidentRequest) HasProjectId() bool {
@@ -22200,6 +25129,13 @@ func (x *GetIncidentRequest) HasIncidentId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
+func (x *GetIncidentRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
 func (x *GetIncidentRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -22210,11 +25146,17 @@ func (x *GetIncidentRequest) ClearIncidentId() {
 	x.xxx_hidden_IncidentId = nil
 }
 
+func (x *GetIncidentRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetIncidentRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId  *string
 	IncidentId *string
+	Workspace  *string
 }
 
 func (b0 GetIncidentRequest_builder) Build() *GetIncidentRequest {
@@ -22222,12 +25164,16 @@ func (b0 GetIncidentRequest_builder) Build() *GetIncidentRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.IncidentId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
 		x.xxx_hidden_IncidentId = b.IncidentId
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -22242,7 +25188,7 @@ type GetIncidentResponse struct {
 
 func (x *GetIncidentResponse) Reset() {
 	*x = GetIncidentResponse{}
-	mi := &file_v1_panel_proto_msgTypes[92]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22254,7 +25200,7 @@ func (x *GetIncidentResponse) String() string {
 func (*GetIncidentResponse) ProtoMessage() {}
 
 func (x *GetIncidentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[92]
+	mi := &file_v1_panel_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22323,6 +25269,7 @@ type GetOperationRequest struct {
 	xxx_hidden_WaitSeconds  uint32                 `protobuf:"varint,3,opt,name=wait_seconds,json=waitSeconds"`
 	xxx_hidden_AfterLogLine uint32                 `protobuf:"varint,4,opt,name=after_log_line,json=afterLogLine"`
 	xxx_hidden_LogLineLimit uint32                 `protobuf:"varint,5,opt,name=log_line_limit,json=logLineLimit"`
+	xxx_hidden_Workspace    *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
 	XXX_presence            [1]uint32
 	unknownFields           protoimpl.UnknownFields
@@ -22331,7 +25278,7 @@ type GetOperationRequest struct {
 
 func (x *GetOperationRequest) Reset() {
 	*x = GetOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[93]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22343,7 +25290,7 @@ func (x *GetOperationRequest) String() string {
 func (*GetOperationRequest) ProtoMessage() {}
 
 func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[93]
+	mi := &file_v1_panel_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22395,29 +25342,44 @@ func (x *GetOperationRequest) GetLogLineLimit() uint32 {
 	return 0
 }
 
+func (x *GetOperationRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetOperationRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
 }
 
 func (x *GetOperationRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
 }
 
 func (x *GetOperationRequest) SetWaitSeconds(v uint32) {
 	x.xxx_hidden_WaitSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
 }
 
 func (x *GetOperationRequest) SetAfterLogLine(v uint32) {
 	x.xxx_hidden_AfterLogLine = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
 }
 
 func (x *GetOperationRequest) SetLogLineLimit(v uint32) {
 	x.xxx_hidden_LogLineLimit = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *GetOperationRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
 }
 
 func (x *GetOperationRequest) HasProjectId() bool {
@@ -22455,6 +25417,13 @@ func (x *GetOperationRequest) HasLogLineLimit() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
+func (x *GetOperationRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
 func (x *GetOperationRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -22480,6 +25449,11 @@ func (x *GetOperationRequest) ClearLogLineLimit() {
 	x.xxx_hidden_LogLineLimit = 0
 }
 
+func (x *GetOperationRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetOperationRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -22491,6 +25465,7 @@ type GetOperationRequest_builder struct {
 	AfterLogLine *uint32
 	// ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB.
 	LogLineLimit *uint32
+	Workspace    *string
 }
 
 func (b0 GetOperationRequest_builder) Build() *GetOperationRequest {
@@ -22498,24 +25473,28 @@ func (b0 GetOperationRequest_builder) Build() *GetOperationRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
 		x.xxx_hidden_OperationId = b.OperationId
 	}
 	if b.WaitSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
 		x.xxx_hidden_WaitSeconds = *b.WaitSeconds
 	}
 	if b.AfterLogLine != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
 		x.xxx_hidden_AfterLogLine = *b.AfterLogLine
 	}
 	if b.LogLineLimit != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
 		x.xxx_hidden_LogLineLimit = *b.LogLineLimit
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -22527,6 +25506,7 @@ type GetOperationResponse struct {
 	xxx_hidden_Log              *[]*OperationLogLine   `protobuf:"bytes,2,rep,name=log"`
 	xxx_hidden_LogLineCount     uint32                 `protobuf:"varint,3,opt,name=log_line_count,json=logLineCount"`
 	xxx_hidden_NextAfterLogLine uint32                 `protobuf:"varint,4,opt,name=next_after_log_line,json=nextAfterLogLine"`
+	xxx_hidden_MoveMessage      *string                `protobuf:"bytes,6,opt,name=move_message,json=moveMessage"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -22535,7 +25515,7 @@ type GetOperationResponse struct {
 
 func (x *GetOperationResponse) Reset() {
 	*x = GetOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[94]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22547,7 +25527,7 @@ func (x *GetOperationResponse) String() string {
 func (*GetOperationResponse) ProtoMessage() {}
 
 func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[94]
+	mi := &file_v1_panel_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22595,6 +25575,16 @@ func (x *GetOperationResponse) GetNextAfterLogLine() uint32 {
 	return 0
 }
 
+func (x *GetOperationResponse) GetMoveMessage() string {
+	if x != nil {
+		if x.xxx_hidden_MoveMessage != nil {
+			return *x.xxx_hidden_MoveMessage
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetOperationResponse) SetOperation(v *Operation) {
 	x.xxx_hidden_Operation = v
 }
@@ -22609,12 +25599,17 @@ func (x *GetOperationResponse) SetLog(v []*OperationLogLine) {
 
 func (x *GetOperationResponse) SetLogLineCount(v uint32) {
 	x.xxx_hidden_LogLineCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
 }
 
 func (x *GetOperationResponse) SetNextAfterLogLine(v uint32) {
 	x.xxx_hidden_NextAfterLogLine = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+}
+
+func (x *GetOperationResponse) SetMoveMessage(v string) {
+	x.xxx_hidden_MoveMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
 }
 
 func (x *GetOperationResponse) HasOperation() bool {
@@ -22645,6 +25640,13 @@ func (x *GetOperationResponse) HasNextAfterLogLine() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
+func (x *GetOperationResponse) HasMoveMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
 func (x *GetOperationResponse) ClearOperation() {
 	x.xxx_hidden_Operation = nil
 }
@@ -22663,6 +25665,11 @@ func (x *GetOperationResponse) ClearNextAfterLogLine() {
 	x.xxx_hidden_NextAfterLogLine = 0
 }
 
+func (x *GetOperationResponse) ClearMoveMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_MoveMessage = nil
+}
+
 type GetOperationResponse_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -22677,6 +25684,9 @@ type GetOperationResponse_builder struct {
 	// Pass it as after_log_line to get the lines after these; absent = 0. The machine keeps every
 	// line of the log.
 	NextAfterLogLine *uint32
+	// A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+	// behind, or why nothing moved.
+	MoveMessage *string
 }
 
 func (b0 GetOperationResponse_builder) Build() *GetOperationResponse {
@@ -22687,12 +25697,16 @@ func (b0 GetOperationResponse_builder) Build() *GetOperationResponse {
 	x.xxx_hidden_Project = b.Project
 	x.xxx_hidden_Log = &b.Log
 	if b.LogLineCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
 		x.xxx_hidden_LogLineCount = *b.LogLineCount
 	}
 	if b.NextAfterLogLine != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
 		x.xxx_hidden_NextAfterLogLine = *b.NextAfterLogLine
+	}
+	if b.MoveMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		x.xxx_hidden_MoveMessage = b.MoveMessage
 	}
 	return m0
 }
@@ -22709,7 +25723,7 @@ type OperationLogLine struct {
 
 func (x *OperationLogLine) Reset() {
 	*x = OperationLogLine{}
-	mi := &file_v1_panel_proto_msgTypes[95]
+	mi := &file_v1_panel_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22721,7 +25735,7 @@ func (x *OperationLogLine) String() string {
 func (*OperationLogLine) ProtoMessage() {}
 
 func (x *OperationLogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[95]
+	mi := &file_v1_panel_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22817,7 +25831,7 @@ type HttpTrafficFilter struct {
 
 func (x *HttpTrafficFilter) Reset() {
 	*x = HttpTrafficFilter{}
-	mi := &file_v1_panel_proto_msgTypes[96]
+	mi := &file_v1_panel_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22829,7 +25843,7 @@ func (x *HttpTrafficFilter) String() string {
 func (*HttpTrafficFilter) ProtoMessage() {}
 
 func (x *HttpTrafficFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[96]
+	mi := &file_v1_panel_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23019,6 +26033,7 @@ type QueryHttpTrafficRequest struct {
 	xxx_hidden_BucketWidthSeconds uint32                 `protobuf:"varint,5,opt,name=bucket_width_seconds,json=bucketWidthSeconds"`
 	xxx_hidden_RequestLimit       uint32                 `protobuf:"varint,6,opt,name=request_limit,json=requestLimit"`
 	xxx_hidden_PageToken          *string                `protobuf:"bytes,7,opt,name=page_token,json=pageToken"`
+	xxx_hidden_Workspace          *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
 	unknownFields                 protoimpl.UnknownFields
@@ -23027,7 +26042,7 @@ type QueryHttpTrafficRequest struct {
 
 func (x *QueryHttpTrafficRequest) Reset() {
 	*x = QueryHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[97]
+	mi := &file_v1_panel_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23039,7 +26054,7 @@ func (x *QueryHttpTrafficRequest) String() string {
 func (*QueryHttpTrafficRequest) ProtoMessage() {}
 
 func (x *QueryHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[97]
+	mi := &file_v1_panel_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23112,9 +26127,19 @@ func (x *QueryHttpTrafficRequest) GetPageToken() string {
 	return ""
 }
 
+func (x *QueryHttpTrafficRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *QueryHttpTrafficRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
 }
 
 func (x *QueryHttpTrafficRequest) SetFilter(v *HttpTrafficFilter) {
@@ -23131,22 +26156,27 @@ func (x *QueryHttpTrafficRequest) SetEndTime(v *timestamppb.Timestamp) {
 
 func (x *QueryHttpTrafficRequest) SetLastSeconds(v uint32) {
 	x.xxx_hidden_LastSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 9)
 }
 
 func (x *QueryHttpTrafficRequest) SetBucketWidthSeconds(v uint32) {
 	x.xxx_hidden_BucketWidthSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
 }
 
 func (x *QueryHttpTrafficRequest) SetRequestLimit(v uint32) {
 	x.xxx_hidden_RequestLimit = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
 }
 
 func (x *QueryHttpTrafficRequest) SetPageToken(v string) {
 	x.xxx_hidden_PageToken = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 9)
+}
+
+func (x *QueryHttpTrafficRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
 }
 
 func (x *QueryHttpTrafficRequest) HasProjectId() bool {
@@ -23205,6 +26235,13 @@ func (x *QueryHttpTrafficRequest) HasPageToken() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
 }
 
+func (x *QueryHttpTrafficRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
 func (x *QueryHttpTrafficRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -23242,6 +26279,11 @@ func (x *QueryHttpTrafficRequest) ClearPageToken() {
 	x.xxx_hidden_PageToken = nil
 }
 
+func (x *QueryHttpTrafficRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_Workspace = nil
+}
+
 type QueryHttpTrafficRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -23255,6 +26297,7 @@ type QueryHttpTrafficRequest_builder struct {
 	RequestLimit       *uint32
 	// The previous next_page_token, other fields unchanged: older requests only.
 	PageToken *string
+	Workspace *string
 }
 
 func (b0 QueryHttpTrafficRequest_builder) Build() *QueryHttpTrafficRequest {
@@ -23262,27 +26305,31 @@ func (b0 QueryHttpTrafficRequest_builder) Build() *QueryHttpTrafficRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Filter = b.Filter
 	x.xxx_hidden_StartTime = b.StartTime
 	x.xxx_hidden_EndTime = b.EndTime
 	if b.LastSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 9)
 		x.xxx_hidden_LastSeconds = *b.LastSeconds
 	}
 	if b.BucketWidthSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
 		x.xxx_hidden_BucketWidthSeconds = *b.BucketWidthSeconds
 	}
 	if b.RequestLimit != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
 		x.xxx_hidden_RequestLimit = *b.RequestLimit
 	}
 	if b.PageToken != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 9)
 		x.xxx_hidden_PageToken = b.PageToken
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -23307,7 +26354,7 @@ type QueryHttpTrafficResponse struct {
 
 func (x *QueryHttpTrafficResponse) Reset() {
 	*x = QueryHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[98]
+	mi := &file_v1_panel_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23319,7 +26366,7 @@ func (x *QueryHttpTrafficResponse) String() string {
 func (*QueryHttpTrafficResponse) ProtoMessage() {}
 
 func (x *QueryHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[98]
+	mi := &file_v1_panel_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23591,7 +26638,7 @@ type HttpTrafficBucket struct {
 
 func (x *HttpTrafficBucket) Reset() {
 	*x = HttpTrafficBucket{}
-	mi := &file_v1_panel_proto_msgTypes[99]
+	mi := &file_v1_panel_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23603,7 +26650,7 @@ func (x *HttpTrafficBucket) String() string {
 func (*HttpTrafficBucket) ProtoMessage() {}
 
 func (x *HttpTrafficBucket) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[99]
+	mi := &file_v1_panel_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23687,7 +26734,7 @@ type HttpPathTraffic struct {
 
 func (x *HttpPathTraffic) Reset() {
 	*x = HttpPathTraffic{}
-	mi := &file_v1_panel_proto_msgTypes[100]
+	mi := &file_v1_panel_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23699,7 +26746,7 @@ func (x *HttpPathTraffic) String() string {
 func (*HttpPathTraffic) ProtoMessage() {}
 
 func (x *HttpPathTraffic) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[100]
+	mi := &file_v1_panel_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23836,7 +26883,7 @@ type HttpRequest struct {
 
 func (x *HttpRequest) Reset() {
 	*x = HttpRequest{}
-	mi := &file_v1_panel_proto_msgTypes[101]
+	mi := &file_v1_panel_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23848,7 +26895,7 @@ func (x *HttpRequest) String() string {
 func (*HttpRequest) ProtoMessage() {}
 
 func (x *HttpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[101]
+	mi := &file_v1_panel_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24341,7 +27388,7 @@ type ContainerLogFilter struct {
 
 func (x *ContainerLogFilter) Reset() {
 	*x = ContainerLogFilter{}
-	mi := &file_v1_panel_proto_msgTypes[102]
+	mi := &file_v1_panel_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24353,7 +27400,7 @@ func (x *ContainerLogFilter) String() string {
 func (*ContainerLogFilter) ProtoMessage() {}
 
 func (x *ContainerLogFilter) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[102]
+	mi := &file_v1_panel_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24482,6 +27529,7 @@ type QueryContainerLogsRequest struct {
 	xxx_hidden_Limit       uint32                 `protobuf:"varint,5,opt,name=limit"`
 	xxx_hidden_FromStart   bool                   `protobuf:"varint,6,opt,name=from_start,json=fromStart"`
 	xxx_hidden_PageToken   *string                `protobuf:"bytes,7,opt,name=page_token,json=pageToken"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -24490,7 +27538,7 @@ type QueryContainerLogsRequest struct {
 
 func (x *QueryContainerLogsRequest) Reset() {
 	*x = QueryContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[103]
+	mi := &file_v1_panel_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24502,7 +27550,7 @@ func (x *QueryContainerLogsRequest) String() string {
 func (*QueryContainerLogsRequest) ProtoMessage() {}
 
 func (x *QueryContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[103]
+	mi := &file_v1_panel_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24575,9 +27623,19 @@ func (x *QueryContainerLogsRequest) GetPageToken() string {
 	return ""
 }
 
+func (x *QueryContainerLogsRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *QueryContainerLogsRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
 }
 
 func (x *QueryContainerLogsRequest) SetFilter(v *ContainerLogFilter) {
@@ -24594,22 +27652,27 @@ func (x *QueryContainerLogsRequest) SetEndTime(v *timestamppb.Timestamp) {
 
 func (x *QueryContainerLogsRequest) SetLastSeconds(v uint32) {
 	x.xxx_hidden_LastSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 9)
 }
 
 func (x *QueryContainerLogsRequest) SetLimit(v uint32) {
 	x.xxx_hidden_Limit = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 9)
 }
 
 func (x *QueryContainerLogsRequest) SetFromStart(v bool) {
 	x.xxx_hidden_FromStart = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 9)
 }
 
 func (x *QueryContainerLogsRequest) SetPageToken(v string) {
 	x.xxx_hidden_PageToken = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 9)
+}
+
+func (x *QueryContainerLogsRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
 }
 
 func (x *QueryContainerLogsRequest) HasProjectId() bool {
@@ -24668,6 +27731,13 @@ func (x *QueryContainerLogsRequest) HasPageToken() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
 }
 
+func (x *QueryContainerLogsRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
+}
+
 func (x *QueryContainerLogsRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -24705,6 +27775,11 @@ func (x *QueryContainerLogsRequest) ClearPageToken() {
 	x.xxx_hidden_PageToken = nil
 }
 
+func (x *QueryContainerLogsRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
+	x.xxx_hidden_Workspace = nil
+}
+
 type QueryContainerLogsRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -24716,6 +27791,7 @@ type QueryContainerLogsRequest_builder struct {
 	Limit       *uint32
 	FromStart   *bool
 	PageToken   *string
+	Workspace   *string
 }
 
 func (b0 QueryContainerLogsRequest_builder) Build() *QueryContainerLogsRequest {
@@ -24723,27 +27799,31 @@ func (b0 QueryContainerLogsRequest_builder) Build() *QueryContainerLogsRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Filter = b.Filter
 	x.xxx_hidden_StartTime = b.StartTime
 	x.xxx_hidden_EndTime = b.EndTime
 	if b.LastSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 9)
 		x.xxx_hidden_LastSeconds = *b.LastSeconds
 	}
 	if b.Limit != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 9)
 		x.xxx_hidden_Limit = *b.Limit
 	}
 	if b.FromStart != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 9)
 		x.xxx_hidden_FromStart = *b.FromStart
 	}
 	if b.PageToken != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 9)
 		x.xxx_hidden_PageToken = b.PageToken
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -24764,7 +27844,7 @@ type QueryContainerLogsResponse struct {
 
 func (x *QueryContainerLogsResponse) Reset() {
 	*x = QueryContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[104]
+	mi := &file_v1_panel_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24776,7 +27856,7 @@ func (x *QueryContainerLogsResponse) String() string {
 func (*QueryContainerLogsResponse) ProtoMessage() {}
 
 func (x *QueryContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[104]
+	mi := &file_v1_panel_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24969,7 +28049,7 @@ type LogLine struct {
 
 func (x *LogLine) Reset() {
 	*x = LogLine{}
-	mi := &file_v1_panel_proto_msgTypes[105]
+	mi := &file_v1_panel_proto_msgTypes[117]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24981,7 +28061,7 @@ func (x *LogLine) String() string {
 func (*LogLine) ProtoMessage() {}
 
 func (x *LogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[105]
+	mi := &file_v1_panel_proto_msgTypes[117]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25135,6 +28215,7 @@ type RunServiceCommandRequest struct {
 	xxx_hidden_RunAsUser        *string                `protobuf:"bytes,5,opt,name=run_as_user,json=runAsUser"`
 	xxx_hidden_WorkingDirectory *string                `protobuf:"bytes,6,opt,name=working_directory,json=workingDirectory"`
 	xxx_hidden_TimeoutSeconds   uint32                 `protobuf:"varint,7,opt,name=timeout_seconds,json=timeoutSeconds"`
+	xxx_hidden_Workspace        *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -25143,7 +28224,7 @@ type RunServiceCommandRequest struct {
 
 func (x *RunServiceCommandRequest) Reset() {
 	*x = RunServiceCommandRequest{}
-	mi := &file_v1_panel_proto_msgTypes[106]
+	mi := &file_v1_panel_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25155,7 +28236,7 @@ func (x *RunServiceCommandRequest) String() string {
 func (*RunServiceCommandRequest) ProtoMessage() {}
 
 func (x *RunServiceCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[106]
+	mi := &file_v1_panel_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25230,14 +28311,24 @@ func (x *RunServiceCommandRequest) GetTimeoutSeconds() uint32 {
 	return 0
 }
 
+func (x *RunServiceCommandRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *RunServiceCommandRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *RunServiceCommandRequest) SetService(v string) {
 	x.xxx_hidden_Service = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
 }
 
 func (x *RunServiceCommandRequest) SetCommand(v []string) {
@@ -25246,22 +28337,27 @@ func (x *RunServiceCommandRequest) SetCommand(v []string) {
 
 func (x *RunServiceCommandRequest) SetStdin(v string) {
 	x.xxx_hidden_Stdin = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
 }
 
 func (x *RunServiceCommandRequest) SetRunAsUser(v string) {
 	x.xxx_hidden_RunAsUser = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
 }
 
 func (x *RunServiceCommandRequest) SetWorkingDirectory(v string) {
 	x.xxx_hidden_WorkingDirectory = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *RunServiceCommandRequest) SetTimeoutSeconds(v uint32) {
 	x.xxx_hidden_TimeoutSeconds = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *RunServiceCommandRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
 }
 
 func (x *RunServiceCommandRequest) HasProjectId() bool {
@@ -25306,6 +28402,13 @@ func (x *RunServiceCommandRequest) HasTimeoutSeconds() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
 }
 
+func (x *RunServiceCommandRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
 func (x *RunServiceCommandRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -25336,6 +28439,11 @@ func (x *RunServiceCommandRequest) ClearTimeoutSeconds() {
 	x.xxx_hidden_TimeoutSeconds = 0
 }
 
+func (x *RunServiceCommandRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_Workspace = nil
+}
+
 type RunServiceCommandRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -25349,6 +28457,7 @@ type RunServiceCommandRequest_builder struct {
 	// 0 = default. Kills the main process only. Over ~50 may outlast your client: background long
 	// jobs.
 	TimeoutSeconds *uint32
+	Workspace      *string
 }
 
 func (b0 RunServiceCommandRequest_builder) Build() *RunServiceCommandRequest {
@@ -25356,29 +28465,33 @@ func (b0 RunServiceCommandRequest_builder) Build() *RunServiceCommandRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.Service != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
 		x.xxx_hidden_Service = b.Service
 	}
 	x.xxx_hidden_Command = b.Command
 	if b.Stdin != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
 		x.xxx_hidden_Stdin = b.Stdin
 	}
 	if b.RunAsUser != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
 		x.xxx_hidden_RunAsUser = b.RunAsUser
 	}
 	if b.WorkingDirectory != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_WorkingDirectory = b.WorkingDirectory
 	}
 	if b.TimeoutSeconds != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_TimeoutSeconds = *b.TimeoutSeconds
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -25398,7 +28511,7 @@ type RunServiceCommandResponse struct {
 
 func (x *RunServiceCommandResponse) Reset() {
 	*x = RunServiceCommandResponse{}
-	mi := &file_v1_panel_proto_msgTypes[107]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25410,7 +28523,7 @@ func (x *RunServiceCommandResponse) String() string {
 func (*RunServiceCommandResponse) ProtoMessage() {}
 
 func (x *RunServiceCommandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[107]
+	mi := &file_v1_panel_proto_msgTypes[119]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25605,7 +28718,7 @@ type FileEntry struct {
 
 func (x *FileEntry) Reset() {
 	*x = FileEntry{}
-	mi := &file_v1_panel_proto_msgTypes[108]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25617,7 +28730,7 @@ func (x *FileEntry) String() string {
 func (*FileEntry) ProtoMessage() {}
 
 func (x *FileEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[108]
+	mi := &file_v1_panel_proto_msgTypes[120]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25887,6 +29000,7 @@ type ReadPathRequest struct {
 	xxx_hidden_OffsetBytes    uint64                 `protobuf:"varint,7,opt,name=offset_bytes,json=offsetBytes"`
 	xxx_hidden_LengthBytes    uint32                 `protobuf:"varint,8,opt,name=length_bytes,json=lengthBytes"`
 	xxx_hidden_EntryPageToken *string                `protobuf:"bytes,9,opt,name=entry_page_token,json=entryPageToken"`
+	xxx_hidden_Workspace      *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -25895,7 +29009,7 @@ type ReadPathRequest struct {
 
 func (x *ReadPathRequest) Reset() {
 	*x = ReadPathRequest{}
-	mi := &file_v1_panel_proto_msgTypes[109]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -25907,7 +29021,7 @@ func (x *ReadPathRequest) String() string {
 func (*ReadPathRequest) ProtoMessage() {}
 
 func (x *ReadPathRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[109]
+	mi := &file_v1_panel_proto_msgTypes[121]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25987,9 +29101,19 @@ func (x *ReadPathRequest) GetEntryPageToken() string {
 	return ""
 }
 
+func (x *ReadPathRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *ReadPathRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
 }
 
 func (x *ReadPathRequest) SetService(v string) {
@@ -26002,27 +29126,32 @@ func (x *ReadPathRequest) SetVolume(v string) {
 
 func (x *ReadPathRequest) SetPath(v string) {
 	x.xxx_hidden_Path = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 8)
 }
 
 func (x *ReadPathRequest) SetEntryLimit(v uint32) {
 	x.xxx_hidden_EntryLimit = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
 }
 
 func (x *ReadPathRequest) SetOffsetBytes(v uint64) {
 	x.xxx_hidden_OffsetBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
 }
 
 func (x *ReadPathRequest) SetLengthBytes(v uint32) {
 	x.xxx_hidden_LengthBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
 }
 
 func (x *ReadPathRequest) SetEntryPageToken(v string) {
 	x.xxx_hidden_EntryPageToken = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *ReadPathRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
 }
 
 func (x *ReadPathRequest) HasProjectId() bool {
@@ -26090,6 +29219,13 @@ func (x *ReadPathRequest) HasEntryPageToken() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
 }
 
+func (x *ReadPathRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
+}
+
 func (x *ReadPathRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -26136,6 +29272,11 @@ func (x *ReadPathRequest) ClearEntryPageToken() {
 	x.xxx_hidden_EntryPageToken = nil
 }
 
+func (x *ReadPathRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
+	x.xxx_hidden_Workspace = nil
+}
+
 const ReadPathRequest_Root_not_set_case case_ReadPathRequest_Root = 0
 const ReadPathRequest_Service_case case_ReadPathRequest_Root = 2
 const ReadPathRequest_Volume_case case_ReadPathRequest_Root = 3
@@ -26171,6 +29312,7 @@ type ReadPathRequest_builder struct {
 	OffsetBytes    *uint64
 	LengthBytes    *uint32
 	EntryPageToken *string
+	Workspace      *string
 }
 
 func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
@@ -26178,7 +29320,7 @@ func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.Service != nil {
@@ -26188,24 +29330,28 @@ func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
 		x.xxx_hidden_Root = &readPathRequest_Volume{*b.Volume}
 	}
 	if b.Path != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 8)
 		x.xxx_hidden_Path = b.Path
 	}
 	if b.EntryLimit != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
 		x.xxx_hidden_EntryLimit = *b.EntryLimit
 	}
 	if b.OffsetBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
 		x.xxx_hidden_OffsetBytes = *b.OffsetBytes
 	}
 	if b.LengthBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
 		x.xxx_hidden_LengthBytes = *b.LengthBytes
 	}
 	if b.EntryPageToken != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
 		x.xxx_hidden_EntryPageToken = b.EntryPageToken
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -26213,7 +29359,7 @@ func (b0 ReadPathRequest_builder) Build() *ReadPathRequest {
 type case_ReadPathRequest_Root protoreflect.FieldNumber
 
 func (x case_ReadPathRequest_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[109].Descriptor()
+	md := file_v1_panel_proto_msgTypes[121].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -26256,7 +29402,7 @@ type ReadPathResponse struct {
 
 func (x *ReadPathResponse) Reset() {
 	*x = ReadPathResponse{}
-	mi := &file_v1_panel_proto_msgTypes[110]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -26268,7 +29414,7 @@ func (x *ReadPathResponse) String() string {
 func (*ReadPathResponse) ProtoMessage() {}
 
 func (x *ReadPathResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[110]
+	mi := &file_v1_panel_proto_msgTypes[122]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -26588,15 +29734,18 @@ func (b0 ReadPathResponse_builder) Build() *ReadPathResponse {
 }
 
 type CreateTransferRequest struct {
-	state               protoimpl.MessageState           `protogen:"opaque.v1"`
-	xxx_hidden_Transfer isCreateTransferRequest_Transfer `protobuf_oneof:"transfer"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                  protoimpl.MessageState           `protogen:"opaque.v1"`
+	xxx_hidden_Transfer    isCreateTransferRequest_Transfer `protobuf_oneof:"transfer"`
+	xxx_hidden_Workspace   *string                          `protobuf:"bytes,100,opt,name=workspace"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *CreateTransferRequest) Reset() {
 	*x = CreateTransferRequest{}
-	mi := &file_v1_panel_proto_msgTypes[111]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -26608,7 +29757,7 @@ func (x *CreateTransferRequest) String() string {
 func (*CreateTransferRequest) ProtoMessage() {}
 
 func (x *CreateTransferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[111]
+	mi := &file_v1_panel_proto_msgTypes[123]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -26655,6 +29804,16 @@ func (x *CreateTransferRequest) GetDownloadDatabase() *DatabaseDump {
 	return nil
 }
 
+func (x *CreateTransferRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *CreateTransferRequest) SetUploadArchive(v *ArchiveUpload) {
 	if v == nil {
 		x.xxx_hidden_Transfer = nil
@@ -26685,6 +29844,11 @@ func (x *CreateTransferRequest) SetDownloadDatabase(v *DatabaseDump) {
 		return
 	}
 	x.xxx_hidden_Transfer = &createTransferRequest_DownloadDatabase{v}
+}
+
+func (x *CreateTransferRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
 }
 
 func (x *CreateTransferRequest) HasTransfer() bool {
@@ -26726,6 +29890,13 @@ func (x *CreateTransferRequest) HasDownloadDatabase() bool {
 	return ok
 }
 
+func (x *CreateTransferRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
 func (x *CreateTransferRequest) ClearTransfer() {
 	x.xxx_hidden_Transfer = nil
 }
@@ -26752,6 +29923,11 @@ func (x *CreateTransferRequest) ClearDownloadDatabase() {
 	if _, ok := x.xxx_hidden_Transfer.(*createTransferRequest_DownloadDatabase); ok {
 		x.xxx_hidden_Transfer = nil
 	}
+}
+
+func (x *CreateTransferRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Workspace = nil
 }
 
 const CreateTransferRequest_Transfer_not_set_case case_CreateTransferRequest_Transfer = 0
@@ -26787,6 +29963,7 @@ type CreateTransferRequest_builder struct {
 	Download         *PathDownload
 	DownloadDatabase *DatabaseDump
 	// -- end of xxx_hidden_Transfer
+	Workspace *string
 }
 
 func (b0 CreateTransferRequest_builder) Build() *CreateTransferRequest {
@@ -26805,13 +29982,17 @@ func (b0 CreateTransferRequest_builder) Build() *CreateTransferRequest {
 	if b.DownloadDatabase != nil {
 		x.xxx_hidden_Transfer = &createTransferRequest_DownloadDatabase{b.DownloadDatabase}
 	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Workspace = b.Workspace
+	}
 	return m0
 }
 
 type case_CreateTransferRequest_Transfer protoreflect.FieldNumber
 
 func (x case_CreateTransferRequest_Transfer) String() string {
-	md := file_v1_panel_proto_msgTypes[111].Descriptor()
+	md := file_v1_panel_proto_msgTypes[123].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -26860,7 +30041,7 @@ type ArchiveUpload struct {
 
 func (x *ArchiveUpload) Reset() {
 	*x = ArchiveUpload{}
-	mi := &file_v1_panel_proto_msgTypes[112]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -26872,7 +30053,7 @@ func (x *ArchiveUpload) String() string {
 func (*ArchiveUpload) ProtoMessage() {}
 
 func (x *ArchiveUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[112]
+	mi := &file_v1_panel_proto_msgTypes[124]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -26941,7 +30122,7 @@ type FileUpload struct {
 
 func (x *FileUpload) Reset() {
 	*x = FileUpload{}
-	mi := &file_v1_panel_proto_msgTypes[113]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -26953,7 +30134,7 @@ func (x *FileUpload) String() string {
 func (*FileUpload) ProtoMessage() {}
 
 func (x *FileUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[113]
+	mi := &file_v1_panel_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27136,7 +30317,7 @@ func (b0 FileUpload_builder) Build() *FileUpload {
 type case_FileUpload_Root protoreflect.FieldNumber
 
 func (x case_FileUpload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[113].Descriptor()
+	md := file_v1_panel_proto_msgTypes[125].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -27173,7 +30354,7 @@ type PathDownload struct {
 
 func (x *PathDownload) Reset() {
 	*x = PathDownload{}
-	mi := &file_v1_panel_proto_msgTypes[114]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27185,7 +30366,7 @@ func (x *PathDownload) String() string {
 func (*PathDownload) ProtoMessage() {}
 
 func (x *PathDownload) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[114]
+	mi := &file_v1_panel_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27370,7 +30551,7 @@ func (b0 PathDownload_builder) Build() *PathDownload {
 type case_PathDownload_Root protoreflect.FieldNumber
 
 func (x case_PathDownload_Root) String() string {
-	md := file_v1_panel_proto_msgTypes[114].Descriptor()
+	md := file_v1_panel_proto_msgTypes[126].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -27406,7 +30587,7 @@ type DatabaseDump struct {
 
 func (x *DatabaseDump) Reset() {
 	*x = DatabaseDump{}
-	mi := &file_v1_panel_proto_msgTypes[115]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27418,7 +30599,7 @@ func (x *DatabaseDump) String() string {
 func (*DatabaseDump) ProtoMessage() {}
 
 func (x *DatabaseDump) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[115]
+	mi := &file_v1_panel_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27523,7 +30704,7 @@ type CreateTransferResponse struct {
 
 func (x *CreateTransferResponse) Reset() {
 	*x = CreateTransferResponse{}
-	mi := &file_v1_panel_proto_msgTypes[116]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27535,7 +30716,7 @@ func (x *CreateTransferResponse) String() string {
 func (*CreateTransferResponse) ProtoMessage() {}
 
 func (x *CreateTransferResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[116]
+	mi := &file_v1_panel_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27800,6 +30981,7 @@ func (b0 CreateTransferResponse_builder) Build() *CreateTransferResponse {
 type GetUploadRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_UploadId    *string                `protobuf:"bytes,1,opt,name=upload_id,json=uploadId"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -27808,7 +30990,7 @@ type GetUploadRequest struct {
 
 func (x *GetUploadRequest) Reset() {
 	*x = GetUploadRequest{}
-	mi := &file_v1_panel_proto_msgTypes[117]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27820,7 +31002,7 @@ func (x *GetUploadRequest) String() string {
 func (*GetUploadRequest) ProtoMessage() {}
 
 func (x *GetUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[117]
+	mi := &file_v1_panel_proto_msgTypes[129]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -27841,9 +31023,24 @@ func (x *GetUploadRequest) GetUploadId() string {
 	return ""
 }
 
+func (x *GetUploadRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *GetUploadRequest) SetUploadId(v string) {
 	x.xxx_hidden_UploadId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *GetUploadRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
 }
 
 func (x *GetUploadRequest) HasUploadId() bool {
@@ -27853,15 +31050,28 @@ func (x *GetUploadRequest) HasUploadId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
 }
 
+func (x *GetUploadRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
 func (x *GetUploadRequest) ClearUploadId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_UploadId = nil
 }
 
+func (x *GetUploadRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Workspace = nil
+}
+
 type GetUploadRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	UploadId *string
+	UploadId  *string
+	Workspace *string
 }
 
 func (b0 GetUploadRequest_builder) Build() *GetUploadRequest {
@@ -27869,8 +31079,12 @@ func (b0 GetUploadRequest_builder) Build() *GetUploadRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.UploadId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
 		x.xxx_hidden_UploadId = b.UploadId
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -27891,7 +31105,7 @@ type GetUploadResponse struct {
 
 func (x *GetUploadResponse) Reset() {
 	*x = GetUploadResponse{}
-	mi := &file_v1_panel_proto_msgTypes[118]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -27903,7 +31117,7 @@ func (x *GetUploadResponse) String() string {
 func (*GetUploadResponse) ProtoMessage() {}
 
 func (x *GetUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[118]
+	mi := &file_v1_panel_proto_msgTypes[130]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28116,7 +31330,7 @@ type ProjectBusy struct {
 
 func (x *ProjectBusy) Reset() {
 	*x = ProjectBusy{}
-	mi := &file_v1_panel_proto_msgTypes[119]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28128,7 +31342,7 @@ func (x *ProjectBusy) String() string {
 func (*ProjectBusy) ProtoMessage() {}
 
 func (x *ProjectBusy) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[119]
+	mi := &file_v1_panel_proto_msgTypes[131]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28251,7 +31465,7 @@ type ProjectChanged struct {
 
 func (x *ProjectChanged) Reset() {
 	*x = ProjectChanged{}
-	mi := &file_v1_panel_proto_msgTypes[120]
+	mi := &file_v1_panel_proto_msgTypes[132]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28263,7 +31477,7 @@ func (x *ProjectChanged) String() string {
 func (*ProjectChanged) ProtoMessage() {}
 
 func (x *ProjectChanged) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[120]
+	mi := &file_v1_panel_proto_msgTypes[132]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28297,7 +31511,7 @@ type MachineUnreachable struct {
 
 func (x *MachineUnreachable) Reset() {
 	*x = MachineUnreachable{}
-	mi := &file_v1_panel_proto_msgTypes[121]
+	mi := &file_v1_panel_proto_msgTypes[133]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28309,7 +31523,7 @@ func (x *MachineUnreachable) String() string {
 func (*MachineUnreachable) ProtoMessage() {}
 
 func (x *MachineUnreachable) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[121]
+	mi := &file_v1_panel_proto_msgTypes[133]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28374,7 +31588,7 @@ type DatabaseLinkRefusal struct {
 
 func (x *DatabaseLinkRefusal) Reset() {
 	*x = DatabaseLinkRefusal{}
-	mi := &file_v1_panel_proto_msgTypes[122]
+	mi := &file_v1_panel_proto_msgTypes[134]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28386,7 +31600,7 @@ func (x *DatabaseLinkRefusal) String() string {
 func (*DatabaseLinkRefusal) ProtoMessage() {}
 
 func (x *DatabaseLinkRefusal) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[122]
+	mi := &file_v1_panel_proto_msgTypes[134]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28553,7 +31767,7 @@ type DatabaseSizeRefusal struct {
 
 func (x *DatabaseSizeRefusal) Reset() {
 	*x = DatabaseSizeRefusal{}
-	mi := &file_v1_panel_proto_msgTypes[123]
+	mi := &file_v1_panel_proto_msgTypes[135]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28565,7 +31779,7 @@ func (x *DatabaseSizeRefusal) String() string {
 func (*DatabaseSizeRefusal) ProtoMessage() {}
 
 func (x *DatabaseSizeRefusal) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[123]
+	mi := &file_v1_panel_proto_msgTypes[135]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28709,11 +31923,13 @@ func (b0 DatabaseSizeRefusal_builder) Build() *DatabaseSizeRefusal {
 	return m0
 }
 
-// Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
+// Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+// caller has no workspace, or the workspace's machine is being prepared.
 type NoMachine struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Reason      NoMachineReason        `protobuf:"varint,1,opt,name=reason,enum=pethost.panel.v1.NoMachineReason"`
 	xxx_hidden_Url         *string                `protobuf:"bytes,2,opt,name=url"`
+	xxx_hidden_WorkspaceId *string                `protobuf:"bytes,3,opt,name=workspace_id,json=workspaceId"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -28722,7 +31938,7 @@ type NoMachine struct {
 
 func (x *NoMachine) Reset() {
 	*x = NoMachine{}
-	mi := &file_v1_panel_proto_msgTypes[124]
+	mi := &file_v1_panel_proto_msgTypes[136]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28734,7 +31950,7 @@ func (x *NoMachine) String() string {
 func (*NoMachine) ProtoMessage() {}
 
 func (x *NoMachine) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[124]
+	mi := &file_v1_panel_proto_msgTypes[136]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28764,14 +31980,29 @@ func (x *NoMachine) GetUrl() string {
 	return ""
 }
 
+func (x *NoMachine) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *NoMachine) SetReason(v NoMachineReason) {
 	x.xxx_hidden_Reason = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
 }
 
 func (x *NoMachine) SetUrl(v string) {
 	x.xxx_hidden_Url = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *NoMachine) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
 }
 
 func (x *NoMachine) HasReason() bool {
@@ -28788,6 +32019,13 @@ func (x *NoMachine) HasUrl() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
+func (x *NoMachine) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
 func (x *NoMachine) ClearReason() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_Reason = NoMachineReason_NO_MACHINE_REASON_UNSPECIFIED
@@ -28798,12 +32036,19 @@ func (x *NoMachine) ClearUrl() {
 	x.xxx_hidden_Url = nil
 }
 
+func (x *NoMachine) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
 type NoMachine_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	Reason *NoMachineReason
-	// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
-	Url *string
+	// Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+	// the workspace's page, which says it is. An MCP tool leaves it out.
+	Url         *string
+	WorkspaceId *string
 }
 
 func (b0 NoMachine_builder) Build() *NoMachine {
@@ -28811,8 +32056,268 @@ func (b0 NoMachine_builder) Build() *NoMachine {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Reason != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
 		x.xxx_hidden_Reason = *b.Reason
+	}
+	if b.Url != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_Url = b.Url
+	}
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
+	}
+	return m0
+}
+
+// Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and
+// the caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by
+// what the person asked for: a project that exists is in those of holding_project; for
+// something new, ask the person, showing each one's size and what is free.
+type WorkspaceChoice struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Workspaces     *[]*Workspace          `protobuf:"bytes,1,rep,name=workspaces"`
+	xxx_hidden_Total          uint32                 `protobuf:"varint,2,opt,name=total"`
+	xxx_hidden_HoldingProject []string               `protobuf:"bytes,3,rep,name=holding_project,json=holdingProject"`
+	xxx_hidden_Incomplete     bool                   `protobuf:"varint,4,opt,name=incomplete"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *WorkspaceChoice) Reset() {
+	*x = WorkspaceChoice{}
+	mi := &file_v1_panel_proto_msgTypes[137]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkspaceChoice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceChoice) ProtoMessage() {}
+
+func (x *WorkspaceChoice) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[137]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *WorkspaceChoice) GetWorkspaces() []*Workspace {
+	if x != nil {
+		if x.xxx_hidden_Workspaces != nil {
+			return *x.xxx_hidden_Workspaces
+		}
+	}
+	return nil
+}
+
+func (x *WorkspaceChoice) GetTotal() uint32 {
+	if x != nil {
+		return x.xxx_hidden_Total
+	}
+	return 0
+}
+
+func (x *WorkspaceChoice) GetHoldingProject() []string {
+	if x != nil {
+		return x.xxx_hidden_HoldingProject
+	}
+	return nil
+}
+
+func (x *WorkspaceChoice) GetIncomplete() bool {
+	if x != nil {
+		return x.xxx_hidden_Incomplete
+	}
+	return false
+}
+
+func (x *WorkspaceChoice) SetWorkspaces(v []*Workspace) {
+	x.xxx_hidden_Workspaces = &v
+}
+
+func (x *WorkspaceChoice) SetTotal(v uint32) {
+	x.xxx_hidden_Total = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *WorkspaceChoice) SetHoldingProject(v []string) {
+	x.xxx_hidden_HoldingProject = v
+}
+
+func (x *WorkspaceChoice) SetIncomplete(v bool) {
+	x.xxx_hidden_Incomplete = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
+}
+
+func (x *WorkspaceChoice) HasTotal() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *WorkspaceChoice) HasIncomplete() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *WorkspaceChoice) ClearTotal() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Total = 0
+}
+
+func (x *WorkspaceChoice) ClearIncomplete() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Incomplete = false
+}
+
+type WorkspaceChoice_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Workspaces []*Workspace
+	Total      *uint32
+	// The call names a project: the workspaces that have a project of that id, by workspace_id.
+	HoldingProject []string
+	Incomplete     *bool
+}
+
+func (b0 WorkspaceChoice_builder) Build() *WorkspaceChoice {
+	m0 := &WorkspaceChoice{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Workspaces = &b.Workspaces
+	if b.Total != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_Total = *b.Total
+	}
+	x.xxx_hidden_HoldingProject = b.HoldingProject
+	if b.Incomplete != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_Incomplete = *b.Incomplete
+	}
+	return m0
+}
+
+// Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+// connection is pinned to), but the person has not let this token reach it; or the call named
+// none and the token reaches none of the account's workspaces.
+type WorkspaceNotGranted struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_WorkspaceId *string                `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId"`
+	xxx_hidden_Url         *string                `protobuf:"bytes,2,opt,name=url"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *WorkspaceNotGranted) Reset() {
+	*x = WorkspaceNotGranted{}
+	mi := &file_v1_panel_proto_msgTypes[138]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkspaceNotGranted) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceNotGranted) ProtoMessage() {}
+
+func (x *WorkspaceNotGranted) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[138]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *WorkspaceNotGranted) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *WorkspaceNotGranted) GetUrl() string {
+	if x != nil {
+		if x.xxx_hidden_Url != nil {
+			return *x.xxx_hidden_Url
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *WorkspaceNotGranted) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *WorkspaceNotGranted) SetUrl(v string) {
+	x.xxx_hidden_Url = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *WorkspaceNotGranted) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *WorkspaceNotGranted) HasUrl() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *WorkspaceNotGranted) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
+func (x *WorkspaceNotGranted) ClearUrl() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Url = nil
+}
+
+type WorkspaceNotGranted_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// The workspace it may not reach: the one named, else the account's only one. Empty = the call
+	// named none and the account has several.
+	WorkspaceId *string
+	Url         *string
+}
+
+func (b0 WorkspaceNotGranted_builder) Build() *WorkspaceNotGranted {
+	m0 := &WorkspaceNotGranted{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
 	}
 	if b.Url != nil {
 		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
@@ -28821,10 +32326,183 @@ func (b0 NoMachine_builder) Build() *NoMachine {
 	return m0
 }
 
+// Detail of a FAILED_PRECONDITION error: the project moved to another workspace (MoveProject).
+// Call there, naming it as `workspace`; ids of operations and snapshots from before stay
+// behind.
+type ProjectMoved struct {
+	state                    protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_ProjectId     *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_WorkspaceId   *string                `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId"`
+	xxx_hidden_WorkspaceName *string                `protobuf:"bytes,3,opt,name=workspace_name,json=workspaceName"`
+	xxx_hidden_MoveTime      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=move_time,json=moveTime"`
+	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
+	XXX_presence             [1]uint32
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *ProjectMoved) Reset() {
+	*x = ProjectMoved{}
+	mi := &file_v1_panel_proto_msgTypes[139]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectMoved) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectMoved) ProtoMessage() {}
+
+func (x *ProjectMoved) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_panel_proto_msgTypes[139]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ProjectMoved) GetProjectId() string {
+	if x != nil {
+		if x.xxx_hidden_ProjectId != nil {
+			return *x.xxx_hidden_ProjectId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectMoved) GetWorkspaceId() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceId != nil {
+			return *x.xxx_hidden_WorkspaceId
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectMoved) GetWorkspaceName() string {
+	if x != nil {
+		if x.xxx_hidden_WorkspaceName != nil {
+			return *x.xxx_hidden_WorkspaceName
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ProjectMoved) GetMoveTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_MoveTime
+	}
+	return nil
+}
+
+func (x *ProjectMoved) SetProjectId(v string) {
+	x.xxx_hidden_ProjectId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+}
+
+func (x *ProjectMoved) SetWorkspaceId(v string) {
+	x.xxx_hidden_WorkspaceId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
+}
+
+func (x *ProjectMoved) SetWorkspaceName(v string) {
+	x.xxx_hidden_WorkspaceName = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *ProjectMoved) SetMoveTime(v *timestamppb.Timestamp) {
+	x.xxx_hidden_MoveTime = v
+}
+
+func (x *ProjectMoved) HasProjectId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ProjectMoved) HasWorkspaceId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ProjectMoved) HasWorkspaceName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ProjectMoved) HasMoveTime() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_MoveTime != nil
+}
+
+func (x *ProjectMoved) ClearProjectId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *ProjectMoved) ClearWorkspaceId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_WorkspaceId = nil
+}
+
+func (x *ProjectMoved) ClearWorkspaceName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_WorkspaceName = nil
+}
+
+func (x *ProjectMoved) ClearMoveTime() {
+	x.xxx_hidden_MoveTime = nil
+}
+
+type ProjectMoved_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	ProjectId     *string
+	WorkspaceId   *string
+	WorkspaceName *string
+	MoveTime      *timestamppb.Timestamp
+}
+
+func (b0 ProjectMoved_builder) Build() *ProjectMoved {
+	m0 := &ProjectMoved{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.ProjectId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.WorkspaceId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
+		x.xxx_hidden_WorkspaceId = b.WorkspaceId
+	}
+	if b.WorkspaceName != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_WorkspaceName = b.WorkspaceName
+	}
+	x.xxx_hidden_MoveTime = b.MoveTime
+	return m0
+}
+
 type WatchOperationRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_OperationId *string                `protobuf:"bytes,2,opt,name=operation_id,json=operationId"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -28833,7 +32511,7 @@ type WatchOperationRequest struct {
 
 func (x *WatchOperationRequest) Reset() {
 	*x = WatchOperationRequest{}
-	mi := &file_v1_panel_proto_msgTypes[125]
+	mi := &file_v1_panel_proto_msgTypes[140]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28845,7 +32523,7 @@ func (x *WatchOperationRequest) String() string {
 func (*WatchOperationRequest) ProtoMessage() {}
 
 func (x *WatchOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[125]
+	mi := &file_v1_panel_proto_msgTypes[140]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28876,14 +32554,29 @@ func (x *WatchOperationRequest) GetOperationId() string {
 	return ""
 }
 
+func (x *WatchOperationRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *WatchOperationRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
 }
 
 func (x *WatchOperationRequest) SetOperationId(v string) {
 	x.xxx_hidden_OperationId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *WatchOperationRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
 }
 
 func (x *WatchOperationRequest) HasProjectId() bool {
@@ -28900,6 +32593,13 @@ func (x *WatchOperationRequest) HasOperationId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
+func (x *WatchOperationRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
 func (x *WatchOperationRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -28910,11 +32610,17 @@ func (x *WatchOperationRequest) ClearOperationId() {
 	x.xxx_hidden_OperationId = nil
 }
 
+func (x *WatchOperationRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Workspace = nil
+}
+
 type WatchOperationRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId   *string
 	OperationId *string
+	Workspace   *string
 }
 
 func (b0 WatchOperationRequest_builder) Build() *WatchOperationRequest {
@@ -28922,26 +32628,33 @@ func (b0 WatchOperationRequest_builder) Build() *WatchOperationRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.OperationId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
 		x.xxx_hidden_OperationId = b.OperationId
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
 
 type WatchOperationResponse struct {
-	state              protoimpl.MessageState           `protogen:"opaque.v1"`
-	xxx_hidden_Message isWatchOperationResponse_Message `protobuf_oneof:"message"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                  protoimpl.MessageState           `protogen:"opaque.v1"`
+	xxx_hidden_Message     isWatchOperationResponse_Message `protobuf_oneof:"message"`
+	xxx_hidden_MoveMessage *string                          `protobuf:"bytes,3,opt,name=move_message,json=moveMessage"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *WatchOperationResponse) Reset() {
 	*x = WatchOperationResponse{}
-	mi := &file_v1_panel_proto_msgTypes[126]
+	mi := &file_v1_panel_proto_msgTypes[141]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -28953,7 +32666,7 @@ func (x *WatchOperationResponse) String() string {
 func (*WatchOperationResponse) ProtoMessage() {}
 
 func (x *WatchOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[126]
+	mi := &file_v1_panel_proto_msgTypes[141]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -28982,6 +32695,16 @@ func (x *WatchOperationResponse) GetFinishedOperation() *Operation {
 	return nil
 }
 
+func (x *WatchOperationResponse) GetMoveMessage() string {
+	if x != nil {
+		if x.xxx_hidden_MoveMessage != nil {
+			return *x.xxx_hidden_MoveMessage
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *WatchOperationResponse) SetLog(v *OperationLogLine) {
 	if v == nil {
 		x.xxx_hidden_Message = nil
@@ -28996,6 +32719,11 @@ func (x *WatchOperationResponse) SetFinishedOperation(v *Operation) {
 		return
 	}
 	x.xxx_hidden_Message = &watchOperationResponse_FinishedOperation{v}
+}
+
+func (x *WatchOperationResponse) SetMoveMessage(v string) {
+	x.xxx_hidden_MoveMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
 }
 
 func (x *WatchOperationResponse) HasMessage() bool {
@@ -29021,6 +32749,13 @@ func (x *WatchOperationResponse) HasFinishedOperation() bool {
 	return ok
 }
 
+func (x *WatchOperationResponse) HasMoveMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
 func (x *WatchOperationResponse) ClearMessage() {
 	x.xxx_hidden_Message = nil
 }
@@ -29035,6 +32770,11 @@ func (x *WatchOperationResponse) ClearFinishedOperation() {
 	if _, ok := x.xxx_hidden_Message.(*watchOperationResponse_FinishedOperation); ok {
 		x.xxx_hidden_Message = nil
 	}
+}
+
+func (x *WatchOperationResponse) ClearMoveMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_MoveMessage = nil
 }
 
 const WatchOperationResponse_Message_not_set_case case_WatchOperationResponse_Message = 0
@@ -29062,6 +32802,8 @@ type WatchOperationResponse_builder struct {
 	Log               *OperationLogLine
 	FinishedOperation *Operation
 	// -- end of xxx_hidden_Message
+	// With a MOVE's finished_operation: MoveProjectResponse.move_message.
+	MoveMessage *string
 }
 
 func (b0 WatchOperationResponse_builder) Build() *WatchOperationResponse {
@@ -29074,13 +32816,17 @@ func (b0 WatchOperationResponse_builder) Build() *WatchOperationResponse {
 	if b.FinishedOperation != nil {
 		x.xxx_hidden_Message = &watchOperationResponse_FinishedOperation{b.FinishedOperation}
 	}
+	if b.MoveMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_MoveMessage = b.MoveMessage
+	}
 	return m0
 }
 
 type case_WatchOperationResponse_Message protoreflect.FieldNumber
 
 func (x case_WatchOperationResponse_Message) String() string {
-	md := file_v1_panel_proto_msgTypes[126].Descriptor()
+	md := file_v1_panel_proto_msgTypes[141].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -29108,6 +32854,7 @@ type TailContainerLogsRequest struct {
 	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_Filter      *ContainerLogFilter    `protobuf:"bytes,2,opt,name=filter"`
 	xxx_hidden_AfterCursor *string                `protobuf:"bytes,3,opt,name=after_cursor,json=afterCursor"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -29116,7 +32863,7 @@ type TailContainerLogsRequest struct {
 
 func (x *TailContainerLogsRequest) Reset() {
 	*x = TailContainerLogsRequest{}
-	mi := &file_v1_panel_proto_msgTypes[127]
+	mi := &file_v1_panel_proto_msgTypes[142]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29128,7 +32875,7 @@ func (x *TailContainerLogsRequest) String() string {
 func (*TailContainerLogsRequest) ProtoMessage() {}
 
 func (x *TailContainerLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[127]
+	mi := &file_v1_panel_proto_msgTypes[142]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29166,9 +32913,19 @@ func (x *TailContainerLogsRequest) GetAfterCursor() string {
 	return ""
 }
 
+func (x *TailContainerLogsRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *TailContainerLogsRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *TailContainerLogsRequest) SetFilter(v *ContainerLogFilter) {
@@ -29177,7 +32934,12 @@ func (x *TailContainerLogsRequest) SetFilter(v *ContainerLogFilter) {
 
 func (x *TailContainerLogsRequest) SetAfterCursor(v string) {
 	x.xxx_hidden_AfterCursor = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *TailContainerLogsRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
 }
 
 func (x *TailContainerLogsRequest) HasProjectId() bool {
@@ -29201,6 +32963,13 @@ func (x *TailContainerLogsRequest) HasAfterCursor() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
+func (x *TailContainerLogsRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
 func (x *TailContainerLogsRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -29215,12 +32984,18 @@ func (x *TailContainerLogsRequest) ClearAfterCursor() {
 	x.xxx_hidden_AfterCursor = nil
 }
 
+func (x *TailContainerLogsRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Workspace = nil
+}
+
 type TailContainerLogsRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId   *string
 	Filter      *ContainerLogFilter
 	AfterCursor *string
+	Workspace   *string
 }
 
 func (b0 TailContainerLogsRequest_builder) Build() *TailContainerLogsRequest {
@@ -29228,13 +33003,17 @@ func (b0 TailContainerLogsRequest_builder) Build() *TailContainerLogsRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Filter = b.Filter
 	if b.AfterCursor != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
 		x.xxx_hidden_AfterCursor = b.AfterCursor
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -29251,7 +33030,7 @@ type TailContainerLogsResponse struct {
 
 func (x *TailContainerLogsResponse) Reset() {
 	*x = TailContainerLogsResponse{}
-	mi := &file_v1_panel_proto_msgTypes[128]
+	mi := &file_v1_panel_proto_msgTypes[143]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29263,7 +33042,7 @@ func (x *TailContainerLogsResponse) String() string {
 func (*TailContainerLogsResponse) ProtoMessage() {}
 
 func (x *TailContainerLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[128]
+	mi := &file_v1_panel_proto_msgTypes[143]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29347,6 +33126,7 @@ type TailHttpTrafficRequest struct {
 	xxx_hidden_ProjectId     *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
 	xxx_hidden_Filter        *HttpTrafficFilter     `protobuf:"bytes,2,opt,name=filter"`
 	xxx_hidden_AfterSequence uint64                 `protobuf:"varint,3,opt,name=after_sequence,json=afterSequence"`
+	xxx_hidden_Workspace     *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
 	XXX_presence             [1]uint32
 	unknownFields            protoimpl.UnknownFields
@@ -29355,7 +33135,7 @@ type TailHttpTrafficRequest struct {
 
 func (x *TailHttpTrafficRequest) Reset() {
 	*x = TailHttpTrafficRequest{}
-	mi := &file_v1_panel_proto_msgTypes[129]
+	mi := &file_v1_panel_proto_msgTypes[144]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29367,7 +33147,7 @@ func (x *TailHttpTrafficRequest) String() string {
 func (*TailHttpTrafficRequest) ProtoMessage() {}
 
 func (x *TailHttpTrafficRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[129]
+	mi := &file_v1_panel_proto_msgTypes[144]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29402,9 +33182,19 @@ func (x *TailHttpTrafficRequest) GetAfterSequence() uint64 {
 	return 0
 }
 
+func (x *TailHttpTrafficRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *TailHttpTrafficRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *TailHttpTrafficRequest) SetFilter(v *HttpTrafficFilter) {
@@ -29413,7 +33203,12 @@ func (x *TailHttpTrafficRequest) SetFilter(v *HttpTrafficFilter) {
 
 func (x *TailHttpTrafficRequest) SetAfterSequence(v uint64) {
 	x.xxx_hidden_AfterSequence = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *TailHttpTrafficRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
 }
 
 func (x *TailHttpTrafficRequest) HasProjectId() bool {
@@ -29437,6 +33232,13 @@ func (x *TailHttpTrafficRequest) HasAfterSequence() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
+func (x *TailHttpTrafficRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
 func (x *TailHttpTrafficRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -29451,12 +33253,18 @@ func (x *TailHttpTrafficRequest) ClearAfterSequence() {
 	x.xxx_hidden_AfterSequence = 0
 }
 
+func (x *TailHttpTrafficRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_Workspace = nil
+}
+
 type TailHttpTrafficRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId     *string
 	Filter        *HttpTrafficFilter
 	AfterSequence *uint64
+	Workspace     *string
 }
 
 func (b0 TailHttpTrafficRequest_builder) Build() *TailHttpTrafficRequest {
@@ -29464,13 +33272,17 @@ func (b0 TailHttpTrafficRequest_builder) Build() *TailHttpTrafficRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	x.xxx_hidden_Filter = b.Filter
 	if b.AfterSequence != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
 		x.xxx_hidden_AfterSequence = *b.AfterSequence
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -29484,7 +33296,7 @@ type TailHttpTrafficResponse struct {
 
 func (x *TailHttpTrafficResponse) Reset() {
 	*x = TailHttpTrafficResponse{}
-	mi := &file_v1_panel_proto_msgTypes[130]
+	mi := &file_v1_panel_proto_msgTypes[145]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29496,7 +33308,7 @@ func (x *TailHttpTrafficResponse) String() string {
 func (*TailHttpTrafficResponse) ProtoMessage() {}
 
 func (x *TailHttpTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[130]
+	mi := &file_v1_panel_proto_msgTypes[145]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29551,6 +33363,7 @@ type OpenTerminalRequest struct {
 	xxx_hidden_Command          []string               `protobuf:"bytes,4,rep,name=command"`
 	xxx_hidden_RunAsUser        *string                `protobuf:"bytes,5,opt,name=run_as_user,json=runAsUser"`
 	xxx_hidden_WorkingDirectory *string                `protobuf:"bytes,6,opt,name=working_directory,json=workingDirectory"`
+	xxx_hidden_Workspace        *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -29559,7 +33372,7 @@ type OpenTerminalRequest struct {
 
 func (x *OpenTerminalRequest) Reset() {
 	*x = OpenTerminalRequest{}
-	mi := &file_v1_panel_proto_msgTypes[131]
+	mi := &file_v1_panel_proto_msgTypes[146]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29571,7 +33384,7 @@ func (x *OpenTerminalRequest) String() string {
 func (*OpenTerminalRequest) ProtoMessage() {}
 
 func (x *OpenTerminalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[131]
+	mi := &file_v1_panel_proto_msgTypes[146]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29636,14 +33449,24 @@ func (x *OpenTerminalRequest) GetWorkingDirectory() string {
 	return ""
 }
 
+func (x *OpenTerminalRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *OpenTerminalRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
 }
 
 func (x *OpenTerminalRequest) SetService(v string) {
 	x.xxx_hidden_Service = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
 }
 
 func (x *OpenTerminalRequest) SetSize(v *TerminalSize) {
@@ -29656,12 +33479,17 @@ func (x *OpenTerminalRequest) SetCommand(v []string) {
 
 func (x *OpenTerminalRequest) SetRunAsUser(v string) {
 	x.xxx_hidden_RunAsUser = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
 }
 
 func (x *OpenTerminalRequest) SetWorkingDirectory(v string) {
 	x.xxx_hidden_WorkingDirectory = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *OpenTerminalRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
 }
 
 func (x *OpenTerminalRequest) HasProjectId() bool {
@@ -29699,6 +33527,13 @@ func (x *OpenTerminalRequest) HasWorkingDirectory() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
 }
 
+func (x *OpenTerminalRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
 func (x *OpenTerminalRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
@@ -29723,6 +33558,11 @@ func (x *OpenTerminalRequest) ClearWorkingDirectory() {
 	x.xxx_hidden_WorkingDirectory = nil
 }
 
+func (x *OpenTerminalRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_Workspace = nil
+}
+
 type OpenTerminalRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -29733,6 +33573,7 @@ type OpenTerminalRequest_builder struct {
 	Command          []string
 	RunAsUser        *string
 	WorkingDirectory *string
+	Workspace        *string
 }
 
 func (b0 OpenTerminalRequest_builder) Build() *OpenTerminalRequest {
@@ -29740,22 +33581,26 @@ func (b0 OpenTerminalRequest_builder) Build() *OpenTerminalRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
 		x.xxx_hidden_ProjectId = b.ProjectId
 	}
 	if b.Service != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
 		x.xxx_hidden_Service = b.Service
 	}
 	x.xxx_hidden_Size = b.Size
 	x.xxx_hidden_Command = b.Command
 	if b.RunAsUser != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
 		x.xxx_hidden_RunAsUser = b.RunAsUser
 	}
 	if b.WorkingDirectory != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
 		x.xxx_hidden_WorkingDirectory = b.WorkingDirectory
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -29772,7 +33617,7 @@ type TerminalSize struct {
 
 func (x *TerminalSize) Reset() {
 	*x = TerminalSize{}
-	mi := &file_v1_panel_proto_msgTypes[132]
+	mi := &file_v1_panel_proto_msgTypes[147]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29784,7 +33629,7 @@ func (x *TerminalSize) String() string {
 func (*TerminalSize) ProtoMessage() {}
 
 func (x *TerminalSize) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[132]
+	mi := &file_v1_panel_proto_msgTypes[147]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29877,7 +33722,7 @@ type OpenTerminalResponse struct {
 
 func (x *OpenTerminalResponse) Reset() {
 	*x = OpenTerminalResponse{}
-	mi := &file_v1_panel_proto_msgTypes[133]
+	mi := &file_v1_panel_proto_msgTypes[148]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29889,7 +33734,7 @@ func (x *OpenTerminalResponse) String() string {
 func (*OpenTerminalResponse) ProtoMessage() {}
 
 func (x *OpenTerminalResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[133]
+	mi := &file_v1_panel_proto_msgTypes[148]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -29972,6 +33817,7 @@ func (b0 OpenTerminalResponse_builder) Build() *OpenTerminalResponse {
 type OpenDatabaseClientRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ProjectId   *string                `protobuf:"bytes,1,opt,name=project_id,json=projectId"`
+	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
 	unknownFields          protoimpl.UnknownFields
@@ -29980,7 +33826,7 @@ type OpenDatabaseClientRequest struct {
 
 func (x *OpenDatabaseClientRequest) Reset() {
 	*x = OpenDatabaseClientRequest{}
-	mi := &file_v1_panel_proto_msgTypes[134]
+	mi := &file_v1_panel_proto_msgTypes[149]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -29992,7 +33838,7 @@ func (x *OpenDatabaseClientRequest) String() string {
 func (*OpenDatabaseClientRequest) ProtoMessage() {}
 
 func (x *OpenDatabaseClientRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[134]
+	mi := &file_v1_panel_proto_msgTypes[149]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -30013,9 +33859,24 @@ func (x *OpenDatabaseClientRequest) GetProjectId() string {
 	return ""
 }
 
+func (x *OpenDatabaseClientRequest) GetWorkspace() string {
+	if x != nil {
+		if x.xxx_hidden_Workspace != nil {
+			return *x.xxx_hidden_Workspace
+		}
+		return ""
+	}
+	return ""
+}
+
 func (x *OpenDatabaseClientRequest) SetProjectId(v string) {
 	x.xxx_hidden_ProjectId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *OpenDatabaseClientRequest) SetWorkspace(v string) {
+	x.xxx_hidden_Workspace = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
 }
 
 func (x *OpenDatabaseClientRequest) HasProjectId() bool {
@@ -30025,15 +33886,28 @@ func (x *OpenDatabaseClientRequest) HasProjectId() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
 }
 
+func (x *OpenDatabaseClientRequest) HasWorkspace() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
 func (x *OpenDatabaseClientRequest) ClearProjectId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_ProjectId = nil
+}
+
+func (x *OpenDatabaseClientRequest) ClearWorkspace() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Workspace = nil
 }
 
 type OpenDatabaseClientRequest_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	ProjectId *string
+	Workspace *string
 }
 
 func (b0 OpenDatabaseClientRequest_builder) Build() *OpenDatabaseClientRequest {
@@ -30041,8 +33915,12 @@ func (b0 OpenDatabaseClientRequest_builder) Build() *OpenDatabaseClientRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.ProjectId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
 		x.xxx_hidden_ProjectId = b.ProjectId
+	}
+	if b.Workspace != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
 }
@@ -30059,7 +33937,7 @@ type OpenDatabaseClientResponse struct {
 
 func (x *OpenDatabaseClientResponse) Reset() {
 	*x = OpenDatabaseClientResponse{}
-	mi := &file_v1_panel_proto_msgTypes[135]
+	mi := &file_v1_panel_proto_msgTypes[150]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -30071,7 +33949,7 @@ func (x *OpenDatabaseClientResponse) String() string {
 func (*OpenDatabaseClientResponse) ProtoMessage() {}
 
 func (x *OpenDatabaseClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_panel_proto_msgTypes[135]
+	mi := &file_v1_panel_proto_msgTypes[150]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -30155,13 +34033,48 @@ var File_v1_panel_proto protoreflect.FileDescriptor
 
 const file_v1_panel_proto_rawDesc = "" +
 	"\n" +
-	"\x0ev1/panel.proto\x12\x10pethost.panel.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x13\n" +
-	"\x11GetMachineRequest\"\x90\x02\n" +
+	"\x0ev1/panel.proto\x12\x10pethost.panel.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"U\n" +
+	"\x15ListWorkspacesRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"\xdc\x01\n" +
+	"\x16ListWorkspacesResponse\x12;\n" +
+	"\n" +
+	"workspaces\x18\x01 \x03(\v2\x1b.pethost.panel.v1.WorkspaceR\n" +
+	"workspaces\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\rR\x05total\x12'\n" +
+	"\x0fholding_project\x18\x04 \x03(\tR\x0eholdingProject\x12\x1e\n" +
+	"\n" +
+	"incomplete\x18\x05 \x01(\bR\n" +
+	"incomplete\"\xe1\x04\n" +
+	"\tWorkspace\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x129\n" +
+	"\x06status\x18\x03 \x01(\x0e2!.pethost.panel.v1.WorkspaceStatusR\x06status\x12\x1a\n" +
+	"\blocation\x18\x04 \x01(\tR\blocation\x12\x12\n" +
+	"\x04plan\x18\x05 \x01(\tR\x04plan\x12&\n" +
+	"\x0fcpu_total_cores\x18\x06 \x01(\x01R\rcpuTotalCores\x12,\n" +
+	"\x12memory_total_bytes\x18\a \x01(\x04R\x10memoryTotalBytes\x120\n" +
+	"\x11memory_free_bytes\x18\b \x01(\x04B\x04\x90\xb5\x18\x01R\x0fmemoryFreeBytes\x12(\n" +
+	"\x10disk_total_bytes\x18\t \x01(\x04R\x0ediskTotalBytes\x12,\n" +
+	"\x0fdisk_free_bytes\x18\n" +
+	" \x01(\x04B\x04\x90\xb5\x18\x01R\rdiskFreeBytes\x12)\n" +
+	"\rproject_count\x18\v \x01(\rB\x04\x90\xb5\x18\x01R\fprojectCount\x12\x1a\n" +
+	"\bhostname\x18\f \x01(\tR\bhostname\x12\x1f\n" +
+	"\vapps_domain\x18\r \x01(\tR\n" +
+	"appsDomain\x125\n" +
+	"\bend_time\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x123\n" +
+	"\x04role\x18\x0f \x01(\x0e2\x1f.pethost.panel.v1.WorkspaceRoleR\x04role\"1\n" +
+	"\x11GetMachineRequest\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xcb\x02\n" +
 	"\x12GetMachineResponse\x123\n" +
 	"\amachine\x18\x01 \x01(\v2\x19.pethost.panel.v1.MachineR\amachine\x12<\n" +
 	"\bprojects\x18\x02 \x03(\v2 .pethost.panel.v1.ProjectSummaryR\bprojects\x12K\n" +
 	"\x10deleted_projects\x18\x03 \x03(\v2 .pethost.panel.v1.DeletedProjectR\x0fdeletedProjects\x12:\n" +
-	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\"\xca\v\n" +
+	"\x06github\x18\x04 \x01(\v2\".pethost.panel.v1.GithubConnectionR\x06github\x129\n" +
+	"\tworkspace\x18\x05 \x01(\v2\x1b.pethost.panel.v1.WorkspaceR\tworkspace\"\xca\v\n" +
 	"\aMachine\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12;\n" +
@@ -30238,18 +34151,24 @@ const file_v1_panel_proto_rawDesc = "" +
 	"repository\x12%\n" +
 	"\x0edefault_branch\x18\x02 \x01(\tR\rdefaultBranch\x12\x18\n" +
 	"\aprivate\x18\x03 \x01(\bR\aprivate\x127\n" +
-	"\tpush_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bpushTime\"\x9b\x01\n" +
+	"\tpush_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bpushTime\"\xd1\x01\n" +
 	"\x0eDeletedProject\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12C\n" +
 	"\x0fnewest_snapshot\x18\x02 \x01(\v2\x1a.pethost.panel.v1.SnapshotR\x0enewestSnapshot\x12%\n" +
-	"\x0esnapshot_count\x18\x03 \x01(\rR\rsnapshotCount\"\xc2\x02\n" +
+	"\x0esnapshot_count\x18\x03 \x01(\rR\rsnapshotCount\x124\n" +
+	"\bmoved_to\x18\x04 \x01(\v2\x19.pethost.panel.v1.MovedToR\amovedTo\"\x8c\x01\n" +
+	"\aMovedTo\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12%\n" +
+	"\x0eworkspace_name\x18\x02 \x01(\tR\rworkspaceName\x127\n" +
+	"\tmove_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bmoveTime\"\xe0\x02\n" +
 	"\x17RunMachineActionRequest\x12:\n" +
 	"\vadd_ssh_key\x18\x01 \x01(\v2\x18.pethost.panel.v1.SshKeyH\x00R\taddSshKey\x12=\n" +
 	"\x1aremove_ssh_key_fingerprint\x18\x02 \x01(\tH\x00R\x17removeSshKeyFingerprint\x12Q\n" +
 	"\x0frestart_machine\x18\x03 \x01(\v2&.pethost.panel.v1.RestartMachineActionH\x00R\x0erestartMachine\x12'\n" +
 	"\x0ecancel_restart\x18\x04 \x01(\bH\x00R\rcancelRestart\x12&\n" +
-	"\x0eend_session_id\x18\x05 \x01(\tH\x00R\fendSessionIdB\b\n" +
+	"\x0eend_session_id\x18\x05 \x01(\tH\x00R\fendSessionId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceB\b\n" +
 	"\x06action\"\xbc\x01\n" +
 	"\x14RestartMachineAction\x12=\n" +
 	"\frestart_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vrestartTime\x122\n" +
@@ -30261,7 +34180,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB\x04\x90\xb5\x18\x01R\x04name\x12\x1a\n" +
 	"\x05emoji\x18\x02 \x01(\tB\x04\x90\xb5\x18\x01R\x05emoji\x12&\n" +
 	"\vdescription\x18\x03 \x01(\tB\x04\x90\xb5\x18\x01R\vdescription\x12\x1a\n" +
-	"\x05notes\x18\x04 \x01(\tB\x04\x90\xb5\x18\x01R\x05notes\"\xc5\x05\n" +
+	"\x05notes\x18\x04 \x01(\tB\x04\x90\xb5\x18\x01R\x05notes\"\xd7\x05\n" +
 	"\x0eProjectSummary\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12=\n" +
@@ -30279,7 +34198,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x12running_operations\x18\v \x03(\v2\x1b.pethost.panel.v1.OperationR\x11runningOperations\x12\x16\n" +
 	"\x06pinned\x18\f \x01(\bR\x06pinned\x12&\n" +
 	"\x0fdisk_used_bytes\x18\r \x01(\x04R\rdiskUsedBytes\x12=\n" +
-	"\bdatabase\x18\x0e \x01(\v2!.pethost.panel.v1.DatabaseSummaryR\bdatabase\"`\n" +
+	"\bdatabase\x18\x0e \x01(\v2!.pethost.panel.v1.DatabaseSummaryR\bdatabase\x12\x10\n" +
+	"\x03uid\x18\x0f \x01(\tR\x03uid\"`\n" +
 	"\x0eServiceSummary\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x124\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\"\x8c\x02\n" +
@@ -30291,7 +34211,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"since_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tsinceTime\x12'\n" +
 	"\x0fproblem_message\x18\x05 \x01(\tR\x0eproblemMessage\x12\x1f\n" +
 	"\vincident_id\x18\x06 \x01(\tR\n" +
-	"incidentId\"\xf9\x02\n" +
+	"incidentId\"\x97\x03\n" +
 	"\x11GetProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x122\n" +
@@ -30300,9 +34220,10 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x10snapshots_volume\x18\x04 \x01(\tR\x0fsnapshotsVolume\x12E\n" +
 	"\x10incidents_before\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0fincidentsBefore\x12(\n" +
 	"\x10uptime_day_count\x18\x06 \x01(\rR\x0euptimeDayCount\x12.\n" +
-	"\x13incidents_before_id\x18\a \x01(\tR\x11incidentsBeforeId\"I\n" +
+	"\x13incidents_before_id\x18\a \x01(\tR\x11incidentsBeforeId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"I\n" +
 	"\x12GetProjectResponse\x123\n" +
-	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xf4\v\n" +
+	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xf2\f\n" +
 	"\aProject\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12=\n" +
@@ -30337,7 +34258,15 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\vuptime_days\x18\x1a \x03(\v2\x1b.pethost.panel.v1.UptimeDayR\n" +
 	"uptimeDays\x126\n" +
 	"\bdatabase\x18\x1b \x01(\v2\x1a.pethost.panel.v1.DatabaseR\bdatabase\x12)\n" +
-	"\x10linked_databases\x18\x1c \x03(\tR\x0flinkedDatabases\"\xa8\x01\n" +
+	"\x10linked_databases\x18\x1c \x03(\tR\x0flinkedDatabases\x12!\n" +
+	"\fworkspace_id\x18\x1d \x01(\tR\vworkspaceId\x12\x10\n" +
+	"\x03uid\x18\x1e \x01(\tR\x03uid\x12G\n" +
+	"\fdependencies\x18  \x03(\v2#.pethost.panel.v1.ProjectDependencyR\fdependencies\"\x87\x01\n" +
+	"\x11ProjectDependency\x12.\n" +
+	"\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12#\n" +
+	"\rcopy_database\x18\x04 \x01(\tR\fcopyDatabase\x12\x1d\n" +
+	"\n" +
+	"env_prefix\x18\x05 \x01(\tR\tenvPrefix\"\xa8\x01\n" +
 	"\x15RunningServicesAction\x128\n" +
 	"\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ServicesActionKindR\x04kind\x12\x1a\n" +
 	"\bservices\x18\x02 \x03(\tR\bservices\x129\n" +
@@ -30483,7 +34412,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rrequest_count\x18\x01 \x01(\x04R\frequestCount\x12,\n" +
 	"\x12server_error_count\x18\x02 \x01(\x04R\x10serverErrorCount\x12$\n" +
 	"\x0elatency_p50_ms\x18\x03 \x01(\rR\flatencyP50Ms\x12$\n" +
-	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\xd9\x03\n" +
+	"\x0elatency_p95_ms\x18\x04 \x01(\rR\flatencyP95Ms\"\xf7\x03\n" +
 	"\x14CreateProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x127\n" +
@@ -30494,7 +34423,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0ftimeout_seconds\x18\x06 \x01(\rR\x0etimeoutSeconds\x12!\n" +
 	"\foperation_id\x18\a \x01(\tR\voperationId\x12'\n" +
 	"\fwait_seconds\x18\t \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12L\n" +
-	"\x0elink_databases\x18\v \x03(\v2%.pethost.panel.v1.DatabaseLinkRequestR\rlinkDatabasesJ\x04\b\n" +
+	"\x0elink_databases\x18\v \x03(\v2%.pethost.panel.v1.DatabaseLinkRequestR\rlinkDatabases\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\b\n" +
 	"\x10\vR\bdatabase\"\x7f\n" +
 	"\x13DatabaseLinkRequest\x12.\n" +
 	"\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x19\n" +
@@ -30508,7 +34438,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"violations\x12 \n" +
 	"\vadjustments\x18\x03 \x03(\tR\vadjustments\x123\n" +
 	"\aproject\x18\x05 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
-	"\x03log\x18\x06 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xa8\x04\n" +
+	"\x03log\x18\x06 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xc6\x04\n" +
 	"\x14DeployProjectRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12$\n" +
@@ -30523,7 +34453,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x06commit\x18\a \x01(\tH\x00R\x06commit\x12%\n" +
 	"\rnewest_commit\x18\b \x01(\bH\x00R\fnewestCommit\x12.\n" +
 	"\x12rollback_deploy_id\x18\f \x01(\tH\x00R\x10rollbackDeployId\x12'\n" +
-	"\fwait_seconds\x18\r \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSecondsB\t\n" +
+	"\fwait_seconds\x18\r \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceB\t\n" +
 	"\aversion\"f\n" +
 	"\vMountVolume\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x16\n" +
@@ -30560,11 +34491,54 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rSpecViolation\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12+\n" +
-	"\x11violation_message\x18\x03 \x01(\tR\x10violationMessage\"X\n" +
+	"\x11violation_message\x18\x03 \x01(\tR\x10violationMessage\"\x8d\x02\n" +
+	"\x12MoveProjectRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
+	"\fto_workspace\x18\x02 \x01(\tR\vtoWorkspace\x12!\n" +
+	"\foperation_id\x18\x04 \x01(\tR\voperationId\x12'\n" +
+	"\fwait_seconds\x18\x05 \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12K\n" +
+	"\x10switch_databases\x18\x06 \x03(\v2 .pethost.panel.v1.DatabaseSwitchR\x0fswitchDatabases\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xae\x01\n" +
+	"\x0eDatabaseSwitch\x12.\n" +
+	"\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x127\n" +
+	"\x18into_database_project_id\x18\x02 \x01(\tR\x15intoDatabaseProjectId\x12\x14\n" +
+	"\x05empty\x18\x03 \x01(\bR\x05empty\x12\x1d\n" +
+	"\n" +
+	"env_prefix\x18\x05 \x01(\tR\tenvPrefix\"\xa8\x01\n" +
+	"\x13MoveProjectResponse\x129\n" +
+	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x123\n" +
+	"\aproject\x18\x02 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x12!\n" +
+	"\fmove_message\x18\x03 \x01(\tR\vmoveMessage\"w\n" +
+	"\x15GetMoveChoicesRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
+	"\fto_workspace\x18\x02 \x01(\tR\vtoWorkspace\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"P\n" +
+	"\x16GetMoveChoicesResponse\x126\n" +
+	"\achoices\x18\x01 \x03(\v2\x1c.pethost.panel.v1.MoveChoiceR\achoices\"\xc3\x02\n" +
+	"\n" +
+	"MoveChoice\x12C\n" +
+	"\n" +
+	"dependency\x18\x01 \x01(\v2#.pethost.panel.v1.ProjectDependencyR\n" +
+	"dependency\x128\n" +
+	"\x06engine\x18\x02 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12\x14\n" +
+	"\x05owned\x18\x03 \x01(\bR\x05owned\x12:\n" +
+	"\tdatabases\x18\x04 \x03(\v2\x1c.pethost.panel.v1.MoveTargetR\tdatabases\x12!\n" +
+	"\fnew_database\x18\x05 \x01(\bR\vnewDatabase\x12A\n" +
+	"\x1dsuggested_database_project_id\x18\x06 \x01(\tR\x1asuggestedDatabaseProjectId\"\x8c\x01\n" +
+	"\n" +
+	"MoveTarget\x12.\n" +
+	"\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"data_bytes\x18\x03 \x01(\x04R\tdataBytes\x12\x1b\n" +
+	"\tapp_names\x18\x04 \x03(\tR\bappNames\"v\n" +
 	"\x12ListCommitsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12#\n" +
-	"\rbefore_commit\x18\x02 \x01(\tR\fbeforeCommit\"c\n" +
+	"\rbefore_commit\x18\x02 \x01(\tR\fbeforeCommit\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"c\n" +
 	"\x13ListCommitsResponse\x128\n" +
 	"\acommits\x18\x01 \x03(\v2\x1e.pethost.panel.v1.BranchCommitR\acommits\x12\x12\n" +
 	"\x04more\x18\x02 \x01(\bR\x04more\"\x8d\x02\n" +
@@ -30576,7 +34550,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\bdeployed\x18\x04 \x01(\bR\bdeployed\x12<\n" +
 	"\vlast_deploy\x18\x05 \x01(\v2\x1b.pethost.panel.v1.OperationR\n" +
 	"lastDeploy\x12\x16\n" +
-	"\x06newest\x18\x06 \x01(\bR\x06newest\"\xbe\a\n" +
+	"\x06newest\x18\x06 \x01(\bR\x06newest\"\xdc\a\n" +
 	"\x17RunProjectActionRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12I\n" +
@@ -30594,7 +34568,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x11set_database_size\x18\x0e \x01(\v2'.pethost.panel.v1.SetDatabaseSizeActionH\x00R\x0fsetDatabaseSize\x12!\n" +
 	"\foperation_id\x18\n" +
 	" \x01(\tR\voperationId\x12'\n" +
-	"\fwait_seconds\x18\r \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSecondsB\b\n" +
+	"\fwait_seconds\x18\r \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceB\b\n" +
 	"\x06action\",\n" +
 	"\x0eServicesAction\x12\x1a\n" +
 	"\bservices\x18\x01 \x03(\tR\bservices\"]\n" +
@@ -30659,13 +34634,14 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x1adefault_memory_limit_bytes\x18\x04 \x01(\x04R\x17defaultMemoryLimitBytes\x12\x1b\n" +
 	"\town_users\x18\x05 \x01(\bR\bownUsers\"B\n" +
 	"\x12DatabaseSizeChoice\x12,\n" +
-	"\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes\"q\n" +
+	"\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes\"\x8f\x01\n" +
 	"\x13LinkDatabaseRequest\x12.\n" +
 	"\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x12\n" +
 	"\x04link\x18\x02 \x03(\tR\x04link\x12\x16\n" +
-	"\x06unlink\x18\x03 \x03(\tR\x06unlink\"K\n" +
+	"\x06unlink\x18\x03 \x03(\tR\x06unlink\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"K\n" +
 	"\x14LinkDatabaseResponse\x123\n" +
-	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\xf3\x02\n" +
+	"\aproject\x18\x01 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\"\x91\x03\n" +
 	"\x15CreateDatabaseRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x128\n" +
@@ -30675,7 +34651,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04link\x18\x05 \x03(\tB\x04\xa8\xb5\x18\x01R\x04link\x12!\n" +
 	"\foperation_id\x18\x06 \x01(\tR\voperationId\x12'\n" +
 	"\fwait_seconds\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12C\n" +
-	"\bmetadata\x18\b \x01(\v2!.pethost.panel.v1.ProjectMetadataB\x04\xa8\xb5\x18\x01R\bmetadata\"\xa1\x02\n" +
+	"\bmetadata\x18\b \x01(\v2!.pethost.panel.v1.ProjectMetadataB\x04\xa8\xb5\x18\x01R\bmetadata\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xa1\x02\n" +
 	"\x16CreateDatabaseResponse\x129\n" +
 	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n" +
 	"\n" +
@@ -30683,7 +34660,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"violations\x12 \n" +
 	"\vadjustments\x18\x03 \x03(\tR\vadjustments\x123\n" +
 	"\aproject\x18\x04 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
-	"\x03log\x18\x05 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xd2\x02\n" +
+	"\x03log\x18\x05 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\"\xf0\x02\n" +
 	"\x17GetDatabaseStatsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x129\n" +
@@ -30692,7 +34669,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\bend_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12!\n" +
 	"\flast_seconds\x18\x04 \x01(\rR\vlastSeconds\x120\n" +
 	"\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12Q\n" +
-	"\x0fstatement_order\x18\x06 \x01(\x0e2(.pethost.panel.v1.DatabaseStatementOrderR\x0estatementOrder\"\x82\x04\n" +
+	"\x0fstatement_order\x18\x06 \x01(\x0e2(.pethost.panel.v1.DatabaseStatementOrderR\x0estatementOrder\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\x82\x04\n" +
 	"\x18GetDatabaseStatsResponse\x129\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
@@ -30824,15 +34802,16 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x03key\x18\x04 \x01(\tR\x03key\x12%\n" +
 	"\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12\x1f\n" +
 	"\vclient_name\x18\x06 \x01(\tR\n" +
-	"clientName\"n\n" +
+	"clientName\"\x8c\x01\n" +
 	"\x1aCancelDatabaseQueryRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x10\n" +
 	"\x03pid\x18\x02 \x01(\x05R\x03pid\x12\x1f\n" +
 	"\vend_session\x18\x03 \x01(\bR\n" +
-	"endSession\"1\n" +
+	"endSession\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"1\n" +
 	"\x1bCancelDatabaseQueryResponse\x12\x12\n" +
-	"\x04done\x18\x01 \x01(\bR\x04done\"\xc9\x02\n" +
+	"\x04done\x18\x01 \x01(\bR\x04done\"\xe7\x02\n" +
 	"\x17SetProjectAlertsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x123\n" +
@@ -30841,7 +34820,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rtraffic_rules\x18\x04 \x03(\v2\x1d.pethost.panel.v1.TrafficRuleR\ftrafficRules\x120\n" +
 	"\x14remove_traffic_rules\x18\x05 \x01(\bR\x12removeTrafficRules\x12\x16\n" +
 	"\x03off\x18\x06 \x01(\bB\x04\x90\xb5\x18\x01R\x03off\x12'\n" +
-	"\fmute_minutes\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vmuteMinutes\"S\n" +
+	"\fmute_minutes\x18\a \x01(\rB\x04\x90\xb5\x18\x01R\vmuteMinutes\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"S\n" +
 	"\x18SetProjectAlertsResponse\x127\n" +
 	"\x06alerts\x18\x01 \x01(\v2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts\"{\n" +
 	"\tSiteCheck\x12\x12\n" +
@@ -30917,28 +34897,31 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\n" +
 	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x12+\n" +
 	"\x0euptime_percent\x18\x02 \x01(\x01B\x04\x90\xb5\x18\x01R\ruptimePercent\x12!\n" +
-	"\fdown_seconds\x18\x03 \x01(\rR\vdownSeconds\"T\n" +
+	"\fdown_seconds\x18\x03 \x01(\rR\vdownSeconds\"r\n" +
 	"\x12GetIncidentRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1f\n" +
 	"\vincident_id\x18\x02 \x01(\tR\n" +
-	"incidentId\"\x81\x01\n" +
+	"incidentId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\x81\x01\n" +
 	"\x13GetIncidentResponse\x126\n" +
 	"\bincident\x18\x01 \x01(\v2\x1a.pethost.panel.v1.IncidentR\bincident\x122\n" +
-	"\x06joined\x18\x02 \x03(\v2\x1a.pethost.panel.v1.IncidentR\x06joined\"\xd8\x01\n" +
+	"\x06joined\x18\x02 \x03(\v2\x1a.pethost.panel.v1.IncidentR\x06joined\"\xf6\x01\n" +
 	"\x13GetOperationRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12'\n" +
 	"\fwait_seconds\x18\x03 \x01(\rB\x04\x90\xb5\x18\x01R\vwaitSeconds\x12*\n" +
 	"\x0eafter_log_line\x18\x04 \x01(\rB\x04\x90\xb5\x18\x01R\fafterLogLine\x12*\n" +
-	"\x0elog_line_limit\x18\x05 \x01(\rB\x04\x90\xb5\x18\x01R\flogLineLimit\"\x91\x02\n" +
+	"\x0elog_line_limit\x18\x05 \x01(\rB\x04\x90\xb5\x18\x01R\flogLineLimit\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xb4\x02\n" +
 	"\x14GetOperationResponse\x129\n" +
 	"\toperation\x18\x01 \x01(\v2\x1b.pethost.panel.v1.OperationR\toperation\x123\n" +
 	"\aproject\x18\x05 \x01(\v2\x19.pethost.panel.v1.ProjectR\aproject\x124\n" +
 	"\x03log\x18\x02 \x03(\v2\".pethost.panel.v1.OperationLogLineR\x03log\x12$\n" +
 	"\x0elog_line_count\x18\x03 \x01(\rR\flogLineCount\x12-\n" +
-	"\x13next_after_log_line\x18\x04 \x01(\rR\x10nextAfterLogLine\"V\n" +
+	"\x13next_after_log_line\x18\x04 \x01(\rR\x10nextAfterLogLine\x12!\n" +
+	"\fmove_message\x18\x06 \x01(\tR\vmoveMessage\"V\n" +
 	"\x10OperationLogLine\x12.\n" +
 	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\"\xaa\x01\n" +
@@ -30947,7 +34930,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x06method\x18\x02 \x01(\tR\x06method\x12#\n" +
 	"\rpath_contains\x18\x03 \x01(\tR\fpathContains\x12!\n" +
 	"\fpath_pattern\x18\x04 \x01(\tR\vpathPattern\x12!\n" +
-	"\fstatus_class\x18\x05 \x01(\rR\vstatusClass\"\x80\x03\n" +
+	"\fstatus_class\x18\x05 \x01(\rR\vstatusClass\"\x9e\x03\n" +
 	"\x17QueryHttpTrafficRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12;\n" +
@@ -30959,7 +34942,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12#\n" +
 	"\rrequest_limit\x18\x06 \x01(\rR\frequestLimit\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\a \x01(\tR\tpageToken\"\xc2\x04\n" +
+	"page_token\x18\a \x01(\tR\tpageToken\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xc2\x04\n" +
 	"\x18QueryHttpTrafficResponse\x129\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
@@ -31006,7 +34990,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x12ContainerLogFilter\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x126\n" +
 	"\x06stream\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12#\n" +
-	"\rtext_contains\x18\x03 \x01(\tR\ftextContains\"\xe1\x02\n" +
+	"\rtext_contains\x18\x03 \x01(\tR\ftextContains\"\xff\x02\n" +
 	"\x19QueryContainerLogsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12<\n" +
@@ -31019,7 +35003,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\n" +
 	"from_start\x18\x06 \x01(\bR\tfromStart\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\a \x01(\tR\tpageToken\"\xce\x02\n" +
+	"page_token\x18\a \x01(\tR\tpageToken\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xce\x02\n" +
 	"\x1aQueryContainerLogsResponse\x129\n" +
 	"\n" +
 	"start_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
@@ -31033,7 +35018,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x126\n" +
 	"\x06stream\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12\x12\n" +
-	"\x04text\x18\x04 \x01(\tR\x04text\"\xf9\x01\n" +
+	"\x04text\x18\x04 \x01(\tR\x04text\"\x97\x02\n" +
 	"\x18RunServiceCommandRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n" +
@@ -31042,7 +35027,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x05stdin\x18\x04 \x01(\tR\x05stdin\x12\x1e\n" +
 	"\vrun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n" +
 	"\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\x12'\n" +
-	"\x0ftimeout_seconds\x18\a \x01(\rR\x0etimeoutSeconds\"\xb0\x01\n" +
+	"\x0ftimeout_seconds\x18\a \x01(\rR\x0etimeoutSeconds\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xb0\x01\n" +
 	"\x19RunServiceCommandResponse\x12\x1b\n" +
 	"\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x1b\n" +
 	"\ttimed_out\x18\x02 \x01(\bR\btimedOut\x12\x16\n" +
@@ -31059,7 +35045,7 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04mode\x18\x05 \x01(\tR\x04mode\x12\x1b\n" +
 	"\towner_uid\x18\x06 \x01(\rR\bownerUid\x12\x1b\n" +
 	"\towner_gid\x18\a \x01(\rR\bownerGid\x12%\n" +
-	"\x0esymlink_target\x18\b \x01(\tR\rsymlinkTarget\"\x93\x02\n" +
+	"\x0esymlink_target\x18\b \x01(\tR\rsymlinkTarget\"\xb1\x02\n" +
 	"\x0fReadPathRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n" +
@@ -31070,7 +35056,8 @@ const file_v1_panel_proto_rawDesc = "" +
 	"entryLimit\x12!\n" +
 	"\foffset_bytes\x18\a \x01(\x04R\voffsetBytes\x12!\n" +
 	"\flength_bytes\x18\b \x01(\rR\vlengthBytes\x12(\n" +
-	"\x10entry_page_token\x18\t \x01(\tR\x0eentryPageTokenB\x06\n" +
+	"\x10entry_page_token\x18\t \x01(\tR\x0eentryPageToken\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceB\x06\n" +
 	"\x04root\"\x9e\x03\n" +
 	"\x10ReadPathResponse\x121\n" +
 	"\x05entry\x18\x01 \x01(\v2\x1b.pethost.panel.v1.FileEntryR\x05entry\x12:\n" +
@@ -31084,13 +35071,14 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04text\x18\x05 \x01(\tB\x03\x80\x01\x01R\x04text\x12\x16\n" +
 	"\x06binary\x18\x06 \x01(\bR\x06binary\x12*\n" +
 	"\x11next_offset_bytes\x18\a \x01(\x04R\x0fnextOffsetBytes\x12\x1b\n" +
-	"\tdeploy_id\x18\t \x01(\tR\bdeployId\"\xbb\x02\n" +
+	"\tdeploy_id\x18\t \x01(\tR\bdeployId\"\xd9\x02\n" +
 	"\x15CreateTransferRequest\x12H\n" +
 	"\x0eupload_archive\x18\x01 \x01(\v2\x1f.pethost.panel.v1.ArchiveUploadH\x00R\ruploadArchive\x12?\n" +
 	"\vupload_file\x18\x02 \x01(\v2\x1c.pethost.panel.v1.FileUploadH\x00R\n" +
 	"uploadFile\x12<\n" +
 	"\bdownload\x18\x03 \x01(\v2\x1e.pethost.panel.v1.PathDownloadH\x00R\bdownload\x12M\n" +
-	"\x11download_database\x18\x04 \x01(\v2\x1e.pethost.panel.v1.DatabaseDumpH\x00R\x10downloadDatabaseB\n" +
+	"\x11download_database\x18\x04 \x01(\v2\x1e.pethost.panel.v1.DatabaseDumpH\x00R\x10downloadDatabase\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspaceB\n" +
 	"\n" +
 	"\btransfer\",\n" +
 	"\rArchiveUpload\x12\x1b\n" +
@@ -31124,9 +35112,10 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\tupload_id\x18\x05 \x01(\tR\buploadId\x12\x1a\n" +
 	"\breplaces\x18\x06 \x01(\bR\breplaces\x12\x1b\n" +
 	"\tfile_name\x18\a \x01(\tR\bfileName\x12#\n" +
-	"\rexclude_names\x18\b \x03(\tR\fexcludeNames\"/\n" +
+	"\rexclude_names\x18\b \x03(\tR\fexcludeNames\"M\n" +
 	"\x10GetUploadRequest\x12\x1b\n" +
-	"\tupload_id\x18\x01 \x01(\tR\buploadId\"\xf9\x01\n" +
+	"\tupload_id\x18\x01 \x01(\tR\buploadId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xf9\x01\n" +
 	"\x11GetUploadResponse\x12\x1b\n" +
 	"\tfile_name\x18\x01 \x01(\tR\bfileName\x12\x1d\n" +
 	"\n" +
@@ -31158,33 +35147,56 @@ const file_v1_panel_proto_rawDesc = "" +
 	"data_bytes\x18\x02 \x01(\x04R\tdataBytes\x12\x1f\n" +
 	"\vkeeps_bytes\x18\x03 \x01(\x04R\n" +
 	"keepsBytes\x12\x16\n" +
-	"\x06volume\x18\x04 \x01(\tR\x06volume\"X\n" +
+	"\x06volume\x18\x04 \x01(\tR\x06volume\"{\n" +
 	"\tNoMachine\x129\n" +
 	"\x06reason\x18\x01 \x01(\x0e2!.pethost.panel.v1.NoMachineReasonR\x06reason\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\"Y\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12!\n" +
+	"\fworkspace_id\x18\x03 \x01(\tR\vworkspaceId\"\xad\x01\n" +
+	"\x0fWorkspaceChoice\x12;\n" +
+	"\n" +
+	"workspaces\x18\x01 \x03(\v2\x1b.pethost.panel.v1.WorkspaceR\n" +
+	"workspaces\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\rR\x05total\x12'\n" +
+	"\x0fholding_project\x18\x03 \x03(\tR\x0eholdingProject\x12\x1e\n" +
+	"\n" +
+	"incomplete\x18\x04 \x01(\bR\n" +
+	"incomplete\"J\n" +
+	"\x13WorkspaceNotGranted\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\"\xb0\x01\n" +
+	"\fProjectMoved\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
+	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12%\n" +
+	"\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x127\n" +
+	"\tmove_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bmoveTime\"w\n" +
 	"\x15WatchOperationRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12!\n" +
-	"\foperation_id\x18\x02 \x01(\tR\voperationId\"\xa9\x01\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xcc\x01\n" +
 	"\x16WatchOperationResponse\x126\n" +
 	"\x03log\x18\x01 \x01(\v2\".pethost.panel.v1.OperationLogLineH\x00R\x03log\x12L\n" +
-	"\x12finished_operation\x18\x02 \x01(\v2\x1b.pethost.panel.v1.OperationH\x00R\x11finishedOperationB\t\n" +
-	"\amessage\"\x9a\x01\n" +
+	"\x12finished_operation\x18\x02 \x01(\v2\x1b.pethost.panel.v1.OperationH\x00R\x11finishedOperation\x12!\n" +
+	"\fmove_message\x18\x03 \x01(\tR\vmoveMessageB\t\n" +
+	"\amessage\"\xb8\x01\n" +
 	"\x18TailContainerLogsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12<\n" +
 	"\x06filter\x18\x02 \x01(\v2$.pethost.panel.v1.ContainerLogFilterR\x06filter\x12!\n" +
-	"\fafter_cursor\x18\x03 \x01(\tR\vafterCursor\"b\n" +
+	"\fafter_cursor\x18\x03 \x01(\tR\vafterCursor\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"b\n" +
 	"\x19TailContainerLogsResponse\x12-\n" +
 	"\x04line\x18\x01 \x01(\v2\x19.pethost.panel.v1.LogLineR\x04line\x12\x16\n" +
-	"\x06cursor\x18\x02 \x01(\tR\x06cursor\"\x9b\x01\n" +
+	"\x06cursor\x18\x02 \x01(\tR\x06cursor\"\xb9\x01\n" +
 	"\x16TailHttpTrafficRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12;\n" +
 	"\x06filter\x18\x02 \x01(\v2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12%\n" +
-	"\x0eafter_sequence\x18\x03 \x01(\x04R\rafterSequence\"R\n" +
+	"\x0eafter_sequence\x18\x03 \x01(\x04R\rafterSequence\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"R\n" +
 	"\x17TailHttpTrafficResponse\x127\n" +
-	"\arequest\x18\x01 \x01(\v2\x1d.pethost.panel.v1.HttpRequestR\arequest\"\xe9\x01\n" +
+	"\arequest\x18\x01 \x01(\v2\x1d.pethost.panel.v1.HttpRequestR\arequest\"\x87\x02\n" +
 	"\x13OpenTerminalRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n" +
@@ -31192,21 +35204,30 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x04size\x18\x03 \x01(\v2\x1e.pethost.panel.v1.TerminalSizeR\x04size\x12\x18\n" +
 	"\acommand\x18\x04 \x03(\tR\acommand\x12\x1e\n" +
 	"\vrun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n" +
-	"\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\"<\n" +
+	"\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"<\n" +
 	"\fTerminalSize\x12\x18\n" +
 	"\acolumns\x18\x01 \x01(\rR\acolumns\x12\x12\n" +
 	"\x04rows\x18\x02 \x01(\rR\x04rows\"e\n" +
 	"\x14OpenTerminalResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12;\n" +
 	"\vexpire_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"expireTime\":\n" +
+	"expireTime\"X\n" +
 	"\x19OpenDatabaseClientRequest\x12\x1d\n" +
 	"\n" +
-	"project_id\x18\x01 \x01(\tR\tprojectId\"k\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1c\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"k\n" +
 	"\x1aOpenDatabaseClientResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12;\n" +
 	"\vexpire_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"expireTime*\x93\x01\n" +
+	"expireTime*t\n" +
+	"\x0fWorkspaceStatus\x12 \n" +
+	"\x1cWORKSPACE_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16WORKSPACE_STATUS_READY\x10\x01\x12#\n" +
+	"\x1fWORKSPACE_STATUS_BEING_PREPARED\x10\x02*I\n" +
+	"\rWorkspaceRole\x12\x1e\n" +
+	"\x1aWORKSPACE_ROLE_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14WORKSPACE_ROLE_OWNER\x10\x01*\x93\x01\n" +
 	"\x10AlertChannelKind\x12\"\n" +
 	"\x1eALERT_CHANNEL_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18ALERT_CHANNEL_KIND_EMAIL\x10\x01\x12\x1f\n" +
@@ -31267,14 +35288,15 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x1eCERTIFICATE_SOURCE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17CERTIFICATE_SOURCE_NONE\x10\x01\x12 \n" +
 	"\x1cCERTIFICATE_SOURCE_INSTALLED\x10\x02\x12 \n" +
-	"\x1cCERTIFICATE_SOURCE_AUTOMATIC\x10\x03*\xc1\x01\n" +
+	"\x1cCERTIFICATE_SOURCE_AUTOMATIC\x10\x03*\xda\x01\n" +
 	"\rOperationKind\x12\x1e\n" +
 	"\x1aOPERATION_KIND_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15OPERATION_KIND_DEPLOY\x10\x01\x12#\n" +
 	"\x1fOPERATION_KIND_RECREATE_SERVICE\x10\x02\x12\x19\n" +
 	"\x15OPERATION_KIND_BACKUP\x10\x03\x12\x1a\n" +
 	"\x16OPERATION_KIND_RESTORE\x10\x04\x12\x19\n" +
-	"\x15OPERATION_KIND_DELETE\x10\x05*\xb2\x01\n" +
+	"\x15OPERATION_KIND_DELETE\x10\x05\x12\x17\n" +
+	"\x13OPERATION_KIND_MOVE\x10\x06*\xb2\x01\n" +
 	"\x0fOperationStatus\x12 \n" +
 	"\x1cOPERATION_STATUS_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cOPERATION_STATUS_IN_PROGRESS\x10\x01\x12\x1e\n" +
@@ -31371,8 +35393,9 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x0fNoMachineReason\x12!\n" +
 	"\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n" +
-	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x93\x1a\n" +
-	"\fPanelService\x12q\n" +
+	" NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x86\x1d\n" +
+	"\fPanelService\x12}\n" +
+	"\x0eListWorkspaces\x12'.pethost.panel.v1.ListWorkspacesRequest\x1a(.pethost.panel.v1.ListWorkspacesResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fList workspaces\x12q\n" +
 	"\n" +
 	"GetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse\"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n" +
 	"\x10RunMachineAction\x12).pethost.panel.v1.RunMachineActionRequest\x1a*.pethost.panel.v1.RunMachineActionResponse\"\x1c\x8a\xb5\x18\x18\b\x01\x12\x14Run a machine action\x12\x8e\x01\n" +
@@ -31385,7 +35408,9 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a'.pethost.panel.v1.DeployProjectResponse\"F\x8a\xb5\x18\x14\b\x01\x12\x10Deploy a project\xa2\xb5\x18\v\n" +
 	"\aProject\x10\x03\xa2\xb5\x18\v\n" +
 	"\aProject\x10\x06\xa2\xb5\x18\f\n" +
-	"\bDatabase\x10\x06\x12}\n" +
+	"\bDatabase\x10\x06\x12\x87\x01\n" +
+	"\vMoveProject\x12$.pethost.panel.v1.MoveProjectRequest\x1a%.pethost.panel.v1.MoveProjectResponse\"+\x8a\xb5\x18'\b\x01\x12#Move a project to another workspace\x12h\n" +
+	"\x0eGetMoveChoices\x12'.pethost.panel.v1.GetMoveChoicesRequest\x1a(.pethost.panel.v1.GetMoveChoicesResponse\"\x03\x90\x02\x01\x12}\n" +
 	"\vListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse\"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project's commits\x12\xe9\x01\n" +
 	"\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse\"~\x8a\xb5\x18\x18\b\x01\x12\x14Run a project action\xa2\xb5\x18\x1b\n" +
 	"\aProject\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1c\n" +
@@ -31416,461 +35441,501 @@ const file_v1_panel_proto_rawDesc = "" +
 	"\x14com.pethost.panel.v1B\n" +
 	"PanelProtoZ6github.com/pethost-dev/sdk/go/internal/panelv1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\x0fv1/pulumi.protoz\fv1/sdk.proto"
 
-var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 24)
-var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 136)
+var file_v1_panel_proto_enumTypes = make([]protoimpl.EnumInfo, 26)
+var file_v1_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 151)
 var file_v1_panel_proto_goTypes = []any{
-	(AlertChannelKind)(0),               // 0: pethost.panel.v1.AlertChannelKind
-	(MachineSessionKind)(0),             // 1: pethost.panel.v1.MachineSessionKind
-	(ProjectProblemKind)(0),             // 2: pethost.panel.v1.ProjectProblemKind
-	(ServicesActionKind)(0),             // 3: pethost.panel.v1.ServicesActionKind
-	(ServiceState)(0),                   // 4: pethost.panel.v1.ServiceState
-	(RestartPolicy)(0),                  // 5: pethost.panel.v1.RestartPolicy
-	(HealthStatus)(0),                   // 6: pethost.panel.v1.HealthStatus
-	(CertificateSource)(0),              // 7: pethost.panel.v1.CertificateSource
-	(OperationKind)(0),                  // 8: pethost.panel.v1.OperationKind
-	(OperationStatus)(0),                // 9: pethost.panel.v1.OperationStatus
-	(DeployFailureReason)(0),            // 10: pethost.panel.v1.DeployFailureReason
-	(DatabaseEngine)(0),                 // 11: pethost.panel.v1.DatabaseEngine
-	(DatabaseCommandKind)(0),            // 12: pethost.panel.v1.DatabaseCommandKind
-	(DatabaseStatementOrder)(0),         // 13: pethost.panel.v1.DatabaseStatementOrder
-	(DatabaseSessionState)(0),           // 14: pethost.panel.v1.DatabaseSessionState
-	(TrafficMetric)(0),                  // 15: pethost.panel.v1.TrafficMetric
-	(AlertStatus)(0),                    // 16: pethost.panel.v1.AlertStatus
-	(IncidentQuietReason)(0),            // 17: pethost.panel.v1.IncidentQuietReason
-	(OutputStream)(0),                   // 18: pethost.panel.v1.OutputStream
-	(FileType)(0),                       // 19: pethost.panel.v1.FileType
-	(FileLocation)(0),                   // 20: pethost.panel.v1.FileLocation
-	(DatabaseLinkRefusalReason)(0),      // 21: pethost.panel.v1.DatabaseLinkRefusalReason
-	(DatabaseSizeRefusalReason)(0),      // 22: pethost.panel.v1.DatabaseSizeRefusalReason
-	(NoMachineReason)(0),                // 23: pethost.panel.v1.NoMachineReason
-	(*GetMachineRequest)(nil),           // 24: pethost.panel.v1.GetMachineRequest
-	(*GetMachineResponse)(nil),          // 25: pethost.panel.v1.GetMachineResponse
-	(*Machine)(nil),                     // 26: pethost.panel.v1.Machine
-	(*AlertDestination)(nil),            // 27: pethost.panel.v1.AlertDestination
-	(*MachineSession)(nil),              // 28: pethost.panel.v1.MachineSession
-	(*DiskUsage)(nil),                   // 29: pethost.panel.v1.DiskUsage
-	(*SshKey)(nil),                      // 30: pethost.panel.v1.SshKey
-	(*GithubConnection)(nil),            // 31: pethost.panel.v1.GithubConnection
-	(*GithubRepository)(nil),            // 32: pethost.panel.v1.GithubRepository
-	(*DeletedProject)(nil),              // 33: pethost.panel.v1.DeletedProject
-	(*RunMachineActionRequest)(nil),     // 34: pethost.panel.v1.RunMachineActionRequest
-	(*RestartMachineAction)(nil),        // 35: pethost.panel.v1.RestartMachineAction
-	(*RunMachineActionResponse)(nil),    // 36: pethost.panel.v1.RunMachineActionResponse
-	(*ProjectMetadata)(nil),             // 37: pethost.panel.v1.ProjectMetadata
-	(*ProjectSummary)(nil),              // 38: pethost.panel.v1.ProjectSummary
-	(*ServiceSummary)(nil),              // 39: pethost.panel.v1.ServiceSummary
-	(*ProjectProblem)(nil),              // 40: pethost.panel.v1.ProjectProblem
-	(*GetProjectRequest)(nil),           // 41: pethost.panel.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),          // 42: pethost.panel.v1.GetProjectResponse
-	(*Project)(nil),                     // 43: pethost.panel.v1.Project
-	(*RunningServicesAction)(nil),       // 44: pethost.panel.v1.RunningServicesAction
-	(*ProjectSource)(nil),               // 45: pethost.panel.v1.ProjectSource
-	(*GithubSource)(nil),                // 46: pethost.panel.v1.GithubSource
-	(*GithubCommit)(nil),                // 47: pethost.panel.v1.GithubCommit
-	(*Service)(nil),                     // 48: pethost.panel.v1.Service
-	(*PublishedPort)(nil),               // 49: pethost.panel.v1.PublishedPort
-	(*VolumeMount)(nil),                 // 50: pethost.panel.v1.VolumeMount
-	(*HealthCheck)(nil),                 // 51: pethost.panel.v1.HealthCheck
-	(*EnvironmentVariable)(nil),         // 52: pethost.panel.v1.EnvironmentVariable
-	(*Volume)(nil),                      // 53: pethost.panel.v1.Volume
-	(*VolumeMountedBy)(nil),             // 54: pethost.panel.v1.VolumeMountedBy
-	(*Host)(nil),                        // 55: pethost.panel.v1.Host
-	(*Route)(nil),                       // 56: pethost.panel.v1.Route
-	(*Operation)(nil),                   // 57: pethost.panel.v1.Operation
-	(*Snapshot)(nil),                    // 58: pethost.panel.v1.Snapshot
-	(*HttpTrafficSummary)(nil),          // 59: pethost.panel.v1.HttpTrafficSummary
-	(*CreateProjectRequest)(nil),        // 60: pethost.panel.v1.CreateProjectRequest
-	(*DatabaseLinkRequest)(nil),         // 61: pethost.panel.v1.DatabaseLinkRequest
-	(*CreateProjectResponse)(nil),       // 62: pethost.panel.v1.CreateProjectResponse
-	(*DeployProjectRequest)(nil),        // 63: pethost.panel.v1.DeployProjectRequest
-	(*MountVolume)(nil),                 // 64: pethost.panel.v1.MountVolume
-	(*ProjectExtension)(nil),            // 65: pethost.panel.v1.ProjectExtension
-	(*FileChange)(nil),                  // 66: pethost.panel.v1.FileChange
-	(*DeployProjectResponse)(nil),       // 67: pethost.panel.v1.DeployProjectResponse
-	(*SpecViolation)(nil),               // 68: pethost.panel.v1.SpecViolation
-	(*ListCommitsRequest)(nil),          // 69: pethost.panel.v1.ListCommitsRequest
-	(*ListCommitsResponse)(nil),         // 70: pethost.panel.v1.ListCommitsResponse
-	(*BranchCommit)(nil),                // 71: pethost.panel.v1.BranchCommit
-	(*RunProjectActionRequest)(nil),     // 72: pethost.panel.v1.RunProjectActionRequest
-	(*ServicesAction)(nil),              // 73: pethost.panel.v1.ServicesAction
-	(*RecreateServiceAction)(nil),       // 74: pethost.panel.v1.RecreateServiceAction
-	(*BackUpAction)(nil),                // 75: pethost.panel.v1.BackUpAction
-	(*RestoreSnapshotAction)(nil),       // 76: pethost.panel.v1.RestoreSnapshotAction
-	(*CancelOperationAction)(nil),       // 77: pethost.panel.v1.CancelOperationAction
-	(*DeleteProjectAction)(nil),         // 78: pethost.panel.v1.DeleteProjectAction
-	(*SetDatabaseSizeAction)(nil),       // 79: pethost.panel.v1.SetDatabaseSizeAction
-	(*RunProjectActionResponse)(nil),    // 80: pethost.panel.v1.RunProjectActionResponse
-	(*Database)(nil),                    // 81: pethost.panel.v1.Database
-	(*DatabaseConnection)(nil),          // 82: pethost.panel.v1.DatabaseConnection
-	(*DatabaseSummary)(nil),             // 83: pethost.panel.v1.DatabaseSummary
-	(*DatabaseEngineOffer)(nil),         // 84: pethost.panel.v1.DatabaseEngineOffer
-	(*DatabaseSizeChoice)(nil),          // 85: pethost.panel.v1.DatabaseSizeChoice
-	(*LinkDatabaseRequest)(nil),         // 86: pethost.panel.v1.LinkDatabaseRequest
-	(*LinkDatabaseResponse)(nil),        // 87: pethost.panel.v1.LinkDatabaseResponse
-	(*CreateDatabaseRequest)(nil),       // 88: pethost.panel.v1.CreateDatabaseRequest
-	(*CreateDatabaseResponse)(nil),      // 89: pethost.panel.v1.CreateDatabaseResponse
-	(*GetDatabaseStatsRequest)(nil),     // 90: pethost.panel.v1.GetDatabaseStatsRequest
-	(*GetDatabaseStatsResponse)(nil),    // 91: pethost.panel.v1.GetDatabaseStatsResponse
-	(*DatabaseStatsBucket)(nil),         // 92: pethost.panel.v1.DatabaseStatsBucket
-	(*DatabaseStats)(nil),               // 93: pethost.panel.v1.DatabaseStats
-	(*DatabaseCommandStats)(nil),        // 94: pethost.panel.v1.DatabaseCommandStats
-	(*PostgresStats)(nil),               // 95: pethost.panel.v1.PostgresStats
-	(*ValkeyStats)(nil),                 // 96: pethost.panel.v1.ValkeyStats
-	(*MariadbStats)(nil),                // 97: pethost.panel.v1.MariadbStats
-	(*DatabaseStatement)(nil),           // 98: pethost.panel.v1.DatabaseStatement
-	(*DatabaseActivity)(nil),            // 99: pethost.panel.v1.DatabaseActivity
-	(*DatabaseSession)(nil),             // 100: pethost.panel.v1.DatabaseSession
-	(*DatabaseSlowCommand)(nil),         // 101: pethost.panel.v1.DatabaseSlowCommand
-	(*CancelDatabaseQueryRequest)(nil),  // 102: pethost.panel.v1.CancelDatabaseQueryRequest
-	(*CancelDatabaseQueryResponse)(nil), // 103: pethost.panel.v1.CancelDatabaseQueryResponse
-	(*SetProjectAlertsRequest)(nil),     // 104: pethost.panel.v1.SetProjectAlertsRequest
-	(*SetProjectAlertsResponse)(nil),    // 105: pethost.panel.v1.SetProjectAlertsResponse
-	(*SiteCheck)(nil),                   // 106: pethost.panel.v1.SiteCheck
-	(*TrafficRule)(nil),                 // 107: pethost.panel.v1.TrafficRule
-	(*ProjectAlerts)(nil),               // 108: pethost.panel.v1.ProjectAlerts
-	(*SiteCheckState)(nil),              // 109: pethost.panel.v1.SiteCheckState
-	(*SiteCheckResult)(nil),             // 110: pethost.panel.v1.SiteCheckResult
-	(*TrafficRuleState)(nil),            // 111: pethost.panel.v1.TrafficRuleState
-	(*Incident)(nil),                    // 112: pethost.panel.v1.Incident
-	(*IncidentEvidence)(nil),            // 113: pethost.panel.v1.IncidentEvidence
-	(*UptimeDay)(nil),                   // 114: pethost.panel.v1.UptimeDay
-	(*GetIncidentRequest)(nil),          // 115: pethost.panel.v1.GetIncidentRequest
-	(*GetIncidentResponse)(nil),         // 116: pethost.panel.v1.GetIncidentResponse
-	(*GetOperationRequest)(nil),         // 117: pethost.panel.v1.GetOperationRequest
-	(*GetOperationResponse)(nil),        // 118: pethost.panel.v1.GetOperationResponse
-	(*OperationLogLine)(nil),            // 119: pethost.panel.v1.OperationLogLine
-	(*HttpTrafficFilter)(nil),           // 120: pethost.panel.v1.HttpTrafficFilter
-	(*QueryHttpTrafficRequest)(nil),     // 121: pethost.panel.v1.QueryHttpTrafficRequest
-	(*QueryHttpTrafficResponse)(nil),    // 122: pethost.panel.v1.QueryHttpTrafficResponse
-	(*HttpTrafficBucket)(nil),           // 123: pethost.panel.v1.HttpTrafficBucket
-	(*HttpPathTraffic)(nil),             // 124: pethost.panel.v1.HttpPathTraffic
-	(*HttpRequest)(nil),                 // 125: pethost.panel.v1.HttpRequest
-	(*ContainerLogFilter)(nil),          // 126: pethost.panel.v1.ContainerLogFilter
-	(*QueryContainerLogsRequest)(nil),   // 127: pethost.panel.v1.QueryContainerLogsRequest
-	(*QueryContainerLogsResponse)(nil),  // 128: pethost.panel.v1.QueryContainerLogsResponse
-	(*LogLine)(nil),                     // 129: pethost.panel.v1.LogLine
-	(*RunServiceCommandRequest)(nil),    // 130: pethost.panel.v1.RunServiceCommandRequest
-	(*RunServiceCommandResponse)(nil),   // 131: pethost.panel.v1.RunServiceCommandResponse
-	(*FileEntry)(nil),                   // 132: pethost.panel.v1.FileEntry
-	(*ReadPathRequest)(nil),             // 133: pethost.panel.v1.ReadPathRequest
-	(*ReadPathResponse)(nil),            // 134: pethost.panel.v1.ReadPathResponse
-	(*CreateTransferRequest)(nil),       // 135: pethost.panel.v1.CreateTransferRequest
-	(*ArchiveUpload)(nil),               // 136: pethost.panel.v1.ArchiveUpload
-	(*FileUpload)(nil),                  // 137: pethost.panel.v1.FileUpload
-	(*PathDownload)(nil),                // 138: pethost.panel.v1.PathDownload
-	(*DatabaseDump)(nil),                // 139: pethost.panel.v1.DatabaseDump
-	(*CreateTransferResponse)(nil),      // 140: pethost.panel.v1.CreateTransferResponse
-	(*GetUploadRequest)(nil),            // 141: pethost.panel.v1.GetUploadRequest
-	(*GetUploadResponse)(nil),           // 142: pethost.panel.v1.GetUploadResponse
-	(*ProjectBusy)(nil),                 // 143: pethost.panel.v1.ProjectBusy
-	(*ProjectChanged)(nil),              // 144: pethost.panel.v1.ProjectChanged
-	(*MachineUnreachable)(nil),          // 145: pethost.panel.v1.MachineUnreachable
-	(*DatabaseLinkRefusal)(nil),         // 146: pethost.panel.v1.DatabaseLinkRefusal
-	(*DatabaseSizeRefusal)(nil),         // 147: pethost.panel.v1.DatabaseSizeRefusal
-	(*NoMachine)(nil),                   // 148: pethost.panel.v1.NoMachine
-	(*WatchOperationRequest)(nil),       // 149: pethost.panel.v1.WatchOperationRequest
-	(*WatchOperationResponse)(nil),      // 150: pethost.panel.v1.WatchOperationResponse
-	(*TailContainerLogsRequest)(nil),    // 151: pethost.panel.v1.TailContainerLogsRequest
-	(*TailContainerLogsResponse)(nil),   // 152: pethost.panel.v1.TailContainerLogsResponse
-	(*TailHttpTrafficRequest)(nil),      // 153: pethost.panel.v1.TailHttpTrafficRequest
-	(*TailHttpTrafficResponse)(nil),     // 154: pethost.panel.v1.TailHttpTrafficResponse
-	(*OpenTerminalRequest)(nil),         // 155: pethost.panel.v1.OpenTerminalRequest
-	(*TerminalSize)(nil),                // 156: pethost.panel.v1.TerminalSize
-	(*OpenTerminalResponse)(nil),        // 157: pethost.panel.v1.OpenTerminalResponse
-	(*OpenDatabaseClientRequest)(nil),   // 158: pethost.panel.v1.OpenDatabaseClientRequest
-	(*OpenDatabaseClientResponse)(nil),  // 159: pethost.panel.v1.OpenDatabaseClientResponse
-	(*timestamppb.Timestamp)(nil),       // 160: google.protobuf.Timestamp
+	(WorkspaceStatus)(0),                // 0: pethost.panel.v1.WorkspaceStatus
+	(WorkspaceRole)(0),                  // 1: pethost.panel.v1.WorkspaceRole
+	(AlertChannelKind)(0),               // 2: pethost.panel.v1.AlertChannelKind
+	(MachineSessionKind)(0),             // 3: pethost.panel.v1.MachineSessionKind
+	(ProjectProblemKind)(0),             // 4: pethost.panel.v1.ProjectProblemKind
+	(ServicesActionKind)(0),             // 5: pethost.panel.v1.ServicesActionKind
+	(ServiceState)(0),                   // 6: pethost.panel.v1.ServiceState
+	(RestartPolicy)(0),                  // 7: pethost.panel.v1.RestartPolicy
+	(HealthStatus)(0),                   // 8: pethost.panel.v1.HealthStatus
+	(CertificateSource)(0),              // 9: pethost.panel.v1.CertificateSource
+	(OperationKind)(0),                  // 10: pethost.panel.v1.OperationKind
+	(OperationStatus)(0),                // 11: pethost.panel.v1.OperationStatus
+	(DeployFailureReason)(0),            // 12: pethost.panel.v1.DeployFailureReason
+	(DatabaseEngine)(0),                 // 13: pethost.panel.v1.DatabaseEngine
+	(DatabaseCommandKind)(0),            // 14: pethost.panel.v1.DatabaseCommandKind
+	(DatabaseStatementOrder)(0),         // 15: pethost.panel.v1.DatabaseStatementOrder
+	(DatabaseSessionState)(0),           // 16: pethost.panel.v1.DatabaseSessionState
+	(TrafficMetric)(0),                  // 17: pethost.panel.v1.TrafficMetric
+	(AlertStatus)(0),                    // 18: pethost.panel.v1.AlertStatus
+	(IncidentQuietReason)(0),            // 19: pethost.panel.v1.IncidentQuietReason
+	(OutputStream)(0),                   // 20: pethost.panel.v1.OutputStream
+	(FileType)(0),                       // 21: pethost.panel.v1.FileType
+	(FileLocation)(0),                   // 22: pethost.panel.v1.FileLocation
+	(DatabaseLinkRefusalReason)(0),      // 23: pethost.panel.v1.DatabaseLinkRefusalReason
+	(DatabaseSizeRefusalReason)(0),      // 24: pethost.panel.v1.DatabaseSizeRefusalReason
+	(NoMachineReason)(0),                // 25: pethost.panel.v1.NoMachineReason
+	(*ListWorkspacesRequest)(nil),       // 26: pethost.panel.v1.ListWorkspacesRequest
+	(*ListWorkspacesResponse)(nil),      // 27: pethost.panel.v1.ListWorkspacesResponse
+	(*Workspace)(nil),                   // 28: pethost.panel.v1.Workspace
+	(*GetMachineRequest)(nil),           // 29: pethost.panel.v1.GetMachineRequest
+	(*GetMachineResponse)(nil),          // 30: pethost.panel.v1.GetMachineResponse
+	(*Machine)(nil),                     // 31: pethost.panel.v1.Machine
+	(*AlertDestination)(nil),            // 32: pethost.panel.v1.AlertDestination
+	(*MachineSession)(nil),              // 33: pethost.panel.v1.MachineSession
+	(*DiskUsage)(nil),                   // 34: pethost.panel.v1.DiskUsage
+	(*SshKey)(nil),                      // 35: pethost.panel.v1.SshKey
+	(*GithubConnection)(nil),            // 36: pethost.panel.v1.GithubConnection
+	(*GithubRepository)(nil),            // 37: pethost.panel.v1.GithubRepository
+	(*DeletedProject)(nil),              // 38: pethost.panel.v1.DeletedProject
+	(*MovedTo)(nil),                     // 39: pethost.panel.v1.MovedTo
+	(*RunMachineActionRequest)(nil),     // 40: pethost.panel.v1.RunMachineActionRequest
+	(*RestartMachineAction)(nil),        // 41: pethost.panel.v1.RestartMachineAction
+	(*RunMachineActionResponse)(nil),    // 42: pethost.panel.v1.RunMachineActionResponse
+	(*ProjectMetadata)(nil),             // 43: pethost.panel.v1.ProjectMetadata
+	(*ProjectSummary)(nil),              // 44: pethost.panel.v1.ProjectSummary
+	(*ServiceSummary)(nil),              // 45: pethost.panel.v1.ServiceSummary
+	(*ProjectProblem)(nil),              // 46: pethost.panel.v1.ProjectProblem
+	(*GetProjectRequest)(nil),           // 47: pethost.panel.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),          // 48: pethost.panel.v1.GetProjectResponse
+	(*Project)(nil),                     // 49: pethost.panel.v1.Project
+	(*ProjectDependency)(nil),           // 50: pethost.panel.v1.ProjectDependency
+	(*RunningServicesAction)(nil),       // 51: pethost.panel.v1.RunningServicesAction
+	(*ProjectSource)(nil),               // 52: pethost.panel.v1.ProjectSource
+	(*GithubSource)(nil),                // 53: pethost.panel.v1.GithubSource
+	(*GithubCommit)(nil),                // 54: pethost.panel.v1.GithubCommit
+	(*Service)(nil),                     // 55: pethost.panel.v1.Service
+	(*PublishedPort)(nil),               // 56: pethost.panel.v1.PublishedPort
+	(*VolumeMount)(nil),                 // 57: pethost.panel.v1.VolumeMount
+	(*HealthCheck)(nil),                 // 58: pethost.panel.v1.HealthCheck
+	(*EnvironmentVariable)(nil),         // 59: pethost.panel.v1.EnvironmentVariable
+	(*Volume)(nil),                      // 60: pethost.panel.v1.Volume
+	(*VolumeMountedBy)(nil),             // 61: pethost.panel.v1.VolumeMountedBy
+	(*Host)(nil),                        // 62: pethost.panel.v1.Host
+	(*Route)(nil),                       // 63: pethost.panel.v1.Route
+	(*Operation)(nil),                   // 64: pethost.panel.v1.Operation
+	(*Snapshot)(nil),                    // 65: pethost.panel.v1.Snapshot
+	(*HttpTrafficSummary)(nil),          // 66: pethost.panel.v1.HttpTrafficSummary
+	(*CreateProjectRequest)(nil),        // 67: pethost.panel.v1.CreateProjectRequest
+	(*DatabaseLinkRequest)(nil),         // 68: pethost.panel.v1.DatabaseLinkRequest
+	(*CreateProjectResponse)(nil),       // 69: pethost.panel.v1.CreateProjectResponse
+	(*DeployProjectRequest)(nil),        // 70: pethost.panel.v1.DeployProjectRequest
+	(*MountVolume)(nil),                 // 71: pethost.panel.v1.MountVolume
+	(*ProjectExtension)(nil),            // 72: pethost.panel.v1.ProjectExtension
+	(*FileChange)(nil),                  // 73: pethost.panel.v1.FileChange
+	(*DeployProjectResponse)(nil),       // 74: pethost.panel.v1.DeployProjectResponse
+	(*SpecViolation)(nil),               // 75: pethost.panel.v1.SpecViolation
+	(*MoveProjectRequest)(nil),          // 76: pethost.panel.v1.MoveProjectRequest
+	(*DatabaseSwitch)(nil),              // 77: pethost.panel.v1.DatabaseSwitch
+	(*MoveProjectResponse)(nil),         // 78: pethost.panel.v1.MoveProjectResponse
+	(*GetMoveChoicesRequest)(nil),       // 79: pethost.panel.v1.GetMoveChoicesRequest
+	(*GetMoveChoicesResponse)(nil),      // 80: pethost.panel.v1.GetMoveChoicesResponse
+	(*MoveChoice)(nil),                  // 81: pethost.panel.v1.MoveChoice
+	(*MoveTarget)(nil),                  // 82: pethost.panel.v1.MoveTarget
+	(*ListCommitsRequest)(nil),          // 83: pethost.panel.v1.ListCommitsRequest
+	(*ListCommitsResponse)(nil),         // 84: pethost.panel.v1.ListCommitsResponse
+	(*BranchCommit)(nil),                // 85: pethost.panel.v1.BranchCommit
+	(*RunProjectActionRequest)(nil),     // 86: pethost.panel.v1.RunProjectActionRequest
+	(*ServicesAction)(nil),              // 87: pethost.panel.v1.ServicesAction
+	(*RecreateServiceAction)(nil),       // 88: pethost.panel.v1.RecreateServiceAction
+	(*BackUpAction)(nil),                // 89: pethost.panel.v1.BackUpAction
+	(*RestoreSnapshotAction)(nil),       // 90: pethost.panel.v1.RestoreSnapshotAction
+	(*CancelOperationAction)(nil),       // 91: pethost.panel.v1.CancelOperationAction
+	(*DeleteProjectAction)(nil),         // 92: pethost.panel.v1.DeleteProjectAction
+	(*SetDatabaseSizeAction)(nil),       // 93: pethost.panel.v1.SetDatabaseSizeAction
+	(*RunProjectActionResponse)(nil),    // 94: pethost.panel.v1.RunProjectActionResponse
+	(*Database)(nil),                    // 95: pethost.panel.v1.Database
+	(*DatabaseConnection)(nil),          // 96: pethost.panel.v1.DatabaseConnection
+	(*DatabaseSummary)(nil),             // 97: pethost.panel.v1.DatabaseSummary
+	(*DatabaseEngineOffer)(nil),         // 98: pethost.panel.v1.DatabaseEngineOffer
+	(*DatabaseSizeChoice)(nil),          // 99: pethost.panel.v1.DatabaseSizeChoice
+	(*LinkDatabaseRequest)(nil),         // 100: pethost.panel.v1.LinkDatabaseRequest
+	(*LinkDatabaseResponse)(nil),        // 101: pethost.panel.v1.LinkDatabaseResponse
+	(*CreateDatabaseRequest)(nil),       // 102: pethost.panel.v1.CreateDatabaseRequest
+	(*CreateDatabaseResponse)(nil),      // 103: pethost.panel.v1.CreateDatabaseResponse
+	(*GetDatabaseStatsRequest)(nil),     // 104: pethost.panel.v1.GetDatabaseStatsRequest
+	(*GetDatabaseStatsResponse)(nil),    // 105: pethost.panel.v1.GetDatabaseStatsResponse
+	(*DatabaseStatsBucket)(nil),         // 106: pethost.panel.v1.DatabaseStatsBucket
+	(*DatabaseStats)(nil),               // 107: pethost.panel.v1.DatabaseStats
+	(*DatabaseCommandStats)(nil),        // 108: pethost.panel.v1.DatabaseCommandStats
+	(*PostgresStats)(nil),               // 109: pethost.panel.v1.PostgresStats
+	(*ValkeyStats)(nil),                 // 110: pethost.panel.v1.ValkeyStats
+	(*MariadbStats)(nil),                // 111: pethost.panel.v1.MariadbStats
+	(*DatabaseStatement)(nil),           // 112: pethost.panel.v1.DatabaseStatement
+	(*DatabaseActivity)(nil),            // 113: pethost.panel.v1.DatabaseActivity
+	(*DatabaseSession)(nil),             // 114: pethost.panel.v1.DatabaseSession
+	(*DatabaseSlowCommand)(nil),         // 115: pethost.panel.v1.DatabaseSlowCommand
+	(*CancelDatabaseQueryRequest)(nil),  // 116: pethost.panel.v1.CancelDatabaseQueryRequest
+	(*CancelDatabaseQueryResponse)(nil), // 117: pethost.panel.v1.CancelDatabaseQueryResponse
+	(*SetProjectAlertsRequest)(nil),     // 118: pethost.panel.v1.SetProjectAlertsRequest
+	(*SetProjectAlertsResponse)(nil),    // 119: pethost.panel.v1.SetProjectAlertsResponse
+	(*SiteCheck)(nil),                   // 120: pethost.panel.v1.SiteCheck
+	(*TrafficRule)(nil),                 // 121: pethost.panel.v1.TrafficRule
+	(*ProjectAlerts)(nil),               // 122: pethost.panel.v1.ProjectAlerts
+	(*SiteCheckState)(nil),              // 123: pethost.panel.v1.SiteCheckState
+	(*SiteCheckResult)(nil),             // 124: pethost.panel.v1.SiteCheckResult
+	(*TrafficRuleState)(nil),            // 125: pethost.panel.v1.TrafficRuleState
+	(*Incident)(nil),                    // 126: pethost.panel.v1.Incident
+	(*IncidentEvidence)(nil),            // 127: pethost.panel.v1.IncidentEvidence
+	(*UptimeDay)(nil),                   // 128: pethost.panel.v1.UptimeDay
+	(*GetIncidentRequest)(nil),          // 129: pethost.panel.v1.GetIncidentRequest
+	(*GetIncidentResponse)(nil),         // 130: pethost.panel.v1.GetIncidentResponse
+	(*GetOperationRequest)(nil),         // 131: pethost.panel.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),        // 132: pethost.panel.v1.GetOperationResponse
+	(*OperationLogLine)(nil),            // 133: pethost.panel.v1.OperationLogLine
+	(*HttpTrafficFilter)(nil),           // 134: pethost.panel.v1.HttpTrafficFilter
+	(*QueryHttpTrafficRequest)(nil),     // 135: pethost.panel.v1.QueryHttpTrafficRequest
+	(*QueryHttpTrafficResponse)(nil),    // 136: pethost.panel.v1.QueryHttpTrafficResponse
+	(*HttpTrafficBucket)(nil),           // 137: pethost.panel.v1.HttpTrafficBucket
+	(*HttpPathTraffic)(nil),             // 138: pethost.panel.v1.HttpPathTraffic
+	(*HttpRequest)(nil),                 // 139: pethost.panel.v1.HttpRequest
+	(*ContainerLogFilter)(nil),          // 140: pethost.panel.v1.ContainerLogFilter
+	(*QueryContainerLogsRequest)(nil),   // 141: pethost.panel.v1.QueryContainerLogsRequest
+	(*QueryContainerLogsResponse)(nil),  // 142: pethost.panel.v1.QueryContainerLogsResponse
+	(*LogLine)(nil),                     // 143: pethost.panel.v1.LogLine
+	(*RunServiceCommandRequest)(nil),    // 144: pethost.panel.v1.RunServiceCommandRequest
+	(*RunServiceCommandResponse)(nil),   // 145: pethost.panel.v1.RunServiceCommandResponse
+	(*FileEntry)(nil),                   // 146: pethost.panel.v1.FileEntry
+	(*ReadPathRequest)(nil),             // 147: pethost.panel.v1.ReadPathRequest
+	(*ReadPathResponse)(nil),            // 148: pethost.panel.v1.ReadPathResponse
+	(*CreateTransferRequest)(nil),       // 149: pethost.panel.v1.CreateTransferRequest
+	(*ArchiveUpload)(nil),               // 150: pethost.panel.v1.ArchiveUpload
+	(*FileUpload)(nil),                  // 151: pethost.panel.v1.FileUpload
+	(*PathDownload)(nil),                // 152: pethost.panel.v1.PathDownload
+	(*DatabaseDump)(nil),                // 153: pethost.panel.v1.DatabaseDump
+	(*CreateTransferResponse)(nil),      // 154: pethost.panel.v1.CreateTransferResponse
+	(*GetUploadRequest)(nil),            // 155: pethost.panel.v1.GetUploadRequest
+	(*GetUploadResponse)(nil),           // 156: pethost.panel.v1.GetUploadResponse
+	(*ProjectBusy)(nil),                 // 157: pethost.panel.v1.ProjectBusy
+	(*ProjectChanged)(nil),              // 158: pethost.panel.v1.ProjectChanged
+	(*MachineUnreachable)(nil),          // 159: pethost.panel.v1.MachineUnreachable
+	(*DatabaseLinkRefusal)(nil),         // 160: pethost.panel.v1.DatabaseLinkRefusal
+	(*DatabaseSizeRefusal)(nil),         // 161: pethost.panel.v1.DatabaseSizeRefusal
+	(*NoMachine)(nil),                   // 162: pethost.panel.v1.NoMachine
+	(*WorkspaceChoice)(nil),             // 163: pethost.panel.v1.WorkspaceChoice
+	(*WorkspaceNotGranted)(nil),         // 164: pethost.panel.v1.WorkspaceNotGranted
+	(*ProjectMoved)(nil),                // 165: pethost.panel.v1.ProjectMoved
+	(*WatchOperationRequest)(nil),       // 166: pethost.panel.v1.WatchOperationRequest
+	(*WatchOperationResponse)(nil),      // 167: pethost.panel.v1.WatchOperationResponse
+	(*TailContainerLogsRequest)(nil),    // 168: pethost.panel.v1.TailContainerLogsRequest
+	(*TailContainerLogsResponse)(nil),   // 169: pethost.panel.v1.TailContainerLogsResponse
+	(*TailHttpTrafficRequest)(nil),      // 170: pethost.panel.v1.TailHttpTrafficRequest
+	(*TailHttpTrafficResponse)(nil),     // 171: pethost.panel.v1.TailHttpTrafficResponse
+	(*OpenTerminalRequest)(nil),         // 172: pethost.panel.v1.OpenTerminalRequest
+	(*TerminalSize)(nil),                // 173: pethost.panel.v1.TerminalSize
+	(*OpenTerminalResponse)(nil),        // 174: pethost.panel.v1.OpenTerminalResponse
+	(*OpenDatabaseClientRequest)(nil),   // 175: pethost.panel.v1.OpenDatabaseClientRequest
+	(*OpenDatabaseClientResponse)(nil),  // 176: pethost.panel.v1.OpenDatabaseClientResponse
+	(*timestamppb.Timestamp)(nil),       // 177: google.protobuf.Timestamp
 }
 var file_v1_panel_proto_depIdxs = []int32{
-	26,  // 0: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
-	38,  // 1: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
-	33,  // 2: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
-	31,  // 3: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
-	160, // 4: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
-	29,  // 5: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
-	30,  // 6: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
-	160, // 7: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	160, // 8: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
-	160, // 9: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
-	160, // 10: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
-	28,  // 11: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
-	27,  // 12: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
-	84,  // 13: pethost.panel.v1.Machine.database_engines:type_name -> pethost.panel.v1.DatabaseEngineOffer
-	0,   // 14: pethost.panel.v1.AlertDestination.kind:type_name -> pethost.panel.v1.AlertChannelKind
-	1,   // 15: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
-	160, // 16: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
-	32,  // 17: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
-	160, // 18: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
-	58,  // 19: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
-	30,  // 20: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
-	35,  // 21: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
-	160, // 22: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
-	26,  // 23: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
-	37,  // 24: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	40,  // 25: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
-	39,  // 26: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
-	59,  // 27: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	160, // 28: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
-	57,  // 29: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
-	83,  // 30: pethost.panel.v1.ProjectSummary.database:type_name -> pethost.panel.v1.DatabaseSummary
-	4,   // 31: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
-	2,   // 32: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	160, // 33: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
-	160, // 34: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
-	160, // 35: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
-	43,  // 36: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
-	37,  // 37: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	40,  // 38: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
-	9,   // 39: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
-	160, // 40: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
-	48,  // 41: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
-	53,  // 42: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
-	56,  // 43: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
-	55,  // 44: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
-	57,  // 45: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
-	58,  // 46: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
-	160, // 47: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
-	59,  // 48: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
-	45,  // 49: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
-	44,  // 50: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
-	108, // 51: pethost.panel.v1.Project.alerts:type_name -> pethost.panel.v1.ProjectAlerts
-	112, // 52: pethost.panel.v1.Project.incidents:type_name -> pethost.panel.v1.Incident
-	114, // 53: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
-	81,  // 54: pethost.panel.v1.Project.database:type_name -> pethost.panel.v1.Database
-	3,   // 55: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
-	160, // 56: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
-	46,  // 57: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
-	47,  // 58: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
-	47,  // 59: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
-	4,   // 60: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
-	160, // 61: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
-	160, // 62: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
-	49,  // 63: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
-	50,  // 64: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
-	5,   // 65: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
-	51,  // 66: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
-	52,  // 67: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
-	6,   // 68: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
-	54,  // 69: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
-	160, // 70: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
-	7,   // 71: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
-	160, // 72: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
-	8,   // 73: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
-	9,   // 74: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
-	160, // 75: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
-	160, // 76: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
-	10,  // 77: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
-	47,  // 78: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
-	160, // 79: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
-	45,  // 80: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
-	66,  // 81: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	65,  // 82: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	61,  // 83: pethost.panel.v1.CreateProjectRequest.link_databases:type_name -> pethost.panel.v1.DatabaseLinkRequest
-	57,  // 84: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	68,  // 85: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	43,  // 86: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
-	119, // 87: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	66,  // 88: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
-	65,  // 89: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
-	64,  // 90: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
-	37,  // 91: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	56,  // 92: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
-	57,  // 93: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
-	68,  // 94: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	43,  // 95: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
-	119, // 96: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	71,  // 97: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
-	47,  // 98: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
-	160, // 99: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
-	57,  // 100: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
-	73,  // 101: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
-	73,  // 102: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
-	73,  // 103: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
-	74,  // 104: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
-	75,  // 105: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
-	76,  // 106: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
-	77,  // 107: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
-	78,  // 108: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
-	45,  // 109: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
-	79,  // 110: pethost.panel.v1.RunProjectActionRequest.set_database_size:type_name -> pethost.panel.v1.SetDatabaseSizeAction
-	57,  // 111: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
-	43,  // 112: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
-	119, // 113: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	11,  // 114: pethost.panel.v1.Database.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	82,  // 115: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
-	11,  // 116: pethost.panel.v1.DatabaseSummary.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	11,  // 117: pethost.panel.v1.DatabaseEngineOffer.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	85,  // 118: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
-	43,  // 119: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
-	11,  // 120: pethost.panel.v1.CreateDatabaseRequest.engine:type_name -> pethost.panel.v1.DatabaseEngine
-	37,  // 121: pethost.panel.v1.CreateDatabaseRequest.metadata:type_name -> pethost.panel.v1.ProjectMetadata
-	57,  // 122: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
-	68,  // 123: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	43,  // 124: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
-	119, // 125: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	160, // 126: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
-	160, // 127: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
-	13,  // 128: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
-	160, // 129: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
-	160, // 130: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
-	160, // 131: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	93,  // 132: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
-	92,  // 133: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
-	98,  // 134: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
-	99,  // 135: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
-	160, // 136: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
-	93,  // 137: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
-	94,  // 138: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
-	95,  // 139: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
-	96,  // 140: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
-	97,  // 141: pethost.panel.v1.DatabaseStats.mariadb:type_name -> pethost.panel.v1.MariadbStats
-	12,  // 142: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
-	12,  // 143: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
-	160, // 144: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
-	100, // 145: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
-	101, // 146: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
-	14,  // 147: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
-	160, // 148: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
-	160, // 149: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
-	160, // 150: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
-	160, // 151: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
-	106, // 152: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
-	107, // 153: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
-	108, // 154: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
-	15,  // 155: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
-	120, // 156: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	109, // 157: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
-	111, // 158: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
-	160, // 159: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
-	106, // 160: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
-	16,  // 161: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
-	110, // 162: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
-	160, // 163: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
-	107, // 164: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
-	16,  // 165: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
-	2,   // 166: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
-	106, // 167: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
-	107, // 168: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
-	160, // 169: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
-	160, // 170: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
-	160, // 171: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
-	17,  // 172: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
-	113, // 173: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
-	110, // 174: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
-	129, // 175: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
-	124, // 176: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
-	160, // 177: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
-	112, // 178: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
-	112, // 179: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
-	57,  // 180: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
-	43,  // 181: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
-	119, // 182: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	160, // 183: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
-	120, // 184: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	160, // 185: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
-	160, // 186: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
-	160, // 187: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
-	160, // 188: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
-	160, // 189: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	59,  // 190: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	123, // 191: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
-	124, // 192: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
-	125, // 193: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
-	160, // 194: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
-	59,  // 195: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	59,  // 196: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
-	160, // 197: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
-	18,  // 198: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
-	126, // 199: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	160, // 200: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	160, // 201: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	160, // 202: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
-	160, // 203: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
-	160, // 204: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
-	129, // 205: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
-	160, // 206: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
-	18,  // 207: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
-	19,  // 208: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
-	160, // 209: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
-	132, // 210: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
-	20,  // 211: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
-	132, // 212: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
-	136, // 213: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
-	137, // 214: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
-	138, // 215: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
-	139, // 216: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
-	160, // 217: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
-	68,  // 218: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
-	8,   // 219: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
-	160, // 220: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
-	160, // 221: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
-	21,  // 222: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
-	22,  // 223: pethost.panel.v1.DatabaseSizeRefusal.reason:type_name -> pethost.panel.v1.DatabaseSizeRefusalReason
-	23,  // 224: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
-	119, // 225: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
-	57,  // 226: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
-	126, // 227: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
-	129, // 228: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
-	120, // 229: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
-	125, // 230: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
-	156, // 231: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
-	160, // 232: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
-	160, // 233: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
-	24,  // 234: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
-	34,  // 235: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
-	41,  // 236: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
-	60,  // 237: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
-	63,  // 238: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
-	69,  // 239: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
-	72,  // 240: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
-	104, // 241: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
-	115, // 242: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
-	117, // 243: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
-	121, // 244: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
-	127, // 245: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
-	88,  // 246: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
-	86,  // 247: pethost.panel.v1.PanelService.LinkDatabase:input_type -> pethost.panel.v1.LinkDatabaseRequest
-	90,  // 248: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
-	102, // 249: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
-	130, // 250: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
-	155, // 251: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
-	158, // 252: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
-	133, // 253: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
-	135, // 254: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
-	141, // 255: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
-	149, // 256: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
-	151, // 257: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
-	153, // 258: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
-	25,  // 259: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
-	36,  // 260: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
-	42,  // 261: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
-	62,  // 262: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
-	67,  // 263: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
-	70,  // 264: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
-	80,  // 265: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
-	105, // 266: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
-	116, // 267: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
-	118, // 268: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
-	122, // 269: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
-	128, // 270: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
-	89,  // 271: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
-	87,  // 272: pethost.panel.v1.PanelService.LinkDatabase:output_type -> pethost.panel.v1.LinkDatabaseResponse
-	91,  // 273: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
-	103, // 274: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
-	131, // 275: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
-	157, // 276: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
-	159, // 277: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
-	134, // 278: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
-	140, // 279: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
-	142, // 280: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
-	150, // 281: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
-	152, // 282: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
-	154, // 283: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
-	259, // [259:284] is the sub-list for method output_type
-	234, // [234:259] is the sub-list for method input_type
-	234, // [234:234] is the sub-list for extension type_name
-	234, // [234:234] is the sub-list for extension extendee
-	0,   // [0:234] is the sub-list for field type_name
+	28,  // 0: pethost.panel.v1.ListWorkspacesResponse.workspaces:type_name -> pethost.panel.v1.Workspace
+	0,   // 1: pethost.panel.v1.Workspace.status:type_name -> pethost.panel.v1.WorkspaceStatus
+	177, // 2: pethost.panel.v1.Workspace.end_time:type_name -> google.protobuf.Timestamp
+	1,   // 3: pethost.panel.v1.Workspace.role:type_name -> pethost.panel.v1.WorkspaceRole
+	31,  // 4: pethost.panel.v1.GetMachineResponse.machine:type_name -> pethost.panel.v1.Machine
+	44,  // 5: pethost.panel.v1.GetMachineResponse.projects:type_name -> pethost.panel.v1.ProjectSummary
+	38,  // 6: pethost.panel.v1.GetMachineResponse.deleted_projects:type_name -> pethost.panel.v1.DeletedProject
+	36,  // 7: pethost.panel.v1.GetMachineResponse.github:type_name -> pethost.panel.v1.GithubConnection
+	28,  // 8: pethost.panel.v1.GetMachineResponse.workspace:type_name -> pethost.panel.v1.Workspace
+	177, // 9: pethost.panel.v1.Machine.sample_time:type_name -> google.protobuf.Timestamp
+	34,  // 10: pethost.panel.v1.Machine.disk_usage:type_name -> pethost.panel.v1.DiskUsage
+	35,  // 11: pethost.panel.v1.Machine.ssh_keys:type_name -> pethost.panel.v1.SshKey
+	177, // 12: pethost.panel.v1.Machine.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	177, // 13: pethost.panel.v1.Machine.boot_time:type_name -> google.protobuf.Timestamp
+	177, // 14: pethost.panel.v1.Machine.restart_required_time:type_name -> google.protobuf.Timestamp
+	177, // 15: pethost.panel.v1.Machine.scheduled_restart_time:type_name -> google.protobuf.Timestamp
+	33,  // 16: pethost.panel.v1.Machine.sessions:type_name -> pethost.panel.v1.MachineSession
+	32,  // 17: pethost.panel.v1.Machine.alert_channels:type_name -> pethost.panel.v1.AlertDestination
+	98,  // 18: pethost.panel.v1.Machine.database_engines:type_name -> pethost.panel.v1.DatabaseEngineOffer
+	2,   // 19: pethost.panel.v1.AlertDestination.kind:type_name -> pethost.panel.v1.AlertChannelKind
+	3,   // 20: pethost.panel.v1.MachineSession.kind:type_name -> pethost.panel.v1.MachineSessionKind
+	177, // 21: pethost.panel.v1.MachineSession.start_time:type_name -> google.protobuf.Timestamp
+	37,  // 22: pethost.panel.v1.GithubConnection.repositories:type_name -> pethost.panel.v1.GithubRepository
+	177, // 23: pethost.panel.v1.GithubRepository.push_time:type_name -> google.protobuf.Timestamp
+	65,  // 24: pethost.panel.v1.DeletedProject.newest_snapshot:type_name -> pethost.panel.v1.Snapshot
+	39,  // 25: pethost.panel.v1.DeletedProject.moved_to:type_name -> pethost.panel.v1.MovedTo
+	177, // 26: pethost.panel.v1.MovedTo.move_time:type_name -> google.protobuf.Timestamp
+	35,  // 27: pethost.panel.v1.RunMachineActionRequest.add_ssh_key:type_name -> pethost.panel.v1.SshKey
+	41,  // 28: pethost.panel.v1.RunMachineActionRequest.restart_machine:type_name -> pethost.panel.v1.RestartMachineAction
+	177, // 29: pethost.panel.v1.RestartMachineAction.restart_time:type_name -> google.protobuf.Timestamp
+	31,  // 30: pethost.panel.v1.RunMachineActionResponse.machine:type_name -> pethost.panel.v1.Machine
+	43,  // 31: pethost.panel.v1.ProjectSummary.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	46,  // 32: pethost.panel.v1.ProjectSummary.problems:type_name -> pethost.panel.v1.ProjectProblem
+	45,  // 33: pethost.panel.v1.ProjectSummary.services:type_name -> pethost.panel.v1.ServiceSummary
+	66,  // 34: pethost.panel.v1.ProjectSummary.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	177, // 35: pethost.panel.v1.ProjectSummary.deploy_time:type_name -> google.protobuf.Timestamp
+	64,  // 36: pethost.panel.v1.ProjectSummary.running_operations:type_name -> pethost.panel.v1.Operation
+	97,  // 37: pethost.panel.v1.ProjectSummary.database:type_name -> pethost.panel.v1.DatabaseSummary
+	6,   // 38: pethost.panel.v1.ServiceSummary.state:type_name -> pethost.panel.v1.ServiceState
+	4,   // 39: pethost.panel.v1.ProjectProblem.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	177, // 40: pethost.panel.v1.ProjectProblem.since_time:type_name -> google.protobuf.Timestamp
+	177, // 41: pethost.panel.v1.GetProjectRequest.snapshots_before:type_name -> google.protobuf.Timestamp
+	177, // 42: pethost.panel.v1.GetProjectRequest.incidents_before:type_name -> google.protobuf.Timestamp
+	49,  // 43: pethost.panel.v1.GetProjectResponse.project:type_name -> pethost.panel.v1.Project
+	43,  // 44: pethost.panel.v1.Project.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	46,  // 45: pethost.panel.v1.Project.problems:type_name -> pethost.panel.v1.ProjectProblem
+	11,  // 46: pethost.panel.v1.Project.deploy_status:type_name -> pethost.panel.v1.OperationStatus
+	177, // 47: pethost.panel.v1.Project.deploy_time:type_name -> google.protobuf.Timestamp
+	55,  // 48: pethost.panel.v1.Project.services:type_name -> pethost.panel.v1.Service
+	60,  // 49: pethost.panel.v1.Project.volumes:type_name -> pethost.panel.v1.Volume
+	63,  // 50: pethost.panel.v1.Project.routes:type_name -> pethost.panel.v1.Route
+	62,  // 51: pethost.panel.v1.Project.hosts:type_name -> pethost.panel.v1.Host
+	64,  // 52: pethost.panel.v1.Project.operations:type_name -> pethost.panel.v1.Operation
+	65,  // 53: pethost.panel.v1.Project.snapshots:type_name -> pethost.panel.v1.Snapshot
+	177, // 54: pethost.panel.v1.Project.snapshot_list_time:type_name -> google.protobuf.Timestamp
+	66,  // 55: pethost.panel.v1.Project.http_traffic_last_day:type_name -> pethost.panel.v1.HttpTrafficSummary
+	52,  // 56: pethost.panel.v1.Project.source:type_name -> pethost.panel.v1.ProjectSource
+	51,  // 57: pethost.panel.v1.Project.running_services_action:type_name -> pethost.panel.v1.RunningServicesAction
+	122, // 58: pethost.panel.v1.Project.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	126, // 59: pethost.panel.v1.Project.incidents:type_name -> pethost.panel.v1.Incident
+	128, // 60: pethost.panel.v1.Project.uptime_days:type_name -> pethost.panel.v1.UptimeDay
+	95,  // 61: pethost.panel.v1.Project.database:type_name -> pethost.panel.v1.Database
+	50,  // 62: pethost.panel.v1.Project.dependencies:type_name -> pethost.panel.v1.ProjectDependency
+	5,   // 63: pethost.panel.v1.RunningServicesAction.kind:type_name -> pethost.panel.v1.ServicesActionKind
+	177, // 64: pethost.panel.v1.RunningServicesAction.start_time:type_name -> google.protobuf.Timestamp
+	53,  // 65: pethost.panel.v1.ProjectSource.github:type_name -> pethost.panel.v1.GithubSource
+	54,  // 66: pethost.panel.v1.GithubSource.newest_commit:type_name -> pethost.panel.v1.GithubCommit
+	54,  // 67: pethost.panel.v1.GithubSource.deployed_commit:type_name -> pethost.panel.v1.GithubCommit
+	6,   // 68: pethost.panel.v1.Service.state:type_name -> pethost.panel.v1.ServiceState
+	177, // 69: pethost.panel.v1.Service.start_time:type_name -> google.protobuf.Timestamp
+	177, // 70: pethost.panel.v1.Service.finish_time:type_name -> google.protobuf.Timestamp
+	56,  // 71: pethost.panel.v1.Service.published_ports:type_name -> pethost.panel.v1.PublishedPort
+	57,  // 72: pethost.panel.v1.Service.volume_mounts:type_name -> pethost.panel.v1.VolumeMount
+	7,   // 73: pethost.panel.v1.Service.restart_policy:type_name -> pethost.panel.v1.RestartPolicy
+	58,  // 74: pethost.panel.v1.Service.health_check:type_name -> pethost.panel.v1.HealthCheck
+	59,  // 75: pethost.panel.v1.Service.environment:type_name -> pethost.panel.v1.EnvironmentVariable
+	8,   // 76: pethost.panel.v1.HealthCheck.status:type_name -> pethost.panel.v1.HealthStatus
+	61,  // 77: pethost.panel.v1.Volume.mounted_by:type_name -> pethost.panel.v1.VolumeMountedBy
+	177, // 78: pethost.panel.v1.Volume.last_backup_time:type_name -> google.protobuf.Timestamp
+	9,   // 79: pethost.panel.v1.Host.certificate_source:type_name -> pethost.panel.v1.CertificateSource
+	177, // 80: pethost.panel.v1.Host.certificate_expire_time:type_name -> google.protobuf.Timestamp
+	10,  // 81: pethost.panel.v1.Operation.kind:type_name -> pethost.panel.v1.OperationKind
+	11,  // 82: pethost.panel.v1.Operation.status:type_name -> pethost.panel.v1.OperationStatus
+	177, // 83: pethost.panel.v1.Operation.start_time:type_name -> google.protobuf.Timestamp
+	177, // 84: pethost.panel.v1.Operation.finish_time:type_name -> google.protobuf.Timestamp
+	12,  // 85: pethost.panel.v1.Operation.deploy_failure_reason:type_name -> pethost.panel.v1.DeployFailureReason
+	54,  // 86: pethost.panel.v1.Operation.github_commit:type_name -> pethost.panel.v1.GithubCommit
+	177, // 87: pethost.panel.v1.Snapshot.create_time:type_name -> google.protobuf.Timestamp
+	52,  // 88: pethost.panel.v1.CreateProjectRequest.source:type_name -> pethost.panel.v1.ProjectSource
+	73,  // 89: pethost.panel.v1.CreateProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	72,  // 90: pethost.panel.v1.CreateProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	68,  // 91: pethost.panel.v1.CreateProjectRequest.link_databases:type_name -> pethost.panel.v1.DatabaseLinkRequest
+	64,  // 92: pethost.panel.v1.CreateProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	75,  // 93: pethost.panel.v1.CreateProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	49,  // 94: pethost.panel.v1.CreateProjectResponse.project:type_name -> pethost.panel.v1.Project
+	133, // 95: pethost.panel.v1.CreateProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	73,  // 96: pethost.panel.v1.DeployProjectRequest.files:type_name -> pethost.panel.v1.FileChange
+	72,  // 97: pethost.panel.v1.DeployProjectRequest.x_pethost:type_name -> pethost.panel.v1.ProjectExtension
+	71,  // 98: pethost.panel.v1.DeployProjectRequest.mount_volume:type_name -> pethost.panel.v1.MountVolume
+	43,  // 99: pethost.panel.v1.ProjectExtension.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	63,  // 100: pethost.panel.v1.ProjectExtension.routes:type_name -> pethost.panel.v1.Route
+	64,  // 101: pethost.panel.v1.DeployProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	75,  // 102: pethost.panel.v1.DeployProjectResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	49,  // 103: pethost.panel.v1.DeployProjectResponse.project:type_name -> pethost.panel.v1.Project
+	133, // 104: pethost.panel.v1.DeployProjectResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	77,  // 105: pethost.panel.v1.MoveProjectRequest.switch_databases:type_name -> pethost.panel.v1.DatabaseSwitch
+	64,  // 106: pethost.panel.v1.MoveProjectResponse.operation:type_name -> pethost.panel.v1.Operation
+	49,  // 107: pethost.panel.v1.MoveProjectResponse.project:type_name -> pethost.panel.v1.Project
+	81,  // 108: pethost.panel.v1.GetMoveChoicesResponse.choices:type_name -> pethost.panel.v1.MoveChoice
+	50,  // 109: pethost.panel.v1.MoveChoice.dependency:type_name -> pethost.panel.v1.ProjectDependency
+	13,  // 110: pethost.panel.v1.MoveChoice.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	82,  // 111: pethost.panel.v1.MoveChoice.databases:type_name -> pethost.panel.v1.MoveTarget
+	85,  // 112: pethost.panel.v1.ListCommitsResponse.commits:type_name -> pethost.panel.v1.BranchCommit
+	54,  // 113: pethost.panel.v1.BranchCommit.commit:type_name -> pethost.panel.v1.GithubCommit
+	177, // 114: pethost.panel.v1.BranchCommit.commit_time:type_name -> google.protobuf.Timestamp
+	64,  // 115: pethost.panel.v1.BranchCommit.last_deploy:type_name -> pethost.panel.v1.Operation
+	87,  // 116: pethost.panel.v1.RunProjectActionRequest.start_services:type_name -> pethost.panel.v1.ServicesAction
+	87,  // 117: pethost.panel.v1.RunProjectActionRequest.stop_services:type_name -> pethost.panel.v1.ServicesAction
+	87,  // 118: pethost.panel.v1.RunProjectActionRequest.restart_services:type_name -> pethost.panel.v1.ServicesAction
+	88,  // 119: pethost.panel.v1.RunProjectActionRequest.recreate_service:type_name -> pethost.panel.v1.RecreateServiceAction
+	89,  // 120: pethost.panel.v1.RunProjectActionRequest.back_up:type_name -> pethost.panel.v1.BackUpAction
+	90,  // 121: pethost.panel.v1.RunProjectActionRequest.restore_snapshot:type_name -> pethost.panel.v1.RestoreSnapshotAction
+	91,  // 122: pethost.panel.v1.RunProjectActionRequest.cancel_operation:type_name -> pethost.panel.v1.CancelOperationAction
+	92,  // 123: pethost.panel.v1.RunProjectActionRequest.delete_project:type_name -> pethost.panel.v1.DeleteProjectAction
+	52,  // 124: pethost.panel.v1.RunProjectActionRequest.set_source:type_name -> pethost.panel.v1.ProjectSource
+	93,  // 125: pethost.panel.v1.RunProjectActionRequest.set_database_size:type_name -> pethost.panel.v1.SetDatabaseSizeAction
+	64,  // 126: pethost.panel.v1.RunProjectActionResponse.operation:type_name -> pethost.panel.v1.Operation
+	49,  // 127: pethost.panel.v1.RunProjectActionResponse.project:type_name -> pethost.panel.v1.Project
+	133, // 128: pethost.panel.v1.RunProjectActionResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	13,  // 129: pethost.panel.v1.Database.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	96,  // 130: pethost.panel.v1.Database.connection:type_name -> pethost.panel.v1.DatabaseConnection
+	13,  // 131: pethost.panel.v1.DatabaseSummary.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	13,  // 132: pethost.panel.v1.DatabaseEngineOffer.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	99,  // 133: pethost.panel.v1.DatabaseEngineOffer.sizes:type_name -> pethost.panel.v1.DatabaseSizeChoice
+	49,  // 134: pethost.panel.v1.LinkDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	13,  // 135: pethost.panel.v1.CreateDatabaseRequest.engine:type_name -> pethost.panel.v1.DatabaseEngine
+	43,  // 136: pethost.panel.v1.CreateDatabaseRequest.metadata:type_name -> pethost.panel.v1.ProjectMetadata
+	64,  // 137: pethost.panel.v1.CreateDatabaseResponse.operation:type_name -> pethost.panel.v1.Operation
+	75,  // 138: pethost.panel.v1.CreateDatabaseResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	49,  // 139: pethost.panel.v1.CreateDatabaseResponse.project:type_name -> pethost.panel.v1.Project
+	133, // 140: pethost.panel.v1.CreateDatabaseResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	177, // 141: pethost.panel.v1.GetDatabaseStatsRequest.start_time:type_name -> google.protobuf.Timestamp
+	177, // 142: pethost.panel.v1.GetDatabaseStatsRequest.end_time:type_name -> google.protobuf.Timestamp
+	15,  // 143: pethost.panel.v1.GetDatabaseStatsRequest.statement_order:type_name -> pethost.panel.v1.DatabaseStatementOrder
+	177, // 144: pethost.panel.v1.GetDatabaseStatsResponse.start_time:type_name -> google.protobuf.Timestamp
+	177, // 145: pethost.panel.v1.GetDatabaseStatsResponse.end_time:type_name -> google.protobuf.Timestamp
+	177, // 146: pethost.panel.v1.GetDatabaseStatsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	107, // 147: pethost.panel.v1.GetDatabaseStatsResponse.overall:type_name -> pethost.panel.v1.DatabaseStats
+	106, // 148: pethost.panel.v1.GetDatabaseStatsResponse.buckets:type_name -> pethost.panel.v1.DatabaseStatsBucket
+	112, // 149: pethost.panel.v1.GetDatabaseStatsResponse.statements:type_name -> pethost.panel.v1.DatabaseStatement
+	113, // 150: pethost.panel.v1.GetDatabaseStatsResponse.activity:type_name -> pethost.panel.v1.DatabaseActivity
+	177, // 151: pethost.panel.v1.DatabaseStatsBucket.start_time:type_name -> google.protobuf.Timestamp
+	107, // 152: pethost.panel.v1.DatabaseStatsBucket.stats:type_name -> pethost.panel.v1.DatabaseStats
+	108, // 153: pethost.panel.v1.DatabaseStats.commands:type_name -> pethost.panel.v1.DatabaseCommandStats
+	109, // 154: pethost.panel.v1.DatabaseStats.postgres:type_name -> pethost.panel.v1.PostgresStats
+	110, // 155: pethost.panel.v1.DatabaseStats.valkey:type_name -> pethost.panel.v1.ValkeyStats
+	111, // 156: pethost.panel.v1.DatabaseStats.mariadb:type_name -> pethost.panel.v1.MariadbStats
+	14,  // 157: pethost.panel.v1.DatabaseCommandStats.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	14,  // 158: pethost.panel.v1.DatabaseStatement.kind:type_name -> pethost.panel.v1.DatabaseCommandKind
+	177, // 159: pethost.panel.v1.DatabaseActivity.read_time:type_name -> google.protobuf.Timestamp
+	114, // 160: pethost.panel.v1.DatabaseActivity.sessions:type_name -> pethost.panel.v1.DatabaseSession
+	115, // 161: pethost.panel.v1.DatabaseActivity.slow_commands:type_name -> pethost.panel.v1.DatabaseSlowCommand
+	16,  // 162: pethost.panel.v1.DatabaseSession.state:type_name -> pethost.panel.v1.DatabaseSessionState
+	177, // 163: pethost.panel.v1.DatabaseSession.backend_start_time:type_name -> google.protobuf.Timestamp
+	177, // 164: pethost.panel.v1.DatabaseSession.transaction_start_time:type_name -> google.protobuf.Timestamp
+	177, // 165: pethost.panel.v1.DatabaseSession.query_start_time:type_name -> google.protobuf.Timestamp
+	177, // 166: pethost.panel.v1.DatabaseSlowCommand.time:type_name -> google.protobuf.Timestamp
+	120, // 167: pethost.panel.v1.SetProjectAlertsRequest.checks:type_name -> pethost.panel.v1.SiteCheck
+	121, // 168: pethost.panel.v1.SetProjectAlertsRequest.traffic_rules:type_name -> pethost.panel.v1.TrafficRule
+	122, // 169: pethost.panel.v1.SetProjectAlertsResponse.alerts:type_name -> pethost.panel.v1.ProjectAlerts
+	17,  // 170: pethost.panel.v1.TrafficRule.metric:type_name -> pethost.panel.v1.TrafficMetric
+	134, // 171: pethost.panel.v1.TrafficRule.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	123, // 172: pethost.panel.v1.ProjectAlerts.checks:type_name -> pethost.panel.v1.SiteCheckState
+	125, // 173: pethost.panel.v1.ProjectAlerts.traffic_rules:type_name -> pethost.panel.v1.TrafficRuleState
+	177, // 174: pethost.panel.v1.ProjectAlerts.mute_end_time:type_name -> google.protobuf.Timestamp
+	120, // 175: pethost.panel.v1.SiteCheckState.check:type_name -> pethost.panel.v1.SiteCheck
+	18,  // 176: pethost.panel.v1.SiteCheckState.status:type_name -> pethost.panel.v1.AlertStatus
+	124, // 177: pethost.panel.v1.SiteCheckState.last_result:type_name -> pethost.panel.v1.SiteCheckResult
+	177, // 178: pethost.panel.v1.SiteCheckResult.check_time:type_name -> google.protobuf.Timestamp
+	121, // 179: pethost.panel.v1.TrafficRuleState.rule:type_name -> pethost.panel.v1.TrafficRule
+	18,  // 180: pethost.panel.v1.TrafficRuleState.status:type_name -> pethost.panel.v1.AlertStatus
+	4,   // 181: pethost.panel.v1.Incident.kind:type_name -> pethost.panel.v1.ProjectProblemKind
+	120, // 182: pethost.panel.v1.Incident.check:type_name -> pethost.panel.v1.SiteCheck
+	121, // 183: pethost.panel.v1.Incident.traffic_rule:type_name -> pethost.panel.v1.TrafficRule
+	177, // 184: pethost.panel.v1.Incident.open_time:type_name -> google.protobuf.Timestamp
+	177, // 185: pethost.panel.v1.Incident.resolve_time:type_name -> google.protobuf.Timestamp
+	177, // 186: pethost.panel.v1.Incident.after_operation_end_time:type_name -> google.protobuf.Timestamp
+	19,  // 187: pethost.panel.v1.Incident.quiet_reason:type_name -> pethost.panel.v1.IncidentQuietReason
+	127, // 188: pethost.panel.v1.Incident.evidence:type_name -> pethost.panel.v1.IncidentEvidence
+	124, // 189: pethost.panel.v1.IncidentEvidence.check_result:type_name -> pethost.panel.v1.SiteCheckResult
+	143, // 190: pethost.panel.v1.IncidentEvidence.log_lines:type_name -> pethost.panel.v1.LogLine
+	138, // 191: pethost.panel.v1.IncidentEvidence.top_path:type_name -> pethost.panel.v1.HttpPathTraffic
+	177, // 192: pethost.panel.v1.UptimeDay.start_time:type_name -> google.protobuf.Timestamp
+	126, // 193: pethost.panel.v1.GetIncidentResponse.incident:type_name -> pethost.panel.v1.Incident
+	126, // 194: pethost.panel.v1.GetIncidentResponse.joined:type_name -> pethost.panel.v1.Incident
+	64,  // 195: pethost.panel.v1.GetOperationResponse.operation:type_name -> pethost.panel.v1.Operation
+	49,  // 196: pethost.panel.v1.GetOperationResponse.project:type_name -> pethost.panel.v1.Project
+	133, // 197: pethost.panel.v1.GetOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	177, // 198: pethost.panel.v1.OperationLogLine.time:type_name -> google.protobuf.Timestamp
+	134, // 199: pethost.panel.v1.QueryHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	177, // 200: pethost.panel.v1.QueryHttpTrafficRequest.start_time:type_name -> google.protobuf.Timestamp
+	177, // 201: pethost.panel.v1.QueryHttpTrafficRequest.end_time:type_name -> google.protobuf.Timestamp
+	177, // 202: pethost.panel.v1.QueryHttpTrafficResponse.start_time:type_name -> google.protobuf.Timestamp
+	177, // 203: pethost.panel.v1.QueryHttpTrafficResponse.end_time:type_name -> google.protobuf.Timestamp
+	177, // 204: pethost.panel.v1.QueryHttpTrafficResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	66,  // 205: pethost.panel.v1.QueryHttpTrafficResponse.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	137, // 206: pethost.panel.v1.QueryHttpTrafficResponse.buckets:type_name -> pethost.panel.v1.HttpTrafficBucket
+	138, // 207: pethost.panel.v1.QueryHttpTrafficResponse.top_paths:type_name -> pethost.panel.v1.HttpPathTraffic
+	139, // 208: pethost.panel.v1.QueryHttpTrafficResponse.requests:type_name -> pethost.panel.v1.HttpRequest
+	177, // 209: pethost.panel.v1.HttpTrafficBucket.start_time:type_name -> google.protobuf.Timestamp
+	66,  // 210: pethost.panel.v1.HttpTrafficBucket.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	66,  // 211: pethost.panel.v1.HttpPathTraffic.summary:type_name -> pethost.panel.v1.HttpTrafficSummary
+	177, // 212: pethost.panel.v1.HttpRequest.finish_time:type_name -> google.protobuf.Timestamp
+	20,  // 213: pethost.panel.v1.ContainerLogFilter.stream:type_name -> pethost.panel.v1.OutputStream
+	140, // 214: pethost.panel.v1.QueryContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	177, // 215: pethost.panel.v1.QueryContainerLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	177, // 216: pethost.panel.v1.QueryContainerLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	177, // 217: pethost.panel.v1.QueryContainerLogsResponse.start_time:type_name -> google.protobuf.Timestamp
+	177, // 218: pethost.panel.v1.QueryContainerLogsResponse.end_time:type_name -> google.protobuf.Timestamp
+	177, // 219: pethost.panel.v1.QueryContainerLogsResponse.oldest_kept_time:type_name -> google.protobuf.Timestamp
+	143, // 220: pethost.panel.v1.QueryContainerLogsResponse.lines:type_name -> pethost.panel.v1.LogLine
+	177, // 221: pethost.panel.v1.LogLine.time:type_name -> google.protobuf.Timestamp
+	20,  // 222: pethost.panel.v1.LogLine.stream:type_name -> pethost.panel.v1.OutputStream
+	21,  // 223: pethost.panel.v1.FileEntry.type:type_name -> pethost.panel.v1.FileType
+	177, // 224: pethost.panel.v1.FileEntry.modify_time:type_name -> google.protobuf.Timestamp
+	146, // 225: pethost.panel.v1.ReadPathResponse.entry:type_name -> pethost.panel.v1.FileEntry
+	22,  // 226: pethost.panel.v1.ReadPathResponse.location:type_name -> pethost.panel.v1.FileLocation
+	146, // 227: pethost.panel.v1.ReadPathResponse.entries:type_name -> pethost.panel.v1.FileEntry
+	150, // 228: pethost.panel.v1.CreateTransferRequest.upload_archive:type_name -> pethost.panel.v1.ArchiveUpload
+	151, // 229: pethost.panel.v1.CreateTransferRequest.upload_file:type_name -> pethost.panel.v1.FileUpload
+	152, // 230: pethost.panel.v1.CreateTransferRequest.download:type_name -> pethost.panel.v1.PathDownload
+	153, // 231: pethost.panel.v1.CreateTransferRequest.download_database:type_name -> pethost.panel.v1.DatabaseDump
+	177, // 232: pethost.panel.v1.CreateTransferResponse.expire_time:type_name -> google.protobuf.Timestamp
+	75,  // 233: pethost.panel.v1.GetUploadResponse.violations:type_name -> pethost.panel.v1.SpecViolation
+	10,  // 234: pethost.panel.v1.ProjectBusy.kind:type_name -> pethost.panel.v1.OperationKind
+	177, // 235: pethost.panel.v1.ProjectBusy.start_time:type_name -> google.protobuf.Timestamp
+	177, // 236: pethost.panel.v1.MachineUnreachable.since_time:type_name -> google.protobuf.Timestamp
+	23,  // 237: pethost.panel.v1.DatabaseLinkRefusal.reason:type_name -> pethost.panel.v1.DatabaseLinkRefusalReason
+	24,  // 238: pethost.panel.v1.DatabaseSizeRefusal.reason:type_name -> pethost.panel.v1.DatabaseSizeRefusalReason
+	25,  // 239: pethost.panel.v1.NoMachine.reason:type_name -> pethost.panel.v1.NoMachineReason
+	28,  // 240: pethost.panel.v1.WorkspaceChoice.workspaces:type_name -> pethost.panel.v1.Workspace
+	177, // 241: pethost.panel.v1.ProjectMoved.move_time:type_name -> google.protobuf.Timestamp
+	133, // 242: pethost.panel.v1.WatchOperationResponse.log:type_name -> pethost.panel.v1.OperationLogLine
+	64,  // 243: pethost.panel.v1.WatchOperationResponse.finished_operation:type_name -> pethost.panel.v1.Operation
+	140, // 244: pethost.panel.v1.TailContainerLogsRequest.filter:type_name -> pethost.panel.v1.ContainerLogFilter
+	143, // 245: pethost.panel.v1.TailContainerLogsResponse.line:type_name -> pethost.panel.v1.LogLine
+	134, // 246: pethost.panel.v1.TailHttpTrafficRequest.filter:type_name -> pethost.panel.v1.HttpTrafficFilter
+	139, // 247: pethost.panel.v1.TailHttpTrafficResponse.request:type_name -> pethost.panel.v1.HttpRequest
+	173, // 248: pethost.panel.v1.OpenTerminalRequest.size:type_name -> pethost.panel.v1.TerminalSize
+	177, // 249: pethost.panel.v1.OpenTerminalResponse.expire_time:type_name -> google.protobuf.Timestamp
+	177, // 250: pethost.panel.v1.OpenDatabaseClientResponse.expire_time:type_name -> google.protobuf.Timestamp
+	26,  // 251: pethost.panel.v1.PanelService.ListWorkspaces:input_type -> pethost.panel.v1.ListWorkspacesRequest
+	29,  // 252: pethost.panel.v1.PanelService.GetMachine:input_type -> pethost.panel.v1.GetMachineRequest
+	40,  // 253: pethost.panel.v1.PanelService.RunMachineAction:input_type -> pethost.panel.v1.RunMachineActionRequest
+	47,  // 254: pethost.panel.v1.PanelService.GetProject:input_type -> pethost.panel.v1.GetProjectRequest
+	67,  // 255: pethost.panel.v1.PanelService.CreateProject:input_type -> pethost.panel.v1.CreateProjectRequest
+	70,  // 256: pethost.panel.v1.PanelService.DeployProject:input_type -> pethost.panel.v1.DeployProjectRequest
+	76,  // 257: pethost.panel.v1.PanelService.MoveProject:input_type -> pethost.panel.v1.MoveProjectRequest
+	79,  // 258: pethost.panel.v1.PanelService.GetMoveChoices:input_type -> pethost.panel.v1.GetMoveChoicesRequest
+	83,  // 259: pethost.panel.v1.PanelService.ListCommits:input_type -> pethost.panel.v1.ListCommitsRequest
+	86,  // 260: pethost.panel.v1.PanelService.RunProjectAction:input_type -> pethost.panel.v1.RunProjectActionRequest
+	118, // 261: pethost.panel.v1.PanelService.SetProjectAlerts:input_type -> pethost.panel.v1.SetProjectAlertsRequest
+	129, // 262: pethost.panel.v1.PanelService.GetIncident:input_type -> pethost.panel.v1.GetIncidentRequest
+	131, // 263: pethost.panel.v1.PanelService.GetOperation:input_type -> pethost.panel.v1.GetOperationRequest
+	135, // 264: pethost.panel.v1.PanelService.QueryHttpTraffic:input_type -> pethost.panel.v1.QueryHttpTrafficRequest
+	141, // 265: pethost.panel.v1.PanelService.QueryContainerLogs:input_type -> pethost.panel.v1.QueryContainerLogsRequest
+	102, // 266: pethost.panel.v1.PanelService.CreateDatabase:input_type -> pethost.panel.v1.CreateDatabaseRequest
+	100, // 267: pethost.panel.v1.PanelService.LinkDatabase:input_type -> pethost.panel.v1.LinkDatabaseRequest
+	104, // 268: pethost.panel.v1.PanelService.GetDatabaseStats:input_type -> pethost.panel.v1.GetDatabaseStatsRequest
+	116, // 269: pethost.panel.v1.PanelService.CancelDatabaseQuery:input_type -> pethost.panel.v1.CancelDatabaseQueryRequest
+	144, // 270: pethost.panel.v1.PanelService.RunServiceCommand:input_type -> pethost.panel.v1.RunServiceCommandRequest
+	172, // 271: pethost.panel.v1.PanelService.OpenTerminal:input_type -> pethost.panel.v1.OpenTerminalRequest
+	175, // 272: pethost.panel.v1.PanelService.OpenDatabaseClient:input_type -> pethost.panel.v1.OpenDatabaseClientRequest
+	147, // 273: pethost.panel.v1.PanelService.ReadPath:input_type -> pethost.panel.v1.ReadPathRequest
+	149, // 274: pethost.panel.v1.PanelService.CreateTransfer:input_type -> pethost.panel.v1.CreateTransferRequest
+	155, // 275: pethost.panel.v1.PanelService.GetUpload:input_type -> pethost.panel.v1.GetUploadRequest
+	166, // 276: pethost.panel.v1.PanelService.WatchOperation:input_type -> pethost.panel.v1.WatchOperationRequest
+	168, // 277: pethost.panel.v1.PanelService.TailContainerLogs:input_type -> pethost.panel.v1.TailContainerLogsRequest
+	170, // 278: pethost.panel.v1.PanelService.TailHttpTraffic:input_type -> pethost.panel.v1.TailHttpTrafficRequest
+	27,  // 279: pethost.panel.v1.PanelService.ListWorkspaces:output_type -> pethost.panel.v1.ListWorkspacesResponse
+	30,  // 280: pethost.panel.v1.PanelService.GetMachine:output_type -> pethost.panel.v1.GetMachineResponse
+	42,  // 281: pethost.panel.v1.PanelService.RunMachineAction:output_type -> pethost.panel.v1.RunMachineActionResponse
+	48,  // 282: pethost.panel.v1.PanelService.GetProject:output_type -> pethost.panel.v1.GetProjectResponse
+	69,  // 283: pethost.panel.v1.PanelService.CreateProject:output_type -> pethost.panel.v1.CreateProjectResponse
+	74,  // 284: pethost.panel.v1.PanelService.DeployProject:output_type -> pethost.panel.v1.DeployProjectResponse
+	78,  // 285: pethost.panel.v1.PanelService.MoveProject:output_type -> pethost.panel.v1.MoveProjectResponse
+	80,  // 286: pethost.panel.v1.PanelService.GetMoveChoices:output_type -> pethost.panel.v1.GetMoveChoicesResponse
+	84,  // 287: pethost.panel.v1.PanelService.ListCommits:output_type -> pethost.panel.v1.ListCommitsResponse
+	94,  // 288: pethost.panel.v1.PanelService.RunProjectAction:output_type -> pethost.panel.v1.RunProjectActionResponse
+	119, // 289: pethost.panel.v1.PanelService.SetProjectAlerts:output_type -> pethost.panel.v1.SetProjectAlertsResponse
+	130, // 290: pethost.panel.v1.PanelService.GetIncident:output_type -> pethost.panel.v1.GetIncidentResponse
+	132, // 291: pethost.panel.v1.PanelService.GetOperation:output_type -> pethost.panel.v1.GetOperationResponse
+	136, // 292: pethost.panel.v1.PanelService.QueryHttpTraffic:output_type -> pethost.panel.v1.QueryHttpTrafficResponse
+	142, // 293: pethost.panel.v1.PanelService.QueryContainerLogs:output_type -> pethost.panel.v1.QueryContainerLogsResponse
+	103, // 294: pethost.panel.v1.PanelService.CreateDatabase:output_type -> pethost.panel.v1.CreateDatabaseResponse
+	101, // 295: pethost.panel.v1.PanelService.LinkDatabase:output_type -> pethost.panel.v1.LinkDatabaseResponse
+	105, // 296: pethost.panel.v1.PanelService.GetDatabaseStats:output_type -> pethost.panel.v1.GetDatabaseStatsResponse
+	117, // 297: pethost.panel.v1.PanelService.CancelDatabaseQuery:output_type -> pethost.panel.v1.CancelDatabaseQueryResponse
+	145, // 298: pethost.panel.v1.PanelService.RunServiceCommand:output_type -> pethost.panel.v1.RunServiceCommandResponse
+	174, // 299: pethost.panel.v1.PanelService.OpenTerminal:output_type -> pethost.panel.v1.OpenTerminalResponse
+	176, // 300: pethost.panel.v1.PanelService.OpenDatabaseClient:output_type -> pethost.panel.v1.OpenDatabaseClientResponse
+	148, // 301: pethost.panel.v1.PanelService.ReadPath:output_type -> pethost.panel.v1.ReadPathResponse
+	154, // 302: pethost.panel.v1.PanelService.CreateTransfer:output_type -> pethost.panel.v1.CreateTransferResponse
+	156, // 303: pethost.panel.v1.PanelService.GetUpload:output_type -> pethost.panel.v1.GetUploadResponse
+	167, // 304: pethost.panel.v1.PanelService.WatchOperation:output_type -> pethost.panel.v1.WatchOperationResponse
+	169, // 305: pethost.panel.v1.PanelService.TailContainerLogs:output_type -> pethost.panel.v1.TailContainerLogsResponse
+	171, // 306: pethost.panel.v1.PanelService.TailHttpTraffic:output_type -> pethost.panel.v1.TailHttpTrafficResponse
+	279, // [279:307] is the sub-list for method output_type
+	251, // [251:279] is the sub-list for method input_type
+	251, // [251:251] is the sub-list for extension type_name
+	251, // [251:251] is the sub-list for extension extendee
+	0,   // [0:251] is the sub-list for field type_name
 }
 
 func init() { file_v1_panel_proto_init() }
@@ -31878,24 +35943,24 @@ func file_v1_panel_proto_init() {
 	if File_v1_panel_proto != nil {
 		return
 	}
-	file_v1_panel_proto_msgTypes[10].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[14].OneofWrappers = []any{
 		(*runMachineActionRequest_AddSshKey)(nil),
 		(*runMachineActionRequest_RemoveSshKeyFingerprint)(nil),
 		(*runMachineActionRequest_RestartMachine)(nil),
 		(*runMachineActionRequest_CancelRestart)(nil),
 		(*runMachineActionRequest_EndSessionId)(nil),
 	}
-	file_v1_panel_proto_msgTypes[21].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[26].OneofWrappers = []any{
 		(*projectSource_Files)(nil),
 		(*projectSource_Github)(nil),
 	}
-	file_v1_panel_proto_msgTypes[39].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[44].OneofWrappers = []any{
 		(*deployProjectRequest_UploadId)(nil),
 		(*deployProjectRequest_Commit)(nil),
 		(*deployProjectRequest_NewestCommit)(nil),
 		(*deployProjectRequest_RollbackDeployId)(nil),
 	}
-	file_v1_panel_proto_msgTypes[42].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[47].OneofWrappers = []any{
 		(*fileChange_Text)(nil),
 		(*fileChange_Data)(nil),
 		(*fileChange_MakeDirectory)(nil),
@@ -31903,7 +35968,7 @@ func file_v1_panel_proto_init() {
 		(*fileChange_DeleteTree)(nil),
 		(*fileChange_RenameTo)(nil),
 	}
-	file_v1_panel_proto_msgTypes[48].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[60].OneofWrappers = []any{
 		(*runProjectActionRequest_StartServices)(nil),
 		(*runProjectActionRequest_StopServices)(nil),
 		(*runProjectActionRequest_RestartServices)(nil),
@@ -31916,25 +35981,25 @@ func file_v1_panel_proto_init() {
 		(*runProjectActionRequest_DeleteVolume)(nil),
 		(*runProjectActionRequest_SetDatabaseSize)(nil),
 	}
-	file_v1_panel_proto_msgTypes[109].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[121].OneofWrappers = []any{
 		(*readPathRequest_Service)(nil),
 		(*readPathRequest_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[111].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[123].OneofWrappers = []any{
 		(*createTransferRequest_UploadArchive)(nil),
 		(*createTransferRequest_UploadFile)(nil),
 		(*createTransferRequest_Download)(nil),
 		(*createTransferRequest_DownloadDatabase)(nil),
 	}
-	file_v1_panel_proto_msgTypes[113].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[125].OneofWrappers = []any{
 		(*fileUpload_Service)(nil),
 		(*fileUpload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[114].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[126].OneofWrappers = []any{
 		(*pathDownload_Service)(nil),
 		(*pathDownload_Volume)(nil),
 	}
-	file_v1_panel_proto_msgTypes[126].OneofWrappers = []any{
+	file_v1_panel_proto_msgTypes[141].OneofWrappers = []any{
 		(*watchOperationResponse_Log)(nil),
 		(*watchOperationResponse_FinishedOperation)(nil),
 	}
@@ -31943,8 +36008,8 @@ func file_v1_panel_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_panel_proto_rawDesc), len(file_v1_panel_proto_rawDesc)),
-			NumEnums:      24,
-			NumMessages:   136,
+			NumEnums:      26,
+			NumMessages:   151,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

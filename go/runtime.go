@@ -20,7 +20,7 @@ import (
 
 // This file is the part of the package that no proto file decides: the client's configuration,
 // the status codes, how a stream is ranged over and the helpers of the generated converters. It
-// names nothing of the API.
+// names nothing of the API: Config's field of a workspace is the generator's.
 
 // Config is what a [Client] is made of.
 type Config struct {
@@ -31,12 +31,17 @@ type Config struct {
 	// What sends the requests. nil = [http.DefaultClient]. A Timeout of it bounds each call
 	// whole, so it ends a stream too.
 	HTTPClient *http.Client
+	// The workspace of every call whose request names none: its id or name
+	// ([Client.ListWorkspaces]). A request's own workspace goes before it. Empty = none: the API
+	// then takes the account's only workspace, and refuses a call with [WorkspaceChoice] when it
+	// has several.
+	Workspace string
 }
 
 const defaultBaseURL = "https://console.pethost.dev"
 
 // userAgent says which client calls, and of which release.
-const userAgent = "pethost-go/0.4.8"
+const userAgent = "pethost-go/0.5.0"
 
 // newTransport is the wire layer's client for config: the Connect protocol over HTTP, by POST
 // with binary protobuf, a stream's responses in the one answer.

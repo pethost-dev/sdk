@@ -7,6 +7,37 @@ import (
 )
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ListWorkspacesRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireListWorkspacesRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ListWorkspacesRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireListWorkspacesRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ListWorkspacesResponse) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireListWorkspacesResponse(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ListWorkspacesResponse) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireListWorkspacesResponse)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v Workspace) MarshalJSON() ([]byte, error) { return marshalJSON(toWireWorkspace(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *Workspace) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireWorkspace)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v GetMachineRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireGetMachineRequest(v))
 }
@@ -101,6 +132,13 @@ func (v DeletedProject) MarshalJSON() ([]byte, error) { return marshalJSON(toWir
 func (v *DeletedProject) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireDeletedProject)
 }
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v MovedTo) MarshalJSON() ([]byte, error) { return marshalJSON(toWireMovedTo(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *MovedTo) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireMovedTo) }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v RunMachineActionRequest) MarshalJSON() ([]byte, error) {
@@ -217,6 +255,17 @@ func (v Project) MarshalJSON() ([]byte, error) { return marshalJSON(toWireProjec
 // UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
 // API does not have is refused.
 func (v *Project) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireProject) }
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ProjectDependency) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireProjectDependency(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ProjectDependency) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireProjectDependency)
+}
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v RunningServicesAction) MarshalJSON() ([]byte, error) {
@@ -457,6 +506,37 @@ func (v SpecViolation) MarshalJSON() ([]byte, error) { return marshalJSON(toWire
 // API does not have is refused.
 func (v *SpecViolation) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireSpecViolation)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v MoveProjectRequest) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireMoveProjectRequest(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *MoveProjectRequest) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireMoveProjectRequest)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v DatabaseSwitch) MarshalJSON() ([]byte, error) { return marshalJSON(toWireDatabaseSwitch(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *DatabaseSwitch) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireDatabaseSwitch)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v MoveProjectResponse) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireMoveProjectResponse(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *MoveProjectResponse) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireMoveProjectResponse)
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
@@ -1222,6 +1302,35 @@ func (v *NoMachine) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v WorkspaceChoice) MarshalJSON() ([]byte, error) { return marshalJSON(toWireWorkspaceChoice(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *WorkspaceChoice) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireWorkspaceChoice)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v WorkspaceNotGranted) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireWorkspaceNotGranted(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *WorkspaceNotGranted) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireWorkspaceNotGranted)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ProjectMoved) MarshalJSON() ([]byte, error) { return marshalJSON(toWireProjectMoved(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ProjectMoved) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireProjectMoved)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v WatchOperationRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireWatchOperationRequest(v))
 }
@@ -1305,6 +1414,28 @@ func (v TailHTTPTrafficResponse) MarshalJSON() ([]byte, error) {
 // API does not have is refused.
 func (v *TailHTTPTrafficResponse) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireTailHTTPTrafficResponse)
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "WORKSPACE_STATUS_BEING_PREPARED" for [WorkspaceStatusBeingPrepared], or its number when the
+// package has no name for it.
+func (v WorkspaceStatus) MarshalJSON() ([]byte, error) {
+	return marshalEnumJSON(toWireWorkspaceStatus(v))
+}
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *WorkspaceStatus) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.WorkspaceStatus(0).Descriptor())
+}
+
+// MarshalJSON writes the value as the API's JSON has it: its whole name there,
+// "WORKSPACE_ROLE_OWNER" for [WorkspaceRoleOwner], or its number when the package has no name
+// for it.
+func (v WorkspaceRole) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireWorkspaceRole(v)) }
+
+// UnmarshalJSON reads the value from its name in the API's JSON, or from its number.
+func (v *WorkspaceRole) UnmarshalJSON(data []byte) error {
+	return unmarshalEnumJSON(data, v, panelv1.WorkspaceRole(0).Descriptor())
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
@@ -1398,8 +1529,8 @@ func (v *CertificateSource) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "OPERATION_KIND_DELETE" for [OperationKindDelete], or its number when the package has no
-// name for it.
+// "OPERATION_KIND_MOVE" for [OperationKindMove], or its number when the package has no name
+// for it.
 func (v OperationKind) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireOperationKind(v)) }
 
 // UnmarshalJSON reads the value from its name in the API's JSON, or from its number.

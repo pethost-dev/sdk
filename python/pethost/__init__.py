@@ -8,7 +8,7 @@ move files.
     from pethost import Pethost
 
     with Pethost() as pethost:  # The token: PETHOST_TOKEN, or Pethost("pth_...").
-        print(pethost.get_machine())
+        print(pethost.list_workspaces("..."))
 
 `Pethost` is the synchronous client and `AsyncPethost` the asyncio one, with the same methods:
 one for each call of the API. What the API calls absent is None where a type allows None, and
@@ -24,7 +24,15 @@ The API's own documentation follows; each method's and each class's docstring is
 Model
 -----
 
-Machine: one VDS running the daemon, petnode; every call acts on the caller's.
+Workspace (workspace): what one plan buys: a machine of the plan's size, its apps_domain, its
+
+    backups. A call acts on the workspace its `workspace` names, by id or name; without one, on
+    the only one the caller has, and with several it is refused (WorkspaceChoice). Keep the id
+    from an answer (workspace_id), never the name: the person may rename it.
+
+Machine: one VDS running the daemon, petnode: the one of the workspace a call acts on. Ids
+
+    below are unique within it: the same project_id in two workspaces is two projects.
 
 - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
   deployed whole. People see metadata.name.
@@ -73,13 +81,18 @@ Conventions
 - Units are in field names (_bytes, _cores, _seconds, _ms). Times are RFC 3339. Absent = 0,
   false or empty. *_message fields are prose for people: branch on enums and ids.
 - Errors: NotFoundError = no such entity (the message lists what exists). InvalidArgumentError =
-  a bad or unknown field (named, with what it takes). FailedPreconditionError = the container is
-  not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
-  do). UnavailableError = retry later: the project is busy (ProjectBusy names the operation:
-  wait with get_operation), or the machine (MachineUnreachable), GitHub or backup storage is
-  down. AbortedError = changed since read (ProjectChanged): reread, redo. ResourceExhaustedError
-  = a limit (named). OutOfRangeError = before the oldest record kept. PermissionDeniedError = a
-  read-only path (project files: use deploy_project). UnauthenticatedError = sign in again.
+  a bad or unknown field (named, with what it takes; a `workspace` of none of the caller's:
+  WorkspaceChoice lists theirs). FailedPreconditionError = the container is not running, or as
+  the RPC says; with NoMachine = no machine yet (the message says what to do); with
+  WorkspaceChoice = `workspace` is needed: name one it lists, by what the person said or where
+  the project is (holding_project); with ProjectMoved = the project moved to the workspace it
+  names: call there. UnavailableError = retry later: the project is busy (ProjectBusy names the
+  operation: wait with get_operation), or the machine (MachineUnreachable), GitHub or backup
+  storage is down. AbortedError = changed since read (ProjectChanged): reread, redo.
+  ResourceExhaustedError = a limit (named). OutOfRangeError = before the oldest record kept.
+  PermissionDeniedError = a read-only path (project files: use deploy_project); with
+  WorkspaceNotGranted = the person has not let this token reach that workspace (they can, at its
+  url). UnauthenticatedError = sign in again.
 - A response holds ~64 KiB at most (read_path(length_bytes=): ≤1 MiB; create_transfer: any
   size); a cut list says so and pages. A limit over its maximum counts as the maximum.
 - An operation runs on after its call returns, even if the caller leaves; a retry with the same
@@ -135,6 +148,7 @@ from ._types import (
     DatabaseSizeRefusal,
     DatabaseSizeRefusalReason,
     DatabaseSummary,
+    DatabaseSwitch,
     DeleteProjectAction,
     DeletedProject,
     DeployFailureReason,
@@ -166,12 +180,15 @@ from ._types import (
     IncidentQuietReason,
     LinkDatabaseResponse,
     ListCommitsResponse,
+    ListWorkspacesResponse,
     LogLine,
     Machine,
     MachineSession,
     MachineSessionKind,
     MachineUnreachable,
     MountVolume,
+    MoveProjectResponse,
+    MovedTo,
     NoMachine,
     NoMachineReason,
     Operation,
@@ -184,8 +201,10 @@ from ._types import (
     ProjectAlerts,
     ProjectBusy,
     ProjectChanged,
+    ProjectDependency,
     ProjectExtension,
     ProjectMetadata,
+    ProjectMoved,
     ProjectProblem,
     ProjectProblemKind,
     ProjectSource,
@@ -226,6 +245,11 @@ from ._types import (
     VolumeMount,
     VolumeMountedBy,
     WatchOperationResponse,
+    Workspace,
+    WorkspaceChoice,
+    WorkspaceNotGranted,
+    WorkspaceRole,
+    WorkspaceStatus,
 )
 
 __all__ = [
@@ -258,6 +282,7 @@ __all__ = [
     "DatabaseSizeRefusal",
     "DatabaseSizeRefusalReason",
     "DatabaseSummary",
+    "DatabaseSwitch",
     "DeadlineExceededError",
     "DeleteProjectAction",
     "DeletedProject",
@@ -294,12 +319,15 @@ __all__ = [
     "InvalidArgumentError",
     "LinkDatabaseResponse",
     "ListCommitsResponse",
+    "ListWorkspacesResponse",
     "LogLine",
     "Machine",
     "MachineSession",
     "MachineSessionKind",
     "MachineUnreachable",
     "MountVolume",
+    "MoveProjectResponse",
+    "MovedTo",
     "NoMachine",
     "NoMachineReason",
     "NotFoundError",
@@ -317,8 +345,10 @@ __all__ = [
     "ProjectAlerts",
     "ProjectBusy",
     "ProjectChanged",
+    "ProjectDependency",
     "ProjectExtension",
     "ProjectMetadata",
+    "ProjectMoved",
     "ProjectProblem",
     "ProjectProblemKind",
     "ProjectSource",
@@ -364,4 +394,9 @@ __all__ = [
     "VolumeMount",
     "VolumeMountedBy",
     "WatchOperationResponse",
+    "Workspace",
+    "WorkspaceChoice",
+    "WorkspaceNotGranted",
+    "WorkspaceRole",
+    "WorkspaceStatus",
 ]

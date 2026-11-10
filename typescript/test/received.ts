@@ -10,11 +10,14 @@ import { first, newer, reading, readingDetail, type Init } from "./harness.ts";
 import type { Pethost } from "pethost";
 
 // The call an error is read from: any will do, since every call fails the same way.
-const anyCall = (api: Pethost): Promise<unknown> => api.getMachine({});
+const anyCall = (api: Pethost): Promise<unknown> => api.listWorkspaces({});
 
 // What each message reads as when nothing is set in it: from a response, and from its JSON.
 export const empty = {
-  GetMachineRequest: () => ({}),
+  ListWorkspacesRequest: () => ({ projectId: "", pageToken: "" }),
+  ListWorkspacesResponse: () => ({ workspaces: [], nextPageToken: "", total: 0, holdingProject: [], incomplete: false }),
+  Workspace: () => ({ workspaceId: "", name: "", location: "", plan: "", cpuTotalCores: 0, memoryTotalBytes: 0n, diskTotalBytes: 0n, hostname: "", appsDomain: "" }),
+  GetMachineRequest: () => ({ workspace: "" }),
   GetMachineResponse: () => ({ projects: [], deletedProjects: [] }),
   Machine: () => ({ name: "", location: "", cpuUsedCores: 0, cpuTotalCores: 0, memoryUsedBytes: 0n, memoryTotalBytes: 0n, diskUsedBytes: 0n, diskTotalBytes: 0n, hostname: "", hostnameIsAddress: false, sshHostKeyFingerprint: "", sshKeys: [], backupsEnabled: false, snapshotListFailureMessage: "", backupRetentionHours: 0, acmeEnabled: false, appsDomain: "", daemonVersion: "", dockerVersion: "", sessions: [], alertChannels: [], databaseEngines: [], memoryLimitsBytes: 0n }),
   AlertDestination: () => ({ label: "" }),
@@ -24,16 +27,18 @@ export const empty = {
   GithubConnection: () => ({ appName: "", installUrl: "", repositories: [], repositoryCount: 0, webhooksEnabled: false }),
   GithubRepository: () => ({ repository: "", defaultBranch: "", private: false }),
   DeletedProject: () => ({ projectId: "", snapshotCount: 0 }),
-  RunMachineActionRequest: () => ({}),
+  MovedTo: () => ({ workspaceId: "", workspaceName: "" }),
+  RunMachineActionRequest: () => ({ workspace: "" }),
   RestartMachineAction: () => ({ atMaintenanceWindow: false, interruptOperations: false }),
   RunMachineActionResponse: () => ({}),
   ProjectMetadata: () => ({}),
-  ProjectSummary: () => ({ projectId: "", problems: [], services: [], url: "", hosts: [], cpuUsedCores: 0, memoryUsedBytes: 0n, runningOperations: [], pinned: false, diskUsedBytes: 0n }),
+  ProjectSummary: () => ({ projectId: "", problems: [], services: [], url: "", hosts: [], cpuUsedCores: 0, memoryUsedBytes: 0n, runningOperations: [], pinned: false, diskUsedBytes: 0n, uid: "" }),
   ServiceSummary: () => ({ service: "" }),
   ProjectProblem: () => ({ service: "", operationId: "", problemMessage: "", incidentId: "" }),
-  GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "", uptimeDayCount: 0, incidentsBeforeId: "" }),
+  GetProjectRequest: () => ({ projectId: "", includeSecretValues: false, snapshotsVolume: "", uptimeDayCount: 0, incidentsBeforeId: "", workspace: "" }),
   GetProjectResponse: () => ({}),
-  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0, incidents: [], moreIncidents: false, uptimeDays: [], linkedDatabases: [] }),
+  Project: () => ({ projectId: "", problems: [], url: "", cpuUsedCores: 0, memoryUsedBytes: 0n, deployId: "", xPethostAppliesAtOnce: false, services: [], volumes: [], routes: [], hosts: [], passwordProtected: false, operations: [], snapshots: [], snapshotCount: 0, incidents: [], moreIncidents: false, uptimeDays: [], linkedDatabases: [], workspaceId: "", uid: "", dependencies: [] }),
+  ProjectDependency: () => ({ databaseProjectId: "", copyDatabase: "", envPrefix: "" }),
   RunningServicesAction: () => ({ services: [] }),
   ProjectSource: () => ({}),
   GithubSource: () => ({ pinned: false, autoDeployPending: false }),
@@ -50,19 +55,22 @@ export const empty = {
   Operation: () => ({ operationId: "", failureMessage: "", madeCurrent: false, service: "", failedExitCode: 0, snapshotId: "", restoredVolumes: [], undoSnapshotId: "", archiveName: "", adjustments: [], changedPaths: [], changedPathCount: 0, filesKept: false, filesOperationId: "", databaseMemoryLimitBytes: 0n }),
   Snapshot: () => ({ snapshotId: "", sizeBytes: 0n, volumes: [] }),
   HttpTrafficSummary: () => ({ requestCount: 0n, serverErrorCount: 0n, latencyP50Ms: 0, latencyP95Ms: 0 }),
-  CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "", linkDatabases: [] }),
+  CreateProjectRequest: () => ({ projectId: "", uploadId: "", files: [], timeoutSeconds: 0, operationId: "", linkDatabases: [], workspace: "" }),
   DatabaseLinkRequest: () => ({ databaseProjectId: "", ownUser: false, envPrefix: "" }),
   CreateProjectResponse: () => ({ violations: [], adjustments: [], log: [] }),
-  DeployProjectRequest: () => ({ projectId: "", baseDeployId: "", files: [], timeoutSeconds: 0, operationId: "" }),
+  DeployProjectRequest: () => ({ projectId: "", baseDeployId: "", files: [], timeoutSeconds: 0, operationId: "", workspace: "" }),
   MountVolume: () => ({ service: "", volume: "", containerPath: "" }),
   ProjectExtension: () => ({ routes: [], removeRoutes: false, password: "", removePassword: false }),
   FileChange: () => ({ path: "", executable: false }),
   DeployProjectResponse: () => ({ violations: [], adjustments: [], log: [] }),
   SpecViolation: () => ({ service: "", location: "", violationMessage: "" }),
-  ListCommitsRequest: () => ({ projectId: "", beforeCommit: "" }),
+  MoveProjectRequest: () => ({ projectId: "", toWorkspace: "", operationId: "", switchDatabases: [], workspace: "" }),
+  DatabaseSwitch: () => ({ databaseProjectId: "", intoDatabaseProjectId: "", empty: false, envPrefix: "" }),
+  MoveProjectResponse: () => ({ moveMessage: "" }),
+  ListCommitsRequest: () => ({ projectId: "", beforeCommit: "", workspace: "" }),
   ListCommitsResponse: () => ({ commits: [], more: false }),
   BranchCommit: () => ({ author: "", deployed: false, newest: false }),
-  RunProjectActionRequest: () => ({ projectId: "", operationId: "" }),
+  RunProjectActionRequest: () => ({ projectId: "", operationId: "", workspace: "" }),
   ServicesAction: () => ({ services: [] }),
   RecreateServiceAction: () => ({ service: "", pullLatestImage: false }),
   BackUpAction: () => ({}),
@@ -76,11 +84,11 @@ export const empty = {
   DatabaseSummary: () => ({ majorVersion: 0, dataBytes: 0n, connections: 0, linkedProjects: [], serverVersion: "", memoryLimitBytes: 0n, ownUserProjects: [] }),
   DatabaseEngineOffer: () => ({ majorVersion: 0, sizes: [], defaultMemoryLimitBytes: 0n, ownUsers: false }),
   DatabaseSizeChoice: () => ({ memoryLimitBytes: 0n }),
-  LinkDatabaseRequest: () => ({ databaseProjectId: "", link: [], unlink: [] }),
+  LinkDatabaseRequest: () => ({ databaseProjectId: "", link: [], unlink: [], workspace: "" }),
   LinkDatabaseResponse: () => ({}),
-  CreateDatabaseRequest: () => ({ projectId: "", memoryLimitBytes: 0n, fromSnapshotId: "", link: [], operationId: "" }),
+  CreateDatabaseRequest: () => ({ projectId: "", memoryLimitBytes: 0n, fromSnapshotId: "", link: [], operationId: "", workspace: "" }),
   CreateDatabaseResponse: () => ({ violations: [], adjustments: [], log: [] }),
-  SetProjectAlertsRequest: () => ({ projectId: "", checks: [], removeChecks: false, trafficRules: [], removeTrafficRules: false }),
+  SetProjectAlertsRequest: () => ({ projectId: "", checks: [], removeChecks: false, trafficRules: [], removeTrafficRules: false, workspace: "" }),
   SetProjectAlertsResponse: () => ({}),
   SiteCheck: () => ({ host: "", path: "", expectStatus: 0, mustContain: "" }),
   TrafficRule: () => ({ threshold: 0, windowMinutes: 0, minRequests: 0 }),
@@ -91,25 +99,25 @@ export const empty = {
   Incident: () => ({ incidentId: "", service: "", operationId: "", value: 0, requestCount: 0n, afterOperationId: "", joinedIncidentId: "", flapping: false, incidentMessage: "" }),
   IncidentEvidence: () => ({ exitCode: 0, oomKilled: false, restartCount: 0, healthOutput: "", logLines: [] }),
   UptimeDay: () => ({ downSeconds: 0 }),
-  GetOperationRequest: () => ({ projectId: "", operationId: "" }),
-  GetOperationResponse: () => ({ log: [], logLineCount: 0, nextAfterLogLine: 0 }),
+  GetOperationRequest: () => ({ projectId: "", operationId: "", workspace: "" }),
+  GetOperationResponse: () => ({ log: [], logLineCount: 0, nextAfterLogLine: 0, moveMessage: "" }),
   OperationLogLine: () => ({ text: "" }),
   HttpTrafficFilter: () => ({ host: "", method: "", pathContains: "", pathPattern: "", statusClass: 0 }),
-  QueryHttpTrafficRequest: () => ({ projectId: "", lastSeconds: 0, bucketWidthSeconds: 0, requestLimit: 0, pageToken: "" }),
+  QueryHttpTrafficRequest: () => ({ projectId: "", lastSeconds: 0, bucketWidthSeconds: 0, requestLimit: 0, pageToken: "", workspace: "" }),
   QueryHttpTrafficResponse: () => ({ buckets: [], topPaths: [], newestSequence: 0n, requests: [], nextPageToken: "", tailSequence: 0n }),
   HttpTrafficBucket: () => ({}),
   HttpPathTraffic: () => ({ method: "", pathPattern: "" }),
   HttpRequest: () => ({ sequence: 0n, host: "", method: "", path: "", pathPattern: "", routePath: "", service: "", port: 0, statusCode: 0, responseSizeBytes: 0n, durationMs: 0, serviceDurationMs: 0, clientIpAddress: "", userAgent: "" }),
   ContainerLogFilter: () => ({ service: "", textContains: "" }),
-  QueryContainerLogsRequest: () => ({ projectId: "", lastSeconds: 0, limit: 0, fromStart: false, pageToken: "" }),
+  QueryContainerLogsRequest: () => ({ projectId: "", lastSeconds: 0, limit: 0, fromStart: false, pageToken: "", workspace: "" }),
   QueryContainerLogsResponse: () => ({ lines: [], nextPageToken: "", tailCursor: "" }),
   LogLine: () => ({ service: "", text: "" }),
-  RunServiceCommandRequest: () => ({ projectId: "", service: "", command: [], stdin: "", runAsUser: "", workingDirectory: "", timeoutSeconds: 0 }),
+  RunServiceCommandRequest: () => ({ projectId: "", service: "", command: [], stdin: "", runAsUser: "", workingDirectory: "", timeoutSeconds: 0, workspace: "" }),
   RunServiceCommandResponse: () => ({ exitCode: 0, timedOut: false, stdout: "", stderr: "", outputTruncated: false }),
   FileEntry: () => ({ name: "", sizeBytes: 0n, mode: "", ownerUid: 0, ownerGid: 0, symlinkTarget: "" }),
-  ReadPathRequest: () => ({ projectId: "", path: "", entryLimit: 0, offsetBytes: 0n, lengthBytes: 0, entryPageToken: "" }),
+  ReadPathRequest: () => ({ projectId: "", path: "", entryLimit: 0, offsetBytes: 0n, lengthBytes: 0, entryPageToken: "", workspace: "" }),
   ReadPathResponse: () => ({ volume: "", entries: [], entryCount: 0, nextEntryPageToken: "", text: "", binary: false, nextOffsetBytes: 0n, deployId: "" }),
-  CreateTransferRequest: () => ({}),
+  CreateTransferRequest: () => ({ workspace: "" }),
   ArchiveUpload: () => ({ fileName: "" }),
   FileUpload: () => ({ projectId: "", path: "" }),
   PathDownload: () => ({ projectId: "", path: "" }),
@@ -120,14 +128,55 @@ export const empty = {
   MachineUnreachable: () => ({}),
   DatabaseLinkRefusal: () => ({ projectId: "", service: "", databaseProjectId: "" }),
   DatabaseSizeRefusal: () => ({ dataBytes: 0n, keepsBytes: 0n, volume: "" }),
-  NoMachine: () => ({ url: "" }),
-  WatchOperationRequest: () => ({ projectId: "", operationId: "" }),
-  WatchOperationResponse: () => ({}),
-  TailContainerLogsRequest: () => ({ projectId: "", afterCursor: "" }),
+  NoMachine: () => ({ url: "", workspaceId: "" }),
+  WorkspaceChoice: () => ({ workspaces: [], total: 0, holdingProject: [], incomplete: false }),
+  WorkspaceNotGranted: () => ({ workspaceId: "", url: "" }),
+  ProjectMoved: () => ({ projectId: "", workspaceId: "", workspaceName: "" }),
+  WatchOperationRequest: () => ({ projectId: "", operationId: "", workspace: "" }),
+  WatchOperationResponse: () => ({ moveMessage: "" }),
+  TailContainerLogsRequest: () => ({ projectId: "", afterCursor: "", workspace: "" }),
   TailContainerLogsResponse: () => ({ cursor: "" }),
-  TailHttpTrafficRequest: () => ({ projectId: "", afterSequence: 0n }),
+  TailHttpTrafficRequest: () => ({ projectId: "", afterSequence: 0n, workspace: "" }),
   TailHttpTrafficResponse: () => ({}),
 };
+
+{
+  const m = reading(w.ListWorkspacesResponseSchema, (leaf: Init<typeof w.ListWorkspacesResponseSchema>): Init<typeof w.ListWorkspacesResponseSchema> => (leaf), async (api) => (await api.listWorkspaces({})));
+  m.reads("ListWorkspacesResponse: nothing set", {}, empty.ListWorkspacesResponse());
+  m.reads("ListWorkspacesResponse: a field newer than the SDK", newer(w.ListWorkspacesResponseSchema), empty.ListWorkspacesResponse());
+  m.reads("ListWorkspacesResponse.workspaces", { workspaces: [{}] }, { ...empty.ListWorkspacesResponse(), workspaces: [empty.Workspace()] });
+  m.reads("ListWorkspacesResponse.next_page_token", { nextPageToken: "next_page_token" }, { ...empty.ListWorkspacesResponse(), nextPageToken: "next_page_token" });
+  m.reads("ListWorkspacesResponse.total", { total: 1003 }, { ...empty.ListWorkspacesResponse(), total: 1003 });
+  m.reads("ListWorkspacesResponse.holding_project", { holdingProject: ["holding_project", ""] }, { ...empty.ListWorkspacesResponse(), holdingProject: ["holding_project", ""] });
+  m.reads("ListWorkspacesResponse.incomplete", { incomplete: true }, { ...empty.ListWorkspacesResponse(), incomplete: true });
+}
+
+{
+  const m = reading(w.ListWorkspacesResponseSchema, (leaf: Init<typeof w.WorkspaceSchema>): Init<typeof w.ListWorkspacesResponseSchema> => ({ workspaces: [leaf] }), async (api) => (await api.listWorkspaces({}))?.workspaces?.[0]);
+  m.reads("Workspace: nothing set", {}, empty.Workspace());
+  m.reads("Workspace: a field newer than the SDK", newer(w.WorkspaceSchema), empty.Workspace());
+  m.reads("Workspace.workspace_id", { workspaceId: "workspace_id" }, { ...empty.Workspace(), workspaceId: "workspace_id" });
+  m.reads("Workspace.name", { name: "name" }, { ...empty.Workspace(), name: "name" });
+  m.reads("Workspace.status: READY", { status: w.WorkspaceStatus.READY }, { ...empty.Workspace(), status: "READY" });
+  m.reads("Workspace.status: BEING_PREPARED", { status: w.WorkspaceStatus.BEING_PREPARED }, { ...empty.Workspace(), status: "BEING_PREPARED" });
+  m.reads("Workspace.status: a value newer than the SDK", { status: 9999 as w.WorkspaceStatus }, { ...empty.Workspace(), status: 9999 });
+  m.reads("Workspace.location", { location: "location" }, { ...empty.Workspace(), location: "location" });
+  m.reads("Workspace.plan", { plan: "plan" }, { ...empty.Workspace(), plan: "plan" });
+  m.reads("Workspace.cpu_total_cores", { cpuTotalCores: 1006.5 }, { ...empty.Workspace(), cpuTotalCores: 1006.5 });
+  m.reads("Workspace.memory_total_bytes", { memoryTotalBytes: 9007199254740993n }, { ...empty.Workspace(), memoryTotalBytes: 9007199254740993n });
+  m.reads("Workspace.memory_free_bytes", { memoryFreeBytes: 9007199254740993n }, { ...empty.Workspace(), memoryFreeBytes: 9007199254740993n });
+  m.reads("Workspace.memory_free_bytes: zero", { memoryFreeBytes: 0n }, { ...empty.Workspace(), memoryFreeBytes: 0n });
+  m.reads("Workspace.disk_total_bytes", { diskTotalBytes: 9007199254740993n }, { ...empty.Workspace(), diskTotalBytes: 9007199254740993n });
+  m.reads("Workspace.disk_free_bytes", { diskFreeBytes: 9007199254740993n }, { ...empty.Workspace(), diskFreeBytes: 9007199254740993n });
+  m.reads("Workspace.disk_free_bytes: zero", { diskFreeBytes: 0n }, { ...empty.Workspace(), diskFreeBytes: 0n });
+  m.reads("Workspace.project_count", { projectCount: 1011 }, { ...empty.Workspace(), projectCount: 1011 });
+  m.reads("Workspace.project_count: zero", { projectCount: 0 }, { ...empty.Workspace(), projectCount: 0 });
+  m.reads("Workspace.hostname", { hostname: "hostname" }, { ...empty.Workspace(), hostname: "hostname" });
+  m.reads("Workspace.apps_domain", { appsDomain: "apps_domain" }, { ...empty.Workspace(), appsDomain: "apps_domain" });
+  m.reads("Workspace.end_time", { endTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Workspace(), endTime: new Date(1790000000999) });
+  m.reads("Workspace.role: OWNER", { role: w.WorkspaceRole.OWNER }, { ...empty.Workspace(), role: "OWNER" });
+  m.reads("Workspace.role: a value newer than the SDK", { role: 9999 as w.WorkspaceRole }, { ...empty.Workspace(), role: 9999 });
+}
 
 {
   const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.GetMachineResponseSchema>): Init<typeof w.GetMachineResponseSchema> => (leaf), async (api) => (await api.getMachine({})));
@@ -137,6 +186,7 @@ export const empty = {
   m.reads("GetMachineResponse.projects", { projects: [{}] }, { ...empty.GetMachineResponse(), projects: [empty.ProjectSummary()] });
   m.reads("GetMachineResponse.deleted_projects", { deletedProjects: [{}] }, { ...empty.GetMachineResponse(), deletedProjects: [empty.DeletedProject()] });
   m.reads("GetMachineResponse.github", { github: {} }, { ...empty.GetMachineResponse(), github: empty.GithubConnection() });
+  m.reads("GetMachineResponse.workspace", { workspace: {} }, { ...empty.GetMachineResponse(), workspace: empty.Workspace() });
 }
 
 {
@@ -257,6 +307,16 @@ export const empty = {
   m.reads("DeletedProject.project_id", { projectId: "project_id" }, { ...empty.DeletedProject(), projectId: "project_id" });
   m.reads("DeletedProject.newest_snapshot", { newestSnapshot: {} }, { ...empty.DeletedProject(), newestSnapshot: empty.Snapshot() });
   m.reads("DeletedProject.snapshot_count", { snapshotCount: 1003 }, { ...empty.DeletedProject(), snapshotCount: 1003 });
+  m.reads("DeletedProject.moved_to", { movedTo: {} }, { ...empty.DeletedProject(), movedTo: empty.MovedTo() });
+}
+
+{
+  const m = reading(w.GetMachineResponseSchema, (leaf: Init<typeof w.MovedToSchema>): Init<typeof w.GetMachineResponseSchema> => ({ deletedProjects: [{ movedTo: leaf }] }), async (api) => (await api.getMachine({}))?.deletedProjects?.[0]?.movedTo);
+  m.reads("MovedTo: nothing set", {}, empty.MovedTo());
+  m.reads("MovedTo: a field newer than the SDK", newer(w.MovedToSchema), empty.MovedTo());
+  m.reads("MovedTo.workspace_id", { workspaceId: "workspace_id" }, { ...empty.MovedTo(), workspaceId: "workspace_id" });
+  m.reads("MovedTo.workspace_name", { workspaceName: "workspace_name" }, { ...empty.MovedTo(), workspaceName: "workspace_name" });
+  m.reads("MovedTo.move_time", { moveTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.MovedTo(), moveTime: new Date(1790000000999) });
 }
 
 {
@@ -298,6 +358,7 @@ export const empty = {
   m.reads("ProjectSummary.pinned", { pinned: true }, { ...empty.ProjectSummary(), pinned: true });
   m.reads("ProjectSummary.disk_used_bytes", { diskUsedBytes: 9007199254740993n }, { ...empty.ProjectSummary(), diskUsedBytes: 9007199254740993n });
   m.reads("ProjectSummary.database", { database: {} }, { ...empty.ProjectSummary(), database: empty.DatabaseSummary() });
+  m.reads("ProjectSummary.uid", { uid: "uid" }, { ...empty.ProjectSummary(), uid: "uid" });
 }
 
 {
@@ -385,6 +446,18 @@ export const empty = {
   m.reads("Project.uptime_days", { uptimeDays: [{}] }, { ...empty.Project(), uptimeDays: [empty.UptimeDay()] });
   m.reads("Project.database", { database: {} }, { ...empty.Project(), database: empty.Database() });
   m.reads("Project.linked_databases", { linkedDatabases: ["linked_databases", ""] }, { ...empty.Project(), linkedDatabases: ["linked_databases", ""] });
+  m.reads("Project.workspace_id", { workspaceId: "workspace_id" }, { ...empty.Project(), workspaceId: "workspace_id" });
+  m.reads("Project.uid", { uid: "uid" }, { ...empty.Project(), uid: "uid" });
+  m.reads("Project.dependencies", { dependencies: [{}] }, { ...empty.Project(), dependencies: [empty.ProjectDependency()] });
+}
+
+{
+  const m = reading(w.GetProjectResponseSchema, (leaf: Init<typeof w.ProjectDependencySchema>): Init<typeof w.GetProjectResponseSchema> => ({ project: { dependencies: [leaf] } }), async (api) => (await api.getProject({}))?.project?.dependencies?.[0]);
+  m.reads("ProjectDependency: nothing set", {}, empty.ProjectDependency());
+  m.reads("ProjectDependency: a field newer than the SDK", newer(w.ProjectDependencySchema), empty.ProjectDependency());
+  m.reads("ProjectDependency.database_project_id", { databaseProjectId: "database_project_id" }, { ...empty.ProjectDependency(), databaseProjectId: "database_project_id" });
+  m.reads("ProjectDependency.copy_database", { copyDatabase: "copy_database" }, { ...empty.ProjectDependency(), copyDatabase: "copy_database" });
+  m.reads("ProjectDependency.env_prefix", { envPrefix: "env_prefix" }, { ...empty.ProjectDependency(), envPrefix: "env_prefix" });
 }
 
 {
@@ -582,6 +655,7 @@ export const empty = {
   m.reads("Operation.kind: BACKUP", { kind: w.OperationKind.BACKUP }, { ...empty.Operation(), kind: "BACKUP" });
   m.reads("Operation.kind: RESTORE", { kind: w.OperationKind.RESTORE }, { ...empty.Operation(), kind: "RESTORE" });
   m.reads("Operation.kind: DELETE", { kind: w.OperationKind.DELETE }, { ...empty.Operation(), kind: "DELETE" });
+  m.reads("Operation.kind: MOVE", { kind: w.OperationKind.MOVE }, { ...empty.Operation(), kind: "MOVE" });
   m.reads("Operation.kind: a value newer than the SDK", { kind: 9999 as w.OperationKind }, { ...empty.Operation(), kind: 9999 });
   m.reads("Operation.status: IN_PROGRESS", { status: w.OperationStatus.IN_PROGRESS }, { ...empty.Operation(), status: "IN_PROGRESS" });
   m.reads("Operation.status: SUCCEEDED", { status: w.OperationStatus.SUCCEEDED }, { ...empty.Operation(), status: "SUCCEEDED" });
@@ -669,6 +743,15 @@ export const empty = {
   m.reads("SpecViolation.service", { service: "service" }, { ...empty.SpecViolation(), service: "service" });
   m.reads("SpecViolation.location", { location: "location" }, { ...empty.SpecViolation(), location: "location" });
   m.reads("SpecViolation.violation_message", { violationMessage: "violation_message" }, { ...empty.SpecViolation(), violationMessage: "violation_message" });
+}
+
+{
+  const m = reading(w.MoveProjectResponseSchema, (leaf: Init<typeof w.MoveProjectResponseSchema>): Init<typeof w.MoveProjectResponseSchema> => (leaf), async (api) => (await api.moveProject({})));
+  m.reads("MoveProjectResponse: nothing set", {}, empty.MoveProjectResponse());
+  m.reads("MoveProjectResponse: a field newer than the SDK", newer(w.MoveProjectResponseSchema), empty.MoveProjectResponse());
+  m.reads("MoveProjectResponse.operation", { operation: {} }, { ...empty.MoveProjectResponse(), operation: empty.Operation() });
+  m.reads("MoveProjectResponse.project", { project: {} }, { ...empty.MoveProjectResponse(), project: empty.Project() });
+  m.reads("MoveProjectResponse.move_message", { moveMessage: "move_message" }, { ...empty.MoveProjectResponse(), moveMessage: "move_message" });
 }
 
 {
@@ -950,6 +1033,7 @@ export const empty = {
   m.reads("GetOperationResponse.log", { log: [{}] }, { ...empty.GetOperationResponse(), log: [empty.OperationLogLine()] });
   m.reads("GetOperationResponse.log_line_count", { logLineCount: 1003 }, { ...empty.GetOperationResponse(), logLineCount: 1003 });
   m.reads("GetOperationResponse.next_after_log_line", { nextAfterLogLine: 1004 }, { ...empty.GetOperationResponse(), nextAfterLogLine: 1004 });
+  m.reads("GetOperationResponse.move_message", { moveMessage: "move_message" }, { ...empty.GetOperationResponse(), moveMessage: "move_message" });
 }
 
 {
@@ -1121,6 +1205,7 @@ export const empty = {
   m.reads("ProjectBusy.kind: BACKUP", { kind: w.OperationKind.BACKUP }, { ...empty.ProjectBusy(), kind: "BACKUP" });
   m.reads("ProjectBusy.kind: RESTORE", { kind: w.OperationKind.RESTORE }, { ...empty.ProjectBusy(), kind: "RESTORE" });
   m.reads("ProjectBusy.kind: DELETE", { kind: w.OperationKind.DELETE }, { ...empty.ProjectBusy(), kind: "DELETE" });
+  m.reads("ProjectBusy.kind: MOVE", { kind: w.OperationKind.MOVE }, { ...empty.ProjectBusy(), kind: "MOVE" });
   m.reads("ProjectBusy.kind: a value newer than the SDK", { kind: 9999 as w.OperationKind }, { ...empty.ProjectBusy(), kind: 9999 });
   m.reads("ProjectBusy.start_time", { startTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.ProjectBusy(), startTime: new Date(1790000000999) });
 }
@@ -1174,6 +1259,35 @@ export const empty = {
   m.reads("NoMachine.reason: BEING_PREPARED", { reason: w.NoMachineReason.BEING_PREPARED }, { ...empty.NoMachine(), reason: "BEING_PREPARED" });
   m.reads("NoMachine.reason: a value newer than the SDK", { reason: 9999 as w.NoMachineReason }, { ...empty.NoMachine(), reason: 9999 });
   m.reads("NoMachine.url", { url: "url" }, { ...empty.NoMachine(), url: "url" });
+  m.reads("NoMachine.workspace_id", { workspaceId: "workspace_id" }, { ...empty.NoMachine(), workspaceId: "workspace_id" });
+}
+
+{
+  const m = readingDetail(w.WorkspaceChoiceSchema, (leaf: Init<typeof w.WorkspaceChoiceSchema>): Init<typeof w.WorkspaceChoiceSchema> => (leaf), anyCall, (error) => error.workspaceChoice);
+  m.reads("WorkspaceChoice: nothing set", {}, empty.WorkspaceChoice());
+  m.reads("WorkspaceChoice: a field newer than the SDK", newer(w.WorkspaceChoiceSchema), empty.WorkspaceChoice());
+  m.reads("WorkspaceChoice.workspaces", { workspaces: [{}] }, { ...empty.WorkspaceChoice(), workspaces: [empty.Workspace()] });
+  m.reads("WorkspaceChoice.total", { total: 1002 }, { ...empty.WorkspaceChoice(), total: 1002 });
+  m.reads("WorkspaceChoice.holding_project", { holdingProject: ["holding_project", ""] }, { ...empty.WorkspaceChoice(), holdingProject: ["holding_project", ""] });
+  m.reads("WorkspaceChoice.incomplete", { incomplete: true }, { ...empty.WorkspaceChoice(), incomplete: true });
+}
+
+{
+  const m = readingDetail(w.WorkspaceNotGrantedSchema, (leaf: Init<typeof w.WorkspaceNotGrantedSchema>): Init<typeof w.WorkspaceNotGrantedSchema> => (leaf), anyCall, (error) => error.workspaceNotGranted);
+  m.reads("WorkspaceNotGranted: nothing set", {}, empty.WorkspaceNotGranted());
+  m.reads("WorkspaceNotGranted: a field newer than the SDK", newer(w.WorkspaceNotGrantedSchema), empty.WorkspaceNotGranted());
+  m.reads("WorkspaceNotGranted.workspace_id", { workspaceId: "workspace_id" }, { ...empty.WorkspaceNotGranted(), workspaceId: "workspace_id" });
+  m.reads("WorkspaceNotGranted.url", { url: "url" }, { ...empty.WorkspaceNotGranted(), url: "url" });
+}
+
+{
+  const m = readingDetail(w.ProjectMovedSchema, (leaf: Init<typeof w.ProjectMovedSchema>): Init<typeof w.ProjectMovedSchema> => (leaf), anyCall, (error) => error.projectMoved);
+  m.reads("ProjectMoved: nothing set", {}, empty.ProjectMoved());
+  m.reads("ProjectMoved: a field newer than the SDK", newer(w.ProjectMovedSchema), empty.ProjectMoved());
+  m.reads("ProjectMoved.project_id", { projectId: "project_id" }, { ...empty.ProjectMoved(), projectId: "project_id" });
+  m.reads("ProjectMoved.workspace_id", { workspaceId: "workspace_id" }, { ...empty.ProjectMoved(), workspaceId: "workspace_id" });
+  m.reads("ProjectMoved.workspace_name", { workspaceName: "workspace_name" }, { ...empty.ProjectMoved(), workspaceName: "workspace_name" });
+  m.reads("ProjectMoved.move_time", { moveTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.ProjectMoved(), moveTime: new Date(1790000000999) });
 }
 
 {
@@ -1181,6 +1295,7 @@ export const empty = {
   m.reads("WatchOperationResponse: a field or a oneof's member newer than the SDK", newer(w.WatchOperationResponseSchema), empty.WatchOperationResponse());
   m.reads("WatchOperationResponse.log", { message: { case: "log", value: {} } }, { ...empty.WatchOperationResponse(), message: "log", log: empty.OperationLogLine() });
   m.reads("WatchOperationResponse.finished_operation", { message: { case: "finishedOperation", value: {} } }, { ...empty.WatchOperationResponse(), message: "finishedOperation", finishedOperation: empty.Operation() });
+  m.reads("WatchOperationResponse.move_message", { moveMessage: "move_message" }, { ...empty.WatchOperationResponse(), moveMessage: "move_message" });
 }
 
 {

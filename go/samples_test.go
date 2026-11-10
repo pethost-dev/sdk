@@ -28,6 +28,10 @@ func (f *fake) handler() http.Handler {
 	return mux
 }
 
+func (f *fake) ListWorkspaces(_ context.Context, request *panelv1.ListWorkspacesRequest) (*panelv1.ListWorkspacesResponse, error) {
+	return answer[*panelv1.ListWorkspacesResponse](&f.exchange, request)
+}
+
 func (f *fake) GetMachine(_ context.Context, request *panelv1.GetMachineRequest) (*panelv1.GetMachineResponse, error) {
 	return answer[*panelv1.GetMachineResponse](&f.exchange, request)
 }
@@ -46,6 +50,10 @@ func (f *fake) CreateProject(_ context.Context, request *panelv1.CreateProjectRe
 
 func (f *fake) DeployProject(_ context.Context, request *panelv1.DeployProjectRequest) (*panelv1.DeployProjectResponse, error) {
 	return answer[*panelv1.DeployProjectResponse](&f.exchange, request)
+}
+
+func (f *fake) MoveProject(_ context.Context, request *panelv1.MoveProjectRequest) (*panelv1.MoveProjectResponse, error) {
+	return answer[*panelv1.MoveProjectResponse](&f.exchange, request)
 }
 
 func (f *fake) ListCommits(_ context.Context, request *panelv1.ListCommitsRequest) (*panelv1.ListCommitsResponse, error) {
@@ -106,11 +114,13 @@ func (f *fake) TailHttpTraffic(ctx context.Context, request *panelv1.TailHttpTra
 
 // calls are the package's methods.
 var calls = []call{
+	callOf("ListWorkspaces", (*Client).ListWorkspaces, sampleListWorkspacesRequest, sampleListWorkspacesResponse, &panelv1.ListWorkspacesRequest{}, &panelv1.ListWorkspacesResponse{}),
 	callOf("GetMachine", (*Client).GetMachine, sampleGetMachineRequest, sampleGetMachineResponse, &panelv1.GetMachineRequest{}, &panelv1.GetMachineResponse{}),
 	callOf("RunMachineAction", (*Client).RunMachineAction, sampleRunMachineActionRequest, sampleRunMachineActionResponse, &panelv1.RunMachineActionRequest{}, &panelv1.RunMachineActionResponse{}),
 	callOf("GetProject", (*Client).GetProject, sampleGetProjectRequest, sampleGetProjectResponse, &panelv1.GetProjectRequest{}, &panelv1.GetProjectResponse{}),
 	callOf("CreateProject", (*Client).CreateProject, sampleCreateProjectRequest, sampleCreateProjectResponse, &panelv1.CreateProjectRequest{}, &panelv1.CreateProjectResponse{}),
 	callOf("DeployProject", (*Client).DeployProject, sampleDeployProjectRequest, sampleDeployProjectResponse, &panelv1.DeployProjectRequest{}, &panelv1.DeployProjectResponse{}),
+	callOf("MoveProject", (*Client).MoveProject, sampleMoveProjectRequest, sampleMoveProjectResponse, &panelv1.MoveProjectRequest{}, &panelv1.MoveProjectResponse{}),
 	callOf("ListCommits", (*Client).ListCommits, sampleListCommitsRequest, sampleListCommitsResponse, &panelv1.ListCommitsRequest{}, &panelv1.ListCommitsResponse{}),
 	callOf("RunProjectAction", (*Client).RunProjectAction, sampleRunProjectActionRequest, sampleRunProjectActionResponse, &panelv1.RunProjectActionRequest{}, &panelv1.RunProjectActionResponse{}),
 	callOf("SetProjectAlerts", (*Client).SetProjectAlerts, sampleSetProjectAlertsRequest, sampleSetProjectAlertsResponse, &panelv1.SetProjectAlertsRequest{}, &panelv1.SetProjectAlertsResponse{}),
@@ -135,10 +145,16 @@ var details = []detail{
 	{&panelv1.DatabaseLinkRefusal{}, func(s seed) Error { return Error{DatabaseLinkRefusal: new(sampleDatabaseLinkRefusal(s))} }},
 	{&panelv1.DatabaseSizeRefusal{}, func(s seed) Error { return Error{DatabaseSizeRefusal: new(sampleDatabaseSizeRefusal(s))} }},
 	{&panelv1.NoMachine{}, func(s seed) Error { return Error{NoMachine: new(sampleNoMachine(s))} }},
+	{&panelv1.WorkspaceChoice{}, func(s seed) Error { return Error{WorkspaceChoice: new(sampleWorkspaceChoice(s))} }},
+	{&panelv1.WorkspaceNotGranted{}, func(s seed) Error { return Error{WorkspaceNotGranted: new(sampleWorkspaceNotGranted(s))} }},
+	{&panelv1.ProjectMoved{}, func(s seed) Error { return Error{ProjectMoved: new(sampleProjectMoved(s))} }},
 }
 
 // shapes are the package's structs, each beside its wire message.
 var shapes = []shape{
+	shapeOf(sampleListWorkspacesRequest, &panelv1.ListWorkspacesRequest{}),
+	shapeOf(sampleListWorkspacesResponse, &panelv1.ListWorkspacesResponse{}),
+	shapeOf(sampleWorkspace, &panelv1.Workspace{}),
 	shapeOf(sampleGetMachineRequest, &panelv1.GetMachineRequest{}),
 	shapeOf(sampleGetMachineResponse, &panelv1.GetMachineResponse{}),
 	shapeOf(sampleMachine, &panelv1.Machine{}),
@@ -149,6 +165,7 @@ var shapes = []shape{
 	shapeOf(sampleGithubConnection, &panelv1.GithubConnection{}),
 	shapeOf(sampleGithubRepository, &panelv1.GithubRepository{}),
 	shapeOf(sampleDeletedProject, &panelv1.DeletedProject{}),
+	shapeOf(sampleMovedTo, &panelv1.MovedTo{}),
 	shapeOf(sampleRunMachineActionRequest, &panelv1.RunMachineActionRequest{}),
 	shapeOf(sampleRestartMachineAction, &panelv1.RestartMachineAction{}),
 	shapeOf(sampleRunMachineActionResponse, &panelv1.RunMachineActionResponse{}),
@@ -159,6 +176,7 @@ var shapes = []shape{
 	shapeOf(sampleGetProjectRequest, &panelv1.GetProjectRequest{}),
 	shapeOf(sampleGetProjectResponse, &panelv1.GetProjectResponse{}),
 	shapeOf(sampleProject, &panelv1.Project{}),
+	shapeOf(sampleProjectDependency, &panelv1.ProjectDependency{}),
 	shapeOf(sampleRunningServicesAction, &panelv1.RunningServicesAction{}),
 	shapeOf(sampleProjectSource, &panelv1.ProjectSource{}),
 	shapeOf(sampleGithubSource, &panelv1.GithubSource{}),
@@ -184,6 +202,9 @@ var shapes = []shape{
 	shapeOf(sampleFileChange, &panelv1.FileChange{}),
 	shapeOf(sampleDeployProjectResponse, &panelv1.DeployProjectResponse{}),
 	shapeOf(sampleSpecViolation, &panelv1.SpecViolation{}),
+	shapeOf(sampleMoveProjectRequest, &panelv1.MoveProjectRequest{}),
+	shapeOf(sampleDatabaseSwitch, &panelv1.DatabaseSwitch{}),
+	shapeOf(sampleMoveProjectResponse, &panelv1.MoveProjectResponse{}),
 	shapeOf(sampleListCommitsRequest, &panelv1.ListCommitsRequest{}),
 	shapeOf(sampleListCommitsResponse, &panelv1.ListCommitsResponse{}),
 	shapeOf(sampleBranchCommit, &panelv1.BranchCommit{}),
@@ -246,6 +267,9 @@ var shapes = []shape{
 	shapeOf(sampleDatabaseLinkRefusal, &panelv1.DatabaseLinkRefusal{}),
 	shapeOf(sampleDatabaseSizeRefusal, &panelv1.DatabaseSizeRefusal{}),
 	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
+	shapeOf(sampleWorkspaceChoice, &panelv1.WorkspaceChoice{}),
+	shapeOf(sampleWorkspaceNotGranted, &panelv1.WorkspaceNotGranted{}),
+	shapeOf(sampleProjectMoved, &panelv1.ProjectMoved{}),
 	shapeOf(sampleWatchOperationRequest, &panelv1.WatchOperationRequest{}),
 	shapeOf(sampleWatchOperationResponse, &panelv1.WatchOperationResponse{}),
 	shapeOf(sampleTailContainerLogsRequest, &panelv1.TailContainerLogsRequest{}),
@@ -256,6 +280,8 @@ var shapes = []shape{
 
 // enums are the package's enums, each beside the wire layer's.
 var enums = []enum{
+	enumOf[WorkspaceStatus, panelv1.WorkspaceStatus]("WorkspaceStatus"),
+	enumOf[WorkspaceRole, panelv1.WorkspaceRole]("WorkspaceRole"),
 	enumOf[AlertChannelKind, panelv1.AlertChannelKind]("AlertChannelKind"),
 	enumOf[MachineSessionKind, panelv1.MachineSessionKind]("MachineSessionKind"),
 	enumOf[ProjectProblemKind, panelv1.ProjectProblemKind]("ProjectProblemKind"),
@@ -279,8 +305,47 @@ var enums = []enum{
 	enumOf[NoMachineReason, panelv1.NoMachineReason]("NoMachineReason"),
 }
 
+func sampleListWorkspacesRequest(s seed) ListWorkspacesRequest {
+	return ListWorkspacesRequest{
+		ProjectID: plain[string](s.at("pethost.panel.v1.ListWorkspacesRequest.project_id")),
+		PageToken: plain[string](s.at("pethost.panel.v1.ListWorkspacesRequest.page_token")),
+	}
+}
+
+func sampleListWorkspacesResponse(s seed) ListWorkspacesResponse {
+	return ListWorkspacesResponse{
+		Workspaces:     list(s.at("pethost.panel.v1.ListWorkspacesResponse.workspaces"), sampleWorkspace),
+		NextPageToken:  plain[string](s.at("pethost.panel.v1.ListWorkspacesResponse.next_page_token")),
+		Total:          plain[uint32](s.at("pethost.panel.v1.ListWorkspacesResponse.total")),
+		HoldingProject: list(s.at("pethost.panel.v1.ListWorkspacesResponse.holding_project"), scalar[string]),
+		Incomplete:     plain[bool](s.at("pethost.panel.v1.ListWorkspacesResponse.incomplete")),
+	}
+}
+
+func sampleWorkspace(s seed) Workspace {
+	return Workspace{
+		WorkspaceID:      plain[string](s.at("pethost.panel.v1.Workspace.workspace_id")),
+		Name:             plain[string](s.at("pethost.panel.v1.Workspace.name")),
+		Status:           plain[WorkspaceStatus](s.at("pethost.panel.v1.Workspace.status")),
+		Location:         plain[string](s.at("pethost.panel.v1.Workspace.location")),
+		Plan:             plain[string](s.at("pethost.panel.v1.Workspace.plan")),
+		CPUTotalCores:    plain[float64](s.at("pethost.panel.v1.Workspace.cpu_total_cores")),
+		MemoryTotalBytes: plain[uint64](s.at("pethost.panel.v1.Workspace.memory_total_bytes")),
+		MemoryFreeBytes:  marked[uint64](s.at("pethost.panel.v1.Workspace.memory_free_bytes")),
+		DiskTotalBytes:   plain[uint64](s.at("pethost.panel.v1.Workspace.disk_total_bytes")),
+		DiskFreeBytes:    marked[uint64](s.at("pethost.panel.v1.Workspace.disk_free_bytes")),
+		ProjectCount:     marked[uint32](s.at("pethost.panel.v1.Workspace.project_count")),
+		Hostname:         plain[string](s.at("pethost.panel.v1.Workspace.hostname")),
+		AppsDomain:       plain[string](s.at("pethost.panel.v1.Workspace.apps_domain")),
+		EndTime:          instant(s.at("pethost.panel.v1.Workspace.end_time")),
+		Role:             plain[WorkspaceRole](s.at("pethost.panel.v1.Workspace.role")),
+	}
+}
+
 func sampleGetMachineRequest(s seed) GetMachineRequest {
-	return GetMachineRequest{}
+	return GetMachineRequest{
+		Workspace: plain[string](s.at("pethost.panel.v1.GetMachineRequest.workspace")),
+	}
 }
 
 func sampleGetMachineResponse(s seed) GetMachineResponse {
@@ -289,6 +354,7 @@ func sampleGetMachineResponse(s seed) GetMachineResponse {
 		Projects:        list(s.at("pethost.panel.v1.GetMachineResponse.projects"), sampleProjectSummary),
 		DeletedProjects: list(s.at("pethost.panel.v1.GetMachineResponse.deleted_projects"), sampleDeletedProject),
 		Github:          pointer(s.at("pethost.panel.v1.GetMachineResponse.github"), sampleGithubConnection),
+		Workspace:       pointer(s.at("pethost.panel.v1.GetMachineResponse.workspace"), sampleWorkspace),
 	}
 }
 
@@ -392,12 +458,22 @@ func sampleDeletedProject(s seed) DeletedProject {
 		ProjectID:      plain[string](s.at("pethost.panel.v1.DeletedProject.project_id")),
 		NewestSnapshot: pointer(s.at("pethost.panel.v1.DeletedProject.newest_snapshot"), sampleSnapshot),
 		SnapshotCount:  plain[uint32](s.at("pethost.panel.v1.DeletedProject.snapshot_count")),
+		MovedTo:        pointer(s.at("pethost.panel.v1.DeletedProject.moved_to"), sampleMovedTo),
+	}
+}
+
+func sampleMovedTo(s seed) MovedTo {
+	return MovedTo{
+		WorkspaceID:   plain[string](s.at("pethost.panel.v1.MovedTo.workspace_id")),
+		WorkspaceName: plain[string](s.at("pethost.panel.v1.MovedTo.workspace_name")),
+		MoveTime:      instant(s.at("pethost.panel.v1.MovedTo.move_time")),
 	}
 }
 
 func sampleRunMachineActionRequest(s seed) RunMachineActionRequest {
 	return RunMachineActionRequest{
-		Action: sampleRunMachineActionAction(s.at("pethost.panel.v1.RunMachineActionRequest.action")),
+		Action:    sampleRunMachineActionAction(s.at("pethost.panel.v1.RunMachineActionRequest.action")),
+		Workspace: plain[string](s.at("pethost.panel.v1.RunMachineActionRequest.workspace")),
 	}
 }
 
@@ -457,6 +533,7 @@ func sampleProjectSummary(s seed) ProjectSummary {
 		Pinned:             plain[bool](s.at("pethost.panel.v1.ProjectSummary.pinned")),
 		DiskUsedBytes:      plain[uint64](s.at("pethost.panel.v1.ProjectSummary.disk_used_bytes")),
 		Database:           pointer(s.at("pethost.panel.v1.ProjectSummary.database"), sampleDatabaseSummary),
+		UID:                plain[string](s.at("pethost.panel.v1.ProjectSummary.uid")),
 	}
 }
 
@@ -487,6 +564,7 @@ func sampleGetProjectRequest(s seed) GetProjectRequest {
 		IncidentsBefore:     instant(s.at("pethost.panel.v1.GetProjectRequest.incidents_before")),
 		UptimeDayCount:      plain[uint32](s.at("pethost.panel.v1.GetProjectRequest.uptime_day_count")),
 		IncidentsBeforeID:   plain[string](s.at("pethost.panel.v1.GetProjectRequest.incidents_before_id")),
+		Workspace:           plain[string](s.at("pethost.panel.v1.GetProjectRequest.workspace")),
 	}
 }
 
@@ -526,6 +604,17 @@ func sampleProject(s seed) Project {
 		UptimeDays:            list(s.at("pethost.panel.v1.Project.uptime_days"), sampleUptimeDay),
 		Database:              pointer(s.at("pethost.panel.v1.Project.database"), sampleDatabase),
 		LinkedDatabases:       list(s.at("pethost.panel.v1.Project.linked_databases"), scalar[string]),
+		WorkspaceID:           plain[string](s.at("pethost.panel.v1.Project.workspace_id")),
+		UID:                   plain[string](s.at("pethost.panel.v1.Project.uid")),
+		Dependencies:          list(s.at("pethost.panel.v1.Project.dependencies"), sampleProjectDependency),
+	}
+}
+
+func sampleProjectDependency(s seed) ProjectDependency {
+	return ProjectDependency{
+		DatabaseProjectID: plain[string](s.at("pethost.panel.v1.ProjectDependency.database_project_id")),
+		CopyDatabase:      plain[string](s.at("pethost.panel.v1.ProjectDependency.copy_database")),
+		EnvPrefix:         plain[string](s.at("pethost.panel.v1.ProjectDependency.env_prefix")),
 	}
 }
 
@@ -742,6 +831,7 @@ func sampleCreateProjectRequest(s seed) CreateProjectRequest {
 		OperationID:    plain[string](s.at("pethost.panel.v1.CreateProjectRequest.operation_id")),
 		WaitSeconds:    marked[uint32](s.at("pethost.panel.v1.CreateProjectRequest.wait_seconds")),
 		LinkDatabases:  list(s.at("pethost.panel.v1.CreateProjectRequest.link_databases"), sampleDatabaseLinkRequest),
+		Workspace:      plain[string](s.at("pethost.panel.v1.CreateProjectRequest.workspace")),
 	}
 }
 
@@ -774,6 +864,7 @@ func sampleDeployProjectRequest(s seed) DeployProjectRequest {
 		OperationID:    plain[string](s.at("pethost.panel.v1.DeployProjectRequest.operation_id")),
 		Version:        sampleDeployProjectVersion(s.at("pethost.panel.v1.DeployProjectRequest.version")),
 		WaitSeconds:    marked[uint32](s.at("pethost.panel.v1.DeployProjectRequest.wait_seconds")),
+		Workspace:      plain[string](s.at("pethost.panel.v1.DeployProjectRequest.workspace")),
 	}
 }
 
@@ -853,10 +944,39 @@ func sampleSpecViolation(s seed) SpecViolation {
 	}
 }
 
+func sampleMoveProjectRequest(s seed) MoveProjectRequest {
+	return MoveProjectRequest{
+		ProjectID:       plain[string](s.at("pethost.panel.v1.MoveProjectRequest.project_id")),
+		ToWorkspace:     plain[string](s.at("pethost.panel.v1.MoveProjectRequest.to_workspace")),
+		OperationID:     plain[string](s.at("pethost.panel.v1.MoveProjectRequest.operation_id")),
+		WaitSeconds:     marked[uint32](s.at("pethost.panel.v1.MoveProjectRequest.wait_seconds")),
+		SwitchDatabases: list(s.at("pethost.panel.v1.MoveProjectRequest.switch_databases"), sampleDatabaseSwitch),
+		Workspace:       plain[string](s.at("pethost.panel.v1.MoveProjectRequest.workspace")),
+	}
+}
+
+func sampleDatabaseSwitch(s seed) DatabaseSwitch {
+	return DatabaseSwitch{
+		DatabaseProjectID:     plain[string](s.at("pethost.panel.v1.DatabaseSwitch.database_project_id")),
+		IntoDatabaseProjectID: plain[string](s.at("pethost.panel.v1.DatabaseSwitch.into_database_project_id")),
+		Empty:                 plain[bool](s.at("pethost.panel.v1.DatabaseSwitch.empty")),
+		EnvPrefix:             plain[string](s.at("pethost.panel.v1.DatabaseSwitch.env_prefix")),
+	}
+}
+
+func sampleMoveProjectResponse(s seed) MoveProjectResponse {
+	return MoveProjectResponse{
+		Operation:   pointer(s.at("pethost.panel.v1.MoveProjectResponse.operation"), sampleOperation),
+		Project:     pointer(s.at("pethost.panel.v1.MoveProjectResponse.project"), sampleProject),
+		MoveMessage: plain[string](s.at("pethost.panel.v1.MoveProjectResponse.move_message")),
+	}
+}
+
 func sampleListCommitsRequest(s seed) ListCommitsRequest {
 	return ListCommitsRequest{
 		ProjectID:    plain[string](s.at("pethost.panel.v1.ListCommitsRequest.project_id")),
 		BeforeCommit: plain[string](s.at("pethost.panel.v1.ListCommitsRequest.before_commit")),
+		Workspace:    plain[string](s.at("pethost.panel.v1.ListCommitsRequest.workspace")),
 	}
 }
 
@@ -884,6 +1004,7 @@ func sampleRunProjectActionRequest(s seed) RunProjectActionRequest {
 		Action:      sampleRunProjectActionAction(s.at("pethost.panel.v1.RunProjectActionRequest.action")),
 		OperationID: plain[string](s.at("pethost.panel.v1.RunProjectActionRequest.operation_id")),
 		WaitSeconds: marked[uint32](s.at("pethost.panel.v1.RunProjectActionRequest.wait_seconds")),
+		Workspace:   plain[string](s.at("pethost.panel.v1.RunProjectActionRequest.workspace")),
 	}
 }
 
@@ -1029,6 +1150,7 @@ func sampleLinkDatabaseRequest(s seed) LinkDatabaseRequest {
 		DatabaseProjectID: plain[string](s.at("pethost.panel.v1.LinkDatabaseRequest.database_project_id")),
 		Link:              list(s.at("pethost.panel.v1.LinkDatabaseRequest.link"), scalar[string]),
 		Unlink:            list(s.at("pethost.panel.v1.LinkDatabaseRequest.unlink"), scalar[string]),
+		Workspace:         plain[string](s.at("pethost.panel.v1.LinkDatabaseRequest.workspace")),
 	}
 }
 
@@ -1048,6 +1170,7 @@ func sampleCreateDatabaseRequest(s seed) CreateDatabaseRequest {
 		OperationID:      plain[string](s.at("pethost.panel.v1.CreateDatabaseRequest.operation_id")),
 		WaitSeconds:      marked[uint32](s.at("pethost.panel.v1.CreateDatabaseRequest.wait_seconds")),
 		Metadata:         pointer(s.at("pethost.panel.v1.CreateDatabaseRequest.metadata"), sampleProjectMetadata),
+		Workspace:        plain[string](s.at("pethost.panel.v1.CreateDatabaseRequest.workspace")),
 	}
 }
 
@@ -1070,6 +1193,7 @@ func sampleSetProjectAlertsRequest(s seed) SetProjectAlertsRequest {
 		RemoveTrafficRules: plain[bool](s.at("pethost.panel.v1.SetProjectAlertsRequest.remove_traffic_rules")),
 		Off:                marked[bool](s.at("pethost.panel.v1.SetProjectAlertsRequest.off")),
 		MuteMinutes:        marked[uint32](s.at("pethost.panel.v1.SetProjectAlertsRequest.mute_minutes")),
+		Workspace:          plain[string](s.at("pethost.panel.v1.SetProjectAlertsRequest.workspace")),
 	}
 }
 
@@ -1189,6 +1313,7 @@ func sampleGetOperationRequest(s seed) GetOperationRequest {
 		WaitSeconds:  marked[uint32](s.at("pethost.panel.v1.GetOperationRequest.wait_seconds")),
 		AfterLogLine: marked[uint32](s.at("pethost.panel.v1.GetOperationRequest.after_log_line")),
 		LogLineLimit: marked[uint32](s.at("pethost.panel.v1.GetOperationRequest.log_line_limit")),
+		Workspace:    plain[string](s.at("pethost.panel.v1.GetOperationRequest.workspace")),
 	}
 }
 
@@ -1199,6 +1324,7 @@ func sampleGetOperationResponse(s seed) GetOperationResponse {
 		Log:              list(s.at("pethost.panel.v1.GetOperationResponse.log"), sampleOperationLogLine),
 		LogLineCount:     plain[uint32](s.at("pethost.panel.v1.GetOperationResponse.log_line_count")),
 		NextAfterLogLine: plain[uint32](s.at("pethost.panel.v1.GetOperationResponse.next_after_log_line")),
+		MoveMessage:      plain[string](s.at("pethost.panel.v1.GetOperationResponse.move_message")),
 	}
 }
 
@@ -1230,6 +1356,7 @@ func sampleQueryHTTPTrafficRequest(s seed) QueryHTTPTrafficRequest {
 		BucketWidthSeconds: plain[uint32](s.at("pethost.panel.v1.QueryHttpTrafficRequest.bucket_width_seconds")),
 		RequestLimit:       plain[uint32](s.at("pethost.panel.v1.QueryHttpTrafficRequest.request_limit")),
 		PageToken:          plain[string](s.at("pethost.panel.v1.QueryHttpTrafficRequest.page_token")),
+		Workspace:          plain[string](s.at("pethost.panel.v1.QueryHttpTrafficRequest.workspace")),
 	}
 }
 
@@ -1301,6 +1428,7 @@ func sampleQueryContainerLogsRequest(s seed) QueryContainerLogsRequest {
 		Limit:       plain[uint32](s.at("pethost.panel.v1.QueryContainerLogsRequest.limit")),
 		FromStart:   plain[bool](s.at("pethost.panel.v1.QueryContainerLogsRequest.from_start")),
 		PageToken:   plain[string](s.at("pethost.panel.v1.QueryContainerLogsRequest.page_token")),
+		Workspace:   plain[string](s.at("pethost.panel.v1.QueryContainerLogsRequest.workspace")),
 	}
 }
 
@@ -1333,6 +1461,7 @@ func sampleRunServiceCommandRequest(s seed) RunServiceCommandRequest {
 		RunAsUser:        plain[string](s.at("pethost.panel.v1.RunServiceCommandRequest.run_as_user")),
 		WorkingDirectory: plain[string](s.at("pethost.panel.v1.RunServiceCommandRequest.working_directory")),
 		TimeoutSeconds:   plain[uint32](s.at("pethost.panel.v1.RunServiceCommandRequest.timeout_seconds")),
+		Workspace:        plain[string](s.at("pethost.panel.v1.RunServiceCommandRequest.workspace")),
 	}
 }
 
@@ -1368,6 +1497,7 @@ func sampleReadPathRequest(s seed) ReadPathRequest {
 		OffsetBytes:    plain[uint64](s.at("pethost.panel.v1.ReadPathRequest.offset_bytes")),
 		LengthBytes:    plain[uint32](s.at("pethost.panel.v1.ReadPathRequest.length_bytes")),
 		EntryPageToken: plain[string](s.at("pethost.panel.v1.ReadPathRequest.entry_page_token")),
+		Workspace:      plain[string](s.at("pethost.panel.v1.ReadPathRequest.workspace")),
 	}
 }
 
@@ -1398,7 +1528,8 @@ func sampleReadPathResponse(s seed) ReadPathResponse {
 
 func sampleCreateTransferRequest(s seed) CreateTransferRequest {
 	return CreateTransferRequest{
-		Transfer: sampleCreateTransferTransfer(s.at("pethost.panel.v1.CreateTransferRequest.transfer")),
+		Transfer:  sampleCreateTransferTransfer(s.at("pethost.panel.v1.CreateTransferRequest.transfer")),
+		Workspace: plain[string](s.at("pethost.panel.v1.CreateTransferRequest.workspace")),
 	}
 }
 
@@ -1516,8 +1647,34 @@ func sampleDatabaseSizeRefusal(s seed) DatabaseSizeRefusal {
 
 func sampleNoMachine(s seed) NoMachine {
 	return NoMachine{
-		Reason: plain[NoMachineReason](s.at("pethost.panel.v1.NoMachine.reason")),
-		URL:    plain[string](s.at("pethost.panel.v1.NoMachine.url")),
+		Reason:      plain[NoMachineReason](s.at("pethost.panel.v1.NoMachine.reason")),
+		URL:         plain[string](s.at("pethost.panel.v1.NoMachine.url")),
+		WorkspaceID: plain[string](s.at("pethost.panel.v1.NoMachine.workspace_id")),
+	}
+}
+
+func sampleWorkspaceChoice(s seed) WorkspaceChoice {
+	return WorkspaceChoice{
+		Workspaces:     list(s.at("pethost.panel.v1.WorkspaceChoice.workspaces"), sampleWorkspace),
+		Total:          plain[uint32](s.at("pethost.panel.v1.WorkspaceChoice.total")),
+		HoldingProject: list(s.at("pethost.panel.v1.WorkspaceChoice.holding_project"), scalar[string]),
+		Incomplete:     plain[bool](s.at("pethost.panel.v1.WorkspaceChoice.incomplete")),
+	}
+}
+
+func sampleWorkspaceNotGranted(s seed) WorkspaceNotGranted {
+	return WorkspaceNotGranted{
+		WorkspaceID: plain[string](s.at("pethost.panel.v1.WorkspaceNotGranted.workspace_id")),
+		URL:         plain[string](s.at("pethost.panel.v1.WorkspaceNotGranted.url")),
+	}
+}
+
+func sampleProjectMoved(s seed) ProjectMoved {
+	return ProjectMoved{
+		ProjectID:     plain[string](s.at("pethost.panel.v1.ProjectMoved.project_id")),
+		WorkspaceID:   plain[string](s.at("pethost.panel.v1.ProjectMoved.workspace_id")),
+		WorkspaceName: plain[string](s.at("pethost.panel.v1.ProjectMoved.workspace_name")),
+		MoveTime:      instant(s.at("pethost.panel.v1.ProjectMoved.move_time")),
 	}
 }
 
@@ -1525,12 +1682,14 @@ func sampleWatchOperationRequest(s seed) WatchOperationRequest {
 	return WatchOperationRequest{
 		ProjectID:   plain[string](s.at("pethost.panel.v1.WatchOperationRequest.project_id")),
 		OperationID: plain[string](s.at("pethost.panel.v1.WatchOperationRequest.operation_id")),
+		Workspace:   plain[string](s.at("pethost.panel.v1.WatchOperationRequest.workspace")),
 	}
 }
 
 func sampleWatchOperationResponse(s seed) WatchOperationResponse {
 	return WatchOperationResponse{
-		Message: sampleWatchOperationResponseMessage(s.at("pethost.panel.v1.WatchOperationResponse.message")),
+		Message:     sampleWatchOperationResponseMessage(s.at("pethost.panel.v1.WatchOperationResponse.message")),
+		MoveMessage: plain[string](s.at("pethost.panel.v1.WatchOperationResponse.move_message")),
 	}
 }
 
@@ -1549,6 +1708,7 @@ func sampleTailContainerLogsRequest(s seed) TailContainerLogsRequest {
 		ProjectID:   plain[string](s.at("pethost.panel.v1.TailContainerLogsRequest.project_id")),
 		Filter:      pointer(s.at("pethost.panel.v1.TailContainerLogsRequest.filter"), sampleContainerLogFilter),
 		AfterCursor: plain[string](s.at("pethost.panel.v1.TailContainerLogsRequest.after_cursor")),
+		Workspace:   plain[string](s.at("pethost.panel.v1.TailContainerLogsRequest.workspace")),
 	}
 }
 
@@ -1564,6 +1724,7 @@ func sampleTailHTTPTrafficRequest(s seed) TailHTTPTrafficRequest {
 		ProjectID:     plain[string](s.at("pethost.panel.v1.TailHttpTrafficRequest.project_id")),
 		Filter:        pointer(s.at("pethost.panel.v1.TailHttpTrafficRequest.filter"), sampleHTTPTrafficFilter),
 		AfterSequence: plain[uint64](s.at("pethost.panel.v1.TailHttpTrafficRequest.after_sequence")),
+		Workspace:     plain[string](s.at("pethost.panel.v1.TailHttpTrafficRequest.workspace")),
 	}
 }
 

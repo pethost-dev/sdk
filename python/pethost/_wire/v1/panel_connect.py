@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import panel_pb
-from .panel_pb import CancelDatabaseQueryRequest, CancelDatabaseQueryResponse, CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetDatabaseStatsRequest, GetDatabaseStatsResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, OpenDatabaseClientRequest, OpenDatabaseClientResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
+from .panel_pb import CancelDatabaseQueryRequest, CancelDatabaseQueryResponse, CreateDatabaseRequest, CreateDatabaseResponse, CreateProjectRequest, CreateProjectResponse, CreateTransferRequest, CreateTransferResponse, DeployProjectRequest, DeployProjectResponse, GetDatabaseStatsRequest, GetDatabaseStatsResponse, GetIncidentRequest, GetIncidentResponse, GetMachineRequest, GetMachineResponse, GetMoveChoicesRequest, GetMoveChoicesResponse, GetOperationRequest, GetOperationResponse, GetProjectRequest, GetProjectResponse, GetUploadRequest, GetUploadResponse, LinkDatabaseRequest, LinkDatabaseResponse, ListCommitsRequest, ListCommitsResponse, ListWorkspacesRequest, ListWorkspacesResponse, MoveProjectRequest, MoveProjectResponse, OpenDatabaseClientRequest, OpenDatabaseClientResponse, OpenTerminalRequest, OpenTerminalResponse, QueryContainerLogsRequest, QueryContainerLogsResponse, QueryHttpTrafficRequest, QueryHttpTrafficResponse, ReadPathRequest, ReadPathResponse, RunMachineActionRequest, RunMachineActionResponse, RunProjectActionRequest, RunProjectActionResponse, RunServiceCommandRequest, RunServiceCommandResponse, SetProjectAlertsRequest, SetProjectAlertsResponse, TailContainerLogsRequest, TailContainerLogsResponse, TailHttpTrafficRequest, TailHttpTrafficResponse, WatchOperationRequest, WatchOperationResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -29,13 +29,26 @@ if TYPE_CHECKING:
 
 class PanelService(Protocol):
     """
-    ── Machine ──────────────────────────────────────────────────────────────
+    ── Workspace ────────────────────────────────────────────────────────────
     """
+    async def list_workspaces(self, request: ListWorkspacesRequest, ctx: RequestContext[ListWorkspacesRequest, ListWorkspacesResponse], /) -> ListWorkspacesResponse:
+        """
+        The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+        is free, location, hostname and apps domain. With project_id, also which of them hold a
+        project of that id (holding_project). Free figures and project counts are each machine's
+        latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+        The one call that takes no `workspace`. A caller that reaches none is refused as a call
+        naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     async def get_machine(self, request: GetMachineRequest, ctx: RequestContext[GetMachineRequest, GetMachineResponse], /) -> GetMachineResponse:
         """
         Start here: the machine (resources, the person's domain, backups, SSH), every project with
         its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-        from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+        from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+        traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+        WorkspaceChoice, which lists them.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -137,6 +150,8 @@ class PanelService(Protocol):
         named volume or a tmpfs there.
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+        An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+        refused (its PUT said why) answers with its `violations`.
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
         such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
         linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -148,8 +163,10 @@ class PanelService(Protocol):
         """
         Deploys a new version of a project and answers as CreateProject does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        CreateProject's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -170,6 +187,59 @@ class PanelService(Protocol):
         the branch. RESOURCE_EXHAUSTED = too many or too large `files`: send them with CreateTransfer.
         ALREADY_EXISTS = operation_id started another kind of operation. When it FAILED, Operation.made_current says whether the files were applied: then
         fix them, or roll back.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def move_project(self, request: MoveProjectRequest, ctx: RequestContext[MoveProjectRequest, MoveProjectResponse], /) -> MoveProjectResponse:
+        """
+        Moves a project to another workspace of the same person, as one operation (OperationKind
+        MOVE): it is stopped here, backed up into the destination's backups, restored and started
+        there under the same project_id, then deleted here. Each database it is linked to
+        (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+        uses one of the same engine instead, one the destination has or a new one, with the data of
+        the database it signs in to copied, or none (DatabaseSwitch). A database project
+        moves only when no app is linked to it.
+        `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+        either workspace, which once it ended answers the same move_message and the project.
+        Answers, once it ended, with the project as it is in the destination, and `move_message`:
+        what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+        point at its hostname, a new SSH command, which database it uses there instead of each, and
+        with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+        snapshots, and what each database it left still holds). Until the restore succeeded, a
+        failure undoes it: the source's services run again as they did, unless its failure says they
+        did not start again; the move's snapshot stays in the destination's backups, as a deleted
+        project's. After that it only goes forward: one that FAILED then moved the project, and its
+        failure names what the source still holds.
+        While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+        workspace, and so is a read where it is not then (before its restore, after its deletion from
+        the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+        until the source has a project of that id again. While it runs, a change to a database it
+        leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+        before the move made it; GetOperation answers the move with any of their project_ids.
+        INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+        an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+        takes or one two switches share, or an `into` the destination lacks or of another engine, or
+        one two switches share, copies of more than 32 databases, or to_workspace is the source
+        or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+        reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+        database takes, or operation_id is an operation of the project's or another move's already.
+        FAILED_PRECONDITION = a database project with apps linked to it (the message
+        names them: move each, or unlink it), a machine needs an update first (the message names it),
+        the project has no deploy yet, or the destination's backups are off (its
+        Machine.backups_enabled), which a move goes through.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    async def get_move_choices(self, request: GetMoveChoicesRequest, ctx: RequestContext[GetMoveChoicesRequest, GetMoveChoicesResponse], /) -> GetMoveChoicesResponse:
+        """
+        What MoveProject may do with each database the project is linked to, for the web panel's move
+        dialog: for each of Project.dependencies, the databases of to_workspace that
+        DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+        choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+        MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+        out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+        as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+        yet.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -437,6 +507,16 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
         super().__init__(
             service=service,
             endpoints=lambda svc: {
+                "/pethost.panel.v1.PanelService/ListWorkspaces": Endpoint.unary(
+                    method=MethodInfo(
+                        name="ListWorkspaces",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=ListWorkspacesRequest,
+                        output=ListWorkspacesResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=svc.list_workspaces,
+                ),
                 "/pethost.panel.v1.PanelService/GetMachine": Endpoint.unary(
                     method=MethodInfo(
                         name="GetMachine",
@@ -486,6 +566,26 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=svc.deploy_project,
+                ),
+                "/pethost.panel.v1.PanelService/MoveProject": Endpoint.unary(
+                    method=MethodInfo(
+                        name="MoveProject",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=MoveProjectRequest,
+                        output=MoveProjectResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=svc.move_project,
+                ),
+                "/pethost.panel.v1.PanelService/GetMoveChoices": Endpoint.unary(
+                    method=MethodInfo(
+                        name="GetMoveChoices",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetMoveChoicesRequest,
+                        output=GetMoveChoicesResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=svc.get_move_choices,
                 ),
                 "/pethost.panel.v1.PanelService/ListCommits": Endpoint.unary(
                     method=MethodInfo(
@@ -702,8 +802,38 @@ class PanelServiceASGIApplication(ConnectASGIApplication[PanelService]):
 
 class PanelServiceClient(ConnectClient):
     """
-    ── Machine ──────────────────────────────────────────────────────────────
+    ── Workspace ────────────────────────────────────────────────────────────
     """
+    async def list_workspaces(
+        self,
+        request: ListWorkspacesRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> ListWorkspacesResponse:
+        """
+        The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+        is free, location, hostname and apps domain. With project_id, also which of them hold a
+        project of that id (holding_project). Free figures and project counts are each machine's
+        latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+        The one call that takes no `workspace`. A caller that reaches none is refused as a call
+        naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="ListWorkspaces",
+                service_name="pethost.panel.v1.PanelService",
+                input=ListWorkspacesRequest,
+                output=ListWorkspacesResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
+        )
+
     async def get_machine(
         self,
         request: GetMachineRequest,
@@ -715,7 +845,9 @@ class PanelServiceClient(ConnectClient):
         """
         Start here: the machine (resources, the person's domain, backups, SSH), every project with
         its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-        from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+        from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+        traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+        WorkspaceChoice, which lists them.
         """
         return await self.execute_unary(
             request=request,
@@ -871,6 +1003,8 @@ class PanelServiceClient(ConnectClient):
         named volume or a tmpfs there.
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+        An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+        refused (its PUT said why) answers with its `violations`.
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
         such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
         linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -899,8 +1033,10 @@ class PanelServiceClient(ConnectClient):
         """
         Deploys a new version of a project and answers as CreateProject does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        CreateProject's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -933,6 +1069,95 @@ class PanelServiceClient(ConnectClient):
             ),
             headers=headers,
             timeout_ms=timeout_ms,
+        )
+
+    async def move_project(
+        self,
+        request: MoveProjectRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> MoveProjectResponse:
+        """
+        Moves a project to another workspace of the same person, as one operation (OperationKind
+        MOVE): it is stopped here, backed up into the destination's backups, restored and started
+        there under the same project_id, then deleted here. Each database it is linked to
+        (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+        uses one of the same engine instead, one the destination has or a new one, with the data of
+        the database it signs in to copied, or none (DatabaseSwitch). A database project
+        moves only when no app is linked to it.
+        `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+        either workspace, which once it ended answers the same move_message and the project.
+        Answers, once it ended, with the project as it is in the destination, and `move_message`:
+        what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+        point at its hostname, a new SSH command, which database it uses there instead of each, and
+        with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+        snapshots, and what each database it left still holds). Until the restore succeeded, a
+        failure undoes it: the source's services run again as they did, unless its failure says they
+        did not start again; the move's snapshot stays in the destination's backups, as a deleted
+        project's. After that it only goes forward: one that FAILED then moved the project, and its
+        failure names what the source still holds.
+        While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+        workspace, and so is a read where it is not then (before its restore, after its deletion from
+        the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+        until the source has a project of that id again. While it runs, a change to a database it
+        leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+        before the move made it; GetOperation answers the move with any of their project_ids.
+        INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+        an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+        takes or one two switches share, or an `into` the destination lacks or of another engine, or
+        one two switches share, copies of more than 32 databases, or to_workspace is the source
+        or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+        reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+        database takes, or operation_id is an operation of the project's or another move's already.
+        FAILED_PRECONDITION = a database project with apps linked to it (the message
+        names them: move each, or unlink it), a machine needs an update first (the message names it),
+        the project has no deploy yet, or the destination's backups are off (its
+        Machine.backups_enabled), which a move goes through.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="MoveProject",
+                service_name="pethost.panel.v1.PanelService",
+                input=MoveProjectRequest,
+                output=MoveProjectResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+
+    async def get_move_choices(
+        self,
+        request: GetMoveChoicesRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetMoveChoicesResponse:
+        """
+        What MoveProject may do with each database the project is linked to, for the web panel's move
+        dialog: for each of Project.dependencies, the databases of to_workspace that
+        DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+        choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+        MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+        out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+        as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+        yet.
+        """
+        return await self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetMoveChoices",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetMoveChoicesRequest,
+                output=GetMoveChoicesResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
         )
 
     async def list_commits(
@@ -1539,13 +1764,26 @@ class PanelServiceClient(ConnectClient):
 
 class PanelServiceSync(Protocol):
     """
-    ── Machine ──────────────────────────────────────────────────────────────
+    ── Workspace ────────────────────────────────────────────────────────────
     """
+    def list_workspaces(self, request: ListWorkspacesRequest, ctx: RequestContext[ListWorkspacesRequest, ListWorkspacesResponse], /) -> ListWorkspacesResponse:
+        """
+        The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+        is free, location, hostname and apps domain. With project_id, also which of them hold a
+        project of that id (holding_project). Free figures and project counts are each machine's
+        latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+        The one call that takes no `workspace`. A caller that reaches none is refused as a call
+        naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
     def get_machine(self, request: GetMachineRequest, ctx: RequestContext[GetMachineRequest, GetMachineResponse], /) -> GetMachineResponse:
         """
         Start here: the machine (resources, the person's domain, backups, SSH), every project with
         its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-        from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+        from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+        traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+        WorkspaceChoice, which lists them.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1647,6 +1885,8 @@ class PanelServiceSync(Protocol):
         named volume or a tmpfs there.
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+        An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+        refused (its PUT said why) answers with its `violations`.
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
         such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
         linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -1658,8 +1898,10 @@ class PanelServiceSync(Protocol):
         """
         Deploys a new version of a project and answers as CreateProject does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        CreateProject's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -1680,6 +1922,59 @@ class PanelServiceSync(Protocol):
         the branch. RESOURCE_EXHAUSTED = too many or too large `files`: send them with CreateTransfer.
         ALREADY_EXISTS = operation_id started another kind of operation. When it FAILED, Operation.made_current says whether the files were applied: then
         fix them, or roll back.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def move_project(self, request: MoveProjectRequest, ctx: RequestContext[MoveProjectRequest, MoveProjectResponse], /) -> MoveProjectResponse:
+        """
+        Moves a project to another workspace of the same person, as one operation (OperationKind
+        MOVE): it is stopped here, backed up into the destination's backups, restored and started
+        there under the same project_id, then deleted here. Each database it is linked to
+        (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+        uses one of the same engine instead, one the destination has or a new one, with the data of
+        the database it signs in to copied, or none (DatabaseSwitch). A database project
+        moves only when no app is linked to it.
+        `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+        either workspace, which once it ended answers the same move_message and the project.
+        Answers, once it ended, with the project as it is in the destination, and `move_message`:
+        what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+        point at its hostname, a new SSH command, which database it uses there instead of each, and
+        with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+        snapshots, and what each database it left still holds). Until the restore succeeded, a
+        failure undoes it: the source's services run again as they did, unless its failure says they
+        did not start again; the move's snapshot stays in the destination's backups, as a deleted
+        project's. After that it only goes forward: one that FAILED then moved the project, and its
+        failure names what the source still holds.
+        While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+        workspace, and so is a read where it is not then (before its restore, after its deletion from
+        the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+        until the source has a project of that id again. While it runs, a change to a database it
+        leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+        before the move made it; GetOperation answers the move with any of their project_ids.
+        INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+        an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+        takes or one two switches share, or an `into` the destination lacks or of another engine, or
+        one two switches share, copies of more than 32 databases, or to_workspace is the source
+        or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+        reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+        database takes, or operation_id is an operation of the project's or another move's already.
+        FAILED_PRECONDITION = a database project with apps linked to it (the message
+        names them: move each, or unlink it), a machine needs an update first (the message names it),
+        the project has no deploy yet, or the destination's backups are off (its
+        Machine.backups_enabled), which a move goes through.
+        """
+        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
+
+    def get_move_choices(self, request: GetMoveChoicesRequest, ctx: RequestContext[GetMoveChoicesRequest, GetMoveChoicesResponse], /) -> GetMoveChoicesResponse:
+        """
+        What MoveProject may do with each database the project is linked to, for the web panel's move
+        dialog: for each of Project.dependencies, the databases of to_workspace that
+        DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+        choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+        MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+        out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+        as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+        yet.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1945,6 +2240,16 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
     ) -> None:
         super().__init__(
             endpoints={
+                "/pethost.panel.v1.PanelService/ListWorkspaces": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="ListWorkspaces",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=ListWorkspacesRequest,
+                        output=ListWorkspacesResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=service.list_workspaces,
+                ),
                 "/pethost.panel.v1.PanelService/GetMachine": EndpointSync.unary(
                     method=MethodInfo(
                         name="GetMachine",
@@ -1994,6 +2299,26 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.UNKNOWN,
                     ),
                     function=service.deploy_project,
+                ),
+                "/pethost.panel.v1.PanelService/MoveProject": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="MoveProject",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=MoveProjectRequest,
+                        output=MoveProjectResponse,
+                        idempotency_level=IdempotencyLevel.UNKNOWN,
+                    ),
+                    function=service.move_project,
+                ),
+                "/pethost.panel.v1.PanelService/GetMoveChoices": EndpointSync.unary(
+                    method=MethodInfo(
+                        name="GetMoveChoices",
+                        service_name="pethost.panel.v1.PanelService",
+                        input=GetMoveChoicesRequest,
+                        output=GetMoveChoicesResponse,
+                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+                    ),
+                    function=service.get_move_choices,
                 ),
                 "/pethost.panel.v1.PanelService/ListCommits": EndpointSync.unary(
                     method=MethodInfo(
@@ -2210,8 +2535,37 @@ class PanelServiceWSGIApplication(ConnectWSGIApplication):
 
 class PanelServiceClientSync(ConnectClientSync):
     """
-    ── Machine ──────────────────────────────────────────────────────────────
+    ── Workspace ────────────────────────────────────────────────────────────
     """
+    def list_workspaces(
+        self,
+        request: ListWorkspacesRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> ListWorkspacesResponse:
+        """
+        The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+        is free, location, hostname and apps domain. With project_id, also which of them hold a
+        project of that id (holding_project). Free figures and project counts are each machine's
+        latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+        The one call that takes no `workspace`. A caller that reaches none is refused as a call
+        naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="ListWorkspaces",
+                service_name="pethost.panel.v1.PanelService",
+                input=ListWorkspacesRequest,
+                output=ListWorkspacesResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
+        )
     def get_machine(
         self,
         request: GetMachineRequest,
@@ -2223,7 +2577,9 @@ class PanelServiceClientSync(ConnectClientSync):
         """
         Start here: the machine (resources, the person's domain, backups, SSH), every project with
         its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-        from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+        from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+        traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+        WorkspaceChoice, which lists them.
         """
         return self.execute_unary(
             request=request,
@@ -2376,6 +2732,8 @@ class PanelServiceClientSync(ConnectClientSync):
         named volume or a tmpfs there.
 
         ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+        An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+        refused (its PUT said why) answers with its `violations`.
         FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
         such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
         linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -2403,8 +2761,10 @@ class PanelServiceClientSync(ConnectClientSync):
         """
         Deploys a new version of a project and answers as CreateProject does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        CreateProject's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -2437,6 +2797,93 @@ class PanelServiceClientSync(ConnectClientSync):
             ),
             headers=headers,
             timeout_ms=timeout_ms,
+        )
+    def move_project(
+        self,
+        request: MoveProjectRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+    ) -> MoveProjectResponse:
+        """
+        Moves a project to another workspace of the same person, as one operation (OperationKind
+        MOVE): it is stopped here, backed up into the destination's backups, restored and started
+        there under the same project_id, then deleted here. Each database it is linked to
+        (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+        uses one of the same engine instead, one the destination has or a new one, with the data of
+        the database it signs in to copied, or none (DatabaseSwitch). A database project
+        moves only when no app is linked to it.
+        `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+        either workspace, which once it ended answers the same move_message and the project.
+        Answers, once it ended, with the project as it is in the destination, and `move_message`:
+        what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+        point at its hostname, a new SSH command, which database it uses there instead of each, and
+        with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+        snapshots, and what each database it left still holds). Until the restore succeeded, a
+        failure undoes it: the source's services run again as they did, unless its failure says they
+        did not start again; the move's snapshot stays in the destination's backups, as a deleted
+        project's. After that it only goes forward: one that FAILED then moved the project, and its
+        failure names what the source still holds.
+        While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+        workspace, and so is a read where it is not then (before its restore, after its deletion from
+        the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+        until the source has a project of that id again. While it runs, a change to a database it
+        leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+        before the move made it; GetOperation answers the move with any of their project_ids.
+        INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+        an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+        takes or one two switches share, or an `into` the destination lacks or of another engine, or
+        one two switches share, copies of more than 32 databases, or to_workspace is the source
+        or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+        reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+        database takes, or operation_id is an operation of the project's or another move's already.
+        FAILED_PRECONDITION = a database project with apps linked to it (the message
+        names them: move each, or unlink it), a machine needs an update first (the message names it),
+        the project has no deploy yet, or the destination's backups are off (its
+        Machine.backups_enabled), which a move goes through.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="MoveProject",
+                service_name="pethost.panel.v1.PanelService",
+                input=MoveProjectRequest,
+                output=MoveProjectResponse,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+        )
+    def get_move_choices(
+        self,
+        request: GetMoveChoicesRequest,
+        *,
+        headers: Headers | Mapping[str, str] | None = None, 
+        timeout_ms: int | None = None,
+        use_get: bool = False,
+    ) -> GetMoveChoicesResponse:
+        """
+        What MoveProject may do with each database the project is linked to, for the web panel's move
+        dialog: for each of Project.dependencies, the databases of to_workspace that
+        DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+        choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+        MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+        out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+        as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+        yet.
+        """
+        return self.execute_unary(
+            request=request,
+            method=MethodInfo(
+                name="GetMoveChoices",
+                service_name="pethost.panel.v1.PanelService",
+                input=GetMoveChoicesRequest,
+                output=GetMoveChoicesResponse,
+                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
+            ),
+            headers=headers,
+            timeout_ms=timeout_ms,
+            use_get=use_get,
         )
     def list_commits(
         self,

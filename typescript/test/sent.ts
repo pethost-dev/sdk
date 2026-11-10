@@ -9,8 +9,19 @@ import { first, sending, type Init } from "./harness.ts";
 import type * as p from "pethost";
 
 {
+  const m = sending(w.ListWorkspacesRequestSchema, (leaf: Init<typeof w.ListWorkspacesRequestSchema>): Init<typeof w.ListWorkspacesRequestSchema> => (leaf), async (api, given: p.ListWorkspacesRequest) => api.listWorkspaces(given));
+  m.sends("ListWorkspacesRequest: nothing set", {}, {});
+  m.sends("ListWorkspacesRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("ListWorkspacesRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("ListWorkspacesRequest.page_token", { pageToken: "page_token" }, { pageToken: "page_token" });
+  m.sends("ListWorkspacesRequest.page_token: zero is not sent", { pageToken: "" }, {});
+}
+
+{
   const m = sending(w.GetMachineRequestSchema, (leaf: Init<typeof w.GetMachineRequestSchema>): Init<typeof w.GetMachineRequestSchema> => (leaf), async (api, given: p.GetMachineRequest) => api.getMachine(given));
   m.sends("GetMachineRequest: nothing set", {}, {});
+  m.sends("GetMachineRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("GetMachineRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -35,6 +46,8 @@ import type * as p from "pethost";
   m.sends("RunMachineActionRequest.cancel_restart: zero", { cancelRestart: false }, { action: { case: "cancelRestart", value: false } });
   m.sends("RunMachineActionRequest.end_session_id", { endSessionId: "end_session_id" }, { action: { case: "endSessionId", value: "end_session_id" } });
   m.sends("RunMachineActionRequest.end_session_id: zero", { endSessionId: "" }, { action: { case: "endSessionId", value: "" } });
+  m.sends("RunMachineActionRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("RunMachineActionRequest.workspace: zero is not sent", { workspace: "" }, {});
   m.refuses("RunMachineActionRequest.action: two members", { addSshKey: {}, removeSshKeyFingerprint: "remove_ssh_key_fingerprint" }, "action: addSshKey and removeSshKeyFingerprint are both set; set one");
 }
 
@@ -80,6 +93,8 @@ import type * as p from "pethost";
   m.sends("GetProjectRequest.uptime_day_count: zero is not sent", { uptimeDayCount: 0 }, {});
   m.sends("GetProjectRequest.incidents_before_id", { incidentsBeforeId: "incidents_before_id" }, { incidentsBeforeId: "incidents_before_id" });
   m.sends("GetProjectRequest.incidents_before_id: zero is not sent", { incidentsBeforeId: "" }, {});
+  m.sends("GetProjectRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("GetProjectRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -158,6 +173,8 @@ import type * as p from "pethost";
   m.sends("CreateProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
   m.sends("CreateProjectRequest.link_databases", { linkDatabases: [{}] }, { linkDatabases: [{}] });
+  m.sends("CreateProjectRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("CreateProjectRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -196,6 +213,8 @@ import type * as p from "pethost";
   m.sends("DeployProjectRequest.wait_seconds", { waitSeconds: 1013 }, { waitSeconds: 1013 });
   m.sends("DeployProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("DeployProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("DeployProjectRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("DeployProjectRequest.workspace: zero is not sent", { workspace: "" }, {});
   m.refuses("DeployProjectRequest.version: two members", { uploadId: "upload_id", commit: "commit" }, "version: uploadId and commit are both set; set one");
 }
 
@@ -246,12 +265,44 @@ import type * as p from "pethost";
 }
 
 {
+  const m = sending(w.MoveProjectRequestSchema, (leaf: Init<typeof w.MoveProjectRequestSchema>): Init<typeof w.MoveProjectRequestSchema> => (leaf), async (api, given: p.MoveProjectRequest) => api.moveProject(given));
+  m.sends("MoveProjectRequest: nothing set", {}, {});
+  m.sends("MoveProjectRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
+  m.sends("MoveProjectRequest.project_id: zero is not sent", { projectId: "" }, {});
+  m.sends("MoveProjectRequest.to_workspace", { toWorkspace: "to_workspace" }, { toWorkspace: "to_workspace" });
+  m.sends("MoveProjectRequest.to_workspace: zero is not sent", { toWorkspace: "" }, {});
+  m.sends("MoveProjectRequest.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
+  m.sends("MoveProjectRequest.operation_id: zero is not sent", { operationId: "" }, {});
+  m.sends("MoveProjectRequest.wait_seconds", { waitSeconds: 1005 }, { waitSeconds: 1005 });
+  m.sends("MoveProjectRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
+  m.sends("MoveProjectRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("MoveProjectRequest.switch_databases", { switchDatabases: [{}] }, { switchDatabases: [{}] });
+  m.sends("MoveProjectRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("MoveProjectRequest.workspace: zero is not sent", { workspace: "" }, {});
+}
+
+{
+  const m = sending(w.MoveProjectRequestSchema, (leaf: Init<typeof w.DatabaseSwitchSchema>): Init<typeof w.MoveProjectRequestSchema> => ({ switchDatabases: [leaf] }), async (api, given: p.DatabaseSwitchInput) => api.moveProject({ switchDatabases: [given] }));
+  m.sends("DatabaseSwitch: nothing set", {}, {});
+  m.sends("DatabaseSwitch.database_project_id", { databaseProjectId: "database_project_id" }, { databaseProjectId: "database_project_id" });
+  m.sends("DatabaseSwitch.database_project_id: zero is not sent", { databaseProjectId: "" }, {});
+  m.sends("DatabaseSwitch.into_database_project_id", { intoDatabaseProjectId: "into_database_project_id" }, { intoDatabaseProjectId: "into_database_project_id" });
+  m.sends("DatabaseSwitch.into_database_project_id: zero is not sent", { intoDatabaseProjectId: "" }, {});
+  m.sends("DatabaseSwitch.empty", { empty: true }, { empty: true });
+  m.sends("DatabaseSwitch.empty: zero is not sent", { empty: false }, {});
+  m.sends("DatabaseSwitch.env_prefix", { envPrefix: "env_prefix" }, { envPrefix: "env_prefix" });
+  m.sends("DatabaseSwitch.env_prefix: zero is not sent", { envPrefix: "" }, {});
+}
+
+{
   const m = sending(w.ListCommitsRequestSchema, (leaf: Init<typeof w.ListCommitsRequestSchema>): Init<typeof w.ListCommitsRequestSchema> => (leaf), async (api, given: p.ListCommitsRequest) => api.listCommits(given));
   m.sends("ListCommitsRequest: nothing set", {}, {});
   m.sends("ListCommitsRequest.project_id", { projectId: "project_id" }, { projectId: "project_id" });
   m.sends("ListCommitsRequest.project_id: zero is not sent", { projectId: "" }, {});
   m.sends("ListCommitsRequest.before_commit", { beforeCommit: "before_commit" }, { beforeCommit: "before_commit" });
   m.sends("ListCommitsRequest.before_commit: zero is not sent", { beforeCommit: "" }, {});
+  m.sends("ListCommitsRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("ListCommitsRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -276,6 +327,8 @@ import type * as p from "pethost";
   m.sends("RunProjectActionRequest.wait_seconds", { waitSeconds: 1013 }, { waitSeconds: 1013 });
   m.sends("RunProjectActionRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("RunProjectActionRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
+  m.sends("RunProjectActionRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("RunProjectActionRequest.workspace: zero is not sent", { workspace: "" }, {});
   m.refuses("RunProjectActionRequest.action: two members", { startServices: {}, stopServices: {} }, "action: startServices and stopServices are both set; set one");
 }
 
@@ -335,6 +388,8 @@ import type * as p from "pethost";
   m.sends("LinkDatabaseRequest.database_project_id: zero is not sent", { databaseProjectId: "" }, {});
   m.sends("LinkDatabaseRequest.link", { link: ["link", ""] }, { link: ["link", ""] });
   m.sends("LinkDatabaseRequest.unlink", { unlink: ["unlink", ""] }, { unlink: ["unlink", ""] });
+  m.sends("LinkDatabaseRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("LinkDatabaseRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -356,6 +411,8 @@ import type * as p from "pethost";
   m.sends("CreateDatabaseRequest.wait_seconds: zero", { waitSeconds: 0 }, { waitSeconds: 0 });
   m.sends("CreateDatabaseRequest.wait_seconds: undefined", { waitSeconds: undefined }, {});
   m.sends("CreateDatabaseRequest.metadata", { metadata: {} }, { metadata: {} });
+  m.sends("CreateDatabaseRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("CreateDatabaseRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -375,6 +432,8 @@ import type * as p from "pethost";
   m.sends("SetProjectAlertsRequest.mute_minutes", { muteMinutes: 1007 }, { muteMinutes: 1007 });
   m.sends("SetProjectAlertsRequest.mute_minutes: zero", { muteMinutes: 0 }, { muteMinutes: 0 });
   m.sends("SetProjectAlertsRequest.mute_minutes: undefined", { muteMinutes: undefined }, {});
+  m.sends("SetProjectAlertsRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("SetProjectAlertsRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -423,6 +482,8 @@ import type * as p from "pethost";
   m.sends("GetOperationRequest.log_line_limit", { logLineLimit: 1005 }, { logLineLimit: 1005 });
   m.sends("GetOperationRequest.log_line_limit: zero", { logLineLimit: 0 }, { logLineLimit: 0 });
   m.sends("GetOperationRequest.log_line_limit: undefined", { logLineLimit: undefined }, {});
+  m.sends("GetOperationRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("GetOperationRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -456,6 +517,8 @@ import type * as p from "pethost";
   m.sends("QueryHttpTrafficRequest.request_limit: zero is not sent", { requestLimit: 0 }, {});
   m.sends("QueryHttpTrafficRequest.page_token", { pageToken: "page_token" }, { pageToken: "page_token" });
   m.sends("QueryHttpTrafficRequest.page_token: zero is not sent", { pageToken: "" }, {});
+  m.sends("QueryHttpTrafficRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("QueryHttpTrafficRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -485,6 +548,8 @@ import type * as p from "pethost";
   m.sends("QueryContainerLogsRequest.from_start: zero is not sent", { fromStart: false }, {});
   m.sends("QueryContainerLogsRequest.page_token", { pageToken: "page_token" }, { pageToken: "page_token" });
   m.sends("QueryContainerLogsRequest.page_token: zero is not sent", { pageToken: "" }, {});
+  m.sends("QueryContainerLogsRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("QueryContainerLogsRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -503,6 +568,8 @@ import type * as p from "pethost";
   m.sends("RunServiceCommandRequest.working_directory: zero is not sent", { workingDirectory: "" }, {});
   m.sends("RunServiceCommandRequest.timeout_seconds", { timeoutSeconds: 1007 }, { timeoutSeconds: 1007 });
   m.sends("RunServiceCommandRequest.timeout_seconds: zero is not sent", { timeoutSeconds: 0 }, {});
+  m.sends("RunServiceCommandRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("RunServiceCommandRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -524,6 +591,8 @@ import type * as p from "pethost";
   m.sends("ReadPathRequest.length_bytes: zero is not sent", { lengthBytes: 0 }, {});
   m.sends("ReadPathRequest.entry_page_token", { entryPageToken: "entry_page_token" }, { entryPageToken: "entry_page_token" });
   m.sends("ReadPathRequest.entry_page_token: zero is not sent", { entryPageToken: "" }, {});
+  m.sends("ReadPathRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("ReadPathRequest.workspace: zero is not sent", { workspace: "" }, {});
   m.refuses("ReadPathRequest.root: two members", { service: "service", volume: "volume" }, "root: service and volume are both set; set one");
 }
 
@@ -534,6 +603,8 @@ import type * as p from "pethost";
   m.sends("CreateTransferRequest.upload_file", { uploadFile: {} }, { transfer: { case: "uploadFile", value: {} } });
   m.sends("CreateTransferRequest.download", { download: {} }, { transfer: { case: "download", value: {} } });
   m.sends("CreateTransferRequest.download_database", { downloadDatabase: {} }, { transfer: { case: "downloadDatabase", value: {} } });
+  m.sends("CreateTransferRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("CreateTransferRequest.workspace: zero is not sent", { workspace: "" }, {});
   m.refuses("CreateTransferRequest.transfer: two members", { uploadArchive: {}, uploadFile: {} }, "transfer: uploadArchive and uploadFile are both set; set one");
 }
 
@@ -588,6 +659,8 @@ import type * as p from "pethost";
   m.sends("WatchOperationRequest.project_id: zero is not sent", { projectId: "" }, {});
   m.sends("WatchOperationRequest.operation_id", { operationId: "operation_id" }, { operationId: "operation_id" });
   m.sends("WatchOperationRequest.operation_id: zero is not sent", { operationId: "" }, {});
+  m.sends("WatchOperationRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("WatchOperationRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -598,6 +671,8 @@ import type * as p from "pethost";
   m.sends("TailContainerLogsRequest.filter", { filter: {} }, { filter: {} });
   m.sends("TailContainerLogsRequest.after_cursor", { afterCursor: "after_cursor" }, { afterCursor: "after_cursor" });
   m.sends("TailContainerLogsRequest.after_cursor: zero is not sent", { afterCursor: "" }, {});
+  m.sends("TailContainerLogsRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("TailContainerLogsRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -608,5 +683,127 @@ import type * as p from "pethost";
   m.sends("TailHttpTrafficRequest.filter", { filter: {} }, { filter: {} });
   m.sends("TailHttpTrafficRequest.after_sequence", { afterSequence: 9007199254740993n }, { afterSequence: 9007199254740993n });
   m.sends("TailHttpTrafficRequest.after_sequence: zero is not sent", { afterSequence: 0n }, {});
+  m.sends("TailHttpTrafficRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
+  m.sends("TailHttpTrafficRequest.workspace: zero is not sent", { workspace: "" }, {});
+}
+
+{
+  const m = sending(w.GetMachineRequestSchema, (leaf: Init<typeof w.GetMachineRequestSchema>) => leaf, async (api, given: p.GetMachineRequest) => api.getMachine(given), { workspace: "the client's" });
+  m.sends("GetMachineRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("GetMachineRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.RunMachineActionRequestSchema, (leaf: Init<typeof w.RunMachineActionRequestSchema>) => leaf, async (api, given: p.RunMachineActionRequest) => api.runMachineAction(given), { workspace: "the client's" });
+  m.sends("RunMachineActionRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("RunMachineActionRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.GetProjectRequestSchema, (leaf: Init<typeof w.GetProjectRequestSchema>) => leaf, async (api, given: p.GetProjectRequest) => api.getProject(given), { workspace: "the client's" });
+  m.sends("GetProjectRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("GetProjectRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.CreateProjectRequestSchema, (leaf: Init<typeof w.CreateProjectRequestSchema>) => leaf, async (api, given: p.CreateProjectRequest) => api.createProject(given), { workspace: "the client's" });
+  m.sends("CreateProjectRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("CreateProjectRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.DeployProjectRequestSchema, (leaf: Init<typeof w.DeployProjectRequestSchema>) => leaf, async (api, given: p.DeployProjectRequest) => api.deployProject(given), { workspace: "the client's" });
+  m.sends("DeployProjectRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("DeployProjectRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.MoveProjectRequestSchema, (leaf: Init<typeof w.MoveProjectRequestSchema>) => leaf, async (api, given: p.MoveProjectRequest) => api.moveProject(given), { workspace: "the client's" });
+  m.sends("MoveProjectRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("MoveProjectRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.ListCommitsRequestSchema, (leaf: Init<typeof w.ListCommitsRequestSchema>) => leaf, async (api, given: p.ListCommitsRequest) => api.listCommits(given), { workspace: "the client's" });
+  m.sends("ListCommitsRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("ListCommitsRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.RunProjectActionRequestSchema, (leaf: Init<typeof w.RunProjectActionRequestSchema>) => leaf, async (api, given: p.RunProjectActionRequest) => api.runProjectAction(given), { workspace: "the client's" });
+  m.sends("RunProjectActionRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("RunProjectActionRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.SetProjectAlertsRequestSchema, (leaf: Init<typeof w.SetProjectAlertsRequestSchema>) => leaf, async (api, given: p.SetProjectAlertsRequest) => api.setProjectAlerts(given), { workspace: "the client's" });
+  m.sends("SetProjectAlertsRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("SetProjectAlertsRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.GetOperationRequestSchema, (leaf: Init<typeof w.GetOperationRequestSchema>) => leaf, async (api, given: p.GetOperationRequest) => api.getOperation(given), { workspace: "the client's" });
+  m.sends("GetOperationRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("GetOperationRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.QueryHttpTrafficRequestSchema, (leaf: Init<typeof w.QueryHttpTrafficRequestSchema>) => leaf, async (api, given: p.QueryHttpTrafficRequest) => api.queryHttpTraffic(given), { workspace: "the client's" });
+  m.sends("QueryHttpTrafficRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("QueryHttpTrafficRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.QueryContainerLogsRequestSchema, (leaf: Init<typeof w.QueryContainerLogsRequestSchema>) => leaf, async (api, given: p.QueryContainerLogsRequest) => api.queryContainerLogs(given), { workspace: "the client's" });
+  m.sends("QueryContainerLogsRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("QueryContainerLogsRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.CreateDatabaseRequestSchema, (leaf: Init<typeof w.CreateDatabaseRequestSchema>) => leaf, async (api, given: p.CreateDatabaseRequest) => api.createDatabase(given), { workspace: "the client's" });
+  m.sends("CreateDatabaseRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("CreateDatabaseRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.LinkDatabaseRequestSchema, (leaf: Init<typeof w.LinkDatabaseRequestSchema>) => leaf, async (api, given: p.LinkDatabaseRequest) => api.linkDatabase(given), { workspace: "the client's" });
+  m.sends("LinkDatabaseRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("LinkDatabaseRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.RunServiceCommandRequestSchema, (leaf: Init<typeof w.RunServiceCommandRequestSchema>) => leaf, async (api, given: p.RunServiceCommandRequest) => api.runServiceCommand(given), { workspace: "the client's" });
+  m.sends("RunServiceCommandRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("RunServiceCommandRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.ReadPathRequestSchema, (leaf: Init<typeof w.ReadPathRequestSchema>) => leaf, async (api, given: p.ReadPathRequest) => api.readPath(given), { workspace: "the client's" });
+  m.sends("ReadPathRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("ReadPathRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.CreateTransferRequestSchema, (leaf: Init<typeof w.CreateTransferRequestSchema>) => leaf, async (api, given: p.CreateTransferRequest) => api.createTransfer(given), { workspace: "the client's" });
+  m.sends("CreateTransferRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("CreateTransferRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.WatchOperationRequestSchema, (leaf: Init<typeof w.WatchOperationRequestSchema>) => leaf, async (api, given: p.WatchOperationRequest) => first(api.watchOperation(given)), { workspace: "the client's" });
+  m.sends("WatchOperationRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("WatchOperationRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.TailContainerLogsRequestSchema, (leaf: Init<typeof w.TailContainerLogsRequestSchema>) => leaf, async (api, given: p.TailContainerLogsRequest) => first(api.tailContainerLogs(given)), { workspace: "the client's" });
+  m.sends("TailContainerLogsRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("TailContainerLogsRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
+}
+
+{
+  const m = sending(w.TailHttpTrafficRequestSchema, (leaf: Init<typeof w.TailHttpTrafficRequestSchema>) => leaf, async (api, given: p.TailHttpTrafficRequest) => first(api.tailHttpTraffic(given)), { workspace: "the client's" });
+  m.sends("TailHttpTrafficRequest: the client's workspace", {}, { workspace: "the client's" });
+  m.sends("TailHttpTrafficRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
 }
 

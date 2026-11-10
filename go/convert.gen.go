@@ -6,12 +6,93 @@ import (
 	"github.com/pethost-dev/sdk/go/internal/panelv1"
 )
 
+func fromWireListWorkspacesRequest(w *panelv1.ListWorkspacesRequest) ListWorkspacesRequest {
+	return ListWorkspacesRequest{
+		w.GetProjectId(),
+		w.GetPageToken(),
+	}
+}
+
+func toWireListWorkspacesRequest(v ListWorkspacesRequest) *panelv1.ListWorkspacesRequest {
+	b := panelv1.ListWorkspacesRequest_builder{
+		ProjectId: nonZero(v.ProjectID),
+		PageToken: nonZero(v.PageToken),
+	}
+	return b.Build()
+}
+
+func fromWireListWorkspacesResponse(w *panelv1.ListWorkspacesResponse) ListWorkspacesResponse {
+	return ListWorkspacesResponse{
+		sliceFromWire(w.GetWorkspaces(), fromWireWorkspace),
+		w.GetNextPageToken(),
+		w.GetTotal(),
+		w.GetHoldingProject(),
+		w.GetIncomplete(),
+	}
+}
+
+func toWireListWorkspacesResponse(v ListWorkspacesResponse) *panelv1.ListWorkspacesResponse {
+	b := panelv1.ListWorkspacesResponse_builder{
+		Workspaces:     sliceToWire(v.Workspaces, toWireWorkspace),
+		NextPageToken:  nonZero(v.NextPageToken),
+		Total:          nonZero(v.Total),
+		HoldingProject: v.HoldingProject,
+		Incomplete:     nonZero(v.Incomplete),
+	}
+	return b.Build()
+}
+
+func fromWireWorkspace(w *panelv1.Workspace) Workspace {
+	return Workspace{
+		w.GetWorkspaceId(),
+		w.GetName(),
+		fromWireWorkspaceStatus(w.GetStatus()),
+		w.GetLocation(),
+		w.GetPlan(),
+		w.GetCpuTotalCores(),
+		w.GetMemoryTotalBytes(),
+		optional(w.HasMemoryFreeBytes(), w.GetMemoryFreeBytes()),
+		w.GetDiskTotalBytes(),
+		optional(w.HasDiskFreeBytes(), w.GetDiskFreeBytes()),
+		optional(w.HasProjectCount(), w.GetProjectCount()),
+		w.GetHostname(),
+		w.GetAppsDomain(),
+		timeFromWire(w.GetEndTime()),
+		fromWireWorkspaceRole(w.GetRole()),
+	}
+}
+
+func toWireWorkspace(v Workspace) *panelv1.Workspace {
+	b := panelv1.Workspace_builder{
+		WorkspaceId:      nonZero(v.WorkspaceID),
+		Name:             nonZero(v.Name),
+		Status:           nonZero(toWireWorkspaceStatus(v.Status)),
+		Location:         nonZero(v.Location),
+		Plan:             nonZero(v.Plan),
+		CpuTotalCores:    nonZero(v.CPUTotalCores),
+		MemoryTotalBytes: nonZero(v.MemoryTotalBytes),
+		MemoryFreeBytes:  v.MemoryFreeBytes,
+		DiskTotalBytes:   nonZero(v.DiskTotalBytes),
+		DiskFreeBytes:    v.DiskFreeBytes,
+		ProjectCount:     v.ProjectCount,
+		Hostname:         nonZero(v.Hostname),
+		AppsDomain:       nonZero(v.AppsDomain),
+		EndTime:          timeToWire(v.EndTime),
+		Role:             nonZero(toWireWorkspaceRole(v.Role)),
+	}
+	return b.Build()
+}
+
 func fromWireGetMachineRequest(w *panelv1.GetMachineRequest) GetMachineRequest {
-	return GetMachineRequest{}
+	return GetMachineRequest{
+		w.GetWorkspace(),
+	}
 }
 
 func toWireGetMachineRequest(v GetMachineRequest) *panelv1.GetMachineRequest {
-	b := panelv1.GetMachineRequest_builder{}
+	b := panelv1.GetMachineRequest_builder{
+		Workspace: nonZero(v.Workspace),
+	}
 	return b.Build()
 }
 
@@ -21,6 +102,7 @@ func fromWireGetMachineResponse(w *panelv1.GetMachineResponse) GetMachineRespons
 		sliceFromWire(w.GetProjects(), fromWireProjectSummary),
 		sliceFromWire(w.GetDeletedProjects(), fromWireDeletedProject),
 		pointerFromWire(w.GetGithub(), fromWireGithubConnection),
+		pointerFromWire(w.GetWorkspace(), fromWireWorkspace),
 	}
 }
 
@@ -30,6 +112,7 @@ func toWireGetMachineResponse(v GetMachineResponse) *panelv1.GetMachineResponse 
 		Projects:        sliceToWire(v.Projects, toWireProjectSummary),
 		DeletedProjects: sliceToWire(v.DeletedProjects, toWireDeletedProject),
 		Github:          pointerToWire(v.Github, toWireGithubConnection),
+		Workspace:       pointerToWire(v.Workspace, toWireWorkspace),
 	}
 	return b.Build()
 }
@@ -235,6 +318,7 @@ func fromWireDeletedProject(w *panelv1.DeletedProject) DeletedProject {
 		w.GetProjectId(),
 		pointerFromWire(w.GetNewestSnapshot(), fromWireSnapshot),
 		w.GetSnapshotCount(),
+		pointerFromWire(w.GetMovedTo(), fromWireMovedTo),
 	}
 }
 
@@ -243,6 +327,24 @@ func toWireDeletedProject(v DeletedProject) *panelv1.DeletedProject {
 		ProjectId:      nonZero(v.ProjectID),
 		NewestSnapshot: pointerToWire(v.NewestSnapshot, toWireSnapshot),
 		SnapshotCount:  nonZero(v.SnapshotCount),
+		MovedTo:        pointerToWire(v.MovedTo, toWireMovedTo),
+	}
+	return b.Build()
+}
+
+func fromWireMovedTo(w *panelv1.MovedTo) MovedTo {
+	return MovedTo{
+		w.GetWorkspaceId(),
+		w.GetWorkspaceName(),
+		timeFromWire(w.GetMoveTime()),
+	}
+}
+
+func toWireMovedTo(v MovedTo) *panelv1.MovedTo {
+	b := panelv1.MovedTo_builder{
+		WorkspaceId:   nonZero(v.WorkspaceID),
+		WorkspaceName: nonZero(v.WorkspaceName),
+		MoveTime:      timeToWire(v.MoveTime),
 	}
 	return b.Build()
 }
@@ -250,11 +352,14 @@ func toWireDeletedProject(v DeletedProject) *panelv1.DeletedProject {
 func fromWireRunMachineActionRequest(w *panelv1.RunMachineActionRequest) RunMachineActionRequest {
 	return RunMachineActionRequest{
 		fromWireRunMachineActionAction(w),
+		w.GetWorkspace(),
 	}
 }
 
 func toWireRunMachineActionRequest(v RunMachineActionRequest) *panelv1.RunMachineActionRequest {
-	b := panelv1.RunMachineActionRequest_builder{}
+	b := panelv1.RunMachineActionRequest_builder{
+		Workspace: nonZero(v.Workspace),
+	}
 	if v.Action != nil {
 		v.Action.toRunMachineActionAction(&b)
 	}
@@ -371,6 +476,7 @@ func fromWireProjectSummary(w *panelv1.ProjectSummary) ProjectSummary {
 		w.GetPinned(),
 		w.GetDiskUsedBytes(),
 		pointerFromWire(w.GetDatabase(), fromWireDatabaseSummary),
+		w.GetUid(),
 	}
 }
 
@@ -390,6 +496,7 @@ func toWireProjectSummary(v ProjectSummary) *panelv1.ProjectSummary {
 		Pinned:             nonZero(v.Pinned),
 		DiskUsedBytes:      nonZero(v.DiskUsedBytes),
 		Database:           pointerToWire(v.Database, toWireDatabaseSummary),
+		Uid:                nonZero(v.UID),
 	}
 	return b.Build()
 }
@@ -441,6 +548,7 @@ func fromWireGetProjectRequest(w *panelv1.GetProjectRequest) GetProjectRequest {
 		timeFromWire(w.GetIncidentsBefore()),
 		w.GetUptimeDayCount(),
 		w.GetIncidentsBeforeId(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -453,6 +561,7 @@ func toWireGetProjectRequest(v GetProjectRequest) *panelv1.GetProjectRequest {
 		IncidentsBefore:     timeToWire(v.IncidentsBefore),
 		UptimeDayCount:      nonZero(v.UptimeDayCount),
 		IncidentsBeforeId:   nonZero(v.IncidentsBeforeID),
+		Workspace:           nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -500,6 +609,9 @@ func fromWireProject(w *panelv1.Project) Project {
 		sliceFromWire(w.GetUptimeDays(), fromWireUptimeDay),
 		pointerFromWire(w.GetDatabase(), fromWireDatabase),
 		w.GetLinkedDatabases(),
+		w.GetWorkspaceId(),
+		w.GetUid(),
+		sliceFromWire(w.GetDependencies(), fromWireProjectDependency),
 	}
 }
 
@@ -533,6 +645,26 @@ func toWireProject(v Project) *panelv1.Project {
 		UptimeDays:            sliceToWire(v.UptimeDays, toWireUptimeDay),
 		Database:              pointerToWire(v.Database, toWireDatabase),
 		LinkedDatabases:       v.LinkedDatabases,
+		WorkspaceId:           nonZero(v.WorkspaceID),
+		Uid:                   nonZero(v.UID),
+		Dependencies:          sliceToWire(v.Dependencies, toWireProjectDependency),
+	}
+	return b.Build()
+}
+
+func fromWireProjectDependency(w *panelv1.ProjectDependency) ProjectDependency {
+	return ProjectDependency{
+		w.GetDatabaseProjectId(),
+		w.GetCopyDatabase(),
+		w.GetEnvPrefix(),
+	}
+}
+
+func toWireProjectDependency(v ProjectDependency) *panelv1.ProjectDependency {
+	b := panelv1.ProjectDependency_builder{
+		DatabaseProjectId: nonZero(v.DatabaseProjectID),
+		CopyDatabase:      nonZero(v.CopyDatabase),
+		EnvPrefix:         nonZero(v.EnvPrefix),
 	}
 	return b.Build()
 }
@@ -971,6 +1103,7 @@ func fromWireCreateProjectRequest(w *panelv1.CreateProjectRequest) CreateProject
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
 		sliceFromWire(w.GetLinkDatabases(), fromWireDatabaseLinkRequest),
+		w.GetWorkspace(),
 	}
 }
 
@@ -985,6 +1118,7 @@ func toWireCreateProjectRequest(v CreateProjectRequest) *panelv1.CreateProjectRe
 		OperationId:    nonZero(v.OperationID),
 		WaitSeconds:    v.WaitSeconds,
 		LinkDatabases:  sliceToWire(v.LinkDatabases, toWireDatabaseLinkRequest),
+		Workspace:      nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1038,6 +1172,7 @@ func fromWireDeployProjectRequest(w *panelv1.DeployProjectRequest) DeployProject
 		w.GetOperationId(),
 		fromWireDeployProjectVersion(w),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1051,6 +1186,7 @@ func toWireDeployProjectRequest(v DeployProjectRequest) *panelv1.DeployProjectRe
 		TimeoutSeconds: nonZero(v.TimeoutSeconds),
 		OperationId:    nonZero(v.OperationID),
 		WaitSeconds:    v.WaitSeconds,
+		Workspace:      nonZero(v.Workspace),
 	}
 	if v.Version != nil {
 		v.Version.toDeployProjectVersion(&b)
@@ -1241,10 +1377,70 @@ func toWireSpecViolation(v SpecViolation) *panelv1.SpecViolation {
 	return b.Build()
 }
 
+func fromWireMoveProjectRequest(w *panelv1.MoveProjectRequest) MoveProjectRequest {
+	return MoveProjectRequest{
+		w.GetProjectId(),
+		w.GetToWorkspace(),
+		w.GetOperationId(),
+		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		sliceFromWire(w.GetSwitchDatabases(), fromWireDatabaseSwitch),
+		w.GetWorkspace(),
+	}
+}
+
+func toWireMoveProjectRequest(v MoveProjectRequest) *panelv1.MoveProjectRequest {
+	b := panelv1.MoveProjectRequest_builder{
+		ProjectId:       nonZero(v.ProjectID),
+		ToWorkspace:     nonZero(v.ToWorkspace),
+		OperationId:     nonZero(v.OperationID),
+		WaitSeconds:     v.WaitSeconds,
+		SwitchDatabases: sliceToWire(v.SwitchDatabases, toWireDatabaseSwitch),
+		Workspace:       nonZero(v.Workspace),
+	}
+	return b.Build()
+}
+
+func fromWireDatabaseSwitch(w *panelv1.DatabaseSwitch) DatabaseSwitch {
+	return DatabaseSwitch{
+		w.GetDatabaseProjectId(),
+		w.GetIntoDatabaseProjectId(),
+		w.GetEmpty(),
+		w.GetEnvPrefix(),
+	}
+}
+
+func toWireDatabaseSwitch(v DatabaseSwitch) *panelv1.DatabaseSwitch {
+	b := panelv1.DatabaseSwitch_builder{
+		DatabaseProjectId:     nonZero(v.DatabaseProjectID),
+		IntoDatabaseProjectId: nonZero(v.IntoDatabaseProjectID),
+		Empty:                 nonZero(v.Empty),
+		EnvPrefix:             nonZero(v.EnvPrefix),
+	}
+	return b.Build()
+}
+
+func fromWireMoveProjectResponse(w *panelv1.MoveProjectResponse) MoveProjectResponse {
+	return MoveProjectResponse{
+		pointerFromWire(w.GetOperation(), fromWireOperation),
+		pointerFromWire(w.GetProject(), fromWireProject),
+		w.GetMoveMessage(),
+	}
+}
+
+func toWireMoveProjectResponse(v MoveProjectResponse) *panelv1.MoveProjectResponse {
+	b := panelv1.MoveProjectResponse_builder{
+		Operation:   pointerToWire(v.Operation, toWireOperation),
+		Project:     pointerToWire(v.Project, toWireProject),
+		MoveMessage: nonZero(v.MoveMessage),
+	}
+	return b.Build()
+}
+
 func fromWireListCommitsRequest(w *panelv1.ListCommitsRequest) ListCommitsRequest {
 	return ListCommitsRequest{
 		w.GetProjectId(),
 		w.GetBeforeCommit(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1252,6 +1448,7 @@ func toWireListCommitsRequest(v ListCommitsRequest) *panelv1.ListCommitsRequest 
 	b := panelv1.ListCommitsRequest_builder{
 		ProjectId:    nonZero(v.ProjectID),
 		BeforeCommit: nonZero(v.BeforeCommit),
+		Workspace:    nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1300,6 +1497,7 @@ func fromWireRunProjectActionRequest(w *panelv1.RunProjectActionRequest) RunProj
 		fromWireRunProjectActionAction(w),
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1308,6 +1506,7 @@ func toWireRunProjectActionRequest(v RunProjectActionRequest) *panelv1.RunProjec
 		ProjectId:   nonZero(v.ProjectID),
 		OperationId: nonZero(v.OperationID),
 		WaitSeconds: v.WaitSeconds,
+		Workspace:   nonZero(v.Workspace),
 	}
 	if v.Action != nil {
 		v.Action.toRunProjectActionAction(&b)
@@ -1637,6 +1836,7 @@ func fromWireLinkDatabaseRequest(w *panelv1.LinkDatabaseRequest) LinkDatabaseReq
 		w.GetDatabaseProjectId(),
 		w.GetLink(),
 		w.GetUnlink(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1645,6 +1845,7 @@ func toWireLinkDatabaseRequest(v LinkDatabaseRequest) *panelv1.LinkDatabaseReque
 		DatabaseProjectId: nonZero(v.DatabaseProjectID),
 		Link:              v.Link,
 		Unlink:            v.Unlink,
+		Workspace:         nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1672,6 +1873,7 @@ func fromWireCreateDatabaseRequest(w *panelv1.CreateDatabaseRequest) CreateDatab
 		w.GetOperationId(),
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
 		pointerFromWire(w.GetMetadata(), fromWireProjectMetadata),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1685,6 +1887,7 @@ func toWireCreateDatabaseRequest(v CreateDatabaseRequest) *panelv1.CreateDatabas
 		OperationId:      nonZero(v.OperationID),
 		WaitSeconds:      v.WaitSeconds,
 		Metadata:         pointerToWire(v.Metadata, toWireProjectMetadata),
+		Workspace:        nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1719,6 +1922,7 @@ func fromWireSetProjectAlertsRequest(w *panelv1.SetProjectAlertsRequest) SetProj
 		w.GetRemoveTrafficRules(),
 		optional(w.HasOff(), w.GetOff()),
 		optional(w.HasMuteMinutes(), w.GetMuteMinutes()),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1731,6 +1935,7 @@ func toWireSetProjectAlertsRequest(v SetProjectAlertsRequest) *panelv1.SetProjec
 		RemoveTrafficRules: nonZero(v.RemoveTrafficRules),
 		Off:                v.Off,
 		MuteMinutes:        v.MuteMinutes,
+		Workspace:          nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1968,6 +2173,7 @@ func fromWireGetOperationRequest(w *panelv1.GetOperationRequest) GetOperationReq
 		optional(w.HasWaitSeconds(), w.GetWaitSeconds()),
 		optional(w.HasAfterLogLine(), w.GetAfterLogLine()),
 		optional(w.HasLogLineLimit(), w.GetLogLineLimit()),
+		w.GetWorkspace(),
 	}
 }
 
@@ -1978,6 +2184,7 @@ func toWireGetOperationRequest(v GetOperationRequest) *panelv1.GetOperationReque
 		WaitSeconds:  v.WaitSeconds,
 		AfterLogLine: v.AfterLogLine,
 		LogLineLimit: v.LogLineLimit,
+		Workspace:    nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -1989,6 +2196,7 @@ func fromWireGetOperationResponse(w *panelv1.GetOperationResponse) GetOperationR
 		sliceFromWire(w.GetLog(), fromWireOperationLogLine),
 		w.GetLogLineCount(),
 		w.GetNextAfterLogLine(),
+		w.GetMoveMessage(),
 	}
 }
 
@@ -1999,6 +2207,7 @@ func toWireGetOperationResponse(v GetOperationResponse) *panelv1.GetOperationRes
 		Log:              sliceToWire(v.Log, toWireOperationLogLine),
 		LogLineCount:     nonZero(v.LogLineCount),
 		NextAfterLogLine: nonZero(v.NextAfterLogLine),
+		MoveMessage:      nonZero(v.MoveMessage),
 	}
 	return b.Build()
 }
@@ -2050,6 +2259,7 @@ func fromWireQueryHTTPTrafficRequest(w *panelv1.QueryHttpTrafficRequest) QueryHT
 		w.GetBucketWidthSeconds(),
 		w.GetRequestLimit(),
 		w.GetPageToken(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2063,6 +2273,7 @@ func toWireQueryHTTPTrafficRequest(v QueryHTTPTrafficRequest) *panelv1.QueryHttp
 		BucketWidthSeconds: nonZero(v.BucketWidthSeconds),
 		RequestLimit:       nonZero(v.RequestLimit),
 		PageToken:          nonZero(v.PageToken),
+		Workspace:          nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2198,6 +2409,7 @@ func fromWireQueryContainerLogsRequest(w *panelv1.QueryContainerLogsRequest) Que
 		w.GetLimit(),
 		w.GetFromStart(),
 		w.GetPageToken(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2211,6 +2423,7 @@ func toWireQueryContainerLogsRequest(v QueryContainerLogsRequest) *panelv1.Query
 		Limit:       nonZero(v.Limit),
 		FromStart:   nonZero(v.FromStart),
 		PageToken:   nonZero(v.PageToken),
+		Workspace:   nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2266,6 +2479,7 @@ func fromWireRunServiceCommandRequest(w *panelv1.RunServiceCommandRequest) RunSe
 		w.GetRunAsUser(),
 		w.GetWorkingDirectory(),
 		w.GetTimeoutSeconds(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2278,6 +2492,7 @@ func toWireRunServiceCommandRequest(v RunServiceCommandRequest) *panelv1.RunServ
 		RunAsUser:        nonZero(v.RunAsUser),
 		WorkingDirectory: nonZero(v.WorkingDirectory),
 		TimeoutSeconds:   nonZero(v.TimeoutSeconds),
+		Workspace:        nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2339,6 +2554,7 @@ func fromWireReadPathRequest(w *panelv1.ReadPathRequest) ReadPathRequest {
 		w.GetOffsetBytes(),
 		w.GetLengthBytes(),
 		w.GetEntryPageToken(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2350,6 +2566,7 @@ func toWireReadPathRequest(v ReadPathRequest) *panelv1.ReadPathRequest {
 		OffsetBytes:    nonZero(v.OffsetBytes),
 		LengthBytes:    nonZero(v.LengthBytes),
 		EntryPageToken: nonZero(v.EntryPageToken),
+		Workspace:      nonZero(v.Workspace),
 	}
 	if v.Root != nil {
 		v.Root.toReadPathRoot(&b)
@@ -2414,11 +2631,14 @@ func toWireReadPathResponse(v ReadPathResponse) *panelv1.ReadPathResponse {
 func fromWireCreateTransferRequest(w *panelv1.CreateTransferRequest) CreateTransferRequest {
 	return CreateTransferRequest{
 		fromWireCreateTransferTransfer(w),
+		w.GetWorkspace(),
 	}
 }
 
 func toWireCreateTransferRequest(v CreateTransferRequest) *panelv1.CreateTransferRequest {
-	b := panelv1.CreateTransferRequest_builder{}
+	b := panelv1.CreateTransferRequest_builder{
+		Workspace: nonZero(v.Workspace),
+	}
 	if v.Transfer != nil {
 		v.Transfer.toCreateTransferTransfer(&b)
 	}
@@ -2682,13 +2902,68 @@ func fromWireNoMachine(w *panelv1.NoMachine) NoMachine {
 	return NoMachine{
 		fromWireNoMachineReason(w.GetReason()),
 		w.GetUrl(),
+		w.GetWorkspaceId(),
 	}
 }
 
 func toWireNoMachine(v NoMachine) *panelv1.NoMachine {
 	b := panelv1.NoMachine_builder{
-		Reason: nonZero(toWireNoMachineReason(v.Reason)),
-		Url:    nonZero(v.URL),
+		Reason:      nonZero(toWireNoMachineReason(v.Reason)),
+		Url:         nonZero(v.URL),
+		WorkspaceId: nonZero(v.WorkspaceID),
+	}
+	return b.Build()
+}
+
+func fromWireWorkspaceChoice(w *panelv1.WorkspaceChoice) WorkspaceChoice {
+	return WorkspaceChoice{
+		sliceFromWire(w.GetWorkspaces(), fromWireWorkspace),
+		w.GetTotal(),
+		w.GetHoldingProject(),
+		w.GetIncomplete(),
+	}
+}
+
+func toWireWorkspaceChoice(v WorkspaceChoice) *panelv1.WorkspaceChoice {
+	b := panelv1.WorkspaceChoice_builder{
+		Workspaces:     sliceToWire(v.Workspaces, toWireWorkspace),
+		Total:          nonZero(v.Total),
+		HoldingProject: v.HoldingProject,
+		Incomplete:     nonZero(v.Incomplete),
+	}
+	return b.Build()
+}
+
+func fromWireWorkspaceNotGranted(w *panelv1.WorkspaceNotGranted) WorkspaceNotGranted {
+	return WorkspaceNotGranted{
+		w.GetWorkspaceId(),
+		w.GetUrl(),
+	}
+}
+
+func toWireWorkspaceNotGranted(v WorkspaceNotGranted) *panelv1.WorkspaceNotGranted {
+	b := panelv1.WorkspaceNotGranted_builder{
+		WorkspaceId: nonZero(v.WorkspaceID),
+		Url:         nonZero(v.URL),
+	}
+	return b.Build()
+}
+
+func fromWireProjectMoved(w *panelv1.ProjectMoved) ProjectMoved {
+	return ProjectMoved{
+		w.GetProjectId(),
+		w.GetWorkspaceId(),
+		w.GetWorkspaceName(),
+		timeFromWire(w.GetMoveTime()),
+	}
+}
+
+func toWireProjectMoved(v ProjectMoved) *panelv1.ProjectMoved {
+	b := panelv1.ProjectMoved_builder{
+		ProjectId:     nonZero(v.ProjectID),
+		WorkspaceId:   nonZero(v.WorkspaceID),
+		WorkspaceName: nonZero(v.WorkspaceName),
+		MoveTime:      timeToWire(v.MoveTime),
 	}
 	return b.Build()
 }
@@ -2697,6 +2972,7 @@ func fromWireWatchOperationRequest(w *panelv1.WatchOperationRequest) WatchOperat
 	return WatchOperationRequest{
 		w.GetProjectId(),
 		w.GetOperationId(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2704,6 +2980,7 @@ func toWireWatchOperationRequest(v WatchOperationRequest) *panelv1.WatchOperatio
 	b := panelv1.WatchOperationRequest_builder{
 		ProjectId:   nonZero(v.ProjectID),
 		OperationId: nonZero(v.OperationID),
+		Workspace:   nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2711,11 +2988,14 @@ func toWireWatchOperationRequest(v WatchOperationRequest) *panelv1.WatchOperatio
 func fromWireWatchOperationResponse(w *panelv1.WatchOperationResponse) WatchOperationResponse {
 	return WatchOperationResponse{
 		fromWireWatchOperationResponseMessage(w),
+		w.GetMoveMessage(),
 	}
 }
 
 func toWireWatchOperationResponse(v WatchOperationResponse) *panelv1.WatchOperationResponse {
-	b := panelv1.WatchOperationResponse_builder{}
+	b := panelv1.WatchOperationResponse_builder{
+		MoveMessage: nonZero(v.MoveMessage),
+	}
 	if v.Message != nil {
 		v.Message.toWatchOperationResponseMessage(&b)
 	}
@@ -2750,6 +3030,7 @@ func fromWireTailContainerLogsRequest(w *panelv1.TailContainerLogsRequest) TailC
 		w.GetProjectId(),
 		pointerFromWire(w.GetFilter(), fromWireContainerLogFilter),
 		w.GetAfterCursor(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2758,6 +3039,7 @@ func toWireTailContainerLogsRequest(v TailContainerLogsRequest) *panelv1.TailCon
 		ProjectId:   nonZero(v.ProjectID),
 		Filter:      pointerToWire(v.Filter, toWireContainerLogFilter),
 		AfterCursor: nonZero(v.AfterCursor),
+		Workspace:   nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2782,6 +3064,7 @@ func fromWireTailHTTPTrafficRequest(w *panelv1.TailHttpTrafficRequest) TailHTTPT
 		w.GetProjectId(),
 		pointerFromWire(w.GetFilter(), fromWireHTTPTrafficFilter),
 		w.GetAfterSequence(),
+		w.GetWorkspace(),
 	}
 }
 
@@ -2790,6 +3073,7 @@ func toWireTailHTTPTrafficRequest(v TailHTTPTrafficRequest) *panelv1.TailHttpTra
 		ProjectId:     nonZero(v.ProjectID),
 		Filter:        pointerToWire(v.Filter, toWireHTTPTrafficFilter),
 		AfterSequence: nonZero(v.AfterSequence),
+		Workspace:     nonZero(v.Workspace),
 	}
 	return b.Build()
 }
@@ -2806,6 +3090,16 @@ func toWireTailHTTPTrafficResponse(v TailHTTPTrafficResponse) *panelv1.TailHttpT
 	}
 	return b.Build()
 }
+
+func fromWireWorkspaceStatus(w panelv1.WorkspaceStatus) WorkspaceStatus { return WorkspaceStatus(w) }
+
+func toWireWorkspaceStatus(v WorkspaceStatus) panelv1.WorkspaceStatus {
+	return panelv1.WorkspaceStatus(v)
+}
+
+func fromWireWorkspaceRole(w panelv1.WorkspaceRole) WorkspaceRole { return WorkspaceRole(w) }
+
+func toWireWorkspaceRole(v WorkspaceRole) panelv1.WorkspaceRole { return panelv1.WorkspaceRole(v) }
 
 func fromWireAlertChannelKind(w panelv1.AlertChannelKind) AlertChannelKind {
 	return AlertChannelKind(w)
@@ -2934,6 +3228,11 @@ func toWireNoMachineReason(v NoMachineReason) panelv1.NoMachineReason {
 // Each constant of the package is the wire layer's number: one that differs does not compile.
 func _() {
 	var same [1]struct{}
+	_ = same[WorkspaceStatusUnspecified-WorkspaceStatus(panelv1.WorkspaceStatus_WORKSPACE_STATUS_UNSPECIFIED)]
+	_ = same[WorkspaceStatusReady-WorkspaceStatus(panelv1.WorkspaceStatus_WORKSPACE_STATUS_READY)]
+	_ = same[WorkspaceStatusBeingPrepared-WorkspaceStatus(panelv1.WorkspaceStatus_WORKSPACE_STATUS_BEING_PREPARED)]
+	_ = same[WorkspaceRoleUnspecified-WorkspaceRole(panelv1.WorkspaceRole_WORKSPACE_ROLE_UNSPECIFIED)]
+	_ = same[WorkspaceRoleOwner-WorkspaceRole(panelv1.WorkspaceRole_WORKSPACE_ROLE_OWNER)]
 	_ = same[AlertChannelKindUnspecified-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_UNSPECIFIED)]
 	_ = same[AlertChannelKindEmail-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_EMAIL)]
 	_ = same[AlertChannelKindTelegram-AlertChannelKind(panelv1.AlertChannelKind_ALERT_CHANNEL_KIND_TELEGRAM)]
@@ -2992,6 +3291,7 @@ func _() {
 	_ = same[OperationKindBackup-OperationKind(panelv1.OperationKind_OPERATION_KIND_BACKUP)]
 	_ = same[OperationKindRestore-OperationKind(panelv1.OperationKind_OPERATION_KIND_RESTORE)]
 	_ = same[OperationKindDelete-OperationKind(panelv1.OperationKind_OPERATION_KIND_DELETE)]
+	_ = same[OperationKindMove-OperationKind(panelv1.OperationKind_OPERATION_KIND_MOVE)]
 	_ = same[OperationStatusUnspecified-OperationStatus(panelv1.OperationStatus_OPERATION_STATUS_UNSPECIFIED)]
 	_ = same[OperationStatusInProgress-OperationStatus(panelv1.OperationStatus_OPERATION_STATUS_IN_PROGRESS)]
 	_ = same[OperationStatusSucceeded-OperationStatus(panelv1.OperationStatus_OPERATION_STATUS_SUCCEEDED)]

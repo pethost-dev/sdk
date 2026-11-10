@@ -24,6 +24,8 @@ const BASE_URL: &str = "https://console.pethost.dev";
 #[derive(Clone)]
 pub struct Client {
     wire: PanelServiceClient<HttpClient>,
+    /// What a request that names no workspace is sent with: [`Client::with_workspace`]'s.
+    workspace: String,
 }
 
 impl Client {
@@ -67,13 +69,42 @@ impl Client {
 
         Self {
             wire: PanelServiceClient::new(transport, config),
+            workspace: String::new(),
         }
+    }
+
+    /// The client, with the workspace it sends where a request names none.
+    ///
+    /// The workspace of every call whose request names none: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). A request's own workspace goes before it. Empty = none: the API then takes the account's only workspace, and refuses a call with [`WorkspaceChoice`](crate::types::WorkspaceChoice) when it has several.
+    #[must_use]
+    pub fn with_workspace(mut self, workspace: &str) -> Self {
+        workspace.clone_into(&mut self.workspace);
+        self
+    }
+
+    /// List workspaces.
+    ///
+    /// The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what is free, location, hostname and apps domain. With `project_id`, also which of them hold a project of that id (`holding_project`). Free figures and project counts are each machine's latest sample, read now: one that did not answer in time leaves them absent (incomplete). The one call that takes no `workspace`. A caller that reaches none is refused as a call naming no workspace is: [`NoMachine`](crate::types::NoMachine) (no plan) or [`WorkspaceNotGranted`](crate::types::WorkspaceNotGranted).
+    pub async fn list_workspaces(
+        &self,
+        request: types::ListWorkspacesRequest,
+    ) -> Result<types::ListWorkspacesResponse, Error> {
+        let response = self
+            .wire
+            .list_workspaces(request.into())
+            .await
+            .map_err(Error::from_wire)?;
+        Ok(response.into_owned().into())
     }
 
     /// Get the machine.
     ///
-    /// Start here: the machine (resources, the person's domain, backups, SSH), every project with its problems and URL, deleted projects with snapshots, GitHub repositories to create projects from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+    /// Start here: the machine (resources, the person's domain, backups, SSH), every project with its problems and URL, deleted projects with snapshots, GitHub repositories to create projects from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes. Several workspaces and no `workspace`: [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) + [`WorkspaceChoice`](crate::types::WorkspaceChoice), which lists them.
     pub async fn get_machine(&self, request: types::GetMachineRequest) -> Result<types::GetMachineResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self.wire.get_machine(request.into()).await.map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
@@ -85,6 +116,10 @@ impl Client {
         &self,
         request: types::RunMachineActionRequest,
     ) -> Result<types::RunMachineActionResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .run_machine_action(request.into())
@@ -97,6 +132,10 @@ impl Client {
     ///
     /// One project in full: services (state, health, image, the ports it listens on, volumes, environment, the SSH command), volumes, routes, hosts with certificates, recent operations, snapshots, the last day's HTTP traffic. Env-file values and a database's password ([`Project::database`](crate::types::Project::database)`.connection`) only with `include_secret_values`. Its files: [`Client::read_path`](crate::Client::read_path).
     pub async fn get_project(&self, request: types::GetProjectRequest) -> Result<types::GetProjectResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self.wire.get_project(request.into()).await.map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
@@ -131,11 +170,15 @@ impl Client {
     ///
     /// Not refused, and read the machine's way: a `container_name` and a network's `name` name nothing on the machine, so two projects may write the same (the project's services still reach the container by it); a service with `profiles` runs only while `COMPOSE_PROFILES` in /.env names one of them, and is no service of the project until then; a bind mount of a folder without `:ro` (`./data:/data`) mounts the project's volume named after the path (`data`), which deploys keep and backups hold, with none of the version's files in it, so project files take `:ro`, and data is plainer in a named volume (`data:/data`, with `data:` under `volumes:`); a bind mount of a file without `:ro` mounts it read-only. An image's VOLUME that no mount covers fails the deploy (`UNCOVERED_IMAGE_VOLUME`): mount a named volume or a tmpfs there.
     ///
-    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory; + [`DatabaseLinkRefusal`](crate::types::DatabaseLinkRefusal) = a database of `link_databases` cannot be linked to it (`database_project_id` says which), and nothing was created. A deleted project's id inherits its snapshots.
+    /// [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the id is taken (a retry with its `operation_id` returns that operation). An `upload_id`: [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = not arrived; [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) = expired or used; one the machine refused (its PUT said why) answers with its `violations`. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the GitHub App cannot read the repository (see [`GetMachineResponse::github`](crate::types::GetMachineResponse::github)), or no such branch or directory; + [`DatabaseLinkRefusal`](crate::types::DatabaseLinkRefusal) = a database of `link_databases` cannot be linked to it (`database_project_id` says which), and nothing was created. A deleted project's id inherits its snapshots.
     pub async fn create_project(
         &self,
         request: types::CreateProjectRequest,
     ) -> Result<types::CreateProjectResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .create_project(request.into())
@@ -146,7 +189,7 @@ impl Client {
 
     /// Deploy a project.
     ///
-    /// Deploys a new version of a project and answers as [`Client::create_project`](crate::Client::create_project) does: `files` written over its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password), `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again (`rollback_deploy_id`). compose.yaml rules: [`Client::create_project`](crate::Client::create_project)\'s.
+    /// Deploys a new version of a project and answers as [`Client::create_project`](crate::Client::create_project) does: `files` written over its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password), `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and x-pethost), a commit, or an earlier deploy's files again as a new version (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules: [`Client::create_project`](crate::Client::create_project)\'s.
     ///
     /// It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each routed service listens on its route's port (up to 15 s: one that does not is the project's `SERVICE_PORT_CLOSED` problem, its route answering 502, not a failed deploy). So it also starts stopped services, reruns jobs, recreates changed services and those bind-mounting project files, and fails on an unhealthy service. While [`Project::x_pethost_applies_at_once`](crate::types::Project::x_pethost_applies_at_once), a version differing only in `x-pethost` (or not at all) applies at once, restarting nothing but a service whose published port a route takes or leaves. Any other deploy applies its routes and password as it ends: to hide new content from its first second, set the password first, in a call of its own, then deploy the content.
     ///
@@ -157,6 +200,10 @@ impl Client {
         &self,
         request: types::DeployProjectRequest,
     ) -> Result<types::DeployProjectResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .deploy_project(request.into())
@@ -165,10 +212,26 @@ impl Client {
         Ok(response.into_owned().into())
     }
 
+    /// Move a project to another workspace.
+    ///
+    /// Moves a project to another workspace of the same person, as one operation ([`OperationKind`](crate::types::OperationKind) MOVE): it is stopped here, backed up into the destination's backups, restored and started there under the same `project_id`, then deleted here. Each database it is linked to ([`Project::dependencies`](crate::types::Project::dependencies)) stays here, with its other apps, if any, running on: there the project uses one of the same engine instead, one the destination has or a new one, with the data of the database it signs in to copied, or none ([`DatabaseSwitch`](crate::types::DatabaseSwitch)). A database project moves only when no app is linked to it. `workspace` is the source. Waits as [`Client::deploy_project`](crate::Client::deploy_project) does (`wait_seconds`), then [`Client::get_operation`](crate::Client::get_operation), in either workspace, which once it ended answers the same `move_message` and the project. Answers, once it ended, with the project as it is in the destination, and `move_message`: what changed (hosts move to the destination's `apps_domain`, a domain of the person's own must point at its hostname, a new SSH command, which database it uses there instead of each, and with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier snapshots, and what each database it left still holds). Until the restore succeeded, a failure undoes it: the source's services run again as they did, unless its failure says they did not start again; the move's snapshot stays in the destination's backups, as a deleted project's. After that it only goes forward: one that FAILED then moved the project, and its failure names what the source still holds. While it runs, a change to the project is [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) + [`ProjectBusy`](crate::types::ProjectBusy) (kind MOVE) in either workspace, and so is a read where it is not then (before its restore, after its deletion from the source); afterwards, a call for it to the source is [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) + [`ProjectMoved`](crate::types::ProjectMoved), until the source has a project of that id again. While it runs, a change to a database it leaves here, or to the one it uses instead there, is [`ProjectBusy`](crate::types::ProjectBusy) too, as is a read of a new one before the move made it; [`Client::get_operation`](crate::Client::get_operation) answers the move with any of their `project_ids`. [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) = `switch_databases` names a database the project is not linked to, or twice, an `env_prefix` where the machine wrote the lines, none where it did not, one of no form a link takes or one two switches share, or an `into` the destination lacks or of another engine, or one two switches share, copies of more than 32 databases, or `to_workspace` is the source or none of the caller's; [`ErrorCode::PermissionDenied`](crate::ErrorCode::PermissionDenied) + [`WorkspaceNotGranted`](crate::types::WorkspaceNotGranted) = one this token may not reach. [`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) = the destination has a project of the project's id, or of the id a new database takes, or `operation_id` is an operation of the project's or another move's already. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = a database project with apps linked to it (the message names them: move each, or unlink it), a machine needs an update first (the message names it), the project has no deploy yet, or the destination's backups are off (its [`Machine::backups_enabled`](crate::types::Machine::backups_enabled)), which a move goes through.
+    pub async fn move_project(&self, request: types::MoveProjectRequest) -> Result<types::MoveProjectResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
+        let response = self.wire.move_project(request.into()).await.map_err(Error::from_wire)?;
+        Ok(response.into_owned().into())
+    }
+
     /// List a project's commits.
     ///
     /// A github project's branch commits that change its directory, newest first, 30 a page, with whether the files are at it and its last deploy. To roll back: [`Client::deploy_project`](crate::Client::deploy_project) with an older commit (volumes keep their current data). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = a files project (it rolls back with [`DeployProjectRequestVersion::RollbackDeployId`](crate::types::DeployProjectRequestVersion::RollbackDeployId)), no such branch, or `before_commit` not on it.
     pub async fn list_commits(&self, request: types::ListCommitsRequest) -> Result<types::ListCommitsResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self.wire.list_commits(request.into()).await.map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
@@ -184,6 +247,10 @@ impl Client {
         &self,
         request: types::RunProjectActionRequest,
     ) -> Result<types::RunProjectActionResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .run_project_action(request.into())
@@ -199,6 +266,10 @@ impl Client {
         &self,
         request: types::SetProjectAlertsRequest,
     ) -> Result<types::SetProjectAlertsResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .set_project_alerts(request.into())
@@ -214,6 +285,10 @@ impl Client {
         &self,
         request: types::GetOperationRequest,
     ) -> Result<types::GetOperationResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .get_operation(request.into())
@@ -229,6 +304,10 @@ impl Client {
         &self,
         request: types::QueryHttpTrafficRequest,
     ) -> Result<types::QueryHttpTrafficResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .query_http_traffic(request.into())
@@ -244,6 +323,10 @@ impl Client {
         &self,
         request: types::QueryContainerLogsRequest,
     ) -> Result<types::QueryContainerLogsResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .query_container_logs(request.into())
@@ -259,6 +342,10 @@ impl Client {
         &self,
         request: types::CreateDatabaseRequest,
     ) -> Result<types::CreateDatabaseResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .create_database(request.into())
@@ -274,6 +361,10 @@ impl Client {
         &self,
         request: types::LinkDatabaseRequest,
     ) -> Result<types::LinkDatabaseResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .link_database(request.into())
@@ -289,6 +380,10 @@ impl Client {
         &self,
         request: types::RunServiceCommandRequest,
     ) -> Result<types::RunServiceCommandResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .run_service_command(request.into())
@@ -301,6 +396,10 @@ impl Client {
     ///
     /// Reads a file (text, 64 KiB a call; ≤1 MiB with `length_bytes`) or a directory's entries (\~64 KiB a page): of the project's deployed files, or with `service` or `volume`, of a container (whole filesystem; while not running only its volumes, [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) listing them) or a volume. [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) names the nearest existing directory. Project files change with [`Client::deploy_project`](crate::Client::deploy_project) `files`; container and volume files with [`Client::create_transfer`](crate::Client::create_transfer). [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) also = no deploy yet, or a file in /proc or /sys (use [`Client::run_service_command`](crate::Client::run_service_command)). Untrusted.
     pub async fn read_path(&self, request: types::ReadPathRequest) -> Result<types::ReadPathResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self.wire.read_path(request.into()).await.map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
@@ -319,6 +418,10 @@ impl Client {
         &self,
         request: types::CreateTransferRequest,
     ) -> Result<types::CreateTransferResponse, Error> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         let response = self
             .wire
             .create_transfer(request.into())
@@ -346,6 +449,10 @@ impl Client {
         &self,
         request: types::WatchOperationRequest,
     ) -> ResponseStream<types::WatchOperationResponse> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
         let wire = self.wire.clone();
         ResponseStream::new(async move { wire.watch_operation(request.into()).await })
@@ -370,6 +477,10 @@ impl Client {
         &self,
         request: types::TailContainerLogsRequest,
     ) -> ResponseStream<types::TailContainerLogsResponse> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
         let wire = self.wire.clone();
         ResponseStream::new(async move { wire.tail_container_logs(request.into()).await })
@@ -394,6 +505,10 @@ impl Client {
         &self,
         request: types::TailHttpTrafficRequest,
     ) -> ResponseStream<types::TailHttpTrafficResponse> {
+        let mut request = request;
+        if request.workspace.is_empty() {
+            request.workspace.clone_from(&self.workspace);
+        }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
         let wire = self.wire.clone();
         ResponseStream::new(async move { wire.tail_http_traffic(request.into()).await })
@@ -405,6 +520,7 @@ impl fmt::Debug for Client {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Client")
             .field("base_url", &self.wire.config().base_uri().to_string())
+            .field("workspace", &self.workspace)
             .finish_non_exhaustive()
     }
 }

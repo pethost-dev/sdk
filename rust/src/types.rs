@@ -46,9 +46,98 @@
 //! }
 //! ```
 
+/// What [`Client::list_workspaces`](crate::Client::list_workspaces) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ListWorkspacesRequest {
+    /// A `project_id`: `holding_project` then says which workspaces have a project of that id.
+    pub project_id: ::std::string::String,
+    /// A `next_page_token`. Empty = the first page.
+    pub page_token: ::std::string::String,
+}
+
+/// What [`Client::list_workspaces`](crate::Client::list_workspaces) returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct ListWorkspacesResponse {
+    /// By name.
+    pub workspaces: ::std::vec::Vec<Workspace>,
+    /// Empty = the last page.
+    pub next_page_token: ::std::string::String,
+    /// Workspaces in all, on every page.
+    pub total: u32,
+    /// With `project_id`: the workspaces that have a project of that id, by `workspace_id`. Empty = none of those that answered (see incomplete).
+    pub holding_project: ::std::vec::Vec<::std::string::String>,
+    /// True = a machine did not answer in time: its free figures and project count are absent, and `holding_project` may lack it.
+    pub incomplete: bool,
+}
+
+/// What one plan buys: a machine of the plan's size, its apps domain and its backups, and the projects on it. A call names it as `workspace`, by `workspace_id` or name.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct Workspace {
+    /// 8 characters of a-z and 2-7, e.g. \"k7f3q2xy\": what to keep, since it never changes and is never another workspace's.
+    pub workspace_id: ::std::string::String,
+    /// The person's, e.g. \"Personal\": unique among their workspaces, in any case, and they may change it.
+    pub name: ::std::string::String,
+    pub status: WorkspaceStatus,
+    /// Where its machine runs, e.g. \"Europe\".
+    pub location: ::std::string::String,
+    /// Its plan's name, e.g. \"Starter\".
+    pub plan: ::std::string::String,
+    /// The plan's.
+    pub cpu_total_cores: f64,
+    /// The plan's, as [`Machine::memory_total_bytes`](crate::types::Machine::memory_total_bytes).
+    pub memory_total_bytes: u64,
+    /// What the projects leave of `memory_total_bytes`, in its machine's latest sample. Absent = not known: `BEING_PREPARED`, or the machine did not answer in time.
+    pub memory_free_bytes: ::core::option::Option<u64>,
+    /// The plan's, as [`Machine::disk_total_bytes`](crate::types::Machine::disk_total_bytes).
+    pub disk_total_bytes: u64,
+    /// Likewise. Absent as `memory_free_bytes`.
+    pub disk_free_bytes: ::core::option::Option<u64>,
+    /// Absent as `memory_free_bytes`.
+    pub project_count: ::core::option::Option<u32>,
+    /// Its machine's name, as [`Machine::hostname`](crate::types::Machine::hostname): SSH, transfers, and where a domain of the person's own points (CNAME). Empty while `BEING_PREPARED`.
+    pub hostname: ::std::string::String,
+    /// As [`Machine::apps_domain`](crate::types::Machine::apps_domain). Empty = none.
+    pub apps_domain: ::std::string::String,
+    /// When it ends: the person removed it, and it works until then, its projects with it. Absent = it is not ending.
+    pub end_time: ::core::option::Option<crate::Timestamp>,
+    /// The caller's.
+    pub role: WorkspaceRole,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum WorkspaceStatus {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// Its machine answers calls.
+    Ready,
+    /// Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call that names it is [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) + [`NoMachine`](crate::types::NoMachine) until then.
+    BeingPrepared,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum WorkspaceRole {
+    /// The zero value: absent, and not sent.
+    #[default]
+    Unspecified,
+    /// Pays for it, and may do everything in it.
+    Owner,
+    /// A value this version of the crate does not know, as the number the API sent.
+    Unrecognized(i32),
+}
+
 /// What [`Client::get_machine`](crate::Client::get_machine) takes.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct GetMachineRequest {}
+pub struct GetMachineRequest {
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
+}
 
 /// What [`Client::get_machine`](crate::Client::get_machine) returns.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -60,6 +149,8 @@ pub struct GetMachineResponse {
     /// Projects no longer on the machine whose snapshots remain, the most recently backed up first; restore one with [`RunProjectActionRequestAction::RestoreSnapshot`](crate::types::RunProjectActionRequestAction::RestoreSnapshot) and its `project_id`. Current after the machine's own backups and deletes; changes made to the backup repository elsewhere show later. Not known while [`Machine::snapshot_list_time`](crate::types::Machine::snapshot_list_time) is absent.
     pub deleted_projects: ::std::vec::Vec<DeletedProject>,
     pub github: ::core::option::Option<GithubConnection>,
+    /// The workspace whose machine this is.
+    pub workspace: ::core::option::Option<Workspace>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -247,12 +338,25 @@ pub struct DeletedProject {
     pub newest_snapshot: ::core::option::Option<Snapshot>,
     /// In all.
     pub snapshot_count: u32,
+    /// Set when the latest move of the project from or to this workspace took it to another one, and this workspace has had no other project of the id since, as a call for it here would answer [`ProjectMoved`](crate::types::ProjectMoved): call it there (`workspace`), which answers for it as it is now. A restore here makes another copy here, as it was last backed up here, and calls here then act on that copy.
+    pub moved_to: ::core::option::Option<MovedTo>,
+}
+
+/// Where a move took a project ([`Client::move_project`](crate::Client::move_project)), and when.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct MovedTo {
+    pub workspace_id: ::std::string::String,
+    pub workspace_name: ::std::string::String,
+    pub move_time: ::core::option::Option<crate::Timestamp>,
 }
 
 /// What [`Client::run_machine_action`](crate::Client::run_machine_action) takes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct RunMachineActionRequest {
     pub action: ::core::option::Option<RunMachineActionRequestAction>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// The oneof [`RunMachineActionRequest::action`](crate::types::RunMachineActionRequest::action): one of its members.
@@ -328,6 +432,8 @@ pub struct ProjectSummary {
     pub disk_used_bytes: u64,
     /// Set = a database project ([`Client::create_database`](crate::Client::create_database)).
     pub database: ::core::option::Option<DatabaseSummary>,
+    /// As [`Project::uid`](crate::types::Project::uid).
+    pub uid: ::std::string::String,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -408,6 +514,8 @@ pub struct GetProjectRequest {
     pub uptime_day_count: u32,
     /// With `incidents_before`: the `incident_id` of the oldest seen, so that those that opened at the same time are not skipped.
     pub incidents_before_id: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::get_project`](crate::Client::get_project) returns.
@@ -470,6 +578,23 @@ pub struct Project {
     pub database: ::core::option::Option<Database>,
     /// The database projects this one reaches ([`Client::link_database`](crate::Client::link_database)), each at the host of its `project_id`.
     pub linked_databases: ::std::vec::Vec<::std::string::String>,
+    /// The workspace it is in ([`Workspace::workspace_id`](crate::types::Workspace::workspace_id)): what a later call for it names as `workspace`.
+    pub workspace_id: ::std::string::String,
+    /// Made when it was created, and kept by its backups, restores and moves: a project deleted and created again under the same `project_id` has another. Empty = not known yet.
+    pub uid: ::std::string::String,
+    /// The databases it is linked to (`linked_databases`), each with what [`Client::move_project`](crate::Client::move_project) may do with it (`switch_databases`).
+    pub dependencies: ::std::vec::Vec<ProjectDependency>,
+}
+
+/// A database a project is linked to, as [`Client::move_project`](crate::Client::move_project) of the project sees it.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct ProjectDependency {
+    pub database_project_id: ::std::string::String,
+    /// The database inside it whose data a move copies, unless [`DatabaseSwitch::empty`](crate::types::DatabaseSwitch::empty): the one the project signs in to, its own where it has a user of its own ([`Database::own_user_projects`](crate::types::Database::own_user_projects)), else `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its own (`app`, `postgres`, `root`\.\.\.), which uses a database there as the apps\' user, so that a new one starts empty and one there is shared.
+    pub copy_database: ::std::string::String,
+    /// The prefix of the lines the machine wrote into the project's /.env of how it signs in to it (e.g. DATABASE for `DATABASE_URL`, \_HOST, \_PORT, \_USER, \_PASSWORD and \_NAME), which the destination writes anew. Empty = a person wrote them ([`Client::link_database`](crate::Client::link_database) linked it): a move needs [`DatabaseSwitch::env_prefix`](crate::types::DatabaseSwitch::env_prefix).
+    pub env_prefix: ::std::string::String,
 }
 
 /// A start, stop or restart of services that has not ended yet.
@@ -829,6 +954,8 @@ pub enum OperationKind {
     Backup,
     Restore,
     Delete,
+    /// [`Client::move_project`](crate::Client::move_project)\'s, of the project it moves, in both workspaces. Its `operation_id` is the move's, which [`Client::get_operation`](crate::Client::get_operation) and [`Client::watch_operation`](crate::Client::watch_operation) answer in either, also with the `project_id` of a database the move holds.
+    Move,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -906,7 +1033,7 @@ pub struct CreateProjectRequest {
     pub project_id: ::std::string::String,
     /// Set = a GitHub project: {github: {repository}}. Absent = the files of this request.
     pub source: ::core::option::Option<ProjectSource>,
-    /// An archive of the project's directory, from [`CreateTransferRequestTransfer::UploadArchive`](crate::types::CreateTransferRequestTransfer::UploadArchive), unpacked first. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = not arrived; [`ErrorCode::NotFound`](crate::ErrorCode::NotFound) = expired or used. One the machine refused (its PUT said why) answers with its `violations`.
+    /// An archive of the project's directory, from [`CreateTransferRequestTransfer::UploadArchive`](crate::types::CreateTransferRequestTransfer::UploadArchive), unpacked first.
     pub upload_id: ::std::string::String,
     /// The project's files, e.g. \[{path: \"/compose.yaml\", text: \"…\"}, {path: \"/.env\", text: \"…\"}\], or those to write over the archive's or the commit's. A github source takes only /.env.
     pub files: ::std::vec::Vec<FileChange>,
@@ -919,6 +1046,8 @@ pub struct CreateProjectRequest {
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
     pub wait_seconds: ::core::option::Option<u32>,
     pub link_databases: ::std::vec::Vec<DatabaseLinkRequest>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -947,7 +1076,7 @@ pub struct CreateProjectResponse {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct DeployProjectRequest {
     pub project_id: ::std::string::String,
-    /// [`Project::deploy_id`](crate::types::Project::deploy_id) as you read it: [`ErrorCode::Aborted`](crate::ErrorCode::Aborted) if the project was deployed since. Empty = no check.
+    /// [`Project::deploy_id`](crate::types::Project::deploy_id) as you read it. Empty = no check.
     pub base_deploy_id: ::std::string::String,
     /// Written in order over the current files, or over the new version's: e.g. \[{path: \"/.env\", text: \"…\"}\] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
     pub files: ::std::vec::Vec<FileChange>,
@@ -963,6 +1092,8 @@ pub struct DeployProjectRequest {
     pub version: ::core::option::Option<DeployProjectRequestVersion>,
     /// Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still `IN_PROGRESS` then: [`Client::get_operation`](crate::Client::get_operation) waits on.
     pub wait_seconds: ::core::option::Option<u32>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// The oneof [`DeployProjectRequest::version`](crate::types::DeployProjectRequest::version): one of its members.
@@ -972,13 +1103,13 @@ pub struct DeployProjectRequest {
 #[non_exhaustive]
 #[allow(clippy::large_enum_variant)]
 pub enum DeployProjectRequestVersion {
-    /// files project: an archive from [`Client::create_transfer`](crate::Client::create_transfer); replaces all files but /.env and x-pethost.
+    /// files project: an archive from [`Client::create_transfer`](crate::Client::create_transfer).
     UploadId(::std::string::String),
     /// github project: a commit of its branch (SHA, ≥7 chars), from [`Client::list_commits`](crate::Client::list_commits).
     Commit(::std::string::String),
     /// github project: true = [`GithubSource::newest_commit`](crate::types::GithubSource::newest_commit), read now.
     NewestCommit(bool),
-    /// files project, a rollback: the `operation_id` of an earlier deploy with `files_kept` ([`Project::operations`](crate::types::Project::operations)). Its files return as a new version; /.env, x-pethost and volumes stay.
+    /// files project, a rollback: the `operation_id` of an earlier deploy with `files_kept` ([`Project::operations`](crate::types::Project::operations)).
     RollbackDeployId(::std::string::String),
 }
 
@@ -1064,12 +1195,55 @@ pub struct SpecViolation {
     pub violation_message: ::std::string::String,
 }
 
+/// What [`Client::move_project`](crate::Client::move_project) takes.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct MoveProjectRequest {
+    pub project_id: ::std::string::String,
+    /// The destination, as `workspace` takes one: its id or name.
+    pub to_workspace: ::std::string::String,
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `operation_id`: the move's.
+    pub operation_id: ::std::string::String,
+    /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s `wait_seconds`.
+    pub wait_seconds: ::core::option::Option<u32>,
+    /// What it uses in `to_workspace` instead of each database it is linked to ([`Project::dependencies`](crate::types::Project::dependencies)), which stays here. One left out: the destination's database of its id and engine, if it has one, else a new one, with the data of its `copy_database`.
+    pub switch_databases: ::std::vec::Vec<DatabaseSwitch>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
+}
+
+/// A database the moved project is linked to, which stays here with its other apps, if any, and what the project uses instead in the destination: a database of the same engine, the lines of how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a user of its own, to a database of its own, which gets the data of [`ProjectDependency`](crate::types::ProjectDependency) .`copy_database` unless empty; a Valkey's it shares as its one user, and so does a project whose id the engine keeps as a name of its own (`copy_database` empty) on Postgres and MariaDB. Once the move succeeded, the user and database the project had of its own here, if it had them, are dropped with it, as any delete does: so empty, where it had them, deletes that data.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct DatabaseSwitch {
+    /// A database it is linked to, which stays.
+    pub database_project_id: ::std::string::String,
+    /// A database of the same engine in `to_workspace`. On Postgres and MariaDB, where the project gets a user of its own there, it has no user or database named as the project. Empty = the destination's database of `database_project_id`\'s id and engine, if it has one, else a new one, made by the move under that id at that one's size where `to_workspace` offers it for the engine, else at the engine's default.
+    pub into_database_project_id: ::std::string::String,
+    /// True = nothing is copied: the project starts there with an empty database of its own, or, as the apps\' user, with what a database there holds that it shares (a new one: nothing). A MariaDB database with a view, trigger, routine or event made by another account than the project's own user, as each in `app` is by the apps\' user, cannot be copied: the move is undone; start it empty, or make those objects again as the project's own user.
+    pub empty: bool,
+    /// Where [`ProjectDependency::env_prefix`](crate::types::ProjectDependency::env_prefix) is empty, as a person wrote the lines of how the project signs in to it: the prefix of those lines (e.g. DATABASE for `DATABASE_URL`), which the destination writes anew as a link with that `env_prefix` writes them, each of its names that /.env sets taking the new value, for the database `copy_database` names. Required there; refused elsewhere.
+    pub env_prefix: ::std::string::String,
+}
+
+/// What [`Client::move_project`](crate::Client::move_project) returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct MoveProjectResponse {
+    /// The move: finished, or `IN_PROGRESS` when `wait_seconds` ran out (then [`Client::get_operation`](crate::Client::get_operation)).
+    pub operation: ::core::option::Option<Operation>,
+    /// Once the project is in the destination: as it is there, as [`Client::get_project`](crate::Client::get_project) returns it. A move that FAILED after that has it too: it runs there, and its failure says what the source still holds. Absent while it runs, and when nothing moved.
+    pub project: ::core::option::Option<Project>,
+    /// What changed and what stayed behind, for people: the new hosts, the domains of the person's own to point at the destination's hostname, the SSH command.
+    pub move_message: ::std::string::String,
+}
+
 /// What [`Client::list_commits`](crate::Client::list_commits) takes.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ListCommitsRequest {
     pub project_id: ::std::string::String,
     /// The previous page's last sha. Empty = from the newest.
     pub before_commit: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::list_commits`](crate::Client::list_commits) returns.
@@ -1107,6 +1281,8 @@ pub struct RunProjectActionRequest {
     pub operation_id: ::std::string::String,
     /// As [`Client::deploy_project`](crate::Client::deploy_project)\'s.
     pub wait_seconds: ::core::option::Option<u32>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// The oneof [`RunProjectActionRequest::action`](crate::types::RunProjectActionRequest::action): one of its members.
@@ -1303,6 +1479,8 @@ pub struct LinkDatabaseRequest {
     pub link: ::std::vec::Vec<::std::string::String>,
     /// App `project_ids` to unlink.
     pub unlink: ::std::vec::Vec<::std::string::String>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::link_database`](crate::Client::link_database) returns.
@@ -1331,6 +1509,8 @@ pub struct CreateDatabaseRequest {
     pub wait_seconds: ::core::option::Option<u32>,
     /// What people see, e.g. {name: \"Postgres for Recipes\"}. Absent = the machine's (the id).
     pub metadata: ::core::option::Option<ProjectMetadata>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::create_database`](crate::Client::create_database) returns.
@@ -1362,6 +1542,8 @@ pub struct SetProjectAlertsRequest {
     pub off: ::core::option::Option<bool>,
     /// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
     pub mute_minutes: ::core::option::Option<u32>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::set_project_alerts`](crate::Client::set_project_alerts) returns.
@@ -1584,6 +1766,8 @@ pub struct GetOperationRequest {
     pub after_log_line: ::core::option::Option<u32>,
     /// ≤500; 0 = 50, when asked for lines. Also ends at \~64 KiB.
     pub log_line_limit: ::core::option::Option<u32>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::get_operation`](crate::Client::get_operation) returns.
@@ -1599,6 +1783,8 @@ pub struct GetOperationResponse {
     pub log_line_count: u32,
     /// Pass it as `after_log_line` to get the lines after these; absent = 0. The machine keeps every line of the log.
     pub next_after_log_line: u32,
+    /// A MOVE's, once it ended: [`MoveProjectResponse::move_message`](crate::types::MoveProjectResponse::move_message), what changed and what stayed behind, or why nothing moved.
+    pub move_message: ::std::string::String,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -1640,6 +1826,8 @@ pub struct QueryHttpTrafficRequest {
     pub request_limit: u32,
     /// The previous `next_page_token`, other fields unchanged: older requests only.
     pub page_token: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::query_http_traffic`](crate::Client::query_http_traffic) returns.
@@ -1749,6 +1937,8 @@ pub struct QueryContainerLogsRequest {
     pub from_start: bool,
     /// The previous `next_page_token`, other fields unchanged.
     pub page_token: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::query_container_logs`](crate::Client::query_container_logs) returns.
@@ -1792,6 +1982,8 @@ pub struct RunServiceCommandRequest {
     pub working_directory: ::std::string::String,
     /// 0 = default. Kills the main process only. Over \~50 may outlast your client: background long jobs.
     pub timeout_seconds: u32,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::run_service_command`](crate::Client::run_service_command) returns.
@@ -1874,6 +2066,8 @@ pub struct ReadPathRequest {
     pub length_bytes: u32,
     /// The previous `next_entry_page_token`, other fields unchanged.
     pub entry_page_token: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// The oneof [`ReadPathRequest::root`](crate::types::ReadPathRequest::root): one of its members.
@@ -1919,6 +2113,8 @@ pub struct ReadPathResponse {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct CreateTransferRequest {
     pub transfer: ::core::option::Option<CreateTransferRequestTransfer>,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// The oneof [`CreateTransferRequest::transfer`](crate::types::CreateTransferRequest::transfer): one of its members.
@@ -2098,13 +2294,15 @@ pub enum DatabaseSizeRefusalReason {
     Unrecognized(i32),
 }
 
-/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the account has no machine to run projects on yet.
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: there is no machine to run projects on yet, since the caller has no workspace, or the workspace's machine is being prepared.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct NoMachine {
     pub reason: NoMachineReason,
-    /// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+    /// Where the person goes on in the browser: for `NO_PLAN` the page they pay at, for `BEING_PREPARED` the workspace's page, which says it is. An MCP tool leaves it out.
     pub url: ::std::string::String,
+    /// `BEING_PREPARED`: the workspace. Empty for `NO_PLAN`.
+    pub workspace_id: ::std::string::String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -2115,10 +2313,45 @@ pub enum NoMachineReason {
     Unspecified,
     /// The person has not chosen and paid for a plan: they do it at url.
     NoPlan,
-    /// The plan is paid and a machine is being prepared for the account: Pethost emails the person when it is ready. Call again later.
+    /// The plan is paid and a machine is being prepared for the workspace: Pethost emails the person when it is ready. Call again later.
     BeingPrepared,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
+}
+
+/// Detail of an error that needs `workspace`: [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) when the call named none and the caller has several, [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) when it named none of theirs. Name one of these, by what the person asked for: a project that exists is in those of `holding_project`; for something new, ask the person, showing each one's size and what is free.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct WorkspaceChoice {
+    /// By name, at most 20: [`Client::list_workspaces`](crate::Client::list_workspaces) lists all.
+    pub workspaces: ::std::vec::Vec<Workspace>,
+    /// The workspaces the call may act on (this token's), in all.
+    pub total: u32,
+    /// The call names a project: the workspaces that have a project of that id, by `workspace_id`.
+    pub holding_project: ::std::vec::Vec<::std::string::String>,
+    /// As [`ListWorkspacesResponse`](crate::types::ListWorkspacesResponse)\'s.
+    pub incomplete: bool,
+}
+
+/// Detail of a [`ErrorCode::PermissionDenied`](crate::ErrorCode::PermissionDenied) error: the account has the workspace `workspace` named (or the connection is pinned to), but the person has not let this token reach it; or the call named none and the token reaches none of the account's workspaces.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct WorkspaceNotGranted {
+    /// The workspace it may not reach: the one named, else the account's only one. Empty = the call named none and the account has several.
+    pub workspace_id: ::std::string::String,
+    /// The panel's page where the person lets the token reach it.
+    pub url: ::std::string::String,
+}
+
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the project moved to another workspace ([`Client::move_project`](crate::Client::move_project)). Call there, naming it as `workspace`; ids of operations and snapshots from before stay behind.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct ProjectMoved {
+    pub project_id: ::std::string::String,
+    /// Where the move took it, which answers for it as it is now.
+    pub workspace_id: ::std::string::String,
+    pub workspace_name: ::std::string::String,
+    pub move_time: ::core::option::Option<crate::Timestamp>,
 }
 
 /// What [`Client::watch_operation`](crate::Client::watch_operation) takes.
@@ -2127,6 +2360,8 @@ pub struct WatchOperationRequest {
     pub project_id: ::std::string::String,
     /// Empty = the latest.
     pub operation_id: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::watch_operation`](crate::Client::watch_operation) yields.
@@ -2134,6 +2369,8 @@ pub struct WatchOperationRequest {
 #[non_exhaustive]
 pub struct WatchOperationResponse {
     pub message: ::core::option::Option<WatchOperationResponseMessage>,
+    /// With a MOVE's `finished_operation`: [`MoveProjectResponse::move_message`](crate::types::MoveProjectResponse::move_message).
+    pub move_message: ::std::string::String,
 }
 
 /// The oneof [`WatchOperationResponse::message`](crate::types::WatchOperationResponse::message): one of its members.
@@ -2156,6 +2393,8 @@ pub struct TailContainerLogsRequest {
     pub filter: ::core::option::Option<ContainerLogFilter>,
     /// Empty = only lines written from now on.
     pub after_cursor: ::std::string::String,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::tail_container_logs`](crate::Client::tail_container_logs) yields.
@@ -2174,6 +2413,8 @@ pub struct TailHttpTrafficRequest {
     pub filter: ::core::option::Option<HttpTrafficFilter>,
     /// 0 = only requests from now on.
     pub after_sequence: u64,
+    /// The workspace: its id or name ([`Client::list_workspaces`](crate::Client::list_workspaces)). Omit when the account has one.
+    pub workspace: ::std::string::String,
 }
 
 /// What [`Client::tail_http_traffic`](crate::Client::tail_http_traffic) yields.

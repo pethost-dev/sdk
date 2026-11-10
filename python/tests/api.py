@@ -1,15 +1,18 @@
 """What the checks need of v1/panel.proto that neither layer says: which RPC a method calls,
-which fields are marked (optional), which messages an error carries. Generated with the package:
+which fields are marked (optional), which messages an error carries, and what a request names its
+workspace by, which a client made with one fills. Generated with the package:
 do not edit."""
 
 import pethost._wire.v1.panel_pb as wire
 
 METHODS = {
+    "list_workspaces": "ListWorkspaces",
     "get_machine": "GetMachine",
     "run_machine_action": "RunMachineAction",
     "get_project": "GetProject",
     "create_project": "CreateProject",
     "deploy_project": "DeployProject",
+    "move_project": "MoveProject",
     "list_commits": "ListCommits",
     "run_project_action": "RunProjectAction",
     "set_project_alerts": "SetProjectAlerts",
@@ -27,6 +30,9 @@ METHODS = {
 }
 
 OPTIONAL = frozenset({
+    "Workspace.memory_free_bytes",
+    "Workspace.disk_free_bytes",
+    "Workspace.project_count",
     "DiskUsage.build_cache_bytes",
     "ProjectMetadata.name",
     "ProjectMetadata.emoji",
@@ -39,6 +45,7 @@ OPTIONAL = frozenset({
     "Service.exit_code",
     "CreateProjectRequest.wait_seconds",
     "DeployProjectRequest.wait_seconds",
+    "MoveProjectRequest.wait_seconds",
     "RunProjectActionRequest.wait_seconds",
     "CreateDatabaseRequest.wait_seconds",
     "SetProjectAlertsRequest.off",
@@ -57,6 +64,11 @@ DETAILS = (
     "DatabaseLinkRefusal",
     "DatabaseSizeRefusal",
     "NoMachine",
+    "WorkspaceChoice",
+    "WorkspaceNotGranted",
+    "ProjectMoved",
 )
 
-__all__ = ["DETAILS", "METHODS", "OPTIONAL", "wire"]
+WORKSPACE = "workspace"
+
+__all__ = ["DETAILS", "METHODS", "OPTIONAL", "WORKSPACE", "wire"]

@@ -8,11 +8,12 @@
 // stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
 // too, as methods of every SDK; an agent uses what is named beside each.
 
-// Pethost is the user's own hosting: their plan sets the size (CPU, memory, disk) of one Linux
-// machine, where their Docker Compose projects run. Use it whenever the user wants to deploy, host,
-// publish or put online an app, site, bot, API or database, and for anything already running there:
-// logs, domains, secrets, rollbacks, files. Start with GetMachine: it lists what runs and what is
-// wrong. A first deploy is CreateProject: its description holds the compose.yaml rules.
+// Pethost is the user's own hosting: each plan they buy is a workspace, a Linux machine of that
+// size for their Docker Compose projects. Use it whenever the user wants to deploy, host, publish
+// or put online an app, site, bot, API or database, and for anything running there: logs,
+// domains, secrets, rollbacks, files. Start with GetMachine: what runs, what is wrong. Several
+// workspaces: ListWorkspaces first, then `workspace` in each call. CreateProject's description
+// holds the compose.yaml rules.
 //
 // A site that fails or is slow: QueryHttpTraffic says which path, QueryContainerLogs what it
 // failed with, ReadPath shows the code at fault. Every tool here is a call you make yourself,
@@ -20,7 +21,12 @@
 //
 // MODEL
 //
-//	Machine: one VDS running the daemon, petnode; every call acts on the caller's.
+//	Workspace (workspace): what one plan buys: a machine of the plan's size, its apps_domain, its
+//	  backups. A call acts on the workspace its `workspace` names, by id or name; without one, on
+//	  the only one the caller has, and with several it is refused (WorkspaceChoice). Keep the id
+//	  from an answer (workspace_id), never the name: the person may rename it.
+//	Machine: one VDS running the daemon, petnode: the one of the workspace a call acts on. Ids
+//	  below are unique within it: the same project_id in two workspaces is two projects.
 //	- Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //	  deployed whole. People see metadata.name.
 //	- Database: a project CreateDatabase made (Postgres; MariaDB, for an app that asks for MySQL
@@ -63,13 +69,18 @@
 //   - Units are in field names (_bytes, _cores, _seconds, _ms). Times are RFC 3339. Absent = 0,
 //     false or empty. *_message fields are prose for people: branch on enums and ids.
 //   - Errors: NOT_FOUND = no such entity (the message lists what exists). INVALID_ARGUMENT = a
-//     bad or unknown field (named, with what it takes). FAILED_PRECONDITION = the container is
-//     not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
-//     do). UNAVAILABLE = retry later: the project is busy (ProjectBusy names the operation: wait
-//     with GetOperation), or the machine (MachineUnreachable), GitHub or backup storage is down.
-//     ABORTED = changed since read (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit
-//     (named). OUT_OF_RANGE = before the oldest record kept. PERMISSION_DENIED = a read-only
-//     path (project files: use DeployProject). UNAUTHENTICATED = sign in again.
+//     bad or unknown field (named, with what it takes; a `workspace` of none of the caller's:
+//     WorkspaceChoice lists theirs). FAILED_PRECONDITION = the container is not running, or as
+//     the RPC says; with NoMachine = no machine yet (the message says what to do); with
+//     WorkspaceChoice = `workspace` is needed: name one it lists, by what the person said or
+//     where the project is (holding_project); with ProjectMoved = the project moved to the
+//     workspace it names: call there. UNAVAILABLE = retry later: the project is busy
+//     (ProjectBusy names the operation: wait with GetOperation), or the machine
+//     (MachineUnreachable), GitHub or backup storage is down. ABORTED = changed since read
+//     (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit (named). OUT_OF_RANGE =
+//     before the oldest record kept. PERMISSION_DENIED = a read-only path (project files: use
+//     DeployProject); with WorkspaceNotGranted = the person has not let this token reach that
+//     workspace (they can, at its url). UNAUTHENTICATED = sign in again.
 //   - A response holds ~64 KiB at most (ReadPath.length_bytes: ≤1 MiB; CreateTransfer: any
 //     size); a cut list says so and pages. A limit over its maximum counts as the maximum.
 //   - An operation runs on after its call returns, even if the caller leaves; a retry with the
@@ -98,6 +109,9 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// PanelServiceListWorkspacesProcedure is the procedure name of the PanelService's ListWorkspaces
+	// RPC.
+	PanelServiceListWorkspacesProcedure = "/pethost.panel.v1.PanelService/ListWorkspaces"
 	// PanelServiceGetMachineProcedure is the procedure name of the PanelService's GetMachine RPC.
 	PanelServiceGetMachineProcedure = "/pethost.panel.v1.PanelService/GetMachine"
 	// PanelServiceRunMachineActionProcedure is the procedure name of the PanelService's
@@ -109,6 +123,11 @@ const (
 	PanelServiceCreateProjectProcedure = "/pethost.panel.v1.PanelService/CreateProject"
 	// PanelServiceDeployProjectProcedure is the procedure name of the PanelService's DeployProject RPC.
 	PanelServiceDeployProjectProcedure = "/pethost.panel.v1.PanelService/DeployProject"
+	// PanelServiceMoveProjectProcedure is the procedure name of the PanelService's MoveProject RPC.
+	PanelServiceMoveProjectProcedure = "/pethost.panel.v1.PanelService/MoveProject"
+	// PanelServiceGetMoveChoicesProcedure is the procedure name of the PanelService's GetMoveChoices
+	// RPC.
+	PanelServiceGetMoveChoicesProcedure = "/pethost.panel.v1.PanelService/GetMoveChoices"
 	// PanelServiceListCommitsProcedure is the procedure name of the PanelService's ListCommits RPC.
 	PanelServiceListCommitsProcedure = "/pethost.panel.v1.PanelService/ListCommits"
 	// PanelServiceRunProjectActionProcedure is the procedure name of the PanelService's
@@ -165,6 +184,14 @@ const (
 )
 
 var (
+	panelServiceListWorkspacesSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("ListWorkspaces"),
+			Procedure:        PanelServiceListWorkspacesProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
 	panelServiceGetMachineSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType:       connect.StreamTypeUnary,
@@ -200,6 +227,21 @@ var (
 			StreamType: connect.StreamTypeUnary,
 			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("DeployProject"),
 			Procedure:  PanelServiceDeployProjectProcedure,
+		}
+	})
+	panelServiceMoveProjectSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("MoveProject"),
+			Procedure:  PanelServiceMoveProjectProcedure,
+		}
+	})
+	panelServiceGetMoveChoicesSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           panelv1.File_v1_panel_proto.Services().ByName("PanelService").Methods().ByName("GetMoveChoices"),
+			Procedure:        PanelServiceGetMoveChoicesProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
 		}
 	})
 	panelServiceListCommitsSpec = sync.OnceValue(func() connect.Spec {
@@ -356,9 +398,18 @@ var (
 
 // PanelServiceClient is a client for the pethost.panel.v1.PanelService service.
 type PanelServiceClient interface {
+	// The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+	// is free, location, hostname and apps domain. With project_id, also which of them hold a
+	// project of that id (holding_project). Free figures and project counts are each machine's
+	// latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+	// The one call that takes no `workspace`. A caller that reaches none is refused as a call
+	// naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+	ListWorkspaces(context.Context, *panelv1.ListWorkspacesRequest) (*panelv1.ListWorkspacesResponse, error)
 	// Start here: the machine (resources, the person's domain, backups, SSH), every project with
 	// its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-	// from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+	// from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+	// traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+	// WorkspaceChoice, which lists them.
 	GetMachine(context.Context, *panelv1.GetMachineRequest) (*panelv1.GetMachineResponse, error)
 	// One machine action: add or remove the person's SSH public key (for SSH and SFTP to their
 	// projects' containers: Service.ssh_command), end a session, schedule or cancel a restart.
@@ -448,6 +499,8 @@ type PanelServiceClient interface {
 	// named volume or a tmpfs there.
 	//
 	// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+	// An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+	// refused (its PUT said why) answers with its `violations`.
 	// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
 	// such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
 	// linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -455,8 +508,10 @@ type PanelServiceClient interface {
 	CreateProject(context.Context, *panelv1.CreateProjectRequest) (*panelv1.CreateProjectResponse, error)
 	// Deploys a new version of a project and answers as CreateProject does: `files` written over
 	// its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-	// `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-	// (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+	// `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+	// x-pethost), a commit, or an earlier deploy's files again as a new version
+	// (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+	// CreateProject's.
 	//
 	// It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
 	// until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -478,6 +533,51 @@ type PanelServiceClient interface {
 	// ALREADY_EXISTS = operation_id started another kind of operation. When it FAILED, Operation.made_current says whether the files were applied: then
 	// fix them, or roll back.
 	DeployProject(context.Context, *panelv1.DeployProjectRequest) (*panelv1.DeployProjectResponse, error)
+	// Moves a project to another workspace of the same person, as one operation (OperationKind
+	// MOVE): it is stopped here, backed up into the destination's backups, restored and started
+	// there under the same project_id, then deleted here. Each database it is linked to
+	// (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+	// uses one of the same engine instead, one the destination has or a new one, with the data of
+	// the database it signs in to copied, or none (DatabaseSwitch). A database project
+	// moves only when no app is linked to it.
+	// `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+	// either workspace, which once it ended answers the same move_message and the project.
+	// Answers, once it ended, with the project as it is in the destination, and `move_message`:
+	// what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+	// point at its hostname, a new SSH command, which database it uses there instead of each, and
+	// with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+	// snapshots, and what each database it left still holds). Until the restore succeeded, a
+	// failure undoes it: the source's services run again as they did, unless its failure says they
+	// did not start again; the move's snapshot stays in the destination's backups, as a deleted
+	// project's. After that it only goes forward: one that FAILED then moved the project, and its
+	// failure names what the source still holds.
+	// While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+	// workspace, and so is a read where it is not then (before its restore, after its deletion from
+	// the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+	// until the source has a project of that id again. While it runs, a change to a database it
+	// leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+	// before the move made it; GetOperation answers the move with any of their project_ids.
+	// INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+	// an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+	// takes or one two switches share, or an `into` the destination lacks or of another engine, or
+	// one two switches share, copies of more than 32 databases, or to_workspace is the source
+	// or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+	// reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+	// database takes, or operation_id is an operation of the project's or another move's already.
+	// FAILED_PRECONDITION = a database project with apps linked to it (the message
+	// names them: move each, or unlink it), a machine needs an update first (the message names it),
+	// the project has no deploy yet, or the destination's backups are off (its
+	// Machine.backups_enabled), which a move goes through.
+	MoveProject(context.Context, *panelv1.MoveProjectRequest) (*panelv1.MoveProjectResponse, error)
+	// What MoveProject may do with each database the project is linked to, for the web panel's move
+	// dialog: for each of Project.dependencies, the databases of to_workspace that
+	// DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+	// choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+	// MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+	// out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+	// as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+	// yet.
+	GetMoveChoices(context.Context, *panelv1.GetMoveChoicesRequest) (*panelv1.GetMoveChoicesResponse, error)
 	// A github project's branch commits that change its directory, newest first, 30 a page, with
 	// whether the files are at it and its last deploy. To roll back: DeployProject with an older
 	// commit (volumes keep their current data). FAILED_PRECONDITION = a files project (it rolls
@@ -717,9 +817,18 @@ func (s PanelServiceTailHttpTrafficClientStream) Close() error {
 
 // PanelServiceHandler is an implementation of the pethost.panel.v1.PanelService service.
 type PanelServiceHandler interface {
+	// The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+	// is free, location, hostname and apps domain. With project_id, also which of them hold a
+	// project of that id (holding_project). Free figures and project counts are each machine's
+	// latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+	// The one call that takes no `workspace`. A caller that reaches none is refused as a call
+	// naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+	ListWorkspaces(context.Context, *panelv1.ListWorkspacesRequest) (*panelv1.ListWorkspacesResponse, error)
 	// Start here: the machine (resources, the person's domain, backups, SSH), every project with
 	// its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-	// from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+	// from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+	// traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+	// WorkspaceChoice, which lists them.
 	GetMachine(context.Context, *panelv1.GetMachineRequest) (*panelv1.GetMachineResponse, error)
 	// One machine action: add or remove the person's SSH public key (for SSH and SFTP to their
 	// projects' containers: Service.ssh_command), end a session, schedule or cancel a restart.
@@ -809,6 +918,8 @@ type PanelServiceHandler interface {
 	// named volume or a tmpfs there.
 	//
 	// ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+	// An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+	// refused (its PUT said why) answers with its `violations`.
 	// FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
 	// such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
 	// linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -816,8 +927,10 @@ type PanelServiceHandler interface {
 	CreateProject(context.Context, *panelv1.CreateProjectRequest) (*panelv1.CreateProjectResponse, error)
 	// Deploys a new version of a project and answers as CreateProject does: `files` written over
 	// its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-	// `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-	// (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+	// `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+	// x-pethost), a commit, or an earlier deploy's files again as a new version
+	// (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+	// CreateProject's.
 	//
 	// It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
 	// until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -839,6 +952,51 @@ type PanelServiceHandler interface {
 	// ALREADY_EXISTS = operation_id started another kind of operation. When it FAILED, Operation.made_current says whether the files were applied: then
 	// fix them, or roll back.
 	DeployProject(context.Context, *panelv1.DeployProjectRequest) (*panelv1.DeployProjectResponse, error)
+	// Moves a project to another workspace of the same person, as one operation (OperationKind
+	// MOVE): it is stopped here, backed up into the destination's backups, restored and started
+	// there under the same project_id, then deleted here. Each database it is linked to
+	// (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+	// uses one of the same engine instead, one the destination has or a new one, with the data of
+	// the database it signs in to copied, or none (DatabaseSwitch). A database project
+	// moves only when no app is linked to it.
+	// `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+	// either workspace, which once it ended answers the same move_message and the project.
+	// Answers, once it ended, with the project as it is in the destination, and `move_message`:
+	// what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+	// point at its hostname, a new SSH command, which database it uses there instead of each, and
+	// with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+	// snapshots, and what each database it left still holds). Until the restore succeeded, a
+	// failure undoes it: the source's services run again as they did, unless its failure says they
+	// did not start again; the move's snapshot stays in the destination's backups, as a deleted
+	// project's. After that it only goes forward: one that FAILED then moved the project, and its
+	// failure names what the source still holds.
+	// While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+	// workspace, and so is a read where it is not then (before its restore, after its deletion from
+	// the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+	// until the source has a project of that id again. While it runs, a change to a database it
+	// leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+	// before the move made it; GetOperation answers the move with any of their project_ids.
+	// INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+	// an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+	// takes or one two switches share, or an `into` the destination lacks or of another engine, or
+	// one two switches share, copies of more than 32 databases, or to_workspace is the source
+	// or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+	// reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+	// database takes, or operation_id is an operation of the project's or another move's already.
+	// FAILED_PRECONDITION = a database project with apps linked to it (the message
+	// names them: move each, or unlink it), a machine needs an update first (the message names it),
+	// the project has no deploy yet, or the destination's backups are off (its
+	// Machine.backups_enabled), which a move goes through.
+	MoveProject(context.Context, *panelv1.MoveProjectRequest) (*panelv1.MoveProjectResponse, error)
+	// What MoveProject may do with each database the project is linked to, for the web panel's move
+	// dialog: for each of Project.dependencies, the databases of to_workspace that
+	// DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+	// choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+	// MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+	// out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+	// as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+	// yet.
+	GetMoveChoices(context.Context, *panelv1.GetMoveChoicesRequest) (*panelv1.GetMoveChoicesResponse, error)
 	// A github project's branch commits that change its directory, newest first, 30 a page, with
 	// whether the files are at it and its last deploy. To roll back: DeployProject with an older
 	// commit (volumes keep their current data). FAILED_PRECONDITION = a files project (it rolls
@@ -1012,11 +1170,14 @@ type PanelServiceHandler interface {
 func RegisterPanelServiceHandler(server *connect.Server, svc PanelServiceHandler) {
 	adapter := panelServiceHandler{svc: svc}
 	server.Register(
+		connect.Method{Spec: panelServiceListWorkspacesSpec(), Handler: adapter.listWorkspaces},
 		connect.Method{Spec: panelServiceGetMachineSpec(), Handler: adapter.getMachine},
 		connect.Method{Spec: panelServiceRunMachineActionSpec(), Handler: adapter.runMachineAction},
 		connect.Method{Spec: panelServiceGetProjectSpec(), Handler: adapter.getProject},
 		connect.Method{Spec: panelServiceCreateProjectSpec(), Handler: adapter.createProject},
 		connect.Method{Spec: panelServiceDeployProjectSpec(), Handler: adapter.deployProject},
+		connect.Method{Spec: panelServiceMoveProjectSpec(), Handler: adapter.moveProject},
+		connect.Method{Spec: panelServiceGetMoveChoicesSpec(), Handler: adapter.getMoveChoices},
 		connect.Method{Spec: panelServiceListCommitsSpec(), Handler: adapter.listCommits},
 		connect.Method{Spec: panelServiceRunProjectActionSpec(), Handler: adapter.runProjectAction},
 		connect.Method{Spec: panelServiceSetProjectAlertsSpec(), Handler: adapter.setProjectAlerts},
@@ -1091,6 +1252,10 @@ func (s PanelServiceTailHttpTrafficServerStream) Send(res *panelv1.TailHttpTraff
 // UnimplementedPanelServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedPanelServiceHandler struct{}
 
+func (UnimplementedPanelServiceHandler) ListWorkspaces(context.Context, *panelv1.ListWorkspacesRequest) (*panelv1.ListWorkspacesResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.ListWorkspaces is not implemented")
+}
+
 func (UnimplementedPanelServiceHandler) GetMachine(context.Context, *panelv1.GetMachineRequest) (*panelv1.GetMachineResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.GetMachine is not implemented")
 }
@@ -1109,6 +1274,14 @@ func (UnimplementedPanelServiceHandler) CreateProject(context.Context, *panelv1.
 
 func (UnimplementedPanelServiceHandler) DeployProject(context.Context, *panelv1.DeployProjectRequest) (*panelv1.DeployProjectResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.DeployProject is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) MoveProject(context.Context, *panelv1.MoveProjectRequest) (*panelv1.MoveProjectResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.MoveProject is not implemented")
+}
+
+func (UnimplementedPanelServiceHandler) GetMoveChoices(context.Context, *panelv1.GetMoveChoicesRequest) (*panelv1.GetMoveChoicesResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.panel.v1.PanelService.GetMoveChoices is not implemented")
 }
 
 func (UnimplementedPanelServiceHandler) ListCommits(context.Context, *panelv1.ListCommitsRequest) (*panelv1.ListCommitsResponse, error) {
@@ -1195,6 +1368,14 @@ type panelServiceClient struct {
 	client *connect.Client
 }
 
+func (c *panelServiceClient) ListWorkspaces(ctx context.Context, req *panelv1.ListWorkspacesRequest) (*panelv1.ListWorkspacesResponse, error) {
+	var res panelv1.ListWorkspacesResponse
+	if err := c.client.CallUnary(ctx, panelServiceListWorkspacesSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (c *panelServiceClient) GetMachine(ctx context.Context, req *panelv1.GetMachineRequest) (*panelv1.GetMachineResponse, error) {
 	var res panelv1.GetMachineResponse
 	if err := c.client.CallUnary(ctx, panelServiceGetMachineSpec(), req, &res); err != nil {
@@ -1230,6 +1411,22 @@ func (c *panelServiceClient) CreateProject(ctx context.Context, req *panelv1.Cre
 func (c *panelServiceClient) DeployProject(ctx context.Context, req *panelv1.DeployProjectRequest) (*panelv1.DeployProjectResponse, error) {
 	var res panelv1.DeployProjectResponse
 	if err := c.client.CallUnary(ctx, panelServiceDeployProjectSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) MoveProject(ctx context.Context, req *panelv1.MoveProjectRequest) (*panelv1.MoveProjectResponse, error) {
+	var res panelv1.MoveProjectResponse
+	if err := c.client.CallUnary(ctx, panelServiceMoveProjectSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *panelServiceClient) GetMoveChoices(ctx context.Context, req *panelv1.GetMoveChoicesRequest) (*panelv1.GetMoveChoicesResponse, error) {
+	var res panelv1.GetMoveChoicesResponse
+	if err := c.client.CallUnary(ctx, panelServiceGetMoveChoicesSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1397,6 +1594,18 @@ func (c *panelServiceClient) TailHttpTraffic(ctx context.Context, req *panelv1.T
 
 type panelServiceHandler struct{ svc PanelServiceHandler }
 
+func (h panelServiceHandler) listWorkspaces(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.ListWorkspacesRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListWorkspaces(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
 func (h panelServiceHandler) getMachine(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
 	var req panelv1.GetMachineRequest
 	if err := stream.Receive(&req); err != nil {
@@ -1451,6 +1660,30 @@ func (h panelServiceHandler) deployProject(ctx context.Context, _ connect.Spec, 
 		return err
 	}
 	res, err := h.svc.DeployProject(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) moveProject(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.MoveProjectRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.MoveProject(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h panelServiceHandler) getMoveChoices(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req panelv1.GetMoveChoicesRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetMoveChoices(ctx, &req)
 	if err != nil {
 		return err
 	}

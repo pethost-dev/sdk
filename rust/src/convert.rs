@@ -15,6 +15,48 @@ fn present<T: Default + PartialEq>(value: T) -> Option<T> {
     (value != T::default()).then_some(value)
 }
 
+pub(crate) fn workspace_status_from_wire(value: buffa::EnumValue<wire::WorkspaceStatus>) -> types::WorkspaceStatus {
+    match value {
+        buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_UNSPECIFIED) => {
+            types::WorkspaceStatus::Unspecified
+        }
+        buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_READY) => types::WorkspaceStatus::Ready,
+        buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_BEING_PREPARED) => {
+            types::WorkspaceStatus::BeingPrepared
+        }
+        buffa::EnumValue::Unknown(number) => types::WorkspaceStatus::Unrecognized(number),
+    }
+}
+
+pub(crate) fn workspace_status_to_wire(value: types::WorkspaceStatus) -> buffa::EnumValue<wire::WorkspaceStatus> {
+    match value {
+        types::WorkspaceStatus::Unspecified => {
+            buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_UNSPECIFIED)
+        }
+        types::WorkspaceStatus::Ready => buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_READY),
+        types::WorkspaceStatus::BeingPrepared => {
+            buffa::EnumValue::Known(wire::WorkspaceStatus::WORKSPACE_STATUS_BEING_PREPARED)
+        }
+        types::WorkspaceStatus::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
+pub(crate) fn workspace_role_from_wire(value: buffa::EnumValue<wire::WorkspaceRole>) -> types::WorkspaceRole {
+    match value {
+        buffa::EnumValue::Known(wire::WorkspaceRole::WORKSPACE_ROLE_UNSPECIFIED) => types::WorkspaceRole::Unspecified,
+        buffa::EnumValue::Known(wire::WorkspaceRole::WORKSPACE_ROLE_OWNER) => types::WorkspaceRole::Owner,
+        buffa::EnumValue::Unknown(number) => types::WorkspaceRole::Unrecognized(number),
+    }
+}
+
+pub(crate) fn workspace_role_to_wire(value: types::WorkspaceRole) -> buffa::EnumValue<wire::WorkspaceRole> {
+    match value {
+        types::WorkspaceRole::Unspecified => buffa::EnumValue::Known(wire::WorkspaceRole::WORKSPACE_ROLE_UNSPECIFIED),
+        types::WorkspaceRole::Owner => buffa::EnumValue::Known(wire::WorkspaceRole::WORKSPACE_ROLE_OWNER),
+        types::WorkspaceRole::Unrecognized(number) => buffa::EnumValue::from(number),
+    }
+}
+
 pub(crate) fn alert_channel_kind_from_wire(value: buffa::EnumValue<wire::AlertChannelKind>) -> types::AlertChannelKind {
     match value {
         buffa::EnumValue::Known(wire::AlertChannelKind::ALERT_CHANNEL_KIND_UNSPECIFIED) => {
@@ -359,6 +401,7 @@ pub(crate) fn operation_kind_from_wire(value: buffa::EnumValue<wire::OperationKi
         buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_BACKUP) => types::OperationKind::Backup,
         buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_RESTORE) => types::OperationKind::Restore,
         buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_DELETE) => types::OperationKind::Delete,
+        buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_MOVE) => types::OperationKind::Move,
         buffa::EnumValue::Unknown(number) => types::OperationKind::Unrecognized(number),
     }
 }
@@ -373,6 +416,7 @@ pub(crate) fn operation_kind_to_wire(value: types::OperationKind) -> buffa::Enum
         types::OperationKind::Backup => buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_BACKUP),
         types::OperationKind::Restore => buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_RESTORE),
         types::OperationKind::Delete => buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_DELETE),
+        types::OperationKind::Move => buffa::EnumValue::Known(wire::OperationKind::OPERATION_KIND_MOVE),
         types::OperationKind::Unrecognized(number) => buffa::EnumValue::from(number),
     }
 }
@@ -805,11 +849,163 @@ pub(crate) fn no_machine_reason_to_wire(value: types::NoMachineReason) -> buffa:
     }
 }
 
-impl From<types::GetMachineRequest> for wire::GetMachineRequest {
-    fn from(message: types::GetMachineRequest) -> Self {
-        let types::GetMachineRequest {} = message;
+impl From<types::ListWorkspacesRequest> for wire::ListWorkspacesRequest {
+    fn from(message: types::ListWorkspacesRequest) -> Self {
+        let types::ListWorkspacesRequest { project_id, page_token } = message;
 
         Self {
+            project_id: self::present(project_id),
+            page_token: self::present(page_token),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ListWorkspacesRequest> for types::ListWorkspacesRequest {
+    fn from(message: wire::ListWorkspacesRequest) -> Self {
+        let wire::ListWorkspacesRequest {
+            project_id,
+            page_token,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            page_token: page_token.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::ListWorkspacesResponse> for wire::ListWorkspacesResponse {
+    fn from(message: types::ListWorkspacesResponse) -> Self {
+        let types::ListWorkspacesResponse {
+            workspaces,
+            next_page_token,
+            total,
+            holding_project,
+            incomplete,
+        } = message;
+
+        Self {
+            workspaces: workspaces.into_iter().map(wire::Workspace::from).collect(),
+            next_page_token: self::present(next_page_token),
+            total: self::present(total),
+            holding_project,
+            incomplete: self::present(incomplete),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ListWorkspacesResponse> for types::ListWorkspacesResponse {
+    fn from(message: wire::ListWorkspacesResponse) -> Self {
+        let wire::ListWorkspacesResponse {
+            workspaces,
+            next_page_token,
+            total,
+            holding_project,
+            incomplete,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspaces: workspaces.into_iter().map(types::Workspace::from).collect(),
+            next_page_token: next_page_token.unwrap_or_default(),
+            total: total.unwrap_or_default(),
+            holding_project,
+            incomplete: incomplete.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::Workspace> for wire::Workspace {
+    fn from(message: types::Workspace) -> Self {
+        let types::Workspace {
+            workspace_id,
+            name,
+            status,
+            location,
+            plan,
+            cpu_total_cores,
+            memory_total_bytes,
+            memory_free_bytes,
+            disk_total_bytes,
+            disk_free_bytes,
+            project_count,
+            hostname,
+            apps_domain,
+            end_time,
+            role,
+        } = message;
+
+        Self {
+            workspace_id: self::present(workspace_id),
+            name: self::present(name),
+            status: self::present(status).map(workspace_status_to_wire),
+            location: self::present(location),
+            plan: self::present(plan),
+            cpu_total_cores: self::present(cpu_total_cores),
+            memory_total_bytes: self::present(memory_total_bytes),
+            memory_free_bytes,
+            disk_total_bytes: self::present(disk_total_bytes),
+            disk_free_bytes,
+            project_count,
+            hostname: self::present(hostname),
+            apps_domain: self::present(apps_domain),
+            end_time: end_time.map(crate::timestamp::to_wire).into(),
+            role: self::present(role).map(workspace_role_to_wire),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::Workspace> for types::Workspace {
+    fn from(message: wire::Workspace) -> Self {
+        let wire::Workspace {
+            workspace_id,
+            name,
+            status,
+            location,
+            plan,
+            cpu_total_cores,
+            memory_total_bytes,
+            memory_free_bytes,
+            disk_total_bytes,
+            disk_free_bytes,
+            project_count,
+            hostname,
+            apps_domain,
+            end_time,
+            role,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspace_id: workspace_id.unwrap_or_default(),
+            name: name.unwrap_or_default(),
+            status: status.map(workspace_status_from_wire).unwrap_or_default(),
+            location: location.unwrap_or_default(),
+            plan: plan.unwrap_or_default(),
+            cpu_total_cores: cpu_total_cores.unwrap_or_default(),
+            memory_total_bytes: memory_total_bytes.unwrap_or_default(),
+            memory_free_bytes,
+            disk_total_bytes: disk_total_bytes.unwrap_or_default(),
+            disk_free_bytes,
+            project_count,
+            hostname: hostname.unwrap_or_default(),
+            apps_domain: apps_domain.unwrap_or_default(),
+            end_time: end_time.into_option().map(crate::timestamp::from_wire),
+            role: role.map(workspace_role_from_wire).unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::GetMachineRequest> for wire::GetMachineRequest {
+    fn from(message: types::GetMachineRequest) -> Self {
+        let types::GetMachineRequest { workspace } = message;
+
+        Self {
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -818,10 +1014,13 @@ impl From<types::GetMachineRequest> for wire::GetMachineRequest {
 impl From<wire::GetMachineRequest> for types::GetMachineRequest {
     fn from(message: wire::GetMachineRequest) -> Self {
         let wire::GetMachineRequest {
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
-        Self {}
+        Self {
+            workspace: workspace.unwrap_or_default(),
+        }
     }
 }
 
@@ -832,6 +1031,7 @@ impl From<types::GetMachineResponse> for wire::GetMachineResponse {
             projects,
             deleted_projects,
             github,
+            workspace,
         } = message;
 
         Self {
@@ -839,6 +1039,7 @@ impl From<types::GetMachineResponse> for wire::GetMachineResponse {
             projects: projects.into_iter().map(wire::ProjectSummary::from).collect(),
             deleted_projects: deleted_projects.into_iter().map(wire::DeletedProject::from).collect(),
             github: github.map(wire::GithubConnection::from).into(),
+            workspace: workspace.map(wire::Workspace::from).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -851,6 +1052,7 @@ impl From<wire::GetMachineResponse> for types::GetMachineResponse {
             projects,
             deleted_projects,
             github,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -859,6 +1061,7 @@ impl From<wire::GetMachineResponse> for types::GetMachineResponse {
             projects: projects.into_iter().map(types::ProjectSummary::from).collect(),
             deleted_projects: deleted_projects.into_iter().map(types::DeletedProject::from).collect(),
             github: github.into_option().map(types::GithubConnection::from),
+            workspace: workspace.into_option().map(types::Workspace::from),
         }
     }
 }
@@ -1262,12 +1465,14 @@ impl From<types::DeletedProject> for wire::DeletedProject {
             project_id,
             newest_snapshot,
             snapshot_count,
+            moved_to,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             newest_snapshot: newest_snapshot.map(wire::Snapshot::from).into(),
             snapshot_count: self::present(snapshot_count),
+            moved_to: moved_to.map(wire::MovedTo::from).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1279,6 +1484,7 @@ impl From<wire::DeletedProject> for types::DeletedProject {
             project_id,
             newest_snapshot,
             snapshot_count,
+            moved_to,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1286,13 +1492,48 @@ impl From<wire::DeletedProject> for types::DeletedProject {
             project_id: project_id.unwrap_or_default(),
             newest_snapshot: newest_snapshot.into_option().map(types::Snapshot::from),
             snapshot_count: snapshot_count.unwrap_or_default(),
+            moved_to: moved_to.into_option().map(types::MovedTo::from),
+        }
+    }
+}
+
+impl From<types::MovedTo> for wire::MovedTo {
+    fn from(message: types::MovedTo) -> Self {
+        let types::MovedTo {
+            workspace_id,
+            workspace_name,
+            move_time,
+        } = message;
+
+        Self {
+            workspace_id: self::present(workspace_id),
+            workspace_name: self::present(workspace_name),
+            move_time: move_time.map(crate::timestamp::to_wire).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::MovedTo> for types::MovedTo {
+    fn from(message: wire::MovedTo) -> Self {
+        let wire::MovedTo {
+            workspace_id,
+            workspace_name,
+            move_time,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspace_id: workspace_id.unwrap_or_default(),
+            workspace_name: workspace_name.unwrap_or_default(),
+            move_time: move_time.into_option().map(crate::timestamp::from_wire),
         }
     }
 }
 
 impl From<types::RunMachineActionRequest> for wire::RunMachineActionRequest {
     fn from(message: types::RunMachineActionRequest) -> Self {
-        let types::RunMachineActionRequest { action } = message;
+        let types::RunMachineActionRequest { action, workspace } = message;
 
         Self {
             action: match action {
@@ -1317,6 +1558,7 @@ impl From<types::RunMachineActionRequest> for wire::RunMachineActionRequest {
                 ),
                 None => None,
             },
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1326,6 +1568,7 @@ impl From<wire::RunMachineActionRequest> for types::RunMachineActionRequest {
     fn from(message: wire::RunMachineActionRequest) -> Self {
         let wire::RunMachineActionRequest {
             action,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1348,6 +1591,7 @@ impl From<wire::RunMachineActionRequest> for types::RunMachineActionRequest {
                 }
                 None => None,
             },
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -1465,6 +1709,7 @@ impl From<types::ProjectSummary> for wire::ProjectSummary {
             pinned,
             disk_used_bytes,
             database,
+            uid,
         } = message;
 
         Self {
@@ -1482,6 +1727,7 @@ impl From<types::ProjectSummary> for wire::ProjectSummary {
             pinned: self::present(pinned),
             disk_used_bytes: self::present(disk_used_bytes),
             database: database.map(wire::DatabaseSummary::from).into(),
+            uid: self::present(uid),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1504,6 +1750,7 @@ impl From<wire::ProjectSummary> for types::ProjectSummary {
             pinned,
             disk_used_bytes,
             database,
+            uid,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1522,6 +1769,7 @@ impl From<wire::ProjectSummary> for types::ProjectSummary {
             pinned: pinned.unwrap_or_default(),
             disk_used_bytes: disk_used_bytes.unwrap_or_default(),
             database: database.into_option().map(types::DatabaseSummary::from),
+            uid: uid.unwrap_or_default(),
         }
     }
 }
@@ -1609,6 +1857,7 @@ impl From<types::GetProjectRequest> for wire::GetProjectRequest {
             incidents_before,
             uptime_day_count,
             incidents_before_id,
+            workspace,
         } = message;
 
         Self {
@@ -1619,6 +1868,7 @@ impl From<types::GetProjectRequest> for wire::GetProjectRequest {
             incidents_before: incidents_before.map(crate::timestamp::to_wire).into(),
             uptime_day_count: self::present(uptime_day_count),
             incidents_before_id: self::present(incidents_before_id),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1634,6 +1884,7 @@ impl From<wire::GetProjectRequest> for types::GetProjectRequest {
             incidents_before,
             uptime_day_count,
             incidents_before_id,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1645,6 +1896,7 @@ impl From<wire::GetProjectRequest> for types::GetProjectRequest {
             incidents_before: incidents_before.into_option().map(crate::timestamp::from_wire),
             uptime_day_count: uptime_day_count.unwrap_or_default(),
             incidents_before_id: incidents_before_id.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -1704,6 +1956,9 @@ impl From<types::Project> for wire::Project {
             uptime_days,
             database,
             linked_databases,
+            workspace_id,
+            uid,
+            dependencies,
         } = message;
 
         Self {
@@ -1735,6 +1990,9 @@ impl From<types::Project> for wire::Project {
             uptime_days: uptime_days.into_iter().map(wire::UptimeDay::from).collect(),
             database: database.map(wire::Database::from).into(),
             linked_databases,
+            workspace_id: self::present(workspace_id),
+            uid: self::present(uid),
+            dependencies: dependencies.into_iter().map(wire::ProjectDependency::from).collect(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -1771,6 +2029,9 @@ impl From<wire::Project> for types::Project {
             uptime_days,
             database,
             linked_databases,
+            workspace_id,
+            uid,
+            dependencies,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -1805,6 +2066,43 @@ impl From<wire::Project> for types::Project {
             uptime_days: uptime_days.into_iter().map(types::UptimeDay::from).collect(),
             database: database.into_option().map(types::Database::from),
             linked_databases,
+            workspace_id: workspace_id.unwrap_or_default(),
+            uid: uid.unwrap_or_default(),
+            dependencies: dependencies.into_iter().map(types::ProjectDependency::from).collect(),
+        }
+    }
+}
+
+impl From<types::ProjectDependency> for wire::ProjectDependency {
+    fn from(message: types::ProjectDependency) -> Self {
+        let types::ProjectDependency {
+            database_project_id,
+            copy_database,
+            env_prefix,
+        } = message;
+
+        Self {
+            database_project_id: self::present(database_project_id),
+            copy_database: self::present(copy_database),
+            env_prefix: self::present(env_prefix),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ProjectDependency> for types::ProjectDependency {
+    fn from(message: wire::ProjectDependency) -> Self {
+        let wire::ProjectDependency {
+            database_project_id,
+            copy_database,
+            env_prefix,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            database_project_id: database_project_id.unwrap_or_default(),
+            copy_database: copy_database.unwrap_or_default(),
+            env_prefix: env_prefix.unwrap_or_default(),
         }
     }
 }
@@ -2616,6 +2914,7 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
             operation_id,
             wait_seconds,
             link_databases,
+            workspace,
         } = message;
 
         Self {
@@ -2631,6 +2930,7 @@ impl From<types::CreateProjectRequest> for wire::CreateProjectRequest {
                 .into_iter()
                 .map(wire::DatabaseLinkRequest::from)
                 .collect(),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2648,6 +2948,7 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
             operation_id,
             wait_seconds,
             link_databases,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2664,6 +2965,7 @@ impl From<wire::CreateProjectRequest> for types::CreateProjectRequest {
                 .into_iter()
                 .map(types::DatabaseLinkRequest::from)
                 .collect(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -2756,6 +3058,7 @@ impl From<types::DeployProjectRequest> for wire::DeployProjectRequest {
             operation_id,
             version,
             wait_seconds,
+            workspace,
         } = message;
 
         Self {
@@ -2782,6 +3085,7 @@ impl From<types::DeployProjectRequest> for wire::DeployProjectRequest {
                 None => None,
             },
             wait_seconds,
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -2799,6 +3103,7 @@ impl From<wire::DeployProjectRequest> for types::DeployProjectRequest {
             operation_id,
             version,
             wait_seconds,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -2826,6 +3131,7 @@ impl From<wire::DeployProjectRequest> for types::DeployProjectRequest {
                 None => None,
             },
             wait_seconds,
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -3056,16 +3362,136 @@ impl From<wire::SpecViolation> for types::SpecViolation {
     }
 }
 
+impl From<types::MoveProjectRequest> for wire::MoveProjectRequest {
+    fn from(message: types::MoveProjectRequest) -> Self {
+        let types::MoveProjectRequest {
+            project_id,
+            to_workspace,
+            operation_id,
+            wait_seconds,
+            switch_databases,
+            workspace,
+        } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            to_workspace: self::present(to_workspace),
+            operation_id: self::present(operation_id),
+            wait_seconds,
+            switch_databases: switch_databases.into_iter().map(wire::DatabaseSwitch::from).collect(),
+            workspace: self::present(workspace),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::MoveProjectRequest> for types::MoveProjectRequest {
+    fn from(message: wire::MoveProjectRequest) -> Self {
+        let wire::MoveProjectRequest {
+            project_id,
+            to_workspace,
+            operation_id,
+            wait_seconds,
+            switch_databases,
+            workspace,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            to_workspace: to_workspace.unwrap_or_default(),
+            operation_id: operation_id.unwrap_or_default(),
+            wait_seconds,
+            switch_databases: switch_databases.into_iter().map(types::DatabaseSwitch::from).collect(),
+            workspace: workspace.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::DatabaseSwitch> for wire::DatabaseSwitch {
+    fn from(message: types::DatabaseSwitch) -> Self {
+        let types::DatabaseSwitch {
+            database_project_id,
+            into_database_project_id,
+            empty,
+            env_prefix,
+        } = message;
+
+        Self {
+            database_project_id: self::present(database_project_id),
+            into_database_project_id: self::present(into_database_project_id),
+            empty: self::present(empty),
+            env_prefix: self::present(env_prefix),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::DatabaseSwitch> for types::DatabaseSwitch {
+    fn from(message: wire::DatabaseSwitch) -> Self {
+        let wire::DatabaseSwitch {
+            database_project_id,
+            into_database_project_id,
+            empty,
+            env_prefix,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            database_project_id: database_project_id.unwrap_or_default(),
+            into_database_project_id: into_database_project_id.unwrap_or_default(),
+            empty: empty.unwrap_or_default(),
+            env_prefix: env_prefix.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::MoveProjectResponse> for wire::MoveProjectResponse {
+    fn from(message: types::MoveProjectResponse) -> Self {
+        let types::MoveProjectResponse {
+            operation,
+            project,
+            move_message,
+        } = message;
+
+        Self {
+            operation: operation.map(wire::Operation::from).into(),
+            project: project.map(wire::Project::from).into(),
+            move_message: self::present(move_message),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::MoveProjectResponse> for types::MoveProjectResponse {
+    fn from(message: wire::MoveProjectResponse) -> Self {
+        let wire::MoveProjectResponse {
+            operation,
+            project,
+            move_message,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            operation: operation.into_option().map(types::Operation::from),
+            project: project.into_option().map(types::Project::from),
+            move_message: move_message.unwrap_or_default(),
+        }
+    }
+}
+
 impl From<types::ListCommitsRequest> for wire::ListCommitsRequest {
     fn from(message: types::ListCommitsRequest) -> Self {
         let types::ListCommitsRequest {
             project_id,
             before_commit,
+            workspace,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             before_commit: self::present(before_commit),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3076,12 +3502,14 @@ impl From<wire::ListCommitsRequest> for types::ListCommitsRequest {
         let wire::ListCommitsRequest {
             project_id,
             before_commit,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             project_id: project_id.unwrap_or_default(),
             before_commit: before_commit.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -3166,6 +3594,7 @@ impl From<types::RunProjectActionRequest> for wire::RunProjectActionRequest {
             action,
             operation_id,
             wait_seconds,
+            workspace,
         } = message;
 
         Self {
@@ -3228,6 +3657,7 @@ impl From<types::RunProjectActionRequest> for wire::RunProjectActionRequest {
             },
             operation_id: self::present(operation_id),
             wait_seconds,
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3240,6 +3670,7 @@ impl From<wire::RunProjectActionRequest> for types::RunProjectActionRequest {
             action,
             operation_id,
             wait_seconds,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3283,6 +3714,7 @@ impl From<wire::RunProjectActionRequest> for types::RunProjectActionRequest {
             },
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -3742,12 +4174,14 @@ impl From<types::LinkDatabaseRequest> for wire::LinkDatabaseRequest {
             database_project_id,
             link,
             unlink,
+            workspace,
         } = message;
 
         Self {
             database_project_id: self::present(database_project_id),
             link,
             unlink,
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3759,6 +4193,7 @@ impl From<wire::LinkDatabaseRequest> for types::LinkDatabaseRequest {
             database_project_id,
             link,
             unlink,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3766,6 +4201,7 @@ impl From<wire::LinkDatabaseRequest> for types::LinkDatabaseRequest {
             database_project_id: database_project_id.unwrap_or_default(),
             link,
             unlink,
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -3805,6 +4241,7 @@ impl From<types::CreateDatabaseRequest> for wire::CreateDatabaseRequest {
             operation_id,
             wait_seconds,
             metadata,
+            workspace,
         } = message;
 
         Self {
@@ -3816,6 +4253,7 @@ impl From<types::CreateDatabaseRequest> for wire::CreateDatabaseRequest {
             operation_id: self::present(operation_id),
             wait_seconds,
             metadata: metadata.map(wire::ProjectMetadata::from).into(),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3832,6 +4270,7 @@ impl From<wire::CreateDatabaseRequest> for types::CreateDatabaseRequest {
             operation_id,
             wait_seconds,
             metadata,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3844,6 +4283,7 @@ impl From<wire::CreateDatabaseRequest> for types::CreateDatabaseRequest {
             operation_id: operation_id.unwrap_or_default(),
             wait_seconds,
             metadata: metadata.into_option().map(types::ProjectMetadata::from),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -3900,6 +4340,7 @@ impl From<types::SetProjectAlertsRequest> for wire::SetProjectAlertsRequest {
             remove_traffic_rules,
             off,
             mute_minutes,
+            workspace,
         } = message;
 
         Self {
@@ -3910,6 +4351,7 @@ impl From<types::SetProjectAlertsRequest> for wire::SetProjectAlertsRequest {
             remove_traffic_rules: self::present(remove_traffic_rules),
             off,
             mute_minutes,
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3925,6 +4367,7 @@ impl From<wire::SetProjectAlertsRequest> for types::SetProjectAlertsRequest {
             remove_traffic_rules,
             off,
             mute_minutes,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3936,6 +4379,7 @@ impl From<wire::SetProjectAlertsRequest> for types::SetProjectAlertsRequest {
             remove_traffic_rules: remove_traffic_rules.unwrap_or_default(),
             off,
             mute_minutes,
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -4394,6 +4838,7 @@ impl From<types::GetOperationRequest> for wire::GetOperationRequest {
             wait_seconds,
             after_log_line,
             log_line_limit,
+            workspace,
         } = message;
 
         Self {
@@ -4402,6 +4847,7 @@ impl From<types::GetOperationRequest> for wire::GetOperationRequest {
             wait_seconds,
             after_log_line,
             log_line_limit,
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -4415,6 +4861,7 @@ impl From<wire::GetOperationRequest> for types::GetOperationRequest {
             wait_seconds,
             after_log_line,
             log_line_limit,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -4424,6 +4871,7 @@ impl From<wire::GetOperationRequest> for types::GetOperationRequest {
             wait_seconds,
             after_log_line,
             log_line_limit,
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -4436,6 +4884,7 @@ impl From<types::GetOperationResponse> for wire::GetOperationResponse {
             log,
             log_line_count,
             next_after_log_line,
+            move_message,
         } = message;
 
         Self {
@@ -4444,6 +4893,7 @@ impl From<types::GetOperationResponse> for wire::GetOperationResponse {
             log: log.into_iter().map(wire::OperationLogLine::from).collect(),
             log_line_count: self::present(log_line_count),
             next_after_log_line: self::present(next_after_log_line),
+            move_message: self::present(move_message),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -4457,6 +4907,7 @@ impl From<wire::GetOperationResponse> for types::GetOperationResponse {
             log,
             log_line_count,
             next_after_log_line,
+            move_message,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -4466,6 +4917,7 @@ impl From<wire::GetOperationResponse> for types::GetOperationResponse {
             log: log.into_iter().map(types::OperationLogLine::from).collect(),
             log_line_count: log_line_count.unwrap_or_default(),
             next_after_log_line: next_after_log_line.unwrap_or_default(),
+            move_message: move_message.unwrap_or_default(),
         }
     }
 }
@@ -4550,6 +5002,7 @@ impl From<types::QueryHttpTrafficRequest> for wire::QueryHttpTrafficRequest {
             bucket_width_seconds,
             request_limit,
             page_token,
+            workspace,
         } = message;
 
         Self {
@@ -4561,6 +5014,7 @@ impl From<types::QueryHttpTrafficRequest> for wire::QueryHttpTrafficRequest {
             bucket_width_seconds: self::present(bucket_width_seconds),
             request_limit: self::present(request_limit),
             page_token: self::present(page_token),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -4577,6 +5031,7 @@ impl From<wire::QueryHttpTrafficRequest> for types::QueryHttpTrafficRequest {
             bucket_width_seconds,
             request_limit,
             page_token,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -4589,6 +5044,7 @@ impl From<wire::QueryHttpTrafficRequest> for types::QueryHttpTrafficRequest {
             bucket_width_seconds: bucket_width_seconds.unwrap_or_default(),
             request_limit: request_limit.unwrap_or_default(),
             page_token: page_token.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -4843,6 +5299,7 @@ impl From<types::QueryContainerLogsRequest> for wire::QueryContainerLogsRequest 
             limit,
             from_start,
             page_token,
+            workspace,
         } = message;
 
         Self {
@@ -4854,6 +5311,7 @@ impl From<types::QueryContainerLogsRequest> for wire::QueryContainerLogsRequest 
             limit: self::present(limit),
             from_start: self::present(from_start),
             page_token: self::present(page_token),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -4870,6 +5328,7 @@ impl From<wire::QueryContainerLogsRequest> for types::QueryContainerLogsRequest 
             limit,
             from_start,
             page_token,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -4882,6 +5341,7 @@ impl From<wire::QueryContainerLogsRequest> for types::QueryContainerLogsRequest 
             limit: limit.unwrap_or_default(),
             from_start: from_start.unwrap_or_default(),
             page_token: page_token.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -4980,6 +5440,7 @@ impl From<types::RunServiceCommandRequest> for wire::RunServiceCommandRequest {
             run_as_user,
             working_directory,
             timeout_seconds,
+            workspace,
         } = message;
 
         Self {
@@ -4990,6 +5451,7 @@ impl From<types::RunServiceCommandRequest> for wire::RunServiceCommandRequest {
             run_as_user: self::present(run_as_user),
             working_directory: self::present(working_directory),
             timeout_seconds: self::present(timeout_seconds),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5005,6 +5467,7 @@ impl From<wire::RunServiceCommandRequest> for types::RunServiceCommandRequest {
             run_as_user,
             working_directory,
             timeout_seconds,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5016,6 +5479,7 @@ impl From<wire::RunServiceCommandRequest> for types::RunServiceCommandRequest {
             run_as_user: run_as_user.unwrap_or_default(),
             working_directory: working_directory.unwrap_or_default(),
             timeout_seconds: timeout_seconds.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -5126,6 +5590,7 @@ impl From<types::ReadPathRequest> for wire::ReadPathRequest {
             offset_bytes,
             length_bytes,
             entry_page_token,
+            workspace,
         } = message;
 
         Self {
@@ -5144,6 +5609,7 @@ impl From<types::ReadPathRequest> for wire::ReadPathRequest {
             offset_bytes: self::present(offset_bytes),
             length_bytes: self::present(length_bytes),
             entry_page_token: self::present(entry_page_token),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5159,6 +5625,7 @@ impl From<wire::ReadPathRequest> for types::ReadPathRequest {
             offset_bytes,
             length_bytes,
             entry_page_token,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5178,6 +5645,7 @@ impl From<wire::ReadPathRequest> for types::ReadPathRequest {
             offset_bytes: offset_bytes.unwrap_or_default(),
             length_bytes: length_bytes.unwrap_or_default(),
             entry_page_token: entry_page_token.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -5246,7 +5714,7 @@ impl From<wire::ReadPathResponse> for types::ReadPathResponse {
 
 impl From<types::CreateTransferRequest> for wire::CreateTransferRequest {
     fn from(message: types::CreateTransferRequest) -> Self {
-        let types::CreateTransferRequest { transfer } = message;
+        let types::CreateTransferRequest { transfer, workspace } = message;
 
         Self {
             transfer: match transfer {
@@ -5272,6 +5740,7 @@ impl From<types::CreateTransferRequest> for wire::CreateTransferRequest {
                 ),
                 None => None,
             },
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5281,6 +5750,7 @@ impl From<wire::CreateTransferRequest> for types::CreateTransferRequest {
     fn from(message: wire::CreateTransferRequest) -> Self {
         let wire::CreateTransferRequest {
             transfer,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5300,6 +5770,7 @@ impl From<wire::CreateTransferRequest> for types::CreateTransferRequest {
                 ),
                 None => None,
             },
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -5657,11 +6128,16 @@ impl From<wire::DatabaseSizeRefusal> for types::DatabaseSizeRefusal {
 
 impl From<types::NoMachine> for wire::NoMachine {
     fn from(message: types::NoMachine) -> Self {
-        let types::NoMachine { reason, url } = message;
+        let types::NoMachine {
+            reason,
+            url,
+            workspace_id,
+        } = message;
 
         Self {
             reason: self::present(reason).map(no_machine_reason_to_wire),
             url: self::present(url),
+            workspace_id: self::present(workspace_id),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5672,12 +6148,117 @@ impl From<wire::NoMachine> for types::NoMachine {
         let wire::NoMachine {
             reason,
             url,
+            workspace_id,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             reason: reason.map(no_machine_reason_from_wire).unwrap_or_default(),
             url: url.unwrap_or_default(),
+            workspace_id: workspace_id.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::WorkspaceChoice> for wire::WorkspaceChoice {
+    fn from(message: types::WorkspaceChoice) -> Self {
+        let types::WorkspaceChoice {
+            workspaces,
+            total,
+            holding_project,
+            incomplete,
+        } = message;
+
+        Self {
+            workspaces: workspaces.into_iter().map(wire::Workspace::from).collect(),
+            total: self::present(total),
+            holding_project,
+            incomplete: self::present(incomplete),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::WorkspaceChoice> for types::WorkspaceChoice {
+    fn from(message: wire::WorkspaceChoice) -> Self {
+        let wire::WorkspaceChoice {
+            workspaces,
+            total,
+            holding_project,
+            incomplete,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspaces: workspaces.into_iter().map(types::Workspace::from).collect(),
+            total: total.unwrap_or_default(),
+            holding_project,
+            incomplete: incomplete.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::WorkspaceNotGranted> for wire::WorkspaceNotGranted {
+    fn from(message: types::WorkspaceNotGranted) -> Self {
+        let types::WorkspaceNotGranted { workspace_id, url } = message;
+
+        Self {
+            workspace_id: self::present(workspace_id),
+            url: self::present(url),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::WorkspaceNotGranted> for types::WorkspaceNotGranted {
+    fn from(message: wire::WorkspaceNotGranted) -> Self {
+        let wire::WorkspaceNotGranted {
+            workspace_id,
+            url,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspace_id: workspace_id.unwrap_or_default(),
+            url: url.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::ProjectMoved> for wire::ProjectMoved {
+    fn from(message: types::ProjectMoved) -> Self {
+        let types::ProjectMoved {
+            project_id,
+            workspace_id,
+            workspace_name,
+            move_time,
+        } = message;
+
+        Self {
+            project_id: self::present(project_id),
+            workspace_id: self::present(workspace_id),
+            workspace_name: self::present(workspace_name),
+            move_time: move_time.map(crate::timestamp::to_wire).into(),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ProjectMoved> for types::ProjectMoved {
+    fn from(message: wire::ProjectMoved) -> Self {
+        let wire::ProjectMoved {
+            project_id,
+            workspace_id,
+            workspace_name,
+            move_time,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            project_id: project_id.unwrap_or_default(),
+            workspace_id: workspace_id.unwrap_or_default(),
+            workspace_name: workspace_name.unwrap_or_default(),
+            move_time: move_time.into_option().map(crate::timestamp::from_wire),
         }
     }
 }
@@ -5687,11 +6268,13 @@ impl From<types::WatchOperationRequest> for wire::WatchOperationRequest {
         let types::WatchOperationRequest {
             project_id,
             operation_id,
+            workspace,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             operation_id: self::present(operation_id),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5702,19 +6285,21 @@ impl From<wire::WatchOperationRequest> for types::WatchOperationRequest {
         let wire::WatchOperationRequest {
             project_id,
             operation_id,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             project_id: project_id.unwrap_or_default(),
             operation_id: operation_id.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
 
 impl From<types::WatchOperationResponse> for wire::WatchOperationResponse {
     fn from(message: types::WatchOperationResponse) -> Self {
-        let types::WatchOperationResponse { message } = message;
+        let types::WatchOperationResponse { message, move_message } = message;
 
         Self {
             message: match message {
@@ -5730,6 +6315,7 @@ impl From<types::WatchOperationResponse> for wire::WatchOperationResponse {
                 ),
                 None | Some(types::WatchOperationResponseMessage::Unrecognized) => None,
             },
+            move_message: self::present(move_message),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5739,6 +6325,7 @@ impl From<wire::WatchOperationResponse> for types::WatchOperationResponse {
     fn from(message: wire::WatchOperationResponse) -> Self {
         let wire::WatchOperationResponse {
             message,
+            move_message,
             __buffa_unknown_fields,
         } = message;
 
@@ -5754,6 +6341,7 @@ impl From<wire::WatchOperationResponse> for types::WatchOperationResponse {
                 None if !__buffa_unknown_fields.is_empty() => Some(types::WatchOperationResponseMessage::Unrecognized),
                 None => None,
             },
+            move_message: move_message.unwrap_or_default(),
         }
     }
 }
@@ -5764,12 +6352,14 @@ impl From<types::TailContainerLogsRequest> for wire::TailContainerLogsRequest {
             project_id,
             filter,
             after_cursor,
+            workspace,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             filter: filter.map(wire::ContainerLogFilter::from).into(),
             after_cursor: self::present(after_cursor),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5781,6 +6371,7 @@ impl From<wire::TailContainerLogsRequest> for types::TailContainerLogsRequest {
             project_id,
             filter,
             after_cursor,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5788,6 +6379,7 @@ impl From<wire::TailContainerLogsRequest> for types::TailContainerLogsRequest {
             project_id: project_id.unwrap_or_default(),
             filter: filter.into_option().map(types::ContainerLogFilter::from),
             after_cursor: after_cursor.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }
@@ -5825,12 +6417,14 @@ impl From<types::TailHttpTrafficRequest> for wire::TailHttpTrafficRequest {
             project_id,
             filter,
             after_sequence,
+            workspace,
         } = message;
 
         Self {
             project_id: self::present(project_id),
             filter: filter.map(wire::HttpTrafficFilter::from).into(),
             after_sequence: self::present(after_sequence),
+            workspace: self::present(workspace),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -5842,6 +6436,7 @@ impl From<wire::TailHttpTrafficRequest> for types::TailHttpTrafficRequest {
             project_id,
             filter,
             after_sequence,
+            workspace,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -5849,6 +6444,7 @@ impl From<wire::TailHttpTrafficRequest> for types::TailHttpTrafficRequest {
             project_id: project_id.unwrap_or_default(),
             filter: filter.into_option().map(types::HttpTrafficFilter::from),
             after_sequence: after_sequence.unwrap_or_default(),
+            workspace: workspace.unwrap_or_default(),
         }
     }
 }

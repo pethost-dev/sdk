@@ -32,6 +32,9 @@ pub mod __buffa {
     }
     /// Register this package's `Any` type entries and extension entries.
     pub fn register_types(reg: &mut ::buffa::type_registry::TypeRegistry) {
+        reg.register_json_any(super::__LIST_WORKSPACES_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__LIST_WORKSPACES_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__WORKSPACE_JSON_ANY);
         reg.register_json_any(super::__GET_MACHINE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GET_MACHINE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MACHINE_JSON_ANY);
@@ -42,6 +45,7 @@ pub mod __buffa {
         reg.register_json_any(super::__GITHUB_CONNECTION_JSON_ANY);
         reg.register_json_any(super::__GITHUB_REPOSITORY_JSON_ANY);
         reg.register_json_any(super::__DELETED_PROJECT_JSON_ANY);
+        reg.register_json_any(super::__MOVED_TO_JSON_ANY);
         reg.register_json_any(super::__RUN_MACHINE_ACTION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__RESTART_MACHINE_ACTION_JSON_ANY);
         reg.register_json_any(super::__RUN_MACHINE_ACTION_RESPONSE_JSON_ANY);
@@ -52,6 +56,7 @@ pub mod __buffa {
         reg.register_json_any(super::__GET_PROJECT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GET_PROJECT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__PROJECT_JSON_ANY);
+        reg.register_json_any(super::__PROJECT_DEPENDENCY_JSON_ANY);
         reg.register_json_any(super::__RUNNING_SERVICES_ACTION_JSON_ANY);
         reg.register_json_any(super::__PROJECT_SOURCE_JSON_ANY);
         reg.register_json_any(super::__GITHUB_SOURCE_JSON_ANY);
@@ -77,6 +82,13 @@ pub mod __buffa {
         reg.register_json_any(super::__FILE_CHANGE_JSON_ANY);
         reg.register_json_any(super::__DEPLOY_PROJECT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SPEC_VIOLATION_JSON_ANY);
+        reg.register_json_any(super::__MOVE_PROJECT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__DATABASE_SWITCH_JSON_ANY);
+        reg.register_json_any(super::__MOVE_PROJECT_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GET_MOVE_CHOICES_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_MOVE_CHOICES_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__MOVE_CHOICE_JSON_ANY);
+        reg.register_json_any(super::__MOVE_TARGET_JSON_ANY);
         reg.register_json_any(super::__LIST_COMMITS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_COMMITS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__BRANCH_COMMIT_JSON_ANY);
@@ -157,6 +169,9 @@ pub mod __buffa {
         reg.register_json_any(super::__DATABASE_LINK_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__DATABASE_SIZE_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
+        reg.register_json_any(super::__WORKSPACE_CHOICE_JSON_ANY);
+        reg.register_json_any(super::__WORKSPACE_NOT_GRANTED_JSON_ANY);
+        reg.register_json_any(super::__PROJECT_MOVED_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__WATCH_OPERATION_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__TAIL_CONTAINER_LOGS_REQUEST_JSON_ANY);
@@ -170,6 +185,18 @@ pub mod __buffa {
         reg.register_json_any(super::__OPEN_DATABASE_CLIENT_RESPONSE_JSON_ANY);
     }
 }
+#[doc(inline)]
+pub use self::__buffa::view::ListWorkspacesRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::ListWorkspacesRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ListWorkspacesResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::ListWorkspacesResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::GetMachineRequestView;
 #[doc(inline)]
@@ -211,6 +238,10 @@ pub use self::__buffa::view::DeletedProjectView;
 #[doc(inline)]
 pub use self::__buffa::view::DeletedProjectOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::MovedToView;
+#[doc(inline)]
+pub use self::__buffa::view::MovedToOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::RunMachineActionRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::RunMachineActionRequestOwnedView;
@@ -250,6 +281,10 @@ pub use self::__buffa::view::GetProjectResponseOwnedView;
 pub use self::__buffa::view::ProjectView;
 #[doc(inline)]
 pub use self::__buffa::view::ProjectOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectDependencyView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectDependencyOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::RunningServicesActionView;
 #[doc(inline)]
@@ -350,6 +385,34 @@ pub use self::__buffa::view::DeployProjectResponseOwnedView;
 pub use self::__buffa::view::SpecViolationView;
 #[doc(inline)]
 pub use self::__buffa::view::SpecViolationOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveProjectRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveProjectRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSwitchView;
+#[doc(inline)]
+pub use self::__buffa::view::DatabaseSwitchOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveProjectResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveProjectResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetMoveChoicesRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetMoveChoicesRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetMoveChoicesResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetMoveChoicesResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveChoiceView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveChoiceOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveTargetView;
+#[doc(inline)]
+pub use self::__buffa::view::MoveTargetOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::ListCommitsRequestView;
 #[doc(inline)]
@@ -670,6 +733,18 @@ pub use self::__buffa::view::DatabaseSizeRefusalOwnedView;
 pub use self::__buffa::view::NoMachineView;
 #[doc(inline)]
 pub use self::__buffa::view::NoMachineOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceChoiceView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceChoiceOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceNotGrantedView;
+#[doc(inline)]
+pub use self::__buffa::view::WorkspaceNotGrantedOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectMovedView;
+#[doc(inline)]
+pub use self::__buffa::view::ProjectMovedOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::WatchOperationRequestView;
 #[doc(inline)]

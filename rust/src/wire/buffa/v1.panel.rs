@@ -4,6 +4,301 @@
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(i32)]
+pub enum WorkspaceStatus {
+    WORKSPACE_STATUS_UNSPECIFIED = 0i32,
+    /// Its machine answers calls.
+    WORKSPACE_STATUS_READY = 1i32,
+    /// Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+    /// that names it is FAILED_PRECONDITION + NoMachine until then.
+    WORKSPACE_STATUS_BEING_PREPARED = 2i32,
+}
+impl WorkspaceStatus {
+    ///Idiomatic alias for [`Self::WORKSPACE_STATUS_UNSPECIFIED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Unspecified: Self = Self::WORKSPACE_STATUS_UNSPECIFIED;
+    ///Idiomatic alias for [`Self::WORKSPACE_STATUS_READY`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Ready: Self = Self::WORKSPACE_STATUS_READY;
+    ///Idiomatic alias for [`Self::WORKSPACE_STATUS_BEING_PREPARED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const BeingPrepared: Self = Self::WORKSPACE_STATUS_BEING_PREPARED;
+}
+impl ::core::default::Default for WorkspaceStatus {
+    fn default() -> Self {
+        Self::WORKSPACE_STATUS_UNSPECIFIED
+    }
+}
+impl ::serde::Serialize for WorkspaceStatus {
+    fn serialize<S: ::serde::Serializer>(
+        &self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        s.serialize_str(::buffa::Enumeration::proto_name(self))
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for WorkspaceStatus {
+    fn deserialize<D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        struct _V;
+        impl ::serde::de::Visitor<'_> for _V {
+            type Value = WorkspaceStatus;
+            fn expecting(
+                &self,
+                f: &mut ::core::fmt::Formatter<'_>,
+            ) -> ::core::fmt::Result {
+                f.write_str(
+                    concat!(
+                        "a string, integer, or null for ", stringify!(WorkspaceStatus)
+                    ),
+                )
+            }
+            fn visit_str<E: ::serde::de::Error>(
+                self,
+                v: &str,
+            ) -> ::core::result::Result<WorkspaceStatus, E> {
+                <WorkspaceStatus as ::buffa::Enumeration>::from_proto_name(v)
+                    .ok_or_else(|| { ::serde::de::Error::unknown_variant(v, &[]) })
+            }
+            fn visit_i64<E: ::serde::de::Error>(
+                self,
+                v: i64,
+            ) -> ::core::result::Result<WorkspaceStatus, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <WorkspaceStatus as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_u64<E: ::serde::de::Error>(
+                self,
+                v: u64,
+            ) -> ::core::result::Result<WorkspaceStatus, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <WorkspaceStatus as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_unit<E: ::serde::de::Error>(
+                self,
+            ) -> ::core::result::Result<WorkspaceStatus, E> {
+                ::core::result::Result::Ok(::core::default::Default::default())
+            }
+        }
+        d.deserialize_any(_V)
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for WorkspaceStatus {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+impl ::buffa::Enumeration for WorkspaceStatus {
+    fn from_i32(value: i32) -> ::core::option::Option<Self> {
+        match value {
+            0i32 => ::core::option::Option::Some(Self::WORKSPACE_STATUS_UNSPECIFIED),
+            1i32 => ::core::option::Option::Some(Self::WORKSPACE_STATUS_READY),
+            2i32 => ::core::option::Option::Some(Self::WORKSPACE_STATUS_BEING_PREPARED),
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn to_i32(&self) -> i32 {
+        *self as i32
+    }
+    fn proto_name(&self) -> &'static str {
+        match self {
+            Self::WORKSPACE_STATUS_UNSPECIFIED => "WORKSPACE_STATUS_UNSPECIFIED",
+            Self::WORKSPACE_STATUS_READY => "WORKSPACE_STATUS_READY",
+            Self::WORKSPACE_STATUS_BEING_PREPARED => "WORKSPACE_STATUS_BEING_PREPARED",
+        }
+    }
+    fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+        match name {
+            "WORKSPACE_STATUS_UNSPECIFIED" => {
+                ::core::option::Option::Some(Self::WORKSPACE_STATUS_UNSPECIFIED)
+            }
+            "WORKSPACE_STATUS_READY" => {
+                ::core::option::Option::Some(Self::WORKSPACE_STATUS_READY)
+            }
+            "WORKSPACE_STATUS_BEING_PREPARED" => {
+                ::core::option::Option::Some(Self::WORKSPACE_STATUS_BEING_PREPARED)
+            }
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn values() -> &'static [Self] {
+        &[
+            Self::WORKSPACE_STATUS_UNSPECIFIED,
+            Self::WORKSPACE_STATUS_READY,
+            Self::WORKSPACE_STATUS_BEING_PREPARED,
+        ]
+    }
+}
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(i32)]
+pub enum WorkspaceRole {
+    WORKSPACE_ROLE_UNSPECIFIED = 0i32,
+    /// Pays for it, and may do everything in it.
+    WORKSPACE_ROLE_OWNER = 1i32,
+}
+impl WorkspaceRole {
+    ///Idiomatic alias for [`Self::WORKSPACE_ROLE_UNSPECIFIED`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Unspecified: Self = Self::WORKSPACE_ROLE_UNSPECIFIED;
+    ///Idiomatic alias for [`Self::WORKSPACE_ROLE_OWNER`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Owner: Self = Self::WORKSPACE_ROLE_OWNER;
+}
+impl ::core::default::Default for WorkspaceRole {
+    fn default() -> Self {
+        Self::WORKSPACE_ROLE_UNSPECIFIED
+    }
+}
+impl ::serde::Serialize for WorkspaceRole {
+    fn serialize<S: ::serde::Serializer>(
+        &self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        s.serialize_str(::buffa::Enumeration::proto_name(self))
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for WorkspaceRole {
+    fn deserialize<D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        struct _V;
+        impl ::serde::de::Visitor<'_> for _V {
+            type Value = WorkspaceRole;
+            fn expecting(
+                &self,
+                f: &mut ::core::fmt::Formatter<'_>,
+            ) -> ::core::fmt::Result {
+                f.write_str(
+                    concat!("a string, integer, or null for ", stringify!(WorkspaceRole)),
+                )
+            }
+            fn visit_str<E: ::serde::de::Error>(
+                self,
+                v: &str,
+            ) -> ::core::result::Result<WorkspaceRole, E> {
+                <WorkspaceRole as ::buffa::Enumeration>::from_proto_name(v)
+                    .ok_or_else(|| { ::serde::de::Error::unknown_variant(v, &[]) })
+            }
+            fn visit_i64<E: ::serde::de::Error>(
+                self,
+                v: i64,
+            ) -> ::core::result::Result<WorkspaceRole, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <WorkspaceRole as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_u64<E: ::serde::de::Error>(
+                self,
+                v: u64,
+            ) -> ::core::result::Result<WorkspaceRole, E> {
+                let v32 = i32::try_from(v)
+                    .map_err(|_| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                        )
+                    })?;
+                <WorkspaceRole as ::buffa::Enumeration>::from_i32(v32)
+                    .ok_or_else(|| {
+                        ::serde::de::Error::custom(
+                            ::buffa::alloc::format!("unknown enum value {v32}"),
+                        )
+                    })
+            }
+            fn visit_unit<E: ::serde::de::Error>(
+                self,
+            ) -> ::core::result::Result<WorkspaceRole, E> {
+                ::core::result::Result::Ok(::core::default::Default::default())
+            }
+        }
+        d.deserialize_any(_V)
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for WorkspaceRole {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+impl ::buffa::Enumeration for WorkspaceRole {
+    fn from_i32(value: i32) -> ::core::option::Option<Self> {
+        match value {
+            0i32 => ::core::option::Option::Some(Self::WORKSPACE_ROLE_UNSPECIFIED),
+            1i32 => ::core::option::Option::Some(Self::WORKSPACE_ROLE_OWNER),
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn to_i32(&self) -> i32 {
+        *self as i32
+    }
+    fn proto_name(&self) -> &'static str {
+        match self {
+            Self::WORKSPACE_ROLE_UNSPECIFIED => "WORKSPACE_ROLE_UNSPECIFIED",
+            Self::WORKSPACE_ROLE_OWNER => "WORKSPACE_ROLE_OWNER",
+        }
+    }
+    fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+        match name {
+            "WORKSPACE_ROLE_UNSPECIFIED" => {
+                ::core::option::Option::Some(Self::WORKSPACE_ROLE_UNSPECIFIED)
+            }
+            "WORKSPACE_ROLE_OWNER" => {
+                ::core::option::Option::Some(Self::WORKSPACE_ROLE_OWNER)
+            }
+            _ => ::core::option::Option::None,
+        }
+    }
+    fn values() -> &'static [Self] {
+        &[Self::WORKSPACE_ROLE_UNSPECIFIED, Self::WORKSPACE_ROLE_OWNER]
+    }
+}
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(i32)]
 pub enum AlertChannelKind {
     ALERT_CHANNEL_KIND_UNSPECIFIED = 0i32,
     /// The account's email.
@@ -1637,6 +1932,10 @@ pub enum OperationKind {
     OPERATION_KIND_BACKUP = 3i32,
     OPERATION_KIND_RESTORE = 4i32,
     OPERATION_KIND_DELETE = 5i32,
+    /// MoveProject's, of the project it moves, in both workspaces. Its operation_id is the move's,
+    /// which GetOperation and WatchOperation answer in either, also with the project_id of a database
+    /// the move holds.
+    OPERATION_KIND_MOVE = 6i32,
 }
 impl OperationKind {
     ///Idiomatic alias for [`Self::OPERATION_KIND_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -1657,6 +1956,9 @@ impl OperationKind {
     ///Idiomatic alias for [`Self::OPERATION_KIND_DELETE`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Delete: Self = Self::OPERATION_KIND_DELETE;
+    ///Idiomatic alias for [`Self::OPERATION_KIND_MOVE`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Move: Self = Self::OPERATION_KIND_MOVE;
 }
 impl ::core::default::Default for OperationKind {
     fn default() -> Self {
@@ -1758,6 +2060,7 @@ impl ::buffa::Enumeration for OperationKind {
             3i32 => ::core::option::Option::Some(Self::OPERATION_KIND_BACKUP),
             4i32 => ::core::option::Option::Some(Self::OPERATION_KIND_RESTORE),
             5i32 => ::core::option::Option::Some(Self::OPERATION_KIND_DELETE),
+            6i32 => ::core::option::Option::Some(Self::OPERATION_KIND_MOVE),
             _ => ::core::option::Option::None,
         }
     }
@@ -1772,6 +2075,7 @@ impl ::buffa::Enumeration for OperationKind {
             Self::OPERATION_KIND_BACKUP => "OPERATION_KIND_BACKUP",
             Self::OPERATION_KIND_RESTORE => "OPERATION_KIND_RESTORE",
             Self::OPERATION_KIND_DELETE => "OPERATION_KIND_DELETE",
+            Self::OPERATION_KIND_MOVE => "OPERATION_KIND_MOVE",
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -1794,6 +2098,9 @@ impl ::buffa::Enumeration for OperationKind {
             "OPERATION_KIND_DELETE" => {
                 ::core::option::Option::Some(Self::OPERATION_KIND_DELETE)
             }
+            "OPERATION_KIND_MOVE" => {
+                ::core::option::Option::Some(Self::OPERATION_KIND_MOVE)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -1805,6 +2112,7 @@ impl ::buffa::Enumeration for OperationKind {
             Self::OPERATION_KIND_BACKUP,
             Self::OPERATION_KIND_RESTORE,
             Self::OPERATION_KIND_DELETE,
+            Self::OPERATION_KIND_MOVE,
         ]
     }
 }
@@ -4557,8 +4865,8 @@ pub enum NoMachineReason {
     NO_MACHINE_REASON_UNSPECIFIED = 0i32,
     /// The person has not chosen and paid for a plan: they do it at url.
     NO_MACHINE_REASON_NO_PLAN = 1i32,
-    /// The plan is paid and a machine is being prepared for the account: Pethost emails the person
-    /// when it is ready. Call again later.
+    /// The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+    /// person when it is ready. Call again later.
     NO_MACHINE_REASON_BEING_PREPARED = 2i32,
 }
 impl NoMachineReason {
@@ -4706,18 +5014,1124 @@ impl ::buffa::Enumeration for NoMachineReason {
         ]
     }
 }
+/// ── Workspace ──────────────────────────────────────────────────────────────
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct ListWorkspacesRequest {
+    /// A project_id: holding_project then says which workspaces have a project of that id.
+    ///
+    /// Field 1: `project_id`
+    #[serde(
+        rename = "project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// A next_page_token. Empty = the first page.
+    ///
+    /// Field 2: `page_token`
+    #[serde(
+        rename = "page_token",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for ListWorkspacesRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ListWorkspacesRequest")
+            .field("project_id", &self.project_id)
+            .field("page_token", &self.page_token)
+            .finish()
+    }
+}
+impl ListWorkspacesRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ListWorkspacesRequest";
+}
+impl ListWorkspacesRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::page_token`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_page_token(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.page_token = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(ListWorkspacesRequest);
+impl ::buffa::MessageName for ListWorkspacesRequest {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "ListWorkspacesRequest";
+    const FULL_NAME: &'static str = "pethost.panel.v1.ListWorkspacesRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ListWorkspacesRequest";
+}
+impl ::buffa::Message for ListWorkspacesRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.page_token {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.page_token {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .page_token
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.project_id = ::core::option::Option::None;
+        self.page_token = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for ListWorkspacesRequest {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.ListWorkspacesRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for ListWorkspacesRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __LIST_WORKSPACES_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.ListWorkspacesRequest",
+    to_json: ::buffa::type_registry::any_to_json::<ListWorkspacesRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<ListWorkspacesRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct ListWorkspacesResponse {
+    /// By name.
+    ///
+    /// Field 1: `workspaces`
+    #[serde(
+        rename = "workspaces",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub workspaces: ::buffa::alloc::vec::Vec<Workspace>,
+    /// Empty = the last page.
+    ///
+    /// Field 2: `next_page_token`
+    #[serde(
+        rename = "next_page_token",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub next_page_token: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Workspaces in all, on every page.
+    ///
+    /// Field 3: `total`
+    #[serde(
+        rename = "total",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub total: ::core::option::Option<u32>,
+    /// With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+    /// none of those that answered (see incomplete).
+    ///
+    /// Field 4: `holding_project`
+    #[serde(
+        rename = "holding_project",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub holding_project: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    /// True = a machine did not answer in time: its free figures and project count are absent, and
+    /// holding_project may lack it.
+    ///
+    /// Field 5: `incomplete`
+    #[serde(
+        rename = "incomplete",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub incomplete: ::core::option::Option<bool>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for ListWorkspacesResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ListWorkspacesResponse")
+            .field("workspaces", &self.workspaces)
+            .field("next_page_token", &self.next_page_token)
+            .field("total", &self.total)
+            .field("holding_project", &self.holding_project)
+            .field("incomplete", &self.incomplete)
+            .finish()
+    }
+}
+impl ListWorkspacesResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ListWorkspacesResponse";
+}
+impl ListWorkspacesResponse {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::next_page_token`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_next_page_token(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.next_page_token = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::total`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_total(mut self, value: u32) -> Self {
+        self.total = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::incomplete`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_incomplete(mut self, value: bool) -> Self {
+        self.incomplete = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(ListWorkspacesResponse);
+impl ::buffa::MessageName for ListWorkspacesResponse {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "ListWorkspacesResponse";
+    const FULL_NAME: &'static str = "pethost.panel.v1.ListWorkspacesResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ListWorkspacesResponse";
+}
+impl ::buffa::Message for ListWorkspacesResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.workspaces {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(ref v) = self.next_page_token {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.total {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        for v in &self.holding_project {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.incomplete.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.workspaces {
+            ::buffa::types::put_len_delimited_header(
+                1u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.next_page_token {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(v) = self.total {
+            ::buffa::types::put_uint32_field(3u32, v, buf);
+        }
+        for v in &self.holding_project {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        if let Some(v) = self.incomplete {
+            ::buffa::types::put_bool_field(5u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.workspaces.push(elem);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .next_page_token
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.total = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.holding_project.push(__elem);
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.incomplete = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.workspaces.clear();
+        self.next_page_token = ::core::option::Option::None;
+        self.total = ::core::option::Option::None;
+        self.holding_project.clear();
+        self.incomplete = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for ListWorkspacesResponse {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.ListWorkspacesResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for ListWorkspacesResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __LIST_WORKSPACES_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.ListWorkspacesResponse",
+    to_json: ::buffa::type_registry::any_to_json::<ListWorkspacesResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<ListWorkspacesResponse>,
+    is_wkt: false,
+};
+/// What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+/// projects on it. A call names it as `workspace`, by workspace_id or name.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct Workspace {
+    /// 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+    /// never another workspace's.
+    ///
+    /// Field 1: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+    /// change it.
+    ///
+    /// Field 2: `name`
+    #[serde(rename = "name", skip_serializing_if = "::core::option::Option::is_none")]
+    pub name: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 3: `status`
+    #[serde(
+        rename = "status",
+        with = "::buffa::json_helpers::opt_enum",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub status: ::core::option::Option<::buffa::EnumValue<WorkspaceStatus>>,
+    /// Where its machine runs, e.g. "Europe".
+    ///
+    /// Field 4: `location`
+    #[serde(
+        rename = "location",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub location: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Its plan's name, e.g. "Starter".
+    ///
+    /// Field 5: `plan`
+    #[serde(rename = "plan", skip_serializing_if = "::core::option::Option::is_none")]
+    pub plan: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The plan's.
+    ///
+    /// Field 6: `cpu_total_cores`
+    #[serde(
+        rename = "cpu_total_cores",
+        with = "::buffa::json_helpers::opt_double",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub cpu_total_cores: ::core::option::Option<f64>,
+    /// The plan's, as Machine.memory_total_bytes.
+    ///
+    /// Field 7: `memory_total_bytes`
+    #[serde(
+        rename = "memory_total_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub memory_total_bytes: ::core::option::Option<u64>,
+    /// What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+    /// known: BEING_PREPARED, or the machine did not answer in time.
+    ///
+    /// Field 8: `memory_free_bytes`
+    #[serde(
+        rename = "memory_free_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub memory_free_bytes: ::core::option::Option<u64>,
+    /// The plan's, as Machine.disk_total_bytes.
+    ///
+    /// Field 9: `disk_total_bytes`
+    #[serde(
+        rename = "disk_total_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub disk_total_bytes: ::core::option::Option<u64>,
+    /// Likewise. Absent as memory_free_bytes.
+    ///
+    /// Field 10: `disk_free_bytes`
+    #[serde(
+        rename = "disk_free_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub disk_free_bytes: ::core::option::Option<u64>,
+    /// Absent as memory_free_bytes.
+    ///
+    /// Field 11: `project_count`
+    #[serde(
+        rename = "project_count",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_count: ::core::option::Option<u32>,
+    /// Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+    /// own points (CNAME). Empty while BEING_PREPARED.
+    ///
+    /// Field 12: `hostname`
+    #[serde(
+        rename = "hostname",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub hostname: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As Machine.apps_domain. Empty = none.
+    ///
+    /// Field 13: `apps_domain`
+    #[serde(
+        rename = "apps_domain",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub apps_domain: ::core::option::Option<::buffa::alloc::string::String>,
+    /// When it ends: the person removed it, and it works until then, its projects with it. Absent
+    /// = it is not ending.
+    ///
+    /// Field 14: `end_time`
+    #[serde(
+        rename = "end_time",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub end_time: ::buffa::MessageField<
+        ::buffa_types::google::protobuf::Timestamp,
+        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
+    >,
+    /// The caller's.
+    ///
+    /// Field 15: `role`
+    #[serde(
+        rename = "role",
+        with = "::buffa::json_helpers::opt_enum",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub role: ::core::option::Option<::buffa::EnumValue<WorkspaceRole>>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for Workspace {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("Workspace")
+            .field("workspace_id", &self.workspace_id)
+            .field("name", &self.name)
+            .field("status", &self.status)
+            .field("location", &self.location)
+            .field("plan", &self.plan)
+            .field("cpu_total_cores", &self.cpu_total_cores)
+            .field("memory_total_bytes", &self.memory_total_bytes)
+            .field("memory_free_bytes", &self.memory_free_bytes)
+            .field("disk_total_bytes", &self.disk_total_bytes)
+            .field("disk_free_bytes", &self.disk_free_bytes)
+            .field("project_count", &self.project_count)
+            .field("hostname", &self.hostname)
+            .field("apps_domain", &self.apps_domain)
+            .field("end_time", &self.end_time)
+            .field("role", &self.role)
+            .finish()
+    }
+}
+impl Workspace {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.Workspace";
+}
+impl Workspace {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::name`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_name(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.name = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::status`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_status(
+        mut self,
+        value: impl Into<::buffa::EnumValue<WorkspaceStatus>>,
+    ) -> Self {
+        self.status = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::location`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_location(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.location = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::plan`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_plan(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.plan = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::cpu_total_cores`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_cpu_total_cores(mut self, value: f64) -> Self {
+        self.cpu_total_cores = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::memory_total_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_memory_total_bytes(mut self, value: u64) -> Self {
+        self.memory_total_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::memory_free_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_memory_free_bytes(mut self, value: u64) -> Self {
+        self.memory_free_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::disk_total_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_disk_total_bytes(mut self, value: u64) -> Self {
+        self.disk_total_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::disk_free_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_disk_free_bytes(mut self, value: u64) -> Self {
+        self.disk_free_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_count`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_count(mut self, value: u32) -> Self {
+        self.project_count = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::hostname`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_hostname(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.hostname = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::apps_domain`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_apps_domain(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.apps_domain = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::role`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_role(
+        mut self,
+        value: impl Into<::buffa::EnumValue<WorkspaceRole>>,
+    ) -> Self {
+        self.role = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(Workspace);
+impl ::buffa::MessageName for Workspace {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "Workspace";
+    const FULL_NAME: &'static str = "pethost.panel.v1.Workspace";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.Workspace";
+}
+impl ::buffa::Message for Workspace {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.workspace_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.name {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.status {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        if let Some(ref v) = self.location {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.plan {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.cpu_total_cores.is_some() {
+            size += 1u64 + ::buffa::types::FIXED64_ENCODED_LEN as u64;
+        }
+        if let Some(v) = self.memory_total_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.memory_free_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.disk_total_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.disk_free_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.project_count {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.hostname {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.apps_domain {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.end_time.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.end_time.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(ref v) = self.role {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.name {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.status {
+            ::buffa::types::put_int32_field(3u32, v.to_i32(), buf);
+        }
+        if let Some(ref v) = self.location {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        if let Some(ref v) = self.plan {
+            ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        if let Some(v) = self.cpu_total_cores {
+            ::buffa::types::put_double_field(6u32, v, buf);
+        }
+        if let Some(v) = self.memory_total_bytes {
+            ::buffa::types::put_uint64_field(7u32, v, buf);
+        }
+        if let Some(v) = self.memory_free_bytes {
+            ::buffa::types::put_uint64_field(8u32, v, buf);
+        }
+        if let Some(v) = self.disk_total_bytes {
+            ::buffa::types::put_uint64_field(9u32, v, buf);
+        }
+        if let Some(v) = self.disk_free_bytes {
+            ::buffa::types::put_uint64_field(10u32, v, buf);
+        }
+        if let Some(v) = self.project_count {
+            ::buffa::types::put_uint32_field(11u32, v, buf);
+        }
+        if let Some(ref v) = self.hostname {
+            ::buffa::types::put_string_field(12u32, v, buf);
+        }
+        if let Some(ref v) = self.apps_domain {
+            ::buffa::types::put_string_field(13u32, v, buf);
+        }
+        if self.end_time.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                14u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.end_time.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.role {
+            ::buffa::types::put_int32_field(15u32, v.to_i32(), buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.name.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.status = ::core::option::Option::Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .location
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.plan.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Fixed64,
+                )?;
+                self.cpu_total_cores = ::core::option::Option::Some(
+                    ::buffa::types::decode_double(buf)?,
+                );
+            }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.memory_total_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.memory_free_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.disk_total_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            10u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.disk_free_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            11u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.project_count = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            12u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .hostname
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            13u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .apps_domain
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            14u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.end_time.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            15u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.role = ::core::option::Option::Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.workspace_id = ::core::option::Option::None;
+        self.name = ::core::option::Option::None;
+        self.status = ::core::option::Option::None;
+        self.location = ::core::option::Option::None;
+        self.plan = ::core::option::Option::None;
+        self.cpu_total_cores = ::core::option::Option::None;
+        self.memory_total_bytes = ::core::option::Option::None;
+        self.memory_free_bytes = ::core::option::Option::None;
+        self.disk_total_bytes = ::core::option::Option::None;
+        self.disk_free_bytes = ::core::option::Option::None;
+        self.project_count = ::core::option::Option::None;
+        self.hostname = ::core::option::Option::None;
+        self.apps_domain = ::core::option::Option::None;
+        self.end_time = ::buffa::MessageField::none();
+        self.role = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for Workspace {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.Workspace";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for Workspace {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __WORKSPACE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.Workspace",
+    to_json: ::buffa::type_registry::any_to_json::<Workspace>,
+    from_json: ::buffa::type_registry::any_from_json::<Workspace>,
+    is_wkt: false,
+};
 /// ── Machine ────────────────────────────────────────────────────────────────
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct GetMachineRequest {
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
 impl ::core::fmt::Debug for GetMachineRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("GetMachineRequest").finish()
+        f.debug_struct("GetMachineRequest").field("workspace", &self.workspace).finish()
     }
 }
 impl GetMachineRequest {
@@ -4726,6 +6140,18 @@ impl GetMachineRequest {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.GetMachineRequest";
+}
+impl GetMachineRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(GetMachineRequest);
 impl ::buffa::MessageName for GetMachineRequest {
@@ -4747,6 +6173,9 @@ impl ::buffa::Message for GetMachineRequest {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4757,6 +6186,9 @@ impl ::buffa::Message for GetMachineRequest {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
+        }
         self.__buffa_unknown_fields.write_to(buf);
     }
     fn merge_field(
@@ -4770,6 +6202,18 @@ impl ::buffa::Message for GetMachineRequest {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         match tag.field_number() {
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -4778,6 +6222,7 @@ impl ::buffa::Message for GetMachineRequest {
         ::core::result::Result::Ok(())
     }
     fn clear(&mut self) {
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -4850,6 +6295,14 @@ pub struct GetMachineResponse {
         GithubConnection,
         ::buffa::Inline<GithubConnection>,
     >,
+    /// The workspace whose machine this is.
+    ///
+    /// Field 5: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub workspace: ::buffa::MessageField<Workspace, ::buffa::Inline<Workspace>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -4861,6 +6314,7 @@ impl ::core::fmt::Debug for GetMachineResponse {
             .field("projects", &self.projects)
             .field("deleted_projects", &self.deleted_projects)
             .field("github", &self.github)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -4923,6 +6377,14 @@ impl ::buffa::Message for GetMachineResponse {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if self.workspace.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.workspace.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4964,6 +6426,14 @@ impl ::buffa::Message for GetMachineResponse {
                 buf,
             );
             self.github.write_to(__cache, buf);
+        }
+        if self.workspace.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                5u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.workspace.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -5024,6 +6494,17 @@ impl ::buffa::Message for GetMachineResponse {
                     ctx,
                 )?;
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.workspace.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -5036,6 +6517,7 @@ impl ::buffa::Message for GetMachineResponse {
         self.projects.clear();
         self.deleted_projects.clear();
         self.github = ::buffa::MessageField::none();
+        self.workspace = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -7964,6 +9446,18 @@ pub struct DeletedProject {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub snapshot_count: ::core::option::Option<u32>,
+    /// Set when the latest move of the project from or to this workspace took it to another one,
+    /// and this workspace has had no other project of the id since, as a call for it here would
+    /// answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+    /// restore here makes another copy here, as it was last backed up here, and calls here then
+    /// act on that copy.
+    ///
+    /// Field 4: `moved_to`
+    #[serde(
+        rename = "moved_to",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub moved_to: ::buffa::MessageField<MovedTo, ::buffa::Inline<MovedTo>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -7974,6 +9468,7 @@ impl ::core::fmt::Debug for DeletedProject {
             .field("project_id", &self.project_id)
             .field("newest_snapshot", &self.newest_snapshot)
             .field("snapshot_count", &self.snapshot_count)
+            .field("moved_to", &self.moved_to)
             .finish()
     }
 }
@@ -8037,6 +9532,14 @@ impl ::buffa::Message for DeletedProject {
         if let Some(v) = self.snapshot_count {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if self.moved_to.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.moved_to.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -8060,6 +9563,14 @@ impl ::buffa::Message for DeletedProject {
         }
         if let Some(v) = self.snapshot_count {
             ::buffa::types::put_uint32_field(3u32, v, buf);
+        }
+        if self.moved_to.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                4u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.moved_to.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -8106,6 +9617,17 @@ impl ::buffa::Message for DeletedProject {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.moved_to.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -8117,6 +9639,7 @@ impl ::buffa::Message for DeletedProject {
         self.project_id = ::core::option::Option::None;
         self.newest_snapshot = ::buffa::MessageField::none();
         self.snapshot_count = ::core::option::Option::None;
+        self.moved_to = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -8149,10 +9672,233 @@ pub const __DELETED_PROJECT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::b
     from_json: ::buffa::type_registry::any_from_json::<DeletedProject>,
     is_wkt: false,
 };
+/// Where a move took a project (MoveProject), and when.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MovedTo {
+    /// Field 1: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 2: `workspace_name`
+    #[serde(
+        rename = "workspace_name",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_name: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 3: `move_time`
+    #[serde(
+        rename = "move_time",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub move_time: ::buffa::MessageField<
+        ::buffa_types::google::protobuf::Timestamp,
+        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
+    >,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MovedTo {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MovedTo")
+            .field("workspace_id", &self.workspace_id)
+            .field("workspace_name", &self.workspace_name)
+            .field("move_time", &self.move_time)
+            .finish()
+    }
+}
+impl MovedTo {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MovedTo";
+}
+impl MovedTo {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_name`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_name(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_name = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(MovedTo);
+impl ::buffa::MessageName for MovedTo {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MovedTo";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MovedTo";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MovedTo";
+}
+impl ::buffa::Message for MovedTo {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.workspace_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.workspace_name {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.move_time.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.move_time.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace_name {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if self.move_time.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                3u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.move_time.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_name
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.move_time.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.workspace_id = ::core::option::Option::None;
+        self.workspace_name = ::core::option::Option::None;
+        self.move_time = ::buffa::MessageField::none();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MovedTo {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MovedTo";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MovedTo {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOVED_TO_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MovedTo",
+    to_json: ::buffa::type_registry::any_to_json::<MovedTo>,
+    from_json: ::buffa::type_registry::any_from_json::<MovedTo>,
+    is_wkt: false,
+};
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize)]
 #[serde(default)]
 pub struct RunMachineActionRequest {
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub action: ::core::option::Option<
         __buffa::oneof::run_machine_action_request::Action,
@@ -8163,7 +9909,10 @@ pub struct RunMachineActionRequest {
 }
 impl ::core::fmt::Debug for RunMachineActionRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("RunMachineActionRequest").field("action", &self.action).finish()
+        f.debug_struct("RunMachineActionRequest")
+            .field("workspace", &self.workspace)
+            .field("action", &self.action)
+            .finish()
     }
 }
 impl RunMachineActionRequest {
@@ -8172,6 +9921,18 @@ impl RunMachineActionRequest {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.RunMachineActionRequest";
+}
+impl RunMachineActionRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(RunMachineActionRequest);
 impl ::buffa::MessageName for RunMachineActionRequest {
@@ -8228,6 +9989,9 @@ impl ::buffa::Message for RunMachineActionRequest {
                 }
             }
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -8270,6 +10034,9 @@ impl ::buffa::Message for RunMachineActionRequest {
                     ::buffa::types::put_string_field(5u32, x, buf);
                 }
             }
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -8361,6 +10128,18 @@ impl ::buffa::Message for RunMachineActionRequest {
                     ),
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -8370,6 +10149,7 @@ impl ::buffa::Message for RunMachineActionRequest {
     }
     fn clear(&mut self) {
         self.action = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -8400,11 +10180,22 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                 self,
                 mut map: A,
             ) -> ::core::result::Result<RunMachineActionRequest, A::Error> {
+                let mut __f_workspace: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
+                > = None;
                 let mut __oneof_action: ::core::option::Option<
                     __buffa::oneof::run_machine_action_request::Action,
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
+                        "workspace" => {
+                            __f_workspace = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
+                        }
                         "add_ssh_key" => {
                             let v: ::core::option::Option<SshKey> = map
                                 .next_value_seed(
@@ -8533,6 +10324,9 @@ impl<'de> ::serde::Deserialize<'de> for RunMachineActionRequest {
                     }
                 }
                 let mut __r = <RunMachineActionRequest as ::core::default::Default>::default();
+                if let ::core::option::Option::Some(v) = __f_workspace {
+                    __r.workspace = v;
+                }
                 __r.action = __oneof_action;
                 Ok(__r)
             }
@@ -9284,6 +11078,11 @@ pub struct ProjectSummary {
         DatabaseSummary,
         ::buffa::Inline<DatabaseSummary>,
     >,
+    /// As Project.uid.
+    ///
+    /// Field 15: `uid`
+    #[serde(rename = "uid", skip_serializing_if = "::core::option::Option::is_none")]
+    pub uid: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -9305,6 +11104,7 @@ impl ::core::fmt::Debug for ProjectSummary {
             .field("pinned", &self.pinned)
             .field("disk_used_bytes", &self.disk_used_bytes)
             .field("database", &self.database)
+            .field("uid", &self.uid)
             .finish()
     }
 }
@@ -9359,6 +11159,13 @@ impl ProjectSummary {
     ///Sets [`Self::disk_used_bytes`] to `Some(value)`, consuming and returning `self`.
     pub fn with_disk_used_bytes(mut self, value: u64) -> Self {
         self.disk_used_bytes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::uid`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_uid(mut self, value: impl Into<::buffa::alloc::string::String>) -> Self {
+        self.uid = Some(value.into());
         self
     }
 }
@@ -9459,6 +11266,9 @@ impl ::buffa::Message for ProjectSummary {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.uid {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -9545,6 +11355,9 @@ impl ::buffa::Message for ProjectSummary {
                 buf,
             );
             self.database.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.uid {
+            ::buffa::types::put_string_field(15u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -9708,6 +11521,16 @@ impl ::buffa::Message for ProjectSummary {
                     ctx,
                 )?;
             }
+            15u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.uid.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -9730,6 +11553,7 @@ impl ::buffa::Message for ProjectSummary {
         self.pinned = ::core::option::Option::None;
         self.disk_used_bytes = ::core::option::Option::None;
         self.database = ::buffa::MessageField::none();
+        self.uid = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -10335,6 +12159,12 @@ pub struct GetProjectRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub incidents_before_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -10349,6 +12179,7 @@ impl ::core::fmt::Debug for GetProjectRequest {
             .field("incidents_before", &self.incidents_before)
             .field("uptime_day_count", &self.uptime_day_count)
             .field("incidents_before_id", &self.incidents_before_id)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -10404,6 +12235,16 @@ impl GetProjectRequest {
         self.incidents_before_id = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(GetProjectRequest);
 impl ::buffa::MessageName for GetProjectRequest {
@@ -10456,6 +12297,9 @@ impl ::buffa::Message for GetProjectRequest {
         if let Some(ref v) = self.incidents_before_id {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -10496,6 +12340,9 @@ impl ::buffa::Message for GetProjectRequest {
         }
         if let Some(ref v) = self.incidents_before_id {
             ::buffa::types::put_string_field(7u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -10586,6 +12433,18 @@ impl ::buffa::Message for GetProjectRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -10601,6 +12460,7 @@ impl ::buffa::Message for GetProjectRequest {
         self.incidents_before = ::buffa::MessageField::none();
         self.uptime_day_count = ::core::option::Option::None;
         self.incidents_before_id = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -11029,6 +12889,31 @@ pub struct Project {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub linked_databases: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    /// The workspace it is in (Workspace.workspace_id): what a later call for it names as
+    /// `workspace`.
+    ///
+    /// Field 29: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Made when it was created, and kept by its backups, restores and moves: a project deleted
+    /// and created again under the same project_id has another. Empty = not known yet.
+    ///
+    /// Field 30: `uid`
+    #[serde(rename = "uid", skip_serializing_if = "::core::option::Option::is_none")]
+    pub uid: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The databases it is linked to (linked_databases), each with what MoveProject may do with it
+    /// (switch_databases).
+    ///
+    /// Field 32: `dependencies`
+    #[serde(
+        rename = "dependencies",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub dependencies: ::buffa::alloc::vec::Vec<ProjectDependency>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -11064,6 +12949,9 @@ impl ::core::fmt::Debug for Project {
             .field("uptime_days", &self.uptime_days)
             .field("database", &self.database)
             .field("linked_databases", &self.linked_databases)
+            .field("workspace_id", &self.workspace_id)
+            .field("uid", &self.uid)
+            .field("dependencies", &self.dependencies)
             .finish()
     }
 }
@@ -11152,6 +13040,23 @@ impl Project {
     ///Sets [`Self::more_incidents`] to `Some(value)`, consuming and returning `self`.
     pub fn with_more_incidents(mut self, value: bool) -> Self {
         self.more_incidents = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::uid`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_uid(mut self, value: impl Into<::buffa::alloc::string::String>) -> Self {
+        self.uid = Some(value.into());
         self
     }
 }
@@ -11344,6 +13249,20 @@ impl ::buffa::Message for Project {
         for v in &self.linked_databases {
             size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace_id {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.uid {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        for v in &self.dependencies {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -11522,6 +13441,20 @@ impl ::buffa::Message for Project {
         }
         for v in &self.linked_databases {
             ::buffa::types::put_string_field(28u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(29u32, v, buf);
+        }
+        if let Some(ref v) = self.uid {
+            ::buffa::types::put_string_field(30u32, v, buf);
+        }
+        for v in &self.dependencies {
+            ::buffa::types::put_len_delimited_header(
+                32u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -11840,6 +13773,40 @@ impl ::buffa::Message for Project {
                 )?;
                 self.linked_databases.push(__elem);
             }
+            29u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            30u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.uid.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            32u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.dependencies.push(elem);
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -11876,6 +13843,9 @@ impl ::buffa::Message for Project {
         self.uptime_days.clear();
         self.database = ::buffa::MessageField::none();
         self.linked_databases.clear();
+        self.workspace_id = ::core::option::Option::None;
+        self.uid = ::core::option::Option::None;
+        self.dependencies.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -11906,6 +13876,232 @@ pub const __PROJECT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
     type_url: "type.googleapis.com/pethost.panel.v1.Project",
     to_json: ::buffa::type_registry::any_to_json::<Project>,
     from_json: ::buffa::type_registry::any_from_json::<Project>,
+    is_wkt: false,
+};
+/// A database a project is linked to, as MoveProject of the project sees it.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct ProjectDependency {
+    /// Field 1: `database_project_id`
+    #[serde(
+        rename = "database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+    /// project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+    /// `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+    /// own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+    /// new one starts empty and one there is shared.
+    ///
+    /// Field 4: `copy_database`
+    #[serde(
+        rename = "copy_database",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub copy_database: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+    /// (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+    /// destination writes anew. Empty = a person wrote them (LinkDatabase linked it): a move needs
+    /// DatabaseSwitch.env_prefix.
+    ///
+    /// Field 5: `env_prefix`
+    #[serde(
+        rename = "env_prefix",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub env_prefix: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for ProjectDependency {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ProjectDependency")
+            .field("database_project_id", &self.database_project_id)
+            .field("copy_database", &self.copy_database)
+            .field("env_prefix", &self.env_prefix)
+            .finish()
+    }
+}
+impl ProjectDependency {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ProjectDependency";
+}
+impl ProjectDependency {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::copy_database`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_copy_database(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.copy_database = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::env_prefix`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_env_prefix(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.env_prefix = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(ProjectDependency);
+impl ::buffa::MessageName for ProjectDependency {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "ProjectDependency";
+    const FULL_NAME: &'static str = "pethost.panel.v1.ProjectDependency";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ProjectDependency";
+}
+impl ::buffa::Message for ProjectDependency {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.copy_database {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.env_prefix {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.database_project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.copy_database {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        if let Some(ref v) = self.env_prefix {
+            ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .copy_database
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .env_prefix
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.database_project_id = ::core::option::Option::None;
+        self.copy_database = ::core::option::Option::None;
+        self.env_prefix = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for ProjectDependency {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.ProjectDependency";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for ProjectDependency {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __PROJECT_DEPENDENCY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.ProjectDependency",
+    to_json: ::buffa::type_registry::any_to_json::<ProjectDependency>,
+    from_json: ::buffa::type_registry::any_from_json::<ProjectDependency>,
     is_wkt: false,
 };
 /// A start, stop or restart of services that has not ended yet.
@@ -17578,8 +19774,6 @@ pub struct CreateProjectRequest {
     )]
     pub source: ::buffa::MessageField<ProjectSource, ::buffa::Inline<ProjectSource>>,
     /// An archive of the project's directory, from CreateTransfer.upload_archive, unpacked first.
-    /// FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its
-    /// PUT said why) answers with its `violations`.
     ///
     /// Field 3: `upload_id`
     #[serde(
@@ -17641,6 +19835,12 @@ pub struct CreateProjectRequest {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub link_databases: ::buffa::alloc::vec::Vec<DatabaseLinkRequest>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -17657,6 +19857,7 @@ impl ::core::fmt::Debug for CreateProjectRequest {
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
             .field("link_databases", &self.link_databases)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -17710,6 +19911,16 @@ impl CreateProjectRequest {
     ///Sets [`Self::wait_seconds`] to `Some(value)`, consuming and returning `self`.
     pub fn with_wait_seconds(mut self, value: u32) -> Self {
         self.wait_seconds = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -17780,6 +19991,9 @@ impl ::buffa::Message for CreateProjectRequest {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -17836,6 +20050,9 @@ impl ::buffa::Message for CreateProjectRequest {
                 buf,
             );
             v.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -17950,6 +20167,18 @@ impl ::buffa::Message for CreateProjectRequest {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.link_databases.push(elem);
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -17967,6 +20196,7 @@ impl ::buffa::Message for CreateProjectRequest {
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
         self.link_databases.clear();
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -18502,7 +20732,7 @@ pub struct DeployProjectRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Project.deploy_id as you read it: ABORTED if the project was deployed since. Empty = no check.
+    /// Project.deploy_id as you read it. Empty = no check.
     ///
     /// Field 2: `base_deploy_id`
     #[serde(
@@ -18569,6 +20799,12 @@ pub struct DeployProjectRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub wait_seconds: ::core::option::Option<u32>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub version: ::core::option::Option<__buffa::oneof::deploy_project_request::Version>,
     #[serde(skip)]
@@ -18586,6 +20822,7 @@ impl ::core::fmt::Debug for DeployProjectRequest {
             .field("timeout_seconds", &self.timeout_seconds)
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
+            .field("workspace", &self.workspace)
             .field("version", &self.version)
             .finish()
     }
@@ -18640,6 +20877,16 @@ impl DeployProjectRequest {
     ///Sets [`Self::wait_seconds`] to `Some(value)`, consuming and returning `self`.
     pub fn with_wait_seconds(mut self, value: u32) -> Self {
         self.wait_seconds = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -18718,6 +20965,9 @@ impl ::buffa::Message for DeployProjectRequest {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -18782,6 +21032,9 @@ impl ::buffa::Message for DeployProjectRequest {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(13u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -18928,6 +21181,18 @@ impl ::buffa::Message for DeployProjectRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -18945,6 +21210,7 @@ impl ::buffa::Message for DeployProjectRequest {
         self.x_pethost = ::buffa::MessageField::none();
         self.mount_volume = ::buffa::MessageField::none();
         self.wait_seconds = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -19001,6 +21267,9 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                 > = None;
                 let mut __f_wait_seconds: ::core::option::Option<
                     ::core::option::Option<u32>,
+                > = None;
+                let mut __f_workspace: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
                 > = None;
                 let mut __oneof_version: ::core::option::Option<
                     __buffa::oneof::deploy_project_request::Version,
@@ -19106,6 +21375,14 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                                 }
                                 map.next_value_seed(_S)?
                             });
+                        }
+                        "workspace" => {
+                            __f_workspace = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
                         }
                         "upload_id" => {
                             let v: ::core::option::Option<
@@ -19232,6 +21509,9 @@ impl<'de> ::serde::Deserialize<'de> for DeployProjectRequest {
                 }
                 if let ::core::option::Option::Some(v) = __f_wait_seconds {
                     __r.wait_seconds = v;
+                }
+                if let ::core::option::Option::Some(v) = __f_workspace {
+                    __r.workspace = v;
                 }
                 __r.version = __oneof_version;
                 Ok(__r)
@@ -20765,6 +23045,1747 @@ pub const __SPEC_VIOLATION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::bu
     from_json: ::buffa::type_registry::any_from_json::<SpecViolation>,
     is_wkt: false,
 };
+/// ── MoveProject ────────────────────────────────────────────────────────────
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MoveProjectRequest {
+    /// Field 1: `project_id`
+    #[serde(
+        rename = "project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The destination, as `workspace` takes one: its id or name.
+    ///
+    /// Field 2: `to_workspace`
+    #[serde(
+        rename = "to_workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub to_workspace: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As DeployProject's operation_id: the move's.
+    ///
+    /// Field 4: `operation_id`
+    #[serde(
+        rename = "operation_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As DeployProject's wait_seconds.
+    ///
+    /// Field 5: `wait_seconds`
+    #[serde(
+        rename = "wait_seconds",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub wait_seconds: ::core::option::Option<u32>,
+    /// What it uses in to_workspace instead of each database it is linked to (Project.dependencies),
+    /// which stays here. One left out: the destination's database of its id and engine, if it has
+    /// one, else a new one, with the data of its copy_database.
+    ///
+    /// Field 6: `switch_databases`
+    #[serde(
+        rename = "switch_databases",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub switch_databases: ::buffa::alloc::vec::Vec<DatabaseSwitch>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MoveProjectRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MoveProjectRequest")
+            .field("project_id", &self.project_id)
+            .field("to_workspace", &self.to_workspace)
+            .field("operation_id", &self.operation_id)
+            .field("wait_seconds", &self.wait_seconds)
+            .field("switch_databases", &self.switch_databases)
+            .field("workspace", &self.workspace)
+            .finish()
+    }
+}
+impl MoveProjectRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveProjectRequest";
+}
+impl MoveProjectRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::to_workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_to_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.to_workspace = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::operation_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_operation_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.operation_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::wait_seconds`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_wait_seconds(mut self, value: u32) -> Self {
+        self.wait_seconds = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(MoveProjectRequest);
+impl ::buffa::MessageName for MoveProjectRequest {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MoveProjectRequest";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MoveProjectRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveProjectRequest";
+}
+impl ::buffa::Message for MoveProjectRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.to_workspace {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.operation_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.wait_seconds {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        for v in &self.switch_databases {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.to_workspace {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.operation_id {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        if let Some(v) = self.wait_seconds {
+            ::buffa::types::put_uint32_field(5u32, v, buf);
+        }
+        for v in &self.switch_databases {
+            ::buffa::types::put_len_delimited_header(
+                6u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .to_workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .operation_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.wait_seconds = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.switch_databases.push(elem);
+            }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.project_id = ::core::option::Option::None;
+        self.to_workspace = ::core::option::Option::None;
+        self.operation_id = ::core::option::Option::None;
+        self.wait_seconds = ::core::option::Option::None;
+        self.switch_databases.clear();
+        self.workspace = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MoveProjectRequest {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MoveProjectRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MoveProjectRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOVE_PROJECT_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MoveProjectRequest",
+    to_json: ::buffa::type_registry::any_to_json::<MoveProjectRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<MoveProjectRequest>,
+    is_wkt: false,
+};
+/// A database the moved project is linked to, which stays here with its other apps, if any, and
+/// what the project uses instead in the destination: a database of the same engine, the lines of
+/// how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+/// user of its own, to a database of its own, which gets the data of ProjectDependency
+/// .copy_database unless empty; a Valkey's it shares as its one user, and so does a project whose
+/// id the engine keeps as a name of its own (copy_database empty) on Postgres and MariaDB. Once the
+/// move succeeded, the user and database the project had of its own here, if it had them, are
+/// dropped with it, as any delete does: so empty, where it had them, deletes that data.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct DatabaseSwitch {
+    /// A database it is linked to, which stays.
+    ///
+    /// Field 1: `database_project_id`
+    #[serde(
+        rename = "database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+    /// a user of its own there, it has no user or database named as the project. Empty = the
+    /// destination's database of database_project_id's id and engine, if it has one, else a new one,
+    /// made by the move under that id at that one's size where to_workspace offers it for the engine,
+    /// else at the engine's default.
+    ///
+    /// Field 2: `into_database_project_id`
+    #[serde(
+        rename = "into_database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub into_database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// True = nothing is copied: the project starts there with an empty database of its own, or, as
+    /// the apps' user, with what a database there holds that it shares (a new one: nothing). A
+    /// MariaDB database with a view, trigger, routine or event made by another account than the
+    /// project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+    /// undone; start it empty, or make those objects again as the project's own user.
+    ///
+    /// Field 3: `empty`
+    #[serde(rename = "empty", skip_serializing_if = "::core::option::Option::is_none")]
+    pub empty: ::core::option::Option<bool>,
+    /// Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+    /// signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+    /// destination writes anew as a link with that env_prefix writes them, each of its names that
+    /// /.env sets taking the new value, for the database copy_database names. Required there;
+    /// refused elsewhere.
+    ///
+    /// Field 5: `env_prefix`
+    #[serde(
+        rename = "env_prefix",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub env_prefix: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DatabaseSwitch {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DatabaseSwitch")
+            .field("database_project_id", &self.database_project_id)
+            .field("into_database_project_id", &self.into_database_project_id)
+            .field("empty", &self.empty)
+            .field("env_prefix", &self.env_prefix)
+            .finish()
+    }
+}
+impl DatabaseSwitch {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseSwitch";
+}
+impl DatabaseSwitch {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::into_database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_into_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.into_database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::empty`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_empty(mut self, value: bool) -> Self {
+        self.empty = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::env_prefix`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_env_prefix(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.env_prefix = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(DatabaseSwitch);
+impl ::buffa::MessageName for DatabaseSwitch {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "DatabaseSwitch";
+    const FULL_NAME: &'static str = "pethost.panel.v1.DatabaseSwitch";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.DatabaseSwitch";
+}
+impl ::buffa::Message for DatabaseSwitch {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.into_database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.empty.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        if let Some(ref v) = self.env_prefix {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.database_project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.into_database_project_id {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(v) = self.empty {
+            ::buffa::types::put_bool_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.env_prefix {
+            ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .into_database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.empty = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .env_prefix
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.database_project_id = ::core::option::Option::None;
+        self.into_database_project_id = ::core::option::Option::None;
+        self.empty = ::core::option::Option::None;
+        self.env_prefix = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DatabaseSwitch {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.DatabaseSwitch";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DatabaseSwitch {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DATABASE_SWITCH_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.DatabaseSwitch",
+    to_json: ::buffa::type_registry::any_to_json::<DatabaseSwitch>,
+    from_json: ::buffa::type_registry::any_from_json::<DatabaseSwitch>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MoveProjectResponse {
+    /// The move: finished, or IN_PROGRESS when wait_seconds ran out (then GetOperation).
+    ///
+    /// Field 1: `operation`
+    #[serde(
+        rename = "operation",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub operation: ::buffa::MessageField<Operation, ::buffa::Inline<Operation>>,
+    /// Once the project is in the destination: as it is there, as GetProject returns it. A move that
+    /// FAILED after that has it too: it runs there, and its failure says what the source still
+    /// holds. Absent while it runs, and when nothing moved.
+    ///
+    /// Field 2: `project`
+    #[serde(
+        rename = "project",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub project: ::buffa::MessageField<Project, ::buffa::Inline<Project>>,
+    /// What changed and what stayed behind, for people: the new hosts, the domains of the person's
+    /// own to point at the destination's hostname, the SSH command.
+    ///
+    /// Field 3: `move_message`
+    #[serde(
+        rename = "move_message",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub move_message: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MoveProjectResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MoveProjectResponse")
+            .field("operation", &self.operation)
+            .field("project", &self.project)
+            .field("move_message", &self.move_message)
+            .finish()
+    }
+}
+impl MoveProjectResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveProjectResponse";
+}
+impl MoveProjectResponse {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::move_message`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_move_message(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.move_message = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(MoveProjectResponse);
+impl ::buffa::MessageName for MoveProjectResponse {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MoveProjectResponse";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MoveProjectResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveProjectResponse";
+}
+impl ::buffa::Message for MoveProjectResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if self.operation.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.operation.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if self.project.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.project.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(ref v) = self.move_message {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.operation.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                1u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.operation.write_to(__cache, buf);
+        }
+        if self.project.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                2u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.project.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.move_message {
+            ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.operation.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.project.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .move_message
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.operation = ::buffa::MessageField::none();
+        self.project = ::buffa::MessageField::none();
+        self.move_message = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MoveProjectResponse {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MoveProjectResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MoveProjectResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOVE_PROJECT_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MoveProjectResponse",
+    to_json: ::buffa::type_registry::any_to_json::<MoveProjectResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<MoveProjectResponse>,
+    is_wkt: false,
+};
+/// ── GetMoveChoices ─────────────────────────────────────────────────────────
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct GetMoveChoicesRequest {
+    /// Field 1: `project_id`
+    #[serde(
+        rename = "project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As MoveProjectRequest's.
+    ///
+    /// Field 2: `to_workspace`
+    #[serde(
+        rename = "to_workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub to_workspace: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for GetMoveChoicesRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("GetMoveChoicesRequest")
+            .field("project_id", &self.project_id)
+            .field("to_workspace", &self.to_workspace)
+            .field("workspace", &self.workspace)
+            .finish()
+    }
+}
+impl GetMoveChoicesRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.GetMoveChoicesRequest";
+}
+impl GetMoveChoicesRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::to_workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_to_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.to_workspace = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(GetMoveChoicesRequest);
+impl ::buffa::MessageName for GetMoveChoicesRequest {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "GetMoveChoicesRequest";
+    const FULL_NAME: &'static str = "pethost.panel.v1.GetMoveChoicesRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.GetMoveChoicesRequest";
+}
+impl ::buffa::Message for GetMoveChoicesRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.to_workspace {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.to_workspace {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .to_workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.project_id = ::core::option::Option::None;
+        self.to_workspace = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for GetMoveChoicesRequest {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.GetMoveChoicesRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for GetMoveChoicesRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __GET_MOVE_CHOICES_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.GetMoveChoicesRequest",
+    to_json: ::buffa::type_registry::any_to_json::<GetMoveChoicesRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<GetMoveChoicesRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct GetMoveChoicesResponse {
+    /// One for each database the project is linked to, in Project.dependencies' order.
+    ///
+    /// Field 1: `choices`
+    #[serde(
+        rename = "choices",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub choices: ::buffa::alloc::vec::Vec<MoveChoice>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for GetMoveChoicesResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("GetMoveChoicesResponse").field("choices", &self.choices).finish()
+    }
+}
+impl GetMoveChoicesResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.GetMoveChoicesResponse";
+}
+::buffa::impl_default_instance!(GetMoveChoicesResponse);
+impl ::buffa::MessageName for GetMoveChoicesResponse {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "GetMoveChoicesResponse";
+    const FULL_NAME: &'static str = "pethost.panel.v1.GetMoveChoicesResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.GetMoveChoicesResponse";
+}
+impl ::buffa::Message for GetMoveChoicesResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.choices {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.choices {
+            ::buffa::types::put_len_delimited_header(
+                1u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.choices.push(elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.choices.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for GetMoveChoicesResponse {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.GetMoveChoicesResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for GetMoveChoicesResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __GET_MOVE_CHOICES_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.GetMoveChoicesResponse",
+    to_json: ::buffa::type_registry::any_to_json::<GetMoveChoicesResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<GetMoveChoicesResponse>,
+    is_wkt: false,
+};
+/// What a move may use in to_workspace instead of a database the project is linked to.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MoveChoice {
+    /// Field 1: `dependency`
+    #[serde(
+        rename = "dependency",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub dependency: ::buffa::MessageField<
+        ProjectDependency,
+        ::buffa::Inline<ProjectDependency>,
+    >,
+    /// The dependency's, which a database used instead runs too.
+    ///
+    /// Field 2: `engine`
+    #[serde(
+        rename = "engine",
+        with = "::buffa::json_helpers::opt_enum",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub engine: ::core::option::Option<::buffa::EnumValue<DatabaseEngine>>,
+    /// The project signs in to the dependency as a user of its own (Database.own_user_projects),
+    /// which the move drops here with its database once it succeeded (DatabaseSwitch).
+    ///
+    /// Field 3: `owned`
+    #[serde(rename = "owned", skip_serializing_if = "::core::option::Option::is_none")]
+    pub owned: ::core::option::Option<bool>,
+    /// The databases of to_workspace of the engine, which into_database_project_id may name: each
+    /// once among a move's switches.
+    ///
+    /// Field 4: `databases`
+    #[serde(
+        rename = "databases",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub databases: ::buffa::alloc::vec::Vec<MoveTarget>,
+    /// A new database may be made there, under the dependency's id: to_workspace has no project of
+    /// that id.
+    ///
+    /// Field 5: `new_database`
+    #[serde(
+        rename = "new_database",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub new_database: ::core::option::Option<bool>,
+    /// Where the dialog's switch goes first: the database of to_workspace of the dependency's id and
+    /// engine, else its only one of the engine that no other choice suggests, else a new one where
+    /// new_database, else the first of `databases` that no other choice suggests. Empty = a new one,
+    /// or nothing fits (no `databases`, and no new_database).
+    ///
+    /// Field 6: `suggested_database_project_id`
+    #[serde(
+        rename = "suggested_database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub suggested_database_project_id: ::core::option::Option<
+        ::buffa::alloc::string::String,
+    >,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MoveChoice {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MoveChoice")
+            .field("dependency", &self.dependency)
+            .field("engine", &self.engine)
+            .field("owned", &self.owned)
+            .field("databases", &self.databases)
+            .field("new_database", &self.new_database)
+            .field("suggested_database_project_id", &self.suggested_database_project_id)
+            .finish()
+    }
+}
+impl MoveChoice {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveChoice";
+}
+impl MoveChoice {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::engine`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_engine(
+        mut self,
+        value: impl Into<::buffa::EnumValue<DatabaseEngine>>,
+    ) -> Self {
+        self.engine = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::owned`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_owned(mut self, value: bool) -> Self {
+        self.owned = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::new_database`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_new_database(mut self, value: bool) -> Self {
+        self.new_database = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::suggested_database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_suggested_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.suggested_database_project_id = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(MoveChoice);
+impl ::buffa::MessageName for MoveChoice {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MoveChoice";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MoveChoice";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveChoice";
+}
+impl ::buffa::Message for MoveChoice {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if self.dependency.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.dependency.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(ref v) = self.engine {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        if self.owned.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        for v in &self.databases {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if self.new_database.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        if let Some(ref v) = self.suggested_database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.dependency.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                1u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.dependency.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.engine {
+            ::buffa::types::put_int32_field(2u32, v.to_i32(), buf);
+        }
+        if let Some(v) = self.owned {
+            ::buffa::types::put_bool_field(3u32, v, buf);
+        }
+        for v in &self.databases {
+            ::buffa::types::put_len_delimited_header(
+                4u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
+        }
+        if let Some(v) = self.new_database {
+            ::buffa::types::put_bool_field(5u32, v, buf);
+        }
+        if let Some(ref v) = self.suggested_database_project_id {
+            ::buffa::types::put_string_field(6u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.dependency.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.engine = ::core::option::Option::Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.owned = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.databases.push(elem);
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.new_database = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .suggested_database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.dependency = ::buffa::MessageField::none();
+        self.engine = ::core::option::Option::None;
+        self.owned = ::core::option::Option::None;
+        self.databases.clear();
+        self.new_database = ::core::option::Option::None;
+        self.suggested_database_project_id = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MoveChoice {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MoveChoice";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MoveChoice {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOVE_CHOICE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MoveChoice",
+    to_json: ::buffa::type_registry::any_to_json::<MoveChoice>,
+    from_json: ::buffa::type_registry::any_from_json::<MoveChoice>,
+    is_wkt: false,
+};
+/// A database of to_workspace that a switch may go to.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MoveTarget {
+    /// Field 1: `database_project_id`
+    #[serde(
+        rename = "database_project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub database_project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As people call it: its metadata name, else its project_id.
+    ///
+    /// Field 2: `name`
+    #[serde(rename = "name", skip_serializing_if = "::core::option::Option::is_none")]
+    pub name: ::core::option::Option<::buffa::alloc::string::String>,
+    /// As in Database.
+    ///
+    /// Field 3: `data_bytes`
+    #[serde(
+        rename = "data_bytes",
+        with = "::buffa::json_helpers::opt_uint64",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub data_bytes: ::core::option::Option<u64>,
+    /// The apps linked to it there, each as people call it.
+    ///
+    /// Field 4: `app_names`
+    #[serde(
+        rename = "app_names",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub app_names: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MoveTarget {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MoveTarget")
+            .field("database_project_id", &self.database_project_id)
+            .field("name", &self.name)
+            .field("data_bytes", &self.data_bytes)
+            .field("app_names", &self.app_names)
+            .finish()
+    }
+}
+impl MoveTarget {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveTarget";
+}
+impl MoveTarget {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::database_project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_database_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::name`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_name(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.name = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::data_bytes`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_data_bytes(mut self, value: u64) -> Self {
+        self.data_bytes = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(MoveTarget);
+impl ::buffa::MessageName for MoveTarget {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "MoveTarget";
+    const FULL_NAME: &'static str = "pethost.panel.v1.MoveTarget";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.MoveTarget";
+}
+impl ::buffa::Message for MoveTarget {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.database_project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.name {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.data_bytes {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
+        }
+        for v in &self.app_names {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.database_project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.name {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(v) = self.data_bytes {
+            ::buffa::types::put_uint64_field(3u32, v, buf);
+        }
+        for v in &self.app_names {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .database_project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.name.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.data_bytes = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint64(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.app_names.push(__elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.database_project_id = ::core::option::Option::None;
+        self.name = ::core::option::Option::None;
+        self.data_bytes = ::core::option::Option::None;
+        self.app_names.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MoveTarget {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.MoveTarget";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MoveTarget {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOVE_TARGET_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.MoveTarget",
+    to_json: ::buffa::type_registry::any_to_json::<MoveTarget>,
+    from_json: ::buffa::type_registry::any_from_json::<MoveTarget>,
+    is_wkt: false,
+};
 /// ── ListCommits ────────────────────────────────────────────────────────────
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
@@ -20784,6 +24805,12 @@ pub struct ListCommitsRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub before_commit: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -20793,6 +24820,7 @@ impl ::core::fmt::Debug for ListCommitsRequest {
         f.debug_struct("ListCommitsRequest")
             .field("project_id", &self.project_id)
             .field("before_commit", &self.before_commit)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -20824,6 +24852,16 @@ impl ListCommitsRequest {
         self.before_commit = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(ListCommitsRequest);
 impl ::buffa::MessageName for ListCommitsRequest {
@@ -20851,6 +24889,9 @@ impl ::buffa::Message for ListCommitsRequest {
         if let Some(ref v) = self.before_commit {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -20866,6 +24907,9 @@ impl ::buffa::Message for ListCommitsRequest {
         }
         if let Some(ref v) = self.before_commit {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -20904,6 +24948,18 @@ impl ::buffa::Message for ListCommitsRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -20914,6 +24970,7 @@ impl ::buffa::Message for ListCommitsRequest {
     fn clear(&mut self) {
         self.project_id = ::core::option::Option::None;
         self.before_commit = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -21462,6 +25519,12 @@ pub struct RunProjectActionRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub wait_seconds: ::core::option::Option<u32>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub action: ::core::option::Option<
         __buffa::oneof::run_project_action_request::Action,
@@ -21476,6 +25539,7 @@ impl ::core::fmt::Debug for RunProjectActionRequest {
             .field("project_id", &self.project_id)
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
+            .field("workspace", &self.workspace)
             .field("action", &self.action)
             .finish()
     }
@@ -21513,6 +25577,16 @@ impl RunProjectActionRequest {
     ///Sets [`Self::wait_seconds`] to `Some(value)`, consuming and returning `self`.
     pub fn with_wait_seconds(mut self, value: u32) -> Self {
         self.wait_seconds = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -21642,6 +25716,9 @@ impl ::buffa::Message for RunProjectActionRequest {
         if let Some(v) = self.wait_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -21757,6 +25834,9 @@ impl ::buffa::Message for RunProjectActionRequest {
         }
         if let Some(v) = self.wait_seconds {
             ::buffa::types::put_uint32_field(13u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -22035,6 +26115,18 @@ impl ::buffa::Message for RunProjectActionRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -22047,6 +26139,7 @@ impl ::buffa::Message for RunProjectActionRequest {
         self.action = ::core::option::Option::None;
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -22086,6 +26179,9 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                 let mut __f_wait_seconds: ::core::option::Option<
                     ::core::option::Option<u32>,
                 > = None;
+                let mut __f_workspace: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
+                > = None;
                 let mut __oneof_action: ::core::option::Option<
                     __buffa::oneof::run_project_action_request::Action,
                 > = None;
@@ -22124,6 +26220,14 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                                 }
                                 map.next_value_seed(_S)?
                             });
+                        }
+                        "workspace" => {
+                            __f_workspace = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
                         }
                         "start_services" => {
                             let v: ::core::option::Option<ServicesAction> = map
@@ -22405,6 +26509,9 @@ impl<'de> ::serde::Deserialize<'de> for RunProjectActionRequest {
                 }
                 if let ::core::option::Option::Some(v) = __f_wait_seconds {
                     __r.wait_seconds = v;
+                }
+                if let ::core::option::Option::Some(v) = __f_workspace {
+                    __r.workspace = v;
                 }
                 __r.action = __oneof_action;
                 Ok(__r)
@@ -25355,6 +29462,12 @@ pub struct LinkDatabaseRequest {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub unlink: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -25365,6 +29478,7 @@ impl ::core::fmt::Debug for LinkDatabaseRequest {
             .field("database_project_id", &self.database_project_id)
             .field("link", &self.link)
             .field("unlink", &self.unlink)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -25384,6 +29498,16 @@ impl LinkDatabaseRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.database_project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -25416,6 +29540,9 @@ impl ::buffa::Message for LinkDatabaseRequest {
         for v in &self.unlink {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -25434,6 +29561,9 @@ impl ::buffa::Message for LinkDatabaseRequest {
         }
         for v in &self.unlink {
             ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -25482,6 +29612,18 @@ impl ::buffa::Message for LinkDatabaseRequest {
                 )?;
                 self.unlink.push(__elem);
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -25493,6 +29635,7 @@ impl ::buffa::Message for LinkDatabaseRequest {
         self.database_project_id = ::core::option::Option::None;
         self.link.clear();
         self.unlink.clear();
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -25740,6 +29883,12 @@ pub struct CreateDatabaseRequest {
         ProjectMetadata,
         ::buffa::Inline<ProjectMetadata>,
     >,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -25755,6 +29904,7 @@ impl ::core::fmt::Debug for CreateDatabaseRequest {
             .field("operation_id", &self.operation_id)
             .field("wait_seconds", &self.wait_seconds)
             .field("metadata", &self.metadata)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -25820,6 +29970,16 @@ impl CreateDatabaseRequest {
         self.wait_seconds = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(CreateDatabaseRequest);
 impl ::buffa::MessageName for CreateDatabaseRequest {
@@ -25870,6 +30030,9 @@ impl ::buffa::Message for CreateDatabaseRequest {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -25908,6 +30071,9 @@ impl ::buffa::Message for CreateDatabaseRequest {
                 buf,
             );
             self.metadata.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -26007,6 +30173,18 @@ impl ::buffa::Message for CreateDatabaseRequest {
                     ctx,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -26023,6 +30201,7 @@ impl ::buffa::Message for CreateDatabaseRequest {
         self.operation_id = ::core::option::Option::None;
         self.wait_seconds = ::core::option::Option::None;
         self.metadata = ::buffa::MessageField::none();
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -26390,6 +30569,12 @@ pub struct GetDatabaseStatsRequest {
     pub statement_order: ::core::option::Option<
         ::buffa::EnumValue<DatabaseStatementOrder>,
     >,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -26403,6 +30588,7 @@ impl ::core::fmt::Debug for GetDatabaseStatsRequest {
             .field("last_seconds", &self.last_seconds)
             .field("bucket_width_seconds", &self.bucket_width_seconds)
             .field("statement_order", &self.statement_order)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -26446,6 +30632,16 @@ impl GetDatabaseStatsRequest {
         value: impl Into<::buffa::EnumValue<DatabaseStatementOrder>>,
     ) -> Self {
         self.statement_order = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -26497,6 +30693,9 @@ impl ::buffa::Message for GetDatabaseStatsRequest {
         if let Some(ref v) = self.statement_order {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -26534,6 +30733,9 @@ impl ::buffa::Message for GetDatabaseStatsRequest {
         }
         if let Some(ref v) = self.statement_order {
             ::buffa::types::put_int32_field(6u32, v.to_i32(), buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -26609,6 +30811,18 @@ impl ::buffa::Message for GetDatabaseStatsRequest {
                     ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -26623,6 +30837,7 @@ impl ::buffa::Message for GetDatabaseStatsRequest {
         self.last_seconds = ::core::option::Option::None;
         self.bucket_width_seconds = ::core::option::Option::None;
         self.statement_order = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -31212,6 +35427,12 @@ pub struct CancelDatabaseQueryRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub end_session: ::core::option::Option<bool>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -31222,6 +35443,7 @@ impl ::core::fmt::Debug for CancelDatabaseQueryRequest {
             .field("project_id", &self.project_id)
             .field("pid", &self.pid)
             .field("end_session", &self.end_session)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -31257,6 +35479,16 @@ impl CancelDatabaseQueryRequest {
         self.end_session = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(CancelDatabaseQueryRequest);
 impl ::buffa::MessageName for CancelDatabaseQueryRequest {
@@ -31287,6 +35519,9 @@ impl ::buffa::Message for CancelDatabaseQueryRequest {
         if self.end_session.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -31305,6 +35540,9 @@ impl ::buffa::Message for CancelDatabaseQueryRequest {
         }
         if let Some(v) = self.end_session {
             ::buffa::types::put_bool_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -31349,6 +35587,18 @@ impl ::buffa::Message for CancelDatabaseQueryRequest {
                     ::buffa::types::decode_bool(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -31360,6 +35610,7 @@ impl ::buffa::Message for CancelDatabaseQueryRequest {
         self.project_id = ::core::option::Option::None;
         self.pid = ::core::option::Option::None;
         self.end_session = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -31584,6 +35835,12 @@ pub struct SetProjectAlertsRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub mute_minutes: ::core::option::Option<u32>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -31598,6 +35855,7 @@ impl ::core::fmt::Debug for SetProjectAlertsRequest {
             .field("remove_traffic_rules", &self.remove_traffic_rules)
             .field("off", &self.off)
             .field("mute_minutes", &self.mute_minutes)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -31645,6 +35903,16 @@ impl SetProjectAlertsRequest {
     ///Sets [`Self::mute_minutes`] to `Some(value)`, consuming and returning `self`.
     pub fn with_mute_minutes(mut self, value: u32) -> Self {
         self.mute_minutes = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -31699,6 +35967,9 @@ impl ::buffa::Message for SetProjectAlertsRequest {
         if let Some(v) = self.mute_minutes {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -31739,6 +36010,9 @@ impl ::buffa::Message for SetProjectAlertsRequest {
         }
         if let Some(v) = self.mute_minutes {
             ::buffa::types::put_uint32_field(7u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -31825,6 +36099,18 @@ impl ::buffa::Message for SetProjectAlertsRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -31840,6 +36126,7 @@ impl ::buffa::Message for SetProjectAlertsRequest {
         self.remove_traffic_rules = ::core::option::Option::None;
         self.off = ::core::option::Option::None;
         self.mute_minutes = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -34991,6 +39278,12 @@ pub struct GetIncidentRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub incident_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -35000,6 +39293,7 @@ impl ::core::fmt::Debug for GetIncidentRequest {
         f.debug_struct("GetIncidentRequest")
             .field("project_id", &self.project_id)
             .field("incident_id", &self.incident_id)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -35031,6 +39325,16 @@ impl GetIncidentRequest {
         self.incident_id = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(GetIncidentRequest);
 impl ::buffa::MessageName for GetIncidentRequest {
@@ -35058,6 +39362,9 @@ impl ::buffa::Message for GetIncidentRequest {
         if let Some(ref v) = self.incident_id {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -35073,6 +39380,9 @@ impl ::buffa::Message for GetIncidentRequest {
         }
         if let Some(ref v) = self.incident_id {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -35111,6 +39421,18 @@ impl ::buffa::Message for GetIncidentRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -35121,6 +39443,7 @@ impl ::buffa::Message for GetIncidentRequest {
     fn clear(&mut self) {
         self.project_id = ::core::option::Option::None;
         self.incident_id = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -35379,6 +39702,12 @@ pub struct GetOperationRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub log_line_limit: ::core::option::Option<u32>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -35391,6 +39720,7 @@ impl ::core::fmt::Debug for GetOperationRequest {
             .field("wait_seconds", &self.wait_seconds)
             .field("after_log_line", &self.after_log_line)
             .field("log_line_limit", &self.log_line_limit)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -35443,6 +39773,16 @@ impl GetOperationRequest {
         self.log_line_limit = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(GetOperationRequest);
 impl ::buffa::MessageName for GetOperationRequest {
@@ -35479,6 +39819,9 @@ impl ::buffa::Message for GetOperationRequest {
         if let Some(v) = self.log_line_limit {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -35503,6 +39846,9 @@ impl ::buffa::Message for GetOperationRequest {
         }
         if let Some(v) = self.log_line_limit {
             ::buffa::types::put_uint32_field(5u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -35568,6 +39914,18 @@ impl ::buffa::Message for GetOperationRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -35581,6 +39939,7 @@ impl ::buffa::Message for GetOperationRequest {
         self.wait_seconds = ::core::option::Option::None;
         self.after_log_line = ::core::option::Option::None;
         self.log_line_limit = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -35661,6 +40020,15 @@ pub struct GetOperationResponse {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub next_after_log_line: ::core::option::Option<u32>,
+    /// A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+    /// behind, or why nothing moved.
+    ///
+    /// Field 6: `move_message`
+    #[serde(
+        rename = "move_message",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub move_message: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -35673,6 +40041,7 @@ impl ::core::fmt::Debug for GetOperationResponse {
             .field("log", &self.log)
             .field("log_line_count", &self.log_line_count)
             .field("next_after_log_line", &self.next_after_log_line)
+            .field("move_message", &self.move_message)
             .finish()
     }
 }
@@ -35696,6 +40065,16 @@ impl GetOperationResponse {
     ///Sets [`Self::next_after_log_line`] to `Some(value)`, consuming and returning `self`.
     pub fn with_next_after_log_line(mut self, value: u32) -> Self {
         self.next_after_log_line = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::move_message`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_move_message(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.move_message = Some(value.into());
         self
     }
 }
@@ -35749,6 +40128,9 @@ impl ::buffa::Message for GetOperationResponse {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.move_message {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -35788,6 +40170,9 @@ impl ::buffa::Message for GetOperationResponse {
                 buf,
             );
             self.project.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.move_message {
+            ::buffa::types::put_string_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -35854,6 +40239,18 @@ impl ::buffa::Message for GetOperationResponse {
                     ctx,
                 )?;
             }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .move_message
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -35867,6 +40264,7 @@ impl ::buffa::Message for GetOperationResponse {
         self.log_line_count = ::core::option::Option::None;
         self.next_after_log_line = ::core::option::Option::None;
         self.project = ::buffa::MessageField::none();
+        self.move_message = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -36435,6 +40833,12 @@ pub struct QueryHttpTrafficRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -36450,6 +40854,7 @@ impl ::core::fmt::Debug for QueryHttpTrafficRequest {
             .field("bucket_width_seconds", &self.bucket_width_seconds)
             .field("request_limit", &self.request_limit)
             .field("page_token", &self.page_token)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -36500,6 +40905,16 @@ impl QueryHttpTrafficRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.page_token = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -36562,6 +40977,9 @@ impl ::buffa::Message for QueryHttpTrafficRequest {
         if let Some(v) = self.last_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -36610,6 +41028,9 @@ impl ::buffa::Message for QueryHttpTrafficRequest {
         }
         if let Some(v) = self.last_seconds {
             ::buffa::types::put_uint32_field(8u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -36708,6 +41129,18 @@ impl ::buffa::Message for QueryHttpTrafficRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -36724,6 +41157,7 @@ impl ::buffa::Message for QueryHttpTrafficRequest {
         self.request_limit = ::core::option::Option::None;
         self.page_token = ::core::option::Option::None;
         self.last_seconds = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -38539,6 +42973,12 @@ pub struct QueryContainerLogsRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -38554,6 +42994,7 @@ impl ::core::fmt::Debug for QueryContainerLogsRequest {
             .field("limit", &self.limit)
             .field("from_start", &self.from_start)
             .field("page_token", &self.page_token)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -38604,6 +43045,16 @@ impl QueryContainerLogsRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.page_token = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -38666,6 +43117,9 @@ impl ::buffa::Message for QueryContainerLogsRequest {
         if let Some(v) = self.last_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -38714,6 +43168,9 @@ impl ::buffa::Message for QueryContainerLogsRequest {
         }
         if let Some(v) = self.last_seconds {
             ::buffa::types::put_uint32_field(8u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -38812,6 +43269,18 @@ impl ::buffa::Message for QueryContainerLogsRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -38828,6 +43297,7 @@ impl ::buffa::Message for QueryContainerLogsRequest {
         self.from_start = ::core::option::Option::None;
         self.page_token = ::core::option::Option::None;
         self.last_seconds = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -39497,6 +43967,12 @@ pub struct RunServiceCommandRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub timeout_seconds: ::core::option::Option<u32>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -39511,6 +43987,7 @@ impl ::core::fmt::Debug for RunServiceCommandRequest {
             .field("run_as_user", &self.run_as_user)
             .field("working_directory", &self.working_directory)
             .field("timeout_seconds", &self.timeout_seconds)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -39579,6 +44056,16 @@ impl RunServiceCommandRequest {
         self.timeout_seconds = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(RunServiceCommandRequest);
 impl ::buffa::MessageName for RunServiceCommandRequest {
@@ -39621,6 +44108,9 @@ impl ::buffa::Message for RunServiceCommandRequest {
         if let Some(v) = self.timeout_seconds {
             size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -39651,6 +44141,9 @@ impl ::buffa::Message for RunServiceCommandRequest {
         }
         if let Some(v) = self.timeout_seconds {
             ::buffa::types::put_uint32_field(7u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -39741,6 +44234,18 @@ impl ::buffa::Message for RunServiceCommandRequest {
                     ::buffa::types::decode_uint32(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -39756,6 +44261,7 @@ impl ::buffa::Message for RunServiceCommandRequest {
         self.run_as_user = ::core::option::Option::None;
         self.working_directory = ::core::option::Option::None;
         self.timeout_seconds = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -40482,6 +44988,12 @@ pub struct ReadPathRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub entry_page_token: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub root: ::core::option::Option<__buffa::oneof::read_path_request::Root>,
     #[serde(skip)]
@@ -40497,6 +45009,7 @@ impl ::core::fmt::Debug for ReadPathRequest {
             .field("offset_bytes", &self.offset_bytes)
             .field("length_bytes", &self.length_bytes)
             .field("entry_page_token", &self.entry_page_token)
+            .field("workspace", &self.workspace)
             .field("root", &self.root)
             .finish()
     }
@@ -40560,6 +45073,16 @@ impl ReadPathRequest {
         self.entry_page_token = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(ReadPathRequest);
 impl ::buffa::MessageName for ReadPathRequest {
@@ -40609,6 +45132,9 @@ impl ::buffa::Message for ReadPathRequest {
         if let Some(ref v) = self.entry_page_token {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -40646,6 +45172,9 @@ impl ::buffa::Message for ReadPathRequest {
         }
         if let Some(ref v) = self.entry_page_token {
             ::buffa::types::put_string_field(9u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -40743,6 +45272,18 @@ impl ::buffa::Message for ReadPathRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -40758,6 +45299,7 @@ impl ::buffa::Message for ReadPathRequest {
         self.offset_bytes = ::core::option::Option::None;
         self.length_bytes = ::core::option::Option::None;
         self.entry_page_token = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -40804,6 +45346,9 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                     ::core::option::Option<u32>,
                 > = None;
                 let mut __f_entry_page_token: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
+                > = None;
+                let mut __f_workspace: ::core::option::Option<
                     ::core::option::Option<::buffa::alloc::string::String>,
                 > = None;
                 let mut __oneof_root: ::core::option::Option<
@@ -40889,6 +45434,14 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                                     >()?,
                             );
                         }
+                        "workspace" => {
+                            __f_workspace = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
+                        }
                         "service" => {
                             let v: ::core::option::Option<
                                 ::buffa::alloc::string::String,
@@ -40960,6 +45513,9 @@ impl<'de> ::serde::Deserialize<'de> for ReadPathRequest {
                 }
                 if let ::core::option::Option::Some(v) = __f_entry_page_token {
                     __r.entry_page_token = v;
+                }
+                if let ::core::option::Option::Some(v) = __f_workspace {
+                    __r.workspace = v;
                 }
                 __r.root = __oneof_root;
                 Ok(__r)
@@ -41457,6 +46013,12 @@ pub const __READ_PATH_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = 
 #[derive(::serde::Serialize)]
 #[serde(default)]
 pub struct CreateTransferRequest {
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub transfer: ::core::option::Option<
         __buffa::oneof::create_transfer_request::Transfer,
@@ -41468,6 +46030,7 @@ pub struct CreateTransferRequest {
 impl ::core::fmt::Debug for CreateTransferRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("CreateTransferRequest")
+            .field("workspace", &self.workspace)
             .field("transfer", &self.transfer)
             .finish()
     }
@@ -41478,6 +46041,18 @@ impl CreateTransferRequest {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.CreateTransferRequest";
+}
+impl CreateTransferRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(CreateTransferRequest);
 impl ::buffa::MessageName for CreateTransferRequest {
@@ -41537,6 +46112,9 @@ impl ::buffa::Message for CreateTransferRequest {
                 }
             }
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -41584,6 +46162,9 @@ impl ::buffa::Message for CreateTransferRequest {
                     x.write_to(__cache, buf);
                 }
             }
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -41686,6 +46267,18 @@ impl ::buffa::Message for CreateTransferRequest {
                     );
                 }
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -41695,6 +46288,7 @@ impl ::buffa::Message for CreateTransferRequest {
     }
     fn clear(&mut self) {
         self.transfer = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -41725,11 +46319,22 @@ impl<'de> ::serde::Deserialize<'de> for CreateTransferRequest {
                 self,
                 mut map: A,
             ) -> ::core::result::Result<CreateTransferRequest, A::Error> {
+                let mut __f_workspace: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
+                > = None;
                 let mut __oneof_transfer: ::core::option::Option<
                     __buffa::oneof::create_transfer_request::Transfer,
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
+                        "workspace" => {
+                            __f_workspace = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
+                        }
                         "upload_archive" => {
                             let v: ::core::option::Option<ArchiveUpload> = map
                                 .next_value_seed(
@@ -41832,6 +46437,9 @@ impl<'de> ::serde::Deserialize<'de> for CreateTransferRequest {
                     }
                 }
                 let mut __r = <CreateTransferRequest as ::core::default::Default>::default();
+                if let ::core::option::Option::Some(v) = __f_workspace {
+                    __r.workspace = v;
+                }
                 __r.transfer = __oneof_transfer;
                 Ok(__r)
             }
@@ -43280,13 +47888,22 @@ pub struct GetUploadRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub upload_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
 impl ::core::fmt::Debug for GetUploadRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("GetUploadRequest").field("upload_id", &self.upload_id).finish()
+        f.debug_struct("GetUploadRequest")
+            .field("upload_id", &self.upload_id)
+            .field("workspace", &self.workspace)
+            .finish()
     }
 }
 impl GetUploadRequest {
@@ -43305,6 +47922,16 @@ impl GetUploadRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.upload_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -43331,6 +47958,9 @@ impl ::buffa::Message for GetUploadRequest {
         if let Some(ref v) = self.upload_id {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -43343,6 +47973,9 @@ impl ::buffa::Message for GetUploadRequest {
         use ::buffa::Enumeration as _;
         if let Some(ref v) = self.upload_id {
             ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -43369,6 +48002,18 @@ impl ::buffa::Message for GetUploadRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -43378,6 +48023,7 @@ impl ::buffa::Message for GetUploadRequest {
     }
     fn clear(&mut self) {
         self.upload_id = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -44708,7 +49354,8 @@ pub const __DATABASE_SIZE_REFUSAL_JSON_ANY: ::buffa::type_registry::JsonAnyEntry
     from_json: ::buffa::type_registry::any_from_json::<DatabaseSizeRefusal>,
     is_wkt: false,
 };
-/// Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
+/// Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+/// caller has no workspace, or the workspace's machine is being prepared.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -44720,11 +49367,20 @@ pub struct NoMachine {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub reason: ::core::option::Option<::buffa::EnumValue<NoMachineReason>>,
-    /// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+    /// Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+    /// the workspace's page, which says it is. An MCP tool leaves it out.
     ///
     /// Field 2: `url`
     #[serde(rename = "url", skip_serializing_if = "::core::option::Option::is_none")]
     pub url: ::core::option::Option<::buffa::alloc::string::String>,
+    /// BEING_PREPARED: the workspace. Empty for NO_PLAN.
+    ///
+    /// Field 3: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -44734,6 +49390,7 @@ impl ::core::fmt::Debug for NoMachine {
         f.debug_struct("NoMachine")
             .field("reason", &self.reason)
             .field("url", &self.url)
+            .field("workspace_id", &self.workspace_id)
             .finish()
     }
 }
@@ -44760,6 +49417,16 @@ impl NoMachine {
     ///Sets [`Self::url`] to `Some(value)`, consuming and returning `self`.
     pub fn with_url(mut self, value: impl Into<::buffa::alloc::string::String>) -> Self {
         self.url = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
         self
     }
 }
@@ -44789,6 +49456,9 @@ impl ::buffa::Message for NoMachine {
         if let Some(ref v) = self.url {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -44804,6 +49474,9 @@ impl ::buffa::Message for NoMachine {
         }
         if let Some(ref v) = self.url {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(3u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -44837,6 +49510,18 @@ impl ::buffa::Message for NoMachine {
                     buf,
                 )?;
             }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -44847,6 +49532,7 @@ impl ::buffa::Message for NoMachine {
     fn clear(&mut self) {
         self.reason = ::core::option::Option::None;
         self.url = ::core::option::Option::None;
+        self.workspace_id = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -44879,6 +49565,683 @@ pub const __NO_MACHINE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa:
     from_json: ::buffa::type_registry::any_from_json::<NoMachine>,
     is_wkt: false,
 };
+/// Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and
+/// the caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by
+/// what the person asked for: a project that exists is in those of holding_project; for
+/// something new, ask the person, showing each one's size and what is free.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct WorkspaceChoice {
+    /// By name, at most 20: ListWorkspaces lists all.
+    ///
+    /// Field 1: `workspaces`
+    #[serde(
+        rename = "workspaces",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub workspaces: ::buffa::alloc::vec::Vec<Workspace>,
+    /// The workspaces the call may act on (this token's), in all.
+    ///
+    /// Field 2: `total`
+    #[serde(
+        rename = "total",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub total: ::core::option::Option<u32>,
+    /// The call names a project: the workspaces that have a project of that id, by workspace_id.
+    ///
+    /// Field 3: `holding_project`
+    #[serde(
+        rename = "holding_project",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub holding_project: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    /// As ListWorkspacesResponse's.
+    ///
+    /// Field 4: `incomplete`
+    #[serde(
+        rename = "incomplete",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub incomplete: ::core::option::Option<bool>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for WorkspaceChoice {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("WorkspaceChoice")
+            .field("workspaces", &self.workspaces)
+            .field("total", &self.total)
+            .field("holding_project", &self.holding_project)
+            .field("incomplete", &self.incomplete)
+            .finish()
+    }
+}
+impl WorkspaceChoice {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.WorkspaceChoice";
+}
+impl WorkspaceChoice {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::total`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_total(mut self, value: u32) -> Self {
+        self.total = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::incomplete`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_incomplete(mut self, value: bool) -> Self {
+        self.incomplete = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(WorkspaceChoice);
+impl ::buffa::MessageName for WorkspaceChoice {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "WorkspaceChoice";
+    const FULL_NAME: &'static str = "pethost.panel.v1.WorkspaceChoice";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.WorkspaceChoice";
+}
+impl ::buffa::Message for WorkspaceChoice {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.workspaces {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if let Some(v) = self.total {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        for v in &self.holding_project {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.incomplete.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.workspaces {
+            ::buffa::types::put_len_delimited_header(
+                1u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            v.write_to(__cache, buf);
+        }
+        if let Some(v) = self.total {
+            ::buffa::types::put_uint32_field(2u32, v, buf);
+        }
+        for v in &self.holding_project {
+            ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        if let Some(v) = self.incomplete {
+            ::buffa::types::put_bool_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.workspaces.push(elem);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.total = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&__elem),
+                )?;
+                self.holding_project.push(__elem);
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.incomplete = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.workspaces.clear();
+        self.total = ::core::option::Option::None;
+        self.holding_project.clear();
+        self.incomplete = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for WorkspaceChoice {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.WorkspaceChoice";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for WorkspaceChoice {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __WORKSPACE_CHOICE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.WorkspaceChoice",
+    to_json: ::buffa::type_registry::any_to_json::<WorkspaceChoice>,
+    from_json: ::buffa::type_registry::any_from_json::<WorkspaceChoice>,
+    is_wkt: false,
+};
+/// Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+/// connection is pinned to), but the person has not let this token reach it; or the call named
+/// none and the token reaches none of the account's workspaces.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct WorkspaceNotGranted {
+    /// The workspace it may not reach: the one named, else the account's only one. Empty = the call
+    /// named none and the account has several.
+    ///
+    /// Field 1: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The panel's page where the person lets the token reach it.
+    ///
+    /// Field 2: `url`
+    #[serde(rename = "url", skip_serializing_if = "::core::option::Option::is_none")]
+    pub url: ::core::option::Option<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for WorkspaceNotGranted {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("WorkspaceNotGranted")
+            .field("workspace_id", &self.workspace_id)
+            .field("url", &self.url)
+            .finish()
+    }
+}
+impl WorkspaceNotGranted {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.WorkspaceNotGranted";
+}
+impl WorkspaceNotGranted {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::url`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_url(mut self, value: impl Into<::buffa::alloc::string::String>) -> Self {
+        self.url = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(WorkspaceNotGranted);
+impl ::buffa::MessageName for WorkspaceNotGranted {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "WorkspaceNotGranted";
+    const FULL_NAME: &'static str = "pethost.panel.v1.WorkspaceNotGranted";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.WorkspaceNotGranted";
+}
+impl ::buffa::Message for WorkspaceNotGranted {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.workspace_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.url {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.url {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.url.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.workspace_id = ::core::option::Option::None;
+        self.url = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for WorkspaceNotGranted {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.WorkspaceNotGranted";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for WorkspaceNotGranted {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __WORKSPACE_NOT_GRANTED_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.WorkspaceNotGranted",
+    to_json: ::buffa::type_registry::any_to_json::<WorkspaceNotGranted>,
+    from_json: ::buffa::type_registry::any_from_json::<WorkspaceNotGranted>,
+    is_wkt: false,
+};
+/// Detail of a FAILED_PRECONDITION error: the project moved to another workspace (MoveProject).
+/// Call there, naming it as `workspace`; ids of operations and snapshots from before stay
+/// behind.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct ProjectMoved {
+    /// Field 1: `project_id`
+    #[serde(
+        rename = "project_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Where the move took it, which answers for it as it is now.
+    ///
+    /// Field 2: `workspace_id`
+    #[serde(
+        rename = "workspace_id",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 3: `workspace_name`
+    #[serde(
+        rename = "workspace_name",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace_name: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 4: `move_time`
+    #[serde(
+        rename = "move_time",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub move_time: ::buffa::MessageField<
+        ::buffa_types::google::protobuf::Timestamp,
+        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
+    >,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for ProjectMoved {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ProjectMoved")
+            .field("project_id", &self.project_id)
+            .field("workspace_id", &self.workspace_id)
+            .field("workspace_name", &self.workspace_name)
+            .field("move_time", &self.move_time)
+            .finish()
+    }
+}
+impl ProjectMoved {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ProjectMoved";
+}
+impl ProjectMoved {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::project_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_project_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_id`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_id(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace_name`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace_name(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace_name = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(ProjectMoved);
+impl ::buffa::MessageName for ProjectMoved {
+    const PACKAGE: &'static str = "pethost.panel.v1";
+    const NAME: &'static str = "ProjectMoved";
+    const FULL_NAME: &'static str = "pethost.panel.v1.ProjectMoved";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.ProjectMoved";
+}
+impl ::buffa::Message for ProjectMoved {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.project_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.workspace_id {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(ref v) = self.workspace_name {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.move_time.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.move_time.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.project_id {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace_id {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace_name {
+            ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        if self.move_time.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                4u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.move_time.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .project_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_id
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace_name
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.move_time.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.project_id = ::core::option::Option::None;
+        self.workspace_id = ::core::option::Option::None;
+        self.workspace_name = ::core::option::Option::None;
+        self.move_time = ::buffa::MessageField::none();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for ProjectMoved {
+    const PROTO_FQN: &'static str = "pethost.panel.v1.ProjectMoved";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for ProjectMoved {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __PROJECT_MOVED_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.panel.v1.ProjectMoved",
+    to_json: ::buffa::type_registry::any_to_json::<ProjectMoved>,
+    from_json: ::buffa::type_registry::any_from_json::<ProjectMoved>,
+    is_wkt: false,
+};
 /// ── Streams ────────────────────────────────────────────────────────────────
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
@@ -44898,6 +50261,12 @@ pub struct WatchOperationRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub operation_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -44907,6 +50276,7 @@ impl ::core::fmt::Debug for WatchOperationRequest {
         f.debug_struct("WatchOperationRequest")
             .field("project_id", &self.project_id)
             .field("operation_id", &self.operation_id)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -44938,6 +50308,16 @@ impl WatchOperationRequest {
         self.operation_id = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(WatchOperationRequest);
 impl ::buffa::MessageName for WatchOperationRequest {
@@ -44965,6 +50345,9 @@ impl ::buffa::Message for WatchOperationRequest {
         if let Some(ref v) = self.operation_id {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -44980,6 +50363,9 @@ impl ::buffa::Message for WatchOperationRequest {
         }
         if let Some(ref v) = self.operation_id {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -45018,6 +50404,18 @@ impl ::buffa::Message for WatchOperationRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -45028,6 +50426,7 @@ impl ::buffa::Message for WatchOperationRequest {
     fn clear(&mut self) {
         self.project_id = ::core::option::Option::None;
         self.operation_id = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -45064,6 +50463,14 @@ pub const __WATCH_OPERATION_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEnt
 #[derive(::serde::Serialize)]
 #[serde(default)]
 pub struct WatchOperationResponse {
+    /// With a MOVE's finished_operation: MoveProjectResponse.move_message.
+    ///
+    /// Field 3: `move_message`
+    #[serde(
+        rename = "move_message",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub move_message: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(flatten)]
     pub message: ::core::option::Option<
         __buffa::oneof::watch_operation_response::Message,
@@ -45074,7 +50481,10 @@ pub struct WatchOperationResponse {
 }
 impl ::core::fmt::Debug for WatchOperationResponse {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("WatchOperationResponse").field("message", &self.message).finish()
+        f.debug_struct("WatchOperationResponse")
+            .field("move_message", &self.move_message)
+            .field("message", &self.message)
+            .finish()
     }
 }
 impl WatchOperationResponse {
@@ -45083,6 +50493,18 @@ impl WatchOperationResponse {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.panel.v1.WatchOperationResponse";
+}
+impl WatchOperationResponse {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::move_message`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_move_message(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.move_message = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(WatchOperationResponse);
 impl ::buffa::MessageName for WatchOperationResponse {
@@ -45126,6 +50548,9 @@ impl ::buffa::Message for WatchOperationResponse {
                 }
             }
         }
+        if let Some(ref v) = self.move_message {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -45157,6 +50582,9 @@ impl ::buffa::Message for WatchOperationResponse {
                     x.write_to(__cache, buf);
                 }
             }
+        }
+        if let Some(ref v) = self.move_message {
+            ::buffa::types::put_string_field(3u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -45215,6 +50643,18 @@ impl ::buffa::Message for WatchOperationResponse {
                     );
                 }
             }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .move_message
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -45224,6 +50664,7 @@ impl ::buffa::Message for WatchOperationResponse {
     }
     fn clear(&mut self) {
         self.message = ::core::option::Option::None;
+        self.move_message = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -45254,11 +50695,22 @@ impl<'de> ::serde::Deserialize<'de> for WatchOperationResponse {
                 self,
                 mut map: A,
             ) -> ::core::result::Result<WatchOperationResponse, A::Error> {
+                let mut __f_move_message: ::core::option::Option<
+                    ::core::option::Option<::buffa::alloc::string::String>,
+                > = None;
                 let mut __oneof_message: ::core::option::Option<
                     __buffa::oneof::watch_operation_response::Message,
                 > = None;
                 while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
                     match key.as_str() {
+                        "move_message" => {
+                            __f_move_message = Some(
+                                map
+                                    .next_value::<
+                                        ::core::option::Option<::buffa::alloc::string::String>,
+                                    >()?,
+                            );
+                        }
                         "log" => {
                             let v: ::core::option::Option<OperationLogLine> = map
                                 .next_value_seed(
@@ -45313,6 +50765,9 @@ impl<'de> ::serde::Deserialize<'de> for WatchOperationResponse {
                     }
                 }
                 let mut __r = <WatchOperationResponse as ::core::default::Default>::default();
+                if let ::core::option::Option::Some(v) = __f_move_message {
+                    __r.move_message = v;
+                }
                 __r.message = __oneof_message;
                 Ok(__r)
             }
@@ -45375,6 +50830,12 @@ pub struct TailContainerLogsRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub after_cursor: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -45385,6 +50846,7 @@ impl ::core::fmt::Debug for TailContainerLogsRequest {
             .field("project_id", &self.project_id)
             .field("filter", &self.filter)
             .field("after_cursor", &self.after_cursor)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -45414,6 +50876,16 @@ impl TailContainerLogsRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.after_cursor = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -45451,6 +50923,9 @@ impl ::buffa::Message for TailContainerLogsRequest {
         if let Some(ref v) = self.after_cursor {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -45474,6 +50949,9 @@ impl ::buffa::Message for TailContainerLogsRequest {
         }
         if let Some(ref v) = self.after_cursor {
             ::buffa::types::put_string_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -45523,6 +51001,18 @@ impl ::buffa::Message for TailContainerLogsRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -45534,6 +51024,7 @@ impl ::buffa::Message for TailContainerLogsRequest {
         self.project_id = ::core::option::Option::None;
         self.filter = ::buffa::MessageField::none();
         self.after_cursor = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -45768,6 +51259,12 @@ pub struct TailHttpTrafficRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub after_sequence: ::core::option::Option<u64>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -45778,6 +51275,7 @@ impl ::core::fmt::Debug for TailHttpTrafficRequest {
             .field("project_id", &self.project_id)
             .field("filter", &self.filter)
             .field("after_sequence", &self.after_sequence)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -45804,6 +51302,16 @@ impl TailHttpTrafficRequest {
     ///Sets [`Self::after_sequence`] to `Some(value)`, consuming and returning `self`.
     pub fn with_after_sequence(mut self, value: u64) -> Self {
         self.after_sequence = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -45841,6 +51349,9 @@ impl ::buffa::Message for TailHttpTrafficRequest {
         if let Some(v) = self.after_sequence {
             size += 1u64 + ::buffa::types::uint64_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -45864,6 +51375,9 @@ impl ::buffa::Message for TailHttpTrafficRequest {
         }
         if let Some(v) = self.after_sequence {
             ::buffa::types::put_uint64_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -45910,6 +51424,18 @@ impl ::buffa::Message for TailHttpTrafficRequest {
                     ::buffa::types::decode_uint64(buf)?,
                 );
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -45921,6 +51447,7 @@ impl ::buffa::Message for TailHttpTrafficRequest {
         self.project_id = ::core::option::Option::None;
         self.filter = ::buffa::MessageField::none();
         self.after_sequence = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -46138,6 +51665,12 @@ pub struct OpenTerminalRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub working_directory: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -46151,6 +51684,7 @@ impl ::core::fmt::Debug for OpenTerminalRequest {
             .field("command", &self.command)
             .field("run_as_user", &self.run_as_user)
             .field("working_directory", &self.working_directory)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -46202,6 +51736,16 @@ impl OpenTerminalRequest {
         self.working_directory = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(OpenTerminalRequest);
 impl ::buffa::MessageName for OpenTerminalRequest {
@@ -46246,6 +51790,9 @@ impl ::buffa::Message for OpenTerminalRequest {
         if let Some(ref v) = self.working_directory {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -46278,6 +51825,9 @@ impl ::buffa::Message for OpenTerminalRequest {
         }
         if let Some(ref v) = self.working_directory {
             ::buffa::types::put_string_field(6u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -46360,6 +51910,18 @@ impl ::buffa::Message for OpenTerminalRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -46374,6 +51936,7 @@ impl ::buffa::Message for OpenTerminalRequest {
         self.command.clear();
         self.run_as_user = ::core::option::Option::None;
         self.working_directory = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -46762,6 +52325,12 @@ pub struct OpenDatabaseClientRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub project_id: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 100: `workspace`
+    #[serde(
+        rename = "workspace",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -46770,6 +52339,7 @@ impl ::core::fmt::Debug for OpenDatabaseClientRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("OpenDatabaseClientRequest")
             .field("project_id", &self.project_id)
+            .field("workspace", &self.workspace)
             .finish()
     }
 }
@@ -46789,6 +52359,16 @@ impl OpenDatabaseClientRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.project_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_workspace(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.workspace = Some(value.into());
         self
     }
 }
@@ -46815,6 +52395,9 @@ impl ::buffa::Message for OpenDatabaseClientRequest {
         if let Some(ref v) = self.project_id {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.workspace {
+            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -46827,6 +52410,9 @@ impl ::buffa::Message for OpenDatabaseClientRequest {
         use ::buffa::Enumeration as _;
         if let Some(ref v) = self.project_id {
             ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.workspace {
+            ::buffa::types::put_string_field(100u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -46853,6 +52439,18 @@ impl ::buffa::Message for OpenDatabaseClientRequest {
                     buf,
                 )?;
             }
+            100u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .workspace
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -46862,6 +52460,7 @@ impl ::buffa::Message for OpenDatabaseClientRequest {
     }
     fn clear(&mut self) {
         self.project_id = ::core::option::Option::None;
+        self.workspace = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }

@@ -66,6 +66,24 @@ function only<T extends { case: string | undefined }>(oneof: string, set: T[]): 
   return set[0];
 }
 
+const fromWorkspaceStatus: Record<w.WorkspaceStatus, p.WorkspaceStatus | undefined> = {
+  [w.WorkspaceStatus.UNSPECIFIED]: undefined,
+  [w.WorkspaceStatus.READY]: "READY",
+  [w.WorkspaceStatus.BEING_PREPARED]: "BEING_PREPARED",
+};
+const toWorkspaceStatus: Record<p.WorkspaceStatus, w.WorkspaceStatus> = {
+  READY: w.WorkspaceStatus.READY,
+  BEING_PREPARED: w.WorkspaceStatus.BEING_PREPARED,
+};
+
+const fromWorkspaceRole: Record<w.WorkspaceRole, p.WorkspaceRole | undefined> = {
+  [w.WorkspaceRole.UNSPECIFIED]: undefined,
+  [w.WorkspaceRole.OWNER]: "OWNER",
+};
+const toWorkspaceRole: Record<p.WorkspaceRole, w.WorkspaceRole> = {
+  OWNER: w.WorkspaceRole.OWNER,
+};
+
 const fromAlertChannelKind: Record<w.AlertChannelKind, p.AlertChannelKind | undefined> = {
   [w.AlertChannelKind.UNSPECIFIED]: undefined,
   [w.AlertChannelKind.EMAIL]: "EMAIL",
@@ -209,6 +227,7 @@ const fromOperationKind: Record<w.OperationKind, p.OperationKind | undefined> = 
   [w.OperationKind.BACKUP]: "BACKUP",
   [w.OperationKind.RESTORE]: "RESTORE",
   [w.OperationKind.DELETE]: "DELETE",
+  [w.OperationKind.MOVE]: "MOVE",
 };
 const toOperationKind: Record<p.OperationKind, w.OperationKind> = {
   DEPLOY: w.OperationKind.DEPLOY,
@@ -216,6 +235,7 @@ const toOperationKind: Record<p.OperationKind, w.OperationKind> = {
   BACKUP: w.OperationKind.BACKUP,
   RESTORE: w.OperationKind.RESTORE,
   DELETE: w.OperationKind.DELETE,
+  MOVE: w.OperationKind.MOVE,
 };
 
 const fromOperationStatus: Record<w.OperationStatus, p.OperationStatus | undefined> = {
@@ -390,12 +410,89 @@ const toNoMachineReason: Record<p.NoMachineReason, w.NoMachineReason> = {
   BEING_PREPARED: w.NoMachineReason.BEING_PREPARED,
 };
 
-export function fromGetMachineRequest(_: w.GetMachineRequest): p.GetMachineRequest {
-  return {};
+export function fromListWorkspacesRequest(m: w.ListWorkspacesRequest): p.ListWorkspacesRequest {
+  return compact<p.ListWorkspacesRequest>({
+    projectId: m.projectId,
+    pageToken: m.pageToken,
+  });
 }
 
-export function toGetMachineRequest(_: p.GetMachineRequest): MessageInitShape<typeof w.GetMachineRequestSchema> {
+export function toListWorkspacesRequest(m: p.ListWorkspacesRequest): MessageInitShape<typeof w.ListWorkspacesRequestSchema> {
   return {
+    projectId: m.projectId || undefined,
+    pageToken: m.pageToken || undefined,
+  } satisfies Fields<w.ListWorkspacesRequest>;
+}
+
+export function fromListWorkspacesResponse(m: w.ListWorkspacesResponse): p.ListWorkspacesResponse {
+  return compact<p.ListWorkspacesResponse>({
+    workspaces: m.workspaces.map(fromWorkspace),
+    nextPageToken: m.nextPageToken,
+    total: m.total,
+    holdingProject: m.holdingProject,
+    incomplete: m.incomplete,
+  });
+}
+
+export function toListWorkspacesResponse(m: p.ListWorkspacesResponse): MessageInitShape<typeof w.ListWorkspacesResponseSchema> {
+  return {
+    workspaces: m.workspaces?.map(toWorkspace),
+    nextPageToken: m.nextPageToken || undefined,
+    total: m.total || undefined,
+    holdingProject: m.holdingProject && [...m.holdingProject],
+    incomplete: m.incomplete || undefined,
+  } satisfies Fields<w.ListWorkspacesResponse>;
+}
+
+export function fromWorkspace(m: w.Workspace): p.Workspace {
+  return compact<p.Workspace>({
+    workspaceId: m.workspaceId,
+    name: m.name,
+    status: known(fromWorkspaceStatus, m.status),
+    location: m.location,
+    plan: m.plan,
+    cpuTotalCores: m.cpuTotalCores,
+    memoryTotalBytes: m.memoryTotalBytes,
+    memoryFreeBytes: isFieldSet(m, w.WorkspaceSchema.field.memoryFreeBytes) ? m.memoryFreeBytes : undefined,
+    diskTotalBytes: m.diskTotalBytes,
+    diskFreeBytes: isFieldSet(m, w.WorkspaceSchema.field.diskFreeBytes) ? m.diskFreeBytes : undefined,
+    projectCount: isFieldSet(m, w.WorkspaceSchema.field.projectCount) ? m.projectCount : undefined,
+    hostname: m.hostname,
+    appsDomain: m.appsDomain,
+    endTime: m.endTime && toDate(m.endTime),
+    role: known(fromWorkspaceRole, m.role),
+  });
+}
+
+export function toWorkspace(m: p.Workspace): MessageInitShape<typeof w.WorkspaceSchema> {
+  return {
+    workspaceId: m.workspaceId || undefined,
+    name: m.name || undefined,
+    status: numbered(toWorkspaceStatus, m.status),
+    location: m.location || undefined,
+    plan: m.plan || undefined,
+    cpuTotalCores: m.cpuTotalCores === 0 ? undefined : m.cpuTotalCores,
+    memoryTotalBytes: m.memoryTotalBytes || undefined,
+    memoryFreeBytes: m.memoryFreeBytes,
+    diskTotalBytes: m.diskTotalBytes || undefined,
+    diskFreeBytes: m.diskFreeBytes,
+    projectCount: m.projectCount,
+    hostname: m.hostname || undefined,
+    appsDomain: m.appsDomain || undefined,
+    endTime: m.endTime && toTimestamp(m.endTime),
+    role: numbered(toWorkspaceRole, m.role),
+  } satisfies Fields<w.Workspace>;
+}
+
+export function fromGetMachineRequest(m: w.GetMachineRequest): p.GetMachineRequest {
+  return compact<p.GetMachineRequest>({
+    workspace: m.workspace,
+  });
+}
+
+export function toGetMachineRequest(m: p.GetMachineRequest): MessageInitShape<typeof w.GetMachineRequestSchema> {
+  return {
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.GetMachineRequest>;
 }
 
@@ -405,6 +502,7 @@ export function fromGetMachineResponse(m: w.GetMachineResponse): p.GetMachineRes
     projects: m.projects.map(fromProjectSummary),
     deletedProjects: m.deletedProjects.map(fromDeletedProject),
     github: m.github && fromGithubConnection(m.github),
+    workspace: m.workspace && fromWorkspace(m.workspace),
   });
 }
 
@@ -414,6 +512,7 @@ export function toGetMachineResponse(m: p.GetMachineResponse): MessageInitShape<
     projects: m.projects?.map(toProjectSummary),
     deletedProjects: m.deletedProjects?.map(toDeletedProject),
     github: m.github && toGithubConnection(m.github),
+    workspace: m.workspace && toWorkspace(m.workspace),
   } satisfies Fields<w.GetMachineResponse>;
 }
 
@@ -610,6 +709,7 @@ export function fromDeletedProject(m: w.DeletedProject): p.DeletedProject {
     projectId: m.projectId,
     newestSnapshot: m.newestSnapshot && fromSnapshot(m.newestSnapshot),
     snapshotCount: m.snapshotCount,
+    movedTo: m.movedTo && fromMovedTo(m.movedTo),
   });
 }
 
@@ -618,11 +718,30 @@ export function toDeletedProject(m: p.DeletedProject): MessageInitShape<typeof w
     projectId: m.projectId || undefined,
     newestSnapshot: m.newestSnapshot && toSnapshot(m.newestSnapshot),
     snapshotCount: m.snapshotCount || undefined,
+    movedTo: m.movedTo && toMovedTo(m.movedTo),
   } satisfies Fields<w.DeletedProject>;
 }
 
+export function fromMovedTo(m: w.MovedTo): p.MovedTo {
+  return compact<p.MovedTo>({
+    workspaceId: m.workspaceId,
+    workspaceName: m.workspaceName,
+    moveTime: m.moveTime && toDate(m.moveTime),
+  });
+}
+
+export function toMovedTo(m: p.MovedTo): MessageInitShape<typeof w.MovedToSchema> {
+  return {
+    workspaceId: m.workspaceId || undefined,
+    workspaceName: m.workspaceName || undefined,
+    moveTime: m.moveTime && toTimestamp(m.moveTime),
+  } satisfies Fields<w.MovedTo>;
+}
+
 export function fromRunMachineActionRequest(m: w.RunMachineActionRequest): p.RunMachineActionRequest {
-  return { ...fromRunMachineActionRequest_action(m.action) };
+  return { ...compact<Part<p.RunMachineActionRequest, "workspace">>({
+    workspace: m.workspace,
+  }), ...fromRunMachineActionRequest_action(m.action) };
 }
 
 function fromRunMachineActionRequest_action(o: w.RunMachineActionRequest["action"]): Part<p.RunMachineActionRequest, "addSshKey" | "removeSshKeyFingerprint" | "restartMachine" | "cancelRestart" | "endSessionId"> {
@@ -640,6 +759,7 @@ function fromRunMachineActionRequest_action(o: w.RunMachineActionRequest["action
 export function toRunMachineActionRequest(m: p.RunMachineActionRequest): MessageInitShape<typeof w.RunMachineActionRequestSchema> {
   return {
     action: toRunMachineActionRequest_action(m),
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.RunMachineActionRequest>;
 }
 
@@ -716,6 +836,7 @@ export function fromProjectSummary(m: w.ProjectSummary): p.ProjectSummary {
     pinned: m.pinned,
     diskUsedBytes: m.diskUsedBytes,
     database: m.database && fromDatabaseSummary(m.database),
+    uid: m.uid,
   });
 }
 
@@ -735,6 +856,7 @@ export function toProjectSummary(m: p.ProjectSummary): MessageInitShape<typeof w
     pinned: m.pinned || undefined,
     diskUsedBytes: m.diskUsedBytes || undefined,
     database: m.database && toDatabaseSummary(m.database),
+    uid: m.uid || undefined,
   } satisfies Fields<w.ProjectSummary>;
 }
 
@@ -783,6 +905,7 @@ export function fromGetProjectRequest(m: w.GetProjectRequest): p.GetProjectReque
     incidentsBefore: m.incidentsBefore && toDate(m.incidentsBefore),
     uptimeDayCount: m.uptimeDayCount,
     incidentsBeforeId: m.incidentsBeforeId,
+    workspace: m.workspace,
   });
 }
 
@@ -795,6 +918,7 @@ export function toGetProjectRequest(m: p.GetProjectRequest): MessageInitShape<ty
     incidentsBefore: m.incidentsBefore && toTimestamp(m.incidentsBefore),
     uptimeDayCount: m.uptimeDayCount || undefined,
     incidentsBeforeId: m.incidentsBeforeId || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.GetProjectRequest>;
 }
 
@@ -840,6 +964,9 @@ export function fromProject(m: w.Project): p.Project {
     uptimeDays: m.uptimeDays.map(fromUptimeDay),
     database: m.database && fromDatabase(m.database),
     linkedDatabases: m.linkedDatabases,
+    workspaceId: m.workspaceId,
+    uid: m.uid,
+    dependencies: m.dependencies.map(fromProjectDependency),
   });
 }
 
@@ -873,7 +1000,26 @@ export function toProject(m: p.Project): MessageInitShape<typeof w.ProjectSchema
     uptimeDays: m.uptimeDays?.map(toUptimeDay),
     database: m.database && toDatabase(m.database),
     linkedDatabases: m.linkedDatabases && [...m.linkedDatabases],
+    workspaceId: m.workspaceId || undefined,
+    uid: m.uid || undefined,
+    dependencies: m.dependencies?.map(toProjectDependency),
   } satisfies Fields<w.Project>;
+}
+
+export function fromProjectDependency(m: w.ProjectDependency): p.ProjectDependency {
+  return compact<p.ProjectDependency>({
+    databaseProjectId: m.databaseProjectId,
+    copyDatabase: m.copyDatabase,
+    envPrefix: m.envPrefix,
+  });
+}
+
+export function toProjectDependency(m: p.ProjectDependency): MessageInitShape<typeof w.ProjectDependencySchema> {
+  return {
+    databaseProjectId: m.databaseProjectId || undefined,
+    copyDatabase: m.copyDatabase || undefined,
+    envPrefix: m.envPrefix || undefined,
+  } satisfies Fields<w.ProjectDependency>;
 }
 
 export function fromRunningServicesAction(m: w.RunningServicesAction): p.RunningServicesAction {
@@ -1278,6 +1424,7 @@ export function fromCreateProjectRequest(m: w.CreateProjectRequest): p.CreatePro
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
     linkDatabases: m.linkDatabases.map(fromDatabaseLinkRequest),
+    workspace: m.workspace,
   });
 }
 
@@ -1292,6 +1439,7 @@ export function toCreateProjectRequest(m: p.CreateProjectRequest): MessageInitSh
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
     linkDatabases: m.linkDatabases?.map(toDatabaseLinkRequest),
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.CreateProjectRequest>;
 }
 
@@ -1332,7 +1480,7 @@ export function toCreateProjectResponse(m: p.CreateProjectResponse): MessageInit
 }
 
 export function fromDeployProjectRequest(m: w.DeployProjectRequest): p.DeployProjectRequest {
-  return { ...compact<Part<p.DeployProjectRequest, "projectId" | "baseDeployId" | "files" | "xPethost" | "mountVolume" | "timeoutSeconds" | "operationId" | "waitSeconds">>({
+  return { ...compact<Part<p.DeployProjectRequest, "projectId" | "baseDeployId" | "files" | "xPethost" | "mountVolume" | "timeoutSeconds" | "operationId" | "waitSeconds" | "workspace">>({
     projectId: m.projectId,
     baseDeployId: m.baseDeployId,
     files: m.files.map(fromFileChange),
@@ -1341,6 +1489,7 @@ export function fromDeployProjectRequest(m: w.DeployProjectRequest): p.DeployPro
     timeoutSeconds: m.timeoutSeconds,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.DeployProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    workspace: m.workspace,
   }), ...fromDeployProjectRequest_version(m.version) };
 }
 
@@ -1366,6 +1515,7 @@ export function toDeployProjectRequest(m: p.DeployProjectRequest): MessageInitSh
     operationId: m.operationId || undefined,
     version: toDeployProjectRequest_version(m),
     waitSeconds: m.waitSeconds,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.DeployProjectRequest>;
 }
 
@@ -1491,10 +1641,67 @@ export function toSpecViolation(m: p.SpecViolation): MessageInitShape<typeof w.S
   } satisfies Fields<w.SpecViolation>;
 }
 
+export function fromMoveProjectRequest(m: w.MoveProjectRequest): p.MoveProjectRequest {
+  return compact<p.MoveProjectRequest>({
+    projectId: m.projectId,
+    toWorkspace: m.toWorkspace,
+    operationId: m.operationId,
+    waitSeconds: isFieldSet(m, w.MoveProjectRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    switchDatabases: m.switchDatabases.map(fromDatabaseSwitch),
+    workspace: m.workspace,
+  });
+}
+
+export function toMoveProjectRequest(m: p.MoveProjectRequest): MessageInitShape<typeof w.MoveProjectRequestSchema> {
+  return {
+    projectId: m.projectId || undefined,
+    toWorkspace: m.toWorkspace || undefined,
+    operationId: m.operationId || undefined,
+    waitSeconds: m.waitSeconds,
+    switchDatabases: m.switchDatabases?.map(toDatabaseSwitch),
+    workspace: m.workspace || undefined,
+  } satisfies Fields<w.MoveProjectRequest>;
+}
+
+export function fromDatabaseSwitch(m: w.DatabaseSwitch): p.DatabaseSwitchInput {
+  return compact<p.DatabaseSwitchInput>({
+    databaseProjectId: m.databaseProjectId,
+    intoDatabaseProjectId: m.intoDatabaseProjectId,
+    empty: m.empty,
+    envPrefix: m.envPrefix,
+  });
+}
+
+export function toDatabaseSwitch(m: p.DatabaseSwitchInput): MessageInitShape<typeof w.DatabaseSwitchSchema> {
+  return {
+    databaseProjectId: m.databaseProjectId || undefined,
+    intoDatabaseProjectId: m.intoDatabaseProjectId || undefined,
+    empty: m.empty || undefined,
+    envPrefix: m.envPrefix || undefined,
+  } satisfies Fields<w.DatabaseSwitch>;
+}
+
+export function fromMoveProjectResponse(m: w.MoveProjectResponse): p.MoveProjectResponse {
+  return compact<p.MoveProjectResponse>({
+    operation: m.operation && fromOperation(m.operation),
+    project: m.project && fromProject(m.project),
+    moveMessage: m.moveMessage,
+  });
+}
+
+export function toMoveProjectResponse(m: p.MoveProjectResponse): MessageInitShape<typeof w.MoveProjectResponseSchema> {
+  return {
+    operation: m.operation && toOperation(m.operation),
+    project: m.project && toProject(m.project),
+    moveMessage: m.moveMessage || undefined,
+  } satisfies Fields<w.MoveProjectResponse>;
+}
+
 export function fromListCommitsRequest(m: w.ListCommitsRequest): p.ListCommitsRequest {
   return compact<p.ListCommitsRequest>({
     projectId: m.projectId,
     beforeCommit: m.beforeCommit,
+    workspace: m.workspace,
   });
 }
 
@@ -1502,6 +1709,7 @@ export function toListCommitsRequest(m: p.ListCommitsRequest): MessageInitShape<
   return {
     projectId: m.projectId || undefined,
     beforeCommit: m.beforeCommit || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.ListCommitsRequest>;
 }
 
@@ -1542,10 +1750,11 @@ export function toBranchCommit(m: p.BranchCommit): MessageInitShape<typeof w.Bra
 }
 
 export function fromRunProjectActionRequest(m: w.RunProjectActionRequest): p.RunProjectActionRequest {
-  return { ...compact<Part<p.RunProjectActionRequest, "projectId" | "operationId" | "waitSeconds">>({
+  return { ...compact<Part<p.RunProjectActionRequest, "projectId" | "operationId" | "waitSeconds" | "workspace">>({
     projectId: m.projectId,
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.RunProjectActionRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
+    workspace: m.workspace,
   }), ...fromRunProjectActionRequest_action(m.action) };
 }
 
@@ -1573,6 +1782,7 @@ export function toRunProjectActionRequest(m: p.RunProjectActionRequest): Message
     action: toRunProjectActionRequest_action(m),
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.RunProjectActionRequest>;
 }
 
@@ -1817,6 +2027,7 @@ export function fromLinkDatabaseRequest(m: w.LinkDatabaseRequest): p.LinkDatabas
     databaseProjectId: m.databaseProjectId,
     link: m.link,
     unlink: m.unlink,
+    workspace: m.workspace,
   });
 }
 
@@ -1825,6 +2036,7 @@ export function toLinkDatabaseRequest(m: p.LinkDatabaseRequest): MessageInitShap
     databaseProjectId: m.databaseProjectId || undefined,
     link: m.link && [...m.link],
     unlink: m.unlink && [...m.unlink],
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.LinkDatabaseRequest>;
 }
 
@@ -1850,6 +2062,7 @@ export function fromCreateDatabaseRequest(m: w.CreateDatabaseRequest): p.CreateD
     operationId: m.operationId,
     waitSeconds: isFieldSet(m, w.CreateDatabaseRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
     metadata: m.metadata && fromProjectMetadata(m.metadata),
+    workspace: m.workspace,
   });
 }
 
@@ -1863,6 +2076,7 @@ export function toCreateDatabaseRequest(m: p.CreateDatabaseRequest): MessageInit
     operationId: m.operationId || undefined,
     waitSeconds: m.waitSeconds,
     metadata: m.metadata && toProjectMetadata(m.metadata),
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.CreateDatabaseRequest>;
 }
 
@@ -1895,6 +2109,7 @@ export function fromSetProjectAlertsRequest(m: w.SetProjectAlertsRequest): p.Set
     removeTrafficRules: m.removeTrafficRules,
     off: isFieldSet(m, w.SetProjectAlertsRequestSchema.field.off) ? m.off : undefined,
     muteMinutes: isFieldSet(m, w.SetProjectAlertsRequestSchema.field.muteMinutes) ? m.muteMinutes : undefined,
+    workspace: m.workspace,
   });
 }
 
@@ -1907,6 +2122,7 @@ export function toSetProjectAlertsRequest(m: p.SetProjectAlertsRequest): Message
     removeTrafficRules: m.removeTrafficRules || undefined,
     off: m.off,
     muteMinutes: m.muteMinutes,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.SetProjectAlertsRequest>;
 }
 
@@ -2131,6 +2347,7 @@ export function fromGetOperationRequest(m: w.GetOperationRequest): p.GetOperatio
     waitSeconds: isFieldSet(m, w.GetOperationRequestSchema.field.waitSeconds) ? m.waitSeconds : undefined,
     afterLogLine: isFieldSet(m, w.GetOperationRequestSchema.field.afterLogLine) ? m.afterLogLine : undefined,
     logLineLimit: isFieldSet(m, w.GetOperationRequestSchema.field.logLineLimit) ? m.logLineLimit : undefined,
+    workspace: m.workspace,
   });
 }
 
@@ -2141,6 +2358,7 @@ export function toGetOperationRequest(m: p.GetOperationRequest): MessageInitShap
     waitSeconds: m.waitSeconds,
     afterLogLine: m.afterLogLine,
     logLineLimit: m.logLineLimit,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.GetOperationRequest>;
 }
 
@@ -2151,6 +2369,7 @@ export function fromGetOperationResponse(m: w.GetOperationResponse): p.GetOperat
     log: m.log.map(fromOperationLogLine),
     logLineCount: m.logLineCount,
     nextAfterLogLine: m.nextAfterLogLine,
+    moveMessage: m.moveMessage,
   });
 }
 
@@ -2161,6 +2380,7 @@ export function toGetOperationResponse(m: p.GetOperationResponse): MessageInitSh
     log: m.log?.map(toOperationLogLine),
     logLineCount: m.logLineCount || undefined,
     nextAfterLogLine: m.nextAfterLogLine || undefined,
+    moveMessage: m.moveMessage || undefined,
   } satisfies Fields<w.GetOperationResponse>;
 }
 
@@ -2208,6 +2428,7 @@ export function fromQueryHttpTrafficRequest(m: w.QueryHttpTrafficRequest): p.Que
     bucketWidthSeconds: m.bucketWidthSeconds,
     requestLimit: m.requestLimit,
     pageToken: m.pageToken,
+    workspace: m.workspace,
   });
 }
 
@@ -2221,6 +2442,7 @@ export function toQueryHttpTrafficRequest(m: p.QueryHttpTrafficRequest): Message
     bucketWidthSeconds: m.bucketWidthSeconds || undefined,
     requestLimit: m.requestLimit || undefined,
     pageToken: m.pageToken || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.QueryHttpTrafficRequest>;
 }
 
@@ -2350,6 +2572,7 @@ export function fromQueryContainerLogsRequest(m: w.QueryContainerLogsRequest): p
     limit: m.limit,
     fromStart: m.fromStart,
     pageToken: m.pageToken,
+    workspace: m.workspace,
   });
 }
 
@@ -2363,6 +2586,7 @@ export function toQueryContainerLogsRequest(m: p.QueryContainerLogsRequest): Mes
     limit: m.limit || undefined,
     fromStart: m.fromStart || undefined,
     pageToken: m.pageToken || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.QueryContainerLogsRequest>;
 }
 
@@ -2415,6 +2639,7 @@ export function fromRunServiceCommandRequest(m: w.RunServiceCommandRequest): p.R
     runAsUser: m.runAsUser,
     workingDirectory: m.workingDirectory,
     timeoutSeconds: m.timeoutSeconds,
+    workspace: m.workspace,
   });
 }
 
@@ -2427,6 +2652,7 @@ export function toRunServiceCommandRequest(m: p.RunServiceCommandRequest): Messa
     runAsUser: m.runAsUser || undefined,
     workingDirectory: m.workingDirectory || undefined,
     timeoutSeconds: m.timeoutSeconds || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.RunServiceCommandRequest>;
 }
 
@@ -2477,13 +2703,14 @@ export function toFileEntry(m: p.FileEntry): MessageInitShape<typeof w.FileEntry
 }
 
 export function fromReadPathRequest(m: w.ReadPathRequest): p.ReadPathRequest {
-  return { ...compact<Part<p.ReadPathRequest, "projectId" | "path" | "entryLimit" | "offsetBytes" | "lengthBytes" | "entryPageToken">>({
+  return { ...compact<Part<p.ReadPathRequest, "projectId" | "path" | "entryLimit" | "offsetBytes" | "lengthBytes" | "entryPageToken" | "workspace">>({
     projectId: m.projectId,
     path: m.path,
     entryLimit: m.entryLimit,
     offsetBytes: m.offsetBytes,
     lengthBytes: m.lengthBytes,
     entryPageToken: m.entryPageToken,
+    workspace: m.workspace,
   }), ...fromReadPathRequest_root(m.root) };
 }
 
@@ -2505,6 +2732,7 @@ export function toReadPathRequest(m: p.ReadPathRequest): MessageInitShape<typeof
     offsetBytes: m.offsetBytes || undefined,
     lengthBytes: m.lengthBytes || undefined,
     entryPageToken: m.entryPageToken || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.ReadPathRequest>;
 }
 
@@ -2547,7 +2775,9 @@ export function toReadPathResponse(m: p.ReadPathResponse): MessageInitShape<type
 }
 
 export function fromCreateTransferRequest(m: w.CreateTransferRequest): p.CreateTransferRequest {
-  return { ...fromCreateTransferRequest_transfer(m.transfer) };
+  return { ...compact<Part<p.CreateTransferRequest, "workspace">>({
+    workspace: m.workspace,
+  }), ...fromCreateTransferRequest_transfer(m.transfer) };
 }
 
 function fromCreateTransferRequest_transfer(o: w.CreateTransferRequest["transfer"]): Part<p.CreateTransferRequest, "uploadArchive" | "uploadFile" | "download" | "downloadDatabase"> {
@@ -2564,6 +2794,7 @@ function fromCreateTransferRequest_transfer(o: w.CreateTransferRequest["transfer
 export function toCreateTransferRequest(m: p.CreateTransferRequest): MessageInitShape<typeof w.CreateTransferRequestSchema> {
   return {
     transfer: toCreateTransferRequest_transfer(m),
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.CreateTransferRequest>;
 }
 
@@ -2770,6 +3001,7 @@ export function fromNoMachine(m: w.NoMachine): p.NoMachine {
   return compact<p.NoMachine>({
     reason: known(fromNoMachineReason, m.reason),
     url: m.url,
+    workspaceId: m.workspaceId,
   });
 }
 
@@ -2777,13 +3009,65 @@ export function toNoMachine(m: p.NoMachine): MessageInitShape<typeof w.NoMachine
   return {
     reason: numbered(toNoMachineReason, m.reason),
     url: m.url || undefined,
+    workspaceId: m.workspaceId || undefined,
   } satisfies Fields<w.NoMachine>;
+}
+
+export function fromWorkspaceChoice(m: w.WorkspaceChoice): p.WorkspaceChoice {
+  return compact<p.WorkspaceChoice>({
+    workspaces: m.workspaces.map(fromWorkspace),
+    total: m.total,
+    holdingProject: m.holdingProject,
+    incomplete: m.incomplete,
+  });
+}
+
+export function toWorkspaceChoice(m: p.WorkspaceChoice): MessageInitShape<typeof w.WorkspaceChoiceSchema> {
+  return {
+    workspaces: m.workspaces?.map(toWorkspace),
+    total: m.total || undefined,
+    holdingProject: m.holdingProject && [...m.holdingProject],
+    incomplete: m.incomplete || undefined,
+  } satisfies Fields<w.WorkspaceChoice>;
+}
+
+export function fromWorkspaceNotGranted(m: w.WorkspaceNotGranted): p.WorkspaceNotGranted {
+  return compact<p.WorkspaceNotGranted>({
+    workspaceId: m.workspaceId,
+    url: m.url,
+  });
+}
+
+export function toWorkspaceNotGranted(m: p.WorkspaceNotGranted): MessageInitShape<typeof w.WorkspaceNotGrantedSchema> {
+  return {
+    workspaceId: m.workspaceId || undefined,
+    url: m.url || undefined,
+  } satisfies Fields<w.WorkspaceNotGranted>;
+}
+
+export function fromProjectMoved(m: w.ProjectMoved): p.ProjectMoved {
+  return compact<p.ProjectMoved>({
+    projectId: m.projectId,
+    workspaceId: m.workspaceId,
+    workspaceName: m.workspaceName,
+    moveTime: m.moveTime && toDate(m.moveTime),
+  });
+}
+
+export function toProjectMoved(m: p.ProjectMoved): MessageInitShape<typeof w.ProjectMovedSchema> {
+  return {
+    projectId: m.projectId || undefined,
+    workspaceId: m.workspaceId || undefined,
+    workspaceName: m.workspaceName || undefined,
+    moveTime: m.moveTime && toTimestamp(m.moveTime),
+  } satisfies Fields<w.ProjectMoved>;
 }
 
 export function fromWatchOperationRequest(m: w.WatchOperationRequest): p.WatchOperationRequest {
   return compact<p.WatchOperationRequest>({
     projectId: m.projectId,
     operationId: m.operationId,
+    workspace: m.workspace,
   });
 }
 
@@ -2791,11 +3075,14 @@ export function toWatchOperationRequest(m: p.WatchOperationRequest): MessageInit
   return {
     projectId: m.projectId || undefined,
     operationId: m.operationId || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.WatchOperationRequest>;
 }
 
 export function fromWatchOperationResponse(m: w.WatchOperationResponse): p.WatchOperationResponse {
-  return { ...fromWatchOperationResponse_message(m.message) };
+  return { ...compact<Part<p.WatchOperationResponse, "moveMessage">>({
+    moveMessage: m.moveMessage,
+  }), ...fromWatchOperationResponse_message(m.message) };
 }
 
 function fromWatchOperationResponse_message(o: w.WatchOperationResponse["message"]): Part<p.WatchOperationResponse, "message" | "log" | "finishedOperation"> {
@@ -2810,6 +3097,7 @@ function fromWatchOperationResponse_message(o: w.WatchOperationResponse["message
 export function toWatchOperationResponse(m: p.WatchOperationResponse): MessageInitShape<typeof w.WatchOperationResponseSchema> {
   return {
     message: toWatchOperationResponse_message(m),
+    moveMessage: m.moveMessage || undefined,
   } satisfies Fields<w.WatchOperationResponse>;
 }
 
@@ -2826,6 +3114,7 @@ export function fromTailContainerLogsRequest(m: w.TailContainerLogsRequest): p.T
     projectId: m.projectId,
     filter: m.filter && fromContainerLogFilter(m.filter),
     afterCursor: m.afterCursor,
+    workspace: m.workspace,
   });
 }
 
@@ -2834,6 +3123,7 @@ export function toTailContainerLogsRequest(m: p.TailContainerLogsRequest): Messa
     projectId: m.projectId || undefined,
     filter: m.filter && toContainerLogFilter(m.filter),
     afterCursor: m.afterCursor || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.TailContainerLogsRequest>;
 }
 
@@ -2856,6 +3146,7 @@ export function fromTailHttpTrafficRequest(m: w.TailHttpTrafficRequest): p.TailH
     projectId: m.projectId,
     filter: m.filter && fromHttpTrafficFilter(m.filter),
     afterSequence: m.afterSequence,
+    workspace: m.workspace,
   });
 }
 
@@ -2864,6 +3155,7 @@ export function toTailHttpTrafficRequest(m: p.TailHttpTrafficRequest): MessageIn
     projectId: m.projectId || undefined,
     filter: m.filter && toHttpTrafficFilter(m.filter),
     afterSequence: m.afterSequence || undefined,
+    workspace: m.workspace || undefined,
   } satisfies Fields<w.TailHttpTrafficRequest>;
 }
 

@@ -2,14 +2,14 @@
 
 The Go SDK of [Pethost](https://pethost.dev), managed hosting for Docker Compose projects: a
 client of its API. With it a program does what the web panel and an agent do: it reads the
-account's machine, creates and deploys projects, runs commands in their containers, and reads
+account's workspaces, creates and deploys projects, runs commands in their containers, and reads
 their files, logs and HTTP traffic. Every type and method is generated from the API's own
 definition, and their doc comments are the API's documentation.
 
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.4.8
+go get github.com/pethost-dev/sdk/go@v0.5.0
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -20,8 +20,16 @@ import names it: `import pethost "github.com/pethost-dev/sdk/go"`.
 Every call carries an API token of your account. Make one in the
 [panel](https://console.pethost.dev), in Settings under "API tokens", and give it to the
 program in its environment: the examples read `PETHOST_TOKEN`. A token starts with `pth_` and is
-shown once, when it is made. A program with one can deploy to and manage your machine, and cannot
-change the account.
+shown once, when it is made. A program with one can deploy to and manage the workspaces it was
+granted, and cannot change the account.
+
+## Workspaces
+
+Each plan the account buys is a workspace: one machine of the plan's size, with its projects. A
+request's `Workspace` names one, by its id or its name; a client made with
+`Config{Workspace: "..."}` sends that in every request that names none. With neither, a call goes
+to the account's only workspace, and is refused, with the workspaces in the error, when the
+account has several.
 
 ## A first program
 
@@ -96,11 +104,13 @@ response or an error; a stream returns its responses one by one, as "Streams" be
 
 | Method | What it does | |
 |---|---|---|
+| `ListWorkspaces` | List workspaces | read-only |
 | `GetMachine` | Get the machine | read-only |
 | `RunMachineAction` | Run a machine action | destructive |
 | `GetProject` | Get a project | read-only |
 | `CreateProject` | Create a project |  |
 | `DeployProject` | Deploy a project | destructive |
+| `MoveProject` | Move a project to another workspace | destructive |
 | `ListCommits` | List a project's commits | read-only |
 | `RunProjectAction` | Run a project action | destructive |
 | `SetProjectAlerts` | Set a project's alerts | destructive |
@@ -237,10 +247,10 @@ Every error a method returns is a `*pethost.Error`. Its `Code` says what kind of
 is, under the name the API's documentation uses: `pethost.CodeNotFound` prints as `NOT_FOUND`.
 Its `Message` says what failed and what to do, for people. Some failures carry a detail to act
 on, each a field of the error that is nil when the API sent none:
-`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal` and `NoMachine`.
+`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, `WorkspaceChoice`, `WorkspaceNotGranted` and `ProjectMoved`.
 
 ```go
-response, err := client.GetMachine(ctx, nil)
+response, err := client.ListWorkspaces(ctx, nil)
 if e, ok := errors.AsType[*pethost.Error](err); ok {
 	switch e.Code {
 	case pethost.CodeUnauthenticated:

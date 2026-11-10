@@ -13,7 +13,11 @@ declare function accepts<T>(value: T): void;
 /** Gives a T. */
 declare function a<T>(): T;
 
-optional<p.GetMachineResponse>({ machine: true, projects: false, deletedProjects: false, github: true });
+optional<p.ListWorkspacesRequest>({ projectId: true, pageToken: true });
+optional<p.ListWorkspacesResponse>({ workspaces: false, nextPageToken: false, total: false, holdingProject: false, incomplete: false });
+optional<p.Workspace>({ workspaceId: false, name: false, status: true, location: false, plan: false, cpuTotalCores: false, memoryTotalBytes: false, memoryFreeBytes: true, diskTotalBytes: false, diskFreeBytes: true, projectCount: true, hostname: false, appsDomain: false, endTime: true, role: true });
+optional<p.GetMachineRequest>({ workspace: true });
+optional<p.GetMachineResponse>({ machine: true, projects: false, deletedProjects: false, github: true, workspace: true });
 optional<p.Machine>({ name: false, location: false, sampleTime: true, cpuUsedCores: false, cpuTotalCores: false, memoryUsedBytes: false, memoryTotalBytes: false, diskUsedBytes: false, diskTotalBytes: false, diskUsage: true, hostname: false, hostnameIsAddress: false, sshHostKeyFingerprint: false, sshKeys: false, backupsEnabled: false, snapshotListTime: true, snapshotListFailureMessage: false, backupRetentionHours: false, acmeEnabled: false, appsDomain: false, daemonVersion: false, dockerVersion: false, bootTime: true, restartRequiredTime: true, scheduledRestartTime: true, sessions: false, alertChannels: false, databaseEngines: false, memoryLimitsBytes: false });
 optional<p.AlertDestination>({ kind: true, label: false });
 optional<p.MachineSession>({ sessionId: false, kind: true, projectId: false, service: false, port: false, startTime: true, clientAddress: false, sshKeyLabel: false, sshKeyFingerprint: false });
@@ -23,7 +27,8 @@ optional<p.SshKey>({ publicKey: false, label: false, fingerprint: false });
 optional<p.SshKeyInput>({ publicKey: true, label: true, fingerprint: true });
 optional<p.GithubConnection>({ appName: false, installUrl: false, repositories: false, repositoryCount: false, webhooksEnabled: false });
 optional<p.GithubRepository>({ repository: false, defaultBranch: false, private: false, pushTime: true });
-optional<p.DeletedProject>({ projectId: false, newestSnapshot: true, snapshotCount: false });
+optional<p.DeletedProject>({ projectId: false, newestSnapshot: true, snapshotCount: false, movedTo: true });
+optional<p.MovedTo>({ workspaceId: false, workspaceName: false, moveTime: true });
 // @ts-expect-error two members of pethost.panel.v1.RunMachineActionRequest.action
 accepts<p.RunMachineActionRequest>({ addSshKey: {}, removeSshKeyFingerprint: "remove_ssh_key_fingerprint" });
 optional<p.RestartMachineActionInput>({ restartTime: true, atMaintenanceWindow: true, interruptOperations: true });
@@ -31,12 +36,13 @@ optional<p.RunMachineActionResponse>({ machine: true });
 accepts<p.ProjectMetadataInput>(a<p.ProjectMetadata>());
 optional<p.ProjectMetadata>({ name: true, emoji: true, description: true, notes: true });
 optional<p.ProjectMetadataInput>({ name: true, emoji: true, description: true, notes: true });
-optional<p.ProjectSummary>({ projectId: false, metadata: true, problems: false, services: false, url: false, hosts: false, httpTrafficLastDay: true, cpuUsedCores: false, memoryUsedBytes: false, deployTime: true, runningOperations: false, pinned: false, diskUsedBytes: false, database: true });
+optional<p.ProjectSummary>({ projectId: false, metadata: true, problems: false, services: false, url: false, hosts: false, httpTrafficLastDay: true, cpuUsedCores: false, memoryUsedBytes: false, deployTime: true, runningOperations: false, pinned: false, diskUsedBytes: false, database: true, uid: false });
 optional<p.ServiceSummary>({ service: false, state: true });
 optional<p.ProjectProblem>({ kind: true, service: false, operationId: false, sinceTime: true, problemMessage: false, incidentId: false });
-optional<p.GetProjectRequest>({ projectId: true, includeSecretValues: true, snapshotsBefore: true, snapshotsVolume: true, incidentsBefore: true, uptimeDayCount: true, incidentsBeforeId: true });
+optional<p.GetProjectRequest>({ projectId: true, includeSecretValues: true, snapshotsBefore: true, snapshotsVolume: true, incidentsBefore: true, uptimeDayCount: true, incidentsBeforeId: true, workspace: true });
 optional<p.GetProjectResponse>({ project: true });
-optional<p.Project>({ projectId: false, metadata: true, problems: false, url: false, cpuUsedCores: false, memoryUsedBytes: false, deployId: false, deployStatus: true, deployTime: true, xPethostAppliesAtOnce: false, services: false, volumes: false, routes: false, hosts: false, passwordProtected: false, operations: false, snapshots: false, snapshotCount: false, snapshotListTime: true, httpTrafficLastDay: true, source: true, runningServicesAction: true, alerts: true, incidents: false, moreIncidents: false, uptimeDays: false, database: true, linkedDatabases: false });
+optional<p.Project>({ projectId: false, metadata: true, problems: false, url: false, cpuUsedCores: false, memoryUsedBytes: false, deployId: false, deployStatus: true, deployTime: true, xPethostAppliesAtOnce: false, services: false, volumes: false, routes: false, hosts: false, passwordProtected: false, operations: false, snapshots: false, snapshotCount: false, snapshotListTime: true, httpTrafficLastDay: true, source: true, runningServicesAction: true, alerts: true, incidents: false, moreIncidents: false, uptimeDays: false, database: true, linkedDatabases: false, workspaceId: false, uid: false, dependencies: false });
+optional<p.ProjectDependency>({ databaseProjectId: false, copyDatabase: false, envPrefix: false });
 optional<p.RunningServicesAction>({ kind: true, services: false, startTime: true });
 accepts<p.ProjectSourceInput>(a<p.ProjectSource>());
 {
@@ -73,7 +79,7 @@ optional<p.RouteInput>({ host: true, path: true, service: true, port: true, stri
 optional<p.Operation>({ operationId: false, kind: true, status: true, startTime: true, finishTime: true, failureMessage: false, deployFailureReason: true, madeCurrent: false, service: false, failedExitCode: false, snapshotId: false, restoredVolumes: false, undoSnapshotId: false, githubCommit: true, archiveName: false, adjustments: false, changedPaths: false, changedPathCount: false, filesKept: false, filesOperationId: false, databaseMemoryLimitBytes: false });
 optional<p.Snapshot>({ snapshotId: false, createTime: true, sizeBytes: false, volumes: false });
 optional<p.HttpTrafficSummary>({ requestCount: false, serverErrorCount: false, latencyP50Ms: false, latencyP95Ms: false });
-optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true, linkDatabases: true });
+optional<p.CreateProjectRequest>({ projectId: true, source: true, uploadId: true, files: true, xPethost: true, timeoutSeconds: true, operationId: true, waitSeconds: true, linkDatabases: true, workspace: true });
 optional<p.DatabaseLinkRequestInput>({ databaseProjectId: true, ownUser: true, envPrefix: true });
 optional<p.CreateProjectResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 // @ts-expect-error two members of pethost.panel.v1.DeployProjectRequest.version
@@ -84,7 +90,10 @@ optional<p.ProjectExtensionInput>({ metadata: true, routes: true, removeRoutes: 
 accepts<p.FileChangeInput>({ text: "text", data: new Uint8Array([0, 255, 3]) });
 optional<p.DeployProjectResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
 optional<p.SpecViolation>({ service: false, location: false, violationMessage: false });
-optional<p.ListCommitsRequest>({ projectId: true, beforeCommit: true });
+optional<p.MoveProjectRequest>({ projectId: true, toWorkspace: true, operationId: true, waitSeconds: true, switchDatabases: true, workspace: true });
+optional<p.DatabaseSwitchInput>({ databaseProjectId: true, intoDatabaseProjectId: true, empty: true, envPrefix: true });
+optional<p.MoveProjectResponse>({ operation: true, project: true, moveMessage: false });
+optional<p.ListCommitsRequest>({ projectId: true, beforeCommit: true, workspace: true });
 optional<p.ListCommitsResponse>({ commits: false, more: false });
 optional<p.BranchCommit>({ commit: true, author: false, commitTime: true, deployed: false, lastDeploy: true, newest: false });
 // @ts-expect-error two members of pethost.panel.v1.RunProjectActionRequest.action
@@ -101,11 +110,11 @@ optional<p.DatabaseConnection>({ host: false, port: false, user: false, database
 optional<p.DatabaseSummary>({ engine: true, majorVersion: false, dataBytes: false, connections: false, linkedProjects: false, serverVersion: false, memoryLimitBytes: false, ownUserProjects: false });
 optional<p.DatabaseEngineOffer>({ engine: true, majorVersion: false, sizes: false, defaultMemoryLimitBytes: false, ownUsers: false });
 optional<p.DatabaseSizeChoice>({ memoryLimitBytes: false });
-optional<p.LinkDatabaseRequest>({ databaseProjectId: true, link: true, unlink: true });
+optional<p.LinkDatabaseRequest>({ databaseProjectId: true, link: true, unlink: true, workspace: true });
 optional<p.LinkDatabaseResponse>({ project: true });
-optional<p.CreateDatabaseRequest>({ projectId: true, engine: true, memoryLimitBytes: true, fromSnapshotId: true, link: true, operationId: true, waitSeconds: true, metadata: true });
+optional<p.CreateDatabaseRequest>({ projectId: true, engine: true, memoryLimitBytes: true, fromSnapshotId: true, link: true, operationId: true, waitSeconds: true, metadata: true, workspace: true });
 optional<p.CreateDatabaseResponse>({ operation: true, violations: false, adjustments: false, project: true, log: false });
-optional<p.SetProjectAlertsRequest>({ projectId: true, checks: true, removeChecks: true, trafficRules: true, removeTrafficRules: true, off: true, muteMinutes: true });
+optional<p.SetProjectAlertsRequest>({ projectId: true, checks: true, removeChecks: true, trafficRules: true, removeTrafficRules: true, off: true, muteMinutes: true, workspace: true });
 optional<p.SetProjectAlertsResponse>({ alerts: true });
 accepts<p.SiteCheckInput>(a<p.SiteCheck>());
 optional<p.SiteCheck>({ host: false, path: false, expectStatus: false, mustContain: false });
@@ -120,22 +129,22 @@ optional<p.TrafficRuleState>({ rule: true, machineDefault: false, status: true, 
 optional<p.Incident>({ incidentId: false, kind: true, service: false, check: true, trafficRule: true, operationId: false, openTime: true, resolveTime: true, value: false, requestCount: false, afterOperationId: false, afterOperationEndTime: true, joinedIncidentId: false, quietReason: true, flapping: false, incidentMessage: false, evidence: true });
 optional<p.IncidentEvidence>({ checkResult: true, exitCode: false, oomKilled: false, restartCount: false, healthOutput: false, logLines: false, topPath: true });
 optional<p.UptimeDay>({ startTime: true, uptimePercent: true, downSeconds: false });
-optional<p.GetOperationRequest>({ projectId: true, operationId: true, waitSeconds: true, afterLogLine: true, logLineLimit: true });
-optional<p.GetOperationResponse>({ operation: true, project: true, log: false, logLineCount: false, nextAfterLogLine: false });
+optional<p.GetOperationRequest>({ projectId: true, operationId: true, waitSeconds: true, afterLogLine: true, logLineLimit: true, workspace: true });
+optional<p.GetOperationResponse>({ operation: true, project: true, log: false, logLineCount: false, nextAfterLogLine: false, moveMessage: false });
 optional<p.OperationLogLine>({ time: true, text: false });
 accepts<p.HttpTrafficFilterInput>(a<p.HttpTrafficFilter>());
 optional<p.HttpTrafficFilter>({ host: false, method: false, pathContains: false, pathPattern: false, statusClass: false });
 optional<p.HttpTrafficFilterInput>({ host: true, method: true, pathContains: true, pathPattern: true, statusClass: true });
-optional<p.QueryHttpTrafficRequest>({ projectId: true, filter: true, startTime: true, endTime: true, lastSeconds: true, bucketWidthSeconds: true, requestLimit: true, pageToken: true });
+optional<p.QueryHttpTrafficRequest>({ projectId: true, filter: true, startTime: true, endTime: true, lastSeconds: true, bucketWidthSeconds: true, requestLimit: true, pageToken: true, workspace: true });
 optional<p.QueryHttpTrafficResponse>({ startTime: true, endTime: true, oldestKeptTime: true, summary: true, buckets: false, topPaths: false, newestSequence: false, requests: false, nextPageToken: false, tailSequence: false });
 optional<p.HttpTrafficBucket>({ startTime: true, summary: true });
 optional<p.HttpPathTraffic>({ method: false, pathPattern: false, summary: true });
 optional<p.HttpRequest>({ sequence: false, finishTime: true, host: false, method: false, path: false, pathPattern: false, routePath: false, service: false, port: false, statusCode: false, responseSizeBytes: false, durationMs: false, serviceDurationMs: false, clientIpAddress: false, userAgent: false });
 optional<p.ContainerLogFilterInput>({ service: true, stream: true, textContains: true });
-optional<p.QueryContainerLogsRequest>({ projectId: true, filter: true, startTime: true, endTime: true, lastSeconds: true, limit: true, fromStart: true, pageToken: true });
+optional<p.QueryContainerLogsRequest>({ projectId: true, filter: true, startTime: true, endTime: true, lastSeconds: true, limit: true, fromStart: true, pageToken: true, workspace: true });
 optional<p.QueryContainerLogsResponse>({ startTime: true, endTime: true, oldestKeptTime: true, lines: false, nextPageToken: false, tailCursor: false });
 optional<p.LogLine>({ time: true, service: false, stream: true, text: false });
-optional<p.RunServiceCommandRequest>({ projectId: true, service: true, command: true, stdin: true, runAsUser: true, workingDirectory: true, timeoutSeconds: true });
+optional<p.RunServiceCommandRequest>({ projectId: true, service: true, command: true, stdin: true, runAsUser: true, workingDirectory: true, timeoutSeconds: true, workspace: true });
 optional<p.RunServiceCommandResponse>({ exitCode: false, timedOut: false, stdout: false, stderr: false, outputTruncated: false });
 optional<p.FileEntry>({ name: false, type: true, sizeBytes: false, modifyTime: true, mode: false, ownerUid: false, ownerGid: false, symlinkTarget: false });
 // @ts-expect-error two members of pethost.panel.v1.ReadPathRequest.root
@@ -154,8 +163,11 @@ optional<p.ProjectBusy>({ operationId: false, kind: true, startTime: true });
 optional<p.MachineUnreachable>({ sinceTime: true });
 optional<p.DatabaseLinkRefusal>({ projectId: false, reason: true, service: false, databaseProjectId: false });
 optional<p.DatabaseSizeRefusal>({ reason: true, dataBytes: false, keepsBytes: false, volume: false });
-optional<p.NoMachine>({ reason: true, url: false });
-optional<p.WatchOperationRequest>({ projectId: true, operationId: true });
+optional<p.NoMachine>({ reason: true, url: false, workspaceId: false });
+optional<p.WorkspaceChoice>({ workspaces: false, total: false, holdingProject: false, incomplete: false });
+optional<p.WorkspaceNotGranted>({ workspaceId: false, url: false });
+optional<p.ProjectMoved>({ projectId: false, workspaceId: false, workspaceName: false, moveTime: true });
+optional<p.WatchOperationRequest>({ projectId: true, operationId: true, workspace: true });
 {
   const read = a<p.WatchOperationResponse>();
   if (read.message === "log") accepts<p.OperationLogLine>(read.log);
@@ -168,8 +180,8 @@ optional<p.WatchOperationRequest>({ projectId: true, operationId: true });
   // @ts-expect-error finishedOperation is there only when message says so
   accepts<p.Operation>(read.finishedOperation);
 }
-optional<p.TailContainerLogsRequest>({ projectId: true, filter: true, afterCursor: true });
+optional<p.TailContainerLogsRequest>({ projectId: true, filter: true, afterCursor: true, workspace: true });
 optional<p.TailContainerLogsResponse>({ line: true, cursor: false });
-optional<p.TailHttpTrafficRequest>({ projectId: true, filter: true, afterSequence: true });
+optional<p.TailHttpTrafficRequest>({ projectId: true, filter: true, afterSequence: true, workspace: true });
 optional<p.TailHttpTrafficResponse>({ request: true });
 

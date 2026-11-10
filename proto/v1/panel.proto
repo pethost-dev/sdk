@@ -6,18 +6,24 @@ edition = "2024";
 // stands alone. The other RPCs serve the web panel, and those marked `(sdk_method)` a program
 // too, as methods of every SDK; an agent uses what is named beside each.
 
-// Pethost is the user's own hosting: their plan sets the size (CPU, memory, disk) of one Linux
-// machine, where their Docker Compose projects run. Use it whenever the user wants to deploy, host,
-// publish or put online an app, site, bot, API or database, and for anything already running there:
-// logs, domains, secrets, rollbacks, files. Start with GetMachine: it lists what runs and what is
-// wrong. A first deploy is CreateProject: its description holds the compose.yaml rules.
+// Pethost is the user's own hosting: each plan they buy is a workspace, a Linux machine of that
+// size for their Docker Compose projects. Use it whenever the user wants to deploy, host, publish
+// or put online an app, site, bot, API or database, and for anything running there: logs,
+// domains, secrets, rollbacks, files. Start with GetMachine: what runs, what is wrong. Several
+// workspaces: ListWorkspaces first, then `workspace` in each call. CreateProject's description
+// holds the compose.yaml rules.
 //
 // A site that fails or is slow: QueryHttpTraffic says which path, QueryContainerLogs what it
 // failed with, ReadPath shows the code at fault. Every tool here is a call you make yourself,
 // never a shell command.
 //
 // MODEL
-//   Machine: one VDS running the daemon, petnode; every call acts on the caller's.
+//   Workspace (workspace): what one plan buys: a machine of the plan's size, its apps_domain, its
+//     backups. A call acts on the workspace its `workspace` names, by id or name; without one, on
+//     the only one the caller has, and with several it is refused (WorkspaceChoice). Keep the id
+//     from an answer (workspace_id), never the name: the person may rename it.
+//   Machine: one VDS running the daemon, petnode: the one of the workspace a call acts on. Ids
+//     below are unique within it: the same project_id in two workspaces is two projects.
 //   - Project (project_id): a Docker Compose project, a directory with compose.yaml at its root,
 //     deployed whole. People see metadata.name.
 //   - Database: a project CreateDatabase made (Postgres; MariaDB, for an app that asks for MySQL
@@ -59,13 +65,18 @@ edition = "2024";
 //   - Units are in field names (_bytes, _cores, _seconds, _ms). Times are RFC 3339. Absent = 0,
 //     false or empty. *_message fields are prose for people: branch on enums and ids.
 //   - Errors: NOT_FOUND = no such entity (the message lists what exists). INVALID_ARGUMENT = a
-//     bad or unknown field (named, with what it takes). FAILED_PRECONDITION = the container is
-//     not running, or as the RPC says; with NoMachine = no machine yet (the message says what to
-//     do). UNAVAILABLE = retry later: the project is busy (ProjectBusy names the operation: wait
-//     with GetOperation), or the machine (MachineUnreachable), GitHub or backup storage is down.
-//     ABORTED = changed since read (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit
-//     (named). OUT_OF_RANGE = before the oldest record kept. PERMISSION_DENIED = a read-only
-//     path (project files: use DeployProject). UNAUTHENTICATED = sign in again.
+//     bad or unknown field (named, with what it takes; a `workspace` of none of the caller's:
+//     WorkspaceChoice lists theirs). FAILED_PRECONDITION = the container is not running, or as
+//     the RPC says; with NoMachine = no machine yet (the message says what to do); with
+//     WorkspaceChoice = `workspace` is needed: name one it lists, by what the person said or
+//     where the project is (holding_project); with ProjectMoved = the project moved to the
+//     workspace it names: call there. UNAVAILABLE = retry later: the project is busy
+//     (ProjectBusy names the operation: wait with GetOperation), or the machine
+//     (MachineUnreachable), GitHub or backup storage is down. ABORTED = changed since read
+//     (ProjectChanged): reread, redo. RESOURCE_EXHAUSTED = a limit (named). OUT_OF_RANGE =
+//     before the oldest record kept. PERMISSION_DENIED = a read-only path (project files: use
+//     DeployProject); with WorkspaceNotGranted = the person has not let this token reach that
+//     workspace (they can, at its url). UNAUTHENTICATED = sign in again.
 //   - A response holds ~64 KiB at most (ReadPath.length_bytes: ≤1 MiB; CreateTransfer: any
 //     size); a cut list says so and pages. A limit over its maximum counts as the maximum.
 //   - An operation runs on after its call returns, even if the caller leaves; a retry with the
@@ -81,11 +92,26 @@ import option "v1/pulumi.proto";
 import option "v1/sdk.proto";
 
 service PanelService {
+  // ── Workspace ────────────────────────────────────────────────────────────
+
+  // The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+  // is free, location, hostname and apps domain. With project_id, also which of them hold a
+  // project of that id (holding_project). Free figures and project counts are each machine's
+  // latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+  // The one call that takes no `workspace`. A caller that reaches none is refused as a call
+  // naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+  rpc ListWorkspaces(ListWorkspacesRequest) returns (ListWorkspacesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (mcp_tool) = {title: "List workspaces"};
+  }
+
   // ── Machine ──────────────────────────────────────────────────────────────
 
   // Start here: the machine (resources, the person's domain, backups, SSH), every project with
   // its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-  // from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+  // from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+  // traffic lag a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+  // WorkspaceChoice, which lists them.
   rpc GetMachine(GetMachineRequest) returns (GetMachineResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
     option (mcp_tool) = {title: "Get the machine"};
@@ -190,6 +216,8 @@ service PanelService {
   // named volume or a tmpfs there.
   //
   // ALREADY_EXISTS = the id is taken (a retry with its operation_id returns that operation).
+  // An upload_id: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+  // refused (its PUT said why) answers with its `violations`.
   // FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachine.github), or no
   // such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
   // linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -201,8 +229,10 @@ service PanelService {
 
   // Deploys a new version of a project and answers as CreateProject does: `files` written over
   // its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-  // `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-  // (`rollback_deploy_id`). compose.yaml rules: CreateProject's.
+  // `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+  // x-pethost), a commit, or an earlier deploy's files again as a new version
+  // (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+  // CreateProject's.
   //
   // It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
   // until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -228,6 +258,57 @@ service PanelService {
     option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_UPDATE};
     option (pulumi) = {resource: "Project", kind: PULUMI_STEP_KIND_RETRY};
     option (pulumi) = {resource: "Database", kind: PULUMI_STEP_KIND_RETRY};
+  }
+
+  // Moves a project to another workspace of the same person, as one operation (OperationKind
+  // MOVE): it is stopped here, backed up into the destination's backups, restored and started
+  // there under the same project_id, then deleted here. Each database it is linked to
+  // (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+  // uses one of the same engine instead, one the destination has or a new one, with the data of
+  // the database it signs in to copied, or none (DatabaseSwitch). A database project
+  // moves only when no app is linked to it.
+  // `workspace` is the source. Waits as DeployProject does (wait_seconds), then GetOperation, in
+  // either workspace, which once it ended answers the same move_message and the project.
+  // Answers, once it ended, with the project as it is in the destination, and `move_message`:
+  // what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+  // point at its hostname, a new SSH command, which database it uses there instead of each, and
+  // with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+  // snapshots, and what each database it left still holds). Until the restore succeeded, a
+  // failure undoes it: the source's services run again as they did, unless its failure says they
+  // did not start again; the move's snapshot stays in the destination's backups, as a deleted
+  // project's. After that it only goes forward: one that FAILED then moved the project, and its
+  // failure names what the source still holds.
+  // While it runs, a change to the project is UNAVAILABLE + ProjectBusy (kind MOVE) in either
+  // workspace, and so is a read where it is not then (before its restore, after its deletion from
+  // the source); afterwards, a call for it to the source is FAILED_PRECONDITION + ProjectMoved,
+  // until the source has a project of that id again. While it runs, a change to a database it
+  // leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+  // before the move made it; GetOperation answers the move with any of their project_ids.
+  // INVALID_ARGUMENT = switch_databases names a database the project is not linked to, or twice,
+  // an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+  // takes or one two switches share, or an `into` the destination lacks or of another engine, or
+  // one two switches share, copies of more than 32 databases, or to_workspace is the source
+  // or none of the caller's; PERMISSION_DENIED + WorkspaceNotGranted = one this token may not
+  // reach. ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new
+  // database takes, or operation_id is an operation of the project's or another move's already.
+  // FAILED_PRECONDITION = a database project with apps linked to it (the message
+  // names them: move each, or unlink it), a machine needs an update first (the message names it),
+  // the project has no deploy yet, or the destination's backups are off (its
+  // Machine.backups_enabled), which a move goes through.
+  rpc MoveProject(MoveProjectRequest) returns (MoveProjectResponse) {
+    option (mcp_tool) = {title: "Move a project to another workspace", destructive: true};
+  }
+
+  // What MoveProject may do with each database the project is linked to, for the web panel's move
+  // dialog: for each of Project.dependencies, the databases of to_workspace that
+  // DatabaseSwitch.into_database_project_id may name, whether a new one may be made there, and the
+  // choice the dialog starts from. MoveProject judges switch_databases by the same rules. Not an
+  // MCP tool: an agent reads Project.dependencies, and MoveProject chooses each switch it leaves
+  // out. NOT_FOUND = no such project. INVALID_ARGUMENT, PERMISSION_DENIED + WorkspaceNotGranted =
+  // as MoveProject's to_workspace. FAILED_PRECONDITION + NoMachine = to_workspace has no machine
+  // yet.
+  rpc GetMoveChoices(GetMoveChoicesRequest) returns (GetMoveChoicesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
   }
 
   // A github project's branch commits that change its directory, newest first, 30 a page, with
@@ -474,9 +555,74 @@ service PanelService {
   }
 }
 
+// ── Workspace ──────────────────────────────────────────────────────────────
+
+message ListWorkspacesRequest {
+  // A project_id: holding_project then says which workspaces have a project of that id.
+  string project_id = 1;
+  string page_token = 2; // A next_page_token. Empty = the first page.
+}
+
+message ListWorkspacesResponse {
+  repeated Workspace workspaces = 1; // By name.
+  string next_page_token = 2; // Empty = the last page.
+  uint32 total = 3; // Workspaces in all, on every page.
+  // With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+  // none of those that answered (see incomplete).
+  repeated string holding_project = 4;
+  // True = a machine did not answer in time: its free figures and project count are absent, and
+  // holding_project may lack it.
+  bool incomplete = 5;
+}
+
+// What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+// projects on it. A call names it as `workspace`, by workspace_id or name.
+message Workspace {
+  // 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+  // never another workspace's.
+  string workspace_id = 1;
+  // The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+  // change it.
+  string name = 2;
+  WorkspaceStatus status = 3;
+  string location = 4; // Where its machine runs, e.g. "Europe".
+  string plan = 5; // Its plan's name, e.g. "Starter".
+  double cpu_total_cores = 6; // The plan's.
+  uint64 memory_total_bytes = 7; // The plan's, as Machine.memory_total_bytes.
+  // What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+  // known: BEING_PREPARED, or the machine did not answer in time.
+  uint64 memory_free_bytes = 8 [(optional) = true];
+  uint64 disk_total_bytes = 9; // The plan's, as Machine.disk_total_bytes.
+  uint64 disk_free_bytes = 10 [(optional) = true]; // Likewise. Absent as memory_free_bytes.
+  uint32 project_count = 11 [(optional) = true]; // Absent as memory_free_bytes.
+  // Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+  // own points (CNAME). Empty while BEING_PREPARED.
+  string hostname = 12;
+  string apps_domain = 13; // As Machine.apps_domain. Empty = none.
+  // When it ends: the person removed it, and it works until then, its projects with it. Absent
+  // = it is not ending.
+  google.protobuf.Timestamp end_time = 14;
+  WorkspaceRole role = 15; // The caller's.
+}
+
+enum WorkspaceStatus {
+  WORKSPACE_STATUS_UNSPECIFIED = 0;
+  WORKSPACE_STATUS_READY = 1; // Its machine answers calls.
+  // Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+  // that names it is FAILED_PRECONDITION + NoMachine until then.
+  WORKSPACE_STATUS_BEING_PREPARED = 2;
+}
+
+enum WorkspaceRole {
+  WORKSPACE_ROLE_UNSPECIFIED = 0;
+  WORKSPACE_ROLE_OWNER = 1; // Pays for it, and may do everything in it.
+}
+
 // ── Machine ────────────────────────────────────────────────────────────────
 
-message GetMachineRequest {}
+message GetMachineRequest {
+  string workspace = 100;
+}
 
 message GetMachineResponse {
   Machine machine = 1;
@@ -487,6 +633,7 @@ message GetMachineResponse {
   // later. Not known while Machine.snapshot_list_time is absent.
   repeated DeletedProject deleted_projects = 3;
   GithubConnection github = 4;
+  Workspace workspace = 5; // The workspace whose machine this is.
 }
 
 message Machine {
@@ -656,6 +803,19 @@ message DeletedProject {
   // older ones (snapshots_before).
   Snapshot newest_snapshot = 2;
   uint32 snapshot_count = 3; // In all.
+  // Set when the latest move of the project from or to this workspace took it to another one,
+  // and this workspace has had no other project of the id since, as a call for it here would
+  // answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+  // restore here makes another copy here, as it was last backed up here, and calls here then
+  // act on that copy.
+  MovedTo moved_to = 4;
+}
+
+// Where a move took a project (MoveProject), and when.
+message MovedTo {
+  string workspace_id = 1;
+  string workspace_name = 2;
+  google.protobuf.Timestamp move_time = 3;
 }
 
 message RunMachineActionRequest {
@@ -672,6 +832,7 @@ message RunMachineActionRequest {
     // ended.
     string end_session_id = 5;
   }
+  string workspace = 100;
 }
 
 message RestartMachineAction {
@@ -717,6 +878,7 @@ message ProjectSummary {
   // with another project counts in both. Measured every few minutes.
   uint64 disk_used_bytes = 13;
   DatabaseSummary database = 14; // Set = a database project (CreateDatabase).
+  string uid = 15; // As Project.uid.
 }
 
 message ServiceSummary {
@@ -805,6 +967,7 @@ message GetProjectRequest {
   // With incidents_before: the incident_id of the oldest seen, so that those that opened at the
   // same time are not skipped.
   string incidents_before_id = 7;
+  string workspace = 100;
 }
 
 message GetProjectResponse {
@@ -875,6 +1038,31 @@ message Project {
   Database database = 27;
   // The database projects this one reaches (LinkDatabase), each at the host of its project_id.
   repeated string linked_databases = 28;
+  // The workspace it is in (Workspace.workspace_id): what a later call for it names as
+  // `workspace`.
+  string workspace_id = 29;
+  // Made when it was created, and kept by its backups, restores and moves: a project deleted
+  // and created again under the same project_id has another. Empty = not known yet.
+  string uid = 30;
+  // The databases it is linked to (linked_databases), each with what MoveProject may do with it
+  // (switch_databases).
+  repeated ProjectDependency dependencies = 32;
+}
+
+// A database a project is linked to, as MoveProject of the project sees it.
+message ProjectDependency {
+  string database_project_id = 1;
+  // The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+  // project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+  // `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+  // own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+  // new one starts empty and one there is shared.
+  string copy_database = 4;
+  // The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+  // (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+  // destination writes anew. Empty = a person wrote them (LinkDatabase linked it): a move needs
+  // DatabaseSwitch.env_prefix.
+  string env_prefix = 5;
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -1194,6 +1382,10 @@ enum OperationKind {
   OPERATION_KIND_BACKUP = 3;
   OPERATION_KIND_RESTORE = 4;
   OPERATION_KIND_DELETE = 5;
+  // MoveProject's, of the project it moves, in both workspaces. Its operation_id is the move's,
+  // which GetOperation and WatchOperation answer in either, also with the project_id of a database
+  // the move holds.
+  OPERATION_KIND_MOVE = 6;
 }
 
 enum OperationStatus {
@@ -1248,8 +1440,6 @@ message CreateProjectRequest {
   // Set = a GitHub project: {github: {repository}}. Absent = the files of this request.
   ProjectSource source = 2;
   // An archive of the project's directory, from CreateTransfer.upload_archive, unpacked first.
-  // FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its
-  // PUT said why) answers with its `violations`.
   string upload_id = 3 [(pulumi_omit) = true];
   // The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text: "…"}],
   // or those to write over the archive's or the commit's. A github source takes only /.env.
@@ -1262,6 +1452,7 @@ message CreateProjectRequest {
   reserved 10;
   reserved database;
   repeated DatabaseLinkRequest link_databases = 11;
+  string workspace = 100;
 }
 
 message DatabaseLinkRequest {
@@ -1288,8 +1479,7 @@ message CreateProjectResponse {
 
 message DeployProjectRequest {
   string project_id = 1;
-  // Project.deploy_id as you read it: ABORTED if the project was deployed since. Empty = no check.
-  string base_deploy_id = 2;
+  string base_deploy_id = 2; // Project.deploy_id as you read it. Empty = no check.
   // Written in order over the current files, or over the new version's: e.g.
   // [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new
   // version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None =
@@ -1304,17 +1494,17 @@ message DeployProjectRequest {
   string operation_id = 5;
   // A new version of the files; none = the current one.
   oneof version {
-    // files project: an archive from CreateTransfer; replaces all files but /.env and x-pethost.
-    string upload_id = 6;
+    string upload_id = 6; // files project: an archive from CreateTransfer.
     string commit = 7; // github project: a commit of its branch (SHA, ≥7 chars), from ListCommits.
     bool newest_commit = 8; // github project: true = GithubSource.newest_commit, read now.
     // files project, a rollback: the operation_id of an earlier deploy with files_kept
-    // (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+    // (Project.operations).
     string rollback_deploy_id = 12;
   }
   // Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still
   // IN_PROGRESS then: GetOperation waits on.
   uint32 wait_seconds = 13 [(optional) = true];
+  string workspace = 100;
 }
 
 // Adds `<volume>:<container_path>` to the service, declaring the volume if needed.
@@ -1371,11 +1561,109 @@ message SpecViolation {
   string violation_message = 3; // What is wrong and what to write instead.
 }
 
+// ── MoveProject ────────────────────────────────────────────────────────────
+
+message MoveProjectRequest {
+  string project_id = 1;
+  string to_workspace = 2; // The destination, as `workspace` takes one: its id or name.
+  string operation_id = 4; // As DeployProject's operation_id: the move's.
+  uint32 wait_seconds = 5 [(optional) = true]; // As DeployProject's wait_seconds.
+  // What it uses in to_workspace instead of each database it is linked to (Project.dependencies),
+  // which stays here. One left out: the destination's database of its id and engine, if it has
+  // one, else a new one, with the data of its copy_database.
+  repeated DatabaseSwitch switch_databases = 6;
+  string workspace = 100;
+}
+
+// A database the moved project is linked to, which stays here with its other apps, if any, and
+// what the project uses instead in the destination: a database of the same engine, the lines of
+// how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+// user of its own, to a database of its own, which gets the data of ProjectDependency
+// .copy_database unless empty; a Valkey's it shares as its one user, and so does a project whose
+// id the engine keeps as a name of its own (copy_database empty) on Postgres and MariaDB. Once the
+// move succeeded, the user and database the project had of its own here, if it had them, are
+// dropped with it, as any delete does: so empty, where it had them, deletes that data.
+message DatabaseSwitch {
+  string database_project_id = 1; // A database it is linked to, which stays.
+  // A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+  // a user of its own there, it has no user or database named as the project. Empty = the
+  // destination's database of database_project_id's id and engine, if it has one, else a new one,
+  // made by the move under that id at that one's size where to_workspace offers it for the engine,
+  // else at the engine's default.
+  string into_database_project_id = 2;
+  // True = nothing is copied: the project starts there with an empty database of its own, or, as
+  // the apps' user, with what a database there holds that it shares (a new one: nothing). A
+  // MariaDB database with a view, trigger, routine or event made by another account than the
+  // project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+  // undone; start it empty, or make those objects again as the project's own user.
+  bool empty = 3;
+  // Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+  // signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+  // destination writes anew as a link with that env_prefix writes them, each of its names that
+  // /.env sets taking the new value, for the database copy_database names. Required there;
+  // refused elsewhere.
+  string env_prefix = 5;
+}
+
+message MoveProjectResponse {
+  // The move: finished, or IN_PROGRESS when wait_seconds ran out (then GetOperation).
+  Operation operation = 1;
+  // Once the project is in the destination: as it is there, as GetProject returns it. A move that
+  // FAILED after that has it too: it runs there, and its failure says what the source still
+  // holds. Absent while it runs, and when nothing moved.
+  Project project = 2;
+  // What changed and what stayed behind, for people: the new hosts, the domains of the person's
+  // own to point at the destination's hostname, the SSH command.
+  string move_message = 3;
+}
+
+// ── GetMoveChoices ─────────────────────────────────────────────────────────
+
+message GetMoveChoicesRequest {
+  string project_id = 1;
+  string to_workspace = 2; // As MoveProjectRequest's.
+  string workspace = 100;
+}
+
+message GetMoveChoicesResponse {
+  // One for each database the project is linked to, in Project.dependencies' order.
+  repeated MoveChoice choices = 1;
+}
+
+// What a move may use in to_workspace instead of a database the project is linked to.
+message MoveChoice {
+  ProjectDependency dependency = 1;
+  DatabaseEngine engine = 2; // The dependency's, which a database used instead runs too.
+  // The project signs in to the dependency as a user of its own (Database.own_user_projects),
+  // which the move drops here with its database once it succeeded (DatabaseSwitch).
+  bool owned = 3;
+  // The databases of to_workspace of the engine, which into_database_project_id may name: each
+  // once among a move's switches.
+  repeated MoveTarget databases = 4;
+  // A new database may be made there, under the dependency's id: to_workspace has no project of
+  // that id.
+  bool new_database = 5;
+  // Where the dialog's switch goes first: the database of to_workspace of the dependency's id and
+  // engine, else its only one of the engine that no other choice suggests, else a new one where
+  // new_database, else the first of `databases` that no other choice suggests. Empty = a new one,
+  // or nothing fits (no `databases`, and no new_database).
+  string suggested_database_project_id = 6;
+}
+
+// A database of to_workspace that a switch may go to.
+message MoveTarget {
+  string database_project_id = 1;
+  string name = 2; // As people call it: its metadata name, else its project_id.
+  uint64 data_bytes = 3; // As in Database.
+  repeated string app_names = 4; // The apps linked to it there, each as people call it.
+}
+
 // ── ListCommits ────────────────────────────────────────────────────────────
 
 message ListCommitsRequest {
   string project_id = 1;
   string before_commit = 2; // The previous page's last sha. Empty = from the newest.
+  string workspace = 100;
 }
 
 message ListCommitsResponse {
@@ -1433,6 +1721,7 @@ message RunProjectActionRequest {
   }
   string operation_id = 10; // As DeployProject's.
   uint32 wait_seconds = 13 [(optional) = true]; // As DeployProject's.
+  string workspace = 100;
 }
 
 message ServicesAction {
@@ -1569,6 +1858,7 @@ message LinkDatabaseRequest {
   string database_project_id = 1;
   repeated string link = 2; // App project_ids to link.
   repeated string unlink = 3; // App project_ids to unlink.
+  string workspace = 100;
 }
 
 message LinkDatabaseResponse {
@@ -1592,6 +1882,7 @@ message CreateDatabaseRequest {
   uint32 wait_seconds = 7 [(optional) = true]; // As DeployProject's wait_seconds.
   // What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
   ProjectMetadata metadata = 8 [(pulumi_omit) = true];
+  string workspace = 100;
 }
 
 // As CreateProjectResponse.
@@ -1613,6 +1904,7 @@ message GetDatabaseStatsRequest {
   // Whole minutes (hours, for a range that starts over 7 days ago); ≤500 buckets. 0 = no series.
   uint32 bucket_width_seconds = 5;
   DatabaseStatementOrder statement_order = 6;
+  string workspace = 100;
 }
 
 message GetDatabaseStatsResponse {
@@ -1803,6 +2095,7 @@ message CancelDatabaseQueryRequest {
   string project_id = 1;
   int32 pid = 2; // A DatabaseSession's.
   bool end_session = 3; // True = end the session, whatever it runs.
+  string workspace = 100;
 }
 
 message CancelDatabaseQueryResponse {
@@ -1821,6 +2114,7 @@ message SetProjectAlertsRequest {
   bool off = 6 [(optional) = true];
   // ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
   uint32 mute_minutes = 7 [(optional) = true];
+  string workspace = 100;
 }
 
 message SetProjectAlertsResponse {
@@ -1968,6 +2262,7 @@ message UptimeDay {
 message GetIncidentRequest {
   string project_id = 1;
   string incident_id = 2;
+  string workspace = 100;
 }
 
 message GetIncidentResponse {
@@ -1986,6 +2281,7 @@ message GetOperationRequest {
   uint32 after_log_line = 4 [(optional) = true];
   // ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB.
   uint32 log_line_limit = 5 [(optional) = true];
+  string workspace = 100;
 }
 
 message GetOperationResponse {
@@ -2000,6 +2296,9 @@ message GetOperationResponse {
   // Pass it as after_log_line to get the lines after these; absent = 0. The machine keeps every
   // line of the log.
   uint32 next_after_log_line = 4;
+  // A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+  // behind, or why nothing moved.
+  string move_message = 6;
 }
 
 message OperationLogLine {
@@ -2030,6 +2329,7 @@ message QueryHttpTrafficRequest {
   uint32 request_limit = 6; // Requests to return, newest first; ≤200. 0 = aggregates only.
   // The previous next_page_token, other fields unchanged: older requests only.
   string page_token = 7;
+  string workspace = 100;
 }
 
 message QueryHttpTrafficResponse {
@@ -2110,6 +2410,7 @@ message QueryContainerLogsRequest {
   uint32 limit = 5; // ≤500; 0 = 100. Also ends at ~64 KiB.
   bool from_start = 6; // False = the newest before end_time; true = the oldest after start_time.
   string page_token = 7; // The previous next_page_token, other fields unchanged.
+  string workspace = 100;
 }
 
 message QueryContainerLogsResponse {
@@ -2149,6 +2450,7 @@ message RunServiceCommandRequest {
   // 0 = default. Kills the main process only. Over ~50 may outlast your client: background long
   // jobs.
   uint32 timeout_seconds = 7;
+  string workspace = 100;
 }
 
 message RunServiceCommandResponse {
@@ -2210,6 +2512,7 @@ message ReadPathRequest {
   uint64 offset_bytes = 7; // File offset.
   uint32 length_bytes = 8; // ≤1 MiB; 0 = 64 KiB.
   string entry_page_token = 9; // The previous next_entry_page_token, other fields unchanged.
+  string workspace = 100;
 }
 
 message ReadPathResponse {
@@ -2243,6 +2546,7 @@ message CreateTransferRequest {
     PathDownload download = 3;
     DatabaseDump download_database = 4;
   }
+  string workspace = 100;
 }
 
 // The project's directory as a zip, tar or tar.gz (told by content), for CreateProject's or
@@ -2305,6 +2609,7 @@ message CreateTransferResponse {
 
 message GetUploadRequest {
   string upload_id = 1; // From CreateTransfer.
+  string workspace = 100;
 }
 
 message GetUploadResponse {
@@ -2393,19 +2698,54 @@ enum DatabaseSizeRefusalReason {
   DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED = 3;
 }
 
-// Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
+// Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+// caller has no workspace, or the workspace's machine is being prepared.
 message NoMachine {
   NoMachineReason reason = 1;
-  // Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+  // Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+  // the workspace's page, which says it is. An MCP tool leaves it out.
   string url = 2;
+  string workspace_id = 3; // BEING_PREPARED: the workspace. Empty for NO_PLAN.
 }
 
 enum NoMachineReason {
   NO_MACHINE_REASON_UNSPECIFIED = 0;
   NO_MACHINE_REASON_NO_PLAN = 1; // The person has not chosen and paid for a plan: they do it at url.
-  // The plan is paid and a machine is being prepared for the account: Pethost emails the person
-  // when it is ready. Call again later.
+  // The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+  // person when it is ready. Call again later.
   NO_MACHINE_REASON_BEING_PREPARED = 2;
+}
+
+// Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and
+// the caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by
+// what the person asked for: a project that exists is in those of holding_project; for
+// something new, ask the person, showing each one's size and what is free.
+message WorkspaceChoice {
+  repeated Workspace workspaces = 1; // By name, at most 20: ListWorkspaces lists all.
+  uint32 total = 2; // The workspaces the call may act on (this token's), in all.
+  // The call names a project: the workspaces that have a project of that id, by workspace_id.
+  repeated string holding_project = 3;
+  bool incomplete = 4; // As ListWorkspacesResponse's.
+}
+
+// Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+// connection is pinned to), but the person has not let this token reach it; or the call named
+// none and the token reaches none of the account's workspaces.
+message WorkspaceNotGranted {
+  // The workspace it may not reach: the one named, else the account's only one. Empty = the call
+  // named none and the account has several.
+  string workspace_id = 1;
+  string url = 2; // The panel's page where the person lets the token reach it.
+}
+
+// Detail of a FAILED_PRECONDITION error: the project moved to another workspace (MoveProject).
+// Call there, naming it as `workspace`; ids of operations and snapshots from before stay
+// behind.
+message ProjectMoved {
+  string project_id = 1;
+  string workspace_id = 2; // Where the move took it, which answers for it as it is now.
+  string workspace_name = 3;
+  google.protobuf.Timestamp move_time = 4;
 }
 
 // ── Streams ────────────────────────────────────────────────────────────────
@@ -2413,6 +2753,7 @@ enum NoMachineReason {
 message WatchOperationRequest {
   string project_id = 1;
   string operation_id = 2; // Empty = the latest.
+  string workspace = 100;
 }
 
 message WatchOperationResponse {
@@ -2420,12 +2761,15 @@ message WatchOperationResponse {
     OperationLogLine log = 1;
     Operation finished_operation = 2; // Always the last message.
   }
+  // With a MOVE's finished_operation: MoveProjectResponse.move_message.
+  string move_message = 3;
 }
 
 message TailContainerLogsRequest {
   string project_id = 1;
   ContainerLogFilter filter = 2;
   string after_cursor = 3; // Empty = only lines written from now on.
+  string workspace = 100;
 }
 
 message TailContainerLogsResponse {
@@ -2437,6 +2781,7 @@ message TailHttpTrafficRequest {
   string project_id = 1;
   HttpTrafficFilter filter = 2;
   uint64 after_sequence = 3; // 0 = only requests from now on.
+  string workspace = 100;
 }
 
 message TailHttpTrafficResponse {
@@ -2451,6 +2796,7 @@ message OpenTerminalRequest {
   repeated string command = 4;
   string run_as_user = 5; // Empty = the container's user. "root" can install packages.
   string working_directory = 6; // Empty = the container's.
+  string workspace = 100;
 }
 
 message TerminalSize {
@@ -2466,6 +2812,7 @@ message OpenTerminalResponse {
 
 message OpenDatabaseClientRequest {
   string project_id = 1; // A database project whose service runs.
+  string workspace = 100;
 }
 
 message OpenDatabaseClientResponse {

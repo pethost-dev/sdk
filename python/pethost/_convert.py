@@ -18,6 +18,22 @@ import pethost._types as _t
 import pethost._wire.v1.panel_pb as _pb
 
 
+def workspace_status_from_wire(_w: _pb.WorkspaceStatus) -> _t.WorkspaceStatus:
+    return _t.WorkspaceStatus(_w.value)
+
+
+def workspace_status_to_wire(_v: _t.WorkspaceStatus) -> _pb.WorkspaceStatus:
+    return _pb.WorkspaceStatus(_v.value)
+
+
+def workspace_role_from_wire(_w: _pb.WorkspaceRole) -> _t.WorkspaceRole:
+    return _t.WorkspaceRole(_w.value)
+
+
+def workspace_role_to_wire(_v: _t.WorkspaceRole) -> _pb.WorkspaceRole:
+    return _pb.WorkspaceRole(_v.value)
+
+
 def alert_channel_kind_from_wire(_w: _pb.AlertChannelKind) -> _t.AlertChannelKind:
     return _t.AlertChannelKind(_w.value)
 
@@ -186,12 +202,89 @@ def no_machine_reason_to_wire(_v: _t.NoMachineReason) -> _pb.NoMachineReason:
     return _pb.NoMachineReason(_v.value)
 
 
+def list_workspaces_response_from_wire(_w: _pb.ListWorkspacesResponse) -> _t.ListWorkspacesResponse:
+    return _t.ListWorkspacesResponse(
+        workspaces=tuple(workspace_from_wire(_x) for _x in _w.workspaces),
+        next_page_token=_w.next_page_token,
+        total=_w.total,
+        holding_project=tuple(_w.holding_project),
+        incomplete=_w.incomplete,
+    )
+
+
+def list_workspaces_response_to_wire(_v: _t.ListWorkspacesResponse) -> _pb.ListWorkspacesResponse:
+    return _pb.ListWorkspacesResponse(
+        workspaces=[workspace_to_wire(_x) for _x in _v.workspaces],
+        next_page_token=_v.next_page_token or None,
+        total=_v.total or None,
+        holding_project=_rt.strings("ListWorkspacesResponse.holding_project", _v.holding_project),
+        incomplete=_v.incomplete or None,
+    )
+
+
+def list_workspaces_response_to_dict(_v: _t.ListWorkspacesResponse) -> dict[str, _Any]:
+    return _rt.to_dict(list_workspaces_response_to_wire(_v))
+
+
+def list_workspaces_response_from_dict(_j: dict[str, _Any]) -> _t.ListWorkspacesResponse:
+    return list_workspaces_response_from_wire(_rt.from_dict(_pb.ListWorkspacesResponse, _j))
+
+
+def workspace_from_wire(_w: _pb.Workspace) -> _t.Workspace:
+    return _t.Workspace(
+        workspace_id=_w.workspace_id,
+        name=_w.name,
+        status=workspace_status_from_wire(_w.status),
+        location=_w.location,
+        plan=_w.plan,
+        cpu_total_cores=_w.cpu_total_cores,
+        memory_total_bytes=_w.memory_total_bytes,
+        memory_free_bytes=_w.memory_free_bytes if _w.has_field("memory_free_bytes") else None,
+        disk_total_bytes=_w.disk_total_bytes,
+        disk_free_bytes=_w.disk_free_bytes if _w.has_field("disk_free_bytes") else None,
+        project_count=_w.project_count if _w.has_field("project_count") else None,
+        hostname=_w.hostname,
+        apps_domain=_w.apps_domain,
+        end_time=_rt.time_from_wire(_w.end_time) if _w.end_time is not None else None,
+        role=workspace_role_from_wire(_w.role),
+    )
+
+
+def workspace_to_wire(_v: _t.Workspace) -> _pb.Workspace:
+    return _pb.Workspace(
+        workspace_id=_v.workspace_id or None,
+        name=_v.name or None,
+        status=workspace_status_to_wire(_v.status) if _v.status.value else None,
+        location=_v.location or None,
+        plan=_v.plan or None,
+        cpu_total_cores=_v.cpu_total_cores or None,
+        memory_total_bytes=_v.memory_total_bytes or None,
+        memory_free_bytes=_v.memory_free_bytes,
+        disk_total_bytes=_v.disk_total_bytes or None,
+        disk_free_bytes=_v.disk_free_bytes,
+        project_count=_v.project_count,
+        hostname=_v.hostname or None,
+        apps_domain=_v.apps_domain or None,
+        end_time=_rt.time_to_wire(_v.end_time) if _v.end_time is not None else None,
+        role=workspace_role_to_wire(_v.role) if _v.role.value else None,
+    )
+
+
+def workspace_to_dict(_v: _t.Workspace) -> dict[str, _Any]:
+    return _rt.to_dict(workspace_to_wire(_v))
+
+
+def workspace_from_dict(_j: dict[str, _Any]) -> _t.Workspace:
+    return workspace_from_wire(_rt.from_dict(_pb.Workspace, _j))
+
+
 def get_machine_response_from_wire(_w: _pb.GetMachineResponse) -> _t.GetMachineResponse:
     return _t.GetMachineResponse(
         machine=machine_from_wire(_w.machine) if _w.machine is not None else None,
         projects=tuple(project_summary_from_wire(_x) for _x in _w.projects),
         deleted_projects=tuple(deleted_project_from_wire(_x) for _x in _w.deleted_projects),
         github=github_connection_from_wire(_w.github) if _w.github is not None else None,
+        workspace=workspace_from_wire(_w.workspace) if _w.workspace is not None else None,
     )
 
 
@@ -201,6 +294,7 @@ def get_machine_response_to_wire(_v: _t.GetMachineResponse) -> _pb.GetMachineRes
         projects=[project_summary_to_wire(_x) for _x in _v.projects],
         deleted_projects=[deleted_project_to_wire(_x) for _x in _v.deleted_projects],
         github=github_connection_to_wire(_v.github) if _v.github is not None else None,
+        workspace=workspace_to_wire(_v.workspace) if _v.workspace is not None else None,
     )
 
 
@@ -461,6 +555,7 @@ def deleted_project_from_wire(_w: _pb.DeletedProject) -> _t.DeletedProject:
         project_id=_w.project_id,
         newest_snapshot=snapshot_from_wire(_w.newest_snapshot) if _w.newest_snapshot is not None else None,
         snapshot_count=_w.snapshot_count,
+        moved_to=moved_to_from_wire(_w.moved_to) if _w.moved_to is not None else None,
     )
 
 
@@ -469,6 +564,7 @@ def deleted_project_to_wire(_v: _t.DeletedProject) -> _pb.DeletedProject:
         project_id=_v.project_id or None,
         newest_snapshot=snapshot_to_wire(_v.newest_snapshot) if _v.newest_snapshot is not None else None,
         snapshot_count=_v.snapshot_count or None,
+        moved_to=moved_to_to_wire(_v.moved_to) if _v.moved_to is not None else None,
     )
 
 
@@ -478,6 +574,30 @@ def deleted_project_to_dict(_v: _t.DeletedProject) -> dict[str, _Any]:
 
 def deleted_project_from_dict(_j: dict[str, _Any]) -> _t.DeletedProject:
     return deleted_project_from_wire(_rt.from_dict(_pb.DeletedProject, _j))
+
+
+def moved_to_from_wire(_w: _pb.MovedTo) -> _t.MovedTo:
+    return _t.MovedTo(
+        workspace_id=_w.workspace_id,
+        workspace_name=_w.workspace_name,
+        move_time=_rt.time_from_wire(_w.move_time) if _w.move_time is not None else None,
+    )
+
+
+def moved_to_to_wire(_v: _t.MovedTo) -> _pb.MovedTo:
+    return _pb.MovedTo(
+        workspace_id=_v.workspace_id or None,
+        workspace_name=_v.workspace_name or None,
+        move_time=_rt.time_to_wire(_v.move_time) if _v.move_time is not None else None,
+    )
+
+
+def moved_to_to_dict(_v: _t.MovedTo) -> dict[str, _Any]:
+    return _rt.to_dict(moved_to_to_wire(_v))
+
+
+def moved_to_from_dict(_j: dict[str, _Any]) -> _t.MovedTo:
+    return moved_to_from_wire(_rt.from_dict(_pb.MovedTo, _j))
 
 
 def restart_machine_action_from_wire(_w: _pb.RestartMachineAction) -> _t.RestartMachineAction:
@@ -566,6 +686,7 @@ def project_summary_from_wire(_w: _pb.ProjectSummary) -> _t.ProjectSummary:
         pinned=_w.pinned,
         disk_used_bytes=_w.disk_used_bytes,
         database=database_summary_from_wire(_w.database) if _w.database is not None else None,
+        uid=_w.uid,
     )
 
 
@@ -585,6 +706,7 @@ def project_summary_to_wire(_v: _t.ProjectSummary) -> _pb.ProjectSummary:
         pinned=_v.pinned or None,
         disk_used_bytes=_v.disk_used_bytes or None,
         database=database_summary_to_wire(_v.database) if _v.database is not None else None,
+        uid=_v.uid or None,
     )
 
 
@@ -698,6 +820,9 @@ def project_from_wire(_w: _pb.Project) -> _t.Project:
         uptime_days=tuple(uptime_day_from_wire(_x) for _x in _w.uptime_days),
         database=database_from_wire(_w.database) if _w.database is not None else None,
         linked_databases=tuple(_w.linked_databases),
+        workspace_id=_w.workspace_id,
+        uid=_w.uid,
+        dependencies=tuple(project_dependency_from_wire(_x) for _x in _w.dependencies),
     )
 
 
@@ -731,6 +856,9 @@ def project_to_wire(_v: _t.Project) -> _pb.Project:
         uptime_days=[uptime_day_to_wire(_x) for _x in _v.uptime_days],
         database=database_to_wire(_v.database) if _v.database is not None else None,
         linked_databases=_rt.strings("Project.linked_databases", _v.linked_databases),
+        workspace_id=_v.workspace_id or None,
+        uid=_v.uid or None,
+        dependencies=[project_dependency_to_wire(_x) for _x in _v.dependencies],
     )
 
 
@@ -740,6 +868,30 @@ def project_to_dict(_v: _t.Project) -> dict[str, _Any]:
 
 def project_from_dict(_j: dict[str, _Any]) -> _t.Project:
     return project_from_wire(_rt.from_dict(_pb.Project, _j))
+
+
+def project_dependency_from_wire(_w: _pb.ProjectDependency) -> _t.ProjectDependency:
+    return _t.ProjectDependency(
+        database_project_id=_w.database_project_id,
+        copy_database=_w.copy_database,
+        env_prefix=_w.env_prefix,
+    )
+
+
+def project_dependency_to_wire(_v: _t.ProjectDependency) -> _pb.ProjectDependency:
+    return _pb.ProjectDependency(
+        database_project_id=_v.database_project_id or None,
+        copy_database=_v.copy_database or None,
+        env_prefix=_v.env_prefix or None,
+    )
+
+
+def project_dependency_to_dict(_v: _t.ProjectDependency) -> dict[str, _Any]:
+    return _rt.to_dict(project_dependency_to_wire(_v))
+
+
+def project_dependency_from_dict(_j: dict[str, _Any]) -> _t.ProjectDependency:
+    return project_dependency_from_wire(_rt.from_dict(_pb.ProjectDependency, _j))
 
 
 def running_services_action_from_wire(_w: _pb.RunningServicesAction) -> _t.RunningServicesAction:
@@ -1488,6 +1640,56 @@ def spec_violation_from_dict(_j: dict[str, _Any]) -> _t.SpecViolation:
     return spec_violation_from_wire(_rt.from_dict(_pb.SpecViolation, _j))
 
 
+def database_switch_from_wire(_w: _pb.DatabaseSwitch) -> _t.DatabaseSwitch:
+    return _t.DatabaseSwitch(
+        database_project_id=_w.database_project_id,
+        into_database_project_id=_w.into_database_project_id,
+        empty=_w.empty,
+        env_prefix=_w.env_prefix,
+    )
+
+
+def database_switch_to_wire(_v: _t.DatabaseSwitch) -> _pb.DatabaseSwitch:
+    return _pb.DatabaseSwitch(
+        database_project_id=_v.database_project_id or None,
+        into_database_project_id=_v.into_database_project_id or None,
+        empty=_v.empty or None,
+        env_prefix=_v.env_prefix or None,
+    )
+
+
+def database_switch_to_dict(_v: _t.DatabaseSwitch) -> dict[str, _Any]:
+    return _rt.to_dict(database_switch_to_wire(_v))
+
+
+def database_switch_from_dict(_j: dict[str, _Any]) -> _t.DatabaseSwitch:
+    return database_switch_from_wire(_rt.from_dict(_pb.DatabaseSwitch, _j))
+
+
+def move_project_response_from_wire(_w: _pb.MoveProjectResponse) -> _t.MoveProjectResponse:
+    return _t.MoveProjectResponse(
+        operation=operation_from_wire(_w.operation) if _w.operation is not None else None,
+        project=project_from_wire(_w.project) if _w.project is not None else None,
+        move_message=_w.move_message,
+    )
+
+
+def move_project_response_to_wire(_v: _t.MoveProjectResponse) -> _pb.MoveProjectResponse:
+    return _pb.MoveProjectResponse(
+        operation=operation_to_wire(_v.operation) if _v.operation is not None else None,
+        project=project_to_wire(_v.project) if _v.project is not None else None,
+        move_message=_v.move_message or None,
+    )
+
+
+def move_project_response_to_dict(_v: _t.MoveProjectResponse) -> dict[str, _Any]:
+    return _rt.to_dict(move_project_response_to_wire(_v))
+
+
+def move_project_response_from_dict(_j: dict[str, _Any]) -> _t.MoveProjectResponse:
+    return move_project_response_from_wire(_rt.from_dict(_pb.MoveProjectResponse, _j))
+
+
 def list_commits_response_from_wire(_w: _pb.ListCommitsResponse) -> _t.ListCommitsResponse:
     return _t.ListCommitsResponse(
         commits=tuple(branch_commit_from_wire(_x) for _x in _w.commits),
@@ -2211,6 +2413,7 @@ def get_operation_response_from_wire(_w: _pb.GetOperationResponse) -> _t.GetOper
         log=tuple(operation_log_line_from_wire(_x) for _x in _w.log),
         log_line_count=_w.log_line_count,
         next_after_log_line=_w.next_after_log_line,
+        move_message=_w.move_message,
     )
 
 
@@ -2221,6 +2424,7 @@ def get_operation_response_to_wire(_v: _t.GetOperationResponse) -> _pb.GetOperat
         log=[operation_log_line_to_wire(_x) for _x in _v.log],
         log_line_count=_v.log_line_count or None,
         next_after_log_line=_v.next_after_log_line or None,
+        move_message=_v.move_message or None,
     )
 
 
@@ -2870,6 +3074,7 @@ def no_machine_from_wire(_w: _pb.NoMachine) -> _t.NoMachine:
     return _t.NoMachine(
         reason=no_machine_reason_from_wire(_w.reason),
         url=_w.url,
+        workspace_id=_w.workspace_id,
     )
 
 
@@ -2877,6 +3082,7 @@ def no_machine_to_wire(_v: _t.NoMachine) -> _pb.NoMachine:
     return _pb.NoMachine(
         reason=no_machine_reason_to_wire(_v.reason) if _v.reason.value else None,
         url=_v.url or None,
+        workspace_id=_v.workspace_id or None,
     )
 
 
@@ -2888,23 +3094,103 @@ def no_machine_from_dict(_j: dict[str, _Any]) -> _t.NoMachine:
     return no_machine_from_wire(_rt.from_dict(_pb.NoMachine, _j))
 
 
+def workspace_choice_from_wire(_w: _pb.WorkspaceChoice) -> _t.WorkspaceChoice:
+    return _t.WorkspaceChoice(
+        workspaces=tuple(workspace_from_wire(_x) for _x in _w.workspaces),
+        total=_w.total,
+        holding_project=tuple(_w.holding_project),
+        incomplete=_w.incomplete,
+    )
+
+
+def workspace_choice_to_wire(_v: _t.WorkspaceChoice) -> _pb.WorkspaceChoice:
+    return _pb.WorkspaceChoice(
+        workspaces=[workspace_to_wire(_x) for _x in _v.workspaces],
+        total=_v.total or None,
+        holding_project=_rt.strings("WorkspaceChoice.holding_project", _v.holding_project),
+        incomplete=_v.incomplete or None,
+    )
+
+
+def workspace_choice_to_dict(_v: _t.WorkspaceChoice) -> dict[str, _Any]:
+    return _rt.to_dict(workspace_choice_to_wire(_v))
+
+
+def workspace_choice_from_dict(_j: dict[str, _Any]) -> _t.WorkspaceChoice:
+    return workspace_choice_from_wire(_rt.from_dict(_pb.WorkspaceChoice, _j))
+
+
+def workspace_not_granted_from_wire(_w: _pb.WorkspaceNotGranted) -> _t.WorkspaceNotGranted:
+    return _t.WorkspaceNotGranted(
+        workspace_id=_w.workspace_id,
+        url=_w.url,
+    )
+
+
+def workspace_not_granted_to_wire(_v: _t.WorkspaceNotGranted) -> _pb.WorkspaceNotGranted:
+    return _pb.WorkspaceNotGranted(
+        workspace_id=_v.workspace_id or None,
+        url=_v.url or None,
+    )
+
+
+def workspace_not_granted_to_dict(_v: _t.WorkspaceNotGranted) -> dict[str, _Any]:
+    return _rt.to_dict(workspace_not_granted_to_wire(_v))
+
+
+def workspace_not_granted_from_dict(_j: dict[str, _Any]) -> _t.WorkspaceNotGranted:
+    return workspace_not_granted_from_wire(_rt.from_dict(_pb.WorkspaceNotGranted, _j))
+
+
+def project_moved_from_wire(_w: _pb.ProjectMoved) -> _t.ProjectMoved:
+    return _t.ProjectMoved(
+        project_id=_w.project_id,
+        workspace_id=_w.workspace_id,
+        workspace_name=_w.workspace_name,
+        move_time=_rt.time_from_wire(_w.move_time) if _w.move_time is not None else None,
+    )
+
+
+def project_moved_to_wire(_v: _t.ProjectMoved) -> _pb.ProjectMoved:
+    return _pb.ProjectMoved(
+        project_id=_v.project_id or None,
+        workspace_id=_v.workspace_id or None,
+        workspace_name=_v.workspace_name or None,
+        move_time=_rt.time_to_wire(_v.move_time) if _v.move_time is not None else None,
+    )
+
+
+def project_moved_to_dict(_v: _t.ProjectMoved) -> dict[str, _Any]:
+    return _rt.to_dict(project_moved_to_wire(_v))
+
+
+def project_moved_from_dict(_j: dict[str, _Any]) -> _t.ProjectMoved:
+    return project_moved_from_wire(_rt.from_dict(_pb.ProjectMoved, _j))
+
+
 def watch_operation_response_from_wire(_w: _pb.WatchOperationResponse) -> _t.WatchOperationResponse:
     _k = _w.message
     if _k is None:
-        return _t.WatchOperationResponse()
+        return _t.WatchOperationResponse(
+            move_message=_w.move_message,
+        )
     if _k.field == "log":
         return _t.WatchOperationResponse(
+            move_message=_w.move_message,
             log=operation_log_line_from_wire(_k.value),
         )
     if _k.field == "finished_operation":
         return _t.WatchOperationResponse(
+            move_message=_w.move_message,
             finished_operation=operation_from_wire(_k.value),
         )
     _rt.never(_k)
 
 
 def watch_operation_response_to_wire(_v: _t.WatchOperationResponse) -> _pb.WatchOperationResponse:
-    _w = _pb.WatchOperationResponse()
+    _w = _pb.WatchOperationResponse(
+        move_message=_v.move_message or None,
+    )
     if _v.log is not None:
         _w.message = _Oneof[_Literal["log"], _pb.OperationLogLine]("log", operation_log_line_to_wire(_v.log))
     elif _v.finished_operation is not None:
@@ -2962,9 +3248,25 @@ def tail_http_traffic_response_from_dict(_j: dict[str, _Any]) -> _t.TailHttpTraf
     return tail_http_traffic_response_from_wire(_rt.from_dict(_pb.TailHttpTrafficResponse, _j))
 
 
+def list_workspaces_request(
+    *,
+    project_id: str,
+    page_token: str,
+) -> _pb.ListWorkspacesRequest:
+    _w = _pb.ListWorkspacesRequest(
+        project_id=project_id or None,
+        page_token=page_token or None,
+    )
+    return _rt.checked(_w)
+
+
 def get_machine_request(
+    *,
+    workspace: str,
 ) -> _pb.GetMachineRequest:
-    _w = _pb.GetMachineRequest()
+    _w = _pb.GetMachineRequest(
+        workspace=workspace or None,
+    )
     return _rt.checked(_w)
 
 
@@ -2975,9 +3277,12 @@ def run_machine_action_request(
     restart_machine: _t.RestartMachineAction | None,
     cancel_restart: bool | None,
     end_session_id: str | None,
+    workspace: str,
 ) -> _pb.RunMachineActionRequest:
     _rt.one_of("run_machine_action", add_ssh_key=add_ssh_key, remove_ssh_key_fingerprint=remove_ssh_key_fingerprint, restart_machine=restart_machine, cancel_restart=cancel_restart, end_session_id=end_session_id)
-    _w = _pb.RunMachineActionRequest()
+    _w = _pb.RunMachineActionRequest(
+        workspace=workspace or None,
+    )
     if add_ssh_key is not None:
         _w.action = _Oneof[_Literal["add_ssh_key"], _pb.SshKey]("add_ssh_key", ssh_key_to_wire(add_ssh_key))
     elif remove_ssh_key_fingerprint is not None:
@@ -3000,6 +3305,7 @@ def get_project_request(
     incidents_before: datetime | None,
     uptime_day_count: int,
     incidents_before_id: str,
+    workspace: str,
 ) -> _pb.GetProjectRequest:
     _w = _pb.GetProjectRequest(
         project_id=project_id or None,
@@ -3009,6 +3315,7 @@ def get_project_request(
         incidents_before=_rt.time_to_wire(incidents_before) if incidents_before is not None else None,
         uptime_day_count=uptime_day_count or None,
         incidents_before_id=incidents_before_id or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3024,6 +3331,7 @@ def create_project_request(
     operation_id: str,
     wait_seconds: int | None,
     link_databases: Sequence[_t.DatabaseLinkRequest],
+    workspace: str,
 ) -> _pb.CreateProjectRequest:
     _w = _pb.CreateProjectRequest(
         project_id=project_id or None,
@@ -3035,6 +3343,7 @@ def create_project_request(
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
         link_databases=[database_link_request_to_wire(_x) for _x in link_databases],
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3053,6 +3362,7 @@ def deploy_project_request(
     newest_commit: bool | None,
     rollback_deploy_id: str | None,
     wait_seconds: int | None,
+    workspace: str,
 ) -> _pb.DeployProjectRequest:
     _rt.one_of("deploy_project", upload_id=upload_id, commit=commit, newest_commit=newest_commit, rollback_deploy_id=rollback_deploy_id)
     _w = _pb.DeployProjectRequest(
@@ -3064,6 +3374,7 @@ def deploy_project_request(
         timeout_seconds=timeout_seconds or None,
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
+        workspace=workspace or None,
     )
     if upload_id is not None:
         _w.version = _Oneof[_Literal["upload_id"], str]("upload_id", upload_id)
@@ -3076,14 +3387,36 @@ def deploy_project_request(
     return _rt.checked(_w)
 
 
+def move_project_request(
+    *,
+    project_id: str,
+    to_workspace: str,
+    operation_id: str,
+    wait_seconds: int | None,
+    switch_databases: Sequence[_t.DatabaseSwitch],
+    workspace: str,
+) -> _pb.MoveProjectRequest:
+    _w = _pb.MoveProjectRequest(
+        project_id=project_id or None,
+        to_workspace=to_workspace or None,
+        operation_id=operation_id or None,
+        wait_seconds=wait_seconds,
+        switch_databases=[database_switch_to_wire(_x) for _x in switch_databases],
+        workspace=workspace or None,
+    )
+    return _rt.checked(_w)
+
+
 def list_commits_request(
     *,
     project_id: str,
     before_commit: str,
+    workspace: str,
 ) -> _pb.ListCommitsRequest:
     _w = _pb.ListCommitsRequest(
         project_id=project_id or None,
         before_commit=before_commit or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3104,12 +3437,14 @@ def run_project_action_request(
     set_database_size: _t.SetDatabaseSizeAction | None,
     operation_id: str,
     wait_seconds: int | None,
+    workspace: str,
 ) -> _pb.RunProjectActionRequest:
     _rt.one_of("run_project_action", start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, set_database_size=set_database_size)
     _w = _pb.RunProjectActionRequest(
         project_id=project_id or None,
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
+        workspace=workspace or None,
     )
     if start_services is not None:
         _w.action = _Oneof[_Literal["start_services"], _pb.ServicesAction]("start_services", services_action_to_wire(start_services))
@@ -3145,6 +3480,7 @@ def set_project_alerts_request(
     remove_traffic_rules: bool,
     off: bool | None,
     mute_minutes: int | None,
+    workspace: str,
 ) -> _pb.SetProjectAlertsRequest:
     _w = _pb.SetProjectAlertsRequest(
         project_id=project_id or None,
@@ -3154,6 +3490,7 @@ def set_project_alerts_request(
         remove_traffic_rules=remove_traffic_rules or None,
         off=off,
         mute_minutes=mute_minutes,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3165,6 +3502,7 @@ def get_operation_request(
     wait_seconds: int | None,
     after_log_line: int | None,
     log_line_limit: int | None,
+    workspace: str,
 ) -> _pb.GetOperationRequest:
     _w = _pb.GetOperationRequest(
         project_id=project_id or None,
@@ -3172,6 +3510,7 @@ def get_operation_request(
         wait_seconds=wait_seconds,
         after_log_line=after_log_line,
         log_line_limit=log_line_limit,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3186,6 +3525,7 @@ def query_http_traffic_request(
     bucket_width_seconds: int,
     request_limit: int,
     page_token: str,
+    workspace: str,
 ) -> _pb.QueryHttpTrafficRequest:
     _w = _pb.QueryHttpTrafficRequest(
         project_id=project_id or None,
@@ -3196,6 +3536,7 @@ def query_http_traffic_request(
         bucket_width_seconds=bucket_width_seconds or None,
         request_limit=request_limit or None,
         page_token=page_token or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3210,6 +3551,7 @@ def query_container_logs_request(
     limit: int,
     from_start: bool,
     page_token: str,
+    workspace: str,
 ) -> _pb.QueryContainerLogsRequest:
     _w = _pb.QueryContainerLogsRequest(
         project_id=project_id or None,
@@ -3220,6 +3562,7 @@ def query_container_logs_request(
         limit=limit or None,
         from_start=from_start or None,
         page_token=page_token or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3234,6 +3577,7 @@ def create_database_request(
     operation_id: str,
     wait_seconds: int | None,
     metadata: _t.ProjectMetadata | None,
+    workspace: str,
 ) -> _pb.CreateDatabaseRequest:
     _w = _pb.CreateDatabaseRequest(
         project_id=project_id or None,
@@ -3244,6 +3588,7 @@ def create_database_request(
         operation_id=operation_id or None,
         wait_seconds=wait_seconds,
         metadata=project_metadata_to_wire(metadata) if metadata is not None else None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3253,11 +3598,13 @@ def link_database_request(
     database_project_id: str,
     link: Sequence[str],
     unlink: Sequence[str],
+    workspace: str,
 ) -> _pb.LinkDatabaseRequest:
     _w = _pb.LinkDatabaseRequest(
         database_project_id=database_project_id or None,
         link=_rt.strings("link_database(link=)", link),
         unlink=_rt.strings("link_database(unlink=)", unlink),
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3271,6 +3618,7 @@ def run_service_command_request(
     run_as_user: str,
     working_directory: str,
     timeout_seconds: int,
+    workspace: str,
 ) -> _pb.RunServiceCommandRequest:
     _w = _pb.RunServiceCommandRequest(
         project_id=project_id or None,
@@ -3280,6 +3628,7 @@ def run_service_command_request(
         run_as_user=run_as_user or None,
         working_directory=working_directory or None,
         timeout_seconds=timeout_seconds or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3294,6 +3643,7 @@ def read_path_request(
     offset_bytes: int,
     length_bytes: int,
     entry_page_token: str,
+    workspace: str,
 ) -> _pb.ReadPathRequest:
     _rt.one_of("read_path", service=service, volume=volume)
     _w = _pb.ReadPathRequest(
@@ -3303,6 +3653,7 @@ def read_path_request(
         offset_bytes=offset_bytes or None,
         length_bytes=length_bytes or None,
         entry_page_token=entry_page_token or None,
+        workspace=workspace or None,
     )
     if service is not None:
         _w.root = _Oneof[_Literal["service"], str]("service", service)
@@ -3317,9 +3668,12 @@ def create_transfer_request(
     upload_file: _t.FileUpload | None,
     download: _t.PathDownload | None,
     download_database: _t.DatabaseDump | None,
+    workspace: str,
 ) -> _pb.CreateTransferRequest:
     _rt.one_of("create_transfer", upload_archive=upload_archive, upload_file=upload_file, download=download, download_database=download_database)
-    _w = _pb.CreateTransferRequest()
+    _w = _pb.CreateTransferRequest(
+        workspace=workspace or None,
+    )
     if upload_archive is not None:
         _w.transfer = _Oneof[_Literal["upload_archive"], _pb.ArchiveUpload]("upload_archive", archive_upload_to_wire(upload_archive))
     elif upload_file is not None:
@@ -3335,10 +3689,12 @@ def watch_operation_request(
     *,
     project_id: str,
     operation_id: str,
+    workspace: str,
 ) -> _pb.WatchOperationRequest:
     _w = _pb.WatchOperationRequest(
         project_id=project_id or None,
         operation_id=operation_id or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3348,11 +3704,13 @@ def tail_container_logs_request(
     project_id: str,
     filter: _t.ContainerLogFilter | None,
     after_cursor: str,
+    workspace: str,
 ) -> _pb.TailContainerLogsRequest:
     _w = _pb.TailContainerLogsRequest(
         project_id=project_id or None,
         filter=container_log_filter_to_wire(filter) if filter is not None else None,
         after_cursor=after_cursor or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3362,11 +3720,13 @@ def tail_http_traffic_request(
     project_id: str,
     filter: _t.HttpTrafficFilter | None,
     after_sequence: int,
+    workspace: str,
 ) -> _pb.TailHttpTrafficRequest:
     _w = _pb.TailHttpTrafficRequest(
         project_id=project_id or None,
         filter=http_traffic_filter_to_wire(filter) if filter is not None else None,
         after_sequence=after_sequence or None,
+        workspace=workspace or None,
     )
     return _rt.checked(_w)
 
@@ -3420,6 +3780,18 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wNoMachine = _d.value(_pb.NoMachine)
                 if _wNoMachine is not None:
                     return no_machine_from_wire(_wNoMachine)
+            if _d.type_name == "pethost.panel.v1.WorkspaceChoice":
+                _wWorkspaceChoice = _d.value(_pb.WorkspaceChoice)
+                if _wWorkspaceChoice is not None:
+                    return workspace_choice_from_wire(_wWorkspaceChoice)
+            if _d.type_name == "pethost.panel.v1.WorkspaceNotGranted":
+                _wWorkspaceNotGranted = _d.value(_pb.WorkspaceNotGranted)
+                if _wWorkspaceNotGranted is not None:
+                    return workspace_not_granted_from_wire(_wWorkspaceNotGranted)
+            if _d.type_name == "pethost.panel.v1.ProjectMoved":
+                _wProjectMoved = _d.value(_pb.ProjectMoved)
+                if _wProjectMoved is not None:
+                    return project_moved_from_wire(_wProjectMoved)
         except ValueError:
             continue
     return None

@@ -9,8 +9,74 @@ import (
 	"github.com/pethost-dev/sdk/go/internal/panelv1"
 )
 
+// ListWorkspacesRequest is the request of [Client.ListWorkspaces].
+type ListWorkspacesRequest struct {
+	// A ProjectID: HoldingProject then says which workspaces have a project of that id.
+	ProjectID string
+	// A NextPageToken. Empty = the first page.
+	PageToken string
+}
+
+// ListWorkspacesResponse is the response of [Client.ListWorkspaces].
+type ListWorkspacesResponse struct {
+	// By name.
+	Workspaces []Workspace
+	// Empty = the last page.
+	NextPageToken string
+	// Workspaces in all, on every page.
+	Total uint32
+	// With ProjectID: the workspaces that have a project of that id, by WorkspaceID. Empty = none
+	// of those that answered (see incomplete).
+	HoldingProject []string
+	// True = a machine did not answer in time: its free figures and project count are absent, and
+	// HoldingProject may lack it.
+	Incomplete bool
+}
+
+// What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+// projects on it. A call names it as `workspace`, by WorkspaceID or name.
+type Workspace struct {
+	// 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+	// never another workspace's.
+	WorkspaceID string
+	// The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+	// change it.
+	Name   string
+	Status WorkspaceStatus
+	// Where its machine runs, e.g. "Europe".
+	Location string
+	// Its plan's name, e.g. "Starter".
+	Plan string
+	// The plan's.
+	CPUTotalCores float64
+	// The plan's, as [Machine.MemoryTotalBytes].
+	MemoryTotalBytes uint64
+	// What the projects leave of MemoryTotalBytes, in its machine's latest sample. Absent = not
+	// known: BEING_PREPARED, or the machine did not answer in time.
+	MemoryFreeBytes *uint64
+	// The plan's, as [Machine.DiskTotalBytes].
+	DiskTotalBytes uint64
+	// Likewise. Absent as MemoryFreeBytes.
+	DiskFreeBytes *uint64
+	// Absent as MemoryFreeBytes.
+	ProjectCount *uint32
+	// Its machine's name, as [Machine.Hostname]: SSH, transfers, and where a domain of the
+	// person's own points (CNAME). Empty while BEING_PREPARED.
+	Hostname string
+	// As [Machine.AppsDomain]. Empty = none.
+	AppsDomain string
+	// When it ends: the person removed it, and it works until then, its projects with it. Absent =
+	// it is not ending.
+	EndTime time.Time
+	// The caller's.
+	Role WorkspaceRole
+}
+
 // GetMachineRequest is the request of [Client.GetMachine].
-type GetMachineRequest struct{}
+type GetMachineRequest struct {
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
+}
 
 // GetMachineResponse is the response of [Client.GetMachine].
 type GetMachineResponse struct {
@@ -23,6 +89,8 @@ type GetMachineResponse struct {
 	// later. Not known while [Machine.SnapshotListTime] is absent.
 	DeletedProjects []DeletedProject
 	Github          *GithubConnection
+	// The workspace whose machine this is.
+	Workspace *Workspace
 }
 
 type Machine struct {
@@ -200,6 +268,19 @@ type DeletedProject struct {
 	NewestSnapshot *Snapshot
 	// In all.
 	SnapshotCount uint32
+	// Set when the latest move of the project from or to this workspace took it to another one,
+	// and this workspace has had no other project of the id since, as a call for it here would
+	// answer [ProjectMoved]: call it there (`workspace`), which answers for it as it is now. A
+	// restore here makes another copy here, as it was last backed up here, and calls here then act
+	// on that copy.
+	MovedTo *MovedTo
+}
+
+// Where a move took a project ([Client.MoveProject]), and when.
+type MovedTo struct {
+	WorkspaceID   string
+	WorkspaceName string
+	MoveTime      time.Time
 }
 
 // RunMachineActionRequest is the request of [Client.RunMachineAction].
@@ -208,6 +289,8 @@ type RunMachineActionRequest struct {
 	// [RunMachineActionRestartMachine], [RunMachineActionCancelRestart] or
 	// [RunMachineActionEndSessionID]; nil = none.
 	Action RunMachineActionAction
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // RunMachineActionAction is what [RunMachineActionRequest.Action] holds: one of
@@ -306,6 +389,8 @@ type ProjectSummary struct {
 	DiskUsedBytes uint64
 	// Set = a database project ([Client.CreateDatabase]).
 	Database *DatabaseSummary
+	// As [Project.UID].
+	UID string
 }
 
 type ServiceSummary struct {
@@ -353,6 +438,8 @@ type GetProjectRequest struct {
 	// With IncidentsBefore: the IncidentID of the oldest seen, so that those that opened at the
 	// same time are not skipped.
 	IncidentsBeforeID string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // GetProjectResponse is the response of [Client.GetProject].
@@ -433,6 +520,31 @@ type Project struct {
 	// The database projects this one reaches ([Client.LinkDatabase]), each at the host of its
 	// ProjectID.
 	LinkedDatabases []string
+	// The workspace it is in ([Workspace.WorkspaceID]): what a later call for it names as
+	// `workspace`.
+	WorkspaceID string
+	// Made when it was created, and kept by its backups, restores and moves: a project deleted and
+	// created again under the same ProjectID has another. Empty = not known yet.
+	UID string
+	// The databases it is linked to (LinkedDatabases), each with what [Client.MoveProject] may do
+	// with it ([MoveProjectRequest.SwitchDatabases]).
+	Dependencies []ProjectDependency
+}
+
+// A database a project is linked to, as [Client.MoveProject] of the project sees it.
+type ProjectDependency struct {
+	DatabaseProjectID string
+	// The database inside it whose data a move copies, unless [DatabaseSwitch.Empty]: the one the
+	// project signs in to, its own where it has a user of its own ([Database.OwnUserProjects]),
+	// else `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name
+	// of its own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so
+	// that a new one starts empty and one there is shared.
+	CopyDatabase string
+	// The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+	// (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+	// destination writes anew. Empty = a person wrote them ([Client.LinkDatabase] linked it): a
+	// move needs [DatabaseSwitch.EnvPrefix].
+	EnvPrefix string
 }
 
 // A start, stop or restart of services that has not ended yet.
@@ -671,9 +783,9 @@ type Host struct {
 	CertificateExpireTime time.Time
 	// Why the host answers nobody: a name under the panel's domain that is not one label under
 	// [Machine.AppsDomain] (another account's, or two labels deep): change its host. One under a
-	// former [Machine.AppsDomain] of this account moves by itself to the same name under the new
-	// one, within a minute of the change, unless the project's last deploy failed or another
-	// project has that name. Empty = it answers, or it is the person's own domain.
+	// former AppsDomain of this account moves by itself to the same name under the new one, within
+	// a minute of the change, unless the project's last deploy failed or another project has that
+	// name. Empty = it answers, or it is the person's own domain.
 	UnavailableMessage string
 }
 
@@ -781,8 +893,6 @@ type CreateProjectRequest struct {
 	// Set = a GitHub project: {github: {repository}}. Absent = the files of this request.
 	Source *ProjectSource
 	// An archive of the project's directory, from [CreateTransferUploadArchive], unpacked first.
-	// [CodeFailedPrecondition] = not arrived; [CodeNotFound] = expired or used. One the machine
-	// refused (its PUT said why) answers with its `violations`.
 	UploadID string
 	// The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text:
 	// "…"}], or those to write over the archive's or the commit's. A github source takes only
@@ -797,6 +907,8 @@ type CreateProjectRequest struct {
 	// As [Client.DeployProject]'s WaitSeconds.
 	WaitSeconds   *uint32
 	LinkDatabases []DatabaseLinkRequest
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 type DatabaseLinkRequest struct {
@@ -823,8 +935,7 @@ type CreateProjectResponse struct {
 // DeployProjectRequest is the request of [Client.DeployProject].
 type DeployProjectRequest struct {
 	ProjectID string
-	// [Project.DeployID] as you read it: [CodeAborted] if the project was deployed since. Empty =
-	// no check.
+	// [Project.DeployID] as you read it. Empty = no check.
 	BaseDeployID string
 	// Written in order over the current files, or over the new version's: e.g. [{path: "/.env",
 	// text: "…"}] writes that file whole, and the files not named stay. With no new version
@@ -847,6 +958,8 @@ type DeployProjectRequest struct {
 	// Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still
 	// IN_PROGRESS then: [Client.GetOperation] waits on.
 	WaitSeconds *uint32
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // DeployProjectVersion is what [DeployProjectRequest.Version] holds: one of
@@ -862,8 +975,7 @@ type DeployProjectVersion interface {
 
 // DeployProjectUploadID is a member of [DeployProjectVersion].
 //
-// files project: an archive from [Client.CreateTransfer]; replaces all files but /.env and
-// x-pethost.
+// files project: an archive from [Client.CreateTransfer].
 type DeployProjectUploadID string
 
 // DeployProjectCommit is a member of [DeployProjectVersion].
@@ -879,8 +991,7 @@ type DeployProjectNewestCommit bool
 // DeployProjectRollbackDeployID is a member of [DeployProjectVersion].
 //
 // files project, a rollback: the OperationID of an earlier deploy with [Operation.FilesKept]
-// ([Project.Operations]). Its files return as a new version; /.env, x-pethost and volumes
-// stay.
+// ([Project.Operations]).
 type DeployProjectRollbackDeployID string
 
 // Adds `<volume>:<container_path>` to the service, declaring the volume if needed.
@@ -983,11 +1094,76 @@ type SpecViolation struct {
 	ViolationMessage string
 }
 
+// MoveProjectRequest is the request of [Client.MoveProject].
+type MoveProjectRequest struct {
+	ProjectID string
+	// The destination, as Workspace takes one: its id or name.
+	ToWorkspace string
+	// As [Client.DeployProject]'s OperationID: the move's.
+	OperationID string
+	// As [Client.DeployProject]'s WaitSeconds.
+	WaitSeconds *uint32
+	// What it uses in ToWorkspace instead of each database it is linked to
+	// ([Project.Dependencies]), which stays here. One left out: the destination's database of its
+	// id and engine, if it has one, else a new one, with the data of its
+	// [ProjectDependency.CopyDatabase].
+	SwitchDatabases []DatabaseSwitch
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
+}
+
+// A database the moved project is linked to, which stays here with its other apps, if any, and
+// what the project uses instead in the destination: a database of the same engine, the lines
+// of how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in
+// there as a user of its own, to a database of its own, which gets the data of
+// [ProjectDependency] .copy_database unless empty; a Valkey's it shares as its one user, and
+// so does a project whose id the engine keeps as a name of its own
+// ([ProjectDependency.CopyDatabase] empty) on Postgres and MariaDB. Once the move succeeded,
+// the user and database the project had of its own here, if it had them, are dropped with it,
+// as any delete does: so empty, where it had them, deletes that data.
+type DatabaseSwitch struct {
+	// A database it is linked to, which stays.
+	DatabaseProjectID string
+	// A database of the same engine in [MoveProjectRequest.ToWorkspace]. On Postgres and MariaDB,
+	// where the project gets a user of its own there, it has no user or database named as the
+	// project. Empty = the destination's database of DatabaseProjectID's id and engine, if it has
+	// one, else a new one, made by the move under that id at that one's size where
+	// [MoveProjectRequest.ToWorkspace] offers it for the engine, else at the engine's default.
+	IntoDatabaseProjectID string
+	// True = nothing is copied: the project starts there with an empty database of its own, or, as
+	// the apps' user, with what a database there holds that it shares (a new one: nothing). A
+	// MariaDB database with a view, trigger, routine or event made by another account than the
+	// project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+	// undone; start it empty, or make those objects again as the project's own user.
+	Empty bool
+	// Where [ProjectDependency.EnvPrefix] is empty, as a person wrote the lines of how the project
+	// signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+	// destination writes anew as a link with that EnvPrefix writes them, each of its names that
+	// /.env sets taking the new value, for the database [ProjectDependency.CopyDatabase] names.
+	// Required there; refused elsewhere.
+	EnvPrefix string
+}
+
+// MoveProjectResponse is the response of [Client.MoveProject].
+type MoveProjectResponse struct {
+	// The move: finished, or IN_PROGRESS when WaitSeconds ran out (then [Client.GetOperation]).
+	Operation *Operation
+	// Once the project is in the destination: as it is there, as [Client.GetProject] returns it. A
+	// move that FAILED after that has it too: it runs there, and its failure says what the source
+	// still holds. Absent while it runs, and when nothing moved.
+	Project *Project
+	// What changed and what stayed behind, for people: the new hosts, the domains of the person's
+	// own to point at the destination's hostname, the SSH command.
+	MoveMessage string
+}
+
 // ListCommitsRequest is the request of [Client.ListCommits].
 type ListCommitsRequest struct {
 	ProjectID string
 	// The previous page's last sha. Empty = from the newest.
 	BeforeCommit string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // ListCommitsResponse is the response of [Client.ListCommits].
@@ -1028,6 +1204,8 @@ type RunProjectActionRequest struct {
 	OperationID string
 	// As [Client.DeployProject]'s.
 	WaitSeconds *uint32
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // RunProjectActionAction is what [RunProjectActionRequest.Action] holds: one of
@@ -1271,6 +1449,8 @@ type LinkDatabaseRequest struct {
 	Link []string
 	// App project_ids to unlink.
 	Unlink []string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // LinkDatabaseResponse is the response of [Client.LinkDatabase].
@@ -1300,6 +1480,8 @@ type CreateDatabaseRequest struct {
 	WaitSeconds *uint32
 	// What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
 	Metadata *ProjectMetadata
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // CreateDatabaseResponse is the response of [Client.CreateDatabase].
@@ -1328,6 +1510,8 @@ type SetProjectAlertsRequest struct {
 	Off *bool
 	// ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
 	MuteMinutes *uint32
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // SetProjectAlertsResponse is the response of [Client.SetProjectAlerts].
@@ -1500,6 +1684,8 @@ type GetOperationRequest struct {
 	AfterLogLine *uint32
 	// ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB.
 	LogLineLimit *uint32
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // GetOperationResponse is the response of [Client.GetOperation].
@@ -1517,6 +1703,9 @@ type GetOperationResponse struct {
 	// Pass it as [GetOperationRequest.AfterLogLine] to get the lines after these; absent = 0. The
 	// machine keeps every line of the log.
 	NextAfterLogLine uint32
+	// A MOVE's, once it ended: [MoveProjectResponse.MoveMessage], what changed and what stayed
+	// behind, or why nothing moved.
+	MoveMessage string
 }
 
 type OperationLogLine struct {
@@ -1559,6 +1748,8 @@ type QueryHTTPTrafficRequest struct {
 	RequestLimit uint32
 	// The previous NextPageToken, other fields unchanged: older requests only.
 	PageToken string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // QueryHTTPTrafficResponse is the response of [Client.QueryHTTPTraffic].
@@ -1652,6 +1843,8 @@ type QueryContainerLogsRequest struct {
 	FromStart bool
 	// The previous NextPageToken, other fields unchanged.
 	PageToken string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // QueryContainerLogsResponse is the response of [Client.QueryContainerLogs].
@@ -1696,6 +1889,8 @@ type RunServiceCommandRequest struct {
 	// 0 = default. Kills the main process only. Over ~50 may outlast your client: background long
 	// jobs.
 	TimeoutSeconds uint32
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // RunServiceCommandResponse is the response of [Client.RunServiceCommand].
@@ -1746,6 +1941,8 @@ type ReadPathRequest struct {
 	LengthBytes uint32
 	// The previous [ReadPathResponse.NextEntryPageToken], other fields unchanged.
 	EntryPageToken string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // ReadPathRoot is what [ReadPathRequest.Root] holds: one of [ReadPathService] or
@@ -1801,6 +1998,8 @@ type CreateTransferRequest struct {
 	// One of [CreateTransferUploadArchive], [CreateTransferUploadFile], [CreateTransferDownload]
 	// or [CreateTransferDownloadDatabase]; nil = none.
 	Transfer CreateTransferTransfer
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // CreateTransferTransfer is what [CreateTransferRequest.Transfer] holds: one of
@@ -1995,12 +2194,58 @@ type DatabaseSizeRefusal struct {
 
 // NoMachine is a detail of an [Error]: [Error.NoMachine].
 //
-// Detail of a [CodeFailedPrecondition] error: the account has no machine to run projects on
-// yet.
+// Detail of a [CodeFailedPrecondition] error: there is no machine to run projects on yet,
+// since the caller has no workspace, or the workspace's machine is being prepared.
 type NoMachine struct {
 	Reason NoMachineReason
-	// Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+	// Where the person goes on in the browser: for NO_PLAN the page they pay at, for
+	// BEING_PREPARED the workspace's page, which says it is. An MCP tool leaves it out.
 	URL string
+	// BEING_PREPARED: the workspace. Empty for NO_PLAN.
+	WorkspaceID string
+}
+
+// WorkspaceChoice is a detail of an [Error]: [Error.WorkspaceChoice].
+//
+// Detail of an error that needs `workspace`: [CodeFailedPrecondition] when the call named none
+// and the caller has several, [CodeInvalidArgument] when it named none of theirs. Name one of
+// these, by what the person asked for: a project that exists is in those of HoldingProject;
+// for something new, ask the person, showing each one's size and what is free.
+type WorkspaceChoice struct {
+	// By name, at most 20: [Client.ListWorkspaces] lists all.
+	Workspaces []Workspace
+	// The workspaces the call may act on (this token's), in all.
+	Total uint32
+	// The call names a project: the workspaces that have a project of that id, by WorkspaceID.
+	HoldingProject []string
+	// As [ListWorkspacesResponse]'s.
+	Incomplete bool
+}
+
+// WorkspaceNotGranted is a detail of an [Error]: [Error.WorkspaceNotGranted].
+//
+// Detail of a [CodePermissionDenied] error: the account has the workspace `workspace` named
+// (or the connection is pinned to), but the person has not let this token reach it; or the
+// call named none and the token reaches none of the account's workspaces.
+type WorkspaceNotGranted struct {
+	// The workspace it may not reach: the one named, else the account's only one. Empty = the call
+	// named none and the account has several.
+	WorkspaceID string
+	// The panel's page where the person lets the token reach it.
+	URL string
+}
+
+// ProjectMoved is a detail of an [Error]: [Error.ProjectMoved].
+//
+// Detail of a [CodeFailedPrecondition] error: the project moved to another workspace
+// ([Client.MoveProject]). Call there, naming it as `workspace`; ids of operations and
+// snapshots from before stay behind.
+type ProjectMoved struct {
+	ProjectID string
+	// Where the move took it, which answers for it as it is now.
+	WorkspaceID   string
+	WorkspaceName string
+	MoveTime      time.Time
 }
 
 // WatchOperationRequest is the request of [Client.WatchOperation].
@@ -2008,12 +2253,16 @@ type WatchOperationRequest struct {
 	ProjectID string
 	// Empty = the latest.
 	OperationID string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // WatchOperationResponse is the response of [Client.WatchOperation].
 type WatchOperationResponse struct {
 	// One of [WatchOperationResponseLog] or [WatchOperationResponseFinishedOperation]; nil = none.
 	Message WatchOperationResponseMessage
+	// With a MOVE's [WatchOperationResponseFinishedOperation]: [MoveProjectResponse.MoveMessage].
+	MoveMessage string
 }
 
 // WatchOperationResponseMessage is what [WatchOperationResponse.Message] holds: one of
@@ -2041,6 +2290,8 @@ type TailContainerLogsRequest struct {
 	Filter    *ContainerLogFilter
 	// Empty = only lines written from now on.
 	AfterCursor string
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // TailContainerLogsResponse is the response of [Client.TailContainerLogs].
@@ -2056,11 +2307,62 @@ type TailHTTPTrafficRequest struct {
 	Filter    *HTTPTrafficFilter
 	// 0 = only requests from now on.
 	AfterSequence uint64
+	// The workspace: its id or name ([Client.ListWorkspaces]). Omit when the account has one.
+	Workspace string
 }
 
 // TailHTTPTrafficResponse is the response of [Client.TailHTTPTraffic].
 type TailHTTPTrafficResponse struct {
 	Request *HTTPRequest
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "WorkspaceStatus(3)".
+type WorkspaceStatus int32
+
+const (
+	WorkspaceStatusUnspecified WorkspaceStatus = 0
+	// Its machine answers calls.
+	WorkspaceStatusReady WorkspaceStatus = 1
+	// Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+	// that names it is [CodeFailedPrecondition] + [NoMachine] until then.
+	WorkspaceStatusBeingPrepared WorkspaceStatus = 2
+)
+
+// String is the value's name as the API's documentation writes it: "BEING_PREPARED" for
+// [WorkspaceStatusBeingPrepared].
+func (v WorkspaceStatus) String() string {
+	switch v {
+	case WorkspaceStatusUnspecified:
+		return "UNSPECIFIED"
+	case WorkspaceStatusReady:
+		return "READY"
+	case WorkspaceStatusBeingPrepared:
+		return "BEING_PREPARED"
+	}
+	return "WorkspaceStatus(" + strconv.Itoa(int(v)) + ")"
+}
+
+// The API may add values: one that this version of the package does not know keeps its number
+// and prints as "WorkspaceRole(2)".
+type WorkspaceRole int32
+
+const (
+	WorkspaceRoleUnspecified WorkspaceRole = 0
+	// Pays for it, and may do everything in it.
+	WorkspaceRoleOwner WorkspaceRole = 1
+)
+
+// String is the value's name as the API's documentation writes it: "OWNER" for
+// [WorkspaceRoleOwner].
+func (v WorkspaceRole) String() string {
+	switch v {
+	case WorkspaceRoleUnspecified:
+		return "UNSPECIFIED"
+	case WorkspaceRoleOwner:
+		return "OWNER"
+	}
+	return "WorkspaceRole(" + strconv.Itoa(int(v)) + ")"
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
@@ -2401,7 +2703,7 @@ func (v CertificateSource) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "OperationKind(6)".
+// and prints as "OperationKind(7)".
 type OperationKind int32
 
 const (
@@ -2411,10 +2713,14 @@ const (
 	OperationKindBackup          OperationKind = 3
 	OperationKindRestore         OperationKind = 4
 	OperationKindDelete          OperationKind = 5
+	// [Client.MoveProject]'s, of the project it moves, in both workspaces. Its OperationID is the
+	// move's, which [Client.GetOperation] and [Client.WatchOperation] answer in either, also with
+	// the ProjectID of a database the move holds.
+	OperationKindMove OperationKind = 6
 )
 
-// String is the value's name as the API's documentation writes it: "DELETE" for
-// [OperationKindDelete].
+// String is the value's name as the API's documentation writes it: "MOVE" for
+// [OperationKindMove].
 func (v OperationKind) String() string {
 	switch v {
 	case OperationKindUnspecified:
@@ -2429,6 +2735,8 @@ func (v OperationKind) String() string {
 		return "RESTORE"
 	case OperationKindDelete:
 		return "DELETE"
+	case OperationKindMove:
+		return "MOVE"
 	}
 	return "OperationKind(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2828,8 +3136,8 @@ const (
 	NoMachineReasonUnspecified NoMachineReason = 0
 	// The person has not chosen and paid for a plan: they do it at url.
 	NoMachineReasonNoPlan NoMachineReason = 1
-	// The plan is paid and a machine is being prepared for the account: Pethost emails the person
-	// when it is ready. Call again later.
+	// The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+	// person when it is ready. Call again later.
 	NoMachineReasonBeingPrepared NoMachineReason = 2
 )
 

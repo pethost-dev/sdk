@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import { create, fromBinary, toBinary, toJson, toJsonString, type DescMessage, type MessageInitShape, type MessageShape } from "@bufbuild/protobuf";
 import { WireType } from "@bufbuild/protobuf/wire";
-import { Pethost, PethostError, type JsonCodec, type JsonValue } from "pethost";
+import { Pethost, PethostError, type JsonCodec, type JsonValue, type PethostOptions } from "pethost";
 
 export type Init<S extends DescMessage> = MessageInitShape<S>;
 
@@ -114,7 +114,10 @@ export const token = "pth_check";
  * A client whose calls go to `respond` and nowhere else; by default it answers an empty
  * response. A `Response` is what something that is not the API answers: it is passed on as it is.
  */
-export function fake(respond: () => Answer | Response = () => ({ responses: [new Uint8Array()] })): {
+export function fake(
+  respond: () => Answer | Response = () => ({ responses: [new Uint8Array()] }),
+  options: Omit<PethostOptions, "token" | "fetch"> = {},
+): {
   api: Pethost;
   calls: Call[];
 } {
@@ -138,7 +141,7 @@ export function fake(respond: () => Answer | Response = () => ({ responses: [new
     if (answered instanceof Response) return answered;
     return stream ? streamed(answered, signal) : unary(answered);
   };
-  return { api: new Pethost({ token, fetch }), calls };
+  return { api: new Pethost({ ...options, token, fetch }), calls };
 }
 
 /** A stream's first response: to the checks of every message, a stream is the call that answers it. */
@@ -224,13 +227,19 @@ export function readingDetail<S extends DescMessage, L, R>(
  * What a request sends. `send` makes a call with a message of the SDK in its request, and
  * `wrap` puts the same message, as the wire layer writes it, into that request. A check gives
  * both, and the bytes that reached the fake must be the wire layer's own for it: a field too
- * many, too few, or a zero where nothing should be sent, is a different request.
+ * many, too few, or a zero where nothing should be sent, is a different request. `options` are
+ * the client's, beside its token.
  */
-export function sending<S extends DescMessage, L, P>(schema: S, wrap: (leaf: L) => Init<S>, send: (api: Pethost, given: P) => Promise<unknown>) {
+export function sending<S extends DescMessage, L, P>(
+  schema: S,
+  wrap: (leaf: L) => Init<S>,
+  send: (api: Pethost, given: P) => Promise<unknown>,
+  options: Omit<PethostOptions, "token" | "fetch"> = {},
+) {
   return {
     sends(name: string, given: P, leaf: L): void {
       check(name, async () => {
-        const { api, calls } = fake();
+        const { api, calls } = fake(undefined, options);
         await send(api, given);
 
         const expected = create(schema, wrap(leaf));

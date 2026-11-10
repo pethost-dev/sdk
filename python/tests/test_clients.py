@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import os
 import unittest.mock
+from typing import Any
 
 import pethost
 from pethost._version import VERSION
 
-from .api import METHODS
+from .api import METHODS, WORKSPACE
 from .fake import CALL
-from .harness import MOST_MEMBERS, AsyncCase, Case
-from .samples import Plan
+from .harness import MOST_MEMBERS, REQUESTS, STREAMS, AsyncCase, Case
+from .samples import Plan, wire_class
 
 
 class Clients(Case):
@@ -52,6 +53,24 @@ class Clients(Case):
         with self.assertRaises(ValueError) as refused:
             pethost.Pethost("pth_two\nlines")
         self.assertNotIn("pth_two", str(refused.exception))
+
+    def test_workspace(self) -> None:
+        """A client made with a workspace sends it in each request that names none, and a
+        request's own where it names one."""
+        named = [method for method, desc in REQUESTS.items() if any(f.name == WORKSPACE for f in desc.fields)]
+        self.assertTrue(named or not WORKSPACE, "no request names a workspace")
+
+        options: dict[str, Any] = {WORKSPACE: "the client's"}
+        with pethost.Pethost("pth_check", base_url=self.fake.url, **options) as client:
+            for method in named:
+                for given, sent in (("", "the client's"), ("its own", "its own")):
+                    with self.subTest(method=method, given=given):
+                        self.fake.answer(b"")
+                        answer = getattr(client, method)(**{**self.required(method), WORKSPACE: given})
+                        if method in STREAMS:
+                            list(answer)
+                        body = wire_class(REQUESTS[method]).from_binary(self.fake.calls[-1].body)
+                        self.assertEqual(getattr(body, WORKSPACE), sent)
 
     def test_timeout(self) -> None:
         """A timeout that is no time is refused when the client is made, not by every call."""

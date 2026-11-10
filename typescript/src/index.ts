@@ -10,6 +10,35 @@ import * as convert from "./convert.ts";
 import * as wire from "./wire/v1/panel_pb.ts";
 
 /**
+ * - `READY`: Its machine answers calls.
+ * - `BEING_PREPARED`: Paid, and its machine is being prepared: Pethost emails the person when it
+ *   is ready. A call that names it is FAILED_PRECONDITION + {@link NoMachine} until then.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type WorkspaceStatus = (typeof WorkspaceStatus)[keyof typeof WorkspaceStatus];
+export const WorkspaceStatus = {
+  /** Its machine answers calls. */
+  READY: "READY",
+  /**
+   * Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call that
+   * names it is FAILED_PRECONDITION + {@link NoMachine} until then.
+   */
+  BEING_PREPARED: "BEING_PREPARED",
+} as const;
+
+/**
+ * - `OWNER`: Pays for it, and may do everything in it.
+ *
+ * In a response, a value this version of the SDK does not know is its number.
+ */
+export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole];
+export const WorkspaceRole = {
+  /** Pays for it, and may do everything in it. */
+  OWNER: "OWNER",
+} as const;
+
+/**
  * - `EMAIL`: The account's email.
  * - `TELEGRAM`: A Telegram chat or group.
  * - `SLACK`: A Slack channel.
@@ -270,6 +299,10 @@ export const CertificateSource = {
  * - `BACKUP`
  * - `RESTORE`
  * - `DELETE`
+ * - `MOVE`: {@link Pethost.moveProject | moveProject}'s, of the project it moves, in both
+ *   workspaces. Its operationId is the move's, which {@link Pethost.getOperation | getOperation}
+ *   and {@link Pethost.watchOperation | watchOperation} answer in either, also with the projectId
+ *   of a database the move holds.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -280,6 +313,13 @@ export const OperationKind = {
   BACKUP: "BACKUP",
   RESTORE: "RESTORE",
   DELETE: "DELETE",
+  /**
+   * {@link Pethost.moveProject | moveProject}'s, of the project it moves, in both workspaces. Its
+   * operationId is the move's, which {@link Pethost.getOperation | getOperation} and
+   * {@link Pethost.watchOperation | watchOperation} answer in either, also with the projectId of a
+   * database the move holds.
+   */
+  MOVE: "MOVE",
 } as const;
 
 /**
@@ -544,7 +584,7 @@ export const DatabaseSizeRefusalReason = {
 
 /**
  * - `NO_PLAN`: The person has not chosen and paid for a plan: they do it at url.
- * - `BEING_PREPARED`: The plan is paid and a machine is being prepared for the account: Pethost
+ * - `BEING_PREPARED`: The plan is paid and a machine is being prepared for the workspace: Pethost
  *   emails the person when it is ready. Call again later.
  *
  * In a response, a value this version of the SDK does not know is its number.
@@ -554,13 +594,114 @@ export const NoMachineReason = {
   /** The person has not chosen and paid for a plan: they do it at url. */
   NO_PLAN: "NO_PLAN",
   /**
-   * The plan is paid and a machine is being prepared for the account: Pethost emails the person when
-   * it is ready. Call again later.
+   * The plan is paid and a machine is being prepared for the workspace: Pethost emails the person
+   * when it is ready. Call again later.
    */
   BEING_PREPARED: "BEING_PREPARED",
 } as const;
 
-export type GetMachineRequest = Record<string, never>;
+export interface ListWorkspacesRequest {
+  /** A projectId: holdingProject then says which workspaces have a project of that id. */
+  projectId?: string | undefined;
+  /** A nextPageToken. Empty = the first page. */
+  pageToken?: string | undefined;
+}
+
+/** {@link ListWorkspacesRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ListWorkspacesRequest: JsonCodec<ListWorkspacesRequest, ListWorkspacesRequest> = {
+  toJson: (value) => writeJson(wire.ListWorkspacesRequestSchema, convert.toListWorkspacesRequest(value)),
+  fromJson: (json) => convert.fromListWorkspacesRequest(readJson(wire.ListWorkspacesRequestSchema, json)),
+};
+
+export interface ListWorkspacesResponse {
+  /** By name. */
+  workspaces: Workspace[];
+  /** Empty = the last page. */
+  nextPageToken: string;
+  /** Workspaces in all, on every page. */
+  total: number;
+  /**
+   * With projectId: the workspaces that have a project of that id, by workspaceId. Empty = none of
+   * those that answered (see incomplete).
+   */
+  holdingProject: string[];
+  /**
+   * True = a machine did not answer in time: its free figures and project count are absent, and
+   * holdingProject may lack it.
+   */
+  incomplete: boolean;
+}
+
+/** {@link ListWorkspacesResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ListWorkspacesResponse: JsonCodec<ListWorkspacesResponse, ListWorkspacesResponse> = {
+  toJson: (value) => writeJson(wire.ListWorkspacesResponseSchema, convert.toListWorkspacesResponse(value)),
+  fromJson: (json) => convert.fromListWorkspacesResponse(readJson(wire.ListWorkspacesResponseSchema, json)),
+};
+
+/**
+ * What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+ * projects on it. A call names it as `workspace`, by workspaceId or name.
+ */
+export interface Workspace {
+  /**
+   * 8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is never
+   * another workspace's.
+   */
+  workspaceId: string;
+  /**
+   * The person's, e.g. "Personal": unique among their workspaces, in any case, and they may change
+   * it.
+   */
+  name: string;
+  status?: WorkspaceStatus | number;
+  /** Where its machine runs, e.g. "Europe". */
+  location: string;
+  /** Its plan's name, e.g. "Starter". */
+  plan: string;
+  /** The plan's. */
+  cpuTotalCores: number;
+  /** The plan's, as Machine.memoryTotalBytes. */
+  memoryTotalBytes: bigint;
+  /**
+   * What the projects leave of memoryTotalBytes, in its machine's latest sample. Absent = not known:
+   * BEING_PREPARED, or the machine did not answer in time.
+   */
+  memoryFreeBytes?: bigint;
+  /** The plan's, as Machine.diskTotalBytes. */
+  diskTotalBytes: bigint;
+  /** Likewise. Absent as memoryFreeBytes. */
+  diskFreeBytes?: bigint;
+  /** Absent as memoryFreeBytes. */
+  projectCount?: number;
+  /**
+   * Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's own
+   * points (CNAME). Empty while BEING_PREPARED.
+   */
+  hostname: string;
+  /** As Machine.appsDomain. Empty = none. */
+  appsDomain: string;
+  /**
+   * When it ends: the person removed it, and it works until then, its projects with it. Absent = it
+   * is not ending.
+   */
+  endTime?: Date;
+  /** The caller's. */
+  role?: WorkspaceRole | number;
+}
+
+/** {@link Workspace} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const Workspace: JsonCodec<Workspace, Workspace> = {
+  toJson: (value) => writeJson(wire.WorkspaceSchema, convert.toWorkspace(value)),
+  fromJson: (json) => convert.fromWorkspace(readJson(wire.WorkspaceSchema, json)),
+};
+
+export interface GetMachineRequest {
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
+}
 
 /** {@link GetMachineRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const GetMachineRequest: JsonCodec<GetMachineRequest, GetMachineRequest> = {
@@ -580,6 +721,8 @@ export interface GetMachineResponse {
    */
   deletedProjects: DeletedProject[];
   github?: GithubConnection;
+  /** The workspace whose machine this is. */
+  workspace?: Workspace;
 }
 
 /** {@link GetMachineResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -854,6 +997,14 @@ export interface DeletedProject {
   newestSnapshot?: Snapshot;
   /** In all. */
   snapshotCount: number;
+  /**
+   * Set when the latest move of the project from or to this workspace took it to another one, and
+   * this workspace has had no other project of the id since, as a call for it here would answer
+   * {@link ProjectMoved}: call it there (`workspace`), which answers for it as it is now. A restore
+   * here makes another copy here, as it was last backed up here, and calls here then act on that
+   * copy.
+   */
+  movedTo?: MovedTo;
 }
 
 /** {@link DeletedProject} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -862,7 +1013,26 @@ export const DeletedProject: JsonCodec<DeletedProject, DeletedProject> = {
   fromJson: (json) => convert.fromDeletedProject(readJson(wire.DeletedProjectSchema, json)),
 };
 
-export type RunMachineActionRequest = (
+/** Where a move took a project ({@link Pethost.moveProject | moveProject}), and when. */
+export interface MovedTo {
+  workspaceId: string;
+  workspaceName: string;
+  moveTime?: Date;
+}
+
+/** {@link MovedTo} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MovedTo: JsonCodec<MovedTo, MovedTo> = {
+  toJson: (value) => writeJson(wire.MovedToSchema, convert.toMovedTo(value)),
+  fromJson: (json) => convert.fromMovedTo(readJson(wire.MovedToSchema, json)),
+};
+
+export type RunMachineActionRequest = {
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
+} & (
   | {
       /**
        * label: one line, ≤100 chars; empty = the key's comment. An existing key gets the new label.
@@ -1023,6 +1193,8 @@ export interface ProjectSummary {
   diskUsedBytes: bigint;
   /** Set = a database project ({@link Pethost.createDatabase | createDatabase}). */
   database?: DatabaseSummary;
+  /** As Project.uid. */
+  uid: string;
 }
 
 /** {@link ProjectSummary} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1098,6 +1270,11 @@ export interface GetProjectRequest {
    * time are not skipped.
    */
   incidentsBeforeId?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link GetProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1211,12 +1388,54 @@ export interface Project {
    * the host of its projectId.
    */
   linkedDatabases: string[];
+  /** The workspace it is in (Workspace.workspaceId): what a later call for it names as `workspace`. */
+  workspaceId: string;
+  /**
+   * Made when it was created, and kept by its backups, restores and moves: a project deleted and
+   * created again under the same projectId has another. Empty = not known yet.
+   */
+  uid: string;
+  /**
+   * The databases it is linked to (linkedDatabases), each with what
+   * {@link Pethost.moveProject | moveProject} may do with it (switchDatabases).
+   */
+  dependencies: ProjectDependency[];
 }
 
 /** {@link Project} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const Project: JsonCodec<Project, Project> = {
   toJson: (value) => writeJson(wire.ProjectSchema, convert.toProject(value)),
   fromJson: (json) => convert.fromProject(readJson(wire.ProjectSchema, json)),
+};
+
+/**
+ * A database a project is linked to, as {@link Pethost.moveProject | moveProject} of the project
+ * sees it.
+ */
+export interface ProjectDependency {
+  databaseProjectId: string;
+  /**
+   * The database inside it whose data a move copies, unless DatabaseSwitchInput.empty: the one the
+   * project signs in to, its own where it has a user of its own (Database.ownUserProjects), else
+   * `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+   * own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a new
+   * one starts empty and one there is shared.
+   */
+  copyDatabase: string;
+  /**
+   * The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+   * (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+   * destination writes anew. Empty = a person wrote them
+   * ({@link Pethost.linkDatabase | linkDatabase} linked it): a move needs
+   * DatabaseSwitchInput.envPrefix.
+   */
+  envPrefix: string;
+}
+
+/** {@link ProjectDependency} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectDependency: JsonCodec<ProjectDependency, ProjectDependency> = {
+  toJson: (value) => writeJson(wire.ProjectDependencySchema, convert.toProjectDependency(value)),
+  fromJson: (json) => convert.fromProjectDependency(readJson(wire.ProjectDependencySchema, json)),
 };
 
 /** A start, stop or restart of services that has not ended yet. */
@@ -1785,11 +2004,7 @@ export interface CreateProjectRequest {
   projectId?: string | undefined;
   /** Set = a GitHub project: {github: {repository}}. Absent = the files of this request. */
   source?: ProjectSourceInput | undefined;
-  /**
-   * An archive of the project's directory, from CreateTransferRequest.uploadArchive, unpacked first.
-   * FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its PUT
-   * said why) answers with its `violations`.
-   */
+  /** An archive of the project's directory, from CreateTransferRequest.uploadArchive, unpacked first. */
   uploadId?: string | undefined;
   /**
    * The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text: "…"}], or
@@ -1805,6 +2020,11 @@ export interface CreateProjectRequest {
   /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
   waitSeconds?: number | undefined;
   linkDatabases?: readonly DatabaseLinkRequestInput[] | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link CreateProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -1855,7 +2075,7 @@ export const CreateProjectResponse: JsonCodec<CreateProjectResponse, CreateProje
 
 export type DeployProjectRequest = {
   projectId?: string | undefined;
-  /** Project.deployId as you read it: ABORTED if the project was deployed since. Empty = no check. */
+  /** Project.deployId as you read it. Empty = no check. */
   baseDeployId?: string | undefined;
   /**
    * Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text:
@@ -1879,11 +2099,15 @@ export type DeployProjectRequest = {
    * IN_PROGRESS then: {@link Pethost.getOperation | getOperation} waits on.
    */
   waitSeconds?: number | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 } & (
   | {
       /**
-       * files project: an archive from {@link Pethost.createTransfer | createTransfer}; replaces all
-       * files but /.env and x-pethost.
+       * files project: an archive from {@link Pethost.createTransfer | createTransfer}.
        *
        * `version`: at most one of `uploadId`, `commit`, `newestCommit`, `rollbackDeployId`.
        * A new version of the files; none = the current one.
@@ -1921,7 +2145,7 @@ export type DeployProjectRequest = {
   | {
       /**
        * files project, a rollback: the operationId of an earlier deploy with filesKept
-       * (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+       * (Project.operations).
        *
        * `version`: at most one of `uploadId`, `commit`, `newestCommit`, `rollbackDeployId`.
        * A new version of the files; none = the current one.
@@ -2114,10 +2338,112 @@ export const SpecViolation: JsonCodec<SpecViolation, SpecViolation> = {
   fromJson: (json) => convert.fromSpecViolation(readJson(wire.SpecViolationSchema, json)),
 };
 
+export interface MoveProjectRequest {
+  projectId?: string | undefined;
+  /** The destination, as `workspace` takes one: its id or name. */
+  toWorkspace?: string | undefined;
+  /** As {@link Pethost.deployProject | deployProject}'s operationId: the move's. */
+  operationId?: string | undefined;
+  /** As {@link Pethost.deployProject | deployProject}'s waitSeconds. */
+  waitSeconds?: number | undefined;
+  /**
+   * What it uses in toWorkspace instead of each database it is linked to (Project.dependencies),
+   * which stays here. One left out: the destination's database of its id and engine, if it has one,
+   * else a new one, with the data of its copyDatabase.
+   */
+  switchDatabases?: readonly DatabaseSwitchInput[] | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
+}
+
+/** {@link MoveProjectRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MoveProjectRequest: JsonCodec<MoveProjectRequest, MoveProjectRequest> = {
+  toJson: (value) => writeJson(wire.MoveProjectRequestSchema, convert.toMoveProjectRequest(value)),
+  fromJson: (json) => convert.fromMoveProjectRequest(readJson(wire.MoveProjectRequestSchema, json)),
+};
+
+/**
+ * A database the moved project is linked to, which stays here with its other apps, if any, and
+ * what the project uses instead in the destination: a database of the same engine, the lines of
+ * how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+ * user of its own, to a database of its own, which gets the data of {@link ProjectDependency}
+ * .copyDatabase unless empty; a Valkey's it shares as its one user, and so does a project whose id
+ * the engine keeps as a name of its own (copyDatabase empty) on Postgres and MariaDB. Once the
+ * move succeeded, the user and database the project had of its own here, if it had them, are
+ * dropped with it, as any delete does: so empty, where it had them, deletes that data.
+ */
+export interface DatabaseSwitchInput {
+  /** A database it is linked to, which stays. */
+  databaseProjectId?: string | undefined;
+  /**
+   * A database of the same engine in toWorkspace. On Postgres and MariaDB, where the project gets a
+   * user of its own there, it has no user or database named as the project. Empty = the
+   * destination's database of databaseProjectId's id and engine, if it has one, else a new one, made
+   * by the move under that id at that one's size where toWorkspace offers it for the engine, else at
+   * the engine's default.
+   */
+  intoDatabaseProjectId?: string | undefined;
+  /**
+   * True = nothing is copied: the project starts there with an empty database of its own, or, as the
+   * apps' user, with what a database there holds that it shares (a new one: nothing). A MariaDB
+   * database with a view, trigger, routine or event made by another account than the project's own
+   * user, as each in `app` is by the apps' user, cannot be copied: the move is undone; start it
+   * empty, or make those objects again as the project's own user.
+   */
+  empty?: boolean | undefined;
+  /**
+   * Where ProjectDependency.envPrefix is empty, as a person wrote the lines of how the project signs
+   * in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the destination
+   * writes anew as a link with that envPrefix writes them, each of its names that /.env sets taking
+   * the new value, for the database copyDatabase names. Required there; refused elsewhere.
+   */
+  envPrefix?: string | undefined;
+}
+
+/** {@link DatabaseSwitchInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const DatabaseSwitch: JsonCodec<DatabaseSwitchInput, DatabaseSwitchInput> = {
+  toJson: (value) => writeJson(wire.DatabaseSwitchSchema, convert.toDatabaseSwitch(value)),
+  fromJson: (json) => convert.fromDatabaseSwitch(readJson(wire.DatabaseSwitchSchema, json)),
+};
+
+export interface MoveProjectResponse {
+  /**
+   * The move: finished, or IN_PROGRESS when waitSeconds ran out (then
+   * {@link Pethost.getOperation | getOperation}).
+   */
+  operation?: Operation;
+  /**
+   * Once the project is in the destination: as it is there, as
+   * {@link Pethost.getProject | getProject} returns it. A move that FAILED after that has it too: it
+   * runs there, and its failure says what the source still holds. Absent while it runs, and when
+   * nothing moved.
+   */
+  project?: Project;
+  /**
+   * What changed and what stayed behind, for people: the new hosts, the domains of the person's own
+   * to point at the destination's hostname, the SSH command.
+   */
+  moveMessage: string;
+}
+
+/** {@link MoveProjectResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MoveProjectResponse: JsonCodec<MoveProjectResponse, MoveProjectResponse> = {
+  toJson: (value) => writeJson(wire.MoveProjectResponseSchema, convert.toMoveProjectResponse(value)),
+  fromJson: (json) => convert.fromMoveProjectResponse(readJson(wire.MoveProjectResponseSchema, json)),
+};
+
 export interface ListCommitsRequest {
   projectId?: string | undefined;
   /** The previous page's last sha. Empty = from the newest. */
   beforeCommit?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link ListCommitsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2171,6 +2497,11 @@ export type RunProjectActionRequest = {
   operationId?: string | undefined;
   /** As {@link Pethost.deployProject | deployProject}'s. */
   waitSeconds?: number | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 } & (
   | {
       /**
@@ -2662,6 +2993,11 @@ export interface LinkDatabaseRequest {
   link?: readonly string[] | undefined;
   /** App project_ids to unlink. */
   unlink?: readonly string[] | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link LinkDatabaseRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2706,6 +3042,11 @@ export interface CreateDatabaseRequest {
   waitSeconds?: number | undefined;
   /** What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id). */
   metadata?: ProjectMetadataInput | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link CreateDatabaseRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2743,6 +3084,11 @@ export interface SetProjectAlertsRequest {
   off?: boolean | undefined;
   /** ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays. */
   muteMinutes?: number | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link SetProjectAlertsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3018,6 +3364,11 @@ export interface GetOperationRequest {
   afterLogLine?: number | undefined;
   /** ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB. */
   logLineLimit?: number | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link GetOperationRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3045,6 +3396,11 @@ export interface GetOperationResponse {
    * of the log.
    */
   nextAfterLogLine: number;
+  /**
+   * A MOVE's, once it ended: MoveProjectResponse.moveMessage, what changed and what stayed behind,
+   * or why nothing moved.
+   */
+  moveMessage: string;
 }
 
 /** {@link GetOperationResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3118,6 +3474,11 @@ export interface QueryHttpTrafficRequest {
   requestLimit?: number | undefined;
   /** The previous nextPageToken, other fields unchanged: older requests only. */
   pageToken?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link QueryHttpTrafficRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3253,6 +3614,11 @@ export interface QueryContainerLogsRequest {
   fromStart?: boolean | undefined;
   /** The previous nextPageToken, other fields unchanged. */
   pageToken?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link QueryContainerLogsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3321,6 +3687,11 @@ export interface RunServiceCommandRequest {
    * jobs.
    */
   timeoutSeconds?: number | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link RunServiceCommandRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3383,6 +3754,11 @@ export type ReadPathRequest = {
   lengthBytes?: number | undefined;
   /** The previous nextEntryPageToken, other fields unchanged. */
   entryPageToken?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 } & (
   | {
       /**
@@ -3450,7 +3826,13 @@ export const ReadPathResponse: JsonCodec<ReadPathResponse, ReadPathResponse> = {
   fromJson: (json) => convert.fromReadPathResponse(readJson(wire.ReadPathResponseSchema, json)),
 };
 
-export type CreateTransferRequest = (
+export type CreateTransferRequest = {
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
+} & (
   | {
       /** `transfer`: at most one of `uploadArchive`, `uploadFile`, `download`, `downloadDatabase`. */
       uploadArchive?: ArchiveUploadInput | undefined;
@@ -3721,11 +4103,19 @@ export const DatabaseSizeRefusal: JsonCodec<DatabaseSizeRefusal, DatabaseSizeRef
   fromJson: (json) => convert.fromDatabaseSizeRefusal(readJson(wire.DatabaseSizeRefusalSchema, json)),
 };
 
-/** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
+/**
+ * Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+ * caller has no workspace, or the workspace's machine is being prepared.
+ */
 export interface NoMachine {
   reason?: NoMachineReason | number;
-  /** Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out. */
+  /**
+   * Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+   * the workspace's page, which says it is. An MCP tool leaves it out.
+   */
   url: string;
+  /** BEING_PREPARED: the workspace. Empty for NO_PLAN. */
+  workspaceId: string;
 }
 
 /** {@link NoMachine} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3734,10 +4124,78 @@ export const NoMachine: JsonCodec<NoMachine, NoMachine> = {
   fromJson: (json) => convert.fromNoMachine(readJson(wire.NoMachineSchema, json)),
 };
 
+/**
+ * Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and the
+ * caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by what
+ * the person asked for: a project that exists is in those of holdingProject; for something new,
+ * ask the person, showing each one's size and what is free.
+ */
+export interface WorkspaceChoice {
+  /** By name, at most 20: {@link Pethost.listWorkspaces | listWorkspaces} lists all. */
+  workspaces: Workspace[];
+  /** The workspaces the call may act on (this token's), in all. */
+  total: number;
+  /** The call names a project: the workspaces that have a project of that id, by workspaceId. */
+  holdingProject: string[];
+  /** As {@link ListWorkspacesResponse}'s. */
+  incomplete: boolean;
+}
+
+/** {@link WorkspaceChoice} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const WorkspaceChoice: JsonCodec<WorkspaceChoice, WorkspaceChoice> = {
+  toJson: (value) => writeJson(wire.WorkspaceChoiceSchema, convert.toWorkspaceChoice(value)),
+  fromJson: (json) => convert.fromWorkspaceChoice(readJson(wire.WorkspaceChoiceSchema, json)),
+};
+
+/**
+ * Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+ * connection is pinned to), but the person has not let this token reach it; or the call named none
+ * and the token reaches none of the account's workspaces.
+ */
+export interface WorkspaceNotGranted {
+  /**
+   * The workspace it may not reach: the one named, else the account's only one. Empty = the call
+   * named none and the account has several.
+   */
+  workspaceId: string;
+  /** The panel's page where the person lets the token reach it. */
+  url: string;
+}
+
+/** {@link WorkspaceNotGranted} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const WorkspaceNotGranted: JsonCodec<WorkspaceNotGranted, WorkspaceNotGranted> = {
+  toJson: (value) => writeJson(wire.WorkspaceNotGrantedSchema, convert.toWorkspaceNotGranted(value)),
+  fromJson: (json) => convert.fromWorkspaceNotGranted(readJson(wire.WorkspaceNotGrantedSchema, json)),
+};
+
+/**
+ * Detail of a FAILED_PRECONDITION error: the project moved to another workspace
+ * ({@link Pethost.moveProject | moveProject}). Call there, naming it as `workspace`; ids of
+ * operations and snapshots from before stay behind.
+ */
+export interface ProjectMoved {
+  projectId: string;
+  /** Where the move took it, which answers for it as it is now. */
+  workspaceId: string;
+  workspaceName: string;
+  moveTime?: Date;
+}
+
+/** {@link ProjectMoved} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ProjectMoved: JsonCodec<ProjectMoved, ProjectMoved> = {
+  toJson: (value) => writeJson(wire.ProjectMovedSchema, convert.toProjectMoved(value)),
+  fromJson: (json) => convert.fromProjectMoved(readJson(wire.ProjectMovedSchema, json)),
+};
+
 export interface WatchOperationRequest {
   projectId?: string | undefined;
   /** Empty = the latest. */
   operationId?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link WatchOperationRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3746,7 +4204,10 @@ export const WatchOperationRequest: JsonCodec<WatchOperationRequest, WatchOperat
   fromJson: (json) => convert.fromWatchOperationRequest(readJson(wire.WatchOperationRequestSchema, json)),
 };
 
-export type WatchOperationResponse = (
+export type WatchOperationResponse = {
+  /** With a MOVE's finishedOperation: MoveProjectResponse.moveMessage. */
+  moveMessage: string;
+} & (
   | {
       /**
        * Which of `log`, `finishedOperation` is set. `undefined` = none, or one this version of the SDK
@@ -3776,6 +4237,11 @@ export interface TailContainerLogsRequest {
   filter?: ContainerLogFilterInput | undefined;
   /** Empty = only lines written from now on. */
   afterCursor?: string | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link TailContainerLogsRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3801,6 +4267,11 @@ export interface TailHttpTrafficRequest {
   filter?: HttpTrafficFilterInput | undefined;
   /** 0 = only requests from now on. */
   afterSequence?: bigint | undefined;
+  /**
+   * The workspace: its id or name ({@link Pethost.listWorkspaces | listWorkspaces}). Omit when the
+   * account has one.
+   */
+  workspace?: string | undefined;
 }
 
 /** {@link TailHttpTrafficRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -3932,13 +4403,35 @@ export class PethostError extends Error {
    * cannot take that size now. Nothing changed.
    */
   declare readonly databaseSizeRefusal?: DatabaseSizeRefusal;
-  /** Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet. */
+  /**
+   * Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+   * caller has no workspace, or the workspace's machine is being prepared.
+   */
   declare readonly noMachine?: NoMachine;
+  /**
+   * Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and the
+   * caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by what
+   * the person asked for: a project that exists is in those of holdingProject; for something new,
+   * ask the person, showing each one's size and what is free.
+   */
+  declare readonly workspaceChoice?: WorkspaceChoice;
+  /**
+   * Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+   * connection is pinned to), but the person has not let this token reach it; or the call named none
+   * and the token reaches none of the account's workspaces.
+   */
+  declare readonly workspaceNotGranted?: WorkspaceNotGranted;
+  /**
+   * Detail of a FAILED_PRECONDITION error: the project moved to another workspace
+   * ({@link Pethost.moveProject | moveProject}). Call there, naming it as `workspace`; ids of
+   * operations and snapshots from before stay behind.
+   */
+  declare readonly projectMoved?: ProjectMoved;
 
   constructor(
     code: ErrorCode,
     message: string,
-    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly databaseSizeRefusal?: DatabaseSizeRefusal | undefined; readonly noMachine?: NoMachine | undefined; } = {},
+    details: { readonly projectBusy?: ProjectBusy | undefined; readonly projectChanged?: ProjectChanged | undefined; readonly machineUnreachable?: MachineUnreachable | undefined; readonly databaseLinkRefusal?: DatabaseLinkRefusal | undefined; readonly databaseSizeRefusal?: DatabaseSizeRefusal | undefined; readonly noMachine?: NoMachine | undefined; readonly workspaceChoice?: WorkspaceChoice | undefined; readonly workspaceNotGranted?: WorkspaceNotGranted | undefined; readonly projectMoved?: ProjectMoved | undefined; } = {},
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -3949,6 +4442,9 @@ export class PethostError extends Error {
     if (details.databaseLinkRefusal) this.databaseLinkRefusal = details.databaseLinkRefusal;
     if (details.databaseSizeRefusal) this.databaseSizeRefusal = details.databaseSizeRefusal;
     if (details.noMachine) this.noMachine = details.noMachine;
+    if (details.workspaceChoice) this.workspaceChoice = details.workspaceChoice;
+    if (details.workspaceNotGranted) this.workspaceNotGranted = details.workspaceNotGranted;
+    if (details.projectMoved) this.projectMoved = details.projectMoved;
   }
 }
 
@@ -3960,6 +4456,13 @@ export interface PethostOptions {
   baseUrl?: string | undefined;
   /** The `fetch` to call with. Default: the runtime's own. */
   fetch?: typeof globalThis.fetch | undefined;
+  /**
+   * The workspace of every call whose request names none: its id or name
+   * ({@link Pethost.listWorkspaces | listWorkspaces}). A request's own workspace goes before it.
+   * Empty = none: the API then takes the account's only workspace, and refuses a call with
+   * {@link WorkspaceChoice} when it has several.
+   */
+  workspace?: string | undefined;
 }
 
 /** What one call takes beside its request. */
@@ -3982,7 +4485,19 @@ export interface CallOptions {
  *
  * ## Model
  *
- * Machine: one VDS running the daemon, petnode; every call acts on the caller's.
+ * Workspace (workspace): what one plan buys: a machine of the plan's size, its appsDomain, its
+ *
+ * ```
+ * backups. A call acts on the workspace its `workspace` names, by id or name; without one, on
+ * the only one the caller has, and with several it is refused (WorkspaceChoice). Keep the id
+ * from an answer (workspace_id), never the name: the person may rename it.
+ * ```
+ *
+ * Machine: one VDS running the daemon, petnode: the one of the workspace a call acts on. Ids
+ *
+ * ```
+ * below are unique within it: the same project_id in two workspaces is two projects.
+ * ```
  *
  * - Project (projectId): a Docker Compose project, a directory with compose.yaml at its root,
  *   deployed whole. People see metadata.name.
@@ -4033,14 +4548,20 @@ export interface CallOptions {
  * - Units are in field names (_bytes, _cores, _seconds, _ms). Times are RFC 3339. Absent = 0,
  *   false or empty. *_message fields are prose for people: branch on enums and ids.
  * - Errors: NOT_FOUND = no such entity (the message lists what exists). INVALID_ARGUMENT = a bad
- *   or unknown field (named, with what it takes). FAILED_PRECONDITION = the container is not
- *   running, or as the RPC says; with {@link NoMachine} = no machine yet (the message says what to
- *   do). UNAVAILABLE = retry later: the project is busy ({@link ProjectBusy} names the operation:
- *   wait with {@link Pethost.getOperation | getOperation}), or the machine
- *   ({@link MachineUnreachable}), GitHub or backup storage is down. ABORTED = changed since read
- *   ({@link ProjectChanged}): reread, redo. RESOURCE_EXHAUSTED = a limit (named). OUT_OF_RANGE =
- *   before the oldest record kept. PERMISSION_DENIED = a read-only path (project files: use
- *   {@link Pethost.deployProject | deployProject}). UNAUTHENTICATED = sign in again.
+ *   or unknown field (named, with what it takes; a `workspace` of none of the caller's:
+ *   {@link WorkspaceChoice} lists theirs). FAILED_PRECONDITION = the container is not running, or
+ *   as the RPC says; with {@link NoMachine} = no machine yet (the message says what to do); with
+ *   {@link WorkspaceChoice} = `workspace` is needed: name one it lists, by what the person said or
+ *   where the project is (holdingProject); with {@link ProjectMoved} = the project moved to the
+ *   workspace it names: call there. UNAVAILABLE = retry later: the project is busy
+ *   ({@link ProjectBusy} names the operation: wait with
+ *   {@link Pethost.getOperation | getOperation}), or the machine ({@link MachineUnreachable}),
+ *   GitHub or backup storage is down. ABORTED = changed since read ({@link ProjectChanged}):
+ *   reread, redo. RESOURCE_EXHAUSTED = a limit (named). OUT_OF_RANGE = before the oldest record
+ *   kept. PERMISSION_DENIED = a read-only path (project files: use
+ *   {@link Pethost.deployProject | deployProject}); with {@link WorkspaceNotGranted} = the person
+ *   has not let this token reach that workspace (they can, at its url). UNAUTHENTICATED = sign in
+ *   again.
  * - A response holds ~64 KiB at most (ReadPathRequest.lengthBytes: ≤1 MiB;
  *   {@link Pethost.createTransfer | createTransfer}: any size); a cut list says so and pages. A
  *   limit over its maximum counts as the maximum.
@@ -4051,12 +4572,15 @@ export interface CallOptions {
  */
 export class Pethost {
   readonly #wire: connect.Client<typeof wire.PanelService>;
+  /** What a request that names no workspace is sent with: the options' {@link PethostOptions.workspace}. */
+  readonly #workspace: string | undefined;
 
   /** A client that calls the API as the account whose token it is given. Nothing is sent yet. */
   constructor(options: PethostOptions) {
+    this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.4.8");
+      request.header.set("User-Agent", "pethost-typescript/0.5.0");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -4071,18 +4595,43 @@ export class Pethost {
   }
 
   /**
+   * List workspaces.
+   *
+   * The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what is
+   * free, location, hostname and apps domain. With projectId, also which of them hold a project of
+   * that id (holdingProject). Free figures and project counts are each machine's latest sample, read
+   * now: one that did not answer in time leaves them absent (incomplete). The one call that takes no
+   * `workspace`. A caller that reaches none is refused as a call naming no workspace is:
+   * {@link NoMachine} (no plan) or {@link WorkspaceNotGranted}.
+   *
+   * Reads only: it changes nothing.
+   *
+   * @throws {@link PethostError} when the call fails.
+   */
+  async listWorkspaces(request: ListWorkspacesRequest, options?: CallOptions): Promise<ListWorkspacesResponse> {
+    const wireRequest = convert.toListWorkspacesRequest(request);
+    try {
+      return convert.fromListWorkspacesResponse(await this.#wire.listWorkspaces(wireRequest, { signal: options?.signal }));
+    } catch (error) {
+      throw toError(error);
+    }
+  }
+
+  /**
    * Get the machine.
    *
    * Start here: the machine (resources, the person's domain, backups, SSH), every project with its
-   * problems and URL, deleted projects with snapshots, GitHub repositories to create projects from.
-   * Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+   * problems and URL, deleted projects with snapshots, GitHub repositories to create projects from,
+   * and the workspace it serves. Figures are the latest sample; disk sizes and the day's traffic lag
+   * a few minutes. Several workspaces and no `workspace`: FAILED_PRECONDITION +
+   * {@link WorkspaceChoice}, which lists them.
    *
    * Reads only: it changes nothing.
    *
    * @throws {@link PethostError} when the call fails.
    */
   async getMachine(request: GetMachineRequest = {}, options?: CallOptions): Promise<GetMachineResponse> {
-    const wireRequest = convert.toGetMachineRequest(request);
+    const wireRequest = convert.toGetMachineRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromGetMachineResponse(await this.#wire.getMachine(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4102,7 +4651,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async runMachineAction(request: RunMachineActionRequest, options?: CallOptions): Promise<RunMachineActionResponse> {
-    const wireRequest = convert.toRunMachineActionRequest(request);
+    const wireRequest = convert.toRunMachineActionRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromRunMachineActionResponse(await this.#wire.runMachineAction(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4124,7 +4673,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async getProject(request: GetProjectRequest, options?: CallOptions): Promise<GetProjectResponse> {
-    const wireRequest = convert.toGetProjectRequest(request);
+    const wireRequest = convert.toGetProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromGetProjectResponse(await this.#wire.getProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4215,16 +4764,18 @@ export class Pethost {
    * file without `:ro` mounts it read-only. An image's VOLUME that no mount covers fails the deploy
    * (UNCOVERED_IMAGE_VOLUME): mount a named volume or a tmpfs there.
    *
-   * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation).
-   * FAILED_PRECONDITION = the GitHub App cannot read the repository (see GetMachineResponse.github),
-   * or no such branch or directory; + {@link DatabaseLinkRefusal} = a database of `linkDatabases`
-   * cannot be linked to it (databaseProjectId says which), and nothing was created. A deleted
-   * project's id inherits its snapshots.
+   * ALREADY_EXISTS = the id is taken (a retry with its operationId returns that operation). An
+   * uploadId: FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used; one the machine
+   * refused (its PUT said why) answers with its `violations`. FAILED_PRECONDITION = the GitHub App
+   * cannot read the repository (see GetMachineResponse.github), or no such branch or directory; +
+   * {@link DatabaseLinkRefusal} = a database of `linkDatabases` cannot be linked to it
+   * (databaseProjectId says which), and nothing was created. A deleted project's id inherits its
+   * snapshots.
    *
    * @throws {@link PethostError} when the call fails.
    */
   async createProject(request: CreateProjectRequest, options?: CallOptions): Promise<CreateProjectResponse> {
-    const wireRequest = convert.toCreateProjectRequest(request);
+    const wireRequest = convert.toCreateProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromCreateProjectResponse(await this.#wire.createProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4237,8 +4788,9 @@ export class Pethost {
    *
    * Deploys a new version of a project and answers as {@link Pethost.createProject | createProject}
    * does: `files` written over its own (/.env, /compose.yaml, a source file), `xPethost` (name,
-   * routes, password), `mountVolume`, a new archive (`uploadId`), a commit, or an earlier deploy's
-   * files again (`rollbackDeployId`). compose.yaml rules:
+   * routes, password), `mountVolume`, a new archive (`uploadId`, which replaces all files but /.env
+   * and x-pethost), a commit, or an earlier deploy's files again as a new version
+   * (`rollbackDeployId`; /.env, x-pethost and volumes stay). compose.yaml rules:
    * {@link Pethost.createProject | createProject}'s.
    *
    * It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
@@ -4267,9 +4819,61 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async deployProject(request: DeployProjectRequest, options?: CallOptions): Promise<DeployProjectResponse> {
-    const wireRequest = convert.toDeployProjectRequest(request);
+    const wireRequest = convert.toDeployProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromDeployProjectResponse(await this.#wire.deployProject(wireRequest, { signal: options?.signal }));
+    } catch (error) {
+      throw toError(error);
+    }
+  }
+
+  /**
+   * Move a project to another workspace.
+   *
+   * Moves a project to another workspace of the same person, as one operation ({@link OperationKind}
+   * MOVE): it is stopped here, backed up into the destination's backups, restored and started there
+   * under the same projectId, then deleted here. Each database it is linked to
+   * (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+   * uses one of the same engine instead, one the destination has or a new one, with the data of the
+   * database it signs in to copied, or none ({@link DatabaseSwitchInput}). A database project moves
+   * only when no app is linked to it. `workspace` is the source. Waits as
+   * {@link Pethost.deployProject | deployProject} does (waitSeconds), then
+   * {@link Pethost.getOperation | getOperation}, in either workspace, which once it ended answers
+   * the same moveMessage and the project. Answers, once it ended, with the project as it is in the
+   * destination, and `moveMessage`: what changed (hosts move to the destination's appsDomain, a
+   * domain of the person's own must point at its hostname, a new SSH command, which database it uses
+   * there instead of each, and with what data) and what stayed behind (operation history, logs,
+   * incidents, uptime, earlier snapshots, and what each database it left still holds). Until the
+   * restore succeeded, a failure undoes it: the source's services run again as they did, unless its
+   * failure says they did not start again; the move's snapshot stays in the destination's backups,
+   * as a deleted project's. After that it only goes forward: one that FAILED then moved the project,
+   * and its failure names what the source still holds. While it runs, a change to the project is
+   * UNAVAILABLE + {@link ProjectBusy} (kind MOVE) in either workspace, and so is a read where it is
+   * not then (before its restore, after its deletion from the source); afterwards, a call for it to
+   * the source is FAILED_PRECONDITION + {@link ProjectMoved}, until the source has a project of that
+   * id again. While it runs, a change to a database it leaves here, or to the one it uses instead
+   * there, is {@link ProjectBusy} too, as is a read of a new one before the move made it;
+   * {@link Pethost.getOperation | getOperation} answers the move with any of their project_ids.
+   * INVALID_ARGUMENT = switchDatabases names a database the project is not linked to, or twice, an
+   * envPrefix where the machine wrote the lines, none where it did not, one of no form a link takes
+   * or one two switches share, or an `into` the destination lacks or of another engine, or one two
+   * switches share, copies of more than 32 databases, or toWorkspace is the source or none of the
+   * caller's; PERMISSION_DENIED + {@link WorkspaceNotGranted} = one this token may not reach.
+   * ALREADY_EXISTS = the destination has a project of the project's id, or of the id a new database
+   * takes, or operationId is an operation of the project's or another move's already.
+   * FAILED_PRECONDITION = a database project with apps linked to it (the message names them: move
+   * each, or unlink it), a machine needs an update first (the message names it), the project has no
+   * deploy yet, or the destination's backups are off (its Machine.backupsEnabled), which a move goes
+   * through.
+   *
+   * Destructive: it may delete or overwrite something.
+   *
+   * @throws {@link PethostError} when the call fails.
+   */
+  async moveProject(request: MoveProjectRequest, options?: CallOptions): Promise<MoveProjectResponse> {
+    const wireRequest = convert.toMoveProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
+    try {
+      return convert.fromMoveProjectResponse(await this.#wire.moveProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4289,7 +4893,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async listCommits(request: ListCommitsRequest, options?: CallOptions): Promise<ListCommitsResponse> {
-    const wireRequest = convert.toListCommitsRequest(request);
+    const wireRequest = convert.toListCommitsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromListCommitsResponse(await this.#wire.listCommits(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4334,7 +4938,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async runProjectAction(request: RunProjectActionRequest, options?: CallOptions): Promise<RunProjectActionResponse> {
-    const wireRequest = convert.toRunProjectActionRequest(request);
+    const wireRequest = convert.toRunProjectActionRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromRunProjectActionResponse(await this.#wire.runProjectAction(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4357,7 +4961,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async setProjectAlerts(request: SetProjectAlertsRequest, options?: CallOptions): Promise<SetProjectAlertsResponse> {
-    const wireRequest = convert.toSetProjectAlertsRequest(request);
+    const wireRequest = convert.toSetProjectAlertsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromSetProjectAlertsResponse(await this.#wire.setProjectAlerts(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4379,7 +4983,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async getOperation(request: GetOperationRequest, options?: CallOptions): Promise<GetOperationResponse> {
-    const wireRequest = convert.toGetOperationRequest(request);
+    const wireRequest = convert.toGetOperationRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromGetOperationResponse(await this.#wire.getOperation(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4400,7 +5004,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async queryHttpTraffic(request: QueryHttpTrafficRequest, options?: CallOptions): Promise<QueryHttpTrafficResponse> {
-    const wireRequest = convert.toQueryHttpTrafficRequest(request);
+    const wireRequest = convert.toQueryHttpTrafficRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromQueryHttpTrafficResponse(await this.#wire.queryHttpTraffic(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4421,7 +5025,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async queryContainerLogs(request: QueryContainerLogsRequest, options?: CallOptions): Promise<QueryContainerLogsResponse> {
-    const wireRequest = convert.toQueryContainerLogsRequest(request);
+    const wireRequest = convert.toQueryContainerLogsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromQueryContainerLogsResponse(await this.#wire.queryContainerLogs(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4448,7 +5052,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async createDatabase(request: CreateDatabaseRequest, options?: CallOptions): Promise<CreateDatabaseResponse> {
-    const wireRequest = convert.toCreateDatabaseRequest(request);
+    const wireRequest = convert.toCreateDatabaseRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromCreateDatabaseResponse(await this.#wire.createDatabase(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4476,7 +5080,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async linkDatabase(request: LinkDatabaseRequest, options?: CallOptions): Promise<LinkDatabaseResponse> {
-    const wireRequest = convert.toLinkDatabaseRequest(request);
+    const wireRequest = convert.toLinkDatabaseRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromLinkDatabaseResponse(await this.#wire.linkDatabase(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4497,7 +5101,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async runServiceCommand(request: RunServiceCommandRequest, options?: CallOptions): Promise<RunServiceCommandResponse> {
-    const wireRequest = convert.toRunServiceCommandRequest(request);
+    const wireRequest = convert.toRunServiceCommandRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromRunServiceCommandResponse(await this.#wire.runServiceCommand(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4521,7 +5125,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async readPath(request: ReadPathRequest, options?: CallOptions): Promise<ReadPathResponse> {
-    const wireRequest = convert.toReadPathRequest(request);
+    const wireRequest = convert.toReadPathRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromReadPathResponse(await this.#wire.readPath(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4561,7 +5165,7 @@ export class Pethost {
    * @throws {@link PethostError} when the call fails.
    */
   async createTransfer(request: CreateTransferRequest, options?: CallOptions): Promise<CreateTransferResponse> {
-    const wireRequest = convert.toCreateTransferRequest(request);
+    const wireRequest = convert.toCreateTransferRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromCreateTransferResponse(await this.#wire.createTransfer(wireRequest, { signal: options?.signal }));
     } catch (error) {
@@ -4590,7 +5194,7 @@ export class Pethost {
    * @throws {@link PethostError} from the loop, when the call or the stream fails.
    */
   watchOperation(request: WatchOperationRequest, options?: CallOptions): AsyncIterable<WatchOperationResponse> {
-    const wireRequest = convert.toWatchOperationRequest(request);
+    const wireRequest = convert.toWatchOperationRequest({ ...request, workspace: request.workspace || this.#workspace });
     const call = (signal: AbortSignal) => this.#wire.watchOperation(wireRequest, { signal });
     return responses(wire.WatchOperationResponseSchema, call, convert.fromWatchOperationResponse, options?.signal);
   }
@@ -4618,7 +5222,7 @@ export class Pethost {
    * @throws {@link PethostError} from the loop, when the call or the stream fails.
    */
   tailContainerLogs(request: TailContainerLogsRequest, options?: CallOptions): AsyncIterable<TailContainerLogsResponse> {
-    const wireRequest = convert.toTailContainerLogsRequest(request);
+    const wireRequest = convert.toTailContainerLogsRequest({ ...request, workspace: request.workspace || this.#workspace });
     const call = (signal: AbortSignal) => this.#wire.tailContainerLogs(wireRequest, { signal });
     return responses(wire.TailContainerLogsResponseSchema, call, convert.fromTailContainerLogsResponse, options?.signal);
   }
@@ -4644,7 +5248,7 @@ export class Pethost {
    * @throws {@link PethostError} from the loop, when the call or the stream fails.
    */
   tailHttpTraffic(request: TailHttpTrafficRequest, options?: CallOptions): AsyncIterable<TailHttpTrafficResponse> {
-    const wireRequest = convert.toTailHttpTrafficRequest(request);
+    const wireRequest = convert.toTailHttpTrafficRequest({ ...request, workspace: request.workspace || this.#workspace });
     const call = (signal: AbortSignal) => this.#wire.tailHttpTraffic(wireRequest, { signal });
     return responses(wire.TailHttpTrafficResponseSchema, call, convert.fromTailHttpTrafficResponse, options?.signal);
   }
@@ -4732,6 +5336,9 @@ function toError(error: unknown): PethostError {
       databaseLinkRefusal: failed.findDetails(wire.DatabaseLinkRefusalSchema).map(convert.fromDatabaseLinkRefusal)[0],
       databaseSizeRefusal: failed.findDetails(wire.DatabaseSizeRefusalSchema).map(convert.fromDatabaseSizeRefusal)[0],
       noMachine: failed.findDetails(wire.NoMachineSchema).map(convert.fromNoMachine)[0],
+      workspaceChoice: failed.findDetails(wire.WorkspaceChoiceSchema).map(convert.fromWorkspaceChoice)[0],
+      workspaceNotGranted: failed.findDetails(wire.WorkspaceNotGrantedSchema).map(convert.fromWorkspaceNotGranted)[0],
+      projectMoved: failed.findDetails(wire.ProjectMovedSchema).map(convert.fromProjectMoved)[0],
     },
     { cause: failed.cause ?? failed },
   );

@@ -9,32 +9,55 @@ import (
 	"github.com/pethost-dev/sdk/go/internal/panelv1/panelv1connect"
 )
 
-// A Client calls the API for one account: every method is one call, and acts on that
-// account's machine. A method returns when its call ends: bound it with the context. A nil
-// request is the empty one, and the response is nil exactly when the error is not. A Client
-// is safe for concurrent use.
+// A Client calls the API for one account: every method is one call, and acts on a workspace
+// of that account, the one its request names, else the Config's. A method returns when its
+// call ends: bound it with the context. A nil request is the empty one, and the response is
+// nil exactly when the error is not. A Client is safe for concurrent use.
 //
 // A stream's method, such as [Client.WatchOperation], returns at once what to range over: its
 // call is made when the loop starts, and lasts as long as the loop. A second loop over it is a
 // second call, with the same request.
 type Client struct {
-	wire panelv1connect.PanelServiceClient
+	wire      panelv1connect.PanelServiceClient
+	workspace string // The Config's: what a request that names no workspace is sent with.
 }
 
 // NewClient returns a client that calls the API as config says. It connects to nothing: a
 // token the API refuses shows as the first call's [CodeUnauthenticated].
 func NewClient(config Config) *Client {
-	return &Client{wire: panelv1connect.NewPanelServiceClient(newTransport(config))}
+	return &Client{wire: panelv1connect.NewPanelServiceClient(newTransport(config)), workspace: config.Workspace}
+}
+
+// ListWorkspaces: list workspaces. It only reads.
+//
+// The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+// is free, location, hostname and apps domain. With ProjectID, also which of them hold a
+// project of that id (HoldingProject). Free figures and project counts are each machine's
+// latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+// The one call that takes no `workspace`. A caller that reaches none is refused as a call
+// naming no workspace is: [NoMachine] (no plan) or [WorkspaceNotGranted].
+func (c *Client) ListWorkspaces(ctx context.Context, request *ListWorkspacesRequest) (*ListWorkspacesResponse, error) {
+	sent := orZero(request)
+	response, err := c.wire.ListWorkspaces(ctx, toWireListWorkspacesRequest(sent))
+	if err != nil {
+		return nil, fromWireError(err)
+	}
+	return new(fromWireListWorkspacesResponse(response)), nil
 }
 
 // GetMachine: get the machine. It only reads.
 //
 // Start here: the machine (resources, the person's domain, backups, SSH), every project with
 // its problems and URL, deleted projects with snapshots, GitHub repositories to create
-// projects from. Figures are the latest sample; disk sizes and the day's traffic lag a few
-// minutes.
+// projects from, and the workspace it serves. Figures are the latest sample; disk sizes and
+// the day's traffic lag a few minutes. Several workspaces and no Workspace:
+// [CodeFailedPrecondition] + [WorkspaceChoice], which lists them.
 func (c *Client) GetMachine(ctx context.Context, request *GetMachineRequest) (*GetMachineResponse, error) {
-	response, err := c.wire.GetMachine(ctx, toWireGetMachineRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.GetMachine(ctx, toWireGetMachineRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -47,7 +70,11 @@ func (c *Client) GetMachine(ctx context.Context, request *GetMachineRequest) (*G
 // projects' containers: [Service.SSHCommand]), end a session, schedule or cancel a restart.
 // Returns the machine.
 func (c *Client) RunMachineAction(ctx context.Context, request *RunMachineActionRequest) (*RunMachineActionResponse, error) {
-	response, err := c.wire.RunMachineAction(ctx, toWireRunMachineActionRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.RunMachineAction(ctx, toWireRunMachineActionRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -61,7 +88,11 @@ func (c *Client) RunMachineAction(ctx context.Context, request *RunMachineAction
 // snapshots, the last day's HTTP traffic. Env-file values and a database's password
 // ([Project.Database].Connection) only with IncludeSecretValues. Its files: [Client.ReadPath].
 func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*GetProjectResponse, error) {
-	response, err := c.wire.GetProject(ctx, toWireGetProjectRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.GetProject(ctx, toWireGetProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -94,10 +125,9 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // (Postgres, MariaDB; a Valkey has one user), to share a database other apps use: a user and a
 // database of its own, named as the project, which they cannot reach; all are restored
 // together. Only LinkDatabases makes one: [Client.LinkDatabase] links as the apps' user.
-// [DatabaseLinkRequest.EnvPrefix] "DATABASE": the machine writes DATABASE_URL, _HOST, _PORT,
-// _USER, _PASSWORD and _NAME into /.env, so no password is copied. A name /.env sets already
-// is refused, as a laptop's .env in an archive may set one: send Files with a /.env without it
-// beside UploadID.
+// EnvPrefix "DATABASE": the machine writes DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and
+// _NAME into /.env, so no password is copied. A name /.env sets already is refused, as a
+// laptop's .env in an archive may set one: send Files with a /.env without it beside UploadID.
 //
 // compose.yaml rules. Data lives in named volumes; all else a container writes is lost when it
 // is recreated. Project files are bind-mounted read-only. HTTP comes through the proxy, to a
@@ -152,12 +182,18 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 // or a tmpfs there.
 //
 // [CodeAlreadyExists] = the id is taken (a retry with its OperationID returns that operation).
-// [CodeFailedPrecondition] = the GitHub App cannot read the repository (see
-// [GetMachineResponse.Github]), or no such branch or directory; + [DatabaseLinkRefusal] = a
-// database of LinkDatabases cannot be linked to it (DatabaseProjectID says which), and nothing
-// was created. A deleted project's id inherits its snapshots.
+// An UploadID: [CodeFailedPrecondition] = not arrived; [CodeNotFound] = expired or used; one
+// the machine refused (its PUT said why) answers with its Violations. [CodeFailedPrecondition]
+// = the GitHub App cannot read the repository (see [GetMachineResponse.Github]), or no such
+// branch or directory; + [DatabaseLinkRefusal] = a database of LinkDatabases cannot be linked
+// to it (DatabaseProjectID says which), and nothing was created. A deleted project's id
+// inherits its snapshots.
 func (c *Client) CreateProject(ctx context.Context, request *CreateProjectRequest) (*CreateProjectResponse, error) {
-	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -168,8 +204,10 @@ func (c *Client) CreateProject(ctx context.Context, request *CreateProjectReques
 //
 // Deploys a new version of a project and answers as [Client.CreateProject] does: Files written
 // over its own (/.env, /compose.yaml, a source file), XPethost (name, routes, password),
-// MountVolume, a new archive ([DeployProjectUploadID]), a commit, or an earlier deploy's files
-// again ([DeployProjectRollbackDeployID]). compose.yaml rules: [Client.CreateProject]'s.
+// MountVolume, a new archive ([DeployProjectUploadID], which replaces all files but /.env and
+// x-pethost), a commit, or an earlier deploy's files again as a new version
+// ([DeployProjectRollbackDeployID]; /.env, x-pethost and volumes stay). compose.yaml rules:
+// [Client.CreateProject]'s.
 //
 // It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and
 // waits until each service runs (healthy, if it has a healthcheck) or each job exits 0, and
@@ -193,11 +231,64 @@ func (c *Client) CreateProject(ctx context.Context, request *CreateProjectReques
 // another kind of operation. When it FAILED, [Operation.MadeCurrent] says whether the files
 // were applied: then fix them, or roll back.
 func (c *Client) DeployProject(ctx context.Context, request *DeployProjectRequest) (*DeployProjectResponse, error) {
-	response, err := c.wire.DeployProject(ctx, toWireDeployProjectRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.DeployProject(ctx, toWireDeployProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
 	return new(fromWireDeployProjectResponse(response)), nil
+}
+
+// MoveProject: move a project to another workspace. It may delete or overwrite.
+//
+// Moves a project to another workspace of the same person, as one operation ([OperationKind]
+// MOVE): it is stopped here, backed up into the destination's backups, restored and started
+// there under the same ProjectID, then deleted here. Each database it is linked to
+// ([Project.Dependencies]) stays here, with its other apps, if any, running on: there the
+// project uses one of the same engine instead, one the destination has or a new one, with the
+// data of the database it signs in to copied, or none ([DatabaseSwitch]). A database project
+// moves only when no app is linked to it. Workspace is the source. Waits as
+// [Client.DeployProject] does (WaitSeconds), then [Client.GetOperation], in either workspace,
+// which once it ended answers the same MoveMessage and the project. Answers, once it ended,
+// with the project as it is in the destination, and MoveMessage: what changed (hosts move to
+// the destination's AppsDomain, a domain of the person's own must point at its hostname, a new
+// SSH command, which database it uses there instead of each, and with what data) and what
+// stayed behind (operation history, logs, incidents, uptime, earlier snapshots, and what each
+// database it left still holds). Until the restore succeeded, a failure undoes it: the
+// source's services run again as they did, unless its failure says they did not start again;
+// the move's snapshot stays in the destination's backups, as a deleted project's. After that
+// it only goes forward: one that FAILED then moved the project, and its failure names what the
+// source still holds. While it runs, a change to the project is [CodeUnavailable] +
+// [ProjectBusy] (kind MOVE) in either workspace, and so is a read where it is not then (before
+// its restore, after its deletion from the source); afterwards, a call for it to the source is
+// [CodeFailedPrecondition] + [ProjectMoved], until the source has a project of that id again.
+// While it runs, a change to a database it leaves here, or to the one it uses instead there,
+// is [ProjectBusy] too, as is a read of a new one before the move made it;
+// [Client.GetOperation] answers the move with any of their project_ids. [CodeInvalidArgument]
+// = SwitchDatabases names a database the project is not linked to, or twice, an EnvPrefix
+// where the machine wrote the lines, none where it did not, one of no form a link takes or one
+// two switches share, or an `into` the destination lacks or of another engine, or one two
+// switches share, copies of more than 32 databases, or ToWorkspace is the source or none of
+// the caller's; [CodePermissionDenied] + [WorkspaceNotGranted] = one this token may not reach.
+// [CodeAlreadyExists] = the destination has a project of the project's id, or of the id a new
+// database takes, or OperationID is an operation of the project's or another move's already.
+// [CodeFailedPrecondition] = a database project with apps linked to it (the message names
+// them: move each, or unlink it), a machine needs an update first (the message names it), the
+// project has no deploy yet, or the destination's backups are off (its
+// [Machine.BackupsEnabled]), which a move goes through.
+func (c *Client) MoveProject(ctx context.Context, request *MoveProjectRequest) (*MoveProjectResponse, error) {
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.MoveProject(ctx, toWireMoveProjectRequest(sent))
+	if err != nil {
+		return nil, fromWireError(err)
+	}
+	return new(fromWireMoveProjectResponse(response)), nil
 }
 
 // ListCommits: list a project's commits. It only reads.
@@ -208,7 +299,11 @@ func (c *Client) DeployProject(ctx context.Context, request *DeployProjectReques
 // project (it rolls back with [DeployProjectRollbackDeployID]), no such branch, or
 // BeforeCommit not on it.
 func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (*ListCommitsResponse, error) {
-	response, err := c.wire.ListCommits(ctx, toWireListCommitsRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.ListCommits(ctx, toWireListCommitsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -249,7 +344,11 @@ func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (
 // volume than the one the file names. [CodeFailedPrecondition] alone = the project is no
 // database. [CodeInvalidArgument] = a size its engine does not offer (the message lists them).
 func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectActionRequest) (*RunProjectActionResponse, error) {
-	response, err := c.wire.RunProjectAction(ctx, toWireRunProjectActionRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.RunProjectAction(ctx, toWireRunProjectActionRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -265,7 +364,11 @@ func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectAction
 // watched. Answers with [Project.Alerts]. Where alerts go is the person's choice in the
 // panel's Settings → Alerts ([Machine.AlertChannels]): no tool sets it.
 func (c *Client) SetProjectAlerts(ctx context.Context, request *SetProjectAlertsRequest) (*SetProjectAlertsResponse, error) {
-	response, err := c.wire.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -280,7 +383,11 @@ func (c *Client) SetProjectAlerts(ctx context.Context, request *SetProjectAlerts
 // still be starting: it is waited for too; still starting at the end = [CodeUnavailable] with
 // that [ProjectBusy].
 func (c *Client) GetOperation(ctx context.Context, request *GetOperationRequest) (*GetOperationResponse, error) {
-	response, err := c.wire.GetOperation(ctx, toWireGetOperationRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.GetOperation(ctx, toWireGetOperationRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -294,7 +401,11 @@ func (c *Client) GetOperation(ctx context.Context, request *GetOperationRequest)
 // paths and the requests, for one filter and range. [CodeOutOfRange] = the range ends before
 // the oldest kept. Paths and user agents are untrusted.
 func (c *Client) QueryHTTPTraffic(ctx context.Context, request *QueryHTTPTrafficRequest) (*QueryHTTPTrafficResponse, error) {
-	response, err := c.wire.QueryHttpTraffic(ctx, toWireQueryHTTPTrafficRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.QueryHttpTraffic(ctx, toWireQueryHTTPTrafficRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -308,7 +419,11 @@ func (c *Client) QueryHTTPTraffic(ctx context.Context, request *QueryHTTPTraffic
 // [Client.QueryHTTPTraffic]. [CodeOutOfRange] = the range ends before the oldest kept.
 // Untrusted.
 func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainerLogsRequest) (*QueryContainerLogsResponse, error) {
-	response, err := c.wire.QueryContainerLogs(ctx, toWireQueryContainerLogsRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.QueryContainerLogs(ctx, toWireQueryContainerLogsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -330,7 +445,11 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 // snapshot or app. [CodeFailedPrecondition] = the snapshot is of no database of that engine; +
 // [DatabaseLinkRefusal] = an app of Link cannot be linked, and nothing was created.
 func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
-	response, err := c.wire.CreateDatabase(ctx, toWireCreateDatabaseRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.CreateDatabase(ctx, toWireCreateDatabaseRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -351,7 +470,11 @@ func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequ
 // app is a database, has a service named or aliased like the database, or there are 20 links
 // already. Answers with the database's Project.
 func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest) (*LinkDatabaseResponse, error) {
-	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -365,7 +488,11 @@ func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest)
 // or timeout = refused (named). Cannot start = exit 127 or 126, Docker's error in stdout.
 // Untrusted output.
 func (c *Client) RunServiceCommand(ctx context.Context, request *RunServiceCommandRequest) (*RunServiceCommandResponse, error) {
-	response, err := c.wire.RunServiceCommand(ctx, toWireRunServiceCommandRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.RunServiceCommand(ctx, toWireRunServiceCommandRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -382,7 +509,11 @@ func (c *Client) RunServiceCommand(ctx context.Context, request *RunServiceComma
 // volume files with [Client.CreateTransfer]. [CodeFailedPrecondition] also = no deploy yet, or
 // a file in /proc or /sys (use [Client.RunServiceCommand]). Untrusted.
 func (c *Client) ReadPath(ctx context.Context, request *ReadPathRequest) (*ReadPathResponse, error) {
-	response, err := c.wire.ReadPath(ctx, toWireReadPathRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.ReadPath(ctx, toWireReadPathRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -416,7 +547,11 @@ func (c *Client) ReadPath(ctx context.Context, request *ReadPathRequest) (*ReadP
 // = disk full, or too many transfers. [CodeUnavailable] = Postgres or MariaDB runs but does
 // not answer yet: try again shortly.
 func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequest) (*CreateTransferResponse, error) {
-	response, err := c.wire.CreateTransfer(ctx, toWireCreateTransferRequest(orZero(request)))
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	response, err := c.wire.CreateTransfer(ctx, toWireCreateTransferRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -440,7 +575,11 @@ func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequ
 //		// Use response.
 //	}
 func (c *Client) WatchOperation(ctx context.Context, request *WatchOperationRequest) iter.Seq2[*WatchOperationResponse, error] {
-	return responses(ctx, c.wire.WatchOperation, toWireWatchOperationRequest(orZero(request)), fromWireWatchOperationResponse)
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	return responses(ctx, c.wire.WatchOperation, toWireWatchOperationRequest(sent), fromWireWatchOperationResponse)
 }
 
 // TailContainerLogs: follow container logs, as a stream.
@@ -462,7 +601,11 @@ func (c *Client) WatchOperation(ctx context.Context, request *WatchOperationRequ
 //		// Use response.
 //	}
 func (c *Client) TailContainerLogs(ctx context.Context, request *TailContainerLogsRequest) iter.Seq2[*TailContainerLogsResponse, error] {
-	return responses(ctx, c.wire.TailContainerLogs, toWireTailContainerLogsRequest(orZero(request)), fromWireTailContainerLogsResponse)
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	return responses(ctx, c.wire.TailContainerLogs, toWireTailContainerLogsRequest(sent), fromWireTailContainerLogsResponse)
 }
 
 // TailHTTPTraffic: follow HTTP traffic, as a stream.
@@ -482,5 +625,9 @@ func (c *Client) TailContainerLogs(ctx context.Context, request *TailContainerLo
 //		// Use response.
 //	}
 func (c *Client) TailHTTPTraffic(ctx context.Context, request *TailHTTPTrafficRequest) iter.Seq2[*TailHTTPTrafficResponse, error] {
-	return responses(ctx, c.wire.TailHttpTraffic, toWireTailHTTPTrafficRequest(orZero(request)), fromWireTailHTTPTrafficResponse)
+	sent := orZero(request)
+	if sent.Workspace == "" {
+		sent.Workspace = c.workspace
+	}
+	return responses(ctx, c.wire.TailHttpTraffic, toWireTailHTTPTrafficRequest(sent), fromWireTailHTTPTrafficResponse)
 }

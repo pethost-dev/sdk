@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.4.8"),
+    ("user-agent", "pethost-rust/0.5.0"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -390,7 +390,7 @@ mod states {
     /// A field no message of the API has: what a later API would add.
     pub fn later_field() -> buffa::UnknownField {
         buffa::UnknownField {
-            number: 30,
+            number: 101,
             data: buffa::UnknownFieldData::LengthDelimited(b"later".to_vec()),
         }
     }
@@ -402,6 +402,23 @@ mod states {
 #[allow(unused_variables)]
 mod samples {
     use super::*;
+
+    pub fn workspace_status(k: usize) -> types::WorkspaceStatus {
+        match k % 4 {
+            0 => types::WorkspaceStatus::Unspecified,
+            1 => types::WorkspaceStatus::Ready,
+            2 => types::WorkspaceStatus::BeingPrepared,
+            _ => types::WorkspaceStatus::Unrecognized(3),
+        }
+    }
+
+    pub fn workspace_role(k: usize) -> types::WorkspaceRole {
+        match k % 3 {
+            0 => types::WorkspaceRole::Unspecified,
+            1 => types::WorkspaceRole::Owner,
+            _ => types::WorkspaceRole::Unrecognized(2),
+        }
+    }
 
     pub fn alert_channel_kind(k: usize) -> types::AlertChannelKind {
         match k % 5 {
@@ -504,14 +521,15 @@ mod samples {
     }
 
     pub fn operation_kind(k: usize) -> types::OperationKind {
-        match k % 7 {
+        match k % 8 {
             0 => types::OperationKind::Unspecified,
             1 => types::OperationKind::Deploy,
             2 => types::OperationKind::RecreateService,
             3 => types::OperationKind::Backup,
             4 => types::OperationKind::Restore,
             5 => types::OperationKind::Delete,
-            _ => types::OperationKind::Unrecognized(6),
+            6 => types::OperationKind::Move,
+            _ => types::OperationKind::Unrecognized(7),
         }
     }
 
@@ -649,8 +667,53 @@ mod samples {
         }
     }
 
-    pub fn get_machine_request(_k: usize, later: bool) -> types::GetMachineRequest {
-        types::GetMachineRequest {}
+    pub fn list_workspaces_request(k: usize, later: bool) -> types::ListWorkspacesRequest {
+        types::ListWorkspacesRequest {
+            project_id: states::plain(k, states::text("project_id", k)),
+            page_token: states::plain(k, states::text("page_token", k)),
+        }
+    }
+
+    pub fn list_workspaces_response(k: usize, later: bool) -> types::ListWorkspacesResponse {
+        states::make(|message: &mut types::ListWorkspacesResponse| {
+            message.workspaces = states::many(k, [samples::workspace(k, later), samples::workspace(k + 1, later)]);
+            message.next_page_token = states::plain(k, states::text("next_page_token", k));
+            message.total = states::plain(k, states::number(3, k));
+            message.holding_project = states::many(
+                k,
+                [
+                    states::text("holding_project", k),
+                    states::text("holding_project", k + 1),
+                ],
+            );
+            message.incomplete = states::flag(1, k);
+        })
+    }
+
+    pub fn workspace(k: usize, later: bool) -> types::Workspace {
+        states::make(|message: &mut types::Workspace| {
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.name = states::plain(k, states::text("name", k));
+            message.status = samples::workspace_status(k + 2);
+            message.location = states::plain(k, states::text("location", k));
+            message.plan = states::plain(k, states::text("plan", k));
+            message.cpu_total_cores = states::plain(k, f64::from(states::number(6, k)) + 0.5);
+            message.memory_total_bytes = states::plain(k, u64::from(states::number(7, k)) << 44);
+            message.memory_free_bytes = states::marked(k, u64::from(states::number(8, k)) << 44);
+            message.disk_total_bytes = states::plain(k, u64::from(states::number(9, k)) << 44);
+            message.disk_free_bytes = states::marked(k, u64::from(states::number(10, k)) << 44);
+            message.project_count = states::marked(k, states::number(11, k));
+            message.hostname = states::plain(k, states::text("hostname", k));
+            message.apps_domain = states::plain(k, states::text("apps_domain", k));
+            message.end_time = states::maybe(k, states::time(states::number(14, k + 13)));
+            message.role = samples::workspace_role(k + 14);
+        })
+    }
+
+    pub fn get_machine_request(k: usize, later: bool) -> types::GetMachineRequest {
+        types::GetMachineRequest {
+            workspace: states::plain(k, states::text("workspace", k)),
+        }
     }
 
     pub fn get_machine_response(k: usize, later: bool) -> types::GetMachineResponse {
@@ -671,6 +734,7 @@ mod samples {
                 ],
             );
             message.github = states::maybe(k, samples::github_connection(k + 3, later));
+            message.workspace = states::maybe(k, samples::workspace(k + 4, later));
         })
     }
 
@@ -797,6 +861,15 @@ mod samples {
             message.project_id = states::plain(k, states::text("project_id", k));
             message.newest_snapshot = states::maybe(k, samples::snapshot(k + 1, later));
             message.snapshot_count = states::plain(k, states::number(3, k));
+            message.moved_to = states::maybe(k, samples::moved_to(k + 3, later));
+        })
+    }
+
+    pub fn moved_to(k: usize, later: bool) -> types::MovedTo {
+        states::make(|message: &mut types::MovedTo| {
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.workspace_name = states::plain(k, states::text("workspace_name", k));
+            message.move_time = states::maybe(k, states::time(states::number(3, k + 2)));
         })
     }
 
@@ -827,6 +900,7 @@ mod samples {
                 10 => Some(types::RunMachineActionRequestAction::CancelRestart(Default::default())),
                 _ => Some(types::RunMachineActionRequestAction::EndSessionId(Default::default())),
             },
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -884,6 +958,7 @@ mod samples {
             message.pinned = states::flag(1, k);
             message.disk_used_bytes = states::plain(k, u64::from(states::number(13, k)) << 44);
             message.database = states::maybe(k, samples::database_summary(k + 13, later));
+            message.uid = states::plain(k, states::text("uid", k));
         })
     }
 
@@ -914,6 +989,7 @@ mod samples {
             incidents_before: states::maybe(k, states::time(states::number(5, k + 4))),
             uptime_day_count: states::plain(k, states::number(6, k)),
             incidents_before_id: states::plain(k, states::text("incidents_before_id", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -971,6 +1047,23 @@ mod samples {
                     states::text("linked_databases", k + 1),
                 ],
             );
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.uid = states::plain(k, states::text("uid", k));
+            message.dependencies = states::many(
+                k,
+                [
+                    samples::project_dependency(k + 30, later),
+                    samples::project_dependency(k + 31, later),
+                ],
+            );
+        })
+    }
+
+    pub fn project_dependency(k: usize, later: bool) -> types::ProjectDependency {
+        states::make(|message: &mut types::ProjectDependency| {
+            message.database_project_id = states::plain(k, states::text("database_project_id", k));
+            message.copy_database = states::plain(k, states::text("copy_database", k));
+            message.env_prefix = states::plain(k, states::text("env_prefix", k));
         })
     }
 
@@ -1228,6 +1321,7 @@ mod samples {
                     samples::database_link_request(k + 9, later),
                 ],
             ),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1292,6 +1386,7 @@ mod samples {
                 _ => Some(types::DeployProjectRequestVersion::RollbackDeployId(Default::default())),
             },
             wait_seconds: states::marked(k, states::number(13, k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1366,10 +1461,45 @@ mod samples {
         })
     }
 
+    pub fn move_project_request(k: usize, later: bool) -> types::MoveProjectRequest {
+        types::MoveProjectRequest {
+            project_id: states::plain(k, states::text("project_id", k)),
+            to_workspace: states::plain(k, states::text("to_workspace", k)),
+            operation_id: states::plain(k, states::text("operation_id", k)),
+            wait_seconds: states::marked(k, states::number(5, k)),
+            switch_databases: states::many(
+                k,
+                [
+                    samples::database_switch(k + 4, later),
+                    samples::database_switch(k + 5, later),
+                ],
+            ),
+            workspace: states::plain(k, states::text("workspace", k)),
+        }
+    }
+
+    pub fn database_switch(k: usize, later: bool) -> types::DatabaseSwitch {
+        types::DatabaseSwitch {
+            database_project_id: states::plain(k, states::text("database_project_id", k)),
+            into_database_project_id: states::plain(k, states::text("into_database_project_id", k)),
+            empty: states::flag(1, k),
+            env_prefix: states::plain(k, states::text("env_prefix", k)),
+        }
+    }
+
+    pub fn move_project_response(k: usize, later: bool) -> types::MoveProjectResponse {
+        states::make(|message: &mut types::MoveProjectResponse| {
+            message.operation = states::maybe(k, samples::operation(k, later));
+            message.project = states::maybe(k, samples::project(k + 1, later));
+            message.move_message = states::plain(k, states::text("move_message", k));
+        })
+    }
+
     pub fn list_commits_request(k: usize, later: bool) -> types::ListCommitsRequest {
         types::ListCommitsRequest {
             project_id: states::plain(k, states::text("project_id", k)),
             before_commit: states::plain(k, states::text("before_commit", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1448,6 +1578,7 @@ mod samples {
             },
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(13, k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1607,6 +1738,7 @@ mod samples {
             database_project_id: states::plain(k, states::text("database_project_id", k)),
             link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
             unlink: states::many(k, [states::text("unlink", k), states::text("unlink", k + 1)]),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1626,6 +1758,7 @@ mod samples {
             operation_id: states::plain(k, states::text("operation_id", k)),
             wait_seconds: states::marked(k, states::number(7, k)),
             metadata: states::maybe(k, samples::project_metadata(k + 7, later)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1666,6 +1799,7 @@ mod samples {
             remove_traffic_rules: states::flag(2, k),
             off: states::marked(k, true),
             mute_minutes: states::marked(k, states::number(7, k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1795,6 +1929,7 @@ mod samples {
             wait_seconds: states::marked(k, states::number(3, k)),
             after_log_line: states::marked(k, states::number(4, k)),
             log_line_limit: states::marked(k, states::number(5, k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1811,6 +1946,7 @@ mod samples {
             );
             message.log_line_count = states::plain(k, states::number(3, k));
             message.next_after_log_line = states::plain(k, states::number(4, k));
+            message.move_message = states::plain(k, states::text("move_message", k));
         })
     }
 
@@ -1841,6 +1977,7 @@ mod samples {
             bucket_width_seconds: states::plain(k, states::number(5, k)),
             request_limit: states::plain(k, states::number(6, k)),
             page_token: states::plain(k, states::text("page_token", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1927,6 +2064,7 @@ mod samples {
             limit: states::plain(k, states::number(5, k)),
             from_start: states::flag(1, k),
             page_token: states::plain(k, states::text("page_token", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -1959,6 +2097,7 @@ mod samples {
             run_as_user: states::plain(k, states::text("run_as_user", k)),
             working_directory: states::plain(k, states::text("working_directory", k)),
             timeout_seconds: states::plain(k, states::number(7, k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2001,6 +2140,7 @@ mod samples {
             offset_bytes: states::plain(k, u64::from(states::number(7, k)) << 44),
             length_bytes: states::plain(k, states::number(8, k)),
             entry_page_token: states::plain(k, states::text("entry_page_token", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2046,6 +2186,7 @@ mod samples {
                     Default::default(),
                 )),
             },
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2148,6 +2289,38 @@ mod samples {
         states::make(|message: &mut types::NoMachine| {
             message.reason = samples::no_machine_reason(k);
             message.url = states::plain(k, states::text("url", k));
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+        })
+    }
+
+    pub fn workspace_choice(k: usize, later: bool) -> types::WorkspaceChoice {
+        states::make(|message: &mut types::WorkspaceChoice| {
+            message.workspaces = states::many(k, [samples::workspace(k, later), samples::workspace(k + 1, later)]);
+            message.total = states::plain(k, states::number(2, k));
+            message.holding_project = states::many(
+                k,
+                [
+                    states::text("holding_project", k),
+                    states::text("holding_project", k + 1),
+                ],
+            );
+            message.incomplete = states::flag(1, k);
+        })
+    }
+
+    pub fn workspace_not_granted(k: usize, later: bool) -> types::WorkspaceNotGranted {
+        states::make(|message: &mut types::WorkspaceNotGranted| {
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.url = states::plain(k, states::text("url", k));
+        })
+    }
+
+    pub fn project_moved(k: usize, later: bool) -> types::ProjectMoved {
+        states::make(|message: &mut types::ProjectMoved| {
+            message.project_id = states::plain(k, states::text("project_id", k));
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.workspace_name = states::plain(k, states::text("workspace_name", k));
+            message.move_time = states::maybe(k, states::time(states::number(4, k + 3)));
         })
     }
 
@@ -2155,6 +2328,7 @@ mod samples {
         types::WatchOperationRequest {
             project_id: states::plain(k, states::text("project_id", k)),
             operation_id: states::plain(k, states::text("operation_id", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2174,6 +2348,7 @@ mod samples {
                     Default::default(),
                 )),
             };
+            message.move_message = states::plain(k, states::text("move_message", k));
         })
     }
 
@@ -2182,6 +2357,7 @@ mod samples {
             project_id: states::plain(k, states::text("project_id", k)),
             filter: states::maybe(k, samples::container_log_filter(k + 1, later)),
             after_cursor: states::plain(k, states::text("after_cursor", k)),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2197,6 +2373,7 @@ mod samples {
             project_id: states::plain(k, states::text("project_id", k)),
             filter: states::maybe(k, samples::http_traffic_filter(k + 1, later)),
             after_sequence: states::plain(k, u64::from(states::number(3, k)) << 44),
+            workspace: states::plain(k, states::text("workspace", k)),
         }
     }
 
@@ -2211,6 +2388,27 @@ mod samples {
 /// it: at an odd `k` it then carries a field the crate does not know, as a later API's would.
 mod on_wire {
     use super::*;
+
+    pub fn workspace_status(k: usize) -> buffa::EnumValue<wire::WorkspaceStatus> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 4 {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            _ => 3,
+        };
+        buffa::EnumValue::from(number)
+    }
+
+    pub fn workspace_role(k: usize) -> buffa::EnumValue<wire::WorkspaceRole> {
+        // By the proto's numbers: the variants' names are the converters' to get right.
+        let number = match k % 3 {
+            0 => 0,
+            1 => 1,
+            _ => 2,
+        };
+        buffa::EnumValue::from(number)
+    }
 
     pub fn alert_channel_kind(k: usize) -> buffa::EnumValue<wire::AlertChannelKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
@@ -2330,14 +2528,15 @@ mod on_wire {
 
     pub fn operation_kind(k: usize) -> buffa::EnumValue<wire::OperationKind> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 7 {
+        let number = match k % 8 {
             0 => 0,
             1 => 1,
             2 => 2,
             3 => 3,
             4 => 4,
             5 => 5,
-            _ => 6,
+            6 => 6,
+            _ => 7,
         };
         buffa::EnumValue::from(number)
     }
@@ -2500,8 +2699,72 @@ mod on_wire {
         buffa::EnumValue::from(number)
     }
 
+    pub fn list_workspaces_request(k: usize, received: bool) -> wire::ListWorkspacesRequest {
+        let mut message = wire::ListWorkspacesRequest {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            page_token: states::present(states::plain(k, states::text("page_token", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn list_workspaces_response(k: usize, received: bool) -> wire::ListWorkspacesResponse {
+        let mut message = wire::ListWorkspacesResponse {
+            workspaces: states::many(
+                k,
+                [on_wire::workspace(k, received), on_wire::workspace(k + 1, received)],
+            ),
+            next_page_token: states::present(states::plain(k, states::text("next_page_token", k))),
+            total: states::present(states::plain(k, states::number(3, k))),
+            holding_project: states::many(
+                k,
+                [
+                    states::text("holding_project", k),
+                    states::text("holding_project", k + 1),
+                ],
+            ),
+            incomplete: states::present(states::flag(1, k)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn workspace(k: usize, received: bool) -> wire::Workspace {
+        let mut message = wire::Workspace {
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            name: states::present(states::plain(k, states::text("name", k))),
+            status: states::set(on_wire::workspace_status(k + 2)),
+            location: states::present(states::plain(k, states::text("location", k))),
+            plan: states::present(states::plain(k, states::text("plan", k))),
+            cpu_total_cores: states::present(states::plain(k, f64::from(states::number(6, k)) + 0.5)),
+            memory_total_bytes: states::present(states::plain(k, u64::from(states::number(7, k)) << 44)),
+            memory_free_bytes: states::marked(k, u64::from(states::number(8, k)) << 44),
+            disk_total_bytes: states::present(states::plain(k, u64::from(states::number(9, k)) << 44)),
+            disk_free_bytes: states::marked(k, u64::from(states::number(10, k)) << 44),
+            project_count: states::marked(k, states::number(11, k)),
+            hostname: states::present(states::plain(k, states::text("hostname", k))),
+            apps_domain: states::present(states::plain(k, states::text("apps_domain", k))),
+            end_time: states::maybe(k, states::time_on_wire(states::number(14, k + 13))).into(),
+            role: states::set(on_wire::workspace_role(k + 14)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
     pub fn get_machine_request(k: usize, received: bool) -> wire::GetMachineRequest {
-        let mut message = wire::GetMachineRequest { ..Default::default() };
+        let mut message = wire::GetMachineRequest {
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
+            ..Default::default()
+        };
         if received && k % 2 == 1 {
             message.__buffa_unknown_fields.push(states::later_field());
         }
@@ -2526,6 +2789,7 @@ mod on_wire {
                 ],
             ),
             github: states::maybe(k, on_wire::github_connection(k + 3, received)).into(),
+            workspace: states::maybe(k, on_wire::workspace(k + 4, received)).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2698,6 +2962,20 @@ mod on_wire {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             newest_snapshot: states::maybe(k, on_wire::snapshot(k + 1, received)).into(),
             snapshot_count: states::present(states::plain(k, states::number(3, k))),
+            moved_to: states::maybe(k, on_wire::moved_to(k + 3, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn moved_to(k: usize, received: bool) -> wire::MovedTo {
+        let mut message = wire::MovedTo {
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            workspace_name: states::present(states::plain(k, states::text("workspace_name", k))),
+            move_time: states::maybe(k, states::time_on_wire(states::number(3, k + 2))).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2746,6 +3024,7 @@ mod on_wire {
                     Default::default(),
                 )),
             },
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2826,6 +3105,7 @@ mod on_wire {
             pinned: states::present(states::flag(1, k)),
             disk_used_bytes: states::present(states::plain(k, u64::from(states::number(13, k)) << 44)),
             database: states::maybe(k, on_wire::database_summary(k + 13, received)).into(),
+            uid: states::present(states::plain(k, states::text("uid", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2871,6 +3151,7 @@ mod on_wire {
             incidents_before: states::maybe(k, states::time_on_wire(states::number(5, k + 4))).into(),
             uptime_day_count: states::present(states::plain(k, states::number(6, k))),
             incidents_before_id: states::present(states::plain(k, states::text("incidents_before_id", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2956,6 +3237,28 @@ mod on_wire {
                     states::text("linked_databases", k + 1),
                 ],
             ),
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            uid: states::present(states::plain(k, states::text("uid", k))),
+            dependencies: states::many(
+                k,
+                [
+                    on_wire::project_dependency(k + 30, received),
+                    on_wire::project_dependency(k + 31, received),
+                ],
+            ),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn project_dependency(k: usize, received: bool) -> wire::ProjectDependency {
+        let mut message = wire::ProjectDependency {
+            database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
+            copy_database: states::present(states::plain(k, states::text("copy_database", k))),
+            env_prefix: states::present(states::plain(k, states::text("env_prefix", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3302,6 +3605,7 @@ mod on_wire {
                     on_wire::database_link_request(k + 9, received),
                 ],
             ),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3393,6 +3697,7 @@ mod on_wire {
                 )),
             },
             wait_seconds: states::marked(k, states::number(13, k)),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3503,10 +3808,60 @@ mod on_wire {
         message
     }
 
+    pub fn move_project_request(k: usize, received: bool) -> wire::MoveProjectRequest {
+        let mut message = wire::MoveProjectRequest {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            to_workspace: states::present(states::plain(k, states::text("to_workspace", k))),
+            operation_id: states::present(states::plain(k, states::text("operation_id", k))),
+            wait_seconds: states::marked(k, states::number(5, k)),
+            switch_databases: states::many(
+                k,
+                [
+                    on_wire::database_switch(k + 4, received),
+                    on_wire::database_switch(k + 5, received),
+                ],
+            ),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn database_switch(k: usize, received: bool) -> wire::DatabaseSwitch {
+        let mut message = wire::DatabaseSwitch {
+            database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
+            into_database_project_id: states::present(states::plain(k, states::text("into_database_project_id", k))),
+            empty: states::present(states::flag(1, k)),
+            env_prefix: states::present(states::plain(k, states::text("env_prefix", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn move_project_response(k: usize, received: bool) -> wire::MoveProjectResponse {
+        let mut message = wire::MoveProjectResponse {
+            operation: states::maybe(k, on_wire::operation(k, received)).into(),
+            project: states::maybe(k, on_wire::project(k + 1, received)).into(),
+            move_message: states::present(states::plain(k, states::text("move_message", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
     pub fn list_commits_request(k: usize, received: bool) -> wire::ListCommitsRequest {
         let mut message = wire::ListCommitsRequest {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             before_commit: states::present(states::plain(k, states::text("before_commit", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3633,6 +3988,7 @@ mod on_wire {
             },
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(13, k)),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3861,6 +4217,7 @@ mod on_wire {
             database_project_id: states::present(states::plain(k, states::text("database_project_id", k))),
             link: states::many(k, [states::text("link", k), states::text("link", k + 1)]),
             unlink: states::many(k, [states::text("unlink", k), states::text("unlink", k + 1)]),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3890,6 +4247,7 @@ mod on_wire {
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
             wait_seconds: states::marked(k, states::number(7, k)),
             metadata: states::maybe(k, on_wire::project_metadata(k + 7, received)).into(),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3946,6 +4304,7 @@ mod on_wire {
             remove_traffic_rules: states::present(states::flag(2, k)),
             off: states::marked(k, true),
             mute_minutes: states::marked(k, states::number(7, k)),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4133,6 +4492,7 @@ mod on_wire {
             wait_seconds: states::marked(k, states::number(3, k)),
             after_log_line: states::marked(k, states::number(4, k)),
             log_line_limit: states::marked(k, states::number(5, k)),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4154,6 +4514,7 @@ mod on_wire {
             ),
             log_line_count: states::present(states::plain(k, states::number(3, k))),
             next_after_log_line: states::present(states::plain(k, states::number(4, k))),
+            move_message: states::present(states::plain(k, states::text("move_message", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4199,6 +4560,7 @@ mod on_wire {
             bucket_width_seconds: states::present(states::plain(k, states::number(5, k))),
             request_limit: states::present(states::plain(k, states::number(6, k))),
             page_token: states::present(states::plain(k, states::text("page_token", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4318,6 +4680,7 @@ mod on_wire {
             limit: states::present(states::plain(k, states::number(5, k))),
             from_start: states::present(states::flag(1, k)),
             page_token: states::present(states::plain(k, states::text("page_token", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4368,6 +4731,7 @@ mod on_wire {
             run_as_user: states::present(states::plain(k, states::text("run_as_user", k))),
             working_directory: states::present(states::plain(k, states::text("working_directory", k))),
             timeout_seconds: states::present(states::plain(k, states::number(7, k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4430,6 +4794,7 @@ mod on_wire {
             offset_bytes: states::present(states::plain(k, u64::from(states::number(7, k)) << 44)),
             length_bytes: states::present(states::plain(k, states::number(8, k))),
             entry_page_token: states::present(states::plain(k, states::text("entry_page_token", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4495,6 +4860,7 @@ mod on_wire {
                     Some(wire::__buffa::oneof::create_transfer_request::Transfer::DownloadDatabase(Default::default()))
                 }
             },
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4657,6 +5023,56 @@ mod on_wire {
         let mut message = wire::NoMachine {
             reason: states::set(on_wire::no_machine_reason(k)),
             url: states::present(states::plain(k, states::text("url", k))),
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn workspace_choice(k: usize, received: bool) -> wire::WorkspaceChoice {
+        let mut message = wire::WorkspaceChoice {
+            workspaces: states::many(
+                k,
+                [on_wire::workspace(k, received), on_wire::workspace(k + 1, received)],
+            ),
+            total: states::present(states::plain(k, states::number(2, k))),
+            holding_project: states::many(
+                k,
+                [
+                    states::text("holding_project", k),
+                    states::text("holding_project", k + 1),
+                ],
+            ),
+            incomplete: states::present(states::flag(1, k)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn workspace_not_granted(k: usize, received: bool) -> wire::WorkspaceNotGranted {
+        let mut message = wire::WorkspaceNotGranted {
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            url: states::present(states::plain(k, states::text("url", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn project_moved(k: usize, received: bool) -> wire::ProjectMoved {
+        let mut message = wire::ProjectMoved {
+            project_id: states::present(states::plain(k, states::text("project_id", k))),
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            workspace_name: states::present(states::plain(k, states::text("workspace_name", k))),
+            move_time: states::maybe(k, states::time_on_wire(states::number(4, k + 3))).into(),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4669,6 +5085,7 @@ mod on_wire {
         let mut message = wire::WatchOperationRequest {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             operation_id: states::present(states::plain(k, states::text("operation_id", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4696,6 +5113,7 @@ mod on_wire {
                     Some(wire::__buffa::oneof::watch_operation_response::Message::FinishedOperation(Default::default()))
                 }
             },
+            move_message: states::present(states::plain(k, states::text("move_message", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4709,6 +5127,7 @@ mod on_wire {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             filter: states::maybe(k, on_wire::container_log_filter(k + 1, received)).into(),
             after_cursor: states::present(states::plain(k, states::text("after_cursor", k))),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4734,6 +5153,7 @@ mod on_wire {
             project_id: states::present(states::plain(k, states::text("project_id", k))),
             filter: states::maybe(k, on_wire::http_traffic_filter(k + 1, received)).into(),
             after_sequence: states::present(states::plain(k, u64::from(states::number(3, k)) << 44)),
+            workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -4755,6 +5175,25 @@ mod on_wire {
 }
 
 // ── Every message, each way it goes ──────────────────────────────────────────
+
+#[tokio::test]
+async fn list_workspaces_request_is_sent() {
+    for k in 0..2 {
+        let request = samples::list_workspaces_request(k, true);
+        let expected = on_wire::list_workspaces_request(k, false);
+
+        let answer = ok(&wire::ListWorkspacesResponse::default());
+        let call = |client: Client| async move { client.list_workspaces(request).await };
+        let (sent, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::ListWorkspacesResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
 
 #[tokio::test]
 async fn get_machine_request_is_sent() {
@@ -4832,6 +5271,21 @@ async fn deploy_project_request_is_sent() {
 
         assert_eq!(sent, expected, "at k = {k}");
         assert_eq!(response.unwrap(), types::DeployProjectResponse::default(), "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn move_project_request_is_sent() {
+    for k in 0..3 {
+        let request = samples::move_project_request(k, true);
+        let expected = on_wire::move_project_request(k, false);
+
+        let answer = ok(&wire::MoveProjectResponse::default());
+        let call = |client: Client| async move { client.move_project(request).await };
+        let (sent, response): (wire::MoveProjectRequest, _) = exchange("MoveProject", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(response.unwrap(), types::MoveProjectResponse::default(), "at k = {k}");
     }
 }
 
@@ -5233,6 +5687,25 @@ async fn mount_volume_is_sent() {
 
         assert_eq!(sent, expected, "at k = {k}");
         assert_eq!(response.unwrap(), types::DeployProjectResponse::default(), "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn database_switch_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::MoveProjectRequest| {
+            message.switch_databases = vec![samples::database_switch(k, true)]
+        });
+        let expected = states::make(|message: &mut wire::MoveProjectRequest| {
+            message.switch_databases = vec![on_wire::database_switch(k, false)]
+        });
+
+        let answer = ok(&wire::MoveProjectResponse::default());
+        let call = |client: Client| async move { client.move_project(request).await };
+        let (sent, response): (wire::MoveProjectRequest, _) = exchange("MoveProject", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(response.unwrap(), types::MoveProjectResponse::default(), "at k = {k}");
     }
 }
 
@@ -5739,6 +6212,20 @@ async fn github_commit_is_sent() {
 }
 
 #[tokio::test]
+async fn list_workspaces_response_is_received() {
+    for k in 0..2 {
+        let answer = ok(&on_wire::list_workspaces_response(k, true));
+        let expected = samples::list_workspaces_response(k, true);
+
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn get_machine_response_is_received() {
     for k in 0..2 {
         let answer = ok(&on_wire::get_machine_response(k, true));
@@ -5802,6 +6289,19 @@ async fn deploy_project_response_is_received() {
 
         let call = |client: Client| async move { client.deploy_project(types::DeployProjectRequest::default()).await };
         let (_, response): (wire::DeployProjectRequest, _) = exchange("DeployProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn move_project_response_is_received() {
+    for k in 0..2 {
+        let answer = ok(&on_wire::move_project_response(k, true));
+        let expected = samples::move_project_response(k, true);
+
+        let call = |client: Client| async move { client.move_project(types::MoveProjectRequest::default()).await };
+        let (_, response): (wire::MoveProjectRequest, _) = exchange("MoveProject", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -6019,7 +6519,7 @@ async fn tail_http_traffic_response_is_received() {
 
 #[tokio::test]
 async fn project_busy_is_received() {
-    for k in 0..7 {
+    for k in 0..8 {
         let detail = on_wire::project_busy(k, true).encode_to_vec();
         let expected = ErrorDetail::ProjectBusy(samples::project_busy(k, true));
 
@@ -6029,8 +6529,9 @@ async fn project_busy_is_received() {
             &[("pethost.panel.v1.ProjectBusy", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
     }
@@ -6048,8 +6549,9 @@ async fn project_changed_is_received() {
             &[("pethost.panel.v1.ProjectChanged", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
     }
@@ -6067,8 +6569,9 @@ async fn machine_unreachable_is_received() {
             &[("pethost.panel.v1.MachineUnreachable", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
     }
@@ -6086,8 +6589,9 @@ async fn database_link_refusal_is_received() {
             &[("pethost.panel.v1.DatabaseLinkRefusal", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
     }
@@ -6105,8 +6609,9 @@ async fn database_size_refusal_is_received() {
             &[("pethost.panel.v1.DatabaseSizeRefusal", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
     }
@@ -6124,10 +6629,89 @@ async fn no_machine_is_received() {
             &[("pethost.panel.v1.NoMachine", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
-        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
 
         assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn workspace_choice_is_received() {
+    for k in 0..2 {
+        let detail = on_wire::workspace_choice(k, true).encode_to_vec();
+        let expected = ErrorDetail::WorkspaceChoice(samples::workspace_choice(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.WorkspaceChoice", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn workspace_not_granted_is_received() {
+    for k in 0..2 {
+        let detail = on_wire::workspace_not_granted(k, true).encode_to_vec();
+        let expected = ErrorDetail::WorkspaceNotGranted(samples::workspace_not_granted(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.WorkspaceNotGranted", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn project_moved_is_received() {
+    for k in 0..2 {
+        let detail = on_wire::project_moved(k, true).encode_to_vec();
+        let expected = ErrorDetail::ProjectMoved(samples::project_moved(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.ProjectMoved", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn workspace_is_received() {
+    for k in 0..4 {
+        let answer = ok(&states::make(|message: &mut wire::ListWorkspacesResponse| {
+            message.workspaces = vec![on_wire::workspace(k, true)]
+        }));
+        let expected = states::make(|message: &mut types::ListWorkspacesResponse| {
+            message.workspaces = vec![samples::workspace(k, true)]
+        });
+
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
 }
 
@@ -6640,6 +7224,27 @@ async fn snapshot_is_received() {
 }
 
 #[tokio::test]
+async fn moved_to_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
+            message.deleted_projects = vec![states::make(|message: &mut wire::DeletedProject| {
+                message.moved_to = Some(on_wire::moved_to(k, true)).into()
+            })]
+        }));
+        let expected = states::make(|message: &mut types::GetMachineResponse| {
+            message.deleted_projects = vec![states::make(|message: &mut types::DeletedProject| {
+                message.moved_to = Some(samples::moved_to(k, true))
+            })]
+        });
+
+        let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
+        let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
 async fn github_repository_is_received() {
     for k in 0..2 {
         let answer = ok(&states::make(|message: &mut wire::GetMachineResponse| {
@@ -6849,6 +7454,28 @@ async fn database_is_received() {
         let expected = states::make(|message: &mut types::GetProjectResponse| {
             message.project = Some(states::make(|message: &mut types::Project| {
                 message.database = Some(samples::database(k, true))
+            }))
+        });
+
+        let call = |client: Client| async move { client.get_project(types::GetProjectRequest::default()).await };
+        let (_, response): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(response.unwrap(), expected, "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn project_dependency_is_received() {
+    for k in 0..2 {
+        let answer = ok(&states::make(|message: &mut wire::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut wire::Project| {
+                message.dependencies = vec![on_wire::project_dependency(k, true)]
+            }))
+            .into()
+        }));
+        let expected = states::make(|message: &mut types::GetProjectResponse| {
+            message.project = Some(states::make(|message: &mut types::Project| {
+                message.dependencies = vec![samples::project_dependency(k, true)]
             }))
         });
 
@@ -7284,6 +7911,387 @@ async fn http_traffic_filter_is_received() {
     }
 }
 
+// ── The client's workspace ───────────────────────────────────────────────────
+
+#[tokio::test]
+async fn get_machine_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::GetMachineRequest {
+            workspace: given.to_owned(),
+        };
+
+        let answer = ok(&wire::GetMachineResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.get_machine(request).await
+        };
+        let (got, _): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn run_machine_action_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::RunMachineActionRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::RunMachineActionResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.run_machine_action(request).await
+        };
+        let (got, _): (wire::RunMachineActionRequest, _) = exchange("RunMachineAction", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn get_project_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::GetProjectRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::GetProjectResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.get_project(request).await
+        };
+        let (got, _): (wire::GetProjectRequest, _) = exchange("GetProject", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn create_project_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::CreateProjectRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::CreateProjectResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.create_project(request).await
+        };
+        let (got, _): (wire::CreateProjectRequest, _) = exchange("CreateProject", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn deploy_project_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::DeployProjectRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::DeployProjectResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.deploy_project(request).await
+        };
+        let (got, _): (wire::DeployProjectRequest, _) = exchange("DeployProject", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn move_project_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::MoveProjectRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::MoveProjectResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.move_project(request).await
+        };
+        let (got, _): (wire::MoveProjectRequest, _) = exchange("MoveProject", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn list_commits_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::ListCommitsRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::ListCommitsResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.list_commits(request).await
+        };
+        let (got, _): (wire::ListCommitsRequest, _) = exchange("ListCommits", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn run_project_action_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::RunProjectActionRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::RunProjectActionResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.run_project_action(request).await
+        };
+        let (got, _): (wire::RunProjectActionRequest, _) = exchange("RunProjectAction", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn set_project_alerts_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::SetProjectAlertsRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::SetProjectAlertsResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.set_project_alerts(request).await
+        };
+        let (got, _): (wire::SetProjectAlertsRequest, _) = exchange("SetProjectAlerts", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn get_operation_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::GetOperationRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::GetOperationResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.get_operation(request).await
+        };
+        let (got, _): (wire::GetOperationRequest, _) = exchange("GetOperation", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn query_http_traffic_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::QueryHttpTrafficRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::QueryHttpTrafficResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.query_http_traffic(request).await
+        };
+        let (got, _): (wire::QueryHttpTrafficRequest, _) = exchange("QueryHttpTraffic", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn query_container_logs_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::QueryContainerLogsRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::QueryContainerLogsResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.query_container_logs(request).await
+        };
+        let (got, _): (wire::QueryContainerLogsRequest, _) = exchange("QueryContainerLogs", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn create_database_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::CreateDatabaseRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::CreateDatabaseResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.create_database(request).await
+        };
+        let (got, _): (wire::CreateDatabaseRequest, _) = exchange("CreateDatabase", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn link_database_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::LinkDatabaseRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::LinkDatabaseResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.link_database(request).await
+        };
+        let (got, _): (wire::LinkDatabaseRequest, _) = exchange("LinkDatabase", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn run_service_command_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::RunServiceCommandRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::RunServiceCommandResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.run_service_command(request).await
+        };
+        let (got, _): (wire::RunServiceCommandRequest, _) = exchange("RunServiceCommand", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn read_path_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::ReadPathRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::ReadPathResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.read_path(request).await
+        };
+        let (got, _): (wire::ReadPathRequest, _) = exchange("ReadPath", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn create_transfer_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::CreateTransferRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = ok(&wire::CreateTransferResponse::default());
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            client.create_transfer(request).await
+        };
+        let (got, _): (wire::CreateTransferRequest, _) = exchange("CreateTransfer", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn watch_operation_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::WatchOperationRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = streamed(&[wire::WatchOperationResponse::default()], End::Clean);
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            first(client.watch_operation(request)).await
+        };
+        let (got, _): (wire::WatchOperationRequest, _) = exchange("WatchOperation", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn tail_container_logs_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::TailContainerLogsRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = streamed(&[wire::TailContainerLogsResponse::default()], End::Clean);
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            first(client.tail_container_logs(request)).await
+        };
+        let (got, _): (wire::TailContainerLogsRequest, _) = exchange("TailContainerLogs", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
+#[tokio::test]
+async fn tail_http_traffic_sends_the_clients_workspace_where_the_request_names_none() {
+    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
+        let request = types::TailHttpTrafficRequest {
+            workspace: given.to_owned(),
+            ..Default::default()
+        };
+
+        let answer = streamed(&[wire::TailHttpTrafficResponse::default()], End::Clean);
+        let call = |client: Client| async move {
+            let client = client.with_workspace("the client's");
+            first(client.tail_http_traffic(request)).await
+        };
+        let (got, _): (wire::TailHttpTrafficRequest, _) = exchange("TailHttpTraffic", answer, call).await;
+
+        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
+    }
+}
+
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
 /// A field no message of the API has, and an enum's name no enum of it has.
@@ -7404,6 +8412,22 @@ where
 }
 
 #[test]
+fn workspace_status_is_json() {
+    let names = [
+        "WORKSPACE_STATUS_UNSPECIFIED",
+        "WORKSPACE_STATUS_READY",
+        "WORKSPACE_STATUS_BEING_PREPARED",
+    ];
+    an_enum_is_json(&names, 3, samples::workspace_status);
+}
+
+#[test]
+fn workspace_role_is_json() {
+    let names = ["WORKSPACE_ROLE_UNSPECIFIED", "WORKSPACE_ROLE_OWNER"];
+    an_enum_is_json(&names, 2, samples::workspace_role);
+}
+
+#[test]
 fn alert_channel_kind_is_json() {
     let names = [
         "ALERT_CHANNEL_KIND_UNSPECIFIED",
@@ -7520,8 +8544,9 @@ fn operation_kind_is_json() {
         "OPERATION_KIND_BACKUP",
         "OPERATION_KIND_RESTORE",
         "OPERATION_KIND_DELETE",
+        "OPERATION_KIND_MOVE",
     ];
-    an_enum_is_json(&names, 6, samples::operation_kind);
+    an_enum_is_json(&names, 7, samples::operation_kind);
 }
 
 #[test]
@@ -7671,14 +8696,64 @@ fn no_machine_reason_is_json() {
 }
 
 #[test]
+fn list_workspaces_request_is_json() {
+    let names = ["project_id", "page_token"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::list_workspaces_request,
+        on_wire::list_workspaces_request,
+    );
+}
+
+#[test]
+fn list_workspaces_response_is_json() {
+    let names = [
+        "workspaces",
+        "next_page_token",
+        "total",
+        "holding_project",
+        "incomplete",
+    ];
+    a_message_is_json(
+        2,
+        &names,
+        samples::list_workspaces_response,
+        on_wire::list_workspaces_response,
+    );
+}
+
+#[test]
+fn workspace_is_json() {
+    let names = [
+        "workspace_id",
+        "name",
+        "status",
+        "location",
+        "plan",
+        "cpu_total_cores",
+        "memory_total_bytes",
+        "memory_free_bytes",
+        "disk_total_bytes",
+        "disk_free_bytes",
+        "project_count",
+        "hostname",
+        "apps_domain",
+        "end_time",
+        "role",
+    ];
+    a_message_is_json(4, &names, samples::workspace, on_wire::workspace);
+}
+
+#[test]
 fn get_machine_request_is_json() {
-    let names = [];
+    let names = ["workspace"];
     a_message_is_json(2, &names, samples::get_machine_request, on_wire::get_machine_request);
 }
 
 #[test]
 fn get_machine_response_is_json() {
-    let names = ["machine", "projects", "deleted_projects", "github"];
+    let names = ["machine", "projects", "deleted_projects", "github", "workspace"];
     a_message_is_json(2, &names, samples::get_machine_response, on_wire::get_machine_response);
 }
 
@@ -7780,8 +8855,14 @@ fn github_repository_is_json() {
 
 #[test]
 fn deleted_project_is_json() {
-    let names = ["project_id", "newest_snapshot", "snapshot_count"];
+    let names = ["project_id", "newest_snapshot", "snapshot_count", "moved_to"];
     a_message_is_json(2, &names, samples::deleted_project, on_wire::deleted_project);
+}
+
+#[test]
+fn moved_to_is_json() {
+    let names = ["workspace_id", "workspace_name", "move_time"];
+    a_message_is_json(2, &names, samples::moved_to, on_wire::moved_to);
 }
 
 #[test]
@@ -7792,6 +8873,7 @@ fn run_machine_action_request_is_json() {
         "restart_machine",
         "cancel_restart",
         "end_session_id",
+        "workspace",
     ];
     a_message_is_json(
         12,
@@ -7846,6 +8928,7 @@ fn project_summary_is_json() {
         "pinned",
         "disk_used_bytes",
         "database",
+        "uid",
     ];
     a_message_is_json(2, &names, samples::project_summary, on_wire::project_summary);
 }
@@ -7879,6 +8962,7 @@ fn get_project_request_is_json() {
         "incidents_before",
         "uptime_day_count",
         "incidents_before_id",
+        "workspace",
     ];
     a_message_is_json(2, &names, samples::get_project_request, on_wire::get_project_request);
 }
@@ -7920,8 +9004,17 @@ fn project_is_json() {
         "uptime_days",
         "database",
         "linked_databases",
+        "workspace_id",
+        "uid",
+        "dependencies",
     ];
     a_message_is_json(6, &names, samples::project, on_wire::project);
+}
+
+#[test]
+fn project_dependency_is_json() {
+    let names = ["database_project_id", "copy_database", "env_prefix"];
+    a_message_is_json(2, &names, samples::project_dependency, on_wire::project_dependency);
 }
 
 #[test]
@@ -8130,6 +9223,7 @@ fn create_project_request_is_json() {
         "operation_id",
         "wait_seconds",
         "link_databases",
+        "workspace",
     ];
     a_message_is_json(
         3,
@@ -8176,6 +9270,7 @@ fn deploy_project_request_is_json() {
         "newest_commit",
         "rollback_deploy_id",
         "wait_seconds",
+        "workspace",
     ];
     a_message_is_json(
         10,
@@ -8230,8 +9325,38 @@ fn spec_violation_is_json() {
 }
 
 #[test]
+fn move_project_request_is_json() {
+    let names = [
+        "project_id",
+        "to_workspace",
+        "operation_id",
+        "wait_seconds",
+        "switch_databases",
+        "workspace",
+    ];
+    a_message_is_json(3, &names, samples::move_project_request, on_wire::move_project_request);
+}
+
+#[test]
+fn database_switch_is_json() {
+    let names = ["database_project_id", "into_database_project_id", "empty", "env_prefix"];
+    a_message_is_json(2, &names, samples::database_switch, on_wire::database_switch);
+}
+
+#[test]
+fn move_project_response_is_json() {
+    let names = ["operation", "project", "move_message"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::move_project_response,
+        on_wire::move_project_response,
+    );
+}
+
+#[test]
 fn list_commits_request_is_json() {
-    let names = ["project_id", "before_commit"];
+    let names = ["project_id", "before_commit", "workspace"];
     a_message_is_json(2, &names, samples::list_commits_request, on_wire::list_commits_request);
 }
 
@@ -8269,6 +9394,7 @@ fn run_project_action_request_is_json() {
         "set_database_size",
         "operation_id",
         "wait_seconds",
+        "workspace",
     ];
     a_message_is_json(
         24,
@@ -8422,7 +9548,7 @@ fn database_size_choice_is_json() {
 
 #[test]
 fn link_database_request_is_json() {
-    let names = ["database_project_id", "link", "unlink"];
+    let names = ["database_project_id", "link", "unlink", "workspace"];
     a_message_is_json(
         2,
         &names,
@@ -8453,6 +9579,7 @@ fn create_database_request_is_json() {
         "operation_id",
         "wait_seconds",
         "metadata",
+        "workspace",
     ];
     a_message_is_json(
         5,
@@ -8483,6 +9610,7 @@ fn set_project_alerts_request_is_json() {
         "remove_traffic_rules",
         "off",
         "mute_minutes",
+        "workspace",
     ];
     a_message_is_json(
         3,
@@ -8598,6 +9726,7 @@ fn get_operation_request_is_json() {
         "wait_seconds",
         "after_log_line",
         "log_line_limit",
+        "workspace",
     ];
     a_message_is_json(
         3,
@@ -8609,7 +9738,14 @@ fn get_operation_request_is_json() {
 
 #[test]
 fn get_operation_response_is_json() {
-    let names = ["operation", "project", "log", "log_line_count", "next_after_log_line"];
+    let names = [
+        "operation",
+        "project",
+        "log",
+        "log_line_count",
+        "next_after_log_line",
+        "move_message",
+    ];
     a_message_is_json(
         2,
         &names,
@@ -8641,6 +9777,7 @@ fn query_http_traffic_request_is_json() {
         "bucket_width_seconds",
         "request_limit",
         "page_token",
+        "workspace",
     ];
     a_message_is_json(
         2,
@@ -8723,6 +9860,7 @@ fn query_container_logs_request_is_json() {
         "limit",
         "from_start",
         "page_token",
+        "workspace",
     ];
     a_message_is_json(
         2,
@@ -8766,6 +9904,7 @@ fn run_service_command_request_is_json() {
         "run_as_user",
         "working_directory",
         "timeout_seconds",
+        "workspace",
     ];
     a_message_is_json(
         2,
@@ -8812,6 +9951,7 @@ fn read_path_request_is_json() {
         "offset_bytes",
         "length_bytes",
         "entry_page_token",
+        "workspace",
     ];
     a_message_is_json(6, &names, samples::read_path_request, on_wire::read_path_request);
 }
@@ -8835,7 +9975,13 @@ fn read_path_response_is_json() {
 
 #[test]
 fn create_transfer_request_is_json() {
-    let names = ["upload_archive", "upload_file", "download", "download_database"];
+    let names = [
+        "upload_archive",
+        "upload_file",
+        "download",
+        "download_database",
+        "workspace",
+    ];
     a_message_is_json(
         10,
         &names,
@@ -8891,7 +10037,7 @@ fn create_transfer_response_is_json() {
 #[test]
 fn project_busy_is_json() {
     let names = ["operation_id", "kind", "start_time"];
-    a_message_is_json(7, &names, samples::project_busy, on_wire::project_busy);
+    a_message_is_json(8, &names, samples::project_busy, on_wire::project_busy);
 }
 
 #[test]
@@ -8930,13 +10076,36 @@ fn database_size_refusal_is_json() {
 
 #[test]
 fn no_machine_is_json() {
-    let names = ["reason", "url"];
+    let names = ["reason", "url", "workspace_id"];
     a_message_is_json(4, &names, samples::no_machine, on_wire::no_machine);
 }
 
 #[test]
+fn workspace_choice_is_json() {
+    let names = ["workspaces", "total", "holding_project", "incomplete"];
+    a_message_is_json(2, &names, samples::workspace_choice, on_wire::workspace_choice);
+}
+
+#[test]
+fn workspace_not_granted_is_json() {
+    let names = ["workspace_id", "url"];
+    a_message_is_json(
+        2,
+        &names,
+        samples::workspace_not_granted,
+        on_wire::workspace_not_granted,
+    );
+}
+
+#[test]
+fn project_moved_is_json() {
+    let names = ["project_id", "workspace_id", "workspace_name", "move_time"];
+    a_message_is_json(2, &names, samples::project_moved, on_wire::project_moved);
+}
+
+#[test]
 fn watch_operation_request_is_json() {
-    let names = ["project_id", "operation_id"];
+    let names = ["project_id", "operation_id", "workspace"];
     a_message_is_json(
         2,
         &names,
@@ -8947,7 +10116,7 @@ fn watch_operation_request_is_json() {
 
 #[test]
 fn watch_operation_response_is_json() {
-    let names = ["log", "finished_operation"];
+    let names = ["log", "finished_operation", "move_message"];
     a_message_is_json(
         6,
         &names,
@@ -8958,7 +10127,7 @@ fn watch_operation_response_is_json() {
 
 #[test]
 fn tail_container_logs_request_is_json() {
-    let names = ["project_id", "filter", "after_cursor"];
+    let names = ["project_id", "filter", "after_cursor", "workspace"];
     a_message_is_json(
         2,
         &names,
@@ -8980,7 +10149,7 @@ fn tail_container_logs_response_is_json() {
 
 #[test]
 fn tail_http_traffic_request_is_json() {
-    let names = ["project_id", "filter", "after_sequence"];
+    let names = ["project_id", "filter", "after_sequence", "workspace"];
     a_message_is_json(
         2,
         &names,
@@ -9203,8 +10372,8 @@ async fn tail_http_traffic_is_a_stream() {
 
 /// A call that fails as the fake says.
 async fn failed(answer: Answer) -> Error {
-    let call = |client: Client| async move { client.get_machine(types::GetMachineRequest::default()).await };
-    let (_, response): (wire::GetMachineRequest, _) = exchange("GetMachine", answer, call).await;
+    let call = |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+    let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
     response.unwrap_err()
 }
 
@@ -9259,7 +10428,7 @@ async fn a_detail_is_read_with_padding_and_without() {
     for length in 0..3 {
         let mut detail = wire::ProjectBusy::default();
         detail.__buffa_unknown_fields.push(buffa::UnknownField {
-            number: 30,
+            number: 101,
             data: buffa::UnknownFieldData::LengthDelimited(vec![0; length]),
         });
         let detail = detail.encode_to_vec();
@@ -9285,7 +10454,7 @@ async fn a_call_that_reaches_nothing_is_unavailable() {
 
     let client = Client::with_base_url(TOKEN, &format!("http://{address}")).unwrap();
     let error = client
-        .get_machine(types::GetMachineRequest::default())
+        .list_workspaces(types::ListWorkspacesRequest::default())
         .await
         .unwrap_err();
 
@@ -9303,7 +10472,7 @@ async fn a_call_given_up_ends() {
 
     let fake = tokio::spawn(take(listener));
 
-    let mut call = Box::pin(async { client.get_machine(types::GetMachineRequest::default()).await });
+    let mut call = Box::pin(async { client.list_workspaces(types::ListWorkspacesRequest::default()).await });
     let taken = tokio::select! {
         taken = fake => taken.unwrap(),
         response = &mut call => panic!("the fake said nothing, and the call returned {response:?}"),
@@ -9345,7 +10514,7 @@ async fn a_client_and_its_calls_cross_threads() {
     shared::<Error>();
 
     let client = Client::new(TOKEN);
-    sent(&async { client.get_machine(types::GetMachineRequest::default()).await });
+    sent(&async { client.list_workspaces(types::ListWorkspacesRequest::default()).await });
 
     let mut responses = client.watch_operation(types::WatchOperationRequest::default());
     stream(&responses);

@@ -17,25 +17,285 @@ if TYPE_CHECKING:
     from protobuf.wkt.google.protobuf.timestamp_pb import Timestamp
 
 
-_GetMachineRequestFields: TypeAlias = NoReturn
+_ListWorkspacesRequestFields: TypeAlias = Literal["project_id", "page_token"]
+
+class ListWorkspacesRequest(Message[_ListWorkspacesRequestFields]):
+    """
+    ```proto
+    message pethost.panel.v1.ListWorkspacesRequest
+    ```
+
+    Attributes:
+        project_id:
+            A project_id: holding_project then says which workspaces have a project of that id.
+
+            ```proto
+            optional string project_id = 1;
+            ```
+        page_token:
+            A next_page_token. Empty = the first page.
+
+            ```proto
+            optional string page_token = 2;
+            ```
+    """
+
+    __slots__ = ("project_id", "page_token")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            project_id: str | None = None,
+            page_token: str | None = None,
+        ) -> None:
+            pass
+
+        project_id: str
+        page_token: str
+
+_ListWorkspacesResponseFields: TypeAlias = Literal["workspaces", "next_page_token", "total", "holding_project", "incomplete"]
+
+class ListWorkspacesResponse(Message[_ListWorkspacesResponseFields]):
+    """
+    ```proto
+    message pethost.panel.v1.ListWorkspacesResponse
+    ```
+
+    Attributes:
+        workspaces:
+            By name.
+
+            ```proto
+            repeated pethost.panel.v1.Workspace workspaces = 1;
+            ```
+        next_page_token:
+            Empty = the last page.
+
+            ```proto
+            optional string next_page_token = 2;
+            ```
+        total:
+            Workspaces in all, on every page.
+
+            ```proto
+            optional uint32 total = 3;
+            ```
+        holding_project:
+            With project_id: the workspaces that have a project of that id, by workspace_id. Empty =
+            none of those that answered (see incomplete).
+
+            ```proto
+            repeated string holding_project = 4;
+            ```
+        incomplete:
+            True = a machine did not answer in time: its free figures and project count are absent, and
+            holding_project may lack it.
+
+            ```proto
+            optional bool incomplete = 5;
+            ```
+    """
+
+    __slots__ = ("workspaces", "next_page_token", "total", "holding_project", "incomplete")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            workspaces: list[Workspace] | None = None,
+            next_page_token: str | None = None,
+            total: int | None = None,
+            holding_project: list[str] | None = None,
+            incomplete: bool | None = None,
+        ) -> None:
+            pass
+
+        workspaces: list[Workspace]
+        next_page_token: str
+        total: int
+        holding_project: list[str]
+        incomplete: bool
+
+_WorkspaceFields: TypeAlias = Literal["workspace_id", "name", "status", "location", "plan", "cpu_total_cores", "memory_total_bytes", "memory_free_bytes", "disk_total_bytes", "disk_free_bytes", "project_count", "hostname", "apps_domain", "end_time", "role"]
+
+class Workspace(Message[_WorkspaceFields]):
+    """
+    What one plan buys: a machine of the plan's size, its apps domain and its backups, and the
+    projects on it. A call names it as `workspace`, by workspace_id or name.
+
+    ```proto
+    message pethost.panel.v1.Workspace
+    ```
+
+    Attributes:
+        workspace_id:
+            8 characters of a-z and 2-7, e.g. "k7f3q2xy": what to keep, since it never changes and is
+            never another workspace's.
+
+            ```proto
+            optional string workspace_id = 1;
+            ```
+        name:
+            The person's, e.g. "Personal": unique among their workspaces, in any case, and they may
+            change it.
+
+            ```proto
+            optional string name = 2;
+            ```
+        status:
+            ```proto
+            optional pethost.panel.v1.WorkspaceStatus status = 3;
+            ```
+        location:
+            Where its machine runs, e.g. "Europe".
+
+            ```proto
+            optional string location = 4;
+            ```
+        plan:
+            Its plan's name, e.g. "Starter".
+
+            ```proto
+            optional string plan = 5;
+            ```
+        cpu_total_cores:
+            The plan's.
+
+            ```proto
+            optional double cpu_total_cores = 6;
+            ```
+        memory_total_bytes:
+            The plan's, as Machine.memory_total_bytes.
+
+            ```proto
+            optional uint64 memory_total_bytes = 7;
+            ```
+        memory_free_bytes:
+            What the projects leave of memory_total_bytes, in its machine's latest sample. Absent = not
+            known: BEING_PREPARED, or the machine did not answer in time.
+
+            ```proto
+            optional uint64 memory_free_bytes = 8;
+            ```
+        disk_total_bytes:
+            The plan's, as Machine.disk_total_bytes.
+
+            ```proto
+            optional uint64 disk_total_bytes = 9;
+            ```
+        disk_free_bytes:
+            Likewise. Absent as memory_free_bytes.
+
+            ```proto
+            optional uint64 disk_free_bytes = 10;
+            ```
+        project_count:
+            Absent as memory_free_bytes.
+
+            ```proto
+            optional uint32 project_count = 11;
+            ```
+        hostname:
+            Its machine's name, as Machine.hostname: SSH, transfers, and where a domain of the person's
+            own points (CNAME). Empty while BEING_PREPARED.
+
+            ```proto
+            optional string hostname = 12;
+            ```
+        apps_domain:
+            As Machine.apps_domain. Empty = none.
+
+            ```proto
+            optional string apps_domain = 13;
+            ```
+        end_time:
+            When it ends: the person removed it, and it works until then, its projects with it. Absent
+            = it is not ending.
+
+            ```proto
+            optional google.protobuf.Timestamp end_time = 14;
+            ```
+        role:
+            The caller's.
+
+            ```proto
+            optional pethost.panel.v1.WorkspaceRole role = 15;
+            ```
+    """
+
+    __slots__ = ("workspace_id", "name", "status", "location", "plan", "cpu_total_cores", "memory_total_bytes", "memory_free_bytes", "disk_total_bytes", "disk_free_bytes", "project_count", "hostname", "apps_domain", "end_time", "role")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            workspace_id: str | None = None,
+            name: str | None = None,
+            status: WorkspaceStatus | None = None,
+            location: str | None = None,
+            plan: str | None = None,
+            cpu_total_cores: float | None = None,
+            memory_total_bytes: int | None = None,
+            memory_free_bytes: int | None = None,
+            disk_total_bytes: int | None = None,
+            disk_free_bytes: int | None = None,
+            project_count: int | None = None,
+            hostname: str | None = None,
+            apps_domain: str | None = None,
+            end_time: Timestamp | None = None,
+            role: WorkspaceRole | None = None,
+        ) -> None:
+            pass
+
+        workspace_id: str
+        name: str
+        status: WorkspaceStatus
+        location: str
+        plan: str
+        cpu_total_cores: float
+        memory_total_bytes: int
+        memory_free_bytes: int
+        disk_total_bytes: int
+        disk_free_bytes: int
+        project_count: int
+        hostname: str
+        apps_domain: str
+        end_time: Timestamp | None
+        role: WorkspaceRole
+
+_GetMachineRequestFields: TypeAlias = Literal["workspace"]
 
 class GetMachineRequest(Message[_GetMachineRequestFields]):
     """
     ```proto
     message pethost.panel.v1.GetMachineRequest
     ```
+
+    Attributes:
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ()
+    __slots__ = ("workspace",)
 
     if TYPE_CHECKING:
 
         def __init__(
             self,
+            *,
+            workspace: str | None = None,
         ) -> None:
             pass
 
-_GetMachineResponseFields: TypeAlias = Literal["machine", "projects", "deleted_projects", "github"]
+        workspace: str
+
+_GetMachineResponseFields: TypeAlias = Literal["machine", "projects", "deleted_projects", "github", "workspace"]
 
 class GetMachineResponse(Message[_GetMachineResponseFields]):
     """
@@ -67,9 +327,15 @@ class GetMachineResponse(Message[_GetMachineResponseFields]):
             ```proto
             optional pethost.panel.v1.GithubConnection github = 4;
             ```
+        workspace:
+            The workspace whose machine this is.
+
+            ```proto
+            optional pethost.panel.v1.Workspace workspace = 5;
+            ```
     """
 
-    __slots__ = ("machine", "projects", "deleted_projects", "github")
+    __slots__ = ("machine", "projects", "deleted_projects", "github", "workspace")
 
     if TYPE_CHECKING:
 
@@ -80,6 +346,7 @@ class GetMachineResponse(Message[_GetMachineResponseFields]):
             projects: list[ProjectSummary] | None = None,
             deleted_projects: list[DeletedProject] | None = None,
             github: GithubConnection | None = None,
+            workspace: Workspace | None = None,
         ) -> None:
             pass
 
@@ -87,6 +354,7 @@ class GetMachineResponse(Message[_GetMachineResponseFields]):
         projects: list[ProjectSummary]
         deleted_projects: list[DeletedProject]
         github: GithubConnection | None
+        workspace: Workspace | None
 
 _MachineFields: TypeAlias = Literal["name", "location", "sample_time", "cpu_used_cores", "cpu_total_cores", "memory_used_bytes", "memory_total_bytes", "disk_used_bytes", "disk_total_bytes", "disk_usage", "hostname", "hostname_is_address", "ssh_host_key_fingerprint", "ssh_keys", "backups_enabled", "snapshot_list_time", "snapshot_list_failure_message", "backup_retention_hours", "acme_enabled", "apps_domain", "daemon_version", "docker_version", "boot_time", "restart_required_time", "scheduled_restart_time", "sessions", "alert_channels", "database_engines", "memory_limits_bytes"]
 
@@ -724,7 +992,7 @@ class GithubRepository(Message[_GithubRepositoryFields]):
         private: bool
         push_time: Timestamp | None
 
-_DeletedProjectFields: TypeAlias = Literal["project_id", "newest_snapshot", "snapshot_count"]
+_DeletedProjectFields: TypeAlias = Literal["project_id", "newest_snapshot", "snapshot_count", "moved_to"]
 
 class DeletedProject(Message[_DeletedProjectFields]):
     """
@@ -750,9 +1018,19 @@ class DeletedProject(Message[_DeletedProjectFields]):
             ```proto
             optional uint32 snapshot_count = 3;
             ```
+        moved_to:
+            Set when the latest move of the project from or to this workspace took it to another one,
+            and this workspace has had no other project of the id since, as a call for it here would
+            answer ProjectMoved: call it there (`workspace`), which answers for it as it is now. A
+            restore here makes another copy here, as it was last backed up here, and calls here then
+            act on that copy.
+
+            ```proto
+            optional pethost.panel.v1.MovedTo moved_to = 4;
+            ```
     """
 
-    __slots__ = ("project_id", "newest_snapshot", "snapshot_count")
+    __slots__ = ("project_id", "newest_snapshot", "snapshot_count", "moved_to")
 
     if TYPE_CHECKING:
 
@@ -762,14 +1040,58 @@ class DeletedProject(Message[_DeletedProjectFields]):
             project_id: str | None = None,
             newest_snapshot: Snapshot | None = None,
             snapshot_count: int | None = None,
+            moved_to: MovedTo | None = None,
         ) -> None:
             pass
 
         project_id: str
         newest_snapshot: Snapshot | None
         snapshot_count: int
+        moved_to: MovedTo | None
 
-_RunMachineActionRequestFields: TypeAlias = Literal["add_ssh_key", "remove_ssh_key_fingerprint", "restart_machine", "cancel_restart", "end_session_id"]
+_MovedToFields: TypeAlias = Literal["workspace_id", "workspace_name", "move_time"]
+
+class MovedTo(Message[_MovedToFields]):
+    """
+    Where a move took a project (MoveProject), and when.
+
+    ```proto
+    message pethost.panel.v1.MovedTo
+    ```
+
+    Attributes:
+        workspace_id:
+            ```proto
+            optional string workspace_id = 1;
+            ```
+        workspace_name:
+            ```proto
+            optional string workspace_name = 2;
+            ```
+        move_time:
+            ```proto
+            optional google.protobuf.Timestamp move_time = 3;
+            ```
+    """
+
+    __slots__ = ("workspace_id", "workspace_name", "move_time")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            workspace_id: str | None = None,
+            workspace_name: str | None = None,
+            move_time: Timestamp | None = None,
+        ) -> None:
+            pass
+
+        workspace_id: str
+        workspace_name: str
+        move_time: Timestamp | None
+
+_RunMachineActionRequestFields: TypeAlias = Literal["add_ssh_key", "remove_ssh_key_fingerprint", "restart_machine", "cancel_restart", "end_session_id", "workspace"]
 
 class RunMachineActionRequest(Message[_RunMachineActionRequestFields]):
     """
@@ -782,9 +1104,13 @@ class RunMachineActionRequest(Message[_RunMachineActionRequestFields]):
             ```proto
             oneof action
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("action",)
+    __slots__ = ("workspace", "action")
 
     if TYPE_CHECKING:
 
@@ -792,10 +1118,12 @@ class RunMachineActionRequest(Message[_RunMachineActionRequestFields]):
             self,
             *,
             action: Oneof[Literal["add_ssh_key"], SshKey] | Oneof[Literal["remove_ssh_key_fingerprint"], str] | Oneof[Literal["restart_machine"], RestartMachineAction] | Oneof[Literal["cancel_restart"], bool] | Oneof[Literal["end_session_id"], str] | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         action: Oneof[Literal["add_ssh_key"], SshKey] | Oneof[Literal["remove_ssh_key_fingerprint"], str] | Oneof[Literal["restart_machine"], RestartMachineAction] | Oneof[Literal["cancel_restart"], bool] | Oneof[Literal["end_session_id"], str] | None
+        workspace: str
 
 _RestartMachineActionFields: TypeAlias = Literal["restart_time", "at_maintenance_window", "interrupt_operations"]
 
@@ -925,7 +1253,7 @@ class ProjectMetadata(Message[_ProjectMetadataFields]):
         description: str
         notes: str
 
-_ProjectSummaryFields: TypeAlias = Literal["project_id", "metadata", "problems", "services", "url", "hosts", "http_traffic_last_day", "cpu_used_cores", "memory_used_bytes", "deploy_time", "running_operations", "pinned", "disk_used_bytes", "database"]
+_ProjectSummaryFields: TypeAlias = Literal["project_id", "metadata", "problems", "services", "url", "hosts", "http_traffic_last_day", "cpu_used_cores", "memory_used_bytes", "deploy_time", "running_operations", "pinned", "disk_used_bytes", "database", "uid"]
 
 class ProjectSummary(Message[_ProjectSummaryFields]):
     """
@@ -1012,9 +1340,15 @@ class ProjectSummary(Message[_ProjectSummaryFields]):
             ```proto
             optional pethost.panel.v1.DatabaseSummary database = 14;
             ```
+        uid:
+            As Project.uid.
+
+            ```proto
+            optional string uid = 15;
+            ```
     """
 
-    __slots__ = ("project_id", "metadata", "problems", "services", "url", "hosts", "http_traffic_last_day", "cpu_used_cores", "memory_used_bytes", "deploy_time", "running_operations", "pinned", "disk_used_bytes", "database")
+    __slots__ = ("project_id", "metadata", "problems", "services", "url", "hosts", "http_traffic_last_day", "cpu_used_cores", "memory_used_bytes", "deploy_time", "running_operations", "pinned", "disk_used_bytes", "database", "uid")
 
     if TYPE_CHECKING:
 
@@ -1035,6 +1369,7 @@ class ProjectSummary(Message[_ProjectSummaryFields]):
             pinned: bool | None = None,
             disk_used_bytes: int | None = None,
             database: DatabaseSummary | None = None,
+            uid: str | None = None,
         ) -> None:
             pass
 
@@ -1052,6 +1387,7 @@ class ProjectSummary(Message[_ProjectSummaryFields]):
         pinned: bool
         disk_used_bytes: int
         database: DatabaseSummary | None
+        uid: str
 
 _ServiceSummaryFields: TypeAlias = Literal["service", "state"]
 
@@ -1163,7 +1499,7 @@ class ProjectProblem(Message[_ProjectProblemFields]):
         problem_message: str
         incident_id: str
 
-_GetProjectRequestFields: TypeAlias = Literal["project_id", "include_secret_values", "snapshots_before", "snapshots_volume", "incidents_before", "uptime_day_count", "incidents_before_id"]
+_GetProjectRequestFields: TypeAlias = Literal["project_id", "include_secret_values", "snapshots_before", "snapshots_volume", "incidents_before", "uptime_day_count", "incidents_before_id", "workspace"]
 
 class GetProjectRequest(Message[_GetProjectRequestFields]):
     """
@@ -1215,9 +1551,13 @@ class GetProjectRequest(Message[_GetProjectRequestFields]):
             ```proto
             optional string incidents_before_id = 7;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "include_secret_values", "snapshots_before", "snapshots_volume", "incidents_before", "uptime_day_count", "incidents_before_id")
+    __slots__ = ("project_id", "include_secret_values", "snapshots_before", "snapshots_volume", "incidents_before", "uptime_day_count", "incidents_before_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -1231,6 +1571,7 @@ class GetProjectRequest(Message[_GetProjectRequestFields]):
             incidents_before: Timestamp | None = None,
             uptime_day_count: int | None = None,
             incidents_before_id: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -1241,6 +1582,7 @@ class GetProjectRequest(Message[_GetProjectRequestFields]):
         incidents_before: Timestamp | None
         uptime_day_count: int
         incidents_before_id: str
+        workspace: str
 
 _GetProjectResponseFields: TypeAlias = Literal["project"]
 
@@ -1270,7 +1612,7 @@ class GetProjectResponse(Message[_GetProjectResponseFields]):
 
         project: Project | None
 
-_ProjectFields: TypeAlias = Literal["project_id", "metadata", "problems", "url", "cpu_used_cores", "memory_used_bytes", "deploy_id", "deploy_status", "deploy_time", "x_pethost_applies_at_once", "services", "volumes", "routes", "hosts", "password_protected", "operations", "snapshots", "snapshot_count", "snapshot_list_time", "http_traffic_last_day", "source", "running_services_action", "alerts", "incidents", "more_incidents", "uptime_days", "database", "linked_databases"]
+_ProjectFields: TypeAlias = Literal["project_id", "metadata", "problems", "url", "cpu_used_cores", "memory_used_bytes", "deploy_id", "deploy_status", "deploy_time", "x_pethost_applies_at_once", "services", "volumes", "routes", "hosts", "password_protected", "operations", "snapshots", "snapshot_count", "snapshot_list_time", "http_traffic_last_day", "source", "running_services_action", "alerts", "incidents", "more_incidents", "uptime_days", "database", "linked_databases", "workspace_id", "uid", "dependencies"]
 
 class Project(Message[_ProjectFields]):
     """
@@ -1452,9 +1794,30 @@ class Project(Message[_ProjectFields]):
             ```proto
             repeated string linked_databases = 28;
             ```
+        workspace_id:
+            The workspace it is in (Workspace.workspace_id): what a later call for it names as
+            `workspace`.
+
+            ```proto
+            optional string workspace_id = 29;
+            ```
+        uid:
+            Made when it was created, and kept by its backups, restores and moves: a project deleted
+            and created again under the same project_id has another. Empty = not known yet.
+
+            ```proto
+            optional string uid = 30;
+            ```
+        dependencies:
+            The databases it is linked to (linked_databases), each with what MoveProject may do with it
+            (switch_databases).
+
+            ```proto
+            repeated pethost.panel.v1.ProjectDependency dependencies = 32;
+            ```
     """
 
-    __slots__ = ("project_id", "metadata", "problems", "url", "cpu_used_cores", "memory_used_bytes", "deploy_id", "deploy_status", "deploy_time", "x_pethost_applies_at_once", "services", "volumes", "routes", "hosts", "password_protected", "operations", "snapshots", "snapshot_count", "snapshot_list_time", "http_traffic_last_day", "source", "running_services_action", "alerts", "incidents", "more_incidents", "uptime_days", "database", "linked_databases")
+    __slots__ = ("project_id", "metadata", "problems", "url", "cpu_used_cores", "memory_used_bytes", "deploy_id", "deploy_status", "deploy_time", "x_pethost_applies_at_once", "services", "volumes", "routes", "hosts", "password_protected", "operations", "snapshots", "snapshot_count", "snapshot_list_time", "http_traffic_last_day", "source", "running_services_action", "alerts", "incidents", "more_incidents", "uptime_days", "database", "linked_databases", "workspace_id", "uid", "dependencies")
 
     if TYPE_CHECKING:
 
@@ -1489,6 +1852,9 @@ class Project(Message[_ProjectFields]):
             uptime_days: list[UptimeDay] | None = None,
             database: Database | None = None,
             linked_databases: list[str] | None = None,
+            workspace_id: str | None = None,
+            uid: str | None = None,
+            dependencies: list[ProjectDependency] | None = None,
         ) -> None:
             pass
 
@@ -1520,6 +1886,62 @@ class Project(Message[_ProjectFields]):
         uptime_days: list[UptimeDay]
         database: Database | None
         linked_databases: list[str]
+        workspace_id: str
+        uid: str
+        dependencies: list[ProjectDependency]
+
+_ProjectDependencyFields: TypeAlias = Literal["database_project_id", "copy_database", "env_prefix"]
+
+class ProjectDependency(Message[_ProjectDependencyFields]):
+    """
+    A database a project is linked to, as MoveProject of the project sees it.
+
+    ```proto
+    message pethost.panel.v1.ProjectDependency
+    ```
+
+    Attributes:
+        database_project_id:
+            ```proto
+            optional string database_project_id = 1;
+            ```
+        copy_database:
+            The database inside it whose data a move copies, unless DatabaseSwitch.empty: the one the
+            project signs in to, its own where it has a user of its own (Database.own_user_projects), else
+            `app`. Empty = none can be: a Valkey, or a project whose id the engine keeps as a name of its
+            own (`app`, `postgres`, `root`...), which uses a database there as the apps' user, so that a
+            new one starts empty and one there is shared.
+
+            ```proto
+            optional string copy_database = 4;
+            ```
+        env_prefix:
+            The prefix of the lines the machine wrote into the project's /.env of how it signs in to it
+            (e.g. DATABASE for DATABASE_URL, _HOST, _PORT, _USER, _PASSWORD and _NAME), which the
+            destination writes anew. Empty = a person wrote them (LinkDatabase linked it): a move needs
+            DatabaseSwitch.env_prefix.
+
+            ```proto
+            optional string env_prefix = 5;
+            ```
+    """
+
+    __slots__ = ("database_project_id", "copy_database", "env_prefix")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            database_project_id: str | None = None,
+            copy_database: str | None = None,
+            env_prefix: str | None = None,
+        ) -> None:
+            pass
+
+        database_project_id: str
+        copy_database: str
+        env_prefix: str
 
 _RunningServicesActionFields: TypeAlias = Literal["kind", "services", "start_time"]
 
@@ -2751,7 +3173,7 @@ class HttpTrafficSummary(Message[_HttpTrafficSummaryFields]):
         latency_p50_ms: int
         latency_p95_ms: int
 
-_CreateProjectRequestFields: TypeAlias = Literal["project_id", "source", "upload_id", "files", "x_pethost", "timeout_seconds", "operation_id", "wait_seconds", "link_databases"]
+_CreateProjectRequestFields: TypeAlias = Literal["project_id", "source", "upload_id", "files", "x_pethost", "timeout_seconds", "operation_id", "wait_seconds", "link_databases", "workspace"]
 
 class CreateProjectRequest(Message[_CreateProjectRequestFields]):
     """
@@ -2774,8 +3196,6 @@ class CreateProjectRequest(Message[_CreateProjectRequestFields]):
             ```
         upload_id:
             An archive of the project's directory, from CreateTransfer.upload_archive, unpacked first.
-            FAILED_PRECONDITION = not arrived; NOT_FOUND = expired or used. One the machine refused (its
-            PUT said why) answers with its `violations`.
 
             ```proto
             optional string upload_id = 3;
@@ -2815,9 +3235,13 @@ class CreateProjectRequest(Message[_CreateProjectRequestFields]):
             ```proto
             repeated pethost.panel.v1.DatabaseLinkRequest link_databases = 11;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "source", "upload_id", "files", "x_pethost", "timeout_seconds", "operation_id", "wait_seconds", "link_databases")
+    __slots__ = ("project_id", "source", "upload_id", "files", "x_pethost", "timeout_seconds", "operation_id", "wait_seconds", "link_databases", "workspace")
 
     if TYPE_CHECKING:
 
@@ -2833,6 +3257,7 @@ class CreateProjectRequest(Message[_CreateProjectRequestFields]):
             operation_id: str | None = None,
             wait_seconds: int | None = None,
             link_databases: list[DatabaseLinkRequest] | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -2845,6 +3270,7 @@ class CreateProjectRequest(Message[_CreateProjectRequestFields]):
         operation_id: str
         wait_seconds: int
         link_databases: list[DatabaseLinkRequest]
+        workspace: str
 
 _DatabaseLinkRequestFields: TypeAlias = Literal["database_project_id", "own_user", "env_prefix"]
 
@@ -2948,7 +3374,7 @@ class CreateProjectResponse(Message[_CreateProjectResponseFields]):
         project: Project | None
         log: list[OperationLogLine]
 
-_DeployProjectRequestFields: TypeAlias = Literal["project_id", "base_deploy_id", "files", "x_pethost", "mount_volume", "timeout_seconds", "operation_id", "upload_id", "commit", "newest_commit", "rollback_deploy_id", "wait_seconds"]
+_DeployProjectRequestFields: TypeAlias = Literal["project_id", "base_deploy_id", "files", "x_pethost", "mount_volume", "timeout_seconds", "operation_id", "upload_id", "commit", "newest_commit", "rollback_deploy_id", "wait_seconds", "workspace"]
 
 class DeployProjectRequest(Message[_DeployProjectRequestFields]):
     """
@@ -2962,7 +3388,7 @@ class DeployProjectRequest(Message[_DeployProjectRequestFields]):
             optional string project_id = 1;
             ```
         base_deploy_id:
-            Project.deploy_id as you read it: ABORTED if the project was deployed since. Empty = no check.
+            Project.deploy_id as you read it. Empty = no check.
 
             ```proto
             optional string base_deploy_id = 2;
@@ -3014,9 +3440,13 @@ class DeployProjectRequest(Message[_DeployProjectRequestFields]):
             ```proto
             optional uint32 wait_seconds = 13;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "base_deploy_id", "files", "x_pethost", "mount_volume", "timeout_seconds", "operation_id", "wait_seconds", "version")
+    __slots__ = ("project_id", "base_deploy_id", "files", "x_pethost", "mount_volume", "timeout_seconds", "operation_id", "wait_seconds", "workspace", "version")
 
     if TYPE_CHECKING:
 
@@ -3032,6 +3462,7 @@ class DeployProjectRequest(Message[_DeployProjectRequestFields]):
             operation_id: str | None = None,
             version: Oneof[Literal["upload_id"], str] | Oneof[Literal["commit"], str] | Oneof[Literal["newest_commit"], bool] | Oneof[Literal["rollback_deploy_id"], str] | None = None,
             wait_seconds: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -3044,6 +3475,7 @@ class DeployProjectRequest(Message[_DeployProjectRequestFields]):
         operation_id: str
         version: Oneof[Literal["upload_id"], str] | Oneof[Literal["commit"], str] | Oneof[Literal["newest_commit"], bool] | Oneof[Literal["rollback_deploy_id"], str] | None
         wait_seconds: int
+        workspace: str
 
 _MountVolumeFields: TypeAlias = Literal["service", "volume", "container_path"]
 
@@ -3314,7 +3746,401 @@ class SpecViolation(Message[_SpecViolationFields]):
         location: str
         violation_message: str
 
-_ListCommitsRequestFields: TypeAlias = Literal["project_id", "before_commit"]
+_MoveProjectRequestFields: TypeAlias = Literal["project_id", "to_workspace", "operation_id", "wait_seconds", "switch_databases", "workspace"]
+
+class MoveProjectRequest(Message[_MoveProjectRequestFields]):
+    """
+    ```proto
+    message pethost.panel.v1.MoveProjectRequest
+    ```
+
+    Attributes:
+        project_id:
+            ```proto
+            optional string project_id = 1;
+            ```
+        to_workspace:
+            The destination, as `workspace` takes one: its id or name.
+
+            ```proto
+            optional string to_workspace = 2;
+            ```
+        operation_id:
+            As DeployProject's operation_id: the move's.
+
+            ```proto
+            optional string operation_id = 4;
+            ```
+        wait_seconds:
+            As DeployProject's wait_seconds.
+
+            ```proto
+            optional uint32 wait_seconds = 5;
+            ```
+        switch_databases:
+            What it uses in to_workspace instead of each database it is linked to (Project.dependencies),
+            which stays here. One left out: the destination's database of its id and engine, if it has
+            one, else a new one, with the data of its copy_database.
+
+            ```proto
+            repeated pethost.panel.v1.DatabaseSwitch switch_databases = 6;
+            ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
+    """
+
+    __slots__ = ("project_id", "to_workspace", "operation_id", "wait_seconds", "switch_databases", "workspace")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            project_id: str | None = None,
+            to_workspace: str | None = None,
+            operation_id: str | None = None,
+            wait_seconds: int | None = None,
+            switch_databases: list[DatabaseSwitch] | None = None,
+            workspace: str | None = None,
+        ) -> None:
+            pass
+
+        project_id: str
+        to_workspace: str
+        operation_id: str
+        wait_seconds: int
+        switch_databases: list[DatabaseSwitch]
+        workspace: str
+
+_DatabaseSwitchFields: TypeAlias = Literal["database_project_id", "into_database_project_id", "empty", "env_prefix"]
+
+class DatabaseSwitch(Message[_DatabaseSwitchFields]):
+    """
+    A database the moved project is linked to, which stays here with its other apps, if any, and
+    what the project uses instead in the destination: a database of the same engine, the lines of
+    how it signs in to it in its /.env written anew. On Postgres and MariaDB it signs in there as a
+    user of its own, to a database of its own, which gets the data of ProjectDependency
+    .copy_database unless empty; a Valkey's it shares as its one user, and so does a project whose
+    id the engine keeps as a name of its own (copy_database empty) on Postgres and MariaDB. Once the
+    move succeeded, the user and database the project had of its own here, if it had them, are
+    dropped with it, as any delete does: so empty, where it had them, deletes that data.
+
+    ```proto
+    message pethost.panel.v1.DatabaseSwitch
+    ```
+
+    Attributes:
+        database_project_id:
+            A database it is linked to, which stays.
+
+            ```proto
+            optional string database_project_id = 1;
+            ```
+        into_database_project_id:
+            A database of the same engine in to_workspace. On Postgres and MariaDB, where the project gets
+            a user of its own there, it has no user or database named as the project. Empty = the
+            destination's database of database_project_id's id and engine, if it has one, else a new one,
+            made by the move under that id at that one's size where to_workspace offers it for the engine,
+            else at the engine's default.
+
+            ```proto
+            optional string into_database_project_id = 2;
+            ```
+        empty:
+            True = nothing is copied: the project starts there with an empty database of its own, or, as
+            the apps' user, with what a database there holds that it shares (a new one: nothing). A
+            MariaDB database with a view, trigger, routine or event made by another account than the
+            project's own user, as each in `app` is by the apps' user, cannot be copied: the move is
+            undone; start it empty, or make those objects again as the project's own user.
+
+            ```proto
+            optional bool empty = 3;
+            ```
+        env_prefix:
+            Where ProjectDependency.env_prefix is empty, as a person wrote the lines of how the project
+            signs in to it: the prefix of those lines (e.g. DATABASE for DATABASE_URL), which the
+            destination writes anew as a link with that env_prefix writes them, each of its names that
+            /.env sets taking the new value, for the database copy_database names. Required there;
+            refused elsewhere.
+
+            ```proto
+            optional string env_prefix = 5;
+            ```
+    """
+
+    __slots__ = ("database_project_id", "into_database_project_id", "empty", "env_prefix")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            database_project_id: str | None = None,
+            into_database_project_id: str | None = None,
+            empty: bool | None = None,
+            env_prefix: str | None = None,
+        ) -> None:
+            pass
+
+        database_project_id: str
+        into_database_project_id: str
+        empty: bool
+        env_prefix: str
+
+_MoveProjectResponseFields: TypeAlias = Literal["operation", "project", "move_message"]
+
+class MoveProjectResponse(Message[_MoveProjectResponseFields]):
+    """
+    ```proto
+    message pethost.panel.v1.MoveProjectResponse
+    ```
+
+    Attributes:
+        operation:
+            The move: finished, or IN_PROGRESS when wait_seconds ran out (then GetOperation).
+
+            ```proto
+            optional pethost.panel.v1.Operation operation = 1;
+            ```
+        project:
+            Once the project is in the destination: as it is there, as GetProject returns it. A move that
+            FAILED after that has it too: it runs there, and its failure says what the source still
+            holds. Absent while it runs, and when nothing moved.
+
+            ```proto
+            optional pethost.panel.v1.Project project = 2;
+            ```
+        move_message:
+            What changed and what stayed behind, for people: the new hosts, the domains of the person's
+            own to point at the destination's hostname, the SSH command.
+
+            ```proto
+            optional string move_message = 3;
+            ```
+    """
+
+    __slots__ = ("operation", "project", "move_message")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            operation: Operation | None = None,
+            project: Project | None = None,
+            move_message: str | None = None,
+        ) -> None:
+            pass
+
+        operation: Operation | None
+        project: Project | None
+        move_message: str
+
+_GetMoveChoicesRequestFields: TypeAlias = Literal["project_id", "to_workspace", "workspace"]
+
+class GetMoveChoicesRequest(Message[_GetMoveChoicesRequestFields]):
+    """
+    ```proto
+    message pethost.panel.v1.GetMoveChoicesRequest
+    ```
+
+    Attributes:
+        project_id:
+            ```proto
+            optional string project_id = 1;
+            ```
+        to_workspace:
+            As MoveProjectRequest's.
+
+            ```proto
+            optional string to_workspace = 2;
+            ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
+    """
+
+    __slots__ = ("project_id", "to_workspace", "workspace")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            project_id: str | None = None,
+            to_workspace: str | None = None,
+            workspace: str | None = None,
+        ) -> None:
+            pass
+
+        project_id: str
+        to_workspace: str
+        workspace: str
+
+_GetMoveChoicesResponseFields: TypeAlias = Literal["choices"]
+
+class GetMoveChoicesResponse(Message[_GetMoveChoicesResponseFields]):
+    """
+    ```proto
+    message pethost.panel.v1.GetMoveChoicesResponse
+    ```
+
+    Attributes:
+        choices:
+            One for each database the project is linked to, in Project.dependencies' order.
+
+            ```proto
+            repeated pethost.panel.v1.MoveChoice choices = 1;
+            ```
+    """
+
+    __slots__ = ("choices",)
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            choices: list[MoveChoice] | None = None,
+        ) -> None:
+            pass
+
+        choices: list[MoveChoice]
+
+_MoveChoiceFields: TypeAlias = Literal["dependency", "engine", "owned", "databases", "new_database", "suggested_database_project_id"]
+
+class MoveChoice(Message[_MoveChoiceFields]):
+    """
+    What a move may use in to_workspace instead of a database the project is linked to.
+
+    ```proto
+    message pethost.panel.v1.MoveChoice
+    ```
+
+    Attributes:
+        dependency:
+            ```proto
+            optional pethost.panel.v1.ProjectDependency dependency = 1;
+            ```
+        engine:
+            The dependency's, which a database used instead runs too.
+
+            ```proto
+            optional pethost.panel.v1.DatabaseEngine engine = 2;
+            ```
+        owned:
+            The project signs in to the dependency as a user of its own (Database.own_user_projects),
+            which the move drops here with its database once it succeeded (DatabaseSwitch).
+
+            ```proto
+            optional bool owned = 3;
+            ```
+        databases:
+            The databases of to_workspace of the engine, which into_database_project_id may name: each
+            once among a move's switches.
+
+            ```proto
+            repeated pethost.panel.v1.MoveTarget databases = 4;
+            ```
+        new_database:
+            A new database may be made there, under the dependency's id: to_workspace has no project of
+            that id.
+
+            ```proto
+            optional bool new_database = 5;
+            ```
+        suggested_database_project_id:
+            Where the dialog's switch goes first: the database of to_workspace of the dependency's id and
+            engine, else its only one of the engine that no other choice suggests, else a new one where
+            new_database, else the first of `databases` that no other choice suggests. Empty = a new one,
+            or nothing fits (no `databases`, and no new_database).
+
+            ```proto
+            optional string suggested_database_project_id = 6;
+            ```
+    """
+
+    __slots__ = ("dependency", "engine", "owned", "databases", "new_database", "suggested_database_project_id")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            dependency: ProjectDependency | None = None,
+            engine: DatabaseEngine | None = None,
+            owned: bool | None = None,
+            databases: list[MoveTarget] | None = None,
+            new_database: bool | None = None,
+            suggested_database_project_id: str | None = None,
+        ) -> None:
+            pass
+
+        dependency: ProjectDependency | None
+        engine: DatabaseEngine
+        owned: bool
+        databases: list[MoveTarget]
+        new_database: bool
+        suggested_database_project_id: str
+
+_MoveTargetFields: TypeAlias = Literal["database_project_id", "name", "data_bytes", "app_names"]
+
+class MoveTarget(Message[_MoveTargetFields]):
+    """
+    A database of to_workspace that a switch may go to.
+
+    ```proto
+    message pethost.panel.v1.MoveTarget
+    ```
+
+    Attributes:
+        database_project_id:
+            ```proto
+            optional string database_project_id = 1;
+            ```
+        name:
+            As people call it: its metadata name, else its project_id.
+
+            ```proto
+            optional string name = 2;
+            ```
+        data_bytes:
+            As in Database.
+
+            ```proto
+            optional uint64 data_bytes = 3;
+            ```
+        app_names:
+            The apps linked to it there, each as people call it.
+
+            ```proto
+            repeated string app_names = 4;
+            ```
+    """
+
+    __slots__ = ("database_project_id", "name", "data_bytes", "app_names")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            database_project_id: str | None = None,
+            name: str | None = None,
+            data_bytes: int | None = None,
+            app_names: list[str] | None = None,
+        ) -> None:
+            pass
+
+        database_project_id: str
+        name: str
+        data_bytes: int
+        app_names: list[str]
+
+_ListCommitsRequestFields: TypeAlias = Literal["project_id", "before_commit", "workspace"]
 
 class ListCommitsRequest(Message[_ListCommitsRequestFields]):
     """
@@ -3333,9 +4159,13 @@ class ListCommitsRequest(Message[_ListCommitsRequestFields]):
             ```proto
             optional string before_commit = 2;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "before_commit")
+    __slots__ = ("project_id", "before_commit", "workspace")
 
     if TYPE_CHECKING:
 
@@ -3344,11 +4174,13 @@ class ListCommitsRequest(Message[_ListCommitsRequestFields]):
             *,
             project_id: str | None = None,
             before_commit: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         before_commit: str
+        workspace: str
 
 _ListCommitsResponseFields: TypeAlias = Literal["commits", "more"]
 
@@ -3458,7 +4290,7 @@ class BranchCommit(Message[_BranchCommitFields]):
         last_deploy: Operation | None
         newest: bool
 
-_RunProjectActionRequestFields: TypeAlias = Literal["project_id", "start_services", "stop_services", "restart_services", "recreate_service", "back_up", "restore_snapshot", "cancel_operation", "delete_project", "set_source", "delete_volume", "set_database_size", "operation_id", "wait_seconds"]
+_RunProjectActionRequestFields: TypeAlias = Literal["project_id", "start_services", "stop_services", "restart_services", "recreate_service", "back_up", "restore_snapshot", "cancel_operation", "delete_project", "set_source", "delete_volume", "set_database_size", "operation_id", "wait_seconds", "workspace"]
 
 class RunProjectActionRequest(Message[_RunProjectActionRequestFields]):
     """
@@ -3487,9 +4319,13 @@ class RunProjectActionRequest(Message[_RunProjectActionRequestFields]):
             ```proto
             optional uint32 wait_seconds = 13;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "operation_id", "wait_seconds", "action")
+    __slots__ = ("project_id", "operation_id", "wait_seconds", "workspace", "action")
 
     if TYPE_CHECKING:
 
@@ -3500,6 +4336,7 @@ class RunProjectActionRequest(Message[_RunProjectActionRequestFields]):
             action: Oneof[Literal["start_services"], ServicesAction] | Oneof[Literal["stop_services"], ServicesAction] | Oneof[Literal["restart_services"], ServicesAction] | Oneof[Literal["recreate_service"], RecreateServiceAction] | Oneof[Literal["back_up"], BackUpAction] | Oneof[Literal["restore_snapshot"], RestoreSnapshotAction] | Oneof[Literal["cancel_operation"], CancelOperationAction] | Oneof[Literal["delete_project"], DeleteProjectAction] | Oneof[Literal["set_source"], ProjectSource] | Oneof[Literal["delete_volume"], str] | Oneof[Literal["set_database_size"], SetDatabaseSizeAction] | None = None,
             operation_id: str | None = None,
             wait_seconds: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -3507,6 +4344,7 @@ class RunProjectActionRequest(Message[_RunProjectActionRequestFields]):
         action: Oneof[Literal["start_services"], ServicesAction] | Oneof[Literal["stop_services"], ServicesAction] | Oneof[Literal["restart_services"], ServicesAction] | Oneof[Literal["recreate_service"], RecreateServiceAction] | Oneof[Literal["back_up"], BackUpAction] | Oneof[Literal["restore_snapshot"], RestoreSnapshotAction] | Oneof[Literal["cancel_operation"], CancelOperationAction] | Oneof[Literal["delete_project"], DeleteProjectAction] | Oneof[Literal["set_source"], ProjectSource] | Oneof[Literal["delete_volume"], str] | Oneof[Literal["set_database_size"], SetDatabaseSizeAction] | None
         operation_id: str
         wait_seconds: int
+        workspace: str
 
 _ServicesActionFields: TypeAlias = Literal["services"]
 
@@ -4157,7 +4995,7 @@ class DatabaseSizeChoice(Message[_DatabaseSizeChoiceFields]):
 
         memory_limit_bytes: int
 
-_LinkDatabaseRequestFields: TypeAlias = Literal["database_project_id", "link", "unlink"]
+_LinkDatabaseRequestFields: TypeAlias = Literal["database_project_id", "link", "unlink", "workspace"]
 
 class LinkDatabaseRequest(Message[_LinkDatabaseRequestFields]):
     """
@@ -4182,9 +5020,13 @@ class LinkDatabaseRequest(Message[_LinkDatabaseRequestFields]):
             ```proto
             repeated string unlink = 3;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("database_project_id", "link", "unlink")
+    __slots__ = ("database_project_id", "link", "unlink", "workspace")
 
     if TYPE_CHECKING:
 
@@ -4194,12 +5036,14 @@ class LinkDatabaseRequest(Message[_LinkDatabaseRequestFields]):
             database_project_id: str | None = None,
             link: list[str] | None = None,
             unlink: list[str] | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         database_project_id: str
         link: list[str]
         unlink: list[str]
+        workspace: str
 
 _LinkDatabaseResponseFields: TypeAlias = Literal["project"]
 
@@ -4231,7 +5075,7 @@ class LinkDatabaseResponse(Message[_LinkDatabaseResponseFields]):
 
         project: Project | None
 
-_CreateDatabaseRequestFields: TypeAlias = Literal["project_id", "engine", "memory_limit_bytes", "from_snapshot_id", "link", "operation_id", "wait_seconds", "metadata"]
+_CreateDatabaseRequestFields: TypeAlias = Literal["project_id", "engine", "memory_limit_bytes", "from_snapshot_id", "link", "operation_id", "wait_seconds", "metadata", "workspace"]
 
 class CreateDatabaseRequest(Message[_CreateDatabaseRequestFields]):
     """
@@ -4289,9 +5133,13 @@ class CreateDatabaseRequest(Message[_CreateDatabaseRequestFields]):
             ```proto
             optional pethost.panel.v1.ProjectMetadata metadata = 8;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "engine", "memory_limit_bytes", "from_snapshot_id", "link", "operation_id", "wait_seconds", "metadata")
+    __slots__ = ("project_id", "engine", "memory_limit_bytes", "from_snapshot_id", "link", "operation_id", "wait_seconds", "metadata", "workspace")
 
     if TYPE_CHECKING:
 
@@ -4306,6 +5154,7 @@ class CreateDatabaseRequest(Message[_CreateDatabaseRequestFields]):
             operation_id: str | None = None,
             wait_seconds: int | None = None,
             metadata: ProjectMetadata | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -4317,6 +5166,7 @@ class CreateDatabaseRequest(Message[_CreateDatabaseRequestFields]):
         operation_id: str
         wait_seconds: int
         metadata: ProjectMetadata | None
+        workspace: str
 
 _CreateDatabaseResponseFields: TypeAlias = Literal["operation", "violations", "adjustments", "project", "log"]
 
@@ -4372,7 +5222,7 @@ class CreateDatabaseResponse(Message[_CreateDatabaseResponseFields]):
         project: Project | None
         log: list[OperationLogLine]
 
-_GetDatabaseStatsRequestFields: TypeAlias = Literal["project_id", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "statement_order"]
+_GetDatabaseStatsRequestFields: TypeAlias = Literal["project_id", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "statement_order", "workspace"]
 
 class GetDatabaseStatsRequest(Message[_GetDatabaseStatsRequestFields]):
     """
@@ -4413,9 +5263,13 @@ class GetDatabaseStatsRequest(Message[_GetDatabaseStatsRequestFields]):
             ```proto
             optional pethost.panel.v1.DatabaseStatementOrder statement_order = 6;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "statement_order")
+    __slots__ = ("project_id", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "statement_order", "workspace")
 
     if TYPE_CHECKING:
 
@@ -4428,6 +5282,7 @@ class GetDatabaseStatsRequest(Message[_GetDatabaseStatsRequestFields]):
             last_seconds: int | None = None,
             bucket_width_seconds: int | None = None,
             statement_order: DatabaseStatementOrder | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -4437,6 +5292,7 @@ class GetDatabaseStatsRequest(Message[_GetDatabaseStatsRequestFields]):
         last_seconds: int
         bucket_width_seconds: int
         statement_order: DatabaseStatementOrder
+        workspace: str
 
 _GetDatabaseStatsResponseFields: TypeAlias = Literal["start_time", "end_time", "oldest_kept_time", "overall", "buckets", "statements", "statements_tracked", "activity"]
 
@@ -5376,7 +6232,7 @@ class DatabaseSlowCommand(Message[_DatabaseSlowCommandFields]):
         client_address: str
         client_name: str
 
-_CancelDatabaseQueryRequestFields: TypeAlias = Literal["project_id", "pid", "end_session"]
+_CancelDatabaseQueryRequestFields: TypeAlias = Literal["project_id", "pid", "end_session", "workspace"]
 
 class CancelDatabaseQueryRequest(Message[_CancelDatabaseQueryRequestFields]):
     """
@@ -5401,9 +6257,13 @@ class CancelDatabaseQueryRequest(Message[_CancelDatabaseQueryRequestFields]):
             ```proto
             optional bool end_session = 3;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "pid", "end_session")
+    __slots__ = ("project_id", "pid", "end_session", "workspace")
 
     if TYPE_CHECKING:
 
@@ -5413,12 +6273,14 @@ class CancelDatabaseQueryRequest(Message[_CancelDatabaseQueryRequestFields]):
             project_id: str | None = None,
             pid: int | None = None,
             end_session: bool | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         pid: int
         end_session: bool
+        workspace: str
 
 _CancelDatabaseQueryResponseFields: TypeAlias = Literal["done"]
 
@@ -5450,7 +6312,7 @@ class CancelDatabaseQueryResponse(Message[_CancelDatabaseQueryResponseFields]):
 
         done: bool
 
-_SetProjectAlertsRequestFields: TypeAlias = Literal["project_id", "checks", "remove_checks", "traffic_rules", "remove_traffic_rules", "off", "mute_minutes"]
+_SetProjectAlertsRequestFields: TypeAlias = Literal["project_id", "checks", "remove_checks", "traffic_rules", "remove_traffic_rules", "off", "mute_minutes", "workspace"]
 
 class SetProjectAlertsRequest(Message[_SetProjectAlertsRequestFields]):
     """
@@ -5499,9 +6361,13 @@ class SetProjectAlertsRequest(Message[_SetProjectAlertsRequestFields]):
             ```proto
             optional uint32 mute_minutes = 7;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "checks", "remove_checks", "traffic_rules", "remove_traffic_rules", "off", "mute_minutes")
+    __slots__ = ("project_id", "checks", "remove_checks", "traffic_rules", "remove_traffic_rules", "off", "mute_minutes", "workspace")
 
     if TYPE_CHECKING:
 
@@ -5515,6 +6381,7 @@ class SetProjectAlertsRequest(Message[_SetProjectAlertsRequestFields]):
             remove_traffic_rules: bool | None = None,
             off: bool | None = None,
             mute_minutes: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -5525,6 +6392,7 @@ class SetProjectAlertsRequest(Message[_SetProjectAlertsRequestFields]):
         remove_traffic_rules: bool
         off: bool
         mute_minutes: int
+        workspace: str
 
 _SetProjectAlertsResponseFields: TypeAlias = Literal["alerts"]
 
@@ -6202,7 +7070,7 @@ class UptimeDay(Message[_UptimeDayFields]):
         uptime_percent: float
         down_seconds: int
 
-_GetIncidentRequestFields: TypeAlias = Literal["project_id", "incident_id"]
+_GetIncidentRequestFields: TypeAlias = Literal["project_id", "incident_id", "workspace"]
 
 class GetIncidentRequest(Message[_GetIncidentRequestFields]):
     """
@@ -6219,9 +7087,13 @@ class GetIncidentRequest(Message[_GetIncidentRequestFields]):
             ```proto
             optional string incident_id = 2;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "incident_id")
+    __slots__ = ("project_id", "incident_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -6230,11 +7102,13 @@ class GetIncidentRequest(Message[_GetIncidentRequestFields]):
             *,
             project_id: str | None = None,
             incident_id: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         incident_id: str
+        workspace: str
 
 _GetIncidentResponseFields: TypeAlias = Literal["incident", "joined"]
 
@@ -6274,7 +7148,7 @@ class GetIncidentResponse(Message[_GetIncidentResponseFields]):
         incident: Incident | None
         joined: list[Incident]
 
-_GetOperationRequestFields: TypeAlias = Literal["project_id", "operation_id", "wait_seconds", "after_log_line", "log_line_limit"]
+_GetOperationRequestFields: TypeAlias = Literal["project_id", "operation_id", "wait_seconds", "after_log_line", "log_line_limit", "workspace"]
 
 class GetOperationRequest(Message[_GetOperationRequestFields]):
     """
@@ -6311,9 +7185,13 @@ class GetOperationRequest(Message[_GetOperationRequestFields]):
             ```proto
             optional uint32 log_line_limit = 5;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "operation_id", "wait_seconds", "after_log_line", "log_line_limit")
+    __slots__ = ("project_id", "operation_id", "wait_seconds", "after_log_line", "log_line_limit", "workspace")
 
     if TYPE_CHECKING:
 
@@ -6325,6 +7203,7 @@ class GetOperationRequest(Message[_GetOperationRequestFields]):
             wait_seconds: int | None = None,
             after_log_line: int | None = None,
             log_line_limit: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -6333,8 +7212,9 @@ class GetOperationRequest(Message[_GetOperationRequestFields]):
         wait_seconds: int
         after_log_line: int
         log_line_limit: int
+        workspace: str
 
-_GetOperationResponseFields: TypeAlias = Literal["operation", "project", "log", "log_line_count", "next_after_log_line"]
+_GetOperationResponseFields: TypeAlias = Literal["operation", "project", "log", "log_line_count", "next_after_log_line", "move_message"]
 
 class GetOperationResponse(Message[_GetOperationResponseFields]):
     """
@@ -6374,9 +7254,16 @@ class GetOperationResponse(Message[_GetOperationResponseFields]):
             ```proto
             optional uint32 next_after_log_line = 4;
             ```
+        move_message:
+            A MOVE's, once it ended: MoveProjectResponse.move_message, what changed and what stayed
+            behind, or why nothing moved.
+
+            ```proto
+            optional string move_message = 6;
+            ```
     """
 
-    __slots__ = ("operation", "project", "log", "log_line_count", "next_after_log_line")
+    __slots__ = ("operation", "project", "log", "log_line_count", "next_after_log_line", "move_message")
 
     if TYPE_CHECKING:
 
@@ -6388,6 +7275,7 @@ class GetOperationResponse(Message[_GetOperationResponseFields]):
             log: list[OperationLogLine] | None = None,
             log_line_count: int | None = None,
             next_after_log_line: int | None = None,
+            move_message: str | None = None,
         ) -> None:
             pass
 
@@ -6396,6 +7284,7 @@ class GetOperationResponse(Message[_GetOperationResponseFields]):
         log: list[OperationLogLine]
         log_line_count: int
         next_after_log_line: int
+        move_message: str
 
 _OperationLogLineFields: TypeAlias = Literal["time", "text"]
 
@@ -6496,7 +7385,7 @@ class HttpTrafficFilter(Message[_HttpTrafficFilterFields]):
         path_pattern: str
         status_class: int
 
-_QueryHttpTrafficRequestFields: TypeAlias = Literal["project_id", "filter", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "request_limit", "page_token"]
+_QueryHttpTrafficRequestFields: TypeAlias = Literal["project_id", "filter", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "request_limit", "page_token", "workspace"]
 
 class QueryHttpTrafficRequest(Message[_QueryHttpTrafficRequestFields]):
     """
@@ -6549,9 +7438,13 @@ class QueryHttpTrafficRequest(Message[_QueryHttpTrafficRequestFields]):
             ```proto
             optional string page_token = 7;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "filter", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "request_limit", "page_token")
+    __slots__ = ("project_id", "filter", "start_time", "end_time", "last_seconds", "bucket_width_seconds", "request_limit", "page_token", "workspace")
 
     if TYPE_CHECKING:
 
@@ -6566,6 +7459,7 @@ class QueryHttpTrafficRequest(Message[_QueryHttpTrafficRequestFields]):
             bucket_width_seconds: int | None = None,
             request_limit: int | None = None,
             page_token: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -6577,6 +7471,7 @@ class QueryHttpTrafficRequest(Message[_QueryHttpTrafficRequestFields]):
         bucket_width_seconds: int
         request_limit: int
         page_token: str
+        workspace: str
 
 _QueryHttpTrafficResponseFields: TypeAlias = Literal["start_time", "end_time", "oldest_kept_time", "summary", "buckets", "top_paths", "newest_sequence", "requests", "next_page_token", "tail_sequence"]
 
@@ -6930,7 +7825,7 @@ class ContainerLogFilter(Message[_ContainerLogFilterFields]):
         stream: OutputStream
         text_contains: str
 
-_QueryContainerLogsRequestFields: TypeAlias = Literal["project_id", "filter", "start_time", "end_time", "last_seconds", "limit", "from_start", "page_token"]
+_QueryContainerLogsRequestFields: TypeAlias = Literal["project_id", "filter", "start_time", "end_time", "last_seconds", "limit", "from_start", "page_token", "workspace"]
 
 class QueryContainerLogsRequest(Message[_QueryContainerLogsRequestFields]):
     """
@@ -6983,9 +7878,13 @@ class QueryContainerLogsRequest(Message[_QueryContainerLogsRequestFields]):
             ```proto
             optional string page_token = 7;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "filter", "start_time", "end_time", "last_seconds", "limit", "from_start", "page_token")
+    __slots__ = ("project_id", "filter", "start_time", "end_time", "last_seconds", "limit", "from_start", "page_token", "workspace")
 
     if TYPE_CHECKING:
 
@@ -7000,6 +7899,7 @@ class QueryContainerLogsRequest(Message[_QueryContainerLogsRequestFields]):
             limit: int | None = None,
             from_start: bool | None = None,
             page_token: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -7011,6 +7911,7 @@ class QueryContainerLogsRequest(Message[_QueryContainerLogsRequestFields]):
         limit: int
         from_start: bool
         page_token: str
+        workspace: str
 
 _QueryContainerLogsResponseFields: TypeAlias = Literal["start_time", "end_time", "oldest_kept_time", "lines", "next_page_token", "tail_cursor"]
 
@@ -7130,7 +8031,7 @@ class LogLine(Message[_LogLineFields]):
         stream: OutputStream
         text: str
 
-_RunServiceCommandRequestFields: TypeAlias = Literal["project_id", "service", "command", "stdin", "run_as_user", "working_directory", "timeout_seconds"]
+_RunServiceCommandRequestFields: TypeAlias = Literal["project_id", "service", "command", "stdin", "run_as_user", "working_directory", "timeout_seconds", "workspace"]
 
 class RunServiceCommandRequest(Message[_RunServiceCommandRequestFields]):
     """
@@ -7178,9 +8079,13 @@ class RunServiceCommandRequest(Message[_RunServiceCommandRequestFields]):
             ```proto
             optional uint32 timeout_seconds = 7;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "service", "command", "stdin", "run_as_user", "working_directory", "timeout_seconds")
+    __slots__ = ("project_id", "service", "command", "stdin", "run_as_user", "working_directory", "timeout_seconds", "workspace")
 
     if TYPE_CHECKING:
 
@@ -7194,6 +8099,7 @@ class RunServiceCommandRequest(Message[_RunServiceCommandRequestFields]):
             run_as_user: str | None = None,
             working_directory: str | None = None,
             timeout_seconds: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -7204,6 +8110,7 @@ class RunServiceCommandRequest(Message[_RunServiceCommandRequestFields]):
         run_as_user: str
         working_directory: str
         timeout_seconds: int
+        workspace: str
 
 _RunServiceCommandResponseFields: TypeAlias = Literal["exit_code", "timed_out", "stdout", "stderr", "output_truncated"]
 
@@ -7345,7 +8252,7 @@ class FileEntry(Message[_FileEntryFields]):
         owner_gid: int
         symlink_target: str
 
-_ReadPathRequestFields: TypeAlias = Literal["project_id", "service", "volume", "path", "entry_limit", "offset_bytes", "length_bytes", "entry_page_token"]
+_ReadPathRequestFields: TypeAlias = Literal["project_id", "service", "volume", "path", "entry_limit", "offset_bytes", "length_bytes", "entry_page_token", "workspace"]
 
 class ReadPathRequest(Message[_ReadPathRequestFields]):
     """
@@ -7395,9 +8302,13 @@ class ReadPathRequest(Message[_ReadPathRequestFields]):
             ```proto
             optional string entry_page_token = 9;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "path", "entry_limit", "offset_bytes", "length_bytes", "entry_page_token", "root")
+    __slots__ = ("project_id", "path", "entry_limit", "offset_bytes", "length_bytes", "entry_page_token", "workspace", "root")
 
     if TYPE_CHECKING:
 
@@ -7411,6 +8322,7 @@ class ReadPathRequest(Message[_ReadPathRequestFields]):
             offset_bytes: int | None = None,
             length_bytes: int | None = None,
             entry_page_token: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -7421,6 +8333,7 @@ class ReadPathRequest(Message[_ReadPathRequestFields]):
         offset_bytes: int
         length_bytes: int
         entry_page_token: str
+        workspace: str
 
 _ReadPathResponseFields: TypeAlias = Literal["entry", "location", "volume", "entries", "entry_count", "next_entry_page_token", "text", "binary", "next_offset_bytes", "deploy_id"]
 
@@ -7526,7 +8439,7 @@ class ReadPathResponse(Message[_ReadPathResponseFields]):
         next_offset_bytes: int
         deploy_id: str
 
-_CreateTransferRequestFields: TypeAlias = Literal["upload_archive", "upload_file", "download", "download_database"]
+_CreateTransferRequestFields: TypeAlias = Literal["upload_archive", "upload_file", "download", "download_database", "workspace"]
 
 class CreateTransferRequest(Message[_CreateTransferRequestFields]):
     """
@@ -7539,9 +8452,13 @@ class CreateTransferRequest(Message[_CreateTransferRequestFields]):
             ```proto
             oneof transfer
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("transfer",)
+    __slots__ = ("workspace", "transfer")
 
     if TYPE_CHECKING:
 
@@ -7549,10 +8466,12 @@ class CreateTransferRequest(Message[_CreateTransferRequestFields]):
             self,
             *,
             transfer: Oneof[Literal["upload_archive"], ArchiveUpload] | Oneof[Literal["upload_file"], FileUpload] | Oneof[Literal["download"], PathDownload] | Oneof[Literal["download_database"], DatabaseDump] | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         transfer: Oneof[Literal["upload_archive"], ArchiveUpload] | Oneof[Literal["upload_file"], FileUpload] | Oneof[Literal["download"], PathDownload] | Oneof[Literal["download_database"], DatabaseDump] | None
+        workspace: str
 
 _ArchiveUploadFields: TypeAlias = Literal["file_name"]
 
@@ -7809,7 +8728,7 @@ class CreateTransferResponse(Message[_CreateTransferResponseFields]):
         file_name: str
         exclude_names: list[str]
 
-_GetUploadRequestFields: TypeAlias = Literal["upload_id"]
+_GetUploadRequestFields: TypeAlias = Literal["upload_id", "workspace"]
 
 class GetUploadRequest(Message[_GetUploadRequestFields]):
     """
@@ -7824,9 +8743,13 @@ class GetUploadRequest(Message[_GetUploadRequestFields]):
             ```proto
             optional string upload_id = 1;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("upload_id",)
+    __slots__ = ("upload_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -7834,10 +8757,12 @@ class GetUploadRequest(Message[_GetUploadRequestFields]):
             self,
             *,
             upload_id: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         upload_id: str
+        workspace: str
 
 _GetUploadResponseFields: TypeAlias = Literal["file_name", "file_count", "unpacked_bytes", "compose_source", "env_file", "violations"]
 
@@ -8128,11 +9053,12 @@ class DatabaseSizeRefusal(Message[_DatabaseSizeRefusalFields]):
         keeps_bytes: int
         volume: str
 
-_NoMachineFields: TypeAlias = Literal["reason", "url"]
+_NoMachineFields: TypeAlias = Literal["reason", "url", "workspace_id"]
 
 class NoMachine(Message[_NoMachineFields]):
     """
-    Detail of a FAILED_PRECONDITION error: the account has no machine to run projects on yet.
+    Detail of a FAILED_PRECONDITION error: there is no machine to run projects on yet, since the
+    caller has no workspace, or the workspace's machine is being prepared.
 
     ```proto
     message pethost.panel.v1.NoMachine
@@ -8144,14 +9070,21 @@ class NoMachine(Message[_NoMachineFields]):
             optional pethost.panel.v1.NoMachineReason reason = 1;
             ```
         url:
-            Where the person goes on in the browser: the page they pay at. An MCP tool leaves it out.
+            Where the person goes on in the browser: for NO_PLAN the page they pay at, for BEING_PREPARED
+            the workspace's page, which says it is. An MCP tool leaves it out.
 
             ```proto
             optional string url = 2;
             ```
+        workspace_id:
+            BEING_PREPARED: the workspace. Empty for NO_PLAN.
+
+            ```proto
+            optional string workspace_id = 3;
+            ```
     """
 
-    __slots__ = ("reason", "url")
+    __slots__ = ("reason", "url", "workspace_id")
 
     if TYPE_CHECKING:
 
@@ -8160,13 +9093,169 @@ class NoMachine(Message[_NoMachineFields]):
             *,
             reason: NoMachineReason | None = None,
             url: str | None = None,
+            workspace_id: str | None = None,
         ) -> None:
             pass
 
         reason: NoMachineReason
         url: str
+        workspace_id: str
 
-_WatchOperationRequestFields: TypeAlias = Literal["project_id", "operation_id"]
+_WorkspaceChoiceFields: TypeAlias = Literal["workspaces", "total", "holding_project", "incomplete"]
+
+class WorkspaceChoice(Message[_WorkspaceChoiceFields]):
+    """
+    Detail of an error that needs `workspace`: FAILED_PRECONDITION when the call named none and
+    the caller has several, INVALID_ARGUMENT when it named none of theirs. Name one of these, by
+    what the person asked for: a project that exists is in those of holding_project; for
+    something new, ask the person, showing each one's size and what is free.
+
+    ```proto
+    message pethost.panel.v1.WorkspaceChoice
+    ```
+
+    Attributes:
+        workspaces:
+            By name, at most 20: ListWorkspaces lists all.
+
+            ```proto
+            repeated pethost.panel.v1.Workspace workspaces = 1;
+            ```
+        total:
+            The workspaces the call may act on (this token's), in all.
+
+            ```proto
+            optional uint32 total = 2;
+            ```
+        holding_project:
+            The call names a project: the workspaces that have a project of that id, by workspace_id.
+
+            ```proto
+            repeated string holding_project = 3;
+            ```
+        incomplete:
+            As ListWorkspacesResponse's.
+
+            ```proto
+            optional bool incomplete = 4;
+            ```
+    """
+
+    __slots__ = ("workspaces", "total", "holding_project", "incomplete")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            workspaces: list[Workspace] | None = None,
+            total: int | None = None,
+            holding_project: list[str] | None = None,
+            incomplete: bool | None = None,
+        ) -> None:
+            pass
+
+        workspaces: list[Workspace]
+        total: int
+        holding_project: list[str]
+        incomplete: bool
+
+_WorkspaceNotGrantedFields: TypeAlias = Literal["workspace_id", "url"]
+
+class WorkspaceNotGranted(Message[_WorkspaceNotGrantedFields]):
+    """
+    Detail of a PERMISSION_DENIED error: the account has the workspace `workspace` named (or the
+    connection is pinned to), but the person has not let this token reach it; or the call named
+    none and the token reaches none of the account's workspaces.
+
+    ```proto
+    message pethost.panel.v1.WorkspaceNotGranted
+    ```
+
+    Attributes:
+        workspace_id:
+            The workspace it may not reach: the one named, else the account's only one. Empty = the call
+            named none and the account has several.
+
+            ```proto
+            optional string workspace_id = 1;
+            ```
+        url:
+            The panel's page where the person lets the token reach it.
+
+            ```proto
+            optional string url = 2;
+            ```
+    """
+
+    __slots__ = ("workspace_id", "url")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            workspace_id: str | None = None,
+            url: str | None = None,
+        ) -> None:
+            pass
+
+        workspace_id: str
+        url: str
+
+_ProjectMovedFields: TypeAlias = Literal["project_id", "workspace_id", "workspace_name", "move_time"]
+
+class ProjectMoved(Message[_ProjectMovedFields]):
+    """
+    Detail of a FAILED_PRECONDITION error: the project moved to another workspace (MoveProject).
+    Call there, naming it as `workspace`; ids of operations and snapshots from before stay
+    behind.
+
+    ```proto
+    message pethost.panel.v1.ProjectMoved
+    ```
+
+    Attributes:
+        project_id:
+            ```proto
+            optional string project_id = 1;
+            ```
+        workspace_id:
+            Where the move took it, which answers for it as it is now.
+
+            ```proto
+            optional string workspace_id = 2;
+            ```
+        workspace_name:
+            ```proto
+            optional string workspace_name = 3;
+            ```
+        move_time:
+            ```proto
+            optional google.protobuf.Timestamp move_time = 4;
+            ```
+    """
+
+    __slots__ = ("project_id", "workspace_id", "workspace_name", "move_time")
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            project_id: str | None = None,
+            workspace_id: str | None = None,
+            workspace_name: str | None = None,
+            move_time: Timestamp | None = None,
+        ) -> None:
+            pass
+
+        project_id: str
+        workspace_id: str
+        workspace_name: str
+        move_time: Timestamp | None
+
+_WatchOperationRequestFields: TypeAlias = Literal["project_id", "operation_id", "workspace"]
 
 class WatchOperationRequest(Message[_WatchOperationRequestFields]):
     """
@@ -8185,9 +9274,13 @@ class WatchOperationRequest(Message[_WatchOperationRequestFields]):
             ```proto
             optional string operation_id = 2;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "operation_id")
+    __slots__ = ("project_id", "operation_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -8196,13 +9289,15 @@ class WatchOperationRequest(Message[_WatchOperationRequestFields]):
             *,
             project_id: str | None = None,
             operation_id: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         operation_id: str
+        workspace: str
 
-_WatchOperationResponseFields: TypeAlias = Literal["log", "finished_operation"]
+_WatchOperationResponseFields: TypeAlias = Literal["log", "finished_operation", "move_message"]
 
 class WatchOperationResponse(Message[_WatchOperationResponseFields]):
     """
@@ -8215,9 +9310,15 @@ class WatchOperationResponse(Message[_WatchOperationResponseFields]):
             ```proto
             oneof message
             ```
+        move_message:
+            With a MOVE's finished_operation: MoveProjectResponse.move_message.
+
+            ```proto
+            optional string move_message = 3;
+            ```
     """
 
-    __slots__ = ("message",)
+    __slots__ = ("move_message", "message")
 
     if TYPE_CHECKING:
 
@@ -8225,12 +9326,14 @@ class WatchOperationResponse(Message[_WatchOperationResponseFields]):
             self,
             *,
             message: Oneof[Literal["log"], OperationLogLine] | Oneof[Literal["finished_operation"], Operation] | None = None,
+            move_message: str | None = None,
         ) -> None:
             pass
 
         message: Oneof[Literal["log"], OperationLogLine] | Oneof[Literal["finished_operation"], Operation] | None
+        move_message: str
 
-_TailContainerLogsRequestFields: TypeAlias = Literal["project_id", "filter", "after_cursor"]
+_TailContainerLogsRequestFields: TypeAlias = Literal["project_id", "filter", "after_cursor", "workspace"]
 
 class TailContainerLogsRequest(Message[_TailContainerLogsRequestFields]):
     """
@@ -8253,9 +9356,13 @@ class TailContainerLogsRequest(Message[_TailContainerLogsRequestFields]):
             ```proto
             optional string after_cursor = 3;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "filter", "after_cursor")
+    __slots__ = ("project_id", "filter", "after_cursor", "workspace")
 
     if TYPE_CHECKING:
 
@@ -8265,12 +9372,14 @@ class TailContainerLogsRequest(Message[_TailContainerLogsRequestFields]):
             project_id: str | None = None,
             filter: ContainerLogFilter | None = None,
             after_cursor: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         filter: ContainerLogFilter | None
         after_cursor: str
+        workspace: str
 
 _TailContainerLogsResponseFields: TypeAlias = Literal["line", "cursor"]
 
@@ -8308,7 +9417,7 @@ class TailContainerLogsResponse(Message[_TailContainerLogsResponseFields]):
         line: LogLine | None
         cursor: str
 
-_TailHttpTrafficRequestFields: TypeAlias = Literal["project_id", "filter", "after_sequence"]
+_TailHttpTrafficRequestFields: TypeAlias = Literal["project_id", "filter", "after_sequence", "workspace"]
 
 class TailHttpTrafficRequest(Message[_TailHttpTrafficRequestFields]):
     """
@@ -8331,9 +9440,13 @@ class TailHttpTrafficRequest(Message[_TailHttpTrafficRequestFields]):
             ```proto
             optional uint64 after_sequence = 3;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "filter", "after_sequence")
+    __slots__ = ("project_id", "filter", "after_sequence", "workspace")
 
     if TYPE_CHECKING:
 
@@ -8343,12 +9456,14 @@ class TailHttpTrafficRequest(Message[_TailHttpTrafficRequestFields]):
             project_id: str | None = None,
             filter: HttpTrafficFilter | None = None,
             after_sequence: int | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
         filter: HttpTrafficFilter | None
         after_sequence: int
+        workspace: str
 
 _TailHttpTrafficResponseFields: TypeAlias = Literal["request"]
 
@@ -8378,7 +9493,7 @@ class TailHttpTrafficResponse(Message[_TailHttpTrafficResponseFields]):
 
         request: HttpRequest | None
 
-_OpenTerminalRequestFields: TypeAlias = Literal["project_id", "service", "size", "command", "run_as_user", "working_directory"]
+_OpenTerminalRequestFields: TypeAlias = Literal["project_id", "service", "size", "command", "run_as_user", "working_directory", "workspace"]
 
 class OpenTerminalRequest(Message[_OpenTerminalRequestFields]):
     """
@@ -8419,9 +9534,13 @@ class OpenTerminalRequest(Message[_OpenTerminalRequestFields]):
             ```proto
             optional string working_directory = 6;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id", "service", "size", "command", "run_as_user", "working_directory")
+    __slots__ = ("project_id", "service", "size", "command", "run_as_user", "working_directory", "workspace")
 
     if TYPE_CHECKING:
 
@@ -8434,6 +9553,7 @@ class OpenTerminalRequest(Message[_OpenTerminalRequestFields]):
             command: list[str] | None = None,
             run_as_user: str | None = None,
             working_directory: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
@@ -8443,6 +9563,7 @@ class OpenTerminalRequest(Message[_OpenTerminalRequestFields]):
         command: list[str]
         run_as_user: str
         working_directory: str
+        workspace: str
 
 _TerminalSizeFields: TypeAlias = Literal["columns", "rows"]
 
@@ -8516,7 +9637,7 @@ class OpenTerminalResponse(Message[_OpenTerminalResponseFields]):
         url: str
         expire_time: Timestamp | None
 
-_OpenDatabaseClientRequestFields: TypeAlias = Literal["project_id"]
+_OpenDatabaseClientRequestFields: TypeAlias = Literal["project_id", "workspace"]
 
 class OpenDatabaseClientRequest(Message[_OpenDatabaseClientRequestFields]):
     """
@@ -8531,9 +9652,13 @@ class OpenDatabaseClientRequest(Message[_OpenDatabaseClientRequestFields]):
             ```proto
             optional string project_id = 1;
             ```
+        workspace:
+            ```proto
+            optional string workspace = 100;
+            ```
     """
 
-    __slots__ = ("project_id",)
+    __slots__ = ("project_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -8541,10 +9666,12 @@ class OpenDatabaseClientRequest(Message[_OpenDatabaseClientRequestFields]):
             self,
             *,
             project_id: str | None = None,
+            workspace: str | None = None,
         ) -> None:
             pass
 
         project_id: str
+        workspace: str
 
 _OpenDatabaseClientResponseFields: TypeAlias = Literal["url", "expire_time"]
 
@@ -8583,6 +9710,58 @@ class OpenDatabaseClientResponse(Message[_OpenDatabaseClientResponseFields]):
 
         url: str
         expire_time: Timestamp | None
+
+class WorkspaceStatus(Enum):
+    """
+    ```proto
+    enum pethost.panel.v1.WorkspaceStatus
+    ```
+
+    Attributes:
+        UNSPECIFIED:
+            ```proto
+            WORKSPACE_STATUS_UNSPECIFIED = 0
+            ```
+        READY:
+            Its machine answers calls.
+
+            ```proto
+            WORKSPACE_STATUS_READY = 1
+            ```
+        BEING_PREPARED:
+            Paid, and its machine is being prepared: Pethost emails the person when it is ready. A call
+            that names it is FAILED_PRECONDITION + NoMachine until then.
+
+            ```proto
+            WORKSPACE_STATUS_BEING_PREPARED = 2
+            ```
+    """
+
+    UNSPECIFIED = 0
+    READY = 1
+    BEING_PREPARED = 2
+
+class WorkspaceRole(Enum):
+    """
+    ```proto
+    enum pethost.panel.v1.WorkspaceRole
+    ```
+
+    Attributes:
+        UNSPECIFIED:
+            ```proto
+            WORKSPACE_ROLE_UNSPECIFIED = 0
+            ```
+        OWNER:
+            Pays for it, and may do everything in it.
+
+            ```proto
+            WORKSPACE_ROLE_OWNER = 1
+            ```
+    """
+
+    UNSPECIFIED = 0
+    OWNER = 1
 
 class AlertChannelKind(Enum):
     """
@@ -9051,6 +10230,14 @@ class OperationKind(Enum):
             ```proto
             OPERATION_KIND_DELETE = 5
             ```
+        MOVE:
+            MoveProject's, of the project it moves, in both workspaces. Its operation_id is the move's,
+            which GetOperation and WatchOperation answer in either, also with the project_id of a database
+            the move holds.
+
+            ```proto
+            OPERATION_KIND_MOVE = 6
+            ```
     """
 
     UNSPECIFIED = 0
@@ -9059,6 +10246,7 @@ class OperationKind(Enum):
     BACKUP = 3
     RESTORE = 4
     DELETE = 5
+    MOVE = 6
 
 class OperationStatus(Enum):
     """
@@ -9691,8 +10879,8 @@ class NoMachineReason(Enum):
             NO_MACHINE_REASON_NO_PLAN = 1
             ```
         BEING_PREPARED:
-            The plan is paid and a machine is being prepared for the account: Pethost emails the person
-            when it is ready. Call again later.
+            The plan is paid and a machine is being prepared for the workspace: Pethost emails the
+            person when it is ready. Call again later.
 
             ```proto
             NO_MACHINE_REASON_BEING_PREPARED = 2
@@ -9705,11 +10893,14 @@ class NoMachineReason(Enum):
 
 
 _DESC = file_desc(
-    b'\n\x0ev1/panel.proto\x12\x10pethost.panel.v1\x1a\x1fgoogle/protobuf/timestamp.protoz\x0cv1/mcp.protoz\x11v1/optional.protoz\x0fv1/pulumi.protoz\x0cv1/sdk.proto"\x13\n\x11GetMachineRequest"\x90\x02\n\x12GetMachineResponse\x123\n\x07machine\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.MachineR\x07machine\x12<\n\x08projects\x18\x02 \x03(\x0b2 .pethost.panel.v1.ProjectSummaryR\x08projects\x12K\n\x10deleted_projects\x18\x03 \x03(\x0b2 .pethost.panel.v1.DeletedProjectR\x0fdeletedProjects\x12:\n\x06github\x18\x04 \x01(\x0b2".pethost.panel.v1.GithubConnectionR\x06github"\xca\x0b\n\x07Machine\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n\x08location\x18\x02 \x01(\tR\x08location\x12;\n\x0bsample_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nsampleTime\x12$\n\x0ecpu_used_cores\x18\x05 \x01(\x01R\x0ccpuUsedCores\x12&\n\x0fcpu_total_cores\x18\x06 \x01(\x01R\rcpuTotalCores\x12*\n\x11memory_used_bytes\x18\x07 \x01(\x04R\x0fmemoryUsedBytes\x12,\n\x12memory_total_bytes\x18\x08 \x01(\x04R\x10memoryTotalBytes\x12&\n\x0fdisk_used_bytes\x18\t \x01(\x04R\rdiskUsedBytes\x12(\n\x10disk_total_bytes\x18\n \x01(\x04R\x0ediskTotalBytes\x12:\n\ndisk_usage\x18\x0b \x01(\x0b2\x1b.pethost.panel.v1.DiskUsageR\tdiskUsage\x12\x1a\n\x08hostname\x18\x0c \x01(\tR\x08hostname\x12.\n\x13hostname_is_address\x18\x1d \x01(\x08R\x11hostnameIsAddress\x127\n\x18ssh_host_key_fingerprint\x18\r \x01(\tR\x15sshHostKeyFingerprint\x123\n\x08ssh_keys\x18\x0e \x03(\x0b2\x18.pethost.panel.v1.SshKeyR\x07sshKeys\x12\'\n\x0fbackups_enabled\x18\x0f \x01(\x08R\x0ebackupsEnabled\x12H\n\x12snapshot_list_time\x18\x16 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10snapshotListTime\x12A\n\x1dsnapshot_list_failure_message\x18\x17 \x01(\tR\x1asnapshotListFailureMessage\x124\n\x16backup_retention_hours\x18\x04 \x01(\rR\x14backupRetentionHours\x12!\n\x0cacme_enabled\x18\x15 \x01(\x08R\x0bacmeEnabled\x12\x1f\n\x0bapps_domain\x18\x19 \x01(\tR\nappsDomain\x12%\n\x0edaemon_version\x18\x10 \x01(\tR\rdaemonVersion\x12%\n\x0edocker_version\x18\x11 \x01(\tR\rdockerVersion\x127\n\tboot_time\x18\x12 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08bootTime\x12N\n\x15restart_required_time\x18\x13 \x01(\x0b2\x1a.google.protobuf.TimestampR\x13restartRequiredTime\x12P\n\x16scheduled_restart_time\x18\x14 \x01(\x0b2\x1a.google.protobuf.TimestampR\x14scheduledRestartTime\x12<\n\x08sessions\x18\x18 \x03(\x0b2 .pethost.panel.v1.MachineSessionR\x08sessions\x12I\n\x0ealert_channels\x18\x1a \x03(\x0b2".pethost.panel.v1.AlertDestinationR\ralertChannels\x12P\n\x10database_engines\x18\x1b \x03(\x0b2%.pethost.panel.v1.DatabaseEngineOfferR\x0fdatabaseEngines\x12.\n\x13memory_limits_bytes\x18\x1c \x01(\x04R\x11memoryLimitsBytes"`\n\x10AlertDestination\x126\n\x04kind\x18\x01 \x01(\x0e2".pethost.panel.v1.AlertChannelKindR\x04kind\x12\x14\n\x05label\x18\x02 \x01(\tR\x05label"\xec\x02\n\x0eMachineSession\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x128\n\x04kind\x18\x02 \x01(\x0e2$.pethost.panel.v1.MachineSessionKindR\x04kind\x12\x1d\n\nproject_id\x18\x03 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x04 \x01(\tR\x07service\x12\x12\n\x04port\x18\x05 \x01(\rR\x04port\x129\n\nstart_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12%\n\x0eclient_address\x18\x07 \x01(\tR\rclientAddress\x12"\n\rssh_key_label\x18\x08 \x01(\tR\x0bsshKeyLabel\x12.\n\x13ssh_key_fingerprint\x18\t \x01(\tR\x11sshKeyFingerprint"\xcb\x02\n\tDiskUsage\x12!\n\x0cimages_bytes\x18\x01 \x01(\x04R\x0bimagesBytes\x120\n\x11build_cache_bytes\x18\x02 \x01(\x04R\x0fbuildCacheBytesB\x04\x90\xb5\x18\x01\x12#\n\rvolumes_bytes\x18\x03 \x01(\x04R\x0cvolumesBytes\x124\n\x16container_layers_bytes\x18\x04 \x01(\x04R\x14containerLayersBytes\x12.\n\x13project_files_bytes\x18\x05 \x01(\x04R\x11projectFilesBytes\x120\n\x14container_logs_bytes\x18\x06 \x01(\x04R\x12containerLogsBytes\x12,\n\x12http_traffic_bytes\x18\x07 \x01(\x04R\x10httpTrafficBytes"_\n\x06SshKey\x12\x1d\n\npublic_key\x18\x01 \x01(\tR\tpublicKey\x12\x14\n\x05label\x18\x02 \x01(\tR\x05label\x12 \n\x0bfingerprint\x18\x03 \x01(\tR\x0bfingerprint"\xec\x01\n\x10GithubConnection\x12\x19\n\x08app_name\x18\x01 \x01(\tR\x07appName\x12\x1f\n\x0binstall_url\x18\x02 \x01(\tR\ninstallUrl\x12F\n\x0crepositories\x18\x03 \x03(\x0b2".pethost.panel.v1.GithubRepositoryR\x0crepositories\x12)\n\x10repository_count\x18\x04 \x01(\rR\x0frepositoryCount\x12)\n\x10webhooks_enabled\x18\x05 \x01(\x08R\x0fwebhooksEnabled"\xac\x01\n\x10GithubRepository\x12\x1e\n\nrepository\x18\x01 \x01(\tR\nrepository\x12%\n\x0edefault_branch\x18\x02 \x01(\tR\rdefaultBranch\x12\x18\n\x07private\x18\x03 \x01(\x08R\x07private\x127\n\tpush_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08pushTime"\x9b\x01\n\x0eDeletedProject\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12C\n\x0fnewest_snapshot\x18\x02 \x01(\x0b2\x1a.pethost.panel.v1.SnapshotR\x0enewestSnapshot\x12%\n\x0esnapshot_count\x18\x03 \x01(\rR\rsnapshotCount"\xc2\x02\n\x17RunMachineActionRequest\x12:\n\x0badd_ssh_key\x18\x01 \x01(\x0b2\x18.pethost.panel.v1.SshKeyH\x00R\taddSshKey\x12=\n\x1aremove_ssh_key_fingerprint\x18\x02 \x01(\tH\x00R\x17removeSshKeyFingerprint\x12Q\n\x0frestart_machine\x18\x03 \x01(\x0b2&.pethost.panel.v1.RestartMachineActionH\x00R\x0erestartMachine\x12\'\n\x0ecancel_restart\x18\x04 \x01(\x08H\x00R\rcancelRestart\x12&\n\x0eend_session_id\x18\x05 \x01(\tH\x00R\x0cendSessionIdB\x08\n\x06action"\xbc\x01\n\x14RestartMachineAction\x12=\n\x0crestart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0brestartTime\x122\n\x15at_maintenance_window\x18\x03 \x01(\x08R\x13atMaintenanceWindow\x121\n\x14interrupt_operations\x18\x02 \x01(\x08R\x13interruptOperations"O\n\x18RunMachineActionResponse\x123\n\x07machine\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.MachineR\x07machine"\x8b\x01\n\x0fProjectMetadata\x12\x18\n\x04name\x18\x01 \x01(\tR\x04nameB\x04\x90\xb5\x18\x01\x12\x1a\n\x05emoji\x18\x02 \x01(\tR\x05emojiB\x04\x90\xb5\x18\x01\x12&\n\x0bdescription\x18\x03 \x01(\tR\x0bdescriptionB\x04\x90\xb5\x18\x01\x12\x1a\n\x05notes\x18\x04 \x01(\tR\x05notesB\x04\x90\xb5\x18\x01"\xc5\x05\n\x0eProjectSummary\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12=\n\x08metadata\x18\x02 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12<\n\x08problems\x18\x03 \x03(\x0b2 .pethost.panel.v1.ProjectProblemR\x08problems\x12<\n\x08services\x18\x04 \x03(\x0b2 .pethost.panel.v1.ServiceSummaryR\x08services\x12\x10\n\x03url\x18\x05 \x01(\tR\x03url\x12\x14\n\x05hosts\x18\x06 \x03(\tR\x05hosts\x12W\n\x15http_traffic_last_day\x18\x07 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x12httpTrafficLastDay\x12$\n\x0ecpu_used_cores\x18\x08 \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\t \x01(\x04R\x0fmemoryUsedBytes\x12;\n\x0bdeploy_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\ndeployTime\x12J\n\x12running_operations\x18\x0b \x03(\x0b2\x1b.pethost.panel.v1.OperationR\x11runningOperations\x12\x16\n\x06pinned\x18\x0c \x01(\x08R\x06pinned\x12&\n\x0fdisk_used_bytes\x18\r \x01(\x04R\rdiskUsedBytes\x12=\n\x08database\x18\x0e \x01(\x0b2!.pethost.panel.v1.DatabaseSummaryR\x08database"`\n\x0eServiceSummary\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x124\n\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state"\x8c\x02\n\x0eProjectProblem\x128\n\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12!\n\x0coperation_id\x18\x03 \x01(\tR\x0boperationId\x129\n\nsince_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tsinceTime\x12\'\n\x0fproblem_message\x18\x05 \x01(\tR\x0eproblemMessage\x12\x1f\n\x0bincident_id\x18\x06 \x01(\tR\nincidentId"\xf9\x02\n\x11GetProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x122\n\x15include_secret_values\x18\x02 \x01(\x08R\x13includeSecretValues\x12E\n\x10snapshots_before\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0fsnapshotsBefore\x12)\n\x10snapshots_volume\x18\x04 \x01(\tR\x0fsnapshotsVolume\x12E\n\x10incidents_before\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0fincidentsBefore\x12(\n\x10uptime_day_count\x18\x06 \x01(\rR\x0euptimeDayCount\x12.\n\x13incidents_before_id\x18\x07 \x01(\tR\x11incidentsBeforeId"I\n\x12GetProjectResponse\x123\n\x07project\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project"\xf4\x0b\n\x07Project\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12=\n\x08metadata\x18\x02 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12<\n\x08problems\x18\x03 \x03(\x0b2 .pethost.panel.v1.ProjectProblemR\x08problems\x12\x10\n\x03url\x18\x04 \x01(\tR\x03url\x12$\n\x0ecpu_used_cores\x18\x05 \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\x06 \x01(\x04R\x0fmemoryUsedBytes\x12\x1b\n\tdeploy_id\x18\x07 \x01(\tR\x08deployId\x12F\n\rdeploy_status\x18\x12 \x01(\x0e2!.pethost.panel.v1.OperationStatusR\x0cdeployStatus\x12;\n\x0bdeploy_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\ndeployTime\x128\n\x19x_pethost_applies_at_once\x18\x13 \x01(\x08R\x15xPethostAppliesAtOnce\x125\n\x08services\x18\n \x03(\x0b2\x19.pethost.panel.v1.ServiceR\x08services\x122\n\x07volumes\x18\x0b \x03(\x0b2\x18.pethost.panel.v1.VolumeR\x07volumes\x12/\n\x06routes\x18\t \x03(\x0b2\x17.pethost.panel.v1.RouteR\x06routes\x12,\n\x05hosts\x18\x0c \x03(\x0b2\x16.pethost.panel.v1.HostR\x05hosts\x12-\n\x12password_protected\x18\x16 \x01(\x08R\x11passwordProtected\x12;\n\noperations\x18\r \x03(\x0b2\x1b.pethost.panel.v1.OperationR\noperations\x128\n\tsnapshots\x18\x0e \x03(\x0b2\x1a.pethost.panel.v1.SnapshotR\tsnapshots\x12%\n\x0esnapshot_count\x18\x0f \x01(\rR\rsnapshotCount\x12H\n\x12snapshot_list_time\x18\x14 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10snapshotListTime\x12W\n\x15http_traffic_last_day\x18\x10 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x12httpTrafficLastDay\x127\n\x06source\x18\x11 \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12_\n\x17running_services_action\x18\x15 \x01(\x0b2\'.pethost.panel.v1.RunningServicesActionR\x15runningServicesAction\x127\n\x06alerts\x18\x17 \x01(\x0b2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts\x128\n\tincidents\x18\x18 \x03(\x0b2\x1a.pethost.panel.v1.IncidentR\tincidents\x12%\n\x0emore_incidents\x18\x19 \x01(\x08R\rmoreIncidents\x12<\n\x0buptime_days\x18\x1a \x03(\x0b2\x1b.pethost.panel.v1.UptimeDayR\nuptimeDays\x126\n\x08database\x18\x1b \x01(\x0b2\x1a.pethost.panel.v1.DatabaseR\x08database\x12)\n\x10linked_databases\x18\x1c \x03(\tR\x0flinkedDatabases"\xa8\x01\n\x15RunningServicesAction\x128\n\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ServicesActionKindR\x04kind\x12\x1a\n\x08services\x18\x02 \x03(\tR\x08services\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime"i\n\rProjectSource\x12\x16\n\x05files\x18\x01 \x01(\x08H\x00R\x05files\x128\n\x06github\x18\x02 \x01(\x0b2\x1e.pethost.panel.v1.GithubSourceH\x00R\x06githubB\x06\n\x04kind"\xf3\x02\n\x0cGithubSource\x12$\n\nrepository\x18\x01 \x01(\tR\nrepositoryB\x04\x90\xb5\x18\x01\x12\x1c\n\x06branch\x18\x02 \x01(\tR\x06branchB\x04\x90\xb5\x18\x01\x12"\n\tdirectory\x18\x03 \x01(\tR\tdirectoryB\x04\x90\xb5\x18\x01\x12%\n\x0bauto_deploy\x18\x04 \x01(\x08R\nautoDeployB\x04\x90\xb5\x18\x01\x12C\n\rnewest_commit\x18\x05 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0cnewestCommit\x12G\n\x0fdeployed_commit\x18\x06 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0edeployedCommit\x12\x16\n\x06pinned\x18\x08 \x01(\x08R\x06pinned\x12.\n\x13auto_deploy_pending\x18\t \x01(\x08R\x11autoDeployPending"H\n\x0cGithubCommit\x12\x10\n\x03sha\x18\x01 \x01(\tR\x03sha\x12\x14\n\x05title\x18\x02 \x01(\tR\x05title\x12\x10\n\x03url\x18\x03 \x01(\tR\x03url"\xff\t\n\x07Service\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x124\n\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\x12+\n\x11container_running\x18\x19 \x01(\x08R\x10containerRunning\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12!\n\x0cbuilds_image\x18\x04 \x01(\x08R\x0bbuildsImage\x12!\n\x0cimage_digest\x18\x05 \x01(\tR\x0bimageDigest\x12(\n\x10image_size_bytes\x18\x06 \x01(\x04R\x0eimageSizeBytes\x12\x18\n\x07command\x18\x07 \x03(\tR\x07command\x12\x1e\n\x0brun_as_user\x18\x08 \x01(\tR\trunAsUser\x129\n\nstart_time\x18\t \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12;\n\x0bfinish_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12!\n\texit_code\x18\x0b \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12"\n\rout_of_memory\x18\x0c \x01(\x08R\x0boutOfMemory\x12#\n\rrestart_count\x18\r \x01(\rR\x0crestartCount\x12$\n\x0ecpu_used_cores\x18\x0e \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\x0f \x01(\x04R\x0fmemoryUsedBytes\x12,\n\x12memory_limit_bytes\x18\x10 \x01(\x04R\x10memoryLimitBytes\x12&\n\x0fcpu_limit_cores\x18\x11 \x01(\x01R\rcpuLimitCores\x120\n\x14writable_layer_bytes\x18\x12 \x01(\x04R\x12writableLayerBytes\x12\x14\n\x05ports\x18\x13 \x03(\rR\x05ports\x12\'\n\x0flistening_ports\x18\x1c \x03(\rR\x0elisteningPorts\x12H\n\x0fpublished_ports\x18\x14 \x03(\x0b2\x1f.pethost.panel.v1.PublishedPortR\x0epublishedPorts\x12B\n\rvolume_mounts\x18\x15 \x03(\x0b2\x1d.pethost.panel.v1.VolumeMountR\x0cvolumeMounts\x12F\n\x0erestart_policy\x18\x16 \x01(\x0e2\x1f.pethost.panel.v1.RestartPolicyR\rrestartPolicy\x12@\n\x0chealth_check\x18\x17 \x01(\x0b2\x1d.pethost.panel.v1.HealthCheckR\x0bhealthCheck\x12G\n\x0benvironment\x18\x18 \x03(\x0b2%.pethost.panel.v1.EnvironmentVariableR\x0benvironment\x12\x1b\n\tenv_files\x18\x1a \x03(\tR\x08envFiles\x12\x1f\n\x0bssh_command\x18\x1b \x01(\tR\nsshCommand\x12\x1b\n\tssh_login\x18\x1d \x01(\tR\x08sshLogin"\x89\x01\n\rPublishedPort\x12!\n\x0cmachine_port\x18\x01 \x01(\rR\x0bmachinePort\x12%\n\x0econtainer_port\x18\x02 \x01(\rR\rcontainerPort\x12\x1a\n\x08protocol\x18\x03 \x01(\tR\x08protocolJ\x04\x08\x04\x10\x05R\x0cmachine_only"L\n\x0bVolumeMount\x12\x16\n\x06volume\x18\x01 \x01(\tR\x06volume\x12%\n\x0econtainer_path\x18\x02 \x01(\tR\rcontainerPath"\xaa\x02\n\x0bHealthCheck\x12\x18\n\x07command\x18\x01 \x03(\tR\x07command\x12)\n\x10interval_seconds\x18\x02 \x01(\rR\x0fintervalSeconds\x126\n\x06status\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.HealthStatusR\x06status\x12:\n\x19consecutive_failure_count\x18\x04 \x01(\rR\x17consecutiveFailureCount\x122\n\x15recent_results_passed\x18\x05 \x03(\x08R\x13recentResultsPassed\x12.\n\x13last_failure_output\x18\x06 \x01(\tR\x11lastFailureOutput"\xda\x01\n\x13EnvironmentVariable\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n\x05value\x18\x02 \x01(\tR\x05valueB\x03\x80\x01\x01\x12\x16\n\x06secret\x18\x03 \x01(\x08R\x06secret\x12\x1f\n\x0bsource_file\x18\x04 \x01(\tR\nsourceFile\x125\n\x17from_env_file_variables\x18\x05 \x03(\tR\x14fromEnvFileVariables\x12$\n\x0evalue_left_out\x18\x06 \x01(\x08R\x0cvalueLeftOut"\x8a\x02\n\x06Volume\x12\x16\n\x06volume\x18\x01 \x01(\tR\x06volume\x12\x1d\n\nsize_bytes\x18\x02 \x01(\x04R\tsizeBytes\x12@\n\nmounted_by\x18\x03 \x03(\x0b2!.pethost.panel.v1.VolumeMountedByR\tmountedBy\x12D\n\x10last_backup_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0elastBackupTime\x12%\n\x0esnapshot_count\x18\x06 \x01(\rR\rsnapshotCount\x12\x1a\n\x08declared\x18\x05 \x01(\x08R\x08declared"R\n\x0fVolumeMountedBy\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12%\n\x0econtainer_path\x18\x02 \x01(\tR\rcontainerPath"\x85\x02\n\x04Host\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12R\n\x12certificate_source\x18\x03 \x01(\x0e2#.pethost.panel.v1.CertificateSourceR\x11certificateSource\x12R\n\x17certificate_expire_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x15certificateExpireTime\x12/\n\x13unavailable_message\x18\x05 \x01(\tR\x12unavailableMessage"|\n\x05Route\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x12\x12\n\x04port\x18\x04 \x01(\rR\x04port\x12\x1d\n\nstrip_path\x18\x05 \x01(\x08R\tstripPath"\xe0\x07\n\tOperation\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId\x123\n\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n\x06status\x18\x03 \x01(\x0e2!.pethost.panel.v1.OperationStatusR\x06status\x129\n\nstart_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12;\n\x0bfinish_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12\'\n\x0ffailure_message\x18\x06 \x01(\tR\x0efailureMessage\x12Y\n\x15deploy_failure_reason\x18\x07 \x01(\x0e2%.pethost.panel.v1.DeployFailureReasonR\x13deployFailureReason\x12!\n\x0cmade_current\x18\x08 \x01(\x08R\x0bmadeCurrent\x12\x18\n\x07service\x18\t \x01(\tR\x07service\x12(\n\x10failed_exit_code\x18\n \x01(\x05R\x0efailedExitCode\x12\x1f\n\x0bsnapshot_id\x18\x0b \x01(\tR\nsnapshotId\x12)\n\x10restored_volumes\x18\x0c \x03(\tR\x0frestoredVolumes\x12(\n\x10undo_snapshot_id\x18\r \x01(\tR\x0eundoSnapshotId\x12C\n\rgithub_commit\x18\x0e \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0cgithubCommit\x12!\n\x0carchive_name\x18\x0f \x01(\tR\x0barchiveName\x12 \n\x0badjustments\x18\x10 \x03(\tR\x0badjustments\x12#\n\rchanged_paths\x18\x11 \x03(\tR\x0cchangedPaths\x12,\n\x12changed_path_count\x18\x12 \x01(\rR\x10changedPathCount\x12\x1d\n\nfiles_kept\x18\x13 \x01(\x08R\tfilesKept\x12,\n\x12files_operation_id\x18\x14 \x01(\tR\x10filesOperationId\x12=\n\x1bdatabase_memory_limit_bytes\x18\x15 \x01(\x04R\x18databaseMemoryLimitBytes"\xa1\x01\n\x08Snapshot\x12\x1f\n\x0bsnapshot_id\x18\x01 \x01(\tR\nsnapshotId\x12;\n\x0bcreate_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x04R\tsizeBytes\x12\x18\n\x07volumes\x18\x04 \x03(\tR\x07volumes"\xb3\x01\n\x12HttpTrafficSummary\x12#\n\rrequest_count\x18\x01 \x01(\x04R\x0crequestCount\x12,\n\x12server_error_count\x18\x02 \x01(\x04R\x10serverErrorCount\x12$\n\x0elatency_p50_ms\x18\x03 \x01(\rR\x0clatencyP50Ms\x12$\n\x0elatency_p95_ms\x18\x04 \x01(\rR\x0clatencyP95Ms"\xd9\x03\n\x14CreateProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x127\n\x06source\x18\x02 \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12!\n\tupload_id\x18\x03 \x01(\tR\x08uploadIdB\x04\xa8\xb5\x18\x01\x122\n\x05files\x18\x04 \x03(\x0b2\x1c.pethost.panel.v1.FileChangeR\x05files\x12?\n\tx_pethost\x18\x05 \x01(\x0b2".pethost.panel.v1.ProjectExtensionR\x08xPethost\x12\'\n\x0ftimeout_seconds\x18\x06 \x01(\rR\x0etimeoutSeconds\x12!\n\x0coperation_id\x18\x07 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\t \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12L\n\x0elink_databases\x18\x0b \x03(\x0b2%.pethost.panel.v1.DatabaseLinkRequestR\rlinkDatabasesJ\x04\x08\n\x10\x0bR\x08database"\x7f\n\x13DatabaseLinkRequest\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x19\n\x08own_user\x18\x02 \x01(\x08R\x07ownUser\x12\x1d\n\nenv_prefix\x18\x03 \x01(\tR\tenvPrefix"\xa0\x02\n\x15CreateProjectResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x06 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\xa8\x04\n\x14DeployProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12$\n\x0ebase_deploy_id\x18\x02 \x01(\tR\x0cbaseDeployId\x128\n\x05files\x18\x03 \x03(\x0b2\x1c.pethost.panel.v1.FileChangeR\x05filesB\x04\xb0\xb5\x18\x01\x12?\n\tx_pethost\x18\n \x01(\x0b2".pethost.panel.v1.ProjectExtensionR\x08xPethost\x12@\n\x0cmount_volume\x18\x0b \x01(\x0b2\x1d.pethost.panel.v1.MountVolumeR\x0bmountVolume\x12\'\n\x0ftimeout_seconds\x18\x04 \x01(\rR\x0etimeoutSeconds\x12!\n\x0coperation_id\x18\x05 \x01(\tR\x0boperationId\x12\x1d\n\tupload_id\x18\x06 \x01(\tH\x00R\x08uploadId\x12\x18\n\x06commit\x18\x07 \x01(\tH\x00R\x06commit\x12%\n\rnewest_commit\x18\x08 \x01(\x08H\x00R\x0cnewestCommit\x12.\n\x12rollback_deploy_id\x18\x0c \x01(\tH\x00R\x10rollbackDeployId\x12\'\n\x0cwait_seconds\x18\r \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01B\t\n\x07version"f\n\x0bMountVolume\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12\x16\n\x06volume\x18\x02 \x01(\tR\x06volume\x12%\n\x0econtainer_path\x18\x03 \x01(\tR\rcontainerPath"\xf1\x01\n\x10ProjectExtension\x12=\n\x08metadata\x18\x01 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12/\n\x06routes\x18\x02 \x03(\x0b2\x17.pethost.panel.v1.RouteR\x06routes\x12#\n\rremove_routes\x18\x03 \x01(\x08R\x0cremoveRoutes\x12\x1f\n\x08password\x18\x04 \x01(\tR\x08passwordB\x03\x80\x01\x01\x12\'\n\x0fremove_password\x18\x05 \x01(\x08R\x0eremovePassword"\xfb\x01\n\nFileChange\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x14\n\x04data\x18\x03 \x01(\x0cH\x00R\x04data\x12\'\n\x0emake_directory\x18\x04 \x01(\x08H\x00R\rmakeDirectory\x12\x18\n\x06delete\x18\x05 \x01(\x08H\x00R\x06delete\x12!\n\x0bdelete_tree\x18\x06 \x01(\x08H\x00R\ndeleteTree\x12\x1d\n\trename_to\x18\x07 \x01(\tH\x00R\x08renameTo\x12\x1e\n\nexecutable\x18\x08 \x01(\x08R\nexecutableB\x08\n\x06change"\xa0\x02\n\x15DeployProjectResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x06 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"r\n\rSpecViolation\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12\x1a\n\x08location\x18\x02 \x01(\tR\x08location\x12+\n\x11violation_message\x18\x03 \x01(\tR\x10violationMessage"X\n\x12ListCommitsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12#\n\rbefore_commit\x18\x02 \x01(\tR\x0cbeforeCommit"c\n\x13ListCommitsResponse\x128\n\x07commits\x18\x01 \x03(\x0b2\x1e.pethost.panel.v1.BranchCommitR\x07commits\x12\x12\n\x04more\x18\x02 \x01(\x08R\x04more"\x8d\x02\n\x0cBranchCommit\x126\n\x06commit\x18\x01 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x06commit\x12\x16\n\x06author\x18\x02 \x01(\tR\x06author\x12;\n\x0bcommit_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncommitTime\x12\x1a\n\x08deployed\x18\x04 \x01(\x08R\x08deployed\x12<\n\x0blast_deploy\x18\x05 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\nlastDeploy\x12\x16\n\x06newest\x18\x06 \x01(\x08R\x06newest"\xbe\x07\n\x17RunProjectActionRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12I\n\x0estart_services\x18\x02 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\rstartServices\x12G\n\rstop_services\x18\x03 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\x0cstopServices\x12M\n\x10restart_services\x18\x04 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\x0frestartServices\x12T\n\x10recreate_service\x18\x05 \x01(\x0b2\'.pethost.panel.v1.RecreateServiceActionH\x00R\x0frecreateService\x129\n\x07back_up\x18\x06 \x01(\x0b2\x1e.pethost.panel.v1.BackUpActionH\x00R\x06backUp\x12T\n\x10restore_snapshot\x18\x07 \x01(\x0b2\'.pethost.panel.v1.RestoreSnapshotActionH\x00R\x0frestoreSnapshot\x12T\n\x10cancel_operation\x18\x08 \x01(\x0b2\'.pethost.panel.v1.CancelOperationActionH\x00R\x0fcancelOperation\x12N\n\x0edelete_project\x18\t \x01(\x0b2%.pethost.panel.v1.DeleteProjectActionH\x00R\rdeleteProject\x12@\n\nset_source\x18\x0b \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceH\x00R\tsetSource\x12%\n\rdelete_volume\x18\x0c \x01(\tH\x00R\x0cdeleteVolume\x12U\n\x11set_database_size\x18\x0e \x01(\x0b2\'.pethost.panel.v1.SetDatabaseSizeActionH\x00R\x0fsetDatabaseSize\x12!\n\x0coperation_id\x18\n \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\r \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01B\x08\n\x06action",\n\x0eServicesAction\x12\x1a\n\x08services\x18\x01 \x03(\tR\x08services"]\n\x15RecreateServiceAction\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12*\n\x11pull_latest_image\x18\x02 \x01(\x08R\x0fpullLatestImage"\x0e\n\x0cBackUpAction"R\n\x15RestoreSnapshotAction\x12\x1f\n\x0bsnapshot_id\x18\x01 \x01(\tR\nsnapshotId\x12\x18\n\x07volumes\x18\x02 \x03(\tR\x07volumes":\n\x15CancelOperationAction\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId"A\n\x13DeleteProjectAction\x12*\n\x11skip_final_backup\x18\x01 \x01(\x08R\x0fskipFinalBackup"E\n\x15SetDatabaseSizeAction\x12,\n\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes"\xc0\x01\n\x18RunProjectActionResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x123\n\x07project\x18\x03 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x04 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\x9e\x04\n\x08Database\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12%\n\x0eserver_version\x18\x03 \x01(\tR\rserverVersion\x12,\n\x12memory_limit_bytes\x18\x04 \x01(\x04R\x10memoryLimitBytes\x12\x1d\n\ndata_bytes\x18\x05 \x01(\x04R\tdataBytes\x12 \n\x0bconnections\x18\x06 \x01(\rR\x0bconnections\x12\'\n\x0fmax_connections\x18\x07 \x01(\rR\x0emaxConnections\x12\'\n\x0flinked_projects\x18\x08 \x03(\tR\x0elinkedProjects\x12D\n\nconnection\x18\t \x01(\x0b2$.pethost.panel.v1.DatabaseConnectionR\nconnection\x12\x18\n\x07service\x18\n \x01(\tR\x07service\x12\x16\n\x06volume\x18\x0b \x01(\tR\x06volume\x12\'\n\x0fconsole_command\x18\x0c \x03(\tR\x0econsoleCommand\x12*\n\x11own_user_projects\x18\r \x03(\tR\x0fownUserProjects"\xc6\x01\n\x12DatabaseConnection\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x12\n\x04user\x18\x03 \x01(\tR\x04user\x12\x1a\n\x08database\x18\x04 \x01(\tR\x08database\x12\x1f\n\x08password\x18\x05 \x01(\tR\x08passwordB\x03\x80\x01\x01\x12\x15\n\x03url\x18\x06 \x01(\tR\x03urlB\x03\x80\x01\x01\x12 \n\tlocal_url\x18\x07 \x01(\tR\x08localUrlB\x03\x80\x01\x01"\xdb\x02\n\x0fDatabaseSummary\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12\x1d\n\ndata_bytes\x18\x03 \x01(\x04R\tdataBytes\x12 \n\x0bconnections\x18\x04 \x01(\rR\x0bconnections\x12\'\n\x0flinked_projects\x18\x05 \x03(\tR\x0elinkedProjects\x12%\n\x0eserver_version\x18\x06 \x01(\tR\rserverVersion\x12,\n\x12memory_limit_bytes\x18\x07 \x01(\x04R\x10memoryLimitBytes\x12*\n\x11own_user_projects\x18\x08 \x03(\tR\x0fownUserProjects"\x8a\x02\n\x13DatabaseEngineOffer\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12:\n\x05sizes\x18\x03 \x03(\x0b2$.pethost.panel.v1.DatabaseSizeChoiceR\x05sizes\x12;\n\x1adefault_memory_limit_bytes\x18\x04 \x01(\x04R\x17defaultMemoryLimitBytes\x12\x1b\n\town_users\x18\x05 \x01(\x08R\x08ownUsers"B\n\x12DatabaseSizeChoice\x12,\n\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes"q\n\x13LinkDatabaseRequest\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x12\n\x04link\x18\x02 \x03(\tR\x04link\x12\x16\n\x06unlink\x18\x03 \x03(\tR\x06unlink"K\n\x14LinkDatabaseResponse\x123\n\x07project\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project"\xf3\x02\n\x15CreateDatabaseRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x128\n\x06engine\x18\x02 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12,\n\x12memory_limit_bytes\x18\x03 \x01(\x04R\x10memoryLimitBytes\x12(\n\x10from_snapshot_id\x18\x04 \x01(\tR\x0efromSnapshotId\x12\x18\n\x04link\x18\x05 \x03(\tR\x04linkB\x04\xa8\xb5\x18\x01\x12!\n\x0coperation_id\x18\x06 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\x07 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12C\n\x08metadata\x18\x08 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadataB\x04\xa8\xb5\x18\x01"\xa1\x02\n\x16CreateDatabaseResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x04 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x05 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\xd2\x02\n\x17GetDatabaseStatsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x129\n\nstart_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x04 \x01(\rR\x0blastSeconds\x120\n\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12Q\n\x0fstatement_order\x18\x06 \x01(\x0e2(.pethost.panel.v1.DatabaseStatementOrderR\x0estatementOrder"\x82\x04\n\x18GetDatabaseStatsResponse\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x129\n\x07overall\x18\x04 \x01(\x0b2\x1f.pethost.panel.v1.DatabaseStatsR\x07overall\x12?\n\x07buckets\x18\x05 \x03(\x0b2%.pethost.panel.v1.DatabaseStatsBucketR\x07buckets\x12C\n\nstatements\x18\x06 \x03(\x0b2#.pethost.panel.v1.DatabaseStatementR\nstatements\x12-\n\x12statements_tracked\x18\x07 \x01(\x08R\x11statementsTracked\x12>\n\x08activity\x18\x08 \x01(\x0b2".pethost.panel.v1.DatabaseActivityR\x08activity"\x87\x01\n\x13DatabaseStatsBucket\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x05stats\x18\x02 \x01(\x0b2\x1f.pethost.panel.v1.DatabaseStatsR\x05stats"\xe9\x04\n\rDatabaseStats\x12\'\n\x0fsampled_seconds\x18\x01 \x01(\rR\x0esampledSeconds\x12$\n\x0ecpu_cores_mean\x18\x02 \x01(\x01R\x0ccpuCoresMean\x12"\n\rcpu_cores_max\x18\x03 \x01(\x01R\x0bcpuCoresMax\x121\n\x15memory_used_bytes_max\x18\x04 \x01(\x04R\x12memoryUsedBytesMax\x12,\n\x12memory_limit_bytes\x18\x05 \x01(\x04R\x10memoryLimitBytes\x12!\n\x0cvolume_bytes\x18\x06 \x01(\x04R\x0bvolumeBytes\x12\x1d\n\ndata_bytes\x18\x07 \x01(\x04R\tdataBytes\x12\'\n\x0fconnections_max\x18\x08 \x01(\rR\x0econnectionsMax\x12\'\n\x0fmax_connections\x18\t \x01(\rR\x0emaxConnections\x12B\n\x08commands\x18\n \x03(\x0b2&.pethost.panel.v1.DatabaseCommandStatsR\x08commands\x12;\n\x08postgres\x18\x0b \x01(\x0b2\x1f.pethost.panel.v1.PostgresStatsR\x08postgres\x125\n\x06valkey\x18\x0c \x01(\x0b2\x1d.pethost.panel.v1.ValkeyStatsR\x06valkey\x128\n\x07mariadb\x18\r \x01(\x0b2\x1e.pethost.panel.v1.MariadbStatsR\x07mariadb"\xc2\x01\n\x14DatabaseCommandStats\x129\n\x04kind\x18\x01 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n\x05calls\x18\x02 \x01(\x04R\x05calls\x12"\n\rtotal_time_ms\x18\x03 \x01(\x01R\x0btotalTimeMs\x12\x12\n\x04rows\x18\x04 \x01(\x04R\x04rows\x12!\n\x0cfailed_calls\x18\x05 \x01(\x04R\x0bfailedCalls"\xd0\x04\n\rPostgresStats\x12\x18\n\x07commits\x18\x01 \x01(\x04R\x07commits\x12\x1c\n\trollbacks\x18\x02 \x01(\x04R\trollbacks\x12\x1d\n\nblocks_hit\x18\x03 \x01(\x04R\tblocksHit\x12\x1f\n\x0bblocks_read\x18\x04 \x01(\x04R\nblocksRead\x12!\n\x0crows_fetched\x18\x05 \x01(\x04R\x0browsFetched\x12!\n\x0crows_scanned\x18\x06 \x01(\x04R\x0browsScanned\x12#\n\rrows_inserted\x18\x07 \x01(\x04R\x0crowsInserted\x12!\n\x0crows_updated\x18\x08 \x01(\x04R\x0browsUpdated\x12!\n\x0crows_deleted\x18\t \x01(\x04R\x0browsDeleted\x12\x1c\n\tdeadlocks\x18\n \x01(\x04R\tdeadlocks\x12\x1d\n\ntemp_bytes\x18\x0b \x01(\x04R\ttempBytes\x12\x1b\n\twal_bytes\x18\x0c \x01(\x04R\x08walBytes\x12\x1d\n\nactive_max\x18\r \x01(\rR\tactiveMax\x125\n\x17idle_in_transaction_max\x18\x0e \x01(\rR\x14idleInTransactionMax\x12\x1f\n\x0bwaiting_max\x18\x0f \x01(\rR\nwaitingMax\x12E\n\x1flongest_transaction_seconds_max\x18\x10 \x01(\rR\x1clongestTransactionSecondsMax"\xc6\x03\n\x0bValkeyStats\x12#\n\rkeyspace_hits\x18\x01 \x01(\x04R\x0ckeyspaceHits\x12\'\n\x0fkeyspace_misses\x18\x02 \x01(\x04R\x0ekeyspaceMisses\x12!\n\x0cexpired_keys\x18\x03 \x01(\x04R\x0bexpiredKeys\x12!\n\x0cevicted_keys\x18\x04 \x01(\x04R\x0bevictedKeys\x12&\n\x0fnet_input_bytes\x18\x05 \x01(\x04R\rnetInputBytes\x12(\n\x10net_output_bytes\x18\x06 \x01(\x04R\x0enetOutputBytes\x121\n\x14rejected_connections\x18\x07 \x01(\x04R\x13rejectedConnections\x12\x12\n\x04keys\x18\x08 \x01(\x04R\x04keys\x121\n\x15used_memory_bytes_max\x18\t \x01(\x04R\x12usedMemoryBytesMax\x12\'\n\x0fmaxmemory_bytes\x18\n \x01(\x04R\x0emaxmemoryBytes\x12.\n\x13blocked_clients_max\x18\x0b \x01(\rR\x11blockedClientsMax"\x9b\x04\n\x0cMariadbStats\x12\x1b\n\tpages_hit\x18\x01 \x01(\x04R\x08pagesHit\x12\x1d\n\npages_read\x18\x02 \x01(\x04R\tpagesRead\x12\x1b\n\trows_read\x18\x03 \x01(\x04R\x08rowsRead\x12#\n\rrows_inserted\x18\x04 \x01(\x04R\x0crowsInserted\x12!\n\x0crows_updated\x18\x05 \x01(\x04R\x0browsUpdated\x12!\n\x0crows_deleted\x18\x06 \x01(\x04R\x0browsDeleted\x12\x1c\n\tdeadlocks\x18\x07 \x01(\x04R\tdeadlocks\x12$\n\x0erow_lock_waits\x18\x08 \x01(\x04R\x0crowLockWaits\x12\x1d\n\nredo_bytes\x18\t \x01(\x04R\tredoBytes\x12&\n\x0ftmp_disk_tables\x18\n \x01(\x04R\rtmpDiskTables\x12\x1d\n\nactive_max\x18\x0b \x01(\rR\tactiveMax\x125\n\x17idle_in_transaction_max\x18\x0c \x01(\rR\x14idleInTransactionMax\x12\x1f\n\x0bwaiting_max\x18\r \x01(\rR\nwaitingMax\x12E\n\x1flongest_transaction_seconds_max\x18\x0e \x01(\rR\x1clongestTransactionSecondsMax"\xe3\x01\n\x11DatabaseStatement\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04text\x18\x02 \x01(\tR\x04text\x129\n\x04kind\x18\x03 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n\x05calls\x18\x04 \x01(\x04R\x05calls\x12"\n\rtotal_time_ms\x18\x05 \x01(\x01R\x0btotalTimeMs\x12\x12\n\x04rows\x18\x06 \x01(\x04R\x04rows\x12!\n\x0cfailed_calls\x18\x07 \x01(\x04R\x0bfailedCalls"\xfb\x01\n\x10DatabaseActivity\x127\n\tread_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08readTime\x12=\n\x08sessions\x18\x02 \x03(\x0b2!.pethost.panel.v1.DatabaseSessionR\x08sessions\x12#\n\rsession_count\x18\x03 \x01(\rR\x0csessionCount\x12J\n\rslow_commands\x18\x04 \x03(\x0b2%.pethost.panel.v1.DatabaseSlowCommandR\x0cslowCommands"\xca\x04\n\x0fDatabaseSession\x12\x10\n\x03pid\x18\x01 \x01(\x05R\x03pid\x12\x12\n\x04user\x18\x02 \x01(\tR\x04user\x12\x1a\n\x08database\x18\x03 \x01(\tR\x08database\x12)\n\x10application_name\x18\x04 \x01(\tR\x0fapplicationName\x12%\n\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12<\n\x05state\x18\x06 \x01(\x0e2&.pethost.panel.v1.DatabaseSessionStateR\x05state\x12H\n\x12backend_start_time\x18\x07 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10backendStartTime\x12P\n\x16transaction_start_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x14transactionStartTime\x12D\n\x10query_start_time\x18\t \x01(\x0b2\x1a.google.protobuf.TimestampR\x0equeryStartTime\x12&\n\x0fwait_event_type\x18\n \x01(\tR\rwaitEventType\x12\x1d\n\nwait_event\x18\x0b \x01(\tR\twaitEvent\x12&\n\x0fblocked_by_pids\x18\x0c \x03(\x05R\rblockedByPids\x12\x14\n\x05query\x18\r \x01(\tR\x05query"\xda\x01\n\x13DatabaseSlowCommand\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x1f\n\x0bduration_ms\x18\x02 \x01(\x01R\ndurationMs\x12\x18\n\x07command\x18\x03 \x01(\tR\x07command\x12\x10\n\x03key\x18\x04 \x01(\tR\x03key\x12%\n\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12\x1f\n\x0bclient_name\x18\x06 \x01(\tR\nclientName"n\n\x1aCancelDatabaseQueryRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x10\n\x03pid\x18\x02 \x01(\x05R\x03pid\x12\x1f\n\x0bend_session\x18\x03 \x01(\x08R\nendSession"1\n\x1bCancelDatabaseQueryResponse\x12\x12\n\x04done\x18\x01 \x01(\x08R\x04done"\xc9\x02\n\x17SetProjectAlertsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x123\n\x06checks\x18\x02 \x03(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x06checks\x12#\n\rremove_checks\x18\x03 \x01(\x08R\x0cremoveChecks\x12B\n\rtraffic_rules\x18\x04 \x03(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x0ctrafficRules\x120\n\x14remove_traffic_rules\x18\x05 \x01(\x08R\x12removeTrafficRules\x12\x16\n\x03off\x18\x06 \x01(\x08R\x03offB\x04\x90\xb5\x18\x01\x12\'\n\x0cmute_minutes\x18\x07 \x01(\rR\x0bmuteMinutesB\x04\x90\xb5\x18\x01"S\n\x18SetProjectAlertsResponse\x127\n\x06alerts\x18\x01 \x01(\x0b2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts"{\n\tSiteCheck\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12#\n\rexpect_status\x18\x03 \x01(\rR\x0cexpectStatus\x12!\n\x0cmust_contain\x18\x04 \x01(\tR\x0bmustContain"\xeb\x01\n\x0bTrafficRule\x127\n\x06metric\x18\x01 \x01(\x0e2\x1f.pethost.panel.v1.TrafficMetricR\x06metric\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12\x1c\n\tthreshold\x18\x03 \x01(\x01R\tthreshold\x12%\n\x0ewindow_minutes\x18\x04 \x01(\rR\rwindowMinutes\x12!\n\x0cmin_requests\x18\x05 \x01(\rR\x0bminRequests"\x91\x02\n\rProjectAlerts\x128\n\x06checks\x18\x01 \x03(\x0b2 .pethost.panel.v1.SiteCheckStateR\x06checks\x12G\n\rtraffic_rules\x18\x02 \x03(\x0b2".pethost.panel.v1.TrafficRuleStateR\x0ctrafficRules\x12\x10\n\x03off\x18\x03 \x01(\x08R\x03off\x12>\n\rmute_end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0bmuteEndTime\x12+\n\x0euptime_percent\x18\x05 \x01(\x01R\ruptimePercentB\x04\x90\xb5\x18\x01"\x88\x02\n\x0eSiteCheckState\x121\n\x05check\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12\'\n\x0fmachine_default\x18\x02 \x01(\x08R\x0emachineDefault\x125\n\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12B\n\x0blast_result\x18\x04 \x01(\x0b2!.pethost.panel.v1.SiteCheckResultR\nlastResult\x12\x1f\n\x0bincident_id\x18\x05 \x01(\tR\nincidentId"\xae\x01\n\x0fSiteCheckResult\x129\n\ncheck_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tcheckTime\x12\x16\n\x06status\x18\x02 \x01(\rR\x06status\x12\x1f\n\x0bduration_ms\x18\x03 \x01(\rR\ndurationMs\x12\'\n\x0ffailure_message\x18\x04 \x01(\tR\x0efailureMessage"\x81\x02\n\x10TrafficRuleState\x121\n\x04rule\x18\x01 \x01(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x04rule\x12\'\n\x0fmachine_default\x18\x02 \x01(\x08R\x0emachineDefault\x125\n\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12\x14\n\x05value\x18\x04 \x01(\x01R\x05value\x12#\n\rrequest_count\x18\x05 \x01(\x04R\x0crequestCount\x12\x1f\n\x0bincident_id\x18\x06 \x01(\tR\nincidentId"\xcc\x06\n\x08Incident\x12\x1f\n\x0bincident_id\x18\x01 \x01(\tR\nincidentId\x128\n\x04kind\x18\x02 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x121\n\x05check\x18\x04 \x01(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12@\n\x0ctraffic_rule\x18\x05 \x01(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x0btrafficRule\x12!\n\x0coperation_id\x18\x06 \x01(\tR\x0boperationId\x127\n\topen_time\x18\x07 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08openTime\x12=\n\x0cresolve_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0bresolveTime\x12\x14\n\x05value\x18\t \x01(\x01R\x05value\x12#\n\rrequest_count\x18\n \x01(\x04R\x0crequestCount\x12,\n\x12after_operation_id\x18\x0b \x01(\tR\x10afterOperationId\x12S\n\x18after_operation_end_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\x15afterOperationEndTime\x12,\n\x12joined_incident_id\x18\r \x01(\tR\x10joinedIncidentId\x12H\n\x0cquiet_reason\x18\x0e \x01(\x0e2%.pethost.panel.v1.IncidentQuietReasonR\x0bquietReason\x12\x1a\n\x08flapping\x18\x0f \x01(\x08R\x08flapping\x12)\n\x10incident_message\x18\x10 \x01(\tR\x0fincidentMessage\x12>\n\x08evidence\x18\x11 \x01(\x0b2".pethost.panel.v1.IncidentEvidenceR\x08evidence"\xd4\x02\n\x10IncidentEvidence\x12D\n\x0ccheck_result\x18\x01 \x01(\x0b2!.pethost.panel.v1.SiteCheckResultR\x0bcheckResult\x12\x1b\n\texit_code\x18\x02 \x01(\x05R\x08exitCode\x12\x1d\n\noom_killed\x18\x03 \x01(\x08R\toomKilled\x12#\n\rrestart_count\x18\x04 \x01(\rR\x0crestartCount\x12#\n\rhealth_output\x18\x05 \x01(\tR\x0chealthOutput\x126\n\tlog_lines\x18\x06 \x03(\x0b2\x19.pethost.panel.v1.LogLineR\x08logLines\x12<\n\x08top_path\x18\x07 \x01(\x0b2!.pethost.panel.v1.HttpPathTrafficR\x07topPath"\x96\x01\n\tUptimeDay\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12+\n\x0euptime_percent\x18\x02 \x01(\x01R\ruptimePercentB\x04\x90\xb5\x18\x01\x12!\n\x0cdown_seconds\x18\x03 \x01(\rR\x0bdownSeconds"T\n\x12GetIncidentRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1f\n\x0bincident_id\x18\x02 \x01(\tR\nincidentId"\x81\x01\n\x13GetIncidentResponse\x126\n\x08incident\x18\x01 \x01(\x0b2\x1a.pethost.panel.v1.IncidentR\x08incident\x122\n\x06joined\x18\x02 \x03(\x0b2\x1a.pethost.panel.v1.IncidentR\x06joined"\xd8\x01\n\x13GetOperationRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0coperation_id\x18\x02 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12*\n\x0eafter_log_line\x18\x04 \x01(\rR\x0cafterLogLineB\x04\x90\xb5\x18\x01\x12*\n\x0elog_line_limit\x18\x05 \x01(\rR\x0clogLineLimitB\x04\x90\xb5\x18\x01"\x91\x02\n\x14GetOperationResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x02 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log\x12$\n\x0elog_line_count\x18\x03 \x01(\rR\x0clogLineCount\x12-\n\x13next_after_log_line\x18\x04 \x01(\rR\x10nextAfterLogLine"V\n\x10OperationLogLine\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x12\n\x04text\x18\x02 \x01(\tR\x04text"\xaa\x01\n\x11HttpTrafficFilter\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x16\n\x06method\x18\x02 \x01(\tR\x06method\x12#\n\rpath_contains\x18\x03 \x01(\tR\x0cpathContains\x12!\n\x0cpath_pattern\x18\x04 \x01(\tR\x0bpathPattern\x12!\n\x0cstatus_class\x18\x05 \x01(\rR\x0bstatusClass"\x80\x03\n\x17QueryHttpTrafficRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x08 \x01(\rR\x0blastSeconds\x120\n\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12#\n\rrequest_limit\x18\x06 \x01(\rR\x0crequestLimit\x12\x1d\n\npage_token\x18\x07 \x01(\tR\tpageToken"\xc2\x04\n\x18QueryHttpTrafficResponse\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x12>\n\x07summary\x18\x03 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary\x12=\n\x07buckets\x18\x04 \x03(\x0b2#.pethost.panel.v1.HttpTrafficBucketR\x07buckets\x12>\n\ttop_paths\x18\x05 \x03(\x0b2!.pethost.panel.v1.HttpPathTrafficR\x08topPaths\x12\'\n\x0fnewest_sequence\x18\t \x01(\x04R\x0enewestSequence\x129\n\x08requests\x18\x06 \x03(\x0b2\x1d.pethost.panel.v1.HttpRequestR\x08requests\x12&\n\x0fnext_page_token\x18\x07 \x01(\tR\rnextPageToken\x12#\n\rtail_sequence\x18\n \x01(\x04R\x0ctailSequence"\x8e\x01\n\x11HttpTrafficBucket\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12>\n\x07summary\x18\x02 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary"\x8c\x01\n\x0fHttpPathTraffic\x12\x16\n\x06method\x18\x01 \x01(\tR\x06method\x12!\n\x0cpath_pattern\x18\x02 \x01(\tR\x0bpathPattern\x12>\n\x07summary\x18\x03 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary"\x83\x04\n\x0bHttpRequest\x12\x1a\n\x08sequence\x18\x01 \x01(\x04R\x08sequence\x12;\n\x0bfinish_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12\x12\n\x04host\x18\x03 \x01(\tR\x04host\x12\x16\n\x06method\x18\x04 \x01(\tR\x06method\x12\x12\n\x04path\x18\x05 \x01(\tR\x04path\x12!\n\x0cpath_pattern\x18\x06 \x01(\tR\x0bpathPattern\x12\x1d\n\nroute_path\x18\x07 \x01(\tR\troutePath\x12\x18\n\x07service\x18\x08 \x01(\tR\x07service\x12\x12\n\x04port\x18\t \x01(\rR\x04port\x12\x1f\n\x0bstatus_code\x18\n \x01(\rR\nstatusCode\x12.\n\x13response_size_bytes\x18\x0b \x01(\x04R\x11responseSizeBytes\x12\x1f\n\x0bduration_ms\x18\x0c \x01(\rR\ndurationMs\x12.\n\x13service_duration_ms\x18\r \x01(\rR\x11serviceDurationMs\x12*\n\x11client_ip_address\x18\x0e \x01(\tR\x0fclientIpAddress\x12\x1d\n\nuser_agent\x18\x0f \x01(\tR\tuserAgent"\x8b\x01\n\x12ContainerLogFilter\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x126\n\x06stream\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12#\n\rtext_contains\x18\x03 \x01(\tR\x0ctextContains"\xe1\x02\n\x19QueryContainerLogsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12<\n\x06filter\x18\x02 \x01(\x0b2$.pethost.panel.v1.ContainerLogFilterR\x06filter\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x08 \x01(\rR\x0blastSeconds\x12\x14\n\x05limit\x18\x05 \x01(\rR\x05limit\x12\x1d\n\nfrom_start\x18\x06 \x01(\x08R\tfromStart\x12\x1d\n\npage_token\x18\x07 \x01(\tR\tpageToken"\xce\x02\n\x1aQueryContainerLogsResponse\x129\n\nstart_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x12/\n\x05lines\x18\x01 \x03(\x0b2\x19.pethost.panel.v1.LogLineR\x05lines\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1f\n\x0btail_cursor\x18\x03 \x01(\tR\ntailCursor"\x9f\x01\n\x07LogLine\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x126\n\x06stream\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12\x12\n\x04text\x18\x04 \x01(\tR\x04text"\xf9\x01\n\x18RunServiceCommandRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12\x18\n\x07command\x18\x03 \x03(\tR\x07command\x12\x14\n\x05stdin\x18\x04 \x01(\tR\x05stdin\x12\x1e\n\x0brun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\x12\'\n\x0ftimeout_seconds\x18\x07 \x01(\rR\x0etimeoutSeconds"\xb0\x01\n\x19RunServiceCommandResponse\x12\x1b\n\texit_code\x18\x01 \x01(\x05R\x08exitCode\x12\x1b\n\ttimed_out\x18\x02 \x01(\x08R\x08timedOut\x12\x16\n\x06stdout\x18\x03 \x01(\tR\x06stdout\x12\x16\n\x06stderr\x18\x04 \x01(\tR\x06stderr\x12)\n\x10output_truncated\x18\x05 \x01(\x08R\x0foutputTruncated"\xa0\x02\n\tFileEntry\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12.\n\x04type\x18\x02 \x01(\x0e2\x1a.pethost.panel.v1.FileTypeR\x04type\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x04R\tsizeBytes\x12;\n\x0bmodify_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\nmodifyTime\x12\x12\n\x04mode\x18\x05 \x01(\tR\x04mode\x12\x1b\n\towner_uid\x18\x06 \x01(\rR\x08ownerUid\x12\x1b\n\towner_gid\x18\x07 \x01(\rR\x08ownerGid\x12%\n\x0esymlink_target\x18\x08 \x01(\tR\rsymlinkTarget"\x93\x02\n\x0fReadPathRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x05 \x01(\tR\x04path\x12\x1f\n\x0bentry_limit\x18\x06 \x01(\rR\nentryLimit\x12!\n\x0coffset_bytes\x18\x07 \x01(\x04R\x0boffsetBytes\x12!\n\x0clength_bytes\x18\x08 \x01(\rR\x0blengthBytes\x12(\n\x10entry_page_token\x18\t \x01(\tR\x0eentryPageTokenB\x06\n\x04root"\x9e\x03\n\x10ReadPathResponse\x121\n\x05entry\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.FileEntryR\x05entry\x12:\n\x08location\x18\n \x01(\x0e2\x1e.pethost.panel.v1.FileLocationR\x08location\x12\x16\n\x06volume\x18\x02 \x01(\tR\x06volume\x125\n\x07entries\x18\x03 \x03(\x0b2\x1b.pethost.panel.v1.FileEntryR\x07entries\x12\x1f\n\x0bentry_count\x18\x04 \x01(\rR\nentryCount\x121\n\x15next_entry_page_token\x18\x08 \x01(\tR\x12nextEntryPageToken\x12\x17\n\x04text\x18\x05 \x01(\tR\x04textB\x03\x80\x01\x01\x12\x16\n\x06binary\x18\x06 \x01(\x08R\x06binary\x12*\n\x11next_offset_bytes\x18\x07 \x01(\x04R\x0fnextOffsetBytes\x12\x1b\n\tdeploy_id\x18\t \x01(\tR\x08deployId"\xbb\x02\n\x15CreateTransferRequest\x12H\n\x0eupload_archive\x18\x01 \x01(\x0b2\x1f.pethost.panel.v1.ArchiveUploadH\x00R\ruploadArchive\x12?\n\x0bupload_file\x18\x02 \x01(\x0b2\x1c.pethost.panel.v1.FileUploadH\x00R\nuploadFile\x12<\n\x08download\x18\x03 \x01(\x0b2\x1e.pethost.panel.v1.PathDownloadH\x00R\x08download\x12M\n\x11download_database\x18\x04 \x01(\x0b2\x1e.pethost.panel.v1.DatabaseDumpH\x00R\x10downloadDatabaseB\n\n\x08transfer",\n\rArchiveUpload\x12\x1b\n\tfile_name\x18\x01 \x01(\tR\x08fileName"}\n\nFileUpload\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x04 \x01(\tR\x04pathB\x06\n\x04root"\x7f\n\x0cPathDownload\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x05 \x01(\tR\x04pathB\x06\n\x04root"I\n\x0cDatabaseDump\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x08database\x18\x02 \x01(\tR\x08database"\x9d\x02\n\x16CreateTransferResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x1f\n\x0bhttp_method\x18\x02 \x01(\tR\nhttpMethod\x12;\n\x0bexpire_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x18\n\x07command\x18\x04 \x01(\tR\x07command\x12\x1b\n\tupload_id\x18\x05 \x01(\tR\x08uploadId\x12\x1a\n\x08replaces\x18\x06 \x01(\x08R\x08replaces\x12\x1b\n\tfile_name\x18\x07 \x01(\tR\x08fileName\x12#\n\rexclude_names\x18\x08 \x03(\tR\x0cexcludeNames"/\n\x10GetUploadRequest\x12\x1b\n\tupload_id\x18\x01 \x01(\tR\x08uploadId"\xf9\x01\n\x11GetUploadResponse\x12\x1b\n\tfile_name\x18\x01 \x01(\tR\x08fileName\x12\x1d\n\nfile_count\x18\x02 \x01(\rR\tfileCount\x12%\n\x0eunpacked_bytes\x18\x03 \x01(\x04R\runpackedBytes\x12%\n\x0ecompose_source\x18\x04 \x01(\tR\rcomposeSource\x12\x19\n\x08env_file\x18\x05 \x01(\tR\x07envFile\x12?\n\nviolations\x18\x06 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations"\xa0\x01\n\x0bProjectBusy\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId\x123\n\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime"\x10\n\x0eProjectChanged"O\n\x12MachineUnreachable\x129\n\nsince_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tsinceTime"\xc3\x01\n\x13DatabaseLinkRefusal\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12C\n\x06reason\x18\x02 \x01(\x0e2+.pethost.panel.v1.DatabaseLinkRefusalReasonR\x06reason\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x12.\n\x13database_project_id\x18\x04 \x01(\tR\x11databaseProjectId"\xb2\x01\n\x13DatabaseSizeRefusal\x12C\n\x06reason\x18\x01 \x01(\x0e2+.pethost.panel.v1.DatabaseSizeRefusalReasonR\x06reason\x12\x1d\n\ndata_bytes\x18\x02 \x01(\x04R\tdataBytes\x12\x1f\n\x0bkeeps_bytes\x18\x03 \x01(\x04R\nkeepsBytes\x12\x16\n\x06volume\x18\x04 \x01(\tR\x06volume"X\n\tNoMachine\x129\n\x06reason\x18\x01 \x01(\x0e2!.pethost.panel.v1.NoMachineReasonR\x06reason\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url"Y\n\x15WatchOperationRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0coperation_id\x18\x02 \x01(\tR\x0boperationId"\xa9\x01\n\x16WatchOperationResponse\x126\n\x03log\x18\x01 \x01(\x0b2".pethost.panel.v1.OperationLogLineH\x00R\x03log\x12L\n\x12finished_operation\x18\x02 \x01(\x0b2\x1b.pethost.panel.v1.OperationH\x00R\x11finishedOperationB\t\n\x07message"\x9a\x01\n\x18TailContainerLogsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12<\n\x06filter\x18\x02 \x01(\x0b2$.pethost.panel.v1.ContainerLogFilterR\x06filter\x12!\n\x0cafter_cursor\x18\x03 \x01(\tR\x0bafterCursor"b\n\x19TailContainerLogsResponse\x12-\n\x04line\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.LogLineR\x04line\x12\x16\n\x06cursor\x18\x02 \x01(\tR\x06cursor"\x9b\x01\n\x16TailHttpTrafficRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12%\n\x0eafter_sequence\x18\x03 \x01(\x04R\rafterSequence"R\n\x17TailHttpTrafficResponse\x127\n\x07request\x18\x01 \x01(\x0b2\x1d.pethost.panel.v1.HttpRequestR\x07request"\xe9\x01\n\x13OpenTerminalRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x122\n\x04size\x18\x03 \x01(\x0b2\x1e.pethost.panel.v1.TerminalSizeR\x04size\x12\x18\n\x07command\x18\x04 \x03(\tR\x07command\x12\x1e\n\x0brun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory"<\n\x0cTerminalSize\x12\x18\n\x07columns\x18\x01 \x01(\rR\x07columns\x12\x12\n\x04rows\x18\x02 \x01(\rR\x04rows"e\n\x14OpenTerminalResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime":\n\x19OpenDatabaseClientRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId"k\n\x1aOpenDatabaseClientResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime*\x93\x01\n\x10AlertChannelKind\x12"\n\x1eALERT_CHANNEL_KIND_UNSPECIFIED\x10\x00\x12\x1c\n\x18ALERT_CHANNEL_KIND_EMAIL\x10\x01\x12\x1f\n\x1bALERT_CHANNEL_KIND_TELEGRAM\x10\x02\x12\x1c\n\x18ALERT_CHANNEL_KIND_SLACK\x10\x03*\x98\x02\n\x12MachineSessionKind\x12$\n MACHINE_SESSION_KIND_UNSPECIFIED\x10\x00\x12%\n!MACHINE_SESSION_KIND_WEB_TERMINAL\x10\x01\x12%\n!MACHINE_SESSION_KIND_SSH_TERMINAL\x10\x02\x12$\n MACHINE_SESSION_KIND_SSH_COMMAND\x10\x03\x12\x1d\n\x19MACHINE_SESSION_KIND_SFTP\x10\x04\x12\x1f\n\x1bMACHINE_SESSION_KIND_TUNNEL\x10\x05\x12(\n$MACHINE_SESSION_KIND_DATABASE_CLIENT\x10\x06*\x83\x05\n\x12ProjectProblemKind\x12$\n PROJECT_PROBLEM_KIND_UNSPECIFIED\x10\x00\x12&\n"PROJECT_PROBLEM_KIND_DEPLOY_FAILED\x10\x01\x12*\n&PROJECT_PROBLEM_KIND_SERVICE_UNHEALTHY\x10\x02\x12+\n\'PROJECT_PROBLEM_KIND_SERVICE_RESTARTING\x10\x03\x12.\n*PROJECT_PROBLEM_KIND_SERVICE_OUT_OF_MEMORY\x10\x04\x12&\n"PROJECT_PROBLEM_KIND_BACKUP_FAILED\x10\x05\x12)\n%PROJECT_PROBLEM_KIND_DEPLOY_CANCELLED\x10\x06\x12\'\n#PROJECT_PROBLEM_KIND_SERVICE_EXITED\x10\x07\x12\'\n#PROJECT_PROBLEM_KIND_RESTORE_FAILED\x10\x08\x12,\n(PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED\x10\t\x12,\n(PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED\x10\n\x12"\n\x1ePROJECT_PROBLEM_KIND_SITE_DOWN\x10\x0b\x12$\n PROJECT_PROBLEM_KIND_HTTP_ERRORS\x10\x0c\x12"\n\x1ePROJECT_PROBLEM_KIND_HTTP_SLOW\x10\r\x12\'\n#PROJECT_PROBLEM_KIND_DATABASE_SETUP\x10\x0e*\x9b\x01\n\x12ServicesActionKind\x12$\n SERVICES_ACTION_KIND_UNSPECIFIED\x10\x00\x12\x1e\n\x1aSERVICES_ACTION_KIND_START\x10\x01\x12\x1d\n\x19SERVICES_ACTION_KIND_STOP\x10\x02\x12 \n\x1cSERVICES_ACTION_KIND_RESTART\x10\x03*\x8e\x02\n\x0cServiceState\x12\x1d\n\x19SERVICE_STATE_UNSPECIFIED\x10\x00\x12\x1d\n\x19SERVICE_STATE_NOT_CREATED\x10\x01\x12\x1a\n\x16SERVICE_STATE_STARTING\x10\x02\x12\x19\n\x15SERVICE_STATE_RUNNING\x10\x03\x12\x19\n\x15SERVICE_STATE_HEALTHY\x10\x04\x12\x1b\n\x17SERVICE_STATE_UNHEALTHY\x10\x05\x12\x1c\n\x18SERVICE_STATE_RESTARTING\x10\x06\x12\x19\n\x15SERVICE_STATE_STOPPED\x10\x07\x12\x18\n\x14SERVICE_STATE_EXITED\x10\x08*\xa3\x01\n\rRestartPolicy\x12\x1e\n\x1aRESTART_POLICY_UNSPECIFIED\x10\x00\x12\x15\n\x11RESTART_POLICY_NO\x10\x01\x12\x1d\n\x19RESTART_POLICY_ON_FAILURE\x10\x02\x12!\n\x1dRESTART_POLICY_UNLESS_STOPPED\x10\x03\x12\x19\n\x15RESTART_POLICY_ALWAYS\x10\x04*\x81\x01\n\x0cHealthStatus\x12\x1d\n\x19HEALTH_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n\x16HEALTH_STATUS_STARTING\x10\x01\x12\x19\n\x15HEALTH_STATUS_HEALTHY\x10\x02\x12\x1b\n\x17HEALTH_STATUS_UNHEALTHY\x10\x03*\x98\x01\n\x11CertificateSource\x12"\n\x1eCERTIFICATE_SOURCE_UNSPECIFIED\x10\x00\x12\x1b\n\x17CERTIFICATE_SOURCE_NONE\x10\x01\x12 \n\x1cCERTIFICATE_SOURCE_INSTALLED\x10\x02\x12 \n\x1cCERTIFICATE_SOURCE_AUTOMATIC\x10\x03*\xc1\x01\n\rOperationKind\x12\x1e\n\x1aOPERATION_KIND_UNSPECIFIED\x10\x00\x12\x19\n\x15OPERATION_KIND_DEPLOY\x10\x01\x12#\n\x1fOPERATION_KIND_RECREATE_SERVICE\x10\x02\x12\x19\n\x15OPERATION_KIND_BACKUP\x10\x03\x12\x1a\n\x16OPERATION_KIND_RESTORE\x10\x04\x12\x19\n\x15OPERATION_KIND_DELETE\x10\x05*\xb2\x01\n\x0fOperationStatus\x12 \n\x1cOPERATION_STATUS_UNSPECIFIED\x10\x00\x12 \n\x1cOPERATION_STATUS_IN_PROGRESS\x10\x01\x12\x1e\n\x1aOPERATION_STATUS_SUCCEEDED\x10\x02\x12\x1b\n\x17OPERATION_STATUS_FAILED\x10\x03\x12\x1e\n\x1aOPERATION_STATUS_CANCELLED\x10\x04*\xd4\x04\n\x13DeployFailureReason\x12%\n!DEPLOY_FAILURE_REASON_UNSPECIFIED\x10\x00\x12+\n\'DEPLOY_FAILURE_REASON_IMAGE_PULL_FAILED\x10\x01\x12,\n(DEPLOY_FAILURE_REASON_IMAGE_BUILD_FAILED\x10\x02\x120\n,DEPLOY_FAILURE_REASON_CONTAINER_START_FAILED\x10\x03\x12#\n\x1fDEPLOY_FAILURE_REASON_DISK_FULL\x10\x04\x12"\n\x1eDEPLOY_FAILURE_REASON_INTERNAL\x10\x05\x12*\n&DEPLOY_FAILURE_REASON_PORT_UNAVAILABLE\x10\x06\x12*\n&DEPLOY_FAILURE_REASON_CONTAINER_EXITED\x10\x07\x12-\n)DEPLOY_FAILURE_REASON_CONTAINER_UNHEALTHY\x10\x08\x12#\n\x1fDEPLOY_FAILURE_REASON_TIMED_OUT\x10\t\x120\n,DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME\x10\n\x122\n.DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE\x10\x0b\x12.\n*DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED\x10\x0c*\x88\x01\n\x0eDatabaseEngine\x12\x1f\n\x1bDATABASE_ENGINE_UNSPECIFIED\x10\x00\x12\x1c\n\x18DATABASE_ENGINE_POSTGRES\x10\x01\x12\x1a\n\x16DATABASE_ENGINE_VALKEY\x10\x02\x12\x1b\n\x17DATABASE_ENGINE_MARIADB\x10\x03*\xca\x02\n\x13DatabaseCommandKind\x12%\n!DATABASE_COMMAND_KIND_UNSPECIFIED\x10\x00\x12\x1f\n\x1bDATABASE_COMMAND_KIND_OTHER\x10\x01\x12 \n\x1cDATABASE_COMMAND_KIND_SELECT\x10\x02\x12 \n\x1cDATABASE_COMMAND_KIND_INSERT\x10\x03\x12 \n\x1cDATABASE_COMMAND_KIND_UPDATE\x10\x04\x12 \n\x1cDATABASE_COMMAND_KIND_DELETE\x10\x05\x12\x1e\n\x1aDATABASE_COMMAND_KIND_READ\x10\x06\x12\x1f\n\x1bDATABASE_COMMAND_KIND_WRITE\x10\x07\x12"\n\x1eDATABASE_COMMAND_KIND_PREPARED\x10\x08*\xb7\x01\n\x16DatabaseStatementOrder\x12(\n$DATABASE_STATEMENT_ORDER_UNSPECIFIED\x10\x00\x12\'\n#DATABASE_STATEMENT_ORDER_TOTAL_TIME\x10\x01\x12&\n"DATABASE_STATEMENT_ORDER_MEAN_TIME\x10\x02\x12"\n\x1eDATABASE_STATEMENT_ORDER_CALLS\x10\x03*\x8c\x02\n\x14DatabaseSessionState\x12&\n"DATABASE_SESSION_STATE_UNSPECIFIED\x10\x00\x12 \n\x1cDATABASE_SESSION_STATE_OTHER\x10\x01\x12!\n\x1dDATABASE_SESSION_STATE_ACTIVE\x10\x02\x12\x1f\n\x1bDATABASE_SESSION_STATE_IDLE\x10\x03\x12.\n*DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION\x10\x04\x126\n2DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED\x10\x05*\x9d\x01\n\rTrafficMetric\x12\x1e\n\x1aTRAFFIC_METRIC_UNSPECIFIED\x10\x00\x12 \n\x1cTRAFFIC_METRIC_SERVER_ERRORS\x10\x01\x12\'\n#TRAFFIC_METRIC_SERVER_ERROR_PERCENT\x10\x02\x12!\n\x1dTRAFFIC_METRIC_LATENCY_P95_MS\x10\x03*\xa6\x01\n\x0bAlertStatus\x12\x1c\n\x18ALERT_STATUS_UNSPECIFIED\x10\x00\x12\x13\n\x0fALERT_STATUS_OK\x10\x01\x12\x18\n\x14ALERT_STATUS_PENDING\x10\x02\x12\x17\n\x13ALERT_STATUS_FIRING\x10\x03\x12\x17\n\x13ALERT_STATUS_PAUSED\x10\x04\x12\x18\n\x14ALERT_STATUS_NO_DATA\x10\x05*\xd1\x01\n\x13IncidentQuietReason\x12%\n!INCIDENT_QUIET_REASON_UNSPECIFIED\x10\x00\x12\x1f\n\x1bINCIDENT_QUIET_REASON_MUTED\x10\x01\x12\x1d\n\x19INCIDENT_QUIET_REASON_OFF\x10\x02\x12*\n&INCIDENT_QUIET_REASON_FIRST_EVALUATION\x10\x03\x12\'\n#INCIDENT_QUIET_REASON_MANUAL_DEPLOY\x10\x04*a\n\x0cOutputStream\x12\x1d\n\x19OUTPUT_STREAM_UNSPECIFIED\x10\x00\x12\x18\n\x14OUTPUT_STREAM_STDOUT\x10\x01\x12\x18\n\x14OUTPUT_STREAM_STDERR\x10\x02*~\n\x08FileType\x12\x19\n\x15FILE_TYPE_UNSPECIFIED\x10\x00\x12\x12\n\x0eFILE_TYPE_FILE\x10\x01\x12\x17\n\x13FILE_TYPE_DIRECTORY\x10\x02\x12\x15\n\x11FILE_TYPE_SYMLINK\x10\x03\x12\x13\n\x0fFILE_TYPE_OTHER\x10\x04*\x85\x01\n\x0cFileLocation\x12\x1d\n\x19FILE_LOCATION_UNSPECIFIED\x10\x00\x12\x1b\n\x17FILE_LOCATION_CONTAINER\x10\x01\x12\x18\n\x14FILE_LOCATION_VOLUME\x10\x02\x12\x1f\n\x1bFILE_LOCATION_PROJECT_FILES\x10\x03*\xc1\x02\n\x19DatabaseLinkRefusalReason\x12,\n(DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED\x10\x00\x120\n,DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE\x10\x01\x123\n/DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN\x10\x02\x12/\n+DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS\x10\x03\x12)\n%DATABASE_LINK_REFUSAL_REASON_ONE_USER\x10\x04\x123\n/DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED\x10\x05*\xd7\x01\n\x19DatabaseSizeRefusalReason\x12,\n(DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED\x10\x00\x12/\n+DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE\x10\x01\x12,\n(DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD\x10\x02\x12-\n)DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED\x10\x03*y\n\x0fNoMachineReason\x12!\n\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x93\x1a\n\x0cPanelService\x12q\n\nGetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n\x10RunMachineAction\x12).pethost.panel.v1.RunMachineActionRequest\x1a*.pethost.panel.v1.RunMachineActionResponse"\x1c\x8a\xb5\x18\x18\x08\x01\x12\x14Run a machine action\x12\x8e\x01\n\nGetProject\x12#.pethost.panel.v1.GetProjectRequest\x1a$.pethost.panel.v1.GetProjectResponse"5\x90\x02\x01\x8a\xb5\x18\x0f\x12\rGet a project\xa2\xb5\x18\x0b\n\x07Project\x10\x02\xa2\xb5\x18\x0c\n\x08Database\x10\x02\x12\x87\x01\n\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a\'.pethost.panel.v1.CreateProjectResponse"%\x8a\xb5\x18\x12\x12\x10Create a project\xa2\xb5\x18\x0b\n\x07Project\x10\x01\x12\xa8\x01\n\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a\'.pethost.panel.v1.DeployProjectResponse"F\x8a\xb5\x18\x14\x08\x01\x12\x10Deploy a project\xa2\xb5\x18\x0b\n\x07Project\x10\x03\xa2\xb5\x18\x0b\n\x07Project\x10\x06\xa2\xb5\x18\x0c\n\x08Database\x10\x06\x12}\n\x0bListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project\'s commits\x12\xe9\x01\n\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse"~\x8a\xb5\x18\x18\x08\x01\x12\x14Run a project action\xa2\xb5\x18\x1b\n\x07Project\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1c\n\x08Database\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1f\n\x08Database\x10\x03\x1a\x11set_database_size\x12\x8c\x01\n\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse"!\x90\x02\x02\x8a\xb5\x18\x1a\x08\x01\x12\x16Set a project\'s alerts\x12_\n\x0bGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse"\x03\x90\x02\x01\x12~\n\x0cGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse"\x1f\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\xa2\xb5\x18\x02\x10\x05\x12\x86\x01\n\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x8c\x01\n\x0eCreateDatabase\x12\'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse"\'\x8a\xb5\x18\x13\x12\x11Create a database\xa2\xb5\x18\x0c\n\x08Database\x10\x01\x12\x85\x01\n\x0cLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse"&\x90\x02\x02\x8a\xb5\x18\x1f\x08\x01\x12\x1bLink projects to a database\x12n\n\x10GetDatabaseStats\x12).pethost.panel.v1.GetDatabaseStatsRequest\x1a*.pethost.panel.v1.GetDatabaseStatsResponse"\x03\x90\x02\x01\x12r\n\x13CancelDatabaseQuery\x12,.pethost.panel.v1.CancelDatabaseQueryRequest\x1a-.pethost.panel.v1.CancelDatabaseQueryResponse\x12\x90\x01\n\x11RunServiceCommand\x12*.pethost.panel.v1.RunServiceCommandRequest\x1a+.pethost.panel.v1.RunServiceCommandResponse""\x8a\xb5\x18\x1e\x08\x01\x12\x1aRun a command in a service\x12]\n\x0cOpenTerminal\x12%.pethost.panel.v1.OpenTerminalRequest\x1a&.pethost.panel.v1.OpenTerminalResponse\x12o\n\x12OpenDatabaseClient\x12+.pethost.panel.v1.OpenDatabaseClientRequest\x1a,.pethost.panel.v1.OpenDatabaseClientResponse\x12t\n\x08ReadPath\x12!.pethost.panel.v1.ReadPathRequest\x1a".pethost.panel.v1.ReadPathResponse"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18Read a file or directory\x12\x86\x01\n\x0eCreateTransfer\x12\'.pethost.panel.v1.CreateTransferRequest\x1a(.pethost.panel.v1.CreateTransferResponse"!\x8a\xb5\x18\x1d\x08\x01\x12\x19Upload or download a file\x12Y\n\tGetUpload\x12".pethost.panel.v1.GetUploadRequest\x1a#.pethost.panel.v1.GetUploadResponse"\x03\x90\x02\x01\x12\x7f\n\x0eWatchOperation\x12\'.pethost.panel.v1.WatchOperationRequest\x1a(.pethost.panel.v1.WatchOperationResponse"\x18\x9a\xb5\x18\x14\n\x12Watch an operation0\x01\x12\x8b\x01\n\x11TailContainerLogs\x12*.pethost.panel.v1.TailContainerLogsRequest\x1a+.pethost.panel.v1.TailContainerLogsResponse"\x1b\x9a\xb5\x18\x17\n\x15Follow container logs0\x01\x12\x83\x01\n\x0fTailHttpTraffic\x12(.pethost.panel.v1.TailHttpTrafficRequest\x1a).pethost.panel.v1.TailHttpTrafficResponse"\x19\x9a\xb5\x18\x15\n\x13Follow HTTP traffic0\x01B\x9c\x01\n\x14com.pethost.panel.v1B\nPanelProtoZ\x18pethost/panel/v1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\x08editionsp\xe9\x07',
+    b'\n\x0ev1/panel.proto\x12\x10pethost.panel.v1\x1a\x1fgoogle/protobuf/timestamp.protoz\x0cv1/mcp.protoz\x11v1/optional.protoz\x0fv1/pulumi.protoz\x0cv1/sdk.proto"U\n\x15ListWorkspacesRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1d\n\npage_token\x18\x02 \x01(\tR\tpageToken"\xdc\x01\n\x16ListWorkspacesResponse\x12;\n\nworkspaces\x18\x01 \x03(\x0b2\x1b.pethost.panel.v1.WorkspaceR\nworkspaces\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x14\n\x05total\x18\x03 \x01(\rR\x05total\x12\'\n\x0fholding_project\x18\x04 \x03(\tR\x0eholdingProject\x12\x1e\n\nincomplete\x18\x05 \x01(\x08R\nincomplete"\xe1\x04\n\tWorkspace\x12!\n\x0cworkspace_id\x18\x01 \x01(\tR\x0bworkspaceId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x129\n\x06status\x18\x03 \x01(\x0e2!.pethost.panel.v1.WorkspaceStatusR\x06status\x12\x1a\n\x08location\x18\x04 \x01(\tR\x08location\x12\x12\n\x04plan\x18\x05 \x01(\tR\x04plan\x12&\n\x0fcpu_total_cores\x18\x06 \x01(\x01R\rcpuTotalCores\x12,\n\x12memory_total_bytes\x18\x07 \x01(\x04R\x10memoryTotalBytes\x120\n\x11memory_free_bytes\x18\x08 \x01(\x04R\x0fmemoryFreeBytesB\x04\x90\xb5\x18\x01\x12(\n\x10disk_total_bytes\x18\t \x01(\x04R\x0ediskTotalBytes\x12,\n\x0fdisk_free_bytes\x18\n \x01(\x04R\rdiskFreeBytesB\x04\x90\xb5\x18\x01\x12)\n\rproject_count\x18\x0b \x01(\rR\x0cprojectCountB\x04\x90\xb5\x18\x01\x12\x1a\n\x08hostname\x18\x0c \x01(\tR\x08hostname\x12\x1f\n\x0bapps_domain\x18\r \x01(\tR\nappsDomain\x125\n\x08end_time\x18\x0e \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x123\n\x04role\x18\x0f \x01(\x0e2\x1f.pethost.panel.v1.WorkspaceRoleR\x04role"1\n\x11GetMachineRequest\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xcb\x02\n\x12GetMachineResponse\x123\n\x07machine\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.MachineR\x07machine\x12<\n\x08projects\x18\x02 \x03(\x0b2 .pethost.panel.v1.ProjectSummaryR\x08projects\x12K\n\x10deleted_projects\x18\x03 \x03(\x0b2 .pethost.panel.v1.DeletedProjectR\x0fdeletedProjects\x12:\n\x06github\x18\x04 \x01(\x0b2".pethost.panel.v1.GithubConnectionR\x06github\x129\n\tworkspace\x18\x05 \x01(\x0b2\x1b.pethost.panel.v1.WorkspaceR\tworkspace"\xca\x0b\n\x07Machine\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n\x08location\x18\x02 \x01(\tR\x08location\x12;\n\x0bsample_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nsampleTime\x12$\n\x0ecpu_used_cores\x18\x05 \x01(\x01R\x0ccpuUsedCores\x12&\n\x0fcpu_total_cores\x18\x06 \x01(\x01R\rcpuTotalCores\x12*\n\x11memory_used_bytes\x18\x07 \x01(\x04R\x0fmemoryUsedBytes\x12,\n\x12memory_total_bytes\x18\x08 \x01(\x04R\x10memoryTotalBytes\x12&\n\x0fdisk_used_bytes\x18\t \x01(\x04R\rdiskUsedBytes\x12(\n\x10disk_total_bytes\x18\n \x01(\x04R\x0ediskTotalBytes\x12:\n\ndisk_usage\x18\x0b \x01(\x0b2\x1b.pethost.panel.v1.DiskUsageR\tdiskUsage\x12\x1a\n\x08hostname\x18\x0c \x01(\tR\x08hostname\x12.\n\x13hostname_is_address\x18\x1d \x01(\x08R\x11hostnameIsAddress\x127\n\x18ssh_host_key_fingerprint\x18\r \x01(\tR\x15sshHostKeyFingerprint\x123\n\x08ssh_keys\x18\x0e \x03(\x0b2\x18.pethost.panel.v1.SshKeyR\x07sshKeys\x12\'\n\x0fbackups_enabled\x18\x0f \x01(\x08R\x0ebackupsEnabled\x12H\n\x12snapshot_list_time\x18\x16 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10snapshotListTime\x12A\n\x1dsnapshot_list_failure_message\x18\x17 \x01(\tR\x1asnapshotListFailureMessage\x124\n\x16backup_retention_hours\x18\x04 \x01(\rR\x14backupRetentionHours\x12!\n\x0cacme_enabled\x18\x15 \x01(\x08R\x0bacmeEnabled\x12\x1f\n\x0bapps_domain\x18\x19 \x01(\tR\nappsDomain\x12%\n\x0edaemon_version\x18\x10 \x01(\tR\rdaemonVersion\x12%\n\x0edocker_version\x18\x11 \x01(\tR\rdockerVersion\x127\n\tboot_time\x18\x12 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08bootTime\x12N\n\x15restart_required_time\x18\x13 \x01(\x0b2\x1a.google.protobuf.TimestampR\x13restartRequiredTime\x12P\n\x16scheduled_restart_time\x18\x14 \x01(\x0b2\x1a.google.protobuf.TimestampR\x14scheduledRestartTime\x12<\n\x08sessions\x18\x18 \x03(\x0b2 .pethost.panel.v1.MachineSessionR\x08sessions\x12I\n\x0ealert_channels\x18\x1a \x03(\x0b2".pethost.panel.v1.AlertDestinationR\ralertChannels\x12P\n\x10database_engines\x18\x1b \x03(\x0b2%.pethost.panel.v1.DatabaseEngineOfferR\x0fdatabaseEngines\x12.\n\x13memory_limits_bytes\x18\x1c \x01(\x04R\x11memoryLimitsBytes"`\n\x10AlertDestination\x126\n\x04kind\x18\x01 \x01(\x0e2".pethost.panel.v1.AlertChannelKindR\x04kind\x12\x14\n\x05label\x18\x02 \x01(\tR\x05label"\xec\x02\n\x0eMachineSession\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x128\n\x04kind\x18\x02 \x01(\x0e2$.pethost.panel.v1.MachineSessionKindR\x04kind\x12\x1d\n\nproject_id\x18\x03 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x04 \x01(\tR\x07service\x12\x12\n\x04port\x18\x05 \x01(\rR\x04port\x129\n\nstart_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12%\n\x0eclient_address\x18\x07 \x01(\tR\rclientAddress\x12"\n\rssh_key_label\x18\x08 \x01(\tR\x0bsshKeyLabel\x12.\n\x13ssh_key_fingerprint\x18\t \x01(\tR\x11sshKeyFingerprint"\xcb\x02\n\tDiskUsage\x12!\n\x0cimages_bytes\x18\x01 \x01(\x04R\x0bimagesBytes\x120\n\x11build_cache_bytes\x18\x02 \x01(\x04R\x0fbuildCacheBytesB\x04\x90\xb5\x18\x01\x12#\n\rvolumes_bytes\x18\x03 \x01(\x04R\x0cvolumesBytes\x124\n\x16container_layers_bytes\x18\x04 \x01(\x04R\x14containerLayersBytes\x12.\n\x13project_files_bytes\x18\x05 \x01(\x04R\x11projectFilesBytes\x120\n\x14container_logs_bytes\x18\x06 \x01(\x04R\x12containerLogsBytes\x12,\n\x12http_traffic_bytes\x18\x07 \x01(\x04R\x10httpTrafficBytes"_\n\x06SshKey\x12\x1d\n\npublic_key\x18\x01 \x01(\tR\tpublicKey\x12\x14\n\x05label\x18\x02 \x01(\tR\x05label\x12 \n\x0bfingerprint\x18\x03 \x01(\tR\x0bfingerprint"\xec\x01\n\x10GithubConnection\x12\x19\n\x08app_name\x18\x01 \x01(\tR\x07appName\x12\x1f\n\x0binstall_url\x18\x02 \x01(\tR\ninstallUrl\x12F\n\x0crepositories\x18\x03 \x03(\x0b2".pethost.panel.v1.GithubRepositoryR\x0crepositories\x12)\n\x10repository_count\x18\x04 \x01(\rR\x0frepositoryCount\x12)\n\x10webhooks_enabled\x18\x05 \x01(\x08R\x0fwebhooksEnabled"\xac\x01\n\x10GithubRepository\x12\x1e\n\nrepository\x18\x01 \x01(\tR\nrepository\x12%\n\x0edefault_branch\x18\x02 \x01(\tR\rdefaultBranch\x12\x18\n\x07private\x18\x03 \x01(\x08R\x07private\x127\n\tpush_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08pushTime"\xd1\x01\n\x0eDeletedProject\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12C\n\x0fnewest_snapshot\x18\x02 \x01(\x0b2\x1a.pethost.panel.v1.SnapshotR\x0enewestSnapshot\x12%\n\x0esnapshot_count\x18\x03 \x01(\rR\rsnapshotCount\x124\n\x08moved_to\x18\x04 \x01(\x0b2\x19.pethost.panel.v1.MovedToR\x07movedTo"\x8c\x01\n\x07MovedTo\x12!\n\x0cworkspace_id\x18\x01 \x01(\tR\x0bworkspaceId\x12%\n\x0eworkspace_name\x18\x02 \x01(\tR\rworkspaceName\x127\n\tmove_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08moveTime"\xe0\x02\n\x17RunMachineActionRequest\x12:\n\x0badd_ssh_key\x18\x01 \x01(\x0b2\x18.pethost.panel.v1.SshKeyH\x00R\taddSshKey\x12=\n\x1aremove_ssh_key_fingerprint\x18\x02 \x01(\tH\x00R\x17removeSshKeyFingerprint\x12Q\n\x0frestart_machine\x18\x03 \x01(\x0b2&.pethost.panel.v1.RestartMachineActionH\x00R\x0erestartMachine\x12\'\n\x0ecancel_restart\x18\x04 \x01(\x08H\x00R\rcancelRestart\x12&\n\x0eend_session_id\x18\x05 \x01(\tH\x00R\x0cendSessionId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceB\x08\n\x06action"\xbc\x01\n\x14RestartMachineAction\x12=\n\x0crestart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0brestartTime\x122\n\x15at_maintenance_window\x18\x03 \x01(\x08R\x13atMaintenanceWindow\x121\n\x14interrupt_operations\x18\x02 \x01(\x08R\x13interruptOperations"O\n\x18RunMachineActionResponse\x123\n\x07machine\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.MachineR\x07machine"\x8b\x01\n\x0fProjectMetadata\x12\x18\n\x04name\x18\x01 \x01(\tR\x04nameB\x04\x90\xb5\x18\x01\x12\x1a\n\x05emoji\x18\x02 \x01(\tR\x05emojiB\x04\x90\xb5\x18\x01\x12&\n\x0bdescription\x18\x03 \x01(\tR\x0bdescriptionB\x04\x90\xb5\x18\x01\x12\x1a\n\x05notes\x18\x04 \x01(\tR\x05notesB\x04\x90\xb5\x18\x01"\xd7\x05\n\x0eProjectSummary\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12=\n\x08metadata\x18\x02 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12<\n\x08problems\x18\x03 \x03(\x0b2 .pethost.panel.v1.ProjectProblemR\x08problems\x12<\n\x08services\x18\x04 \x03(\x0b2 .pethost.panel.v1.ServiceSummaryR\x08services\x12\x10\n\x03url\x18\x05 \x01(\tR\x03url\x12\x14\n\x05hosts\x18\x06 \x03(\tR\x05hosts\x12W\n\x15http_traffic_last_day\x18\x07 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x12httpTrafficLastDay\x12$\n\x0ecpu_used_cores\x18\x08 \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\t \x01(\x04R\x0fmemoryUsedBytes\x12;\n\x0bdeploy_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\ndeployTime\x12J\n\x12running_operations\x18\x0b \x03(\x0b2\x1b.pethost.panel.v1.OperationR\x11runningOperations\x12\x16\n\x06pinned\x18\x0c \x01(\x08R\x06pinned\x12&\n\x0fdisk_used_bytes\x18\r \x01(\x04R\rdiskUsedBytes\x12=\n\x08database\x18\x0e \x01(\x0b2!.pethost.panel.v1.DatabaseSummaryR\x08database\x12\x10\n\x03uid\x18\x0f \x01(\tR\x03uid"`\n\x0eServiceSummary\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x124\n\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state"\x8c\x02\n\x0eProjectProblem\x128\n\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12!\n\x0coperation_id\x18\x03 \x01(\tR\x0boperationId\x129\n\nsince_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tsinceTime\x12\'\n\x0fproblem_message\x18\x05 \x01(\tR\x0eproblemMessage\x12\x1f\n\x0bincident_id\x18\x06 \x01(\tR\nincidentId"\x97\x03\n\x11GetProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x122\n\x15include_secret_values\x18\x02 \x01(\x08R\x13includeSecretValues\x12E\n\x10snapshots_before\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0fsnapshotsBefore\x12)\n\x10snapshots_volume\x18\x04 \x01(\tR\x0fsnapshotsVolume\x12E\n\x10incidents_before\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0fincidentsBefore\x12(\n\x10uptime_day_count\x18\x06 \x01(\rR\x0euptimeDayCount\x12.\n\x13incidents_before_id\x18\x07 \x01(\tR\x11incidentsBeforeId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"I\n\x12GetProjectResponse\x123\n\x07project\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project"\xf2\x0c\n\x07Project\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12=\n\x08metadata\x18\x02 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12<\n\x08problems\x18\x03 \x03(\x0b2 .pethost.panel.v1.ProjectProblemR\x08problems\x12\x10\n\x03url\x18\x04 \x01(\tR\x03url\x12$\n\x0ecpu_used_cores\x18\x05 \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\x06 \x01(\x04R\x0fmemoryUsedBytes\x12\x1b\n\tdeploy_id\x18\x07 \x01(\tR\x08deployId\x12F\n\rdeploy_status\x18\x12 \x01(\x0e2!.pethost.panel.v1.OperationStatusR\x0cdeployStatus\x12;\n\x0bdeploy_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\ndeployTime\x128\n\x19x_pethost_applies_at_once\x18\x13 \x01(\x08R\x15xPethostAppliesAtOnce\x125\n\x08services\x18\n \x03(\x0b2\x19.pethost.panel.v1.ServiceR\x08services\x122\n\x07volumes\x18\x0b \x03(\x0b2\x18.pethost.panel.v1.VolumeR\x07volumes\x12/\n\x06routes\x18\t \x03(\x0b2\x17.pethost.panel.v1.RouteR\x06routes\x12,\n\x05hosts\x18\x0c \x03(\x0b2\x16.pethost.panel.v1.HostR\x05hosts\x12-\n\x12password_protected\x18\x16 \x01(\x08R\x11passwordProtected\x12;\n\noperations\x18\r \x03(\x0b2\x1b.pethost.panel.v1.OperationR\noperations\x128\n\tsnapshots\x18\x0e \x03(\x0b2\x1a.pethost.panel.v1.SnapshotR\tsnapshots\x12%\n\x0esnapshot_count\x18\x0f \x01(\rR\rsnapshotCount\x12H\n\x12snapshot_list_time\x18\x14 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10snapshotListTime\x12W\n\x15http_traffic_last_day\x18\x10 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x12httpTrafficLastDay\x127\n\x06source\x18\x11 \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12_\n\x17running_services_action\x18\x15 \x01(\x0b2\'.pethost.panel.v1.RunningServicesActionR\x15runningServicesAction\x127\n\x06alerts\x18\x17 \x01(\x0b2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts\x128\n\tincidents\x18\x18 \x03(\x0b2\x1a.pethost.panel.v1.IncidentR\tincidents\x12%\n\x0emore_incidents\x18\x19 \x01(\x08R\rmoreIncidents\x12<\n\x0buptime_days\x18\x1a \x03(\x0b2\x1b.pethost.panel.v1.UptimeDayR\nuptimeDays\x126\n\x08database\x18\x1b \x01(\x0b2\x1a.pethost.panel.v1.DatabaseR\x08database\x12)\n\x10linked_databases\x18\x1c \x03(\tR\x0flinkedDatabases\x12!\n\x0cworkspace_id\x18\x1d \x01(\tR\x0bworkspaceId\x12\x10\n\x03uid\x18\x1e \x01(\tR\x03uid\x12G\n\x0cdependencies\x18  \x03(\x0b2#.pethost.panel.v1.ProjectDependencyR\x0cdependencies"\x87\x01\n\x11ProjectDependency\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12#\n\rcopy_database\x18\x04 \x01(\tR\x0ccopyDatabase\x12\x1d\n\nenv_prefix\x18\x05 \x01(\tR\tenvPrefix"\xa8\x01\n\x15RunningServicesAction\x128\n\x04kind\x18\x01 \x01(\x0e2$.pethost.panel.v1.ServicesActionKindR\x04kind\x12\x1a\n\x08services\x18\x02 \x03(\tR\x08services\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime"i\n\rProjectSource\x12\x16\n\x05files\x18\x01 \x01(\x08H\x00R\x05files\x128\n\x06github\x18\x02 \x01(\x0b2\x1e.pethost.panel.v1.GithubSourceH\x00R\x06githubB\x06\n\x04kind"\xf3\x02\n\x0cGithubSource\x12$\n\nrepository\x18\x01 \x01(\tR\nrepositoryB\x04\x90\xb5\x18\x01\x12\x1c\n\x06branch\x18\x02 \x01(\tR\x06branchB\x04\x90\xb5\x18\x01\x12"\n\tdirectory\x18\x03 \x01(\tR\tdirectoryB\x04\x90\xb5\x18\x01\x12%\n\x0bauto_deploy\x18\x04 \x01(\x08R\nautoDeployB\x04\x90\xb5\x18\x01\x12C\n\rnewest_commit\x18\x05 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0cnewestCommit\x12G\n\x0fdeployed_commit\x18\x06 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0edeployedCommit\x12\x16\n\x06pinned\x18\x08 \x01(\x08R\x06pinned\x12.\n\x13auto_deploy_pending\x18\t \x01(\x08R\x11autoDeployPending"H\n\x0cGithubCommit\x12\x10\n\x03sha\x18\x01 \x01(\tR\x03sha\x12\x14\n\x05title\x18\x02 \x01(\tR\x05title\x12\x10\n\x03url\x18\x03 \x01(\tR\x03url"\xff\t\n\x07Service\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x124\n\x05state\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.ServiceStateR\x05state\x12+\n\x11container_running\x18\x19 \x01(\x08R\x10containerRunning\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12!\n\x0cbuilds_image\x18\x04 \x01(\x08R\x0bbuildsImage\x12!\n\x0cimage_digest\x18\x05 \x01(\tR\x0bimageDigest\x12(\n\x10image_size_bytes\x18\x06 \x01(\x04R\x0eimageSizeBytes\x12\x18\n\x07command\x18\x07 \x03(\tR\x07command\x12\x1e\n\x0brun_as_user\x18\x08 \x01(\tR\trunAsUser\x129\n\nstart_time\x18\t \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12;\n\x0bfinish_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12!\n\texit_code\x18\x0b \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12"\n\rout_of_memory\x18\x0c \x01(\x08R\x0boutOfMemory\x12#\n\rrestart_count\x18\r \x01(\rR\x0crestartCount\x12$\n\x0ecpu_used_cores\x18\x0e \x01(\x01R\x0ccpuUsedCores\x12*\n\x11memory_used_bytes\x18\x0f \x01(\x04R\x0fmemoryUsedBytes\x12,\n\x12memory_limit_bytes\x18\x10 \x01(\x04R\x10memoryLimitBytes\x12&\n\x0fcpu_limit_cores\x18\x11 \x01(\x01R\rcpuLimitCores\x120\n\x14writable_layer_bytes\x18\x12 \x01(\x04R\x12writableLayerBytes\x12\x14\n\x05ports\x18\x13 \x03(\rR\x05ports\x12\'\n\x0flistening_ports\x18\x1c \x03(\rR\x0elisteningPorts\x12H\n\x0fpublished_ports\x18\x14 \x03(\x0b2\x1f.pethost.panel.v1.PublishedPortR\x0epublishedPorts\x12B\n\rvolume_mounts\x18\x15 \x03(\x0b2\x1d.pethost.panel.v1.VolumeMountR\x0cvolumeMounts\x12F\n\x0erestart_policy\x18\x16 \x01(\x0e2\x1f.pethost.panel.v1.RestartPolicyR\rrestartPolicy\x12@\n\x0chealth_check\x18\x17 \x01(\x0b2\x1d.pethost.panel.v1.HealthCheckR\x0bhealthCheck\x12G\n\x0benvironment\x18\x18 \x03(\x0b2%.pethost.panel.v1.EnvironmentVariableR\x0benvironment\x12\x1b\n\tenv_files\x18\x1a \x03(\tR\x08envFiles\x12\x1f\n\x0bssh_command\x18\x1b \x01(\tR\nsshCommand\x12\x1b\n\tssh_login\x18\x1d \x01(\tR\x08sshLogin"\x89\x01\n\rPublishedPort\x12!\n\x0cmachine_port\x18\x01 \x01(\rR\x0bmachinePort\x12%\n\x0econtainer_port\x18\x02 \x01(\rR\rcontainerPort\x12\x1a\n\x08protocol\x18\x03 \x01(\tR\x08protocolJ\x04\x08\x04\x10\x05R\x0cmachine_only"L\n\x0bVolumeMount\x12\x16\n\x06volume\x18\x01 \x01(\tR\x06volume\x12%\n\x0econtainer_path\x18\x02 \x01(\tR\rcontainerPath"\xaa\x02\n\x0bHealthCheck\x12\x18\n\x07command\x18\x01 \x03(\tR\x07command\x12)\n\x10interval_seconds\x18\x02 \x01(\rR\x0fintervalSeconds\x126\n\x06status\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.HealthStatusR\x06status\x12:\n\x19consecutive_failure_count\x18\x04 \x01(\rR\x17consecutiveFailureCount\x122\n\x15recent_results_passed\x18\x05 \x03(\x08R\x13recentResultsPassed\x12.\n\x13last_failure_output\x18\x06 \x01(\tR\x11lastFailureOutput"\xda\x01\n\x13EnvironmentVariable\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n\x05value\x18\x02 \x01(\tR\x05valueB\x03\x80\x01\x01\x12\x16\n\x06secret\x18\x03 \x01(\x08R\x06secret\x12\x1f\n\x0bsource_file\x18\x04 \x01(\tR\nsourceFile\x125\n\x17from_env_file_variables\x18\x05 \x03(\tR\x14fromEnvFileVariables\x12$\n\x0evalue_left_out\x18\x06 \x01(\x08R\x0cvalueLeftOut"\x8a\x02\n\x06Volume\x12\x16\n\x06volume\x18\x01 \x01(\tR\x06volume\x12\x1d\n\nsize_bytes\x18\x02 \x01(\x04R\tsizeBytes\x12@\n\nmounted_by\x18\x03 \x03(\x0b2!.pethost.panel.v1.VolumeMountedByR\tmountedBy\x12D\n\x10last_backup_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0elastBackupTime\x12%\n\x0esnapshot_count\x18\x06 \x01(\rR\rsnapshotCount\x12\x1a\n\x08declared\x18\x05 \x01(\x08R\x08declared"R\n\x0fVolumeMountedBy\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12%\n\x0econtainer_path\x18\x02 \x01(\tR\rcontainerPath"\x85\x02\n\x04Host\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12R\n\x12certificate_source\x18\x03 \x01(\x0e2#.pethost.panel.v1.CertificateSourceR\x11certificateSource\x12R\n\x17certificate_expire_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x15certificateExpireTime\x12/\n\x13unavailable_message\x18\x05 \x01(\tR\x12unavailableMessage"|\n\x05Route\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x12\x12\n\x04port\x18\x04 \x01(\rR\x04port\x12\x1d\n\nstrip_path\x18\x05 \x01(\x08R\tstripPath"\xe0\x07\n\tOperation\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId\x123\n\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n\x06status\x18\x03 \x01(\x0e2!.pethost.panel.v1.OperationStatusR\x06status\x129\n\nstart_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12;\n\x0bfinish_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12\'\n\x0ffailure_message\x18\x06 \x01(\tR\x0efailureMessage\x12Y\n\x15deploy_failure_reason\x18\x07 \x01(\x0e2%.pethost.panel.v1.DeployFailureReasonR\x13deployFailureReason\x12!\n\x0cmade_current\x18\x08 \x01(\x08R\x0bmadeCurrent\x12\x18\n\x07service\x18\t \x01(\tR\x07service\x12(\n\x10failed_exit_code\x18\n \x01(\x05R\x0efailedExitCode\x12\x1f\n\x0bsnapshot_id\x18\x0b \x01(\tR\nsnapshotId\x12)\n\x10restored_volumes\x18\x0c \x03(\tR\x0frestoredVolumes\x12(\n\x10undo_snapshot_id\x18\r \x01(\tR\x0eundoSnapshotId\x12C\n\rgithub_commit\x18\x0e \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x0cgithubCommit\x12!\n\x0carchive_name\x18\x0f \x01(\tR\x0barchiveName\x12 \n\x0badjustments\x18\x10 \x03(\tR\x0badjustments\x12#\n\rchanged_paths\x18\x11 \x03(\tR\x0cchangedPaths\x12,\n\x12changed_path_count\x18\x12 \x01(\rR\x10changedPathCount\x12\x1d\n\nfiles_kept\x18\x13 \x01(\x08R\tfilesKept\x12,\n\x12files_operation_id\x18\x14 \x01(\tR\x10filesOperationId\x12=\n\x1bdatabase_memory_limit_bytes\x18\x15 \x01(\x04R\x18databaseMemoryLimitBytes"\xa1\x01\n\x08Snapshot\x12\x1f\n\x0bsnapshot_id\x18\x01 \x01(\tR\nsnapshotId\x12;\n\x0bcreate_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x04R\tsizeBytes\x12\x18\n\x07volumes\x18\x04 \x03(\tR\x07volumes"\xb3\x01\n\x12HttpTrafficSummary\x12#\n\rrequest_count\x18\x01 \x01(\x04R\x0crequestCount\x12,\n\x12server_error_count\x18\x02 \x01(\x04R\x10serverErrorCount\x12$\n\x0elatency_p50_ms\x18\x03 \x01(\rR\x0clatencyP50Ms\x12$\n\x0elatency_p95_ms\x18\x04 \x01(\rR\x0clatencyP95Ms"\xf7\x03\n\x14CreateProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x127\n\x06source\x18\x02 \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceR\x06source\x12!\n\tupload_id\x18\x03 \x01(\tR\x08uploadIdB\x04\xa8\xb5\x18\x01\x122\n\x05files\x18\x04 \x03(\x0b2\x1c.pethost.panel.v1.FileChangeR\x05files\x12?\n\tx_pethost\x18\x05 \x01(\x0b2".pethost.panel.v1.ProjectExtensionR\x08xPethost\x12\'\n\x0ftimeout_seconds\x18\x06 \x01(\rR\x0etimeoutSeconds\x12!\n\x0coperation_id\x18\x07 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\t \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12L\n\x0elink_databases\x18\x0b \x03(\x0b2%.pethost.panel.v1.DatabaseLinkRequestR\rlinkDatabases\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\x08\n\x10\x0bR\x08database"\x7f\n\x13DatabaseLinkRequest\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x19\n\x08own_user\x18\x02 \x01(\x08R\x07ownUser\x12\x1d\n\nenv_prefix\x18\x03 \x01(\tR\tenvPrefix"\xa0\x02\n\x15CreateProjectResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x06 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\xc6\x04\n\x14DeployProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12$\n\x0ebase_deploy_id\x18\x02 \x01(\tR\x0cbaseDeployId\x128\n\x05files\x18\x03 \x03(\x0b2\x1c.pethost.panel.v1.FileChangeR\x05filesB\x04\xb0\xb5\x18\x01\x12?\n\tx_pethost\x18\n \x01(\x0b2".pethost.panel.v1.ProjectExtensionR\x08xPethost\x12@\n\x0cmount_volume\x18\x0b \x01(\x0b2\x1d.pethost.panel.v1.MountVolumeR\x0bmountVolume\x12\'\n\x0ftimeout_seconds\x18\x04 \x01(\rR\x0etimeoutSeconds\x12!\n\x0coperation_id\x18\x05 \x01(\tR\x0boperationId\x12\x1d\n\tupload_id\x18\x06 \x01(\tH\x00R\x08uploadId\x12\x18\n\x06commit\x18\x07 \x01(\tH\x00R\x06commit\x12%\n\rnewest_commit\x18\x08 \x01(\x08H\x00R\x0cnewestCommit\x12.\n\x12rollback_deploy_id\x18\x0c \x01(\tH\x00R\x10rollbackDeployId\x12\'\n\x0cwait_seconds\x18\r \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceB\t\n\x07version"f\n\x0bMountVolume\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12\x16\n\x06volume\x18\x02 \x01(\tR\x06volume\x12%\n\x0econtainer_path\x18\x03 \x01(\tR\rcontainerPath"\xf1\x01\n\x10ProjectExtension\x12=\n\x08metadata\x18\x01 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadata\x12/\n\x06routes\x18\x02 \x03(\x0b2\x17.pethost.panel.v1.RouteR\x06routes\x12#\n\rremove_routes\x18\x03 \x01(\x08R\x0cremoveRoutes\x12\x1f\n\x08password\x18\x04 \x01(\tR\x08passwordB\x03\x80\x01\x01\x12\'\n\x0fremove_password\x18\x05 \x01(\x08R\x0eremovePassword"\xfb\x01\n\nFileChange\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x14\n\x04data\x18\x03 \x01(\x0cH\x00R\x04data\x12\'\n\x0emake_directory\x18\x04 \x01(\x08H\x00R\rmakeDirectory\x12\x18\n\x06delete\x18\x05 \x01(\x08H\x00R\x06delete\x12!\n\x0bdelete_tree\x18\x06 \x01(\x08H\x00R\ndeleteTree\x12\x1d\n\trename_to\x18\x07 \x01(\tH\x00R\x08renameTo\x12\x1e\n\nexecutable\x18\x08 \x01(\x08R\nexecutableB\x08\n\x06change"\xa0\x02\n\x15DeployProjectResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x06 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"r\n\rSpecViolation\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12\x1a\n\x08location\x18\x02 \x01(\tR\x08location\x12+\n\x11violation_message\x18\x03 \x01(\tR\x10violationMessage"\x8d\x02\n\x12MoveProjectRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0cto_workspace\x18\x02 \x01(\tR\x0btoWorkspace\x12!\n\x0coperation_id\x18\x04 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\x05 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12K\n\x10switch_databases\x18\x06 \x03(\x0b2 .pethost.panel.v1.DatabaseSwitchR\x0fswitchDatabases\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xae\x01\n\x0eDatabaseSwitch\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x127\n\x18into_database_project_id\x18\x02 \x01(\tR\x15intoDatabaseProjectId\x12\x14\n\x05empty\x18\x03 \x01(\x08R\x05empty\x12\x1d\n\nenv_prefix\x18\x05 \x01(\tR\tenvPrefix"\xa8\x01\n\x13MoveProjectResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x123\n\x07project\x18\x02 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x12!\n\x0cmove_message\x18\x03 \x01(\tR\x0bmoveMessage"w\n\x15GetMoveChoicesRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0cto_workspace\x18\x02 \x01(\tR\x0btoWorkspace\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"P\n\x16GetMoveChoicesResponse\x126\n\x07choices\x18\x01 \x03(\x0b2\x1c.pethost.panel.v1.MoveChoiceR\x07choices"\xc3\x02\n\nMoveChoice\x12C\n\ndependency\x18\x01 \x01(\x0b2#.pethost.panel.v1.ProjectDependencyR\ndependency\x128\n\x06engine\x18\x02 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12\x14\n\x05owned\x18\x03 \x01(\x08R\x05owned\x12:\n\tdatabases\x18\x04 \x03(\x0b2\x1c.pethost.panel.v1.MoveTargetR\tdatabases\x12!\n\x0cnew_database\x18\x05 \x01(\x08R\x0bnewDatabase\x12A\n\x1dsuggested_database_project_id\x18\x06 \x01(\tR\x1asuggestedDatabaseProjectId"\x8c\x01\n\nMoveTarget\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n\ndata_bytes\x18\x03 \x01(\x04R\tdataBytes\x12\x1b\n\tapp_names\x18\x04 \x03(\tR\x08appNames"v\n\x12ListCommitsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12#\n\rbefore_commit\x18\x02 \x01(\tR\x0cbeforeCommit\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"c\n\x13ListCommitsResponse\x128\n\x07commits\x18\x01 \x03(\x0b2\x1e.pethost.panel.v1.BranchCommitR\x07commits\x12\x12\n\x04more\x18\x02 \x01(\x08R\x04more"\x8d\x02\n\x0cBranchCommit\x126\n\x06commit\x18\x01 \x01(\x0b2\x1e.pethost.panel.v1.GithubCommitR\x06commit\x12\x16\n\x06author\x18\x02 \x01(\tR\x06author\x12;\n\x0bcommit_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncommitTime\x12\x1a\n\x08deployed\x18\x04 \x01(\x08R\x08deployed\x12<\n\x0blast_deploy\x18\x05 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\nlastDeploy\x12\x16\n\x06newest\x18\x06 \x01(\x08R\x06newest"\xdc\x07\n\x17RunProjectActionRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12I\n\x0estart_services\x18\x02 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\rstartServices\x12G\n\rstop_services\x18\x03 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\x0cstopServices\x12M\n\x10restart_services\x18\x04 \x01(\x0b2 .pethost.panel.v1.ServicesActionH\x00R\x0frestartServices\x12T\n\x10recreate_service\x18\x05 \x01(\x0b2\'.pethost.panel.v1.RecreateServiceActionH\x00R\x0frecreateService\x129\n\x07back_up\x18\x06 \x01(\x0b2\x1e.pethost.panel.v1.BackUpActionH\x00R\x06backUp\x12T\n\x10restore_snapshot\x18\x07 \x01(\x0b2\'.pethost.panel.v1.RestoreSnapshotActionH\x00R\x0frestoreSnapshot\x12T\n\x10cancel_operation\x18\x08 \x01(\x0b2\'.pethost.panel.v1.CancelOperationActionH\x00R\x0fcancelOperation\x12N\n\x0edelete_project\x18\t \x01(\x0b2%.pethost.panel.v1.DeleteProjectActionH\x00R\rdeleteProject\x12@\n\nset_source\x18\x0b \x01(\x0b2\x1f.pethost.panel.v1.ProjectSourceH\x00R\tsetSource\x12%\n\rdelete_volume\x18\x0c \x01(\tH\x00R\x0cdeleteVolume\x12U\n\x11set_database_size\x18\x0e \x01(\x0b2\'.pethost.panel.v1.SetDatabaseSizeActionH\x00R\x0fsetDatabaseSize\x12!\n\x0coperation_id\x18\n \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\r \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceB\x08\n\x06action",\n\x0eServicesAction\x12\x1a\n\x08services\x18\x01 \x03(\tR\x08services"]\n\x15RecreateServiceAction\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x12*\n\x11pull_latest_image\x18\x02 \x01(\x08R\x0fpullLatestImage"\x0e\n\x0cBackUpAction"R\n\x15RestoreSnapshotAction\x12\x1f\n\x0bsnapshot_id\x18\x01 \x01(\tR\nsnapshotId\x12\x18\n\x07volumes\x18\x02 \x03(\tR\x07volumes":\n\x15CancelOperationAction\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId"A\n\x13DeleteProjectAction\x12*\n\x11skip_final_backup\x18\x01 \x01(\x08R\x0fskipFinalBackup"E\n\x15SetDatabaseSizeAction\x12,\n\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes"\xc0\x01\n\x18RunProjectActionResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x123\n\x07project\x18\x03 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x04 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\x9e\x04\n\x08Database\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12%\n\x0eserver_version\x18\x03 \x01(\tR\rserverVersion\x12,\n\x12memory_limit_bytes\x18\x04 \x01(\x04R\x10memoryLimitBytes\x12\x1d\n\ndata_bytes\x18\x05 \x01(\x04R\tdataBytes\x12 \n\x0bconnections\x18\x06 \x01(\rR\x0bconnections\x12\'\n\x0fmax_connections\x18\x07 \x01(\rR\x0emaxConnections\x12\'\n\x0flinked_projects\x18\x08 \x03(\tR\x0elinkedProjects\x12D\n\nconnection\x18\t \x01(\x0b2$.pethost.panel.v1.DatabaseConnectionR\nconnection\x12\x18\n\x07service\x18\n \x01(\tR\x07service\x12\x16\n\x06volume\x18\x0b \x01(\tR\x06volume\x12\'\n\x0fconsole_command\x18\x0c \x03(\tR\x0econsoleCommand\x12*\n\x11own_user_projects\x18\r \x03(\tR\x0fownUserProjects"\xc6\x01\n\x12DatabaseConnection\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x12\n\x04user\x18\x03 \x01(\tR\x04user\x12\x1a\n\x08database\x18\x04 \x01(\tR\x08database\x12\x1f\n\x08password\x18\x05 \x01(\tR\x08passwordB\x03\x80\x01\x01\x12\x15\n\x03url\x18\x06 \x01(\tR\x03urlB\x03\x80\x01\x01\x12 \n\tlocal_url\x18\x07 \x01(\tR\x08localUrlB\x03\x80\x01\x01"\xdb\x02\n\x0fDatabaseSummary\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12\x1d\n\ndata_bytes\x18\x03 \x01(\x04R\tdataBytes\x12 \n\x0bconnections\x18\x04 \x01(\rR\x0bconnections\x12\'\n\x0flinked_projects\x18\x05 \x03(\tR\x0elinkedProjects\x12%\n\x0eserver_version\x18\x06 \x01(\tR\rserverVersion\x12,\n\x12memory_limit_bytes\x18\x07 \x01(\x04R\x10memoryLimitBytes\x12*\n\x11own_user_projects\x18\x08 \x03(\tR\x0fownUserProjects"\x8a\x02\n\x13DatabaseEngineOffer\x128\n\x06engine\x18\x01 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12#\n\rmajor_version\x18\x02 \x01(\rR\x0cmajorVersion\x12:\n\x05sizes\x18\x03 \x03(\x0b2$.pethost.panel.v1.DatabaseSizeChoiceR\x05sizes\x12;\n\x1adefault_memory_limit_bytes\x18\x04 \x01(\x04R\x17defaultMemoryLimitBytes\x12\x1b\n\town_users\x18\x05 \x01(\x08R\x08ownUsers"B\n\x12DatabaseSizeChoice\x12,\n\x12memory_limit_bytes\x18\x01 \x01(\x04R\x10memoryLimitBytes"\x8f\x01\n\x13LinkDatabaseRequest\x12.\n\x13database_project_id\x18\x01 \x01(\tR\x11databaseProjectId\x12\x12\n\x04link\x18\x02 \x03(\tR\x04link\x12\x16\n\x06unlink\x18\x03 \x03(\tR\x06unlink\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"K\n\x14LinkDatabaseResponse\x123\n\x07project\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project"\x91\x03\n\x15CreateDatabaseRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x128\n\x06engine\x18\x02 \x01(\x0e2 .pethost.panel.v1.DatabaseEngineR\x06engine\x12,\n\x12memory_limit_bytes\x18\x03 \x01(\x04R\x10memoryLimitBytes\x12(\n\x10from_snapshot_id\x18\x04 \x01(\tR\x0efromSnapshotId\x12\x18\n\x04link\x18\x05 \x03(\tR\x04linkB\x04\xa8\xb5\x18\x01\x12!\n\x0coperation_id\x18\x06 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\x07 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12C\n\x08metadata\x18\x08 \x01(\x0b2!.pethost.panel.v1.ProjectMetadataR\x08metadataB\x04\xa8\xb5\x18\x01\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xa1\x02\n\x16CreateDatabaseResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x12?\n\nviolations\x18\x02 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations\x12 \n\x0badjustments\x18\x03 \x03(\tR\x0badjustments\x123\n\x07project\x18\x04 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x05 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log"\xf0\x02\n\x17GetDatabaseStatsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x129\n\nstart_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x04 \x01(\rR\x0blastSeconds\x120\n\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12Q\n\x0fstatement_order\x18\x06 \x01(\x0e2(.pethost.panel.v1.DatabaseStatementOrderR\x0estatementOrder\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\x82\x04\n\x18GetDatabaseStatsResponse\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x129\n\x07overall\x18\x04 \x01(\x0b2\x1f.pethost.panel.v1.DatabaseStatsR\x07overall\x12?\n\x07buckets\x18\x05 \x03(\x0b2%.pethost.panel.v1.DatabaseStatsBucketR\x07buckets\x12C\n\nstatements\x18\x06 \x03(\x0b2#.pethost.panel.v1.DatabaseStatementR\nstatements\x12-\n\x12statements_tracked\x18\x07 \x01(\x08R\x11statementsTracked\x12>\n\x08activity\x18\x08 \x01(\x0b2".pethost.panel.v1.DatabaseActivityR\x08activity"\x87\x01\n\x13DatabaseStatsBucket\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x05stats\x18\x02 \x01(\x0b2\x1f.pethost.panel.v1.DatabaseStatsR\x05stats"\xe9\x04\n\rDatabaseStats\x12\'\n\x0fsampled_seconds\x18\x01 \x01(\rR\x0esampledSeconds\x12$\n\x0ecpu_cores_mean\x18\x02 \x01(\x01R\x0ccpuCoresMean\x12"\n\rcpu_cores_max\x18\x03 \x01(\x01R\x0bcpuCoresMax\x121\n\x15memory_used_bytes_max\x18\x04 \x01(\x04R\x12memoryUsedBytesMax\x12,\n\x12memory_limit_bytes\x18\x05 \x01(\x04R\x10memoryLimitBytes\x12!\n\x0cvolume_bytes\x18\x06 \x01(\x04R\x0bvolumeBytes\x12\x1d\n\ndata_bytes\x18\x07 \x01(\x04R\tdataBytes\x12\'\n\x0fconnections_max\x18\x08 \x01(\rR\x0econnectionsMax\x12\'\n\x0fmax_connections\x18\t \x01(\rR\x0emaxConnections\x12B\n\x08commands\x18\n \x03(\x0b2&.pethost.panel.v1.DatabaseCommandStatsR\x08commands\x12;\n\x08postgres\x18\x0b \x01(\x0b2\x1f.pethost.panel.v1.PostgresStatsR\x08postgres\x125\n\x06valkey\x18\x0c \x01(\x0b2\x1d.pethost.panel.v1.ValkeyStatsR\x06valkey\x128\n\x07mariadb\x18\r \x01(\x0b2\x1e.pethost.panel.v1.MariadbStatsR\x07mariadb"\xc2\x01\n\x14DatabaseCommandStats\x129\n\x04kind\x18\x01 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n\x05calls\x18\x02 \x01(\x04R\x05calls\x12"\n\rtotal_time_ms\x18\x03 \x01(\x01R\x0btotalTimeMs\x12\x12\n\x04rows\x18\x04 \x01(\x04R\x04rows\x12!\n\x0cfailed_calls\x18\x05 \x01(\x04R\x0bfailedCalls"\xd0\x04\n\rPostgresStats\x12\x18\n\x07commits\x18\x01 \x01(\x04R\x07commits\x12\x1c\n\trollbacks\x18\x02 \x01(\x04R\trollbacks\x12\x1d\n\nblocks_hit\x18\x03 \x01(\x04R\tblocksHit\x12\x1f\n\x0bblocks_read\x18\x04 \x01(\x04R\nblocksRead\x12!\n\x0crows_fetched\x18\x05 \x01(\x04R\x0browsFetched\x12!\n\x0crows_scanned\x18\x06 \x01(\x04R\x0browsScanned\x12#\n\rrows_inserted\x18\x07 \x01(\x04R\x0crowsInserted\x12!\n\x0crows_updated\x18\x08 \x01(\x04R\x0browsUpdated\x12!\n\x0crows_deleted\x18\t \x01(\x04R\x0browsDeleted\x12\x1c\n\tdeadlocks\x18\n \x01(\x04R\tdeadlocks\x12\x1d\n\ntemp_bytes\x18\x0b \x01(\x04R\ttempBytes\x12\x1b\n\twal_bytes\x18\x0c \x01(\x04R\x08walBytes\x12\x1d\n\nactive_max\x18\r \x01(\rR\tactiveMax\x125\n\x17idle_in_transaction_max\x18\x0e \x01(\rR\x14idleInTransactionMax\x12\x1f\n\x0bwaiting_max\x18\x0f \x01(\rR\nwaitingMax\x12E\n\x1flongest_transaction_seconds_max\x18\x10 \x01(\rR\x1clongestTransactionSecondsMax"\xc6\x03\n\x0bValkeyStats\x12#\n\rkeyspace_hits\x18\x01 \x01(\x04R\x0ckeyspaceHits\x12\'\n\x0fkeyspace_misses\x18\x02 \x01(\x04R\x0ekeyspaceMisses\x12!\n\x0cexpired_keys\x18\x03 \x01(\x04R\x0bexpiredKeys\x12!\n\x0cevicted_keys\x18\x04 \x01(\x04R\x0bevictedKeys\x12&\n\x0fnet_input_bytes\x18\x05 \x01(\x04R\rnetInputBytes\x12(\n\x10net_output_bytes\x18\x06 \x01(\x04R\x0enetOutputBytes\x121\n\x14rejected_connections\x18\x07 \x01(\x04R\x13rejectedConnections\x12\x12\n\x04keys\x18\x08 \x01(\x04R\x04keys\x121\n\x15used_memory_bytes_max\x18\t \x01(\x04R\x12usedMemoryBytesMax\x12\'\n\x0fmaxmemory_bytes\x18\n \x01(\x04R\x0emaxmemoryBytes\x12.\n\x13blocked_clients_max\x18\x0b \x01(\rR\x11blockedClientsMax"\x9b\x04\n\x0cMariadbStats\x12\x1b\n\tpages_hit\x18\x01 \x01(\x04R\x08pagesHit\x12\x1d\n\npages_read\x18\x02 \x01(\x04R\tpagesRead\x12\x1b\n\trows_read\x18\x03 \x01(\x04R\x08rowsRead\x12#\n\rrows_inserted\x18\x04 \x01(\x04R\x0crowsInserted\x12!\n\x0crows_updated\x18\x05 \x01(\x04R\x0browsUpdated\x12!\n\x0crows_deleted\x18\x06 \x01(\x04R\x0browsDeleted\x12\x1c\n\tdeadlocks\x18\x07 \x01(\x04R\tdeadlocks\x12$\n\x0erow_lock_waits\x18\x08 \x01(\x04R\x0crowLockWaits\x12\x1d\n\nredo_bytes\x18\t \x01(\x04R\tredoBytes\x12&\n\x0ftmp_disk_tables\x18\n \x01(\x04R\rtmpDiskTables\x12\x1d\n\nactive_max\x18\x0b \x01(\rR\tactiveMax\x125\n\x17idle_in_transaction_max\x18\x0c \x01(\rR\x14idleInTransactionMax\x12\x1f\n\x0bwaiting_max\x18\r \x01(\rR\nwaitingMax\x12E\n\x1flongest_transaction_seconds_max\x18\x0e \x01(\rR\x1clongestTransactionSecondsMax"\xe3\x01\n\x11DatabaseStatement\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04text\x18\x02 \x01(\tR\x04text\x129\n\x04kind\x18\x03 \x01(\x0e2%.pethost.panel.v1.DatabaseCommandKindR\x04kind\x12\x14\n\x05calls\x18\x04 \x01(\x04R\x05calls\x12"\n\rtotal_time_ms\x18\x05 \x01(\x01R\x0btotalTimeMs\x12\x12\n\x04rows\x18\x06 \x01(\x04R\x04rows\x12!\n\x0cfailed_calls\x18\x07 \x01(\x04R\x0bfailedCalls"\xfb\x01\n\x10DatabaseActivity\x127\n\tread_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08readTime\x12=\n\x08sessions\x18\x02 \x03(\x0b2!.pethost.panel.v1.DatabaseSessionR\x08sessions\x12#\n\rsession_count\x18\x03 \x01(\rR\x0csessionCount\x12J\n\rslow_commands\x18\x04 \x03(\x0b2%.pethost.panel.v1.DatabaseSlowCommandR\x0cslowCommands"\xca\x04\n\x0fDatabaseSession\x12\x10\n\x03pid\x18\x01 \x01(\x05R\x03pid\x12\x12\n\x04user\x18\x02 \x01(\tR\x04user\x12\x1a\n\x08database\x18\x03 \x01(\tR\x08database\x12)\n\x10application_name\x18\x04 \x01(\tR\x0fapplicationName\x12%\n\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12<\n\x05state\x18\x06 \x01(\x0e2&.pethost.panel.v1.DatabaseSessionStateR\x05state\x12H\n\x12backend_start_time\x18\x07 \x01(\x0b2\x1a.google.protobuf.TimestampR\x10backendStartTime\x12P\n\x16transaction_start_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x14transactionStartTime\x12D\n\x10query_start_time\x18\t \x01(\x0b2\x1a.google.protobuf.TimestampR\x0equeryStartTime\x12&\n\x0fwait_event_type\x18\n \x01(\tR\rwaitEventType\x12\x1d\n\nwait_event\x18\x0b \x01(\tR\twaitEvent\x12&\n\x0fblocked_by_pids\x18\x0c \x03(\x05R\rblockedByPids\x12\x14\n\x05query\x18\r \x01(\tR\x05query"\xda\x01\n\x13DatabaseSlowCommand\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x1f\n\x0bduration_ms\x18\x02 \x01(\x01R\ndurationMs\x12\x18\n\x07command\x18\x03 \x01(\tR\x07command\x12\x10\n\x03key\x18\x04 \x01(\tR\x03key\x12%\n\x0eclient_address\x18\x05 \x01(\tR\rclientAddress\x12\x1f\n\x0bclient_name\x18\x06 \x01(\tR\nclientName"\x8c\x01\n\x1aCancelDatabaseQueryRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x10\n\x03pid\x18\x02 \x01(\x05R\x03pid\x12\x1f\n\x0bend_session\x18\x03 \x01(\x08R\nendSession\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"1\n\x1bCancelDatabaseQueryResponse\x12\x12\n\x04done\x18\x01 \x01(\x08R\x04done"\xe7\x02\n\x17SetProjectAlertsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x123\n\x06checks\x18\x02 \x03(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x06checks\x12#\n\rremove_checks\x18\x03 \x01(\x08R\x0cremoveChecks\x12B\n\rtraffic_rules\x18\x04 \x03(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x0ctrafficRules\x120\n\x14remove_traffic_rules\x18\x05 \x01(\x08R\x12removeTrafficRules\x12\x16\n\x03off\x18\x06 \x01(\x08R\x03offB\x04\x90\xb5\x18\x01\x12\'\n\x0cmute_minutes\x18\x07 \x01(\rR\x0bmuteMinutesB\x04\x90\xb5\x18\x01\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"S\n\x18SetProjectAlertsResponse\x127\n\x06alerts\x18\x01 \x01(\x0b2\x1f.pethost.panel.v1.ProjectAlertsR\x06alerts"{\n\tSiteCheck\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12#\n\rexpect_status\x18\x03 \x01(\rR\x0cexpectStatus\x12!\n\x0cmust_contain\x18\x04 \x01(\tR\x0bmustContain"\xeb\x01\n\x0bTrafficRule\x127\n\x06metric\x18\x01 \x01(\x0e2\x1f.pethost.panel.v1.TrafficMetricR\x06metric\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12\x1c\n\tthreshold\x18\x03 \x01(\x01R\tthreshold\x12%\n\x0ewindow_minutes\x18\x04 \x01(\rR\rwindowMinutes\x12!\n\x0cmin_requests\x18\x05 \x01(\rR\x0bminRequests"\x91\x02\n\rProjectAlerts\x128\n\x06checks\x18\x01 \x03(\x0b2 .pethost.panel.v1.SiteCheckStateR\x06checks\x12G\n\rtraffic_rules\x18\x02 \x03(\x0b2".pethost.panel.v1.TrafficRuleStateR\x0ctrafficRules\x12\x10\n\x03off\x18\x03 \x01(\x08R\x03off\x12>\n\rmute_end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0bmuteEndTime\x12+\n\x0euptime_percent\x18\x05 \x01(\x01R\ruptimePercentB\x04\x90\xb5\x18\x01"\x88\x02\n\x0eSiteCheckState\x121\n\x05check\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12\'\n\x0fmachine_default\x18\x02 \x01(\x08R\x0emachineDefault\x125\n\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12B\n\x0blast_result\x18\x04 \x01(\x0b2!.pethost.panel.v1.SiteCheckResultR\nlastResult\x12\x1f\n\x0bincident_id\x18\x05 \x01(\tR\nincidentId"\xae\x01\n\x0fSiteCheckResult\x129\n\ncheck_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tcheckTime\x12\x16\n\x06status\x18\x02 \x01(\rR\x06status\x12\x1f\n\x0bduration_ms\x18\x03 \x01(\rR\ndurationMs\x12\'\n\x0ffailure_message\x18\x04 \x01(\tR\x0efailureMessage"\x81\x02\n\x10TrafficRuleState\x121\n\x04rule\x18\x01 \x01(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x04rule\x12\'\n\x0fmachine_default\x18\x02 \x01(\x08R\x0emachineDefault\x125\n\x06status\x18\x03 \x01(\x0e2\x1d.pethost.panel.v1.AlertStatusR\x06status\x12\x14\n\x05value\x18\x04 \x01(\x01R\x05value\x12#\n\rrequest_count\x18\x05 \x01(\x04R\x0crequestCount\x12\x1f\n\x0bincident_id\x18\x06 \x01(\tR\nincidentId"\xcc\x06\n\x08Incident\x12\x1f\n\x0bincident_id\x18\x01 \x01(\tR\nincidentId\x128\n\x04kind\x18\x02 \x01(\x0e2$.pethost.panel.v1.ProjectProblemKindR\x04kind\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x121\n\x05check\x18\x04 \x01(\x0b2\x1b.pethost.panel.v1.SiteCheckR\x05check\x12@\n\x0ctraffic_rule\x18\x05 \x01(\x0b2\x1d.pethost.panel.v1.TrafficRuleR\x0btrafficRule\x12!\n\x0coperation_id\x18\x06 \x01(\tR\x0boperationId\x127\n\topen_time\x18\x07 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08openTime\x12=\n\x0cresolve_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0bresolveTime\x12\x14\n\x05value\x18\t \x01(\x01R\x05value\x12#\n\rrequest_count\x18\n \x01(\x04R\x0crequestCount\x12,\n\x12after_operation_id\x18\x0b \x01(\tR\x10afterOperationId\x12S\n\x18after_operation_end_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\x15afterOperationEndTime\x12,\n\x12joined_incident_id\x18\r \x01(\tR\x10joinedIncidentId\x12H\n\x0cquiet_reason\x18\x0e \x01(\x0e2%.pethost.panel.v1.IncidentQuietReasonR\x0bquietReason\x12\x1a\n\x08flapping\x18\x0f \x01(\x08R\x08flapping\x12)\n\x10incident_message\x18\x10 \x01(\tR\x0fincidentMessage\x12>\n\x08evidence\x18\x11 \x01(\x0b2".pethost.panel.v1.IncidentEvidenceR\x08evidence"\xd4\x02\n\x10IncidentEvidence\x12D\n\x0ccheck_result\x18\x01 \x01(\x0b2!.pethost.panel.v1.SiteCheckResultR\x0bcheckResult\x12\x1b\n\texit_code\x18\x02 \x01(\x05R\x08exitCode\x12\x1d\n\noom_killed\x18\x03 \x01(\x08R\toomKilled\x12#\n\rrestart_count\x18\x04 \x01(\rR\x0crestartCount\x12#\n\rhealth_output\x18\x05 \x01(\tR\x0chealthOutput\x126\n\tlog_lines\x18\x06 \x03(\x0b2\x19.pethost.panel.v1.LogLineR\x08logLines\x12<\n\x08top_path\x18\x07 \x01(\x0b2!.pethost.panel.v1.HttpPathTrafficR\x07topPath"\x96\x01\n\tUptimeDay\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12+\n\x0euptime_percent\x18\x02 \x01(\x01R\ruptimePercentB\x04\x90\xb5\x18\x01\x12!\n\x0cdown_seconds\x18\x03 \x01(\rR\x0bdownSeconds"r\n\x12GetIncidentRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1f\n\x0bincident_id\x18\x02 \x01(\tR\nincidentId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\x81\x01\n\x13GetIncidentResponse\x126\n\x08incident\x18\x01 \x01(\x0b2\x1a.pethost.panel.v1.IncidentR\x08incident\x122\n\x06joined\x18\x02 \x03(\x0b2\x1a.pethost.panel.v1.IncidentR\x06joined"\xf6\x01\n\x13GetOperationRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0coperation_id\x18\x02 \x01(\tR\x0boperationId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12*\n\x0eafter_log_line\x18\x04 \x01(\rR\x0cafterLogLineB\x04\x90\xb5\x18\x01\x12*\n\x0elog_line_limit\x18\x05 \x01(\rR\x0clogLineLimitB\x04\x90\xb5\x18\x01\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xb4\x02\n\x14GetOperationResponse\x129\n\toperation\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.OperationR\toperation\x123\n\x07project\x18\x05 \x01(\x0b2\x19.pethost.panel.v1.ProjectR\x07project\x124\n\x03log\x18\x02 \x03(\x0b2".pethost.panel.v1.OperationLogLineR\x03log\x12$\n\x0elog_line_count\x18\x03 \x01(\rR\x0clogLineCount\x12-\n\x13next_after_log_line\x18\x04 \x01(\rR\x10nextAfterLogLine\x12!\n\x0cmove_message\x18\x06 \x01(\tR\x0bmoveMessage"V\n\x10OperationLogLine\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x12\n\x04text\x18\x02 \x01(\tR\x04text"\xaa\x01\n\x11HttpTrafficFilter\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x16\n\x06method\x18\x02 \x01(\tR\x06method\x12#\n\rpath_contains\x18\x03 \x01(\tR\x0cpathContains\x12!\n\x0cpath_pattern\x18\x04 \x01(\tR\x0bpathPattern\x12!\n\x0cstatus_class\x18\x05 \x01(\rR\x0bstatusClass"\x9e\x03\n\x17QueryHttpTrafficRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x08 \x01(\rR\x0blastSeconds\x120\n\x14bucket_width_seconds\x18\x05 \x01(\rR\x12bucketWidthSeconds\x12#\n\rrequest_limit\x18\x06 \x01(\rR\x0crequestLimit\x12\x1d\n\npage_token\x18\x07 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xc2\x04\n\x18QueryHttpTrafficResponse\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x12>\n\x07summary\x18\x03 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary\x12=\n\x07buckets\x18\x04 \x03(\x0b2#.pethost.panel.v1.HttpTrafficBucketR\x07buckets\x12>\n\ttop_paths\x18\x05 \x03(\x0b2!.pethost.panel.v1.HttpPathTrafficR\x08topPaths\x12\'\n\x0fnewest_sequence\x18\t \x01(\x04R\x0enewestSequence\x129\n\x08requests\x18\x06 \x03(\x0b2\x1d.pethost.panel.v1.HttpRequestR\x08requests\x12&\n\x0fnext_page_token\x18\x07 \x01(\tR\rnextPageToken\x12#\n\rtail_sequence\x18\n \x01(\x04R\x0ctailSequence"\x8e\x01\n\x11HttpTrafficBucket\x129\n\nstart_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x12>\n\x07summary\x18\x02 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary"\x8c\x01\n\x0fHttpPathTraffic\x12\x16\n\x06method\x18\x01 \x01(\tR\x06method\x12!\n\x0cpath_pattern\x18\x02 \x01(\tR\x0bpathPattern\x12>\n\x07summary\x18\x03 \x01(\x0b2$.pethost.panel.v1.HttpTrafficSummaryR\x07summary"\x83\x04\n\x0bHttpRequest\x12\x1a\n\x08sequence\x18\x01 \x01(\x04R\x08sequence\x12;\n\x0bfinish_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nfinishTime\x12\x12\n\x04host\x18\x03 \x01(\tR\x04host\x12\x16\n\x06method\x18\x04 \x01(\tR\x06method\x12\x12\n\x04path\x18\x05 \x01(\tR\x04path\x12!\n\x0cpath_pattern\x18\x06 \x01(\tR\x0bpathPattern\x12\x1d\n\nroute_path\x18\x07 \x01(\tR\troutePath\x12\x18\n\x07service\x18\x08 \x01(\tR\x07service\x12\x12\n\x04port\x18\t \x01(\rR\x04port\x12\x1f\n\x0bstatus_code\x18\n \x01(\rR\nstatusCode\x12.\n\x13response_size_bytes\x18\x0b \x01(\x04R\x11responseSizeBytes\x12\x1f\n\x0bduration_ms\x18\x0c \x01(\rR\ndurationMs\x12.\n\x13service_duration_ms\x18\r \x01(\rR\x11serviceDurationMs\x12*\n\x11client_ip_address\x18\x0e \x01(\tR\x0fclientIpAddress\x12\x1d\n\nuser_agent\x18\x0f \x01(\tR\tuserAgent"\x8b\x01\n\x12ContainerLogFilter\x12\x18\n\x07service\x18\x01 \x01(\tR\x07service\x126\n\x06stream\x18\x02 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12#\n\rtext_contains\x18\x03 \x01(\tR\x0ctextContains"\xff\x02\n\x19QueryContainerLogsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12<\n\x06filter\x18\x02 \x01(\x0b2$.pethost.panel.v1.ContainerLogFilterR\x06filter\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12!\n\x0clast_seconds\x18\x08 \x01(\rR\x0blastSeconds\x12\x14\n\x05limit\x18\x05 \x01(\rR\x05limit\x12\x1d\n\nfrom_start\x18\x06 \x01(\x08R\tfromStart\x12\x1d\n\npage_token\x18\x07 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xce\x02\n\x1aQueryContainerLogsResponse\x129\n\nstart_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime\x12D\n\x10oldest_kept_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\x0eoldestKeptTime\x12/\n\x05lines\x18\x01 \x03(\x0b2\x19.pethost.panel.v1.LogLineR\x05lines\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1f\n\x0btail_cursor\x18\x03 \x01(\tR\ntailCursor"\x9f\x01\n\x07LogLine\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x126\n\x06stream\x18\x03 \x01(\x0e2\x1e.pethost.panel.v1.OutputStreamR\x06stream\x12\x12\n\x04text\x18\x04 \x01(\tR\x04text"\x97\x02\n\x18RunServiceCommandRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12\x18\n\x07command\x18\x03 \x03(\tR\x07command\x12\x14\n\x05stdin\x18\x04 \x01(\tR\x05stdin\x12\x1e\n\x0brun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\x12\'\n\x0ftimeout_seconds\x18\x07 \x01(\rR\x0etimeoutSeconds\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xb0\x01\n\x19RunServiceCommandResponse\x12\x1b\n\texit_code\x18\x01 \x01(\x05R\x08exitCode\x12\x1b\n\ttimed_out\x18\x02 \x01(\x08R\x08timedOut\x12\x16\n\x06stdout\x18\x03 \x01(\tR\x06stdout\x12\x16\n\x06stderr\x18\x04 \x01(\tR\x06stderr\x12)\n\x10output_truncated\x18\x05 \x01(\x08R\x0foutputTruncated"\xa0\x02\n\tFileEntry\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12.\n\x04type\x18\x02 \x01(\x0e2\x1a.pethost.panel.v1.FileTypeR\x04type\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x04R\tsizeBytes\x12;\n\x0bmodify_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\nmodifyTime\x12\x12\n\x04mode\x18\x05 \x01(\tR\x04mode\x12\x1b\n\towner_uid\x18\x06 \x01(\rR\x08ownerUid\x12\x1b\n\towner_gid\x18\x07 \x01(\rR\x08ownerGid\x12%\n\x0esymlink_target\x18\x08 \x01(\tR\rsymlinkTarget"\xb1\x02\n\x0fReadPathRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x05 \x01(\tR\x04path\x12\x1f\n\x0bentry_limit\x18\x06 \x01(\rR\nentryLimit\x12!\n\x0coffset_bytes\x18\x07 \x01(\x04R\x0boffsetBytes\x12!\n\x0clength_bytes\x18\x08 \x01(\rR\x0blengthBytes\x12(\n\x10entry_page_token\x18\t \x01(\tR\x0eentryPageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceB\x06\n\x04root"\x9e\x03\n\x10ReadPathResponse\x121\n\x05entry\x18\x01 \x01(\x0b2\x1b.pethost.panel.v1.FileEntryR\x05entry\x12:\n\x08location\x18\n \x01(\x0e2\x1e.pethost.panel.v1.FileLocationR\x08location\x12\x16\n\x06volume\x18\x02 \x01(\tR\x06volume\x125\n\x07entries\x18\x03 \x03(\x0b2\x1b.pethost.panel.v1.FileEntryR\x07entries\x12\x1f\n\x0bentry_count\x18\x04 \x01(\rR\nentryCount\x121\n\x15next_entry_page_token\x18\x08 \x01(\tR\x12nextEntryPageToken\x12\x17\n\x04text\x18\x05 \x01(\tR\x04textB\x03\x80\x01\x01\x12\x16\n\x06binary\x18\x06 \x01(\x08R\x06binary\x12*\n\x11next_offset_bytes\x18\x07 \x01(\x04R\x0fnextOffsetBytes\x12\x1b\n\tdeploy_id\x18\t \x01(\tR\x08deployId"\xd9\x02\n\x15CreateTransferRequest\x12H\n\x0eupload_archive\x18\x01 \x01(\x0b2\x1f.pethost.panel.v1.ArchiveUploadH\x00R\ruploadArchive\x12?\n\x0bupload_file\x18\x02 \x01(\x0b2\x1c.pethost.panel.v1.FileUploadH\x00R\nuploadFile\x12<\n\x08download\x18\x03 \x01(\x0b2\x1e.pethost.panel.v1.PathDownloadH\x00R\x08download\x12M\n\x11download_database\x18\x04 \x01(\x0b2\x1e.pethost.panel.v1.DatabaseDumpH\x00R\x10downloadDatabase\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceB\n\n\x08transfer",\n\rArchiveUpload\x12\x1b\n\tfile_name\x18\x01 \x01(\tR\x08fileName"}\n\nFileUpload\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x04 \x01(\tR\x04pathB\x06\n\x04root"\x7f\n\x0cPathDownload\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x07service\x18\x02 \x01(\tH\x00R\x07service\x12\x18\n\x06volume\x18\x03 \x01(\tH\x00R\x06volume\x12\x12\n\x04path\x18\x05 \x01(\tR\x04pathB\x06\n\x04root"I\n\x0cDatabaseDump\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1a\n\x08database\x18\x02 \x01(\tR\x08database"\x9d\x02\n\x16CreateTransferResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x1f\n\x0bhttp_method\x18\x02 \x01(\tR\nhttpMethod\x12;\n\x0bexpire_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x18\n\x07command\x18\x04 \x01(\tR\x07command\x12\x1b\n\tupload_id\x18\x05 \x01(\tR\x08uploadId\x12\x1a\n\x08replaces\x18\x06 \x01(\x08R\x08replaces\x12\x1b\n\tfile_name\x18\x07 \x01(\tR\x08fileName\x12#\n\rexclude_names\x18\x08 \x03(\tR\x0cexcludeNames"M\n\x10GetUploadRequest\x12\x1b\n\tupload_id\x18\x01 \x01(\tR\x08uploadId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xf9\x01\n\x11GetUploadResponse\x12\x1b\n\tfile_name\x18\x01 \x01(\tR\x08fileName\x12\x1d\n\nfile_count\x18\x02 \x01(\rR\tfileCount\x12%\n\x0eunpacked_bytes\x18\x03 \x01(\x04R\runpackedBytes\x12%\n\x0ecompose_source\x18\x04 \x01(\tR\rcomposeSource\x12\x19\n\x08env_file\x18\x05 \x01(\tR\x07envFile\x12?\n\nviolations\x18\x06 \x03(\x0b2\x1f.pethost.panel.v1.SpecViolationR\nviolations"\xa0\x01\n\x0bProjectBusy\x12!\n\x0coperation_id\x18\x01 \x01(\tR\x0boperationId\x123\n\x04kind\x18\x02 \x01(\x0e2\x1f.pethost.panel.v1.OperationKindR\x04kind\x129\n\nstart_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime"\x10\n\x0eProjectChanged"O\n\x12MachineUnreachable\x129\n\nsince_time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\tsinceTime"\xc3\x01\n\x13DatabaseLinkRefusal\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12C\n\x06reason\x18\x02 \x01(\x0e2+.pethost.panel.v1.DatabaseLinkRefusalReasonR\x06reason\x12\x18\n\x07service\x18\x03 \x01(\tR\x07service\x12.\n\x13database_project_id\x18\x04 \x01(\tR\x11databaseProjectId"\xb2\x01\n\x13DatabaseSizeRefusal\x12C\n\x06reason\x18\x01 \x01(\x0e2+.pethost.panel.v1.DatabaseSizeRefusalReasonR\x06reason\x12\x1d\n\ndata_bytes\x18\x02 \x01(\x04R\tdataBytes\x12\x1f\n\x0bkeeps_bytes\x18\x03 \x01(\x04R\nkeepsBytes\x12\x16\n\x06volume\x18\x04 \x01(\tR\x06volume"{\n\tNoMachine\x129\n\x06reason\x18\x01 \x01(\x0e2!.pethost.panel.v1.NoMachineReasonR\x06reason\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12!\n\x0cworkspace_id\x18\x03 \x01(\tR\x0bworkspaceId"\xad\x01\n\x0fWorkspaceChoice\x12;\n\nworkspaces\x18\x01 \x03(\x0b2\x1b.pethost.panel.v1.WorkspaceR\nworkspaces\x12\x14\n\x05total\x18\x02 \x01(\rR\x05total\x12\'\n\x0fholding_project\x18\x03 \x03(\tR\x0eholdingProject\x12\x1e\n\nincomplete\x18\x04 \x01(\x08R\nincomplete"J\n\x13WorkspaceNotGranted\x12!\n\x0cworkspace_id\x18\x01 \x01(\tR\x0bworkspaceId\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url"\xb0\x01\n\x0cProjectMoved\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0cworkspace_id\x18\x02 \x01(\tR\x0bworkspaceId\x12%\n\x0eworkspace_name\x18\x03 \x01(\tR\rworkspaceName\x127\n\tmove_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\x08moveTime"w\n\x15WatchOperationRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12!\n\x0coperation_id\x18\x02 \x01(\tR\x0boperationId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xcc\x01\n\x16WatchOperationResponse\x126\n\x03log\x18\x01 \x01(\x0b2".pethost.panel.v1.OperationLogLineH\x00R\x03log\x12L\n\x12finished_operation\x18\x02 \x01(\x0b2\x1b.pethost.panel.v1.OperationH\x00R\x11finishedOperation\x12!\n\x0cmove_message\x18\x03 \x01(\tR\x0bmoveMessageB\t\n\x07message"\xb8\x01\n\x18TailContainerLogsRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12<\n\x06filter\x18\x02 \x01(\x0b2$.pethost.panel.v1.ContainerLogFilterR\x06filter\x12!\n\x0cafter_cursor\x18\x03 \x01(\tR\x0bafterCursor\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"b\n\x19TailContainerLogsResponse\x12-\n\x04line\x18\x01 \x01(\x0b2\x19.pethost.panel.v1.LogLineR\x04line\x12\x16\n\x06cursor\x18\x02 \x01(\tR\x06cursor"\xb9\x01\n\x16TailHttpTrafficRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12;\n\x06filter\x18\x02 \x01(\x0b2#.pethost.panel.v1.HttpTrafficFilterR\x06filter\x12%\n\x0eafter_sequence\x18\x03 \x01(\x04R\rafterSequence\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"R\n\x17TailHttpTrafficResponse\x127\n\x07request\x18\x01 \x01(\x0b2\x1d.pethost.panel.v1.HttpRequestR\x07request"\x87\x02\n\x13OpenTerminalRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x122\n\x04size\x18\x03 \x01(\x0b2\x1e.pethost.panel.v1.TerminalSizeR\x04size\x12\x18\n\x07command\x18\x04 \x03(\tR\x07command\x12\x1e\n\x0brun_as_user\x18\x05 \x01(\tR\trunAsUser\x12+\n\x11working_directory\x18\x06 \x01(\tR\x10workingDirectory\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"<\n\x0cTerminalSize\x12\x18\n\x07columns\x18\x01 \x01(\rR\x07columns\x12\x12\n\x04rows\x18\x02 \x01(\rR\x04rows"e\n\x14OpenTerminalResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime"X\n\x19OpenDatabaseClientRequest\x12\x1d\n\nproject_id\x18\x01 \x01(\tR\tprojectId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"k\n\x1aOpenDatabaseClientResponse\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime*t\n\x0fWorkspaceStatus\x12 \n\x1cWORKSPACE_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n\x16WORKSPACE_STATUS_READY\x10\x01\x12#\n\x1fWORKSPACE_STATUS_BEING_PREPARED\x10\x02*I\n\rWorkspaceRole\x12\x1e\n\x1aWORKSPACE_ROLE_UNSPECIFIED\x10\x00\x12\x18\n\x14WORKSPACE_ROLE_OWNER\x10\x01*\x93\x01\n\x10AlertChannelKind\x12"\n\x1eALERT_CHANNEL_KIND_UNSPECIFIED\x10\x00\x12\x1c\n\x18ALERT_CHANNEL_KIND_EMAIL\x10\x01\x12\x1f\n\x1bALERT_CHANNEL_KIND_TELEGRAM\x10\x02\x12\x1c\n\x18ALERT_CHANNEL_KIND_SLACK\x10\x03*\x98\x02\n\x12MachineSessionKind\x12$\n MACHINE_SESSION_KIND_UNSPECIFIED\x10\x00\x12%\n!MACHINE_SESSION_KIND_WEB_TERMINAL\x10\x01\x12%\n!MACHINE_SESSION_KIND_SSH_TERMINAL\x10\x02\x12$\n MACHINE_SESSION_KIND_SSH_COMMAND\x10\x03\x12\x1d\n\x19MACHINE_SESSION_KIND_SFTP\x10\x04\x12\x1f\n\x1bMACHINE_SESSION_KIND_TUNNEL\x10\x05\x12(\n$MACHINE_SESSION_KIND_DATABASE_CLIENT\x10\x06*\x83\x05\n\x12ProjectProblemKind\x12$\n PROJECT_PROBLEM_KIND_UNSPECIFIED\x10\x00\x12&\n"PROJECT_PROBLEM_KIND_DEPLOY_FAILED\x10\x01\x12*\n&PROJECT_PROBLEM_KIND_SERVICE_UNHEALTHY\x10\x02\x12+\n\'PROJECT_PROBLEM_KIND_SERVICE_RESTARTING\x10\x03\x12.\n*PROJECT_PROBLEM_KIND_SERVICE_OUT_OF_MEMORY\x10\x04\x12&\n"PROJECT_PROBLEM_KIND_BACKUP_FAILED\x10\x05\x12)\n%PROJECT_PROBLEM_KIND_DEPLOY_CANCELLED\x10\x06\x12\'\n#PROJECT_PROBLEM_KIND_SERVICE_EXITED\x10\x07\x12\'\n#PROJECT_PROBLEM_KIND_RESTORE_FAILED\x10\x08\x12,\n(PROJECT_PROBLEM_KIND_AUTO_DEPLOY_REFUSED\x10\t\x12,\n(PROJECT_PROBLEM_KIND_SERVICE_PORT_CLOSED\x10\n\x12"\n\x1ePROJECT_PROBLEM_KIND_SITE_DOWN\x10\x0b\x12$\n PROJECT_PROBLEM_KIND_HTTP_ERRORS\x10\x0c\x12"\n\x1ePROJECT_PROBLEM_KIND_HTTP_SLOW\x10\r\x12\'\n#PROJECT_PROBLEM_KIND_DATABASE_SETUP\x10\x0e*\x9b\x01\n\x12ServicesActionKind\x12$\n SERVICES_ACTION_KIND_UNSPECIFIED\x10\x00\x12\x1e\n\x1aSERVICES_ACTION_KIND_START\x10\x01\x12\x1d\n\x19SERVICES_ACTION_KIND_STOP\x10\x02\x12 \n\x1cSERVICES_ACTION_KIND_RESTART\x10\x03*\x8e\x02\n\x0cServiceState\x12\x1d\n\x19SERVICE_STATE_UNSPECIFIED\x10\x00\x12\x1d\n\x19SERVICE_STATE_NOT_CREATED\x10\x01\x12\x1a\n\x16SERVICE_STATE_STARTING\x10\x02\x12\x19\n\x15SERVICE_STATE_RUNNING\x10\x03\x12\x19\n\x15SERVICE_STATE_HEALTHY\x10\x04\x12\x1b\n\x17SERVICE_STATE_UNHEALTHY\x10\x05\x12\x1c\n\x18SERVICE_STATE_RESTARTING\x10\x06\x12\x19\n\x15SERVICE_STATE_STOPPED\x10\x07\x12\x18\n\x14SERVICE_STATE_EXITED\x10\x08*\xa3\x01\n\rRestartPolicy\x12\x1e\n\x1aRESTART_POLICY_UNSPECIFIED\x10\x00\x12\x15\n\x11RESTART_POLICY_NO\x10\x01\x12\x1d\n\x19RESTART_POLICY_ON_FAILURE\x10\x02\x12!\n\x1dRESTART_POLICY_UNLESS_STOPPED\x10\x03\x12\x19\n\x15RESTART_POLICY_ALWAYS\x10\x04*\x81\x01\n\x0cHealthStatus\x12\x1d\n\x19HEALTH_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n\x16HEALTH_STATUS_STARTING\x10\x01\x12\x19\n\x15HEALTH_STATUS_HEALTHY\x10\x02\x12\x1b\n\x17HEALTH_STATUS_UNHEALTHY\x10\x03*\x98\x01\n\x11CertificateSource\x12"\n\x1eCERTIFICATE_SOURCE_UNSPECIFIED\x10\x00\x12\x1b\n\x17CERTIFICATE_SOURCE_NONE\x10\x01\x12 \n\x1cCERTIFICATE_SOURCE_INSTALLED\x10\x02\x12 \n\x1cCERTIFICATE_SOURCE_AUTOMATIC\x10\x03*\xda\x01\n\rOperationKind\x12\x1e\n\x1aOPERATION_KIND_UNSPECIFIED\x10\x00\x12\x19\n\x15OPERATION_KIND_DEPLOY\x10\x01\x12#\n\x1fOPERATION_KIND_RECREATE_SERVICE\x10\x02\x12\x19\n\x15OPERATION_KIND_BACKUP\x10\x03\x12\x1a\n\x16OPERATION_KIND_RESTORE\x10\x04\x12\x19\n\x15OPERATION_KIND_DELETE\x10\x05\x12\x17\n\x13OPERATION_KIND_MOVE\x10\x06*\xb2\x01\n\x0fOperationStatus\x12 \n\x1cOPERATION_STATUS_UNSPECIFIED\x10\x00\x12 \n\x1cOPERATION_STATUS_IN_PROGRESS\x10\x01\x12\x1e\n\x1aOPERATION_STATUS_SUCCEEDED\x10\x02\x12\x1b\n\x17OPERATION_STATUS_FAILED\x10\x03\x12\x1e\n\x1aOPERATION_STATUS_CANCELLED\x10\x04*\xd4\x04\n\x13DeployFailureReason\x12%\n!DEPLOY_FAILURE_REASON_UNSPECIFIED\x10\x00\x12+\n\'DEPLOY_FAILURE_REASON_IMAGE_PULL_FAILED\x10\x01\x12,\n(DEPLOY_FAILURE_REASON_IMAGE_BUILD_FAILED\x10\x02\x120\n,DEPLOY_FAILURE_REASON_CONTAINER_START_FAILED\x10\x03\x12#\n\x1fDEPLOY_FAILURE_REASON_DISK_FULL\x10\x04\x12"\n\x1eDEPLOY_FAILURE_REASON_INTERNAL\x10\x05\x12*\n&DEPLOY_FAILURE_REASON_PORT_UNAVAILABLE\x10\x06\x12*\n&DEPLOY_FAILURE_REASON_CONTAINER_EXITED\x10\x07\x12-\n)DEPLOY_FAILURE_REASON_CONTAINER_UNHEALTHY\x10\x08\x12#\n\x1fDEPLOY_FAILURE_REASON_TIMED_OUT\x10\t\x120\n,DEPLOY_FAILURE_REASON_UNCOVERED_IMAGE_VOLUME\x10\n\x122\n.DEPLOY_FAILURE_REASON_BUILD_MEMORY_UNAVAILABLE\x10\x0b\x12.\n*DEPLOY_FAILURE_REASON_DATABASE_USER_FAILED\x10\x0c*\x88\x01\n\x0eDatabaseEngine\x12\x1f\n\x1bDATABASE_ENGINE_UNSPECIFIED\x10\x00\x12\x1c\n\x18DATABASE_ENGINE_POSTGRES\x10\x01\x12\x1a\n\x16DATABASE_ENGINE_VALKEY\x10\x02\x12\x1b\n\x17DATABASE_ENGINE_MARIADB\x10\x03*\xca\x02\n\x13DatabaseCommandKind\x12%\n!DATABASE_COMMAND_KIND_UNSPECIFIED\x10\x00\x12\x1f\n\x1bDATABASE_COMMAND_KIND_OTHER\x10\x01\x12 \n\x1cDATABASE_COMMAND_KIND_SELECT\x10\x02\x12 \n\x1cDATABASE_COMMAND_KIND_INSERT\x10\x03\x12 \n\x1cDATABASE_COMMAND_KIND_UPDATE\x10\x04\x12 \n\x1cDATABASE_COMMAND_KIND_DELETE\x10\x05\x12\x1e\n\x1aDATABASE_COMMAND_KIND_READ\x10\x06\x12\x1f\n\x1bDATABASE_COMMAND_KIND_WRITE\x10\x07\x12"\n\x1eDATABASE_COMMAND_KIND_PREPARED\x10\x08*\xb7\x01\n\x16DatabaseStatementOrder\x12(\n$DATABASE_STATEMENT_ORDER_UNSPECIFIED\x10\x00\x12\'\n#DATABASE_STATEMENT_ORDER_TOTAL_TIME\x10\x01\x12&\n"DATABASE_STATEMENT_ORDER_MEAN_TIME\x10\x02\x12"\n\x1eDATABASE_STATEMENT_ORDER_CALLS\x10\x03*\x8c\x02\n\x14DatabaseSessionState\x12&\n"DATABASE_SESSION_STATE_UNSPECIFIED\x10\x00\x12 \n\x1cDATABASE_SESSION_STATE_OTHER\x10\x01\x12!\n\x1dDATABASE_SESSION_STATE_ACTIVE\x10\x02\x12\x1f\n\x1bDATABASE_SESSION_STATE_IDLE\x10\x03\x12.\n*DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION\x10\x04\x126\n2DATABASE_SESSION_STATE_IDLE_IN_TRANSACTION_ABORTED\x10\x05*\x9d\x01\n\rTrafficMetric\x12\x1e\n\x1aTRAFFIC_METRIC_UNSPECIFIED\x10\x00\x12 \n\x1cTRAFFIC_METRIC_SERVER_ERRORS\x10\x01\x12\'\n#TRAFFIC_METRIC_SERVER_ERROR_PERCENT\x10\x02\x12!\n\x1dTRAFFIC_METRIC_LATENCY_P95_MS\x10\x03*\xa6\x01\n\x0bAlertStatus\x12\x1c\n\x18ALERT_STATUS_UNSPECIFIED\x10\x00\x12\x13\n\x0fALERT_STATUS_OK\x10\x01\x12\x18\n\x14ALERT_STATUS_PENDING\x10\x02\x12\x17\n\x13ALERT_STATUS_FIRING\x10\x03\x12\x17\n\x13ALERT_STATUS_PAUSED\x10\x04\x12\x18\n\x14ALERT_STATUS_NO_DATA\x10\x05*\xd1\x01\n\x13IncidentQuietReason\x12%\n!INCIDENT_QUIET_REASON_UNSPECIFIED\x10\x00\x12\x1f\n\x1bINCIDENT_QUIET_REASON_MUTED\x10\x01\x12\x1d\n\x19INCIDENT_QUIET_REASON_OFF\x10\x02\x12*\n&INCIDENT_QUIET_REASON_FIRST_EVALUATION\x10\x03\x12\'\n#INCIDENT_QUIET_REASON_MANUAL_DEPLOY\x10\x04*a\n\x0cOutputStream\x12\x1d\n\x19OUTPUT_STREAM_UNSPECIFIED\x10\x00\x12\x18\n\x14OUTPUT_STREAM_STDOUT\x10\x01\x12\x18\n\x14OUTPUT_STREAM_STDERR\x10\x02*~\n\x08FileType\x12\x19\n\x15FILE_TYPE_UNSPECIFIED\x10\x00\x12\x12\n\x0eFILE_TYPE_FILE\x10\x01\x12\x17\n\x13FILE_TYPE_DIRECTORY\x10\x02\x12\x15\n\x11FILE_TYPE_SYMLINK\x10\x03\x12\x13\n\x0fFILE_TYPE_OTHER\x10\x04*\x85\x01\n\x0cFileLocation\x12\x1d\n\x19FILE_LOCATION_UNSPECIFIED\x10\x00\x12\x1b\n\x17FILE_LOCATION_CONTAINER\x10\x01\x12\x18\n\x14FILE_LOCATION_VOLUME\x10\x02\x12\x1f\n\x1bFILE_LOCATION_PROJECT_FILES\x10\x03*\xc1\x02\n\x19DatabaseLinkRefusalReason\x12,\n(DATABASE_LINK_REFUSAL_REASON_UNSPECIFIED\x10\x00\x120\n,DATABASE_LINK_REFUSAL_REASON_APP_IS_DATABASE\x10\x01\x123\n/DATABASE_LINK_REFUSAL_REASON_SERVICE_NAME_TAKEN\x10\x02\x12/\n+DATABASE_LINK_REFUSAL_REASON_TOO_MANY_LINKS\x10\x03\x12)\n%DATABASE_LINK_REFUSAL_REASON_ONE_USER\x10\x04\x123\n/DATABASE_LINK_REFUSAL_REASON_USER_NAME_RESERVED\x10\x05*\xd7\x01\n\x19DatabaseSizeRefusalReason\x12,\n(DATABASE_SIZE_REFUSAL_REASON_UNSPECIFIED\x10\x00\x12/\n+DATABASE_SIZE_REFUSAL_REASON_DATA_TOO_LARGE\x10\x01\x12,\n(DATABASE_SIZE_REFUSAL_REASON_DATA_UNREAD\x10\x02\x12-\n)DATABASE_SIZE_REFUSAL_REASON_VOLUME_MOVED\x10\x03*y\n\x0fNoMachineReason\x12!\n\x1dNO_MACHINE_REASON_UNSPECIFIED\x10\x00\x12\x1d\n\x19NO_MACHINE_REASON_NO_PLAN\x10\x01\x12$\n NO_MACHINE_REASON_BEING_PREPARED\x10\x022\x86\x1d\n\x0cPanelService\x12}\n\x0eListWorkspaces\x12\'.pethost.panel.v1.ListWorkspacesRequest\x1a(.pethost.panel.v1.ListWorkspacesResponse"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fList workspaces\x12q\n\nGetMachine\x12#.pethost.panel.v1.GetMachineRequest\x1a$.pethost.panel.v1.GetMachineResponse"\x18\x90\x02\x01\x8a\xb5\x18\x11\x12\x0fGet the machine\x12\x87\x01\n\x10RunMachineAction\x12).pethost.panel.v1.RunMachineActionRequest\x1a*.pethost.panel.v1.RunMachineActionResponse"\x1c\x8a\xb5\x18\x18\x08\x01\x12\x14Run a machine action\x12\x8e\x01\n\nGetProject\x12#.pethost.panel.v1.GetProjectRequest\x1a$.pethost.panel.v1.GetProjectResponse"5\x90\x02\x01\x8a\xb5\x18\x0f\x12\rGet a project\xa2\xb5\x18\x0b\n\x07Project\x10\x02\xa2\xb5\x18\x0c\n\x08Database\x10\x02\x12\x87\x01\n\rCreateProject\x12&.pethost.panel.v1.CreateProjectRequest\x1a\'.pethost.panel.v1.CreateProjectResponse"%\x8a\xb5\x18\x12\x12\x10Create a project\xa2\xb5\x18\x0b\n\x07Project\x10\x01\x12\xa8\x01\n\rDeployProject\x12&.pethost.panel.v1.DeployProjectRequest\x1a\'.pethost.panel.v1.DeployProjectResponse"F\x8a\xb5\x18\x14\x08\x01\x12\x10Deploy a project\xa2\xb5\x18\x0b\n\x07Project\x10\x03\xa2\xb5\x18\x0b\n\x07Project\x10\x06\xa2\xb5\x18\x0c\n\x08Database\x10\x06\x12\x87\x01\n\x0bMoveProject\x12$.pethost.panel.v1.MoveProjectRequest\x1a%.pethost.panel.v1.MoveProjectResponse"+\x8a\xb5\x18\'\x08\x01\x12#Move a project to another workspace\x12h\n\x0eGetMoveChoices\x12\'.pethost.panel.v1.GetMoveChoicesRequest\x1a(.pethost.panel.v1.GetMoveChoicesResponse"\x03\x90\x02\x01\x12}\n\x0bListCommits\x12$.pethost.panel.v1.ListCommitsRequest\x1a%.pethost.panel.v1.ListCommitsResponse"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18List a project\'s commits\x12\xe9\x01\n\x10RunProjectAction\x12).pethost.panel.v1.RunProjectActionRequest\x1a*.pethost.panel.v1.RunProjectActionResponse"~\x8a\xb5\x18\x18\x08\x01\x12\x14Run a project action\xa2\xb5\x18\x1b\n\x07Project\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1c\n\x08Database\x10\x04\x1a\x0edelete_project\xa2\xb5\x18\x1f\n\x08Database\x10\x03\x1a\x11set_database_size\x12\x8c\x01\n\x10SetProjectAlerts\x12).pethost.panel.v1.SetProjectAlertsRequest\x1a*.pethost.panel.v1.SetProjectAlertsResponse"!\x90\x02\x02\x8a\xb5\x18\x1a\x08\x01\x12\x16Set a project\'s alerts\x12_\n\x0bGetIncident\x12$.pethost.panel.v1.GetIncidentRequest\x1a%.pethost.panel.v1.GetIncidentResponse"\x03\x90\x02\x01\x12~\n\x0cGetOperation\x12%.pethost.panel.v1.GetOperationRequest\x1a&.pethost.panel.v1.GetOperationResponse"\x1f\x90\x02\x01\x8a\xb5\x18\x12\x12\x10Get an operation\xa2\xb5\x18\x02\x10\x05\x12\x86\x01\n\x10QueryHttpTraffic\x12).pethost.panel.v1.QueryHttpTrafficRequest\x1a*.pethost.panel.v1.QueryHttpTrafficResponse"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Query HTTP traffic\x12\x8e\x01\n\x12QueryContainerLogs\x12+.pethost.panel.v1.QueryContainerLogsRequest\x1a,.pethost.panel.v1.QueryContainerLogsResponse"\x1d\x90\x02\x01\x8a\xb5\x18\x16\x12\x14Query container logs\x12\x8c\x01\n\x0eCreateDatabase\x12\'.pethost.panel.v1.CreateDatabaseRequest\x1a(.pethost.panel.v1.CreateDatabaseResponse"\'\x8a\xb5\x18\x13\x12\x11Create a database\xa2\xb5\x18\x0c\n\x08Database\x10\x01\x12\x85\x01\n\x0cLinkDatabase\x12%.pethost.panel.v1.LinkDatabaseRequest\x1a&.pethost.panel.v1.LinkDatabaseResponse"&\x90\x02\x02\x8a\xb5\x18\x1f\x08\x01\x12\x1bLink projects to a database\x12n\n\x10GetDatabaseStats\x12).pethost.panel.v1.GetDatabaseStatsRequest\x1a*.pethost.panel.v1.GetDatabaseStatsResponse"\x03\x90\x02\x01\x12r\n\x13CancelDatabaseQuery\x12,.pethost.panel.v1.CancelDatabaseQueryRequest\x1a-.pethost.panel.v1.CancelDatabaseQueryResponse\x12\x90\x01\n\x11RunServiceCommand\x12*.pethost.panel.v1.RunServiceCommandRequest\x1a+.pethost.panel.v1.RunServiceCommandResponse""\x8a\xb5\x18\x1e\x08\x01\x12\x1aRun a command in a service\x12]\n\x0cOpenTerminal\x12%.pethost.panel.v1.OpenTerminalRequest\x1a&.pethost.panel.v1.OpenTerminalResponse\x12o\n\x12OpenDatabaseClient\x12+.pethost.panel.v1.OpenDatabaseClientRequest\x1a,.pethost.panel.v1.OpenDatabaseClientResponse\x12t\n\x08ReadPath\x12!.pethost.panel.v1.ReadPathRequest\x1a".pethost.panel.v1.ReadPathResponse"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18Read a file or directory\x12\x86\x01\n\x0eCreateTransfer\x12\'.pethost.panel.v1.CreateTransferRequest\x1a(.pethost.panel.v1.CreateTransferResponse"!\x8a\xb5\x18\x1d\x08\x01\x12\x19Upload or download a file\x12Y\n\tGetUpload\x12".pethost.panel.v1.GetUploadRequest\x1a#.pethost.panel.v1.GetUploadResponse"\x03\x90\x02\x01\x12\x7f\n\x0eWatchOperation\x12\'.pethost.panel.v1.WatchOperationRequest\x1a(.pethost.panel.v1.WatchOperationResponse"\x18\x9a\xb5\x18\x14\n\x12Watch an operation0\x01\x12\x8b\x01\n\x11TailContainerLogs\x12*.pethost.panel.v1.TailContainerLogsRequest\x1a+.pethost.panel.v1.TailContainerLogsResponse"\x1b\x9a\xb5\x18\x17\n\x15Follow container logs0\x01\x12\x83\x01\n\x0fTailHttpTraffic\x12(.pethost.panel.v1.TailHttpTrafficRequest\x1a).pethost.panel.v1.TailHttpTrafficResponse"\x19\x9a\xb5\x18\x15\n\x13Follow HTTP traffic0\x01B\x9c\x01\n\x14com.pethost.panel.v1B\nPanelProtoZ\x18pethost/panel/v1;panelv1\xa2\x02\x03PPX\xaa\x02\x10Pethost.Panel.V1\xca\x02\x10Pethost\\Panel\\V1\xe2\x02\x1cPethost\\Panel\\V1\\GPBMetadata\xea\x02\x12Pethost::Panel::V1b\x08editionsp\xe9\x07',
     [
         timestamp_pb.desc(),
     ],
     {
+        "ListWorkspacesRequest": ListWorkspacesRequest,
+        "ListWorkspacesResponse": ListWorkspacesResponse,
+        "Workspace": Workspace,
         "GetMachineRequest": GetMachineRequest,
         "GetMachineResponse": GetMachineResponse,
         "Machine": Machine,
@@ -9720,6 +10911,7 @@ _DESC = file_desc(
         "GithubConnection": GithubConnection,
         "GithubRepository": GithubRepository,
         "DeletedProject": DeletedProject,
+        "MovedTo": MovedTo,
         "RunMachineActionRequest": RunMachineActionRequest,
         "RestartMachineAction": RestartMachineAction,
         "RunMachineActionResponse": RunMachineActionResponse,
@@ -9730,6 +10922,7 @@ _DESC = file_desc(
         "GetProjectRequest": GetProjectRequest,
         "GetProjectResponse": GetProjectResponse,
         "Project": Project,
+        "ProjectDependency": ProjectDependency,
         "RunningServicesAction": RunningServicesAction,
         "ProjectSource": ProjectSource,
         "GithubSource": GithubSource,
@@ -9755,6 +10948,13 @@ _DESC = file_desc(
         "FileChange": FileChange,
         "DeployProjectResponse": DeployProjectResponse,
         "SpecViolation": SpecViolation,
+        "MoveProjectRequest": MoveProjectRequest,
+        "DatabaseSwitch": DatabaseSwitch,
+        "MoveProjectResponse": MoveProjectResponse,
+        "GetMoveChoicesRequest": GetMoveChoicesRequest,
+        "GetMoveChoicesResponse": GetMoveChoicesResponse,
+        "MoveChoice": MoveChoice,
+        "MoveTarget": MoveTarget,
         "ListCommitsRequest": ListCommitsRequest,
         "ListCommitsResponse": ListCommitsResponse,
         "BranchCommit": BranchCommit,
@@ -9835,6 +11035,9 @@ _DESC = file_desc(
         "DatabaseLinkRefusal": DatabaseLinkRefusal,
         "DatabaseSizeRefusal": DatabaseSizeRefusal,
         "NoMachine": NoMachine,
+        "WorkspaceChoice": WorkspaceChoice,
+        "WorkspaceNotGranted": WorkspaceNotGranted,
+        "ProjectMoved": ProjectMoved,
         "WatchOperationRequest": WatchOperationRequest,
         "WatchOperationResponse": WatchOperationResponse,
         "TailContainerLogsRequest": TailContainerLogsRequest,
@@ -9846,6 +11049,8 @@ _DESC = file_desc(
         "OpenTerminalResponse": OpenTerminalResponse,
         "OpenDatabaseClientRequest": OpenDatabaseClientRequest,
         "OpenDatabaseClientResponse": OpenDatabaseClientResponse,
+        "WorkspaceStatus": WorkspaceStatus,
+        "WorkspaceRole": WorkspaceRole,
         "AlertChannelKind": AlertChannelKind,
         "MachineSessionKind": MachineSessionKind,
         "ProjectProblemKind": ProjectProblemKind,

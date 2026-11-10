@@ -22,6 +22,7 @@ from pethost._types import (
     DatabaseDump,
     DatabaseEngine,
     DatabaseLinkRequest,
+    DatabaseSwitch,
     DeleteProjectAction,
     DeployProjectResponse,
     FileChange,
@@ -32,7 +33,9 @@ from pethost._types import (
     HttpTrafficFilter,
     LinkDatabaseResponse,
     ListCommitsResponse,
+    ListWorkspacesResponse,
     MountVolume,
+    MoveProjectResponse,
     PathDownload,
     ProjectExtension,
     ProjectMetadata,
@@ -64,10 +67,10 @@ _Self = TypeVar("_Self", bound="Pethost")
 
 
 class Pethost:
-    """Pethost's API: a method for each call, on the machine of the token's account.
+    """Pethost's API: a method for each call, on a workspace of the token's account.
 
         with Pethost() as pethost:
-            print(pethost.get_machine())
+            print(pethost.list_workspaces("..."))
 
     A failed call raises a PethostError: a subclass for each code.
     """
@@ -78,14 +81,17 @@ class Pethost:
         *,
         base_url: str = "https://console.pethost.dev",
         timeout: float | None = 60.0,
+        workspace: str = "",
     ) -> None:
         """
         Args:
             token: The API token, "pth_...": a person makes one in the panel's Settings, under "API tokens". None = the environment's PETHOST_TOKEN.
             base_url: The API's address.
             timeout: Seconds one call may take, the API's own waiting included: a call that waits for an operation or runs a command can be told to take longer than this. None = no limit. A stream has no limit: it lasts as long as its loop.
+            workspace: The workspace of every call whose request names none: its id or name (list_workspaces). A request's own workspace goes before it. Empty = none: the API then takes the account's only workspace, and refuses a call with WorkspaceChoice when it has several.
         """
         caller = _rt.Caller(_rt.token_or_environment(token))
+        self._workspace = workspace
         self._wire = _Wire(base_url, interceptors=[caller], timeout_ms=_rt.timeout_ms(timeout))
         # The wire layer's timeout is a call's whole time, and a call cannot lift its client's:
         # the streams have a client of their own, without one.
@@ -128,16 +134,48 @@ class Pethost:
             if isinstance(wired, Generator):  # It is one, though the wire layer types it an iterator.
                 wired.close()
 
-    def get_machine(self) -> GetMachineResponse:
+    def list_workspaces(
+        self,
+        project_id: str,
+        *,
+        page_token: str = "",
+    ) -> ListWorkspacesResponse:
+        """List workspaces.
+
+        The workspaces the caller may reach, by name, 20 a page: each one's id, name, size and what
+        is free, location, hostname and apps domain. With project_id, also which of them hold a
+        project of that id (holding_project). Free figures and project counts are each machine's
+        latest sample, read now: one that did not answer in time leaves them absent (incomplete).
+        The one call that takes no `workspace`. A caller that reaches none is refused as a call
+        naming no workspace is: NoMachine (no plan) or WorkspaceNotGranted.
+
+        Read-only.
+
+        Args:
+            project_id: A project_id: holding_project then says which workspaces have a project of that id.
+            page_token: A next_page_token. Empty = the first page.
+        """
+        return _convert.list_workspaces_response_from_wire(self._call(self._wire.list_workspaces, _convert.list_workspaces_request(project_id=project_id, page_token=page_token)))
+
+    def get_machine(
+        self,
+        *,
+        workspace: str = "",
+    ) -> GetMachineResponse:
         """Get the machine.
 
         Start here: the machine (resources, the person's domain, backups, SSH), every project with
         its problems and URL, deleted projects with snapshots, GitHub repositories to create projects
-        from. Figures are the latest sample; disk sizes and the day's traffic lag a few minutes.
+        from, and the workspace it serves. Figures are the latest sample; disk sizes and the day's
+        traffic lag a few minutes. Several workspaces and no `workspace`: FailedPreconditionError +
+        WorkspaceChoice, which lists them.
 
         Read-only.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.get_machine_response_from_wire(self._call(self._wire.get_machine, _convert.get_machine_request()))
+        return _convert.get_machine_response_from_wire(self._call(self._wire.get_machine, _convert.get_machine_request(workspace=workspace or self._workspace)))
 
     @overload
     def run_machine_action(
@@ -148,6 +186,7 @@ class Pethost:
         restart_machine: None = None,
         cancel_restart: None = None,
         end_session_id: None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -165,6 +204,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -177,6 +217,7 @@ class Pethost:
         restart_machine: None = None,
         cancel_restart: None = None,
         end_session_id: None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -194,6 +235,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -206,6 +248,7 @@ class Pethost:
         restart_machine: None = None,
         cancel_restart: None = None,
         end_session_id: None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -223,6 +266,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -235,6 +279,7 @@ class Pethost:
         restart_machine: RestartMachineAction,
         cancel_restart: None = None,
         end_session_id: None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -252,6 +297,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -264,6 +310,7 @@ class Pethost:
         restart_machine: None = None,
         cancel_restart: bool,
         end_session_id: None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -281,6 +328,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -293,6 +341,7 @@ class Pethost:
         restart_machine: None = None,
         cancel_restart: None = None,
         end_session_id: str,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -310,6 +359,7 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -321,6 +371,7 @@ class Pethost:
         restart_machine: RestartMachineAction | None = None,
         cancel_restart: bool | None = None,
         end_session_id: str | None = None,
+        workspace: str = "",
     ) -> RunMachineActionResponse:
         """Run a machine action.
 
@@ -338,8 +389,9 @@ class Pethost:
             restart_machine: Containers come back per restart policy. A new call before the restart replaces it; after (Machine.boot_time changed), restarts again.
             cancel_restart: True = cancels the scheduled restart.
             end_session_id: A Machine.sessions id: ends it now (its key can open new ones until removed). NotFoundError = ended.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.run_machine_action_response_from_wire(self._call(self._wire.run_machine_action, _convert.run_machine_action_request(add_ssh_key=add_ssh_key, remove_ssh_key_fingerprint=remove_ssh_key_fingerprint, restart_machine=restart_machine, cancel_restart=cancel_restart, end_session_id=end_session_id)))
+        return _convert.run_machine_action_response_from_wire(self._call(self._wire.run_machine_action, _convert.run_machine_action_request(add_ssh_key=add_ssh_key, remove_ssh_key_fingerprint=remove_ssh_key_fingerprint, restart_machine=restart_machine, cancel_restart=cancel_restart, end_session_id=end_session_id, workspace=workspace or self._workspace)))
 
     def get_project(
         self,
@@ -351,6 +403,7 @@ class Pethost:
         incidents_before: datetime | None = None,
         uptime_day_count: int = 0,
         incidents_before_id: str = "",
+        workspace: str = "",
     ) -> GetProjectResponse:
         """Get a project.
 
@@ -368,8 +421,9 @@ class Pethost:
             incidents_before: Only incidents that opened before it: the oldest open_time seen, to page back. Absent = the newest.
             uptime_day_count: ≤90: Project.uptime_days. 0 = none.
             incidents_before_id: With incidents_before: the incident_id of the oldest seen, so that those that opened at the same time are not skipped.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.get_project_response_from_wire(self._call(self._wire.get_project, _convert.get_project_request(project_id=project_id, include_secret_values=include_secret_values, snapshots_before=snapshots_before, snapshots_volume=snapshots_volume, incidents_before=incidents_before, uptime_day_count=uptime_day_count, incidents_before_id=incidents_before_id)))
+        return _convert.get_project_response_from_wire(self._call(self._wire.get_project, _convert.get_project_request(project_id=project_id, include_secret_values=include_secret_values, snapshots_before=snapshots_before, snapshots_volume=snapshots_volume, incidents_before=incidents_before, uptime_day_count=uptime_day_count, incidents_before_id=incidents_before_id, workspace=workspace or self._workspace)))
 
     def create_project(
         self,
@@ -383,6 +437,7 @@ class Pethost:
         operation_id: str = "",
         wait_seconds: int | None = None,
         link_databases: Sequence[DatabaseLinkRequest] = (),
+        workspace: str = "",
     ) -> CreateProjectResponse:
         """Create a project.
 
@@ -465,6 +520,8 @@ class Pethost:
         named volume or a tmpfs there.
 
         AlreadyExistsError = the id is taken (a retry with its operation_id returns that operation).
+        An upload_id: FailedPreconditionError = not arrived; NotFoundError = expired or used; one the machine
+        refused (its PUT said why) answers with its `violations`.
         FailedPreconditionError = the GitHub App cannot read the repository (see GetMachineResponse.github), or no
         such branch or directory; + DatabaseLinkRefusal = a database of `link_databases` cannot be
         linked to it (database_project_id says which), and nothing was created. A deleted project's
@@ -473,14 +530,15 @@ class Pethost:
         Args:
             project_id: New, [a-z0-9][a-z0-9_-]*, ≤63 chars; immutable.
             source: Set = a GitHub project: {github: {repository}}. Absent = the files of this request.
-            upload_id: An archive of the project's directory, from create_transfer(upload_archive=), unpacked first. FailedPreconditionError = not arrived; NotFoundError = expired or used. One the machine refused (its PUT said why) answers with its `violations`.
+            upload_id: An archive of the project's directory, from create_transfer(upload_archive=), unpacked first.
             files: The project's files, e.g. [{path: "/compose.yaml", text: "…"}, {path: "/.env", text: "…"}], or those to write over the archive's or the commit's. A github source takes only /.env.
             x_pethost: Changes to the files' x-pethost: the name people see, the routes, a password.
             timeout_seconds: As deploy_project's timeout_seconds.
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.create_project_response_from_wire(self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds, link_databases=link_databases)))
+        return _convert.create_project_response_from_wire(self._call(self._wire.create_project, _convert.create_project_request(project_id=project_id, source=source, upload_id=upload_id, files=files, x_pethost=x_pethost, timeout_seconds=timeout_seconds, operation_id=operation_id, wait_seconds=wait_seconds, link_databases=link_databases, workspace=workspace or self._workspace)))
 
     @overload
     def deploy_project(
@@ -498,13 +556,16 @@ class Pethost:
         newest_commit: None = None,
         rollback_deploy_id: None = None,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -532,17 +593,18 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -562,13 +624,16 @@ class Pethost:
         newest_commit: None = None,
         rollback_deploy_id: None = None,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -596,17 +661,18 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -626,13 +692,16 @@ class Pethost:
         newest_commit: None = None,
         rollback_deploy_id: None = None,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -660,17 +729,18 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -690,13 +760,16 @@ class Pethost:
         newest_commit: bool,
         rollback_deploy_id: None = None,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -724,17 +797,18 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -754,13 +828,16 @@ class Pethost:
         newest_commit: None = None,
         rollback_deploy_id: str,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -788,17 +865,18 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -817,13 +895,16 @@ class Pethost:
         newest_commit: bool | None = None,
         rollback_deploy_id: str | None = None,
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> DeployProjectResponse:
         """Deploy a project.
 
         Deploys a new version of a project and answers as create_project does: `files` written over
         its own (/.env, /compose.yaml, a source file), `x_pethost` (name, routes, password),
-        `mount_volume`, a new archive (`upload_id`), a commit, or an earlier deploy's files again
-        (`rollback_deploy_id`). compose.yaml rules: create_project's.
+        `mount_volume`, a new archive (`upload_id`, which replaces all files but /.env and
+        x-pethost), a commit, or an earlier deploy's files again as a new version
+        (`rollback_deploy_id`; /.env, x-pethost and volumes stay). compose.yaml rules:
+        create_project's.
 
         It builds `build:` images, pulls missing ones, runs `compose up` on the whole project and waits
         until each service runs (healthy, if it has a healthcheck) or each job exits 0, and until each
@@ -851,25 +932,86 @@ class Pethost:
         At most one of `upload_id`, `commit`, `newest_commit`, `rollback_deploy_id`.
 
         Args:
-            base_deploy_id: Project.deploy_id as you read it: AbortedError if the project was deployed since. Empty = no check.
+            base_deploy_id: Project.deploy_id as you read it. Empty = no check.
             files: Written in order over the current files, or over the new version's: e.g. [{path: "/.env", text: "…"}] writes that file whole, and the files not named stay. With no new version pethost.compose.yaml is refused: write /compose.yaml. github: only /.env. None = redeploy.
             x_pethost: Edits x-pethost by part, after `files`: metadata by key; routes all at once.
             mount_volume: Not with upload_id, or github.
             timeout_seconds: For the whole deploy, builds included; 0 = default.
             operation_id: For a safe retry: the same id returns the first call's operation and starts nothing. [A-Za-z0-9][A-Za-z0-9._-]*, ≤128 chars; empty = generated.
-            upload_id: files project: an archive from create_transfer; replaces all files but /.env and x-pethost.
+            upload_id: files project: an archive from create_transfer.
             commit: github project: a commit of its branch (SHA, ≥7 chars), from list_commits.
             newest_commit: github project: true = GithubSource.newest_commit, read now.
-            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations). Its files return as a new version; /.env, x-pethost and volumes stay.
+            rollback_deploy_id: files project, a rollback: the operation_id of an earlier deploy with files_kept (Project.operations).
             wait_seconds: Seconds to wait for the deploy's end, ≤45. Absent = 45; 0 = answer once it started. Still IN_PROGRESS then: get_operation waits on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.deploy_project_response_from_wire(self._call(self._wire.deploy_project, _convert.deploy_project_request(project_id=project_id, base_deploy_id=base_deploy_id, files=files, x_pethost=x_pethost, mount_volume=mount_volume, timeout_seconds=timeout_seconds, operation_id=operation_id, upload_id=upload_id, commit=commit, newest_commit=newest_commit, rollback_deploy_id=rollback_deploy_id, wait_seconds=wait_seconds)))
+        return _convert.deploy_project_response_from_wire(self._call(self._wire.deploy_project, _convert.deploy_project_request(project_id=project_id, base_deploy_id=base_deploy_id, files=files, x_pethost=x_pethost, mount_volume=mount_volume, timeout_seconds=timeout_seconds, operation_id=operation_id, upload_id=upload_id, commit=commit, newest_commit=newest_commit, rollback_deploy_id=rollback_deploy_id, wait_seconds=wait_seconds, workspace=workspace or self._workspace)))
+
+    def move_project(
+        self,
+        project_id: str,
+        *,
+        to_workspace: str = "",
+        operation_id: str = "",
+        wait_seconds: int | None = None,
+        switch_databases: Sequence[DatabaseSwitch] = (),
+        workspace: str = "",
+    ) -> MoveProjectResponse:
+        """Move a project to another workspace.
+
+        Moves a project to another workspace of the same person, as one operation (OperationKind
+        MOVE): it is stopped here, backed up into the destination's backups, restored and started
+        there under the same project_id, then deleted here. Each database it is linked to
+        (Project.dependencies) stays here, with its other apps, if any, running on: there the project
+        uses one of the same engine instead, one the destination has or a new one, with the data of
+        the database it signs in to copied, or none (DatabaseSwitch). A database project
+        moves only when no app is linked to it.
+        `workspace` is the source. Waits as deploy_project does (wait_seconds), then get_operation, in
+        either workspace, which once it ended answers the same move_message and the project.
+        Answers, once it ended, with the project as it is in the destination, and `move_message`:
+        what changed (hosts move to the destination's apps_domain, a domain of the person's own must
+        point at its hostname, a new SSH command, which database it uses there instead of each, and
+        with what data) and what stayed behind (operation history, logs, incidents, uptime, earlier
+        snapshots, and what each database it left still holds). Until the restore succeeded, a
+        failure undoes it: the source's services run again as they did, unless its failure says they
+        did not start again; the move's snapshot stays in the destination's backups, as a deleted
+        project's. After that it only goes forward: one that FAILED then moved the project, and its
+        failure names what the source still holds.
+        While it runs, a change to the project is UnavailableError + ProjectBusy (kind MOVE) in either
+        workspace, and so is a read where it is not then (before its restore, after its deletion from
+        the source); afterwards, a call for it to the source is FailedPreconditionError + ProjectMoved,
+        until the source has a project of that id again. While it runs, a change to a database it
+        leaves here, or to the one it uses instead there, is ProjectBusy too, as is a read of a new one
+        before the move made it; get_operation answers the move with any of their project_ids.
+        InvalidArgumentError = switch_databases names a database the project is not linked to, or twice,
+        an env_prefix where the machine wrote the lines, none where it did not, one of no form a link
+        takes or one two switches share, or an `into` the destination lacks or of another engine, or
+        one two switches share, copies of more than 32 databases, or to_workspace is the source
+        or none of the caller's; PermissionDeniedError + WorkspaceNotGranted = one this token may not
+        reach. AlreadyExistsError = the destination has a project of the project's id, or of the id a new
+        database takes, or operation_id is an operation of the project's or another move's already.
+        FailedPreconditionError = a database project with apps linked to it (the message
+        names them: move each, or unlink it), a machine needs an update first (the message names it),
+        the project has no deploy yet, or the destination's backups are off (its
+        Machine.backups_enabled), which a move goes through.
+
+        Destructive: it may delete or overwrite something.
+
+        Args:
+            to_workspace: The destination, as `workspace` takes one: its id or name.
+            operation_id: As deploy_project's operation_id: the move's.
+            wait_seconds: As deploy_project's wait_seconds.
+            switch_databases: What it uses in to_workspace instead of each database it is linked to (Project.dependencies), which stays here. One left out: the destination's database of its id and engine, if it has one, else a new one, with the data of its copy_database.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
+        """
+        return _convert.move_project_response_from_wire(self._call(self._wire.move_project, _convert.move_project_request(project_id=project_id, to_workspace=to_workspace, operation_id=operation_id, wait_seconds=wait_seconds, switch_databases=switch_databases, workspace=workspace or self._workspace)))
 
     def list_commits(
         self,
         project_id: str,
         *,
         before_commit: str = "",
+        workspace: str = "",
     ) -> ListCommitsResponse:
         """List a project's commits.
 
@@ -882,8 +1024,9 @@ class Pethost:
 
         Args:
             before_commit: The previous page's last sha. Empty = from the newest.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.list_commits_response_from_wire(self._call(self._wire.list_commits, _convert.list_commits_request(project_id=project_id, before_commit=before_commit)))
+        return _convert.list_commits_response_from_wire(self._call(self._wire.list_commits, _convert.list_commits_request(project_id=project_id, before_commit=before_commit, workspace=workspace or self._workspace)))
 
     @overload
     def run_project_action(
@@ -903,6 +1046,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -953,6 +1097,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -974,6 +1119,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1024,6 +1170,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1045,6 +1192,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1095,6 +1243,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1116,6 +1265,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1166,6 +1316,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1187,6 +1338,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1237,6 +1389,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1258,6 +1411,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1308,6 +1462,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1329,6 +1484,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1379,6 +1535,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1400,6 +1557,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1450,6 +1608,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1471,6 +1630,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1521,6 +1681,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1542,6 +1703,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1592,6 +1754,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1613,6 +1776,7 @@ class Pethost:
         set_database_size: None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1663,6 +1827,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1684,6 +1849,7 @@ class Pethost:
         set_database_size: SetDatabaseSizeAction,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1734,6 +1900,7 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -1754,6 +1921,7 @@ class Pethost:
         set_database_size: SetDatabaseSizeAction | None = None,
         operation_id: str = "",
         wait_seconds: int | None = None,
+        workspace: str = "",
     ) -> RunProjectActionResponse:
         """Run a project action.
 
@@ -1804,8 +1972,9 @@ class Pethost:
             set_database_size: A database's size. An operation: it restarts.
             operation_id: As deploy_project's.
             wait_seconds: As deploy_project's.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.run_project_action_response_from_wire(self._call(self._wire.run_project_action, _convert.run_project_action_request(project_id=project_id, start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, set_database_size=set_database_size, operation_id=operation_id, wait_seconds=wait_seconds)))
+        return _convert.run_project_action_response_from_wire(self._call(self._wire.run_project_action, _convert.run_project_action_request(project_id=project_id, start_services=start_services, stop_services=stop_services, restart_services=restart_services, recreate_service=recreate_service, back_up=back_up, restore_snapshot=restore_snapshot, cancel_operation=cancel_operation, delete_project=delete_project, set_source=set_source, delete_volume=delete_volume, set_database_size=set_database_size, operation_id=operation_id, wait_seconds=wait_seconds, workspace=workspace or self._workspace)))
 
     def set_project_alerts(
         self,
@@ -1817,6 +1986,7 @@ class Pethost:
         remove_traffic_rules: bool = False,
         off: bool | None = None,
         mute_minutes: int | None = None,
+        workspace: str = "",
     ) -> SetProjectAlertsResponse:
         """Set a project's alerts.
 
@@ -1836,8 +2006,9 @@ class Pethost:
             remove_traffic_rules: True = none.
             off: True = incidents are recorded, nothing is sent. Absent = stays.
             mute_minutes: ≤10080; 0 = unmute. Incidents opened meanwhile are not sent. Absent = stays.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.set_project_alerts_response_from_wire(self._call(self._wire.set_project_alerts, _convert.set_project_alerts_request(project_id=project_id, checks=checks, remove_checks=remove_checks, traffic_rules=traffic_rules, remove_traffic_rules=remove_traffic_rules, off=off, mute_minutes=mute_minutes)))
+        return _convert.set_project_alerts_response_from_wire(self._call(self._wire.set_project_alerts, _convert.set_project_alerts_request(project_id=project_id, checks=checks, remove_checks=remove_checks, traffic_rules=traffic_rules, remove_traffic_rules=remove_traffic_rules, off=off, mute_minutes=mute_minutes, workspace=workspace or self._workspace)))
 
     def get_operation(
         self,
@@ -1847,6 +2018,7 @@ class Pethost:
         wait_seconds: int | None = None,
         after_log_line: int | None = None,
         log_line_limit: int | None = None,
+        workspace: str = "",
     ) -> GetOperationResponse:
         """Get an operation.
 
@@ -1863,8 +2035,9 @@ class Pethost:
             wait_seconds: How long to wait for it to end, ≤45. Absent = 45; 0 = answer at once.
             after_log_line: The previous next_after_log_line; 0 = from the start. Absent = the last lines.
             log_line_limit: ≤500; 0 = 50, when asked for lines. Also ends at ~64 KiB.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.get_operation_response_from_wire(self._call(self._wire.get_operation, _convert.get_operation_request(project_id=project_id, operation_id=operation_id, wait_seconds=wait_seconds, after_log_line=after_log_line, log_line_limit=log_line_limit)))
+        return _convert.get_operation_response_from_wire(self._call(self._wire.get_operation, _convert.get_operation_request(project_id=project_id, operation_id=operation_id, wait_seconds=wait_seconds, after_log_line=after_log_line, log_line_limit=log_line_limit, workspace=workspace or self._workspace)))
 
     def query_http_traffic(
         self,
@@ -1877,6 +2050,7 @@ class Pethost:
         bucket_width_seconds: int = 0,
         request_limit: int = 0,
         page_token: str = "",
+        workspace: str = "",
     ) -> QueryHttpTrafficResponse:
         """Query HTTP traffic.
 
@@ -1894,8 +2068,9 @@ class Pethost:
             bucket_width_seconds: Time series bucket width; ≤500 buckets. 0 = no series.
             request_limit: Requests to return, newest first; ≤200. 0 = aggregates only.
             page_token: The previous next_page_token, other fields unchanged: older requests only.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.query_http_traffic_response_from_wire(self._call(self._wire.query_http_traffic, _convert.query_http_traffic_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, bucket_width_seconds=bucket_width_seconds, request_limit=request_limit, page_token=page_token)))
+        return _convert.query_http_traffic_response_from_wire(self._call(self._wire.query_http_traffic, _convert.query_http_traffic_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, bucket_width_seconds=bucket_width_seconds, request_limit=request_limit, page_token=page_token, workspace=workspace or self._workspace)))
 
     def query_container_logs(
         self,
@@ -1908,6 +2083,7 @@ class Pethost:
         limit: int = 0,
         from_start: bool = False,
         page_token: str = "",
+        workspace: str = "",
     ) -> QueryContainerLogsResponse:
         """Query container logs.
 
@@ -1924,8 +2100,9 @@ class Pethost:
             limit: ≤500; 0 = 100. Also ends at ~64 KiB.
             from_start: False = the newest before end_time; true = the oldest after start_time.
             page_token: The previous next_page_token, other fields unchanged.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.query_container_logs_response_from_wire(self._call(self._wire.query_container_logs, _convert.query_container_logs_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, limit=limit, from_start=from_start, page_token=page_token)))
+        return _convert.query_container_logs_response_from_wire(self._call(self._wire.query_container_logs, _convert.query_container_logs_request(project_id=project_id, filter=filter, start_time=start_time, end_time=end_time, last_seconds=last_seconds, limit=limit, from_start=from_start, page_token=page_token, workspace=workspace or self._workspace)))
 
     def create_database(
         self,
@@ -1938,6 +2115,7 @@ class Pethost:
         operation_id: str = "",
         wait_seconds: int | None = None,
         metadata: ProjectMetadata | None = None,
+        workspace: str = "",
     ) -> CreateDatabaseResponse:
         """Create a database.
 
@@ -1962,8 +2140,9 @@ class Pethost:
             operation_id: As deploy_project's operation_id.
             wait_seconds: As deploy_project's wait_seconds.
             metadata: What people see, e.g. {name: "Postgres for Recipes"}. Absent = the machine's (the id).
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.create_database_response_from_wire(self._call(self._wire.create_database, _convert.create_database_request(project_id=project_id, engine=engine, memory_limit_bytes=memory_limit_bytes, from_snapshot_id=from_snapshot_id, link=link, operation_id=operation_id, wait_seconds=wait_seconds, metadata=metadata)))
+        return _convert.create_database_response_from_wire(self._call(self._wire.create_database, _convert.create_database_request(project_id=project_id, engine=engine, memory_limit_bytes=memory_limit_bytes, from_snapshot_id=from_snapshot_id, link=link, operation_id=operation_id, wait_seconds=wait_seconds, metadata=metadata, workspace=workspace or self._workspace)))
 
     def link_database(
         self,
@@ -1971,6 +2150,7 @@ class Pethost:
         *,
         link: Sequence[str] = (),
         unlink: Sequence[str] = (),
+        workspace: str = "",
     ) -> LinkDatabaseResponse:
         """Link projects to a database.
 
@@ -1990,8 +2170,9 @@ class Pethost:
         Args:
             link: App project_ids to link.
             unlink: App project_ids to unlink.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.link_database_response_from_wire(self._call(self._wire.link_database, _convert.link_database_request(database_project_id=database_project_id, link=link, unlink=unlink)))
+        return _convert.link_database_response_from_wire(self._call(self._wire.link_database, _convert.link_database_request(database_project_id=database_project_id, link=link, unlink=unlink, workspace=workspace or self._workspace)))
 
     def run_service_command(
         self,
@@ -2003,6 +2184,7 @@ class Pethost:
         run_as_user: str = "",
         working_directory: str = "",
         timeout_seconds: int = 0,
+        workspace: str = "",
     ) -> RunServiceCommandResponse:
         """Run a command in a service.
 
@@ -2019,8 +2201,9 @@ class Pethost:
             run_as_user: Empty = the container's. "root" can install packages.
             working_directory: Empty = the container's.
             timeout_seconds: 0 = default. Kills the main process only. Over ~50 may outlast your client: background long jobs.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.run_service_command_response_from_wire(self._call(self._wire.run_service_command, _convert.run_service_command_request(project_id=project_id, service=service, command=command, stdin=stdin, run_as_user=run_as_user, working_directory=working_directory, timeout_seconds=timeout_seconds)))
+        return _convert.run_service_command_response_from_wire(self._call(self._wire.run_service_command, _convert.run_service_command_request(project_id=project_id, service=service, command=command, stdin=stdin, run_as_user=run_as_user, working_directory=working_directory, timeout_seconds=timeout_seconds, workspace=workspace or self._workspace)))
 
     @overload
     def read_path(
@@ -2034,6 +2217,7 @@ class Pethost:
         offset_bytes: int = 0,
         length_bytes: int = 0,
         entry_page_token: str = "",
+        workspace: str = "",
     ) -> ReadPathResponse:
         """Read a file or directory.
 
@@ -2059,6 +2243,7 @@ class Pethost:
             offset_bytes: File offset.
             length_bytes: ≤1 MiB; 0 = 64 KiB.
             entry_page_token: The previous next_entry_page_token, other fields unchanged.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2074,6 +2259,7 @@ class Pethost:
         offset_bytes: int = 0,
         length_bytes: int = 0,
         entry_page_token: str = "",
+        workspace: str = "",
     ) -> ReadPathResponse:
         """Read a file or directory.
 
@@ -2099,6 +2285,7 @@ class Pethost:
             offset_bytes: File offset.
             length_bytes: ≤1 MiB; 0 = 64 KiB.
             entry_page_token: The previous next_entry_page_token, other fields unchanged.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2114,6 +2301,7 @@ class Pethost:
         offset_bytes: int = 0,
         length_bytes: int = 0,
         entry_page_token: str = "",
+        workspace: str = "",
     ) -> ReadPathResponse:
         """Read a file or directory.
 
@@ -2139,6 +2327,7 @@ class Pethost:
             offset_bytes: File offset.
             length_bytes: ≤1 MiB; 0 = 64 KiB.
             entry_page_token: The previous next_entry_page_token, other fields unchanged.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2153,6 +2342,7 @@ class Pethost:
         offset_bytes: int = 0,
         length_bytes: int = 0,
         entry_page_token: str = "",
+        workspace: str = "",
     ) -> ReadPathResponse:
         """Read a file or directory.
 
@@ -2178,8 +2368,9 @@ class Pethost:
             offset_bytes: File offset.
             length_bytes: ≤1 MiB; 0 = 64 KiB.
             entry_page_token: The previous next_entry_page_token, other fields unchanged.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.read_path_response_from_wire(self._call(self._wire.read_path, _convert.read_path_request(project_id=project_id, service=service, volume=volume, path=path, entry_limit=entry_limit, offset_bytes=offset_bytes, length_bytes=length_bytes, entry_page_token=entry_page_token)))
+        return _convert.read_path_response_from_wire(self._call(self._wire.read_path, _convert.read_path_request(project_id=project_id, service=service, volume=volume, path=path, entry_limit=entry_limit, offset_bytes=offset_bytes, length_bytes=length_bytes, entry_page_token=entry_page_token, workspace=workspace or self._workspace)))
 
     @overload
     def create_transfer(
@@ -2189,6 +2380,7 @@ class Pethost:
         upload_file: None = None,
         download: None = None,
         download_database: None = None,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2216,6 +2408,9 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2227,6 +2422,7 @@ class Pethost:
         upload_file: None = None,
         download: None = None,
         download_database: None = None,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2254,6 +2450,9 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2265,6 +2464,7 @@ class Pethost:
         upload_file: FileUpload,
         download: None = None,
         download_database: None = None,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2292,6 +2492,9 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2303,6 +2506,7 @@ class Pethost:
         upload_file: None = None,
         download: PathDownload,
         download_database: None = None,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2330,6 +2534,9 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2341,6 +2548,7 @@ class Pethost:
         upload_file: None = None,
         download: None = None,
         download_database: DatabaseDump,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2368,6 +2576,9 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
         ...
 
@@ -2378,6 +2589,7 @@ class Pethost:
         upload_file: FileUpload | None = None,
         download: PathDownload | None = None,
         download_database: DatabaseDump | None = None,
+        workspace: str = "",
     ) -> CreateTransferResponse:
         """Upload or download a file.
 
@@ -2405,14 +2617,18 @@ class Pethost:
         Destructive: it may delete or overwrite something.
 
         At most one of `upload_archive`, `upload_file`, `download`, `download_database`.
+
+        Args:
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return _convert.create_transfer_response_from_wire(self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download, download_database=download_database)))
+        return _convert.create_transfer_response_from_wire(self._call(self._wire.create_transfer, _convert.create_transfer_request(upload_archive=upload_archive, upload_file=upload_file, download=download, download_database=download_database, workspace=workspace or self._workspace)))
 
     def watch_operation(
         self,
         project_id: str,
         *,
         operation_id: str = "",
+        workspace: str = "",
     ) -> Generator[WatchOperationResponse, None, None]:
         """Watch an operation, as a stream.
 
@@ -2430,8 +2646,9 @@ class Pethost:
 
         Args:
             operation_id: Empty = the latest.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return self._stream(self._streams.watch_operation, _convert.watch_operation_request(project_id=project_id, operation_id=operation_id), _convert.watch_operation_response_from_wire)
+        return self._stream(self._streams.watch_operation, _convert.watch_operation_request(project_id=project_id, operation_id=operation_id, workspace=workspace or self._workspace), _convert.watch_operation_response_from_wire)
 
     def tail_container_logs(
         self,
@@ -2439,6 +2656,7 @@ class Pethost:
         *,
         filter: ContainerLogFilter | None = None,
         after_cursor: str = "",
+        workspace: str = "",
     ) -> Generator[TailContainerLogsResponse, None, None]:
         """Follow container logs, as a stream.
 
@@ -2457,8 +2675,9 @@ class Pethost:
 
         Args:
             after_cursor: Empty = only lines written from now on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return self._stream(self._streams.tail_container_logs, _convert.tail_container_logs_request(project_id=project_id, filter=filter, after_cursor=after_cursor), _convert.tail_container_logs_response_from_wire)
+        return self._stream(self._streams.tail_container_logs, _convert.tail_container_logs_request(project_id=project_id, filter=filter, after_cursor=after_cursor, workspace=workspace or self._workspace), _convert.tail_container_logs_response_from_wire)
 
     def tail_http_traffic(
         self,
@@ -2466,6 +2685,7 @@ class Pethost:
         *,
         filter: HttpTrafficFilter | None = None,
         after_sequence: int = 0,
+        workspace: str = "",
     ) -> Generator[TailHttpTrafficResponse, None, None]:
         """Follow HTTP traffic, as a stream.
 
@@ -2483,5 +2703,6 @@ class Pethost:
 
         Args:
             after_sequence: 0 = only requests from now on.
+            workspace: The workspace: its id or name (list_workspaces). Omit when the account has one.
         """
-        return self._stream(self._streams.tail_http_traffic, _convert.tail_http_traffic_request(project_id=project_id, filter=filter, after_sequence=after_sequence), _convert.tail_http_traffic_response_from_wire)
+        return self._stream(self._streams.tail_http_traffic, _convert.tail_http_traffic_request(project_id=project_id, filter=filter, after_sequence=after_sequence, workspace=workspace or self._workspace), _convert.tail_http_traffic_response_from_wire)

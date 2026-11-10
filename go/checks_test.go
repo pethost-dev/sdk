@@ -200,6 +200,47 @@ func TestCalls(t *testing.T) {
 	}
 }
 
+// TestWorkspace calls each method whose request names a workspace with a client made with one:
+// a request that names none is sent with the client's, and one that names its own with its own,
+// each else as the sample has it.
+func TestWorkspace(t *testing.T) {
+	const clients = "the client's"
+	api, server := serve(t)
+	client := NewClient(Config{Token: account, BaseURL: server.URL, HTTPClient: server.Client(), Workspace: clients})
+	bothWays := bothWaysOf()
+
+	for _, call := range calls {
+		field := call.request.ProtoReflect().Descriptor().Fields().ByName("workspace")
+		if field == nil {
+			continue
+		}
+		t.Run(call.name, func(t *testing.T) {
+			sent := &wireSample{sent: true, bothWays: bothWays, had: map[string]bool{}}
+			own, none := false, false
+			for n := seed(0); !own || !none; n++ {
+				if n == mostSamples {
+					t.Fatalf("%d samples, and none that names a workspace (%v) or none that names none (%v)", n, own, none)
+				}
+				request := n.at(call.name).at("request")
+				want := sent.message(call.request, request)
+				named := want.ProtoReflect().Get(field).String() != ""
+				own, none = own || named, none || !named
+				if !named {
+					want.ProtoReflect().Set(field, protoreflect.ValueOfString(clients))
+				}
+
+				api.response = call.response
+				if _, err := call.do(t.Context(), client, &request); err != nil {
+					t.Fatal(err)
+				}
+				if !proto.Equal(api.received, want) {
+					t.Fatalf("the API received another request than the sample's with the client's workspace:\n%s", wireDifference(api.received, want))
+				}
+			}
+		})
+	}
+}
+
 // roundTrip makes one call with a sample of its request and of its response.
 func roundTrip(t *testing.T, api *fake, client *Client, call call, sent, received *wireSample, sample seed) {
 	request, response := sample.at("request"), sample.at("response")
