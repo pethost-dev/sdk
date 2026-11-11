@@ -6160,6 +6160,40 @@ impl From<wire::NoMachine> for types::NoMachine {
     }
 }
 
+impl From<types::PaymentOverdue> for wire::PaymentOverdue {
+    fn from(message: types::PaymentOverdue) -> Self {
+        let types::PaymentOverdue {
+            workspace_id,
+            end_time,
+            url,
+        } = message;
+
+        Self {
+            workspace_id: self::present(workspace_id),
+            end_time: end_time.map(crate::timestamp::to_wire).into(),
+            url: self::present(url),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::PaymentOverdue> for types::PaymentOverdue {
+    fn from(message: wire::PaymentOverdue) -> Self {
+        let wire::PaymentOverdue {
+            workspace_id,
+            end_time,
+            url,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            workspace_id: workspace_id.unwrap_or_default(),
+            end_time: end_time.into_option().map(crate::timestamp::from_wire),
+            url: url.unwrap_or_default(),
+        }
+    }
+}
+
 impl From<types::WorkspaceChoice> for wire::WorkspaceChoice {
     fn from(message: types::WorkspaceChoice) -> Self {
         let types::WorkspaceChoice {

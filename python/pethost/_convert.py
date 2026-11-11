@@ -3094,6 +3094,30 @@ def no_machine_from_dict(_j: dict[str, _Any]) -> _t.NoMachine:
     return no_machine_from_wire(_rt.from_dict(_pb.NoMachine, _j))
 
 
+def payment_overdue_from_wire(_w: _pb.PaymentOverdue) -> _t.PaymentOverdue:
+    return _t.PaymentOverdue(
+        workspace_id=_w.workspace_id,
+        end_time=_rt.time_from_wire(_w.end_time) if _w.end_time is not None else None,
+        url=_w.url,
+    )
+
+
+def payment_overdue_to_wire(_v: _t.PaymentOverdue) -> _pb.PaymentOverdue:
+    return _pb.PaymentOverdue(
+        workspace_id=_v.workspace_id or None,
+        end_time=_rt.time_to_wire(_v.end_time) if _v.end_time is not None else None,
+        url=_v.url or None,
+    )
+
+
+def payment_overdue_to_dict(_v: _t.PaymentOverdue) -> dict[str, _Any]:
+    return _rt.to_dict(payment_overdue_to_wire(_v))
+
+
+def payment_overdue_from_dict(_j: dict[str, _Any]) -> _t.PaymentOverdue:
+    return payment_overdue_from_wire(_rt.from_dict(_pb.PaymentOverdue, _j))
+
+
 def workspace_choice_from_wire(_w: _pb.WorkspaceChoice) -> _t.WorkspaceChoice:
     return _t.WorkspaceChoice(
         workspaces=tuple(workspace_from_wire(_x) for _x in _w.workspaces),
@@ -3780,6 +3804,10 @@ def _detail(_e: _ConnectError) -> _errors.ErrorDetail | None:
                 _wNoMachine = _d.value(_pb.NoMachine)
                 if _wNoMachine is not None:
                     return no_machine_from_wire(_wNoMachine)
+            if _d.type_name == "pethost.panel.v1.PaymentOverdue":
+                _wPaymentOverdue = _d.value(_pb.PaymentOverdue)
+                if _wPaymentOverdue is not None:
+                    return payment_overdue_from_wire(_wPaymentOverdue)
             if _d.type_name == "pethost.panel.v1.WorkspaceChoice":
                 _wWorkspaceChoice = _d.value(_pb.WorkspaceChoice)
                 if _wWorkspaceChoice is not None:

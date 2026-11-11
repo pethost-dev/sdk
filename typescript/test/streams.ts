@@ -13,8 +13,8 @@ import { empty } from "./received.ts";
 import type { CallOptions, Pethost } from "pethost";
 
 // How a stream fails: with every detail the API has, as the last envelope of a stream holds one.
-const failure = refusal(400, "out_of_range", "why", detail(w.ProjectBusySchema, {}), detail(w.ProjectChangedSchema, {}), detail(w.MachineUnreachableSchema, {}), detail(w.DatabaseLinkRefusalSchema, {}), detail(w.DatabaseSizeRefusalSchema, {}), detail(w.NoMachineSchema, {}), detail(w.WorkspaceChoiceSchema, {}), detail(w.WorkspaceNotGrantedSchema, {}), detail(w.ProjectMovedSchema, {}));
-const details: string[] = ["projectBusy", "projectChanged", "machineUnreachable", "databaseLinkRefusal", "databaseSizeRefusal", "noMachine", "workspaceChoice", "workspaceNotGranted", "projectMoved"];
+const failure = refusal(400, "out_of_range", "why", detail(w.ProjectBusySchema, {}), detail(w.ProjectChangedSchema, {}), detail(w.MachineUnreachableSchema, {}), detail(w.DatabaseLinkRefusalSchema, {}), detail(w.DatabaseSizeRefusalSchema, {}), detail(w.NoMachineSchema, {}), detail(w.PaymentOverdueSchema, {}), detail(w.WorkspaceChoiceSchema, {}), detail(w.WorkspaceNotGrantedSchema, {}), detail(w.ProjectMovedSchema, {}));
+const details: string[] = ["projectBusy", "projectChanged", "machineUnreachable", "databaseLinkRefusal", "databaseSizeRefusal", "noMachine", "paymentOverdue", "workspaceChoice", "workspaceNotGranted", "projectMoved"];
 
 /** A pulse as the API sends one: a response with nothing set, which is no bytes. */
 const pulse = new Uint8Array();

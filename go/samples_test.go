@@ -145,6 +145,7 @@ var details = []detail{
 	{&panelv1.DatabaseLinkRefusal{}, func(s seed) Error { return Error{DatabaseLinkRefusal: new(sampleDatabaseLinkRefusal(s))} }},
 	{&panelv1.DatabaseSizeRefusal{}, func(s seed) Error { return Error{DatabaseSizeRefusal: new(sampleDatabaseSizeRefusal(s))} }},
 	{&panelv1.NoMachine{}, func(s seed) Error { return Error{NoMachine: new(sampleNoMachine(s))} }},
+	{&panelv1.PaymentOverdue{}, func(s seed) Error { return Error{PaymentOverdue: new(samplePaymentOverdue(s))} }},
 	{&panelv1.WorkspaceChoice{}, func(s seed) Error { return Error{WorkspaceChoice: new(sampleWorkspaceChoice(s))} }},
 	{&panelv1.WorkspaceNotGranted{}, func(s seed) Error { return Error{WorkspaceNotGranted: new(sampleWorkspaceNotGranted(s))} }},
 	{&panelv1.ProjectMoved{}, func(s seed) Error { return Error{ProjectMoved: new(sampleProjectMoved(s))} }},
@@ -267,6 +268,7 @@ var shapes = []shape{
 	shapeOf(sampleDatabaseLinkRefusal, &panelv1.DatabaseLinkRefusal{}),
 	shapeOf(sampleDatabaseSizeRefusal, &panelv1.DatabaseSizeRefusal{}),
 	shapeOf(sampleNoMachine, &panelv1.NoMachine{}),
+	shapeOf(samplePaymentOverdue, &panelv1.PaymentOverdue{}),
 	shapeOf(sampleWorkspaceChoice, &panelv1.WorkspaceChoice{}),
 	shapeOf(sampleWorkspaceNotGranted, &panelv1.WorkspaceNotGranted{}),
 	shapeOf(sampleProjectMoved, &panelv1.ProjectMoved{}),
@@ -1650,6 +1652,14 @@ func sampleNoMachine(s seed) NoMachine {
 		Reason:      plain[NoMachineReason](s.at("pethost.panel.v1.NoMachine.reason")),
 		URL:         plain[string](s.at("pethost.panel.v1.NoMachine.url")),
 		WorkspaceID: plain[string](s.at("pethost.panel.v1.NoMachine.workspace_id")),
+	}
+}
+
+func samplePaymentOverdue(s seed) PaymentOverdue {
+	return PaymentOverdue{
+		WorkspaceID: plain[string](s.at("pethost.panel.v1.PaymentOverdue.workspace_id")),
+		EndTime:     instant(s.at("pethost.panel.v1.PaymentOverdue.end_time")),
+		URL:         plain[string](s.at("pethost.panel.v1.PaymentOverdue.url")),
 	}
 }
 

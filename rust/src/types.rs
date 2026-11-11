@@ -2305,6 +2305,16 @@ pub struct NoMachine {
     pub workspace_id: ::std::string::String,
 }
 
+/// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the workspace's last payment failed, and it stayed unpaid past the day its projects were to stop. Its machine is suspended, with every project on it stopped, and every call on the workspace is refused until it is paid, which its owner does in the workspace's settings in the panel. Still unpaid at `end_time`, it ends: its machine is deleted with every project on it, and its backups are kept for 30 days.
+#[derive(Debug, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct PaymentOverdue {
+    pub workspace_id: ::std::string::String,
+    pub end_time: ::core::option::Option<crate::Timestamp>,
+    /// Where its owner pays, in the browser: the workspace's settings in the panel. An MCP tool leaves it out.
+    pub url: ::std::string::String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[non_exhaustive]
 pub enum NoMachineReason {

@@ -64,6 +64,7 @@ DETAILS = (
     "DatabaseLinkRefusal",
     "DatabaseSizeRefusal",
     "NoMachine",
+    "PaymentOverdue",
     "WorkspaceChoice",
     "WorkspaceNotGranted",
     "ProjectMoved",

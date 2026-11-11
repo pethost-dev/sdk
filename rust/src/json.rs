@@ -830,6 +830,12 @@ json!(
     types::NoMachine::from
 );
 json!(
+    types::PaymentOverdue,
+    wire::PaymentOverdue,
+    wire::PaymentOverdue::from,
+    types::PaymentOverdue::from
+);
+json!(
     types::WorkspaceChoice,
     wire::WorkspaceChoice,
     wire::WorkspaceChoice::from,

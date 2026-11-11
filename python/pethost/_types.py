@@ -6145,6 +6145,51 @@ class NoMachine:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class PaymentOverdue:
+    """Detail of a FailedPreconditionError error: the workspace's last payment failed, and it stayed
+    unpaid past the day its projects were to stop. Its machine is suspended, with every project on
+    it stopped, and every call on the workspace is refused until it is paid, which its owner does
+    in the workspace's settings in the panel. Still unpaid at end_time, it ends: its machine is deleted with every
+    project on it, and its backups are kept for 30 days.
+
+    Attributes:
+        url: Where its owner pays, in the browser: the workspace's settings in the panel. An MCP tool
+            leaves it out.
+    """
+
+    workspace_id: str = ""
+
+    end_time: datetime | None = None
+
+    url: str = ""
+    """Where its owner pays, in the browser: the workspace's settings in the panel. An MCP tool
+    leaves it out.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.payment_overdue_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> PaymentOverdue:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.payment_overdue_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class WorkspaceChoice:
     """Detail of an error that needs `workspace`: FailedPreconditionError when the call named none and
     the caller has several, InvalidArgumentError when it named none of theirs. Name one of these, by

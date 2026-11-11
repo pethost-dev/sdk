@@ -9,7 +9,7 @@ definition, and their doc comments are the API's documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.5.0
+go get github.com/pethost-dev/sdk/go@v0.5.1
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -247,7 +247,7 @@ Every error a method returns is a `*pethost.Error`. Its `Code` says what kind of
 is, under the name the API's documentation uses: `pethost.CodeNotFound` prints as `NOT_FOUND`.
 Its `Message` says what failed and what to do, for people. Some failures carry a detail to act
 on, each a field of the error that is nil when the API sent none:
-`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, `WorkspaceChoice`, `WorkspaceNotGranted` and `ProjectMoved`.
+`ProjectBusy`, `ProjectChanged`, `MachineUnreachable`, `DatabaseLinkRefusal`, `DatabaseSizeRefusal`, `NoMachine`, `PaymentOverdue`, `WorkspaceChoice`, `WorkspaceNotGranted` and `ProjectMoved`.
 
 ```go
 response, err := client.ListWorkspaces(ctx, nil)

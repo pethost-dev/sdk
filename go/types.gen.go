@@ -2205,6 +2205,21 @@ type NoMachine struct {
 	WorkspaceID string
 }
 
+// PaymentOverdue is a detail of an [Error]: [Error.PaymentOverdue].
+//
+// Detail of a [CodeFailedPrecondition] error: the workspace's last payment failed, and it
+// stayed unpaid past the day its projects were to stop. Its machine is suspended, with every
+// project on it stopped, and every call on the workspace is refused until it is paid, which
+// its owner does in the workspace's settings in the panel. Still unpaid at EndTime, it ends:
+// its machine is deleted with every project on it, and its backups are kept for 30 days.
+type PaymentOverdue struct {
+	WorkspaceID string
+	EndTime     time.Time
+	// Where its owner pays, in the browser: the workspace's settings in the panel. An MCP tool
+	// leaves it out.
+	URL string
+}
+
 // WorkspaceChoice is a detail of an [Error]: [Error.WorkspaceChoice].
 //
 // Detail of an error that needs `workspace`: [CodeFailedPrecondition] when the call named none

@@ -46,7 +46,7 @@ const TOKEN: &str = "pth_checks";
 /// What every call says of itself: whose it is, what makes it, and the protocol's version.
 const HEADERS: [(&str, &str); 3] = [
     ("authorization", "Bearer pth_checks"),
-    ("user-agent", "pethost-rust/0.5.0"),
+    ("user-agent", "pethost-rust/0.5.1"),
     ("connect-protocol-version", "1"),
 ];
 
@@ -2290,6 +2290,14 @@ mod samples {
             message.reason = samples::no_machine_reason(k);
             message.url = states::plain(k, states::text("url", k));
             message.workspace_id = states::plain(k, states::text("workspace_id", k));
+        })
+    }
+
+    pub fn payment_overdue(k: usize, later: bool) -> types::PaymentOverdue {
+        states::make(|message: &mut types::PaymentOverdue| {
+            message.workspace_id = states::plain(k, states::text("workspace_id", k));
+            message.end_time = states::maybe(k, states::time(states::number(2, k + 1)));
+            message.url = states::plain(k, states::text("url", k));
         })
     }
 
@@ -5032,6 +5040,19 @@ mod on_wire {
         message
     }
 
+    pub fn payment_overdue(k: usize, received: bool) -> wire::PaymentOverdue {
+        let mut message = wire::PaymentOverdue {
+            workspace_id: states::present(states::plain(k, states::text("workspace_id", k))),
+            end_time: states::maybe(k, states::time_on_wire(states::number(2, k + 1))).into(),
+            url: states::present(states::plain(k, states::text("url", k))),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
     pub fn workspace_choice(k: usize, received: bool) -> wire::WorkspaceChoice {
         let mut message = wire::WorkspaceChoice {
             workspaces: states::many(
@@ -6627,6 +6648,26 @@ async fn no_machine_is_received() {
             "unavailable",
             503,
             &[("pethost.panel.v1.NoMachine", detail.as_slice())],
+            &STANDARD_NO_PAD,
+        );
+        let call =
+            |client: Client| async move { client.list_workspaces(types::ListWorkspacesRequest::default()).await };
+        let (_, response): (wire::ListWorkspacesRequest, _) = exchange("ListWorkspaces", answer, call).await;
+
+        assert_eq!(response.unwrap_err().details(), [expected], "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn payment_overdue_is_received() {
+    for k in 0..2 {
+        let detail = on_wire::payment_overdue(k, true).encode_to_vec();
+        let expected = ErrorDetail::PaymentOverdue(samples::payment_overdue(k, true));
+
+        let answer = failure(
+            "unavailable",
+            503,
+            &[("pethost.panel.v1.PaymentOverdue", detail.as_slice())],
             &STANDARD_NO_PAD,
         );
         let call =
@@ -10078,6 +10119,12 @@ fn database_size_refusal_is_json() {
 fn no_machine_is_json() {
     let names = ["reason", "url", "workspace_id"];
     a_message_is_json(4, &names, samples::no_machine, on_wire::no_machine);
+}
+
+#[test]
+fn payment_overdue_is_json() {
+    let names = ["workspace_id", "end_time", "url"];
+    a_message_is_json(2, &names, samples::payment_overdue, on_wire::payment_overdue);
 }
 
 #[test]

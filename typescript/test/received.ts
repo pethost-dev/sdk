@@ -129,6 +129,7 @@ export const empty = {
   DatabaseLinkRefusal: () => ({ projectId: "", service: "", databaseProjectId: "" }),
   DatabaseSizeRefusal: () => ({ dataBytes: 0n, keepsBytes: 0n, volume: "" }),
   NoMachine: () => ({ url: "", workspaceId: "" }),
+  PaymentOverdue: () => ({ workspaceId: "", url: "" }),
   WorkspaceChoice: () => ({ workspaces: [], total: 0, holdingProject: [], incomplete: false }),
   WorkspaceNotGranted: () => ({ workspaceId: "", url: "" }),
   ProjectMoved: () => ({ projectId: "", workspaceId: "", workspaceName: "" }),
@@ -1260,6 +1261,15 @@ export const empty = {
   m.reads("NoMachine.reason: a value newer than the SDK", { reason: 9999 as w.NoMachineReason }, { ...empty.NoMachine(), reason: 9999 });
   m.reads("NoMachine.url", { url: "url" }, { ...empty.NoMachine(), url: "url" });
   m.reads("NoMachine.workspace_id", { workspaceId: "workspace_id" }, { ...empty.NoMachine(), workspaceId: "workspace_id" });
+}
+
+{
+  const m = readingDetail(w.PaymentOverdueSchema, (leaf: Init<typeof w.PaymentOverdueSchema>): Init<typeof w.PaymentOverdueSchema> => (leaf), anyCall, (error) => error.paymentOverdue);
+  m.reads("PaymentOverdue: nothing set", {}, empty.PaymentOverdue());
+  m.reads("PaymentOverdue: a field newer than the SDK", newer(w.PaymentOverdueSchema), empty.PaymentOverdue());
+  m.reads("PaymentOverdue.workspace_id", { workspaceId: "workspace_id" }, { ...empty.PaymentOverdue(), workspaceId: "workspace_id" });
+  m.reads("PaymentOverdue.end_time", { endTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.PaymentOverdue(), endTime: new Date(1790000000999) });
+  m.reads("PaymentOverdue.url", { url: "url" }, { ...empty.PaymentOverdue(), url: "url" });
 }
 
 {

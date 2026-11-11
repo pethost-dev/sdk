@@ -61,6 +61,15 @@ type Error struct {
 	// nil = the API sent no such detail.
 	NoMachine *NoMachine
 
+	// Detail of a [CodeFailedPrecondition] error: the workspace's last payment failed, and it
+	// stayed unpaid past the day its projects were to stop. Its machine is suspended, with every
+	// project on it stopped, and every call on the workspace is refused until it is paid, which
+	// its owner does in the workspace's settings in the panel. Still unpaid at EndTime, it ends:
+	// its machine is deleted with every project on it, and its backups are kept for 30 days.
+	//
+	// nil = the API sent no such detail.
+	PaymentOverdue *PaymentOverdue
+
 	// Detail of an error that needs `workspace`: [CodeFailedPrecondition] when the call named none
 	// and the caller has several, [CodeInvalidArgument] when it named none of theirs. Name one of
 	// these, by what the person asked for: a project that exists is in those of HoldingProject;
@@ -113,6 +122,8 @@ func fromWireError(err error) error {
 			e.DatabaseSizeRefusal = new(fromWireDatabaseSizeRefusal(w))
 		case *panelv1.NoMachine:
 			e.NoMachine = new(fromWireNoMachine(w))
+		case *panelv1.PaymentOverdue:
+			e.PaymentOverdue = new(fromWirePaymentOverdue(w))
 		case *panelv1.WorkspaceChoice:
 			e.WorkspaceChoice = new(fromWireWorkspaceChoice(w))
 		case *panelv1.WorkspaceNotGranted:

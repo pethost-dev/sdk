@@ -169,6 +169,7 @@ pub mod __buffa {
         reg.register_json_any(super::__DATABASE_LINK_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__DATABASE_SIZE_REFUSAL_JSON_ANY);
         reg.register_json_any(super::__NO_MACHINE_JSON_ANY);
+        reg.register_json_any(super::__PAYMENT_OVERDUE_JSON_ANY);
         reg.register_json_any(super::__WORKSPACE_CHOICE_JSON_ANY);
         reg.register_json_any(super::__WORKSPACE_NOT_GRANTED_JSON_ANY);
         reg.register_json_any(super::__PROJECT_MOVED_JSON_ANY);
@@ -733,6 +734,10 @@ pub use self::__buffa::view::DatabaseSizeRefusalOwnedView;
 pub use self::__buffa::view::NoMachineView;
 #[doc(inline)]
 pub use self::__buffa::view::NoMachineOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::PaymentOverdueView;
+#[doc(inline)]
+pub use self::__buffa::view::PaymentOverdueOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::WorkspaceChoiceView;
 #[doc(inline)]

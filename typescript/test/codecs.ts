@@ -1643,6 +1643,15 @@ import * as p from "pethost";
 }
 
 {
+  const m = json(p.PaymentOverdue, w.PaymentOverdueSchema);
+  m.converts("PaymentOverdue: nothing set", {}, empty.PaymentOverdue());
+  m.refuses("PaymentOverdue: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("PaymentOverdue.workspace_id", { workspaceId: "workspace_id" }, { ...empty.PaymentOverdue(), workspaceId: "workspace_id" });
+  m.converts("PaymentOverdue.end_time", { endTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.PaymentOverdue(), endTime: new Date(1790000000123) });
+  m.converts("PaymentOverdue.url", { url: "url" }, { ...empty.PaymentOverdue(), url: "url" });
+}
+
+{
   const m = json(p.WorkspaceChoice, w.WorkspaceChoiceSchema);
   m.converts("WorkspaceChoice: nothing set", {}, empty.WorkspaceChoice());
   m.refuses("WorkspaceChoice: a field the API does not have", { no_such_field: true }, "no_such_field");

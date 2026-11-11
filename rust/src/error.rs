@@ -196,6 +196,8 @@ pub enum ErrorDetail {
     DatabaseSizeRefusal(types::DatabaseSizeRefusal),
     /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: there is no machine to run projects on yet, since the caller has no workspace, or the workspace's machine is being prepared.
     NoMachine(types::NoMachine),
+    /// Detail of a [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) error: the workspace's last payment failed, and it stayed unpaid past the day its projects were to stop. Its machine is suspended, with every project on it stopped, and every call on the workspace is refused until it is paid, which its owner does in the workspace's settings in the panel. Still unpaid at `end_time`, it ends: its machine is deleted with every project on it, and its backups are kept for 30 days.
+    PaymentOverdue(types::PaymentOverdue),
     /// Detail of an error that needs `workspace`: [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) when the call named none and the caller has several, [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument) when it named none of theirs. Name one of these, by what the person asked for: a project that exists is in those of `holding_project`; for something new, ask the person, showing each one's size and what is free.
     WorkspaceChoice(types::WorkspaceChoice),
     /// Detail of a [`ErrorCode::PermissionDenied`](crate::ErrorCode::PermissionDenied) error: the account has the workspace `workspace` named (or the connection is pinned to), but the person has not let this token reach it; or the call named none and the token reaches none of the account's workspaces.
@@ -228,6 +230,9 @@ fn detail_of(detail: &connectrpc::ErrorDetail) -> Option<ErrorDetail> {
         "pethost.panel.v1.NoMachine" => wire::NoMachine::decode_from_slice(&bytes)
             .ok()
             .map(|message| ErrorDetail::NoMachine(message.into())),
+        "pethost.panel.v1.PaymentOverdue" => wire::PaymentOverdue::decode_from_slice(&bytes)
+            .ok()
+            .map(|message| ErrorDetail::PaymentOverdue(message.into())),
         "pethost.panel.v1.WorkspaceChoice" => wire::WorkspaceChoice::decode_from_slice(&bytes)
             .ok()
             .map(|message| ErrorDetail::WorkspaceChoice(message.into())),

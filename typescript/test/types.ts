@@ -164,6 +164,7 @@ optional<p.MachineUnreachable>({ sinceTime: true });
 optional<p.DatabaseLinkRefusal>({ projectId: false, reason: true, service: false, databaseProjectId: false });
 optional<p.DatabaseSizeRefusal>({ reason: true, dataBytes: false, keepsBytes: false, volume: false });
 optional<p.NoMachine>({ reason: true, url: false, workspaceId: false });
+optional<p.PaymentOverdue>({ workspaceId: false, endTime: true, url: false });
 optional<p.WorkspaceChoice>({ workspaces: false, total: false, holdingProject: false, incomplete: false });
 optional<p.WorkspaceNotGranted>({ workspaceId: false, url: false });
 optional<p.ProjectMoved>({ projectId: false, workspaceId: false, workspaceName: false, moveTime: true });

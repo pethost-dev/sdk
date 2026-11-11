@@ -2915,6 +2915,23 @@ func toWireNoMachine(v NoMachine) *panelv1.NoMachine {
 	return b.Build()
 }
 
+func fromWirePaymentOverdue(w *panelv1.PaymentOverdue) PaymentOverdue {
+	return PaymentOverdue{
+		w.GetWorkspaceId(),
+		timeFromWire(w.GetEndTime()),
+		w.GetUrl(),
+	}
+}
+
+func toWirePaymentOverdue(v PaymentOverdue) *panelv1.PaymentOverdue {
+	b := panelv1.PaymentOverdue_builder{
+		WorkspaceId: nonZero(v.WorkspaceID),
+		EndTime:     timeToWire(v.EndTime),
+		Url:         nonZero(v.URL),
+	}
+	return b.Build()
+}
+
 func fromWireWorkspaceChoice(w *panelv1.WorkspaceChoice) WorkspaceChoice {
 	return WorkspaceChoice{
 		sliceFromWire(w.GetWorkspaces(), fromWireWorkspace),

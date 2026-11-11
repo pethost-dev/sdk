@@ -1302,6 +1302,15 @@ func (v *NoMachine) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v PaymentOverdue) MarshalJSON() ([]byte, error) { return marshalJSON(toWirePaymentOverdue(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *PaymentOverdue) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWirePaymentOverdue)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v WorkspaceChoice) MarshalJSON() ([]byte, error) { return marshalJSON(toWireWorkspaceChoice(v)) }
 
 // UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the

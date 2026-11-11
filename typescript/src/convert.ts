@@ -3013,6 +3013,22 @@ export function toNoMachine(m: p.NoMachine): MessageInitShape<typeof w.NoMachine
   } satisfies Fields<w.NoMachine>;
 }
 
+export function fromPaymentOverdue(m: w.PaymentOverdue): p.PaymentOverdue {
+  return compact<p.PaymentOverdue>({
+    workspaceId: m.workspaceId,
+    endTime: m.endTime && toDate(m.endTime),
+    url: m.url,
+  });
+}
+
+export function toPaymentOverdue(m: p.PaymentOverdue): MessageInitShape<typeof w.PaymentOverdueSchema> {
+  return {
+    workspaceId: m.workspaceId || undefined,
+    endTime: m.endTime && toTimestamp(m.endTime),
+    url: m.url || undefined,
+  } satisfies Fields<w.PaymentOverdue>;
+}
+
 export function fromWorkspaceChoice(m: w.WorkspaceChoice): p.WorkspaceChoice {
   return compact<p.WorkspaceChoice>({
     workspaces: m.workspaces.map(fromWorkspace),
