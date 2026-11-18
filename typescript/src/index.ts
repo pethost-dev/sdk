@@ -4616,7 +4616,7 @@ export class Pethost {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.5.1");
+      request.header.set("User-Agent", "pethost-typescript/0.5.2");
       return next(request);
     };
     this.#wire = connect.createClient(
@@ -4958,9 +4958,10 @@ export class Pethost {
    *
    * setDatabaseSize gives a database another of its engine's sizes (Machine.databaseEngines; its
    * size now is Project.database.memoryLimitBytes): the machine writes its compose.yaml anew for
-   * that size, with the settings that follow from it and the image it runs, so never edit them by
-   * hand; what else was written there goes. The database restarts, and its apps lose their
-   * connections for a few seconds: one that does not connect again shows as restarting
+   * that size, with the settings that follow from it, so never edit them by hand, and with the image
+   * it runs and the other flags of its command as they were written, a server setting added or
+   * changed there included; what else was written there goes. The database restarts, and its apps
+   * lose their connections for a few seconds: one that does not connect again shows as restarting
    * ({@link Pethost.getMachine | getMachine}). A size changes nothing on the bill: a smaller one
    * only leaves memory to the other projects. A Valkey whose data is more than the size keeps (its
    * maxmemory, 70 % of the size) is refused before anything changes, and the refusal gives both
