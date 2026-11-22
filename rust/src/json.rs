@@ -10,33 +10,35 @@
 
 use serde::de::value::{MapDeserializer, SeqDeserializer};
 use serde::de::{DeserializeOwned, Error as _, IntoDeserializer, Unexpected, Visitor};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 
 use crate::proto::pethost::panel::v1 as wire;
 use crate::{convert, timestamp, types};
 
-/// The two impls of a public type: `$to` makes the wire layer's type of it, whose JSON is
-/// written, and `$from` makes it of the one that was read.
+/// The two impls of a public type, of every surface's types: `$to` makes the wire layer's type
+/// of it, whose JSON is written, and `$from` makes it of the one that was read.
 macro_rules! json {
     ($public:ty, $wire:ty, $to:path, $from:path) => {
         /// As the API's JSON: the proto's field names, an enum as its value's name, a 64-bit
         /// integer as a string, a time as RFC 3339, bytes as base64.
-        impl Serialize for $public {
-            fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-                $to(Clone::clone(self)).serialize(serializer)
+        impl ::serde::Serialize for $public {
+            fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                ::serde::Serialize::serialize(&$to(Clone::clone(self)), serializer)
             }
         }
 
         /// From the API's JSON. A field this version does not know is refused, as the API
         /// refuses one it does not have.
-        impl<'de> Deserialize<'de> for $public {
-            fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-                read::<$wire, D>(deserializer).map($from)
+        impl<'de> ::serde::Deserialize<'de> for $public {
+            fn deserialize<D: ::serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                $crate::json::read::<$wire, D>(deserializer).map($from)
             }
         }
     };
 }
+
+pub(crate) use json;
 
 json!(
     crate::Timestamp,
@@ -891,7 +893,7 @@ json!(
 );
 
 /// A value of the wire layer's, read from JSON as the API reads it.
-fn read<'de, Wire: DeserializeOwned, D: Deserializer<'de>>(deserializer: D) -> Result<Wire, D::Error> {
+pub(crate) fn read<'de, Wire: DeserializeOwned, D: Deserializer<'de>>(deserializer: D) -> Result<Wire, D::Error> {
     let value = Value::deserialize(deserializer)?;
     Wire::deserialize(Strict { value, field: None }).map_err(D::Error::custom)
 }

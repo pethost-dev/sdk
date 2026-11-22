@@ -1,4 +1,4 @@
-# Generated with the package from v1/panel.proto: do not edit.
+# Generated with the package from v1/panel.proto and v1/sandboxes.proto: do not edit.
 
 [build-system]
 requires = ["hatchling>=1.27,<2"]
@@ -6,14 +6,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pethost"
-version = "0.5.2"
-description = "The Python SDK for Pethost, hosting for Docker Compose projects: deploy, read logs and requests, run commands and move files through its API."
+version = "0.6.0"
+description = "Pethost's SDK: App Platform (Docker Compose projects at one flat price) and Agent Sandboxes (Firecracker microVMs for code and coding agents)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Pethost" }]
-keywords = ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client"]
+keywords = ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client", "sandbox", "microvm", "firecracker", "ai agents", "code execution"]
 # A Python is named here once the package's checks (tests/) were seen to pass on it.
 classifiers = [
     "Intended Audience :: Developers",

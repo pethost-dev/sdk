@@ -1,7 +1,7 @@
-"""A local fake of the API: an HTTP server on 127.0.0.1 that speaks the Connect protocol as the
-API does, to a call and to a stream of responses. It keeps each call as the wire carried it, and
-answers what the check told it to, in raw bytes, so that it can also say what this version of
-the package does not know."""
+"""A local fake of the API, or of a server a service answered at a Connection is called at: an
+HTTP server on 127.0.0.1 that speaks the Connect protocol as the API does, to a call and to a
+stream of responses. It keeps each call as the wire carried it, and answers what the check told it
+to, in raw bytes, so that it can also say what this version of the package does not know."""
 
 from __future__ import annotations
 
@@ -55,12 +55,26 @@ class Answer:
     left: threading.Event | None = None  # A stream then has no end: the fake sets this when its caller is gone.
 
 
+def failure(code: str, message: str, details: list[tuple[str, bytes]] | None = None, after: tuple[bytes, ...] = ()) -> Answer:
+    """A call that fails with a code, and with details: each a type's full name and its bytes. A
+    stream fails after these responses."""
+    error: dict[str, Any] = {"code": code, "message": message}
+    if details:
+        error["details"] = [
+            {"type": name, "value": base64.b64encode(value).decode().rstrip("=")} for name, value in details
+        ]
+    return Answer(list(after), error)
+
+
 @dataclass
 class Fake:
-    """The server. `calls` are the calls so far; the next one gets what `answer`, `fail` or `hold` set."""
+    """The server. `calls` are the calls so far. A call of a path `route` set gets its answer; any
+    other the first answer `script` set that is left, else what `answer`, `fail` or `hold` set."""
 
     calls: list[Call] = field(default_factory=list[Call])
     next: Answer = field(default_factory=Answer)
+    routes: dict[str, Answer] = field(default_factory=dict[str, Answer])
+    queue: list[Answer] = field(default_factory=list[Answer])
 
     def __post_init__(self) -> None:
         # A thread a connection: a stream the fake holds open keeps no other call waiting.
@@ -73,14 +87,16 @@ class Fake:
         self.next = Answer(list(responses), delay=delay)
 
     def fail(self, code: str, message: str, details: list[tuple[str, bytes]] | None = None, after: tuple[bytes, ...] = ()) -> None:
-        """The next call fails with a code, and with details: each a type's full name and its
-        bytes. A stream fails after these responses."""
-        error: dict[str, Any] = {"code": code, "message": message}
-        if details:
-            error["details"] = [
-                {"type": name, "value": base64.b64encode(value).decode().rstrip("=")} for name, value in details
-            ]
-        self.next = Answer(list(after), error)
+        """The next call fails with a code, and with details (failure)."""
+        self.next = failure(code, message, details, after)
+
+    def route(self, path: str, *responses: bytes) -> None:
+        """Every call of a path succeeds with this message, whatever else the check set."""
+        self.routes[path] = Answer(list(responses))
+
+    def script(self, *answers: Answer) -> None:
+        """The next calls get these answers, one each, in turn; the calls after them, `next`."""
+        self.queue = list(answers)
 
     def hold(self, *responses: bytes) -> threading.Event:
         """The next call, a stream, gets these responses and no end: the fake waits for its
@@ -113,7 +129,7 @@ class Fake:
                 stream = headers.get("content-type") == STREAM
                 fake.calls.append(Call("POST", self.path, headers, message_of(self.sent(), headers, stream)))
 
-                answer = fake.next
+                answer = fake.routes.get(self.path) or (fake.queue.pop(0) if fake.queue else fake.next)
                 time.sleep(answer.delay)
                 if stream:
                     self.answer_stream(answer)

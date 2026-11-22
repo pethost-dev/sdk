@@ -3,8 +3,10 @@ edition = "2024";
 // The option that gives the SDKs an RPC that is no MCP tool. An SDK (sdk/README.md) has every
 // RPC marked `(mcp_tool)` (v1/mcp.proto), which a program calls as an agent does, and every RPC
 // marked here: one that a tool call cannot carry, such as a stream, which an agent has a tool
-// in place of. The generators of cmd/protoc-gen-panel-<language> read both through
-// internal/sdk; nothing on the wire and nothing in the panel's own code depends on the option.
+// in place of. A service marked `(sdk_service)` is answered elsewhere than at the API's address:
+// at the address and with the token another RPC answers, which every SDK calls first. The
+// generators of cmd/protoc-gen-panel-<language> read these through internal/sdk; nothing on the
+// wire and nothing in the panel's own code depends on them.
 package pethost.panel.v1;
 
 import "google/protobuf/descriptor.proto";
@@ -21,4 +23,21 @@ extend google.protobuf.MethodOptions {
   // a tool anyway. A server stream is a method that yields each response as it comes, until the
   // stream ends or the caller leaves; a client stream cannot be marked.
   SdkMethod sdk_method = 50003;
+}
+
+// Where a service's calls go when the API's own address does not answer them.
+message SdkService {
+  // The name of an RPC of another service of the same file, which every SDK calls to reach this
+  // service: its request's field 1 is a string naming what it connects to (sandbox_id), which every
+  // request of this service has as its field 1 too; its response has `string url = 1`
+  // (`https://<host>`, where this service is called), `string token = 2` (the bearer of those
+  // calls) and `google.protobuf.Timestamp expire_time = 3`. internal/sdk holds the rule every SDK
+  // follows (its Runtime); nothing on the wire depends on the option.
+  string connect = 1;
+}
+
+extend google.protobuf.ServiceOptions {
+  // Present = the service's calls are answered not at the client's base URL but at the Connection
+  // that the RPC `connect` names answers for the request's field 1.
+  SdkService sdk_service = 50008;
 }

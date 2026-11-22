@@ -147,7 +147,7 @@ impl ErrorCode {
         }
     }
 
-    fn from_wire(code: connectrpc::ErrorCode) -> Self {
+    pub(crate) fn from_wire(code: connectrpc::ErrorCode) -> Self {
         use connectrpc::ErrorCode as Wire;
 
         match code {

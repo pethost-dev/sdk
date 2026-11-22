@@ -1,3 +1,3 @@
 """The package's version: what a call's User-Agent says. Generated with the package: do not edit."""
 
-VERSION = "0.5.2"
+VERSION = "0.6.0"

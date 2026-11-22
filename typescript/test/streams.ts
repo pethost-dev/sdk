@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import type { DescMessage } from "@bufbuild/protobuf";
 import * as w from "../dist/wire/v1/panel_pb.js";
-import { answer, check, detail, detailsOf, fake, newer, refusal, rejection, type Init } from "./harness.ts";
+import { answer, check, detail, detailsOf, fake, newer, refusal, rejection, type FakeOptions, type Init } from "./harness.ts";
 import { empty } from "./received.ts";
 import type { CallOptions, Pethost } from "pethost";
 
@@ -26,7 +26,7 @@ async function drain<R>(stream: AsyncIterable<R>, yielded: R[]): Promise<void> {
 
 /**
  * The checks of one stream. `open` calls its method; the fake sends `sent`, which the method
- * must yield as `expected`, one for one.
+ * must yield as `expected`, one for one. `options` are the fake's.
  */
 function streaming<S extends DescMessage, R>(
   rpc: string,
@@ -34,11 +34,12 @@ function streaming<S extends DescMessage, R>(
   open: (api: Pethost, options?: CallOptions) => AsyncIterable<R>,
   sent: Init<S>[],
   expected: NoInfer<R>[],
+  options: FakeOptions = {},
 ): void {
   const { responses } = answer(schema, ...sent);
 
   check(`${rpc}: each response in order, then the error that ended the stream`, async () => {
-    const { api } = fake(() => ({ ...failure, responses }));
+    const { api } = fake(() => ({ ...failure, responses }), options);
     const yielded: R[] = [];
     const error = await rejection(drain(open(api), yielded));
 
@@ -50,7 +51,7 @@ function streaming<S extends DescMessage, R>(
 
   check(`${rpc}: pulses before, between and after the responses, then the error`, async () => {
     const pulsed = [pulse, ...responses.flatMap((response) => [response, pulse])];
-    const { api } = fake(() => ({ ...failure, responses: pulsed }));
+    const { api } = fake(() => ({ ...failure, responses: pulsed }), options);
     const yielded: R[] = [];
     const error = await rejection(drain(open(api), yielded));
 
@@ -60,7 +61,7 @@ function streaming<S extends DescMessage, R>(
   });
 
   check(`${rpc}: pulses alone, then the stream's end`, async () => {
-    const { api } = fake(() => ({ responses: [pulse, pulse] }));
+    const { api } = fake(() => ({ responses: [pulse, pulse] }), options);
     const yielded: R[] = [];
     await drain(open(api), yielded);
 
@@ -68,7 +69,7 @@ function streaming<S extends DescMessage, R>(
   });
 
   check(`${rpc}: a call refused before any response`, async () => {
-    const { api } = fake(() => refusal(404, "not_found", "no such project"));
+    const { api } = fake(() => refusal(404, "not_found", "no such project"), options);
     const yielded: R[] = [];
     const error = await rejection(drain(open(api), yielded));
 
@@ -78,7 +79,7 @@ function streaming<S extends DescMessage, R>(
   });
 
   check(`${rpc}: a stream that ends by itself`, async () => {
-    const { api } = fake(() => ({ responses }));
+    const { api } = fake(() => ({ responses }), options);
     const yielded: R[] = [];
     await drain(open(api), yielded);
 
@@ -86,7 +87,7 @@ function streaming<S extends DescMessage, R>(
   });
 
   check(`${rpc}: the call is made when the loop starts, and leaving the loop ends it`, async () => {
-    const { api, calls } = fake(() => ({ responses, open: true }));
+    const { api, calls } = fake(() => ({ responses, open: true }), options);
     const stream = open(api);
     assert.equal(calls.length, 0, "a call was made before the loop started");
 
@@ -102,7 +103,7 @@ function streaming<S extends DescMessage, R>(
   });
 
   check(`${rpc}: a stream its signal aborted`, async () => {
-    const { api, calls } = fake(() => ({ responses, open: true }));
+    const { api, calls } = fake(() => ({ responses, open: true }), options);
     const aborted = new AbortController();
     const reading = (async () => {
       // Seen here, not after the loop: a stream that was not ended would never end the loop.

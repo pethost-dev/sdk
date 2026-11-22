@@ -1,8 +1,8 @@
 {
   "name": "pethost",
-  "version": "0.5.2",
-  "description": "TypeScript and JavaScript SDK for Pethost, the agent-first cloud for everything you build: deploy Docker Compose projects at one flat price, read their logs and requests, run commands in their containers.",
-  "keywords": ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "api", "sdk", "client"],
+  "version": "0.6.0",
+  "description": "TypeScript and JavaScript SDK for Pethost: App Platform (Docker Compose projects at one flat price) and Agent Sandboxes (Firecracker microVMs for code and coding agents).",
+  "keywords": ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "sandbox", "firecracker", "microvm", "ai agents", "api", "sdk", "client"],
   "homepage": "https://pethost.dev",
   "repository": {
     "type": "git",
@@ -19,6 +19,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./sandboxes": {
+      "types": "./dist/sandboxes/index.d.ts",
+      "default": "./dist/sandboxes/index.js"
     }
   },
   "files": ["dist"],

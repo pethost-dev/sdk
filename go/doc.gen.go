@@ -36,8 +36,8 @@
 //
 // Every message of the package is the API's own JSON to [encoding/json], both ways:
 // json.Marshal(response) writes what the API answers over HTTP, and json.Unmarshal(data,
-// &request) reads what it takes, which https://pethost.dev/docs/api documents. A field has the
-// API's name for it, such as project_id; an enum's value is its whole name there, a 64-bit
+// &request) reads what it takes, which https://pethost.dev/docs/api/ documents. A field has
+// the API's name for it, such as project_id; an enum's value is its whole name there, a 64-bit
 // integer a string, a time RFC 3339, bytes base64, and a choice's member stands under its own
 // name. What is absent is left out.
 //

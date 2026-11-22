@@ -13,23 +13,25 @@ use crate::Error;
 /// What the client's transport reads a response from.
 type Body = <HttpClient as ClientTransport>::ResponseBody;
 
-/// The responses of a stream's call, each as the API sends it.
+/// The responses of a stream's call, each as the API sends it, or the error `E` of the stream
+/// that failed: [`Error`], or the error of the module whose client made the call.
 ///
 /// A stream's method of [`Client`](crate::Client) returns one at once, and makes no call yet:
 ///
 /// - **The call is made when the stream is first read**, by [`next`](Self::next), and lasts
 ///   until the stream ends or is dropped.
-/// - **A stream that fails yields its [`Error`] last, once**: alone when the API refused the
-///   call or was not reached, after the responses that came before it when the stream broke
-///   midway. A stream that ends by itself just ends. After either, `next` is `None`.
+/// - **A stream that fails yields its error last, once**: alone when the API refused the call
+///   or was not reached, after the responses that came before it when the stream broke midway. A stream that ends by itself just ends. After either, `next` is `None`.
 /// - **A silence is no response.** Through one the API sends a response with
 ///   nothing set, so that no proxy on the way ends the call as dead: the stream passes over
 ///   it, and `next` waits on.
 /// - **Dropping the stream ends the call**: to stop reading, leave the loop. Dropping the
 ///   future of `next` alone, as `tokio::time::timeout` does, ends nothing and loses nothing:
 ///   the next `next` reads on.
-/// - **The crate does not call again by itself.** Where a response carries a cursor, as a log
-///   line does, a new call goes on from it.
+/// - **The crate does not call again by itself**, but where a module's client is told, before
+///   the stream's first response, that the connection it called at no longer holds: it calls
+///   once more at a new one. Where a response carries a cursor, as a log line does, a new call
+///   goes on from it.
 ///
 /// It is a [`Stream`](futures_core::Stream) of the `futures` crates too, for their
 /// combinators; `next` needs none of them.
@@ -72,64 +74,75 @@ type Body = <HttpClient as ClientTransport>::ResponseBody;
 /// }
 /// ```
 #[must_use = "a stream makes its call when it is first read"]
-pub struct ResponseStream<T> {
-    responses: Pin<Box<dyn futures_core::Stream<Item = Result<T, Error>> + Send>>,
+pub struct ResponseStream<T, E = Error> {
+    responses: Pin<Box<dyn futures_core::Stream<Item = Result<T, E>> + Send>>,
 }
 
-impl<T> ResponseStream<T> {
+impl<T, E> ResponseStream<T, E> {
     /// The next response, as soon as the API sends it; `None` = the stream has ended.
-    pub async fn next(&mut self) -> Option<Result<T, Error>> {
+    pub async fn next(&mut self) -> Option<Result<T, E>> {
         std::future::poll_fn(|context| self.responses.as_mut().poll_next(context)).await
     }
 
     /// The stream of the call that `call` makes once it is polled, with each of its messages as
-    /// the public type.
+    /// the public type, and its failure as `error` makes it the surface's error.
     ///
     /// The call's own failure is the stream's one item, as a failure midway is its last: the
     /// protocol answers a refused stream with 200 and the error in the stream's end, so the
     /// two are one to a program, and it handles both where it reads. After its error or its
     /// end the wire layer's stream is dropped, and with it the call.
-    ///
-    /// The API's pulse is no item: a response with nothing set, which on the wire is a message
-    /// of no bytes, where a response that says anything has some. It is passed over inside the
-    /// read of the next response, so who awaits that one is not woken with nothing.
-    pub(crate) fn new<Call, View, Wire>(call: Call) -> Self
+    pub(crate) fn new<Call, View, Wire>(call: Call, error: fn(connectrpc::ConnectError) -> E) -> Self
     where
         Call: Future<Output = Result<ServerStream<Body, View>, connectrpc::ConnectError>> + Send + 'static,
         View: buffa::MessageView<'static, Owned = Wire> + Send + 'static,
         Wire: buffa::HasMessageView<View<'static> = View> + buffa::Message + connectrpc::codec::JsonDeserialize,
-        T: From<Wire> + 'static,
+        T: From<Wire> + Send + 'static,
+        E: 'static,
     {
-        let responses = call
-            .map_ok(|stream| {
-                futures_util::stream::try_unfold(stream, |mut stream| async move {
-                    while let Some(message) = stream.message().await? {
-                        // A pulse has no bytes: the read goes on to the next message.
-                        if !message.bytes().is_empty() {
-                            return Ok(Some((T::from(message.to_owned_message()), stream)));
-                        }
-                    }
-                    Ok(None)
-                })
-            })
-            .try_flatten_stream()
-            .map_err(Error::from_wire);
+        Self::from_stream(call.map_ok(responses).try_flatten_stream().map_err(error))
+    }
 
+    /// The stream of what `responses` yields.
+    pub(crate) fn from_stream(responses: impl futures_core::Stream<Item = Result<T, E>> + Send + 'static) -> Self {
         Self {
             responses: Box::pin(responses),
         }
     }
 }
 
-impl<T> futures_core::Stream for ResponseStream<T> {
-    type Item = Result<T, Error>;
+/// The responses of a call's stream, each as the public type.
+///
+/// The API's pulse is no item: a response with nothing set, which on the wire is a message of
+/// no bytes, where a response that says anything has some. It is passed over inside the read of
+/// the next response, so who awaits that one is not woken with nothing.
+pub(crate) fn responses<View, Wire, T>(
+    stream: ServerStream<Body, View>,
+) -> impl futures_core::Stream<Item = Result<T, connectrpc::ConnectError>> + Send
+where
+    View: buffa::MessageView<'static, Owned = Wire> + Send + 'static,
+    Wire: buffa::HasMessageView<View<'static> = View> + buffa::Message + connectrpc::codec::JsonDeserialize,
+    T: From<Wire> + Send + 'static,
+{
+    futures_util::stream::try_unfold(stream, |mut stream| async move {
+        while let Some(message) = stream.message().await? {
+            // A pulse has no bytes: the read goes on to the next message.
+            if !message.bytes().is_empty() {
+                return Ok(Some((T::from(message.to_owned_message()), stream)));
+            }
+        }
+        Ok(None)
+    })
+}
+
+impl<T, E> futures_core::Stream for ResponseStream<T, E> {
+    type Item = Result<T, E>;
 
     fn poll_next(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.responses.as_mut().poll_next(context)
     }
 }
 
-impl<T> fmt::Debug for ResponseStream<T> {
+impl<T, E> fmt::Debug for ResponseStream<T, E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ResponseStream").finish_non_exhaustive()
     }

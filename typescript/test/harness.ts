@@ -9,6 +9,9 @@ import assert from "node:assert/strict";
 import { create, fromBinary, toBinary, toJson, toJsonString, type DescMessage, type MessageInitShape, type MessageShape } from "@bufbuild/protobuf";
 import { WireType } from "@bufbuild/protobuf/wire";
 import { Pethost, PethostError, type JsonCodec, type JsonValue, type PethostOptions } from "pethost";
+import { check } from "./checks.ts";
+
+export { check };
 
 export type Init<S extends DescMessage> = MessageInitShape<S>;
 
@@ -110,13 +113,16 @@ export function newer<S extends DescMessage>(schema: S): MessageShape<S> {
 /** The token every check's client holds. */
 export const token = "pth_check";
 
+/** What a check's client is made with, beside its token and the fake's fetch. */
+export type FakeOptions = Omit<PethostOptions, "token" | "fetch">;
+
 /**
  * A client whose calls go to `respond` and nowhere else; by default it answers an empty
  * response. A `Response` is what something that is not the API answers: it is passed on as it is.
  */
 export function fake(
-  respond: () => Answer | Response = () => ({ responses: [new Uint8Array()] }),
-  options: Omit<PethostOptions, "token" | "fetch"> = {},
+  respond: (call: Call) => Answer | Response = () => ({ responses: [new Uint8Array()] }),
+  options: FakeOptions = {},
 ): {
   api: Pethost;
   calls: Call[];
@@ -129,15 +135,16 @@ export function fake(
     const headers = new Headers(init?.headers);
     const stream = headers.get("Content-Type") === streamType;
     const sent = new Uint8Array(init?.body as Uint8Array);
-    calls.push({
+    const call: Call = {
       url: input instanceof Request ? input.url : String(input),
       method: init?.method,
       headers,
       body: stream ? sent.slice(5) : sent,
       signal,
-    });
+    };
+    calls.push(call);
 
-    const answered = respond();
+    const answered = respond(call);
     if (answered instanceof Response) return answered;
     return stream ? streamed(answered, signal) : unary(answered);
   };
@@ -166,40 +173,21 @@ export function detailsOf(error: PethostError): string[] {
   return Object.keys(error).filter((key) => key !== "name" && key !== "code");
 }
 
-const checks: { name: string; run: () => Promise<void> }[] = [];
-
-export function check(name: string, run: () => Promise<void>): void {
-  checks.push({ name, run });
-}
-
-/** Runs every check and says which failed; the process then exits with 1. */
-export async function runChecks(): Promise<void> {
-  const failures: string[] = [];
-  for (const { name, run } of checks) {
-    try {
-      await run();
-    } catch (error) {
-      failures.push(`${name}\n  ${error instanceof Error ? error.message.replaceAll("\n", "\n  ") : String(error)}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    console.error(`${failures.join("\n\n")}\n\n${failures.length} of ${checks.length} checks failed`);
-    process.exit(1);
-  }
-  console.log(`ok: ${checks.length} checks`);
-}
-
 /**
  * What a response reads as. `wrap` puts a message into the response of a call, and `read`
  * makes the call and takes the message out again. A check gives the message as the server
  * sends it and as the SDK must then show it: exactly, key for key.
  */
-export function reading<S extends DescMessage, L, R>(schema: S, wrap: (leaf: L) => Init<S>, read: (api: Pethost) => Promise<R>) {
+export function reading<S extends DescMessage, L, R>(
+  schema: S,
+  wrap: (leaf: L) => Init<S>,
+  read: (api: Pethost) => Promise<R>,
+  options: FakeOptions = {},
+) {
   return {
     reads(name: string, leaf: L, expected: NoInfer<R>): void {
       check(name, async () => {
-        const { api } = fake(() => answer(schema, wrap(leaf)));
+        const { api } = fake(() => answer(schema, wrap(leaf)), options);
         assert.deepStrictEqual(await read(api), expected);
       });
     },
@@ -234,7 +222,7 @@ export function sending<S extends DescMessage, L, P>(
   schema: S,
   wrap: (leaf: L) => Init<S>,
   send: (api: Pethost, given: P) => Promise<unknown>,
-  options: Omit<PethostOptions, "token" | "fetch"> = {},
+  options: FakeOptions = {},
 ) {
   return {
     sends(name: string, given: P, leaf: L): void {

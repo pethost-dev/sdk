@@ -137,6 +137,9 @@ var calls = []call{
 	streamOf("TailHTTPTraffic", (*Client).TailHTTPTraffic, sampleTailHTTPTrafficRequest, sampleTailHTTPTrafficResponse, &panelv1.TailHttpTrafficRequest{}, &panelv1.TailHttpTrafficResponse{}),
 }
 
+// runtimeServices are the services called at a Connection, whose calls carry its token.
+var runtimeServices []string
+
 // details are the error details.
 var details = []detail{
 	{&panelv1.ProjectBusy{}, func(s seed) Error { return Error{ProjectBusy: new(sampleProjectBusy(s))} }},

@@ -1,11 +1,15 @@
 edition = "2024";
 
 // The option that makes an RPC an MCP tool. protoc-gen-panel-mcp (cmd/protoc-gen-panel-mcp) reads
-// it and writes the tool list agents see, v1/panel.mcp.json: the tool is named after the RPC
-// (people are shown the option's title), its description is the comment above the RPC, its input
-// schema the request message with each field's comment, and the server's instructions the comment
-// at the top of the RPC's file. A tool call runs the RPC's own handler, so the web panel and an
-// agent can never disagree.
+// it and writes the tool list agents see of each file, a server each (v1/panel.mcp.json,
+// v1/sandboxes.mcp.json): the tool is named after the RPC (people are shown the option's title),
+// its description is the comment above the RPC, its input schema the request message with each
+// field's comment, and the server's instructions the comment at the top of the RPC's file. Each
+// tool also names its RPC's service, whose handler a call runs, and its title at the top level,
+// where MCP's clients look first. A response's bytes field marked `(mcp_image)` reaches the agent
+// as an image beside the JSON, not as base64 inside it, one marked `(mcp_omit)` not at all, and
+// one marked `(mcp_failure)`, set, makes the answer an error. A tool call runs the RPC's own
+// handler, so the web panel and an agent can never disagree.
 package pethost.panel.v1;
 
 import "google/protobuf/descriptor.proto";
@@ -24,4 +28,27 @@ message McpTool {
 extend google.protobuf.MethodOptions {
   // Present = the RPC is an MCP tool. Only unary RPCs can be.
   McpTool mcp_tool = 50001;
+}
+
+extend google.protobuf.FieldOptions {
+  // True = a `bytes` field of a tool's response that is an image: the tool answers it as MCP
+  // image content, typed by its message's `string mime_type`, and leaves it out of the JSON, where
+  // a model would read base64 it cannot see. Not repeated. A type other than image/png,
+  // image/jpeg, image/gif and image/webp makes the answer an error: what an image's bytes are is
+  // the program's that made them, and a client draws only an image. The SDKs, the web and the
+  // API's reference read the field as any other.
+  bool mcp_image = 50007;
+
+  // True = a field of a tool's response that the tool's answer leaves out, wherever the response
+  // holds it, in every element of a list on the way: what a model must not hold (a root token) or
+  // cannot read (a file's bytes). A model reads no response's comment: the tool's description or
+  // the server's instructions say how it does without the field. Only in a message no request
+  // holds. The SDKs, the web and the API's reference read the field as any other.
+  bool mcp_omit = 50009;
+
+  // True = a `string` field at the top of a tool's response that, set, says the call stopped short
+  // of what it was asked (WriteFiles' failure_message): the tool's result is an error (MCP's
+  // isError), its JSON as it is, so that a model does not go on as if it had all been done. The
+  // SDKs, the web and the API's reference read the field as any other.
+  bool mcp_failure = 50010;
 }

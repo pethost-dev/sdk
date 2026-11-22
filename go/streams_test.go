@@ -24,6 +24,10 @@ import (
 // answerStream is the fake's handler of every stream.
 func answerStream[R proto.Message](ctx context.Context, x *exchange, request proto.Message, send func(R) error) error {
 	x.received = request
+	x.log = append(x.log, request)
+	if err := x.fail(); err != nil {
+		return err
+	}
 
 	responses := x.responses
 	if len(responses) == 0 && x.response != nil {
@@ -121,7 +125,8 @@ func streams(t *testing.T, api *fake, client *Client) {
 			samples, said := saying(call, bothWays)
 			pulse := call.response
 			api.responses = []proto.Message{pulse, said[0], pulse, pulse, said[1], said[2], pulse}
-			t.Cleanup(func() { api.responses, api.err, api.left = nil, nil, nil })
+			api.connecting = call.runtime
+			t.Cleanup(func() { api.responses, api.err, api.left, api.connecting = nil, nil, nil, false })
 
 			streamNotMade(t, client, call)
 			streamFails(t, api, client, call, samples)

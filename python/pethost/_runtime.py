@@ -1,12 +1,13 @@
 """What the generated modules lean on, the same for any version of the API: the open enum, the
-oneof and encoding checks, the API's JSON, a stream's pulse, times, the token, who calls. Written
-by hand: nothing here names a message or a method."""
+oneof and encoding checks, the API's JSON, a stream's pulse, times, the token, a new request_id,
+who calls. Written by hand: nothing here names a message or a method."""
 
 from __future__ import annotations
 
 import datetime
 import enum
 import os
+import secrets
 from typing import TYPE_CHECKING, Any, NoReturn, TypeAlias, TypeVar, cast
 
 from protobuf import Message, message_from_json_value, message_to_json_value
@@ -130,6 +131,13 @@ def token_or_environment(token: str | None) -> str:
     return token
 
 
+def request_id(size: int) -> str:
+    """A new request_id: size random bytes as lowercase hex, which no other call makes by chance.
+    A client makes one once a call, so that the call made again on a new connection is the same
+    request."""
+    return secrets.token_hex(size)
+
+
 def timeout_ms(timeout: float | None) -> int | None:
     if timeout is None:
         return None
@@ -142,13 +150,17 @@ class Caller:
     """Says who calls, on every call: the token, and this package with its version. It is
     connectrpc's interceptor of a call and of a stream, for the synchronous client and the
     asyncio one. It hands on what the wire layer returns and wraps nothing around it, so the
-    stream a client closes is the HTTP call itself."""
+    stream a client closes is the HTTP call itself.
 
-    def __init__(self, token: str) -> None:
-        self._authorization = f"Bearer {token}"
+    With no token it says the package alone: a call at a connection sends the connection's token
+    with its own headers, and the API token never goes to a connection's server."""
+
+    def __init__(self, token: str | None) -> None:
+        self._authorization = None if token is None else f"Bearer {token}"
 
     def _sign(self, ctx: _Context) -> None:
-        ctx.request_headers["authorization"] = self._authorization
+        if self._authorization is not None:
+            ctx.request_headers["authorization"] = self._authorization
         ctx.request_headers["user-agent"] = USER_AGENT
 
     def intercept_unary_sync(self, call_next: _Next[_Request, _Answer], request: _Request, ctx: _Context, /) -> _Answer:

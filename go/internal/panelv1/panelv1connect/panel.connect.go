@@ -17,7 +17,8 @@
 //
 // A site that fails or is slow: QueryHttpTraffic says which path, QueryContainerLogs what it
 // failed with, ReadPath shows the code at fault. Every tool here is a call you make yourself,
-// never a shell command.
+// never a shell command. Pethost Agent Sandboxes, microVMs to run code and coding agents, is a
+// separate connector: this server neither lists nor reaches workspaces of sandboxes.
 //
 // MODEL
 //

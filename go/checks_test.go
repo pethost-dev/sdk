@@ -6,13 +6,9 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"net"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -32,83 +28,6 @@ import (
 // starts with "sample": sample<Type> is a message's, in samples_test.go.)
 const mostSamples = 100_000
 
-// account is the token the fake knows.
-const account = "pth_check"
-
-// exchange is one call as the fake sees it: what a check prepared, and what arrived.
-type exchange struct {
-	response proto.Message // What to answer with,
-	err      error         // unless the answer is this error.
-
-	// A stream answers with each of these in turn, or with response alone when there are none,
-	// and then ends with err. With left it does not end: it waits for its caller to leave, and
-	// says so there.
-	responses []proto.Message
-	left      chan struct{}
-
-	received  proto.Message // The request of the last call,
-	method    string        // and how it came.
-	header    http.Header
-	httpMajor int // The major version of the HTTP it came by.
-
-	connections atomic.Int32 // The connections its callers have opened.
-}
-
-// answer is the fake's handler of every RPC.
-func answer[R proto.Message](x *exchange, request proto.Message) (R, error) {
-	x.received = request
-	if x.err != nil {
-		var none R
-		return none, x.err
-	}
-	return x.response.(R), nil
-}
-
-// serve starts a fake of the API as a developer's own panel is served: without TLS, where a
-// call comes by HTTP/1.1. It answers the token alone as the API.
-func serve(t *testing.T) (*fake, *httptest.Server) {
-	api, server := unstarted()
-	server.Start()
-	t.Cleanup(server.Close)
-	return api, server
-}
-
-// serveTLS starts one as the API itself is served: over TLS, where its caller and it agree on
-// HTTP/2.
-func serveTLS(t *testing.T) (*fake, *httptest.Server) {
-	api, server := unstarted()
-	server.EnableHTTP2 = true
-	server.StartTLS()
-	t.Cleanup(server.Close)
-	return api, server
-}
-
-func unstarted() (*fake, *httptest.Server) {
-	api := &fake{}
-	handler := api.handler()
-
-	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.method, api.header, api.httpMajor = r.Method, r.Header.Clone(), r.ProtoMajor
-		if r.Header.Get("Authorization") != "Bearer "+account {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		handler.ServeHTTP(w, r)
-	}))
-	server.Config.ConnState = func(_ net.Conn, state http.ConnState) {
-		if state == http.StateNew {
-			api.connections.Add(1)
-		}
-	}
-	return api, server
-}
-
-// clientOf is a client of a fake, over the fake's own HTTP client: one like http.DefaultClient
-// that also trusts the certificate of a fake served over TLS.
-func clientOf(server *httptest.Server, token string) *Client {
-	return NewClient(Config{Token: token, BaseURL: server.URL, HTTPClient: server.Client()})
-}
-
 // call is a method of the package, as the checks call any of them.
 type call struct {
 	name     string
@@ -123,6 +42,16 @@ type call struct {
 	// A stream's method, called with a nil request: each response it yields, and the error.
 	// nil = the method is one request and one response.
 	stream func(ctx context.Context, client *Client) iter.Seq2[any, error]
+
+	// The method is called at a Connection: the client connects first, and never fills the
+	// request's workspace.
+	runtime bool
+}
+
+// atConnection is the call of a method called at a Connection.
+func (c call) atConnection() call {
+	c.runtime = true
+	return c
 }
 
 func callOf[Q, R any](name string, method func(*Client, context.Context, *Q) (*R, error), request func(seed) Q, response func(seed) R, wireRequest, wireResponse proto.Message) call {
@@ -174,12 +103,14 @@ func TestCalls(t *testing.T) {
 
 	for _, call := range calls {
 		t.Run(call.name, func(t *testing.T) {
+			api.connecting = call.runtime
+
 			// A nil request is the empty one.
 			api.response = call.response
 			if _, err := call.do(t.Context(), client, nil); err != nil {
 				t.Fatal(err)
 			}
-			if !proto.Equal(api.received, call.request) {
+			if !proto.Equal(api.received, withRequestID(t, api.received, call.request)) {
 				t.Fatalf("a nil request arrived as\n%s", prototext.Format(api.received))
 			}
 
@@ -200,47 +131,6 @@ func TestCalls(t *testing.T) {
 	}
 }
 
-// TestWorkspace calls each method whose request names a workspace with a client made with one:
-// a request that names none is sent with the client's, and one that names its own with its own,
-// each else as the sample has it.
-func TestWorkspace(t *testing.T) {
-	const clients = "the client's"
-	api, server := serve(t)
-	client := NewClient(Config{Token: account, BaseURL: server.URL, HTTPClient: server.Client(), Workspace: clients})
-	bothWays := bothWaysOf()
-
-	for _, call := range calls {
-		field := call.request.ProtoReflect().Descriptor().Fields().ByName("workspace")
-		if field == nil {
-			continue
-		}
-		t.Run(call.name, func(t *testing.T) {
-			sent := &wireSample{sent: true, bothWays: bothWays, had: map[string]bool{}}
-			own, none := false, false
-			for n := seed(0); !own || !none; n++ {
-				if n == mostSamples {
-					t.Fatalf("%d samples, and none that names a workspace (%v) or none that names none (%v)", n, own, none)
-				}
-				request := n.at(call.name).at("request")
-				want := sent.message(call.request, request)
-				named := want.ProtoReflect().Get(field).String() != ""
-				own, none = own || named, none || !named
-				if !named {
-					want.ProtoReflect().Set(field, protoreflect.ValueOfString(clients))
-				}
-
-				api.response = call.response
-				if _, err := call.do(t.Context(), client, &request); err != nil {
-					t.Fatal(err)
-				}
-				if !proto.Equal(api.received, want) {
-					t.Fatalf("the API received another request than the sample's with the client's workspace:\n%s", wireDifference(api.received, want))
-				}
-			}
-		})
-	}
-}
-
 // roundTrip makes one call with a sample of its request and of its response.
 func roundTrip(t *testing.T, api *fake, client *Client, call call, sent, received *wireSample, sample seed) {
 	request, response := sample.at("request"), sample.at("response")
@@ -251,8 +141,8 @@ func roundTrip(t *testing.T, api *fake, client *Client, call call, sent, receive
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !proto.Equal(api.received, wantReceived) {
-		t.Fatalf("the API received another request than the sample's:\n%s", wireDifference(api.received, wantReceived))
+	if want := withRequestID(t, api.received, wantReceived); !proto.Equal(api.received, want) {
+		t.Fatalf("the API received another request than the sample's:\n%s", wireDifference(api.received, want))
 	}
 	if where := differ(reflect.ValueOf(got), reflect.ValueOf(call.want(response)), call.name+"'s response"); where != "" {
 		t.Fatalf("the method returned another response than the sample's: %s\n\nthe API sent:\n%s", where, prototext.Format(api.response))

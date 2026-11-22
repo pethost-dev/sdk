@@ -4607,7 +4607,7 @@ export interface CallOptions {
  *   person hears it from you.
  */
 export class Pethost {
-  readonly #wire: connect.Client<typeof wire.PanelService>;
+  readonly #panelService: connect.Client<typeof wire.PanelService>;
   /** What a request that names no workspace is sent with: the options' {@link PethostOptions.workspace}. */
   readonly #workspace: string | undefined;
 
@@ -4616,18 +4616,16 @@ export class Pethost {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.5.2");
+      request.header.set("User-Agent", "pethost-typescript/0.6.0");
       return next(request);
     };
-    this.#wire = connect.createClient(
-      wire.PanelService,
-      connectWeb.createConnectTransport({
-        baseUrl: options.baseUrl ?? "https://console.pethost.dev",
-        useBinaryFormat: true,
-        interceptors: [identify],
-        ...(options.fetch ? { fetch: options.fetch } : {}),
-      }),
-    );
+    const transport = connectWeb.createConnectTransport({
+      baseUrl: options.baseUrl ?? "https://console.pethost.dev",
+      useBinaryFormat: true,
+      interceptors: [identify],
+      ...(options.fetch ? { fetch: options.fetch } : {}),
+    });
+    this.#panelService = connect.createClient(wire.PanelService, transport);
   }
 
   /**
@@ -4647,7 +4645,7 @@ export class Pethost {
   async listWorkspaces(request: ListWorkspacesRequest, options?: CallOptions): Promise<ListWorkspacesResponse> {
     const wireRequest = convert.toListWorkspacesRequest(request);
     try {
-      return convert.fromListWorkspacesResponse(await this.#wire.listWorkspaces(wireRequest, { signal: options?.signal }));
+      return convert.fromListWorkspacesResponse(await this.#panelService.listWorkspaces(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4669,7 +4667,7 @@ export class Pethost {
   async getMachine(request: GetMachineRequest = {}, options?: CallOptions): Promise<GetMachineResponse> {
     const wireRequest = convert.toGetMachineRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromGetMachineResponse(await this.#wire.getMachine(wireRequest, { signal: options?.signal }));
+      return convert.fromGetMachineResponse(await this.#panelService.getMachine(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4689,7 +4687,7 @@ export class Pethost {
   async runMachineAction(request: RunMachineActionRequest, options?: CallOptions): Promise<RunMachineActionResponse> {
     const wireRequest = convert.toRunMachineActionRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromRunMachineActionResponse(await this.#wire.runMachineAction(wireRequest, { signal: options?.signal }));
+      return convert.fromRunMachineActionResponse(await this.#panelService.runMachineAction(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4711,7 +4709,7 @@ export class Pethost {
   async getProject(request: GetProjectRequest, options?: CallOptions): Promise<GetProjectResponse> {
     const wireRequest = convert.toGetProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromGetProjectResponse(await this.#wire.getProject(wireRequest, { signal: options?.signal }));
+      return convert.fromGetProjectResponse(await this.#panelService.getProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4813,7 +4811,7 @@ export class Pethost {
   async createProject(request: CreateProjectRequest, options?: CallOptions): Promise<CreateProjectResponse> {
     const wireRequest = convert.toCreateProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromCreateProjectResponse(await this.#wire.createProject(wireRequest, { signal: options?.signal }));
+      return convert.fromCreateProjectResponse(await this.#panelService.createProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4857,7 +4855,7 @@ export class Pethost {
   async deployProject(request: DeployProjectRequest, options?: CallOptions): Promise<DeployProjectResponse> {
     const wireRequest = convert.toDeployProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromDeployProjectResponse(await this.#wire.deployProject(wireRequest, { signal: options?.signal }));
+      return convert.fromDeployProjectResponse(await this.#panelService.deployProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4909,7 +4907,7 @@ export class Pethost {
   async moveProject(request: MoveProjectRequest, options?: CallOptions): Promise<MoveProjectResponse> {
     const wireRequest = convert.toMoveProjectRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromMoveProjectResponse(await this.#wire.moveProject(wireRequest, { signal: options?.signal }));
+      return convert.fromMoveProjectResponse(await this.#panelService.moveProject(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4931,7 +4929,7 @@ export class Pethost {
   async listCommits(request: ListCommitsRequest, options?: CallOptions): Promise<ListCommitsResponse> {
     const wireRequest = convert.toListCommitsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromListCommitsResponse(await this.#wire.listCommits(wireRequest, { signal: options?.signal }));
+      return convert.fromListCommitsResponse(await this.#panelService.listCommits(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -4977,7 +4975,7 @@ export class Pethost {
   async runProjectAction(request: RunProjectActionRequest, options?: CallOptions): Promise<RunProjectActionResponse> {
     const wireRequest = convert.toRunProjectActionRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromRunProjectActionResponse(await this.#wire.runProjectAction(wireRequest, { signal: options?.signal }));
+      return convert.fromRunProjectActionResponse(await this.#panelService.runProjectAction(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5000,7 +4998,7 @@ export class Pethost {
   async setProjectAlerts(request: SetProjectAlertsRequest, options?: CallOptions): Promise<SetProjectAlertsResponse> {
     const wireRequest = convert.toSetProjectAlertsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromSetProjectAlertsResponse(await this.#wire.setProjectAlerts(wireRequest, { signal: options?.signal }));
+      return convert.fromSetProjectAlertsResponse(await this.#panelService.setProjectAlerts(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5022,7 +5020,7 @@ export class Pethost {
   async getOperation(request: GetOperationRequest, options?: CallOptions): Promise<GetOperationResponse> {
     const wireRequest = convert.toGetOperationRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromGetOperationResponse(await this.#wire.getOperation(wireRequest, { signal: options?.signal }));
+      return convert.fromGetOperationResponse(await this.#panelService.getOperation(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5043,7 +5041,7 @@ export class Pethost {
   async queryHttpTraffic(request: QueryHttpTrafficRequest, options?: CallOptions): Promise<QueryHttpTrafficResponse> {
     const wireRequest = convert.toQueryHttpTrafficRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromQueryHttpTrafficResponse(await this.#wire.queryHttpTraffic(wireRequest, { signal: options?.signal }));
+      return convert.fromQueryHttpTrafficResponse(await this.#panelService.queryHttpTraffic(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5064,7 +5062,7 @@ export class Pethost {
   async queryContainerLogs(request: QueryContainerLogsRequest, options?: CallOptions): Promise<QueryContainerLogsResponse> {
     const wireRequest = convert.toQueryContainerLogsRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromQueryContainerLogsResponse(await this.#wire.queryContainerLogs(wireRequest, { signal: options?.signal }));
+      return convert.fromQueryContainerLogsResponse(await this.#panelService.queryContainerLogs(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5091,7 +5089,7 @@ export class Pethost {
   async createDatabase(request: CreateDatabaseRequest, options?: CallOptions): Promise<CreateDatabaseResponse> {
     const wireRequest = convert.toCreateDatabaseRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromCreateDatabaseResponse(await this.#wire.createDatabase(wireRequest, { signal: options?.signal }));
+      return convert.fromCreateDatabaseResponse(await this.#panelService.createDatabase(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5119,7 +5117,7 @@ export class Pethost {
   async linkDatabase(request: LinkDatabaseRequest, options?: CallOptions): Promise<LinkDatabaseResponse> {
     const wireRequest = convert.toLinkDatabaseRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromLinkDatabaseResponse(await this.#wire.linkDatabase(wireRequest, { signal: options?.signal }));
+      return convert.fromLinkDatabaseResponse(await this.#panelService.linkDatabase(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5140,7 +5138,7 @@ export class Pethost {
   async runServiceCommand(request: RunServiceCommandRequest, options?: CallOptions): Promise<RunServiceCommandResponse> {
     const wireRequest = convert.toRunServiceCommandRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromRunServiceCommandResponse(await this.#wire.runServiceCommand(wireRequest, { signal: options?.signal }));
+      return convert.fromRunServiceCommandResponse(await this.#panelService.runServiceCommand(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5164,7 +5162,7 @@ export class Pethost {
   async readPath(request: ReadPathRequest, options?: CallOptions): Promise<ReadPathResponse> {
     const wireRequest = convert.toReadPathRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromReadPathResponse(await this.#wire.readPath(wireRequest, { signal: options?.signal }));
+      return convert.fromReadPathResponse(await this.#panelService.readPath(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5204,7 +5202,7 @@ export class Pethost {
   async createTransfer(request: CreateTransferRequest, options?: CallOptions): Promise<CreateTransferResponse> {
     const wireRequest = convert.toCreateTransferRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
-      return convert.fromCreateTransferResponse(await this.#wire.createTransfer(wireRequest, { signal: options?.signal }));
+      return convert.fromCreateTransferResponse(await this.#panelService.createTransfer(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }
@@ -5232,7 +5230,7 @@ export class Pethost {
    */
   watchOperation(request: WatchOperationRequest, options?: CallOptions): AsyncIterable<WatchOperationResponse> {
     const wireRequest = convert.toWatchOperationRequest({ ...request, workspace: request.workspace || this.#workspace });
-    const call = (signal: AbortSignal) => this.#wire.watchOperation(wireRequest, { signal });
+    const call = (signal: AbortSignal) => this.#panelService.watchOperation(wireRequest, { signal });
     return responses(wire.WatchOperationResponseSchema, call, convert.fromWatchOperationResponse, options?.signal);
   }
 
@@ -5260,7 +5258,7 @@ export class Pethost {
    */
   tailContainerLogs(request: TailContainerLogsRequest, options?: CallOptions): AsyncIterable<TailContainerLogsResponse> {
     const wireRequest = convert.toTailContainerLogsRequest({ ...request, workspace: request.workspace || this.#workspace });
-    const call = (signal: AbortSignal) => this.#wire.tailContainerLogs(wireRequest, { signal });
+    const call = (signal: AbortSignal) => this.#panelService.tailContainerLogs(wireRequest, { signal });
     return responses(wire.TailContainerLogsResponseSchema, call, convert.fromTailContainerLogsResponse, options?.signal);
   }
 
@@ -5286,7 +5284,7 @@ export class Pethost {
    */
   tailHttpTraffic(request: TailHttpTrafficRequest, options?: CallOptions): AsyncIterable<TailHttpTrafficResponse> {
     const wireRequest = convert.toTailHttpTrafficRequest({ ...request, workspace: request.workspace || this.#workspace });
-    const call = (signal: AbortSignal) => this.#wire.tailHttpTraffic(wireRequest, { signal });
+    const call = (signal: AbortSignal) => this.#panelService.tailHttpTraffic(wireRequest, { signal });
     return responses(wire.TailHttpTrafficResponseSchema, call, convert.fromTailHttpTrafficResponse, options?.signal);
   }
 }

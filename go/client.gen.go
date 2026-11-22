@@ -18,14 +18,18 @@ import (
 // call is made when the loop starts, and lasts as long as the loop. A second loop over it is a
 // second call, with the same request.
 type Client struct {
-	wire      panelv1connect.PanelServiceClient
-	workspace string // The Config's: what a request that names no workspace is sent with.
+	panelService panelv1connect.PanelServiceClient
+	workspace    string // The Config's: what a request that names no workspace is sent with.
 }
 
 // NewClient returns a client that calls the API as config says. It connects to nothing: a
 // token the API refuses shows as the first call's [CodeUnauthenticated].
 func NewClient(config Config) *Client {
-	return &Client{wire: panelv1connect.NewPanelServiceClient(newTransport(config)), workspace: config.Workspace}
+	transport := newTransport(config)
+	return &Client{
+		panelService: panelv1connect.NewPanelServiceClient(transport),
+		workspace:    config.Workspace,
+	}
 }
 
 // ListWorkspaces: list workspaces. It only reads.
@@ -38,7 +42,7 @@ func NewClient(config Config) *Client {
 // naming no workspace is: [NoMachine] (no plan) or [WorkspaceNotGranted].
 func (c *Client) ListWorkspaces(ctx context.Context, request *ListWorkspacesRequest) (*ListWorkspacesResponse, error) {
 	sent := orZero(request)
-	response, err := c.wire.ListWorkspaces(ctx, toWireListWorkspacesRequest(sent))
+	response, err := c.panelService.ListWorkspaces(ctx, toWireListWorkspacesRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -57,7 +61,7 @@ func (c *Client) GetMachine(ctx context.Context, request *GetMachineRequest) (*G
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.GetMachine(ctx, toWireGetMachineRequest(sent))
+	response, err := c.panelService.GetMachine(ctx, toWireGetMachineRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -74,7 +78,7 @@ func (c *Client) RunMachineAction(ctx context.Context, request *RunMachineAction
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.RunMachineAction(ctx, toWireRunMachineActionRequest(sent))
+	response, err := c.panelService.RunMachineAction(ctx, toWireRunMachineActionRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -92,7 +96,7 @@ func (c *Client) GetProject(ctx context.Context, request *GetProjectRequest) (*G
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.GetProject(ctx, toWireGetProjectRequest(sent))
+	response, err := c.panelService.GetProject(ctx, toWireGetProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -193,7 +197,7 @@ func (c *Client) CreateProject(ctx context.Context, request *CreateProjectReques
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.CreateProject(ctx, toWireCreateProjectRequest(sent))
+	response, err := c.panelService.CreateProject(ctx, toWireCreateProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -235,7 +239,7 @@ func (c *Client) DeployProject(ctx context.Context, request *DeployProjectReques
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.DeployProject(ctx, toWireDeployProjectRequest(sent))
+	response, err := c.panelService.DeployProject(ctx, toWireDeployProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -284,7 +288,7 @@ func (c *Client) MoveProject(ctx context.Context, request *MoveProjectRequest) (
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.MoveProject(ctx, toWireMoveProjectRequest(sent))
+	response, err := c.panelService.MoveProject(ctx, toWireMoveProjectRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -303,7 +307,7 @@ func (c *Client) ListCommits(ctx context.Context, request *ListCommitsRequest) (
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.ListCommits(ctx, toWireListCommitsRequest(sent))
+	response, err := c.panelService.ListCommits(ctx, toWireListCommitsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -350,7 +354,7 @@ func (c *Client) RunProjectAction(ctx context.Context, request *RunProjectAction
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.RunProjectAction(ctx, toWireRunProjectActionRequest(sent))
+	response, err := c.panelService.RunProjectAction(ctx, toWireRunProjectActionRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -370,7 +374,7 @@ func (c *Client) SetProjectAlerts(ctx context.Context, request *SetProjectAlerts
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(sent))
+	response, err := c.panelService.SetProjectAlerts(ctx, toWireSetProjectAlertsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -389,7 +393,7 @@ func (c *Client) GetOperation(ctx context.Context, request *GetOperationRequest)
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.GetOperation(ctx, toWireGetOperationRequest(sent))
+	response, err := c.panelService.GetOperation(ctx, toWireGetOperationRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -407,7 +411,7 @@ func (c *Client) QueryHTTPTraffic(ctx context.Context, request *QueryHTTPTraffic
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.QueryHttpTraffic(ctx, toWireQueryHTTPTrafficRequest(sent))
+	response, err := c.panelService.QueryHttpTraffic(ctx, toWireQueryHTTPTrafficRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -425,7 +429,7 @@ func (c *Client) QueryContainerLogs(ctx context.Context, request *QueryContainer
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.QueryContainerLogs(ctx, toWireQueryContainerLogsRequest(sent))
+	response, err := c.panelService.QueryContainerLogs(ctx, toWireQueryContainerLogsRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -451,7 +455,7 @@ func (c *Client) CreateDatabase(ctx context.Context, request *CreateDatabaseRequ
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.CreateDatabase(ctx, toWireCreateDatabaseRequest(sent))
+	response, err := c.panelService.CreateDatabase(ctx, toWireCreateDatabaseRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -476,7 +480,7 @@ func (c *Client) LinkDatabase(ctx context.Context, request *LinkDatabaseRequest)
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.LinkDatabase(ctx, toWireLinkDatabaseRequest(sent))
+	response, err := c.panelService.LinkDatabase(ctx, toWireLinkDatabaseRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -494,7 +498,7 @@ func (c *Client) RunServiceCommand(ctx context.Context, request *RunServiceComma
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.RunServiceCommand(ctx, toWireRunServiceCommandRequest(sent))
+	response, err := c.panelService.RunServiceCommand(ctx, toWireRunServiceCommandRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -515,7 +519,7 @@ func (c *Client) ReadPath(ctx context.Context, request *ReadPathRequest) (*ReadP
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.ReadPath(ctx, toWireReadPathRequest(sent))
+	response, err := c.panelService.ReadPath(ctx, toWireReadPathRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -553,7 +557,7 @@ func (c *Client) CreateTransfer(ctx context.Context, request *CreateTransferRequ
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	response, err := c.wire.CreateTransfer(ctx, toWireCreateTransferRequest(sent))
+	response, err := c.panelService.CreateTransfer(ctx, toWireCreateTransferRequest(sent))
 	if err != nil {
 		return nil, fromWireError(err)
 	}
@@ -581,7 +585,7 @@ func (c *Client) WatchOperation(ctx context.Context, request *WatchOperationRequ
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	return responses(ctx, c.wire.WatchOperation, toWireWatchOperationRequest(sent), fromWireWatchOperationResponse)
+	return responses(ctx, c.panelService.WatchOperation, toWireWatchOperationRequest(sent), fromWireWatchOperationResponse)
 }
 
 // TailContainerLogs: follow container logs, as a stream.
@@ -607,7 +611,7 @@ func (c *Client) TailContainerLogs(ctx context.Context, request *TailContainerLo
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	return responses(ctx, c.wire.TailContainerLogs, toWireTailContainerLogsRequest(sent), fromWireTailContainerLogsResponse)
+	return responses(ctx, c.panelService.TailContainerLogs, toWireTailContainerLogsRequest(sent), fromWireTailContainerLogsResponse)
 }
 
 // TailHTTPTraffic: follow HTTP traffic, as a stream.
@@ -631,5 +635,5 @@ func (c *Client) TailHTTPTraffic(ctx context.Context, request *TailHTTPTrafficRe
 	if sent.Workspace == "" {
 		sent.Workspace = c.workspace
 	}
-	return responses(ctx, c.wire.TailHttpTraffic, toWireTailHTTPTrafficRequest(sent), fromWireTailHTTPTrafficResponse)
+	return responses(ctx, c.panelService.TailHttpTraffic, toWireTailHTTPTrafficRequest(sent), fromWireTailHTTPTrafficResponse)
 }

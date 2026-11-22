@@ -1,7 +1,8 @@
-"""Samples of the API's messages, for any version of it: one walk over a message's descriptor in
-the wire layer builds the wire message and, beside it, what the package must make of it (the
-arguments of the public class, or of the method). A check sends one side through the package
-and expects the other.
+"""Samples of the API's messages, for any version of it and any of its surfaces: one walk over a
+message's descriptor in the wire layer builds the wire message and, beside it, what the package
+must make of it (the arguments of the public class, or of the method). A check sends one side
+through the package and expects the other. A descriptor's file says which surface it is of, and
+so which package has its class.
 
 The walk knows the package's rules and none of its code. A public class is named as its message
 and takes its fields by their names; an absent field is None where the proto says absence means
@@ -21,9 +22,8 @@ from typing import Any
 from protobuf import DescEnum, DescField, DescMessage, DescOneof, Message, Oneof, ScalarType
 from protobuf.wkt.google.protobuf.timestamp_pb import Timestamp
 
-import pethost
-
-from .api import OPTIONAL, wire
+from .api import SURFACES
+from .facts import Facts
 
 # A field no version of the API has, as the wire carries it: number 2**29 - 1, the largest.
 UNKNOWN_FIELD = b"\xf8\xff\xff\xff\x0f\x01"
@@ -99,8 +99,13 @@ def is_time(kind: object) -> bool:
     return isinstance(kind, DescMessage) and kind.type_name == Timestamp.desc().type_name
 
 
+def facts_of(desc: DescMessage | DescEnum) -> Facts:
+    """The surface whose file has the type."""
+    return next(facts for facts in SURFACES if facts.wire.desc().name == desc.file.name)
+
+
 def marked(field: DescField) -> bool:
-    return f"{field.parent.name}.{field.name}" in OPTIONAL
+    return f"{field.parent.name}.{field.name}" in facts_of(field.parent).optional
 
 
 def attribute(name: str) -> str:
@@ -109,21 +114,27 @@ def attribute(name: str) -> str:
 
 
 def public_class(desc: DescMessage | DescEnum) -> Any:
-    return getattr(pethost, desc.name)
+    return getattr(facts_of(desc).public, desc.name)
 
 
 def wire_class(desc: DescMessage | DescEnum) -> Any:
-    return getattr(wire, desc.name)
+    return getattr(facts_of(desc).wire, desc.name)
+
+
+def reaches(desc: DescMessage) -> frozenset[str]:
+    """The names of the messages a message holds at any depth, its own among them: all of its
+    file, where a name is one message's."""
+    return _reaches(desc.type_name)
 
 
 @functools.cache
-def reaches(name: str) -> frozenset[str]:
-    """The names of the messages a message holds at any depth, its own among them."""
-    found = {name}
-    for field in getattr(wire, name).desc().fields:
+def _reaches(type_name: str) -> frozenset[str]:
+    desc = next(d for facts in SURFACES for d in facts.wire.desc().messages if d.type_name == type_name)
+    found = {desc.name}
+    for field in desc.fields:
         kind = kind_of(field)
         if isinstance(kind, DescMessage) and not is_time(kind):
-            found |= reaches(kind.name)
+            found |= _reaches(kind.type_name)
     return frozenset(found)
 
 
@@ -177,7 +188,7 @@ def chosen_member(oneof: DescOneof, plan: Plan, here: bool) -> DescField | None:
     if plan.only is not None:
         for field in oneof.fields:
             kind = kind_of(field)
-            if isinstance(kind, DescMessage) and not is_time(kind) and plan.only[0] in reaches(kind.name):
+            if isinstance(kind, DescMessage) and not is_time(kind) and plan.only[0] in reaches(kind):
                 return field
     if plan.member is None:
         return None

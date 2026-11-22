@@ -7,23 +7,26 @@ use connectrpc::client::{ClientConfig, HttpClient};
 use connectrpc::rustls;
 
 use crate::connect::pethost::panel::v1::PanelServiceClient;
-use crate::types;
-use crate::{Error, ErrorCode, ResponseStream};
+use crate::{Error, types};
+use crate::{ErrorCode, ResponseStream};
 
 /// Where the API is served.
-const BASE_URL: &str = "https://console.pethost.dev";
+pub(crate) const BASE_URL: &str = "https://console.pethost.dev";
+
+/// What every call says makes it: the crate and its version, which is the manifest's.
+pub(crate) const USER_AGENT: &str = concat!("pethost-rust/", env!("CARGO_PKG_VERSION"));
 
 /// The Pethost API of one account: a method per call.
 ///
 /// Every method takes its request by value and runs on Tokio. A call of one response is
 /// `async`: to give up on it, drop its future, as `tokio::time::timeout` does; an operation it
-/// started runs on, and a call with the same `operation_id` returns it. A stream's method
-/// returns a [`ResponseStream`] at once: its call is made when the stream is first read, and
-/// ends when the stream is dropped. A clone shares the connections: clone it rather than make
-/// a second one.
+/// started runs on, and a call with the same `operation_id` returns it.
+/// A stream's method returns a [`ResponseStream`] at once: its call is made when the stream is
+/// first read, and ends when the stream is dropped. A clone shares the connections: clone it
+/// rather than make a second one.
 #[derive(Clone)]
 pub struct Client {
-    wire: PanelServiceClient<HttpClient>,
+    panel_service: PanelServiceClient<HttpClient>,
     /// What a request that names no workspace is sent with: [`Client::with_workspace`]'s.
     workspace: String,
 }
@@ -56,19 +59,16 @@ impl Client {
     }
 
     fn at(token: &str, base: http::Uri) -> Self {
-        let transport = match base.scheme_str() {
-            Some("http") => HttpClient::plaintext(),
-            _ => HttpClient::with_tls(Arc::new(tls())),
-        };
-        // Every call says who calls: the crate and its version, which is the manifest's. The
-        // token is trimmed: a header cannot carry a line's end, and the wire layer would send
-        // the call with no token at all.
+        let transport = transport(&base);
+        // Every call says who calls. The token is trimmed: a header cannot carry a line's end,
+        // and the wire layer would send the call with no token at all.
         let config = ClientConfig::new(base)
             .with_default_header("authorization", format!("Bearer {}", token.trim()))
-            .with_default_header("user-agent", concat!("pethost-rust/", env!("CARGO_PKG_VERSION")));
+            .with_default_header("user-agent", USER_AGENT);
+        let panel_service = PanelServiceClient::new(transport.clone(), config.clone());
 
         Self {
-            wire: PanelServiceClient::new(transport, config),
+            panel_service,
             workspace: String::new(),
         }
     }
@@ -90,7 +90,7 @@ impl Client {
         request: types::ListWorkspacesRequest,
     ) -> Result<types::ListWorkspacesResponse, Error> {
         let response = self
-            .wire
+            .panel_service
             .list_workspaces(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -105,7 +105,11 @@ impl Client {
         if request.workspace.is_empty() {
             request.workspace.clone_from(&self.workspace);
         }
-        let response = self.wire.get_machine(request.into()).await.map_err(Error::from_wire)?;
+        let response = self
+            .panel_service
+            .get_machine(request.into())
+            .await
+            .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
 
@@ -121,7 +125,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .run_machine_action(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -136,7 +140,11 @@ impl Client {
         if request.workspace.is_empty() {
             request.workspace.clone_from(&self.workspace);
         }
-        let response = self.wire.get_project(request.into()).await.map_err(Error::from_wire)?;
+        let response = self
+            .panel_service
+            .get_project(request.into())
+            .await
+            .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
 
@@ -180,7 +188,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .create_project(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -205,7 +213,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .deploy_project(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -220,7 +228,11 @@ impl Client {
         if request.workspace.is_empty() {
             request.workspace.clone_from(&self.workspace);
         }
-        let response = self.wire.move_project(request.into()).await.map_err(Error::from_wire)?;
+        let response = self
+            .panel_service
+            .move_project(request.into())
+            .await
+            .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
 
@@ -232,7 +244,11 @@ impl Client {
         if request.workspace.is_empty() {
             request.workspace.clone_from(&self.workspace);
         }
-        let response = self.wire.list_commits(request.into()).await.map_err(Error::from_wire)?;
+        let response = self
+            .panel_service
+            .list_commits(request.into())
+            .await
+            .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
 
@@ -252,7 +268,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .run_project_action(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -271,7 +287,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .set_project_alerts(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -290,7 +306,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .get_operation(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -309,7 +325,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .query_http_traffic(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -328,7 +344,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .query_container_logs(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -347,7 +363,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .create_database(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -366,7 +382,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .link_database(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -385,7 +401,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .run_service_command(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -400,7 +416,11 @@ impl Client {
         if request.workspace.is_empty() {
             request.workspace.clone_from(&self.workspace);
         }
-        let response = self.wire.read_path(request.into()).await.map_err(Error::from_wire)?;
+        let response = self
+            .panel_service
+            .read_path(request.into())
+            .await
+            .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())
     }
 
@@ -423,7 +443,7 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         let response = self
-            .wire
+            .panel_service
             .create_transfer(request.into())
             .await
             .map_err(Error::from_wire)?;
@@ -454,8 +474,11 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
-        let wire = self.wire.clone();
-        ResponseStream::new(async move { wire.watch_operation(request.into()).await })
+        let service = self.panel_service.clone();
+        ResponseStream::new(
+            async move { service.watch_operation(request.into()).await },
+            Error::from_wire,
+        )
     }
 
     /// Follow container logs.
@@ -482,8 +505,11 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
-        let wire = self.wire.clone();
-        ResponseStream::new(async move { wire.tail_container_logs(request.into()).await })
+        let service = self.panel_service.clone();
+        ResponseStream::new(
+            async move { service.tail_container_logs(request.into()).await },
+            Error::from_wire,
+        )
     }
 
     /// Follow HTTP traffic.
@@ -510,8 +536,11 @@ impl Client {
             request.workspace.clone_from(&self.workspace);
         }
         // The stream owns its client: it outlives this borrow, and goes where it is read.
-        let wire = self.wire.clone();
-        ResponseStream::new(async move { wire.tail_http_traffic(request.into()).await })
+        let service = self.panel_service.clone();
+        ResponseStream::new(
+            async move { service.tail_http_traffic(request.into()).await },
+            Error::from_wire,
+        )
     }
 }
 
@@ -519,9 +548,18 @@ impl fmt::Debug for Client {
     /// Without the token.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Client")
-            .field("base_url", &self.wire.config().base_uri().to_string())
+            .field("base_url", &self.panel_service.config().base_uri().to_string())
             .field("workspace", &self.workspace)
             .finish_non_exhaustive()
+    }
+}
+
+/// The transport of calls to `base`: HTTPS, or plain HTTP where the URL says `http`. Each holds
+/// its own connections, shared by its clones.
+pub(crate) fn transport(base: &http::Uri) -> HttpClient {
+    match base.scheme_str() {
+        Some("http") => HttpClient::plaintext(),
+        _ => HttpClient::with_tls(Arc::new(tls())),
     }
 }
 

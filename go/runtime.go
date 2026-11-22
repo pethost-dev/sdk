@@ -41,7 +41,7 @@ type Config struct {
 const defaultBaseURL = "https://console.pethost.dev"
 
 // userAgent says which client calls, and of which release.
-const userAgent = "pethost-go/0.5.2"
+const userAgent = "pethost-go/0.6.0"
 
 // newTransport is the wire layer's client for config: the Connect protocol over HTTP, by POST
 // with binary protobuf, a stream's responses in the one answer.
@@ -50,11 +50,15 @@ func newTransport(config Config) *connect.Client {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}
-	httpClient := config.HTTPClient
-	if httpClient == nil {
-		httpClient = http.DefaultClient
+	return connect.NewClient(connecthttp.NewTransport(caller{httpClientOf(config), config.Token}, baseURL))
+}
+
+// httpClientOf is what sends config's requests.
+func httpClientOf(config Config) *http.Client {
+	if config.HTTPClient == nil {
+		return http.DefaultClient
 	}
-	return connect.NewClient(connecthttp.NewTransport(caller{httpClient, config.Token}, baseURL))
+	return config.HTTPClient
 }
 
 // caller says on each request who calls: the account, by its token, and this package.
@@ -181,9 +185,7 @@ type wireStream[W proto.Message] interface {
 }
 
 // responses is a server stream as its method returns it: the call is made when the loop starts,
-// each response is yielded as it arrives, and an error, the call's or the stream's, is yielded
-// once and ends the loop. The stream's own end is no error, and a pulse is passed over. However
-// the loop ends, the stream is closed, which ends the call.
+// and relay yields what it answers.
 func responses[Q any, W proto.Message, R any, S wireStream[W]](ctx context.Context, call func(context.Context, *Q) (S, error), request *Q, fromWire func(W) R) iter.Seq2[*R, error] {
 	return func(yield func(*R, error) bool) {
 		stream, err := call(ctx, request)
@@ -191,23 +193,30 @@ func responses[Q any, W proto.Message, R any, S wireStream[W]](ctx context.Conte
 			yield(nil, fromWireError(err))
 			return
 		}
-		defer stream.Close()
+		relay(stream, yield, fromWire)
+	}
+}
 
-		for {
-			response, err := stream.Receive()
-			if errors.Is(err, io.EOF) {
-				return
-			}
-			if err != nil {
-				yield(nil, fromWireError(err))
-				return
-			}
-			if isPulse(response) {
-				continue
-			}
-			if !yield(new(fromWire(response)), nil) {
-				return
-			}
+// relay yields a stream's responses as they arrive, and an error, the stream's, once, which
+// ends the loop. The stream's own end is no error, and a pulse is passed over. However the loop
+// ends, the stream is closed, which ends the call.
+func relay[W proto.Message, R any](stream wireStream[W], yield func(*R, error) bool, fromWire func(W) R) {
+	defer stream.Close()
+
+	for {
+		response, err := stream.Receive()
+		if errors.Is(err, io.EOF) {
+			return
+		}
+		if err != nil {
+			yield(nil, fromWireError(err))
+			return
+		}
+		if isPulse(response) {
+			continue
+		}
+		if !yield(new(fromWire(response)), nil) {
+			return
 		}
 	}
 }

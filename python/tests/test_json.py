@@ -5,19 +5,14 @@ from __future__ import annotations
 
 import base64
 import json
-import unittest
 from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
 
-import pethost
-
 from protobuf import DescEnum, DescMessage, Message, ScalarType
 
-from .harness import MESSAGES, MOST_MEMBERS
+from .harness import Checked, by_surface
 from .samples import Plan, alone, attribute, is_time, kind_of, pair, public_class, repeated
-
-CLASSES = [desc for desc in MESSAGES.values() if hasattr(pethost, desc.name)]
 
 # The integers JSON has as strings: its numbers do not hold 64 bits.
 WIDE = {ScalarType.INT64, ScalarType.UINT64, ScalarType.SINT64, ScalarType.FIXED64, ScalarType.SFIXED64}
@@ -27,23 +22,24 @@ WIDE = {ScalarType.INT64, ScalarType.UINT64, ScalarType.SINT64, ScalarType.FIXED
 TAKEN: tuple[dict[str, Any], ...] = ({"use_proto_field_name": True}, {}, {"print_enums_as_ints": True})
 
 
-def samples(desc: DescMessage, *, sending: bool) -> Iterator[tuple[Plan, Message[Any], Any]]:
+def samples(desc: DescMessage, most_members: int, *, sending: bool) -> Iterator[tuple[Plan, Message[Any], Any]]:
     """Samples of a class, each as the wire layer's message and as the class's value: every field
     at once with each member of each oneof in turn, then each field alone, at a sample, at its
     zero and at a number its enum does not have, and the message with no field."""
-    for plan in [*(Plan(member=member, sending=sending) for member in range(MOST_MEMBERS)), *alone(desc, sending=sending)]:
+    for plan in [*(Plan(member=member, sending=sending) for member in range(most_members)), *alone(desc, sending=sending)]:
         sent, given = pair(desc, plan)
         yield plan, sent, public_class(desc)(**given)
 
 
-class Json(unittest.TestCase):
-    maxDiff = None
+class Json(Checked):
+    def classes(self) -> list[DescMessage]:
+        return [desc for desc in self.surface.messages.values() if hasattr(self.surface.facts.public, desc.name)]
 
     def test_to_dict(self) -> None:
         """A class writes what the wire layer writes of the message it sends, under the proto's
         field names: `json.dumps` takes it, it has the API's form, and from_dict reads it back."""
-        for desc in CLASSES:
-            for plan, sent, value in samples(desc, sending=True):
+        for desc in self.classes():
+            for plan, sent, value in samples(desc, self.surface.most_members, sending=True):
                 with self.subTest(message=desc.name, plan=plan):
                     written = value.to_dict()
                     self.assertEqual(json.loads(json.dumps(written)), json.loads(sent.to_json(use_proto_field_name=True)))
@@ -53,8 +49,8 @@ class Json(unittest.TestCase):
     def test_from_dict(self) -> None:
         """A class reads what the API writes, a field at its zero too, which to_dict leaves out,
         and what the API takes beside its own form: keys in lowerCamelCase, an enum by its number."""
-        for desc in CLASSES:
-            for plan, sent, value in samples(desc, sending=False):
+        for desc in self.classes():
+            for plan, sent, value in samples(desc, self.surface.most_members, sending=False):
                 for form in TAKEN:
                     with self.subTest(message=desc.name, plan=plan, form=form):
                         self.assertEqual(public_class(desc).from_dict(json.loads(sent.to_json(**form))), value)
@@ -63,7 +59,7 @@ class Json(unittest.TestCase):
         """A key that is no field of the message is refused, as the API refuses it, and so is a
         value that is not of its field's kind; a 64-bit integer is read as a number too, and
         one that 64 bits do not hold is an OverflowError."""
-        for desc in CLASSES:
+        for desc in self.classes():
             cls = public_class(desc)
             with self.subTest(message=desc.name):
                 with self.assertRaises(ValueError):
@@ -79,7 +75,7 @@ class Json(unittest.TestCase):
     def test_a_value_its_enum_does_not_have(self) -> None:
         """A number a later API gave an enum is read as a member and written as the number; a
         name this version does not know is refused."""
-        for desc in CLASSES:
+        for desc in self.classes():
             cls = public_class(desc)
             for field in desc.fields:
                 kind = kind_of(field)
@@ -114,3 +110,6 @@ class Json(unittest.TestCase):
                     self.assertEqual(one, str(int(one)))
                 elif kind is ScalarType.BYTES:
                     self.assertEqual(base64.b64encode(base64.b64decode(one)).decode(), one)
+
+
+load_tests = by_surface(Json)

@@ -1,8 +1,11 @@
 {
   "name": "@pethost/sdk",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "license": "MIT",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sandboxes": "./src/sandboxes/index.ts"
+  },
   "publish": {
     "include": ["src", "README.md", "LICENSE", "jsr.json"]
   }

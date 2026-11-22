@@ -2,17 +2,17 @@
 
 [package]
 name = "pethost"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 rust-version = "1.88"
-description = "Client for the API of Pethost, managed hosting for Docker Compose projects: deploy, logs, HTTP traffic, files"
+description = "Pethost's SDK: App Platform (Docker Compose projects at one flat price) and Agent Sandboxes (Firecracker microVMs for code and coding agents)"
 license = "MIT"
 homepage = "https://pethost.dev"
 repository = "https://github.com/pethost-dev/sdk"
 documentation = "https://docs.rs/pethost"
 readme = "README.md"
 # crates.io takes five keywords at most; the categories say that it is an API's client.
-keywords = ["pethost", "hosting", "deploy", "docker-compose", "paas"]
+keywords = ["pethost", "paas", "docker-compose", "sandbox", "firecracker"]
 categories = ["api-bindings", "web-programming::http-client"]
 # What a crate holds: the code, its checks and examples, and the two pages.
 include = ["/src", "/tests", "/examples", "/README.md", "/LICENSE"]
