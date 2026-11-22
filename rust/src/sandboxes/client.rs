@@ -291,29 +291,6 @@ impl Client {
         Ok(response)
     }
 
-    /// Fork a sandbox.
-    ///
-    /// Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its disk. The copies are the source's size, with its disk, each with its own id, hostname, machine-id and kernel randomness, and no name (names are unique: [`Client::update_sandbox`](crate::sandboxes::Client::update_sandbox) gives one); their processes keep the state they had, their random generators and the keys they made among it. All or none: [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) + [`NoCapacity`](crate::sandboxes::types::NoCapacity) says how many fit. Refused for a sandbox with a read-write volume.
-    pub async fn fork_sandbox(&self, request: types::ForkSandboxRequest) -> Result<types::ForkSandboxResponse, Error> {
-        let mut request = request;
-        if request.request_id.is_empty() {
-            request.request_id = connection::request_id();
-        }
-        let response = self
-            .sandbox_service
-            .fork_sandbox(request.into())
-            .await
-            .map_err(Error::from_wire)?;
-        let response = types::ForkSandboxResponse::from(response.into_owned());
-        // The connections it holds are kept for the calls at them.
-        for held in &response.sandboxes {
-            if let Some(connection) = &held.connection {
-                self.connections.keep(&held.sandbox_id, connection);
-            }
-        }
-        Ok(response)
-    }
-
     /// Delete a sandbox.
     ///
     /// Drops its memory and disk for good; its volumes stay. Answers its final record, usage included. A DELETED sandbox is answered with that record.
@@ -333,7 +310,7 @@ impl Client {
 
     /// Get a sandbox's address and root token.
     ///
-    /// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires, and the SSH command the token is the password of: the header says how to call it. The token is root in the sandbox: give it to a program, never to a page or a message. [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox) and [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) answer with one already.
+    /// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires, and the SSH command the token is the password of: the header says how to call it. The token is root in the sandbox: give it to a program, never to a page or a message. [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox) answers with one already.
     pub async fn connect_sandbox(&self, request: types::ConnectSandboxRequest) -> Result<types::Connection, Error> {
         let response = self
             .sandbox_service

@@ -12,7 +12,7 @@ documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.6.0
+go get github.com/pethost-dev/sdk/go@v0.6.1
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -272,7 +272,7 @@ works on it.
 The package `sandboxes` is the client of [Pethost Agent Sandboxes](https://pethost.dev/sandboxes/):
 Linux microVMs, each a Firecracker VM with its own kernel, to run code, coding agents and a
 desktop with Chrome. A sandbox starts from a template in about 0.1 s, pauses with its memory when
-idle and wakes at the next call, and forks. Its client takes the same token and the same
+idle and wakes at the next call. Its client takes the same token and the same
 `Config`. What runs inside a sandbox, a command, a file, an agent's turn, is answered by the
 sandbox's own server: the client asks the API for the sandbox's connection, or keeps the one
 `CreateSandbox` answered with, and calls the server with its token, so a program writes no
@@ -368,7 +368,7 @@ or autoscaling: a plan's size is the limit.
 Pethost Agent Sandboxes are Firecracker microVMs for AI agents, each with its own kernel and root
 inside. A sandbox starts in about 0.15 s, pauses with its memory and processes while the agent
 thinks, and wakes in 0.1 s at the next call. Commands, files, SSH, a desktop with Chrome, Claude
-Code and Codex installed, forks, templates, an egress allow-list and API keys the sandbox never
+Code and Codex installed, templates, an egress allow-list and API keys the sandbox never
 holds. In the EU.
 
 - **A VM per sandbox:** every sandbox is its own Firecracker microVM with its own Linux kernel,
@@ -379,9 +379,8 @@ holds. In the EU.
   next call wakes it in about 0.1 s, exactly where it was. Idle longer, it stops: its disk goes to
   object storage at $0.03 per GiB a month of its own data. Nothing is deleted unless a timer says
   so.
-- **Starts are free:** creating, forking and starting a stopped sandbox cost nothing, up to a
+- **Starts are free:** creating and starting a stopped sandbox cost nothing, up to a
   plan's starts per minute, hour and day.
-- **Fork** a running sandbox, memory and all, in one call: three copies take about 0.25 s.
 - **API keys never enter a sandbox:** it sees a placeholder, and the egress proxy puts the key in
   HTTPS request headers, only to the hosts named. An egress allow-list by domain, wildcard, IP or
   CIDR; DNS answers only allowed names.

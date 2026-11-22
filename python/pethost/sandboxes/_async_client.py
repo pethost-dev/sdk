@@ -27,7 +27,6 @@ from pethost.sandboxes._types import (
     File,
     FileChange,
     FileEvent,
-    ForkSandboxResponse,
     GetSandboxMetricsResponse,
     Label,
     Link,
@@ -479,34 +478,6 @@ class AsyncSandboxes:
         """
         return _convert.sandbox_from_wire(self._keep(_convert.sandbox_seeds, await self._call(self._wire.resume_sandbox, _convert.resume_sandbox_request(sandbox_id=sandbox_id))))
 
-    async def fork_sandbox(
-        self,
-        sandbox_id: str,
-        *,
-        count: int = 0,
-        labels: Sequence[Label] = (),
-        settings: SandboxSettings | None = None,
-        request_id: str = "",
-    ) -> ForkSandboxResponse:
-        """Fork a sandbox.
-
-        Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on
-        its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-        copies of a STOPPED one start from its disk. The copies are the source's size, with its disk,
-        each with its own id, hostname, machine-id and kernel randomness, and no name (names are
-        unique: update_sandbox gives one); their processes keep the
-        state they had, their random generators and the keys they made among it.
-        All or none: UnavailableError + NoCapacity says how many fit. Refused for a sandbox with a
-        read-write volume.
-
-        Args:
-            count: Absent = 1; at most 100.
-            labels: The copies', at most 32. None = the source's.
-            settings: Groups sent replace the source's in the copies. Its size is the source's: another is InvalidArgumentError.
-            request_id: Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
-        """
-        return _convert.fork_sandbox_response_from_wire(self._keep(_convert.fork_sandbox_response_seeds, await self._call(self._wire.fork_sandbox, _convert.fork_sandbox_request(sandbox_id=sandbox_id, count=count, labels=labels, settings=settings, request_id=request_id or _rt.request_id(16)))))
-
     async def delete_sandbox(
         self,
         sandbox_id: str,
@@ -530,8 +501,8 @@ class AsyncSandboxes:
 
         Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
         and the SSH command the token is the password of: the header says how to call it. The token
-        is root in the sandbox: give it to a program, never to a page or a message. create_sandbox and
-        fork_sandbox answer with one already.
+        is root in the sandbox: give it to a program, never to a page or a message. create_sandbox answers
+        with one already.
 
         Args:
             ttl_seconds: Absent = 3600; at most 86400.

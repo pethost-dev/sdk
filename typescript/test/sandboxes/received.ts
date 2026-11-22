@@ -36,8 +36,6 @@ export const empty = {
   PauseSandboxRequest: () => ({ sandboxId: "" }),
   StopSandboxRequest: () => ({ sandboxId: "" }),
   ResumeSandboxRequest: () => ({ sandboxId: "" }),
-  ForkSandboxRequest: () => ({ sandboxId: "", count: 0, labels: [], requestId: "" }),
-  ForkSandboxResponse: () => ({ sandboxes: [] }),
   DeleteSandboxRequest: () => ({ sandboxId: "" }),
   ConnectSandboxRequest: () => ({ sandboxId: "", ttlSeconds: 0 }),
   Connection: () => ({ url: "", token: "", sshCommand: "" }),
@@ -291,13 +289,6 @@ export const empty = {
   m.reads("ListSandboxesResponse: a field newer than the SDK", newer(w.ListSandboxesResponseSchema), empty.ListSandboxesResponse());
   m.reads("ListSandboxesResponse.sandboxes", { sandboxes: [{}] }, { ...empty.ListSandboxesResponse(), sandboxes: [empty.Sandbox()] });
   m.reads("ListSandboxesResponse.next_page_token", { nextPageToken: "next_page_token" }, { ...empty.ListSandboxesResponse(), nextPageToken: "next_page_token" });
-}
-
-{
-  const m = reading(w.ForkSandboxResponseSchema, (leaf: Init<typeof w.ForkSandboxResponseSchema>): Init<typeof w.ForkSandboxResponseSchema> => (leaf), async (api) => (await api.forkSandbox({})));
-  m.reads("ForkSandboxResponse: nothing set", {}, empty.ForkSandboxResponse());
-  m.reads("ForkSandboxResponse: a field newer than the SDK", newer(w.ForkSandboxResponseSchema), empty.ForkSandboxResponse());
-  m.reads("ForkSandboxResponse.sandboxes", { sandboxes: [{}] }, { ...empty.ForkSandboxResponse(), sandboxes: [empty.Sandbox()] });
 }
 
 {

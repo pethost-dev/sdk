@@ -495,26 +495,6 @@ def list_sandboxes_response_from_dict(_j: dict[str, _Any]) -> _t.ListSandboxesRe
     return list_sandboxes_response_from_wire(_rt.from_dict(_pb.ListSandboxesResponse, _j))
 
 
-def fork_sandbox_response_from_wire(_w: _pb.ForkSandboxResponse) -> _t.ForkSandboxResponse:
-    return _t.ForkSandboxResponse(
-        sandboxes=tuple(sandbox_from_wire(_x) for _x in _w.sandboxes),
-    )
-
-
-def fork_sandbox_response_to_wire(_v: _t.ForkSandboxResponse) -> _pb.ForkSandboxResponse:
-    return _pb.ForkSandboxResponse(
-        sandboxes=[sandbox_to_wire(_x) for _x in _v.sandboxes],
-    )
-
-
-def fork_sandbox_response_to_dict(_v: _t.ForkSandboxResponse) -> dict[str, _Any]:
-    return _rt.to_dict(fork_sandbox_response_to_wire(_v))
-
-
-def fork_sandbox_response_from_dict(_j: dict[str, _Any]) -> _t.ForkSandboxResponse:
-    return fork_sandbox_response_from_wire(_rt.from_dict(_pb.ForkSandboxResponse, _j))
-
-
 def connection_from_wire(_w: _pb.Connection) -> _t.Connection:
     return _t.Connection(
         url=_w.url,
@@ -2447,24 +2427,6 @@ def resume_sandbox_request(
     return _rt.checked(_w)
 
 
-def fork_sandbox_request(
-    *,
-    sandbox_id: str,
-    count: int,
-    labels: Sequence[_t.Label],
-    settings: _t.SandboxSettings | None,
-    request_id: str,
-) -> _pb.ForkSandboxRequest:
-    _w = _pb.ForkSandboxRequest(
-        sandbox_id=sandbox_id or None,
-        count=count or None,
-        labels=[label_to_wire(_x) for _x in labels],
-        settings=sandbox_settings_to_wire(settings) if settings is not None else None,
-        request_id=request_id or None,
-    )
-    return _rt.checked(_w)
-
-
 def delete_sandbox_request(
     *,
     sandbox_id: str,
@@ -2924,12 +2886,6 @@ def sandbox_seeds(_w: _pb.Sandbox) -> Iterator[tuple[str, _connections.Kept]]:
 
 
 def list_sandboxes_response_seeds(_w: _pb.ListSandboxesResponse) -> Iterator[tuple[str, _connections.Kept]]:
-    for _s0 in _w.sandboxes:
-        if _s0.connection is not None:
-            yield _s0.sandbox_id, kept(_s0.connection)
-
-
-def fork_sandbox_response_seeds(_w: _pb.ForkSandboxResponse) -> Iterator[tuple[str, _connections.Kept]]:
     for _s0 in _w.sandboxes:
         if _s0.connection is not None:
             yield _s0.sandbox_id, kept(_s0.connection)

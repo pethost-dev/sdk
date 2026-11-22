@@ -329,7 +329,7 @@ class MouseButton(OpenEnum):
 class Agent(OpenEnum):
     """Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable
     (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A conversation's
-    history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+    history stays on the sandbox's disk: a pause keeps it.
     """
 
     UNSPECIFIED = 0
@@ -685,12 +685,12 @@ class Limits:
 
     Attributes:
         vcpus: The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-            STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-            Checked by create_sandbox, fork_sandbox, resume_sandbox of a STOPPED sandbox, update_sandbox's new
+            STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+            Checked by create_sandbox, resume_sandbox of a STOPPED sandbox, update_sandbox's new
             size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
             counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
             when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
-        largest_size: The largest size it may create, fork, start or change a sandbox to.
+        largest_size: The largest size it may create, start or change a sandbox to.
         volume_gib: The most GiB its volumes may take together (create_volume).
         template_versions: The workspace's own templates: at most template_versions versions of one name, FAILED ones
             aside, and template_gib GiB in all of what its versions take in object storage
@@ -699,23 +699,22 @@ class Limits:
             template_gib is FAILED before its upload. delete_template makes room at once. A FAILED version
             takes nothing, and goes a day after it failed.
         starts_per_minute: How many sandboxes it may start in any minute, hour and day, each window sliding: a
-            create_sandbox, each copy of a fork_sandbox and a resume_sandbox of a STOPPED sandbox are each a
-            start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+            create_sandbox and a resume_sandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
             resume_sandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
             starts. 0 = no limit.
     """
 
     vcpus: int = 0
     """The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-    STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-    Checked by create_sandbox, fork_sandbox, resume_sandbox of a STOPPED sandbox, update_sandbox's new
+    STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+    Checked by create_sandbox, resume_sandbox of a STOPPED sandbox, update_sandbox's new
     size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
     counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
     when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
     """
 
     largest_size: Size = Size.UNSPECIFIED
-    """The largest size it may create, fork, start or change a sandbox to."""
+    """The largest size it may create, start or change a sandbox to."""
 
     volume_gib: int = 0
     """The most GiB its volumes may take together (create_volume)."""
@@ -733,8 +732,7 @@ class Limits:
 
     starts_per_minute: int = 0
     """How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    create_sandbox, each copy of a fork_sandbox and a resume_sandbox of a STOPPED sandbox are each a
-    start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+    create_sandbox and a resume_sandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
     resume_sandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
     starts. 0 = no limit.
     """
@@ -873,14 +871,14 @@ class Sandbox:
         settings: In force: every group, its defaults filled in.
         revision: Grows with every change of its settings (update_sandbox(if_revision=)).
         disk_gib: What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-            grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+            grows it to the new size's. No size whose disk is smaller is allowed
             (SIZES).
         desktop: Its screen: every sandbox has one (control_desktop).
         ssh_command: "ssh <id>@<server> -p 2222": signs in with a key of the workspace, or a connect_sandbox token
             as the password.
         panel_url: Its page in the panel, where a person signs in to see its terminal, desktop and events. Give
             a person this, not a link.
-        connection: In the answers of create_sandbox and fork_sandbox only: what connect_sandbox would answer. An MCP
+        connection: In create_sandbox's answer only: what connect_sandbox would answer. An MCP
             tool's answer leaves it out: connect_sandbox gives it to an agent that asks.
         restore: STOPPED while its disk is fetched from object storage for a start: how far that is. Absent
             otherwise.
@@ -926,7 +924,7 @@ class Sandbox:
 
     disk_gib: int = 0
     """What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-    grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+    grows it to the new size's. No size whose disk is smaller is allowed
     (SIZES).
     """
 
@@ -950,7 +948,7 @@ class Sandbox:
     usage: Usage | None = None
 
     connection: Connection | None = None
-    """In the answers of create_sandbox and fork_sandbox only: what connect_sandbox would answer. An MCP
+    """In create_sandbox's answer only: what connect_sandbox would answer. An MCP
     tool's answer leaves it out: connect_sandbox gives it to an agent that asks.
     """
 
@@ -1134,33 +1132,6 @@ class ListSandboxesResponse:
         from . import _convert
 
         return _convert.list_sandboxes_response_from_dict(data)
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class ForkSandboxResponse:
-    sandboxes: Sequence[Sandbox] = ()
-
-    def to_dict(self) -> dict[str, Any]:
-        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
-        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
-        absent is left out, a zero where the type has no None too, and an enum's value this version does
-        not know is its number.
-        """
-        from . import _convert
-
-        return _convert.fork_sandbox_response_to_dict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ForkSandboxResponse:
-        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
-        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
-        and so is an enum's name this version does not know; a value that is not of its field's kind is
-        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
-        """
-        from . import _convert
-
-        return _convert.fork_sandbox_response_from_dict(data)
 
 
 @final
@@ -1837,7 +1808,7 @@ class LifecycleEvent:
     """It was created, paused, stopped, resumed, resized or deleted.
 
     Attributes:
-        forked_from: CREATED by fork_sandbox: the source.
+        forked_from: CREATED as a copy of another sandbox: that one.
         size: CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
             STOPPED one takes it at its next start.
         disk_gib: CREATED, RESIZED: its disk from then on.
@@ -1849,7 +1820,7 @@ class LifecycleEvent:
     reason: StateReason = StateReason.UNSPECIFIED
 
     forked_from: str = ""
-    """CREATED by fork_sandbox: the source."""
+    """CREATED as a copy of another sandbox: that one."""
 
     size: Size = Size.UNSPECIFIED
     """CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
@@ -4100,7 +4071,7 @@ class LimitReached:
             "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
             "starts_per_day"; or "secrets", a bound of every workspace (set_secret).
         retry_time: A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-            which may be retried then. Absent = never: a fork_sandbox of more copies than the limit.
+            which may be retried then. Absent = never: a call that asks more starts than the limit.
     """
 
     limit: str = ""
@@ -4113,7 +4084,7 @@ class LimitReached:
 
     retry_time: datetime | None = None
     """A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    which may be retried then. Absent = never: a fork_sandbox of more copies than the limit.
+    which may be retried then. Absent = never: a call that asks more starts than the limit.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -4237,13 +4208,13 @@ class NoCapacity:
     """UnavailableError: no room for it now.
 
     Attributes:
-        fork_count: fork_sandbox: how many copies the source's server has room for.
+        fork_count: Unused: 0.
         bound: What the server that refused it lacked; absent when no server was asked, none having room
             by what they report.
     """
 
     fork_count: int = 0
-    """fork_sandbox: how many copies the source's server has room for."""
+    """Unused: 0."""
 
     bound: RoomBound = RoomBound.UNSPECIFIED
     """What the server that refused it lacked; absent when no server was asked, none having room

@@ -123,7 +123,6 @@ SURFACES = (
             "pause_sandbox": "PauseSandbox",
             "stop_sandbox": "StopSandbox",
             "resume_sandbox": "ResumeSandbox",
-            "fork_sandbox": "ForkSandbox",
             "delete_sandbox": "DeleteSandbox",
             "connect_sandbox": "ConnectSandbox",
             "get_sandbox_metrics": "GetSandboxMetrics",
@@ -195,7 +194,6 @@ SURFACES = (
         )),
         request_ids={
             "create_sandbox": "request_id",
-            "fork_sandbox": "request_id",
             "create_template": "request_id",
             "create_volume": "request_id",
             "run_command": "request_id",
@@ -219,7 +217,6 @@ SURFACES = (
                 Seed("pause_sandbox", ()),
                 Seed("stop_sandbox", ()),
                 Seed("resume_sandbox", ()),
-                Seed("fork_sandbox", ("sandboxes",)),
                 Seed("delete_sandbox", ()),
             ),
         ),

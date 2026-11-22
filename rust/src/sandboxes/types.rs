@@ -102,16 +102,16 @@ pub struct SshKey {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Limits {
-    /// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED, STOPPED with [`Lifecycle::wake_when_stopped`](crate::sandboxes::types::Lifecycle::wake_when_stopped), and every create, fork, start or move under way. Checked by [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox), [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox, [`Client::update_sandbox`](crate::sandboxes::Client::update_sandbox)\'s new size of one that counts, and `wake_when_stopped` turned on for a STOPPED one. A sandbox that counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
+    /// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED, STOPPED with [`Lifecycle::wake_when_stopped`](crate::sandboxes::types::Lifecycle::wake_when_stopped), and every create, start or move under way. Checked by [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox, [`Client::update_sandbox`](crate::sandboxes::Client::update_sandbox)\'s new size of one that counts, and `wake_when_stopped` turned on for a STOPPED one. A sandbox that counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
     pub vcpus: i32,
-    /// The largest size it may create, fork, start or change a sandbox to.
+    /// The largest size it may create, start or change a sandbox to.
     pub largest_size: Size,
     /// The most GiB its volumes may take together ([`Client::create_volume`](crate::sandboxes::Client::create_volume)).
     pub volume_gib: i32,
     /// The workspace's own templates: at most `template_versions` versions of one name, FAILED ones aside, and `template_gib` GiB in all of what its versions take in object storage ([`Workspace::template_bytes`](crate::sandboxes::types::Workspace::template_bytes)), which is not billed. A [`Client::create_template`](crate::sandboxes::Client::create_template) past either, or while another version is SAVING, is refused ([`LimitReached`](crate::sandboxes::types::LimitReached)); a version whose own bytes would pass `template_gib` is FAILED before its upload. [`Client::delete_template`](crate::sandboxes::Client::delete_template) makes room at once. A FAILED version takes nothing, and goes a day after it failed.
     pub template_versions: i32,
     pub template_gib: i32,
-    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), each copy of a [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) and a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused ([`LimitReached`](crate::sandboxes::types::LimitReached), with `retry_time`). [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never starts. 0 = no limit.
+    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox) and a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused ([`LimitReached`](crate::sandboxes::types::LimitReached), with `retry_time`). [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never starts. 0 = no limit.
     pub starts_per_minute: i32,
     pub starts_per_hour: i32,
     pub starts_per_day: i32,
@@ -213,7 +213,7 @@ pub struct Sandbox {
     pub settings: ::core::option::Option<SandboxSettings>,
     /// Grows with every change of its settings ([`UpdateSandboxRequest::if_revision`](crate::sandboxes::types::UpdateSandboxRequest::if_revision)).
     pub revision: i64,
-    /// What it may write: its size's disk at its create, which a new size keeps unless `grow_disk` grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed (SIZES).
+    /// What it may write: its size's disk at its create, which a new size keeps unless `grow_disk` grows it to the new size's. No size whose disk is smaller is allowed (SIZES).
     pub disk_gib: i32,
     pub mounts: ::std::vec::Vec<Mount>,
     /// Its screen: every sandbox has one ([`Client::control_desktop`](crate::sandboxes::Client::control_desktop)).
@@ -224,7 +224,7 @@ pub struct Sandbox {
     pub panel_url: ::std::string::String,
     pub create_time: ::core::option::Option<crate::Timestamp>,
     pub usage: ::core::option::Option<Usage>,
-    /// In the answers of [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox) and [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) only: what [`Client::connect_sandbox`](crate::sandboxes::Client::connect_sandbox) would answer. An MCP tool's answer leaves it out: [`Client::connect_sandbox`](crate::sandboxes::Client::connect_sandbox) gives it to an agent that asks.
+    /// In [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox)\'s answer only: what [`Client::connect_sandbox`](crate::sandboxes::Client::connect_sandbox) would answer. An MCP tool's answer leaves it out: [`Client::connect_sandbox`](crate::sandboxes::Client::connect_sandbox) gives it to an agent that asks.
     pub connection: ::core::option::Option<Connection>,
     /// STOPPED while its disk is fetched from object storage for a start: how far that is. Absent otherwise.
     pub restore: ::core::option::Option<Restore>,
@@ -384,27 +384,6 @@ pub struct StopSandboxRequest {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ResumeSandboxRequest {
     pub sandbox_id: ::std::string::String,
-}
-
-/// What [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) takes.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ForkSandboxRequest {
-    pub sandbox_id: ::std::string::String,
-    /// Absent = 1; at most 100.
-    pub count: i32,
-    /// The copies\', at most 32. None = the source's.
-    pub labels: ::std::vec::Vec<Label>,
-    /// Groups sent replace the source's in the copies. Its size is the source's: another is [`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument).
-    pub settings: ::core::option::Option<SandboxSettings>,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
-    pub request_id: ::std::string::String,
-}
-
-/// What [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) returns.
-#[derive(Debug, Clone, PartialEq, Default)]
-#[non_exhaustive]
-pub struct ForkSandboxResponse {
-    pub sandboxes: ::std::vec::Vec<Sandbox>,
 }
 
 /// What [`Client::delete_sandbox`](crate::sandboxes::Client::delete_sandbox) takes.
@@ -646,7 +625,7 @@ pub enum SandboxEventEvent {
 pub struct LifecycleEvent {
     pub change: LifecycleChange,
     pub reason: StateReason,
-    /// CREATED by [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox): the source.
+    /// CREATED as a copy of another sandbox: that one.
     pub forked_from: ::std::string::String,
     /// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a STOPPED one takes it at its next start.
     pub size: Size,
@@ -1432,7 +1411,7 @@ pub struct Link {
     pub token: ::std::string::String,
 }
 
-/// Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), or as a person signed it in in a terminal. A conversation's history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+/// Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), or as a person signed it in in a terminal. A conversation's history stays on the sandbox's disk: a pause keeps it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[non_exhaustive]
 pub enum Agent {
@@ -1629,7 +1608,7 @@ pub struct LimitReached {
     /// A field of [`Workspace::limits`](crate::sandboxes::types::Workspace::limits): \"vcpus\", \"`largest_size`\" (max is that Size's number), \"`volume_gib`\", \"`template_versions`\", \"`template_gib`\", \"`starts_per_minute`\", \"`starts_per_hour`\", \"`starts_per_day`\"; or \"secrets\", a bound of every workspace ([`Client::set_secret`](crate::sandboxes::Client::set_secret)).
     pub limit: ::std::string::String,
     pub max: i32,
-    /// A `starts_per_`\* limit: when enough of the window's starts have left it for the call to fit, which may be retried then. Absent = never: a [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox) of more copies than the limit.
+    /// A `starts_per_`\* limit: when enough of the window's starts have left it for the call to fit, which may be retried then. Absent = never: a call that asks more starts than the limit.
     pub retry_time: ::core::option::Option<crate::Timestamp>,
 }
 
@@ -1655,7 +1634,7 @@ pub struct Restoring {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct NoCapacity {
-    /// [`Client::fork_sandbox`](crate::sandboxes::Client::fork_sandbox): how many copies the source's server has room for.
+    /// Unused: 0.
     pub fork_count: i32,
     /// What the server that refused it lacked; absent when no server was asked, none having room by what they report.
     pub bound: RoomBound,

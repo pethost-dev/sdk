@@ -210,12 +210,12 @@ await sandboxes.pauseSandbox({ sandboxId });
 
 The calls into a sandbox (commands, files, the desktop, links, coding agents) go to the server it
 runs on, not to the API. The client asks the API for a connection to that server by itself
-(`connectSandbox`), or takes the one `createSandbox` and `forkSandbox` answer with, keeps it
+(`connectSandbox`), or takes the one `createSandbox` answers with, keeps it
 per sandbox until 60 s before it expires, and asks for a new one, once, when the server
 refuses it: a token that expired or was revoked, or a sandbox that moved to another server. You
 write no URL and no token, and your API token never goes to a sandbox's server. A request with a
 `requestId` that you leave out gets one of its own for each call:
-`createSandbox`, `forkSandbox`, `createTemplate`, `createVolume`, `runCommand`, `promptAgent`.
+`createSandbox`, `createTemplate`, `createVolume`, `runCommand`, `promptAgent`.
 A call made again at a new connection keeps it, so the server does it once.
 
 | Method | What it does | Effect |
@@ -231,7 +231,6 @@ A call made again at a new connection keeps it, so the server does it once.
 | `pauseSandbox` | Pause a sandbox |  |
 | `stopSandbox` | Stop a sandbox | Destructive |
 | `resumeSandbox` | Resume a sandbox |  |
-| `forkSandbox` | Fork a sandbox |  |
 | `deleteSandbox` | Delete a sandbox | Destructive |
 | `connectSandbox` | Get a sandbox's address and root token |  |
 | `getSandboxMetrics` | Read a sandbox's metrics | Reads only |
@@ -323,7 +322,7 @@ or autoscaling: a plan's size is the limit.
 Pethost Agent Sandboxes are Firecracker microVMs for AI agents, each with its own kernel and root
 inside. A sandbox starts in about 0.15 s, pauses with its memory and processes while the agent
 thinks, and wakes in 0.1 s at the next call. Commands, files, SSH, a desktop with Chrome, Claude
-Code and Codex installed, forks, templates, an egress allow-list and API keys the sandbox never
+Code and Codex installed, templates, an egress allow-list and API keys the sandbox never
 holds. In the EU.
 
 - **A VM per sandbox:** every sandbox is its own Firecracker microVM with its own Linux kernel,
@@ -334,9 +333,8 @@ holds. In the EU.
   next call wakes it in about 0.1 s, exactly where it was. Idle longer, it stops: its disk goes to
   object storage at $0.03 per GiB a month of its own data. Nothing is deleted unless a timer says
   so.
-- **Starts are free:** creating, forking and starting a stopped sandbox cost nothing, up to a
+- **Starts are free:** creating and starting a stopped sandbox cost nothing, up to a
   plan's starts per minute, hour and day.
-- **Fork** a running sandbox, memory and all, in one call: three copies take about 0.25 s.
 - **API keys never enter a sandbox:** it sees a placeholder, and the egress proxy puts the key in
   HTTPS request headers, only to the hosts named. An egress allow-list by domain, wildcard, IP or
   CIDR; DNS answers only allowed names.

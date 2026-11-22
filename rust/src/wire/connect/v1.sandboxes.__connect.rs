@@ -1384,7 +1384,7 @@ pub const SANDBOX_SERVICE_LIST_USAGE_SPEC: ::connectrpc::Spec = ::connectrpc::Sp
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
-/// The workspace, and each sandbox as a record: create, settings, pause, fork, delete; templates,
+/// The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
 /// volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
 /// with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 ///
@@ -1760,14 +1760,22 @@ pub trait SandboxService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on
-    /// its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-    /// copies of a STOPPED one start from its disk. The copies are the source's size, with its disk,
-    /// each with its own id, hostname, machine-id and kernel randomness, and no name (names are
-    /// unique: UpdateSandbox gives one); their processes keep the
-    /// state they had, their random generators and the keys they made among it.
-    /// All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with a
-    /// read-write volume.
+    /// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
+    /// the API's page. A fork's
+    /// copies run on its source's server alone, so how many one call makes is what that one server
+    /// has free, which no number of servers raises: a copy's memory resumes only on the processor it
+    /// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
+    /// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
+    /// from it, on any server.
+    ///
+    /// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
+    /// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
+    /// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
+    /// disk. The copies are the source's size, with its disk, each with its own id, hostname,
+    /// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
+    /// their processes keep the state they had, their random generators and the keys they made
+    /// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
+    /// a read-write volume.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1816,8 +1824,8 @@ pub trait SandboxService: Send + Sync + 'static {
     > + Send;
     /// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
     /// and the SSH command the token is the password of: the header says how to call it. The token
-    /// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox and
-    /// ForkSandbox answer with one already.
+    /// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox answers
+    /// with one already.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///

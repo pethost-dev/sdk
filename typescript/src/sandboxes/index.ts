@@ -323,7 +323,7 @@ export const MouseButton = {
 /**
  * Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable
  * (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A conversation's
- * history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+ * history stays on the sandbox's disk: a pause keeps it.
  *
  * - `CLAUDE_CODE`
  * - `CODEX`
@@ -545,16 +545,15 @@ export const SshKey: JsonCodec<SshKey, SshKey> = {
 export interface Limits {
   /**
    * The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-   * STOPPED with Lifecycle.wakeWhenStopped, and every create, fork, start or move under way. Checked
-   * by {@link Sandboxes.createSandbox | createSandbox}, {@link Sandboxes.forkSandbox | forkSandbox},
-   * {@link Sandboxes.resumeSandbox | resumeSandbox} of a STOPPED sandbox,
-   * {@link Sandboxes.updateSandbox | updateSandbox}'s new size of one that counts, and
-   * wakeWhenStopped turned on for a STOPPED one. A sandbox that counts is never refused for it: a
-   * call into a PAUSED one, or into a STOPPED one that wakes when stopped, wakes it. Stopping one
-   * frees its vCPUs, but for one that wakes when stopped.
+   * STOPPED with Lifecycle.wakeWhenStopped, and every create, start or move under way. Checked by
+   * {@link Sandboxes.createSandbox | createSandbox}, {@link Sandboxes.resumeSandbox | resumeSandbox}
+   * of a STOPPED sandbox, {@link Sandboxes.updateSandbox | updateSandbox}'s new size of one that
+   * counts, and wakeWhenStopped turned on for a STOPPED one. A sandbox that counts is never refused
+   * for it: a call into a PAUSED one, or into a STOPPED one that wakes when stopped, wakes it.
+   * Stopping one frees its vCPUs, but for one that wakes when stopped.
    */
   vcpus: number;
-  /** The largest size it may create, fork, start or change a sandbox to. */
+  /** The largest size it may create, start or change a sandbox to. */
   largestSize?: Size | number;
   /** The most GiB its volumes may take together ({@link Sandboxes.createVolume | createVolume}). */
   volumeGib: number;
@@ -571,8 +570,7 @@ export interface Limits {
   templateGib: number;
   /**
    * How many sandboxes it may start in any minute, hour and day, each window sliding: a
-   * {@link Sandboxes.createSandbox | createSandbox}, each copy of a
-   * {@link Sandboxes.forkSandbox | forkSandbox} and a
+   * {@link Sandboxes.createSandbox | createSandbox} and a
    * {@link Sandboxes.resumeSandbox | resumeSandbox} of a STOPPED sandbox are each a start, which
    * costs nothing, and one past a limit is refused ({@link LimitReached}, with retryTime).
    * {@link Sandboxes.resumeSandbox | resumeSandbox} of a PAUSED sandbox, and a wake by a call into
@@ -734,7 +732,7 @@ export interface Sandbox {
   revision: bigint;
   /**
    * What it may write: its size's disk at its create, which a new size keeps unless growDisk grows
-   * it to the new size's, and a fork its source's. No size whose disk is smaller is allowed (SIZES).
+   * it to the new size's. No size whose disk is smaller is allowed (SIZES).
    */
   diskGib: number;
   mounts: Mount[];
@@ -753,8 +751,7 @@ export interface Sandbox {
   createTime?: Date;
   usage?: Usage;
   /**
-   * In the answers of {@link Sandboxes.createSandbox | createSandbox} and
-   * {@link Sandboxes.forkSandbox | forkSandbox} only: what
+   * In {@link Sandboxes.createSandbox | createSandbox}'s answer only: what
    * {@link Sandboxes.connectSandbox | connectSandbox} would answer. An MCP tool's answer leaves it
    * out: {@link Sandboxes.connectSandbox | connectSandbox} gives it to an agent that asks.
    */
@@ -982,40 +979,6 @@ export interface ResumeSandboxRequest {
 export const ResumeSandboxRequest: JsonCodec<ResumeSandboxRequest, ResumeSandboxRequest> = {
   toJson: (value) => writeJson(wire.ResumeSandboxRequestSchema, convert.toResumeSandboxRequest(value)),
   fromJson: (json) => convert.fromResumeSandboxRequest(readJson(wire.ResumeSandboxRequestSchema, json)),
-};
-
-export interface ForkSandboxRequest {
-  sandboxId?: string | undefined;
-  /** Absent = 1; at most 100. */
-  count?: number | undefined;
-  /** The copies', at most 32. None = the source's. */
-  labels?: readonly LabelInput[] | undefined;
-  /**
-   * Groups sent replace the source's in the copies. Its size is the source's: another is
-   * INVALID_ARGUMENT.
-   */
-  settings?: SandboxSettingsInput | undefined;
-  /**
-   * Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-   * nothing again and answers what the first call did (24 h).
-   */
-  requestId?: string | undefined;
-}
-
-/** {@link ForkSandboxRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const ForkSandboxRequest: JsonCodec<ForkSandboxRequest, ForkSandboxRequest> = {
-  toJson: (value) => writeJson(wire.ForkSandboxRequestSchema, convert.toForkSandboxRequest(value)),
-  fromJson: (json) => convert.fromForkSandboxRequest(readJson(wire.ForkSandboxRequestSchema, json)),
-};
-
-export interface ForkSandboxResponse {
-  sandboxes: Sandbox[];
-}
-
-/** {@link ForkSandboxResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const ForkSandboxResponse: JsonCodec<ForkSandboxResponse, ForkSandboxResponse> = {
-  toJson: (value) => writeJson(wire.ForkSandboxResponseSchema, convert.toForkSandboxResponse(value)),
-  fromJson: (json) => convert.fromForkSandboxResponse(readJson(wire.ForkSandboxResponseSchema, json)),
 };
 
 export interface DeleteSandboxRequest {
@@ -1485,7 +1448,7 @@ export const SandboxEvent: JsonCodec<SandboxEvent, SandboxEvent> = {
 export interface LifecycleEvent {
   change?: LifecycleChange | number;
   reason?: StateReason | number;
-  /** CREATED by {@link Sandboxes.forkSandbox | forkSandbox}: the source. */
+  /** CREATED as a copy of another sandbox: that one. */
   forkedFrom: string;
   /**
    * CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a STOPPED
@@ -2920,8 +2883,7 @@ export interface LimitReached {
   max: number;
   /**
    * A starts_per_* limit: when enough of the window's starts have left it for the call to fit, which
-   * may be retried then. Absent = never: a {@link Sandboxes.forkSandbox | forkSandbox} of more
-   * copies than the limit.
+   * may be retried then. Absent = never: a call that asks more starts than the limit.
    */
   retryTime?: Date;
 }
@@ -2975,7 +2937,7 @@ export const Restoring: JsonCodec<Restoring, Restoring> = {
 
 /** UNAVAILABLE: no room for it now. */
 export interface NoCapacity {
-  /** {@link Sandboxes.forkSandbox | forkSandbox}: how many copies the source's server has room for. */
+  /** Unused: 0. */
   forkCount: number;
   /**
    * What the server that refused it lacked; absent when no server was asked, none having room by
@@ -3199,7 +3161,7 @@ export interface CallOptions {
  * The client of the API of Pethost Agent Sandboxes (https://pethost.dev/sandboxes/): Firecracker
  * microVMs for AI agents, each with its own kernel. A sandbox starts in about 0.15 s, pauses with
  * its memory and processes while the agent thinks, and wakes at the next call. A method here is
- * one call of the API: it creates, pauses, forks or deletes a sandbox, runs a command in one,
+ * one call of the API: it creates, pauses or deletes a sandbox, runs a command in one,
  * reads and writes its files, or prompts a coding agent there. A stream's method returns what
  * `for await` loops over: its call is made when the loop starts, and lasts as long as the loop.
  *
@@ -3295,7 +3257,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.6.0");
+      request.header.set("User-Agent", "pethost-typescript/0.6.1");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3307,7 +3269,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.6.0");
+      request.header.set("User-Agent", "pethost-typescript/0.6.1");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>
@@ -3574,32 +3536,6 @@ export class Sandboxes {
   }
 
   /**
-   * Fork a sandbox.
-   *
-   * Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on its
-   * server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the copies
-   * of a STOPPED one start from its disk. The copies are the source's size, with its disk, each with
-   * its own id, hostname, machine-id and kernel randomness, and no name (names are unique:
-   * {@link Sandboxes.updateSandbox | updateSandbox} gives one); their processes keep the state they
-   * had, their random generators and the keys they made among it. All or none: UNAVAILABLE +
-   * {@link NoCapacity} says how many fit. Refused for a sandbox with a read-write volume.
-   *
-   * @throws {@link SandboxesError} when the call fails.
-   */
-  async forkSandbox(request: ForkSandboxRequest, options?: CallOptions): Promise<ForkSandboxResponse> {
-    const wireRequest = convert.toForkSandboxRequest({ ...request, requestId: request.requestId || newRequestId() });
-    try {
-      const response = convert.fromForkSandboxResponse(await this.#sandboxService.forkSandbox(wireRequest, { signal: options?.signal }));
-      for (const held of response.sandboxes) {
-        this.#keep(held.sandboxId, held.connection);
-      }
-      return response;
-    } catch (error) {
-      throw toError(error);
-    }
-  }
-
-  /**
    * Delete a sandbox.
    *
    * Drops its memory and disk for good; its volumes stay. Answers its final record, usage included.
@@ -3626,8 +3562,7 @@ export class Sandboxes {
    * Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
    * and the SSH command the token is the password of: the header says how to call it. The token is
    * root in the sandbox: give it to a program, never to a page or a message.
-   * {@link Sandboxes.createSandbox | createSandbox} and {@link Sandboxes.forkSandbox | forkSandbox}
-   * answer with one already.
+   * {@link Sandboxes.createSandbox | createSandbox} answers with one already.
    *
    * @throws {@link SandboxesError} when the call fails.
    */

@@ -208,18 +208,6 @@ json!(
     types::ResumeSandboxRequest::from
 );
 json!(
-    types::ForkSandboxRequest,
-    wire::ForkSandboxRequest,
-    wire::ForkSandboxRequest::from,
-    types::ForkSandboxRequest::from
-);
-json!(
-    types::ForkSandboxResponse,
-    wire::ForkSandboxResponse,
-    wire::ForkSandboxResponse::from,
-    types::ForkSandboxResponse::from
-);
-json!(
     types::DeleteSandboxRequest,
     wire::DeleteSandboxRequest,
     wire::DeleteSandboxRequest::from,

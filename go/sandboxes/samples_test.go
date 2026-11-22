@@ -74,10 +74,6 @@ func (f *fake) ResumeSandbox(_ context.Context, request *sandboxesv1.ResumeSandb
 	return answer[*sandboxesv1.Sandbox](&f.exchange, request)
 }
 
-func (f *fake) ForkSandbox(_ context.Context, request *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error) {
-	return answer[*sandboxesv1.ForkSandboxResponse](&f.exchange, request)
-}
-
 func (f *fake) DeleteSandbox(_ context.Context, request *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error) {
 	return answer[*sandboxesv1.Sandbox](&f.exchange, request)
 }
@@ -207,7 +203,6 @@ var calls = []call{
 	callOf("PauseSandbox", (*Client).PauseSandbox, samplePauseSandboxRequest, sampleSandbox, &sandboxesv1.PauseSandboxRequest{}, &sandboxesv1.Sandbox{}),
 	callOf("StopSandbox", (*Client).StopSandbox, sampleStopSandboxRequest, sampleSandbox, &sandboxesv1.StopSandboxRequest{}, &sandboxesv1.Sandbox{}),
 	callOf("ResumeSandbox", (*Client).ResumeSandbox, sampleResumeSandboxRequest, sampleSandbox, &sandboxesv1.ResumeSandboxRequest{}, &sandboxesv1.Sandbox{}),
-	callOf("ForkSandbox", (*Client).ForkSandbox, sampleForkSandboxRequest, sampleForkSandboxResponse, &sandboxesv1.ForkSandboxRequest{}, &sandboxesv1.ForkSandboxResponse{}),
 	callOf("DeleteSandbox", (*Client).DeleteSandbox, sampleDeleteSandboxRequest, sampleSandbox, &sandboxesv1.DeleteSandboxRequest{}, &sandboxesv1.Sandbox{}),
 	callOf("ConnectSandbox", (*Client).ConnectSandbox, sampleConnectSandboxRequest, sampleConnection, &sandboxesv1.ConnectSandboxRequest{}, &sandboxesv1.Connection{}),
 	callOf("GetSandboxMetrics", (*Client).GetSandboxMetrics, sampleGetSandboxMetricsRequest, sampleGetSandboxMetricsResponse, &sandboxesv1.GetSandboxMetricsRequest{}, &sandboxesv1.GetSandboxMetricsResponse{}),
@@ -253,7 +248,6 @@ var seeded = []seededCall{
 	{"PauseSandbox", []string{}, "sandbox_id", "connection"},
 	{"StopSandbox", []string{}, "sandbox_id", "connection"},
 	{"ResumeSandbox", []string{}, "sandbox_id", "connection"},
-	{"ForkSandbox", []string{"sandboxes"}, "sandbox_id", "connection"},
 	{"DeleteSandbox", []string{}, "sandbox_id", "connection"},
 }
 
@@ -319,8 +313,6 @@ var shapes = []shape{
 	shapeOf(samplePauseSandboxRequest, &sandboxesv1.PauseSandboxRequest{}),
 	shapeOf(sampleStopSandboxRequest, &sandboxesv1.StopSandboxRequest{}),
 	shapeOf(sampleResumeSandboxRequest, &sandboxesv1.ResumeSandboxRequest{}),
-	shapeOf(sampleForkSandboxRequest, &sandboxesv1.ForkSandboxRequest{}),
-	shapeOf(sampleForkSandboxResponse, &sandboxesv1.ForkSandboxResponse{}),
 	shapeOf(sampleDeleteSandboxRequest, &sandboxesv1.DeleteSandboxRequest{}),
 	shapeOf(sampleConnectSandboxRequest, &sandboxesv1.ConnectSandboxRequest{}),
 	shapeOf(sampleConnection, &sandboxesv1.Connection{}),
@@ -646,22 +638,6 @@ func sampleStopSandboxRequest(s seed) StopSandboxRequest {
 func sampleResumeSandboxRequest(s seed) ResumeSandboxRequest {
 	return ResumeSandboxRequest{
 		SandboxID: plain[string](s.at("pethost.sandboxes.v1.ResumeSandboxRequest.sandbox_id")),
-	}
-}
-
-func sampleForkSandboxRequest(s seed) ForkSandboxRequest {
-	return ForkSandboxRequest{
-		SandboxID: plain[string](s.at("pethost.sandboxes.v1.ForkSandboxRequest.sandbox_id")),
-		Count:     plain[int32](s.at("pethost.sandboxes.v1.ForkSandboxRequest.count")),
-		Labels:    list(s.at("pethost.sandboxes.v1.ForkSandboxRequest.labels"), sampleLabel),
-		Settings:  pointer(s.at("pethost.sandboxes.v1.ForkSandboxRequest.settings"), sampleSandboxSettings),
-		RequestID: plain[string](s.at("pethost.sandboxes.v1.ForkSandboxRequest.request_id")),
-	}
-}
-
-func sampleForkSandboxResponse(s seed) ForkSandboxResponse {
-	return ForkSandboxResponse{
-		Sandboxes: list(s.at("pethost.sandboxes.v1.ForkSandboxResponse.sandboxes"), sampleSandbox),
 	}
 }
 

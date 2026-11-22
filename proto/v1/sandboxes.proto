@@ -2,8 +2,8 @@ edition = "2024";
 
 // Pethost Agent Sandboxes: Linux microVMs, each a Firecracker VM with its own kernel, to run code,
 // coding agents and a desktop with Chrome. A sandbox starts from a template in about 0.1 s, pauses
-// with its memory when idle and wakes at the next call, stops to object storage when idle longer,
-// and forks. It is not where an app stays online for people: that is Pethost App Platform, a
+// with its memory when idle and wakes at the next call, and stops to object storage when idle
+// longer. It is not where an app stays online for people: that is Pethost App Platform, a
 // separate connector. Start with ListSandboxes: reuse one before CreateSandbox.
 //
 // Two services, by who answers: SandboxService, the panel, for the workspace and each sandbox as
@@ -71,7 +71,7 @@ import option "v1/mcp.proto";
 import option "v1/optional.proto";
 import option "v1/sdk.proto";
 
-// The workspace, and each sandbox as a record: create, settings, pause, fork, delete; templates,
+// The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
 // volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
 // with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 //
@@ -214,16 +214,24 @@ service SandboxService {
     option (pethost.panel.v1.mcp_tool) = {title: "Resume a sandbox"};
   }
 
-  // Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on
-  // its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-  // copies of a STOPPED one start from its disk. The copies are the source's size, with its disk,
-  // each with its own id, hostname, machine-id and kernel randomness, and no name (names are
-  // unique: UpdateSandbox gives one); their processes keep the
-  // state they had, their random generators and the keys they made among it.
-  // All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with a
-  // read-write volume.
+  // Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
+  // the API's page. A fork's
+  // copies run on its source's server alone, so how many one call makes is what that one server
+  // has free, which no number of servers raises: a copy's memory resumes only on the processor it
+  // was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
+  // to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
+  // from it, on any server.
+  //
+  // Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
+  // processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
+  // a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
+  // disk. The copies are the source's size, with its disk, each with its own id, hostname,
+  // machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
+  // their processes keep the state they had, their random generators and the keys they made
+  // among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
+  // a read-write volume.
   rpc ForkSandbox(ForkSandboxRequest) returns (ForkSandboxResponse) {
-    option (pethost.panel.v1.mcp_tool) = {title: "Fork a sandbox"};
+    option deprecated = true;
   }
 
   // Drops its memory and disk for good; its volumes stay. Answers its final record, usage
@@ -235,8 +243,8 @@ service SandboxService {
 
   // Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
   // and the SSH command the token is the password of: the header says how to call it. The token
-  // is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox and
-  // ForkSandbox answer with one already.
+  // is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox answers
+  // with one already.
   rpc ConnectSandbox(ConnectSandboxRequest) returns (Connection) {
     option (pethost.panel.v1.mcp_tool) = {title: "Get a sandbox's address and root token"};
   }
@@ -574,13 +582,13 @@ message SshKey {
 message Limits {
   reserved 1;
   // The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-  // STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-  // Checked by CreateSandbox, ForkSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
+  // STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+  // Checked by CreateSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
   // size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
   // counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
   // when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
   int32 vcpus = 4;
-  // The largest size it may create, fork, start or change a sandbox to.
+  // The largest size it may create, start or change a sandbox to.
   Size largest_size = 5;
   // The most GiB its volumes may take together (CreateVolume).
   int32 volume_gib = 6;
@@ -593,8 +601,7 @@ message Limits {
   int32 template_versions = 2;
   int32 template_gib = 3;
   // How many sandboxes it may start in any minute, hour and day, each window sliding: a
-  // CreateSandbox, each copy of a ForkSandbox and a ResumeSandbox of a STOPPED sandbox are each a
-  // start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+  // CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
   // ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
   // starts. 0 = no limit.
   int32 starts_per_minute = 7;
@@ -709,7 +716,7 @@ message Sandbox {
   SandboxSettings settings = 10; // In force: every group, its defaults filled in.
   int64 revision = 11; // Grows with every change of its settings (UpdateSandbox.if_revision).
   // What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-  // grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+  // grows it to the new size's. No size whose disk is smaller is allowed
   // (SIZES).
   int32 disk_gib = 12;
   repeated Mount mounts = 13;
@@ -722,7 +729,7 @@ message Sandbox {
   string panel_url = 16;
   google.protobuf.Timestamp create_time = 17;
   Usage usage = 19;
-  // In the answers of CreateSandbox and ForkSandbox only: what ConnectSandbox would answer. An MCP
+  // In CreateSandbox's answer only: what ConnectSandbox would answer. An MCP
   // tool's answer leaves it out: ConnectSandbox gives it to an agent that asks.
   Connection connection = 20 [(pethost.panel.v1.mcp_omit) = true];
   // STOPPED while its disk is fetched from object storage for a start: how far that is. Absent
@@ -1074,7 +1081,7 @@ message SandboxEvent {
 message LifecycleEvent {
   LifecycleChange change = 1;
   StateReason reason = 2;
-  string forked_from = 3; // CREATED by ForkSandbox: the source.
+  string forked_from = 3; // CREATED as a copy of another sandbox: that one.
   // CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
   // STOPPED one takes it at its next start.
   Size size = 4;
@@ -1639,7 +1646,7 @@ message Link {
 
 // Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable
 // (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A conversation's
-// history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+// history stays on the sandbox's disk: a pause keeps it.
 enum Agent {
   reserved 4;
   AGENT_UNSPECIFIED = 0;
@@ -1782,7 +1789,7 @@ message LimitReached {
   string limit = 1;
   int32 max = 2;
   // A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-  // which may be retried then. Absent = never: a ForkSandbox of more copies than the limit.
+  // which may be retried then. Absent = never: a call that asks more starts than the limit.
   google.protobuf.Timestamp retry_time = 3;
 }
 
@@ -1805,7 +1812,7 @@ message Restoring {
 
 // UNAVAILABLE: no room for it now.
 message NoCapacity {
-  int32 fork_count = 1; // ForkSandbox: how many copies the source's server has room for.
+  int32 fork_count = 1; // Unused: 0.
   // What the server that refused it lacked; absent when no server was asked, none having room
   // by what they report.
   RoomBound bound = 2;

@@ -35,8 +35,6 @@ optional<p.UpdateSandboxRequest>({ sandboxId: true, settings: true, ifRevision: 
 optional<p.PauseSandboxRequest>({ sandboxId: true });
 optional<p.StopSandboxRequest>({ sandboxId: true });
 optional<p.ResumeSandboxRequest>({ sandboxId: true });
-optional<p.ForkSandboxRequest>({ sandboxId: true, count: true, labels: true, settings: true, requestId: true });
-optional<p.ForkSandboxResponse>({ sandboxes: false });
 optional<p.DeleteSandboxRequest>({ sandboxId: true });
 optional<p.ConnectSandboxRequest>({ sandboxId: true, ttlSeconds: true });
 optional<p.Connection>({ url: false, token: false, expireTime: true, sshCommand: false });

@@ -761,38 +761,6 @@ export function toResumeSandboxRequest(m: p.ResumeSandboxRequest): MessageInitSh
   } satisfies Fields<w.ResumeSandboxRequest>;
 }
 
-export function fromForkSandboxRequest(m: w.ForkSandboxRequest): p.ForkSandboxRequest {
-  return compact<p.ForkSandboxRequest>({
-    sandboxId: m.sandboxId,
-    count: m.count,
-    labels: m.labels.map(fromLabel),
-    settings: m.settings && fromSandboxSettings(m.settings),
-    requestId: m.requestId,
-  });
-}
-
-export function toForkSandboxRequest(m: p.ForkSandboxRequest): MessageInitShape<typeof w.ForkSandboxRequestSchema> {
-  return {
-    sandboxId: m.sandboxId || undefined,
-    count: m.count || undefined,
-    labels: m.labels?.map(toLabel),
-    settings: m.settings && toSandboxSettings(m.settings),
-    requestId: m.requestId || undefined,
-  } satisfies Fields<w.ForkSandboxRequest>;
-}
-
-export function fromForkSandboxResponse(m: w.ForkSandboxResponse): p.ForkSandboxResponse {
-  return compact<p.ForkSandboxResponse>({
-    sandboxes: m.sandboxes.map(fromSandbox),
-  });
-}
-
-export function toForkSandboxResponse(m: p.ForkSandboxResponse): MessageInitShape<typeof w.ForkSandboxResponseSchema> {
-  return {
-    sandboxes: m.sandboxes?.map(toSandbox),
-  } satisfies Fields<w.ForkSandboxResponse>;
-}
-
 export function fromDeleteSandboxRequest(m: w.DeleteSandboxRequest): p.DeleteSandboxRequest {
   return compact<p.DeleteSandboxRequest>({
     sandboxId: m.sandboxId,

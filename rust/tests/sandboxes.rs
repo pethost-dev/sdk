@@ -55,7 +55,7 @@ use proto::pethost::sandboxes::v1 as wire;
 const STREAMS: [&str; 4] = ["WatchSandboxEvents", "WatchCommand", "WatchFiles", "WatchConversation"];
 
 /// The service of each call, which its path names.
-const SERVICES: [(&str, &str); 41] = [
+const SERVICES: [(&str, &str); 40] = [
     ("GetWorkspace", "SandboxService"),
     ("SetSshKeys", "SandboxService"),
     ("SetSecret", "SandboxService"),
@@ -67,7 +67,6 @@ const SERVICES: [(&str, &str); 41] = [
     ("PauseSandbox", "SandboxService"),
     ("StopSandbox", "SandboxService"),
     ("ResumeSandbox", "SandboxService"),
-    ("ForkSandbox", "SandboxService"),
     ("DeleteSandbox", "SandboxService"),
     ("ConnectSandbox", "SandboxService"),
     ("GetSandboxMetrics", "SandboxService"),
@@ -692,22 +691,6 @@ mod samples {
         types::ResumeSandboxRequest {
             sandbox_id: states::plain(k, states::text("sandbox_id", k)),
         }
-    }
-
-    pub fn fork_sandbox_request(k: usize, later: bool) -> types::ForkSandboxRequest {
-        types::ForkSandboxRequest {
-            sandbox_id: states::plain(k, states::text("sandbox_id", k)),
-            count: states::plain(k, -(states::number(2, k) as i32)),
-            labels: states::many(k, [samples::label(k + 2, later), samples::label(k + 3, later)]),
-            settings: states::maybe(k, samples::sandbox_settings(k + 3, later)),
-            request_id: states::plain(k, states::text("request_id", k)),
-        }
-    }
-
-    pub fn fork_sandbox_response(k: usize, later: bool) -> types::ForkSandboxResponse {
-        states::make(|message: &mut types::ForkSandboxResponse| {
-            message.sandboxes = states::many(k, [samples::sandbox(k, later), samples::sandbox(k + 1, later)]);
-        })
     }
 
     pub fn delete_sandbox_request(k: usize, later: bool) -> types::DeleteSandboxRequest {
@@ -2158,32 +2141,6 @@ mod on_wire {
     pub fn resume_sandbox_request(k: usize, received: bool) -> wire::ResumeSandboxRequest {
         let mut message = wire::ResumeSandboxRequest {
             sandbox_id: states::present(states::plain(k, states::text("sandbox_id", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn fork_sandbox_request(k: usize, received: bool) -> wire::ForkSandboxRequest {
-        let mut message = wire::ForkSandboxRequest {
-            sandbox_id: states::present(states::plain(k, states::text("sandbox_id", k))),
-            count: states::present(states::plain(k, -(states::number(2, k) as i32))),
-            labels: states::many(k, [on_wire::label(k + 2, received), on_wire::label(k + 3, received)]),
-            settings: states::maybe(k, on_wire::sandbox_settings(k + 3, received)).into(),
-            request_id: states::present(states::plain(k, states::text("request_id", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn fork_sandbox_response(k: usize, received: bool) -> wire::ForkSandboxResponse {
-        let mut message = wire::ForkSandboxResponse {
-            sandboxes: states::many(k, [on_wire::sandbox(k, received), on_wire::sandbox(k + 1, received)]),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3801,26 +3758,6 @@ async fn resume_sandbox_request_is_sent() {
 }
 
 #[tokio::test]
-async fn fork_sandbox_request_is_sent() {
-    for k in 0..2 {
-        let request = samples::fork_sandbox_request(k, true);
-        let expected = on_wire::fork_sandbox_request(k, false);
-
-        let answer = ok(&wire::ForkSandboxResponse::default());
-        let call = |client: Client| async move { client.fork_sandbox(request).await };
-        let (sent, response): (wire::ForkSandboxRequest, _) = exchange("ForkSandbox", answer, call).await;
-        // A request_id left empty is filled, once per call.
-        let mut sent = sent;
-        if expected.request_id.is_none() {
-            request_id(sent.request_id.take());
-        }
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::ForkSandboxResponse::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
 async fn delete_sandbox_request_is_sent() {
     for k in 0..2 {
         let request = samples::delete_sandbox_request(k, true);
@@ -4867,19 +4804,6 @@ async fn list_sandboxes_response_is_received() {
 
         let call = |client: Client| async move { client.list_sandboxes(types::ListSandboxesRequest::default()).await };
         let (_, response): (wire::ListSandboxesRequest, _) = exchange("ListSandboxes", answer, call).await;
-
-        assert_eq!(response.unwrap(), expected, "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn fork_sandbox_response_is_received() {
-    for k in 0..2 {
-        let answer = ok(&on_wire::fork_sandbox_response(k, true));
-        let expected = samples::fork_sandbox_response(k, true);
-
-        let call = |client: Client| async move { client.fork_sandbox(types::ForkSandboxRequest::default()).await };
-        let (_, response): (wire::ForkSandboxRequest, _) = exchange("ForkSandbox", answer, call).await;
 
         assert_eq!(response.unwrap(), expected, "at k = {k}");
     }
@@ -6748,23 +6672,6 @@ fn resume_sandbox_request_is_json() {
 }
 
 #[test]
-fn fork_sandbox_request_is_json() {
-    let names = ["sandbox_id", "count", "labels", "settings", "request_id"];
-    a_message_is_json(2, &names, samples::fork_sandbox_request, on_wire::fork_sandbox_request);
-}
-
-#[test]
-fn fork_sandbox_response_is_json() {
-    let names = ["sandboxes"];
-    a_message_is_json(
-        2,
-        &names,
-        samples::fork_sandbox_response,
-        on_wire::fork_sandbox_response,
-    );
-}
-
-#[test]
 fn delete_sandbox_request_is_json() {
     let names = ["sandbox_id"];
     a_message_is_json(
@@ -7873,13 +7780,6 @@ async fn api(server: &Fake, seeded: Duration) -> Fake {
             connection: Some(connection_to(&url, SEEDED_TOKEN, seeded)).into(),
             ..Default::default()
         }),
-        "ForkSandbox" => ok(&states::make(|message: &mut wire::ForkSandboxResponse| {
-            message.sandboxes = vec![wire::Sandbox {
-                sandbox_id: Some(KEY.to_owned()),
-                connection: Some(connection_to(&url, SEEDED_TOKEN, seeded)).into(),
-                ..Default::default()
-            }]
-        })),
         "DeleteSandbox" => ok(&wire::Sandbox {
             sandbox_id: Some(KEY.to_owned()),
             connection: Some(connection_to(&url, SEEDED_TOKEN, seeded)).into(),
@@ -8078,19 +7978,6 @@ async fn resume_sandbox_keeps_the_connection_its_answer_holds() {
     call(&client, KEY, "").await.unwrap();
 
     assert_eq!(api.rpcs(), ["ResumeSandbox"]);
-    assert_eq!(server.tokens(), [SEEDED_TOKEN]);
-}
-
-#[tokio::test]
-async fn fork_sandbox_keeps_the_connection_its_answer_holds() {
-    let server = Fake::new(|_| empty()).await;
-    let api = api(&server, HOUR).await;
-    let client = client_of(&api);
-
-    client.fork_sandbox(types::ForkSandboxRequest::default()).await.unwrap();
-    call(&client, KEY, "").await.unwrap();
-
-    assert_eq!(api.rpcs(), ["ForkSandbox"]);
     assert_eq!(server.tokens(), [SEEDED_TOKEN]);
 }
 

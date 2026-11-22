@@ -211,28 +211,6 @@ func (v *ResumeSandboxRequest) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v ForkSandboxRequest) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireForkSandboxRequest(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *ForkSandboxRequest) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireForkSandboxRequest)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v ForkSandboxResponse) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireForkSandboxResponse(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *ForkSandboxResponse) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireForkSandboxResponse)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v DeleteSandboxRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireDeleteSandboxRequest(v))
 }

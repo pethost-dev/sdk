@@ -454,40 +454,6 @@ func toWireResumeSandboxRequest(v ResumeSandboxRequest) *sandboxesv1.ResumeSandb
 	return b.Build()
 }
 
-func fromWireForkSandboxRequest(w *sandboxesv1.ForkSandboxRequest) ForkSandboxRequest {
-	return ForkSandboxRequest{
-		w.GetSandboxId(),
-		w.GetCount(),
-		sliceFromWire(w.GetLabels(), fromWireLabel),
-		pointerFromWire(w.GetSettings(), fromWireSandboxSettings),
-		w.GetRequestId(),
-	}
-}
-
-func toWireForkSandboxRequest(v ForkSandboxRequest) *sandboxesv1.ForkSandboxRequest {
-	b := sandboxesv1.ForkSandboxRequest_builder{
-		SandboxId: nonZero(v.SandboxID),
-		Count:     nonZero(v.Count),
-		Labels:    sliceToWire(v.Labels, toWireLabel),
-		Settings:  pointerToWire(v.Settings, toWireSandboxSettings),
-		RequestId: nonZero(v.RequestID),
-	}
-	return b.Build()
-}
-
-func fromWireForkSandboxResponse(w *sandboxesv1.ForkSandboxResponse) ForkSandboxResponse {
-	return ForkSandboxResponse{
-		sliceFromWire(w.GetSandboxes(), fromWireSandbox),
-	}
-}
-
-func toWireForkSandboxResponse(v ForkSandboxResponse) *sandboxesv1.ForkSandboxResponse {
-	b := sandboxesv1.ForkSandboxResponse_builder{
-		Sandboxes: sliceToWire(v.Sandboxes, toWireSandbox),
-	}
-	return b.Build()
-}
-
 func fromWireDeleteSandboxRequest(w *sandboxesv1.DeleteSandboxRequest) DeleteSandboxRequest {
 	return DeleteSandboxRequest{
 		w.GetSandboxId(),

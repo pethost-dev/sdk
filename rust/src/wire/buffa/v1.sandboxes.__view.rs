@@ -2430,15 +2430,15 @@ impl ::serde::Serialize for SshKeyOwnedView {
 #[derive(Clone, Debug, Default)]
 pub struct LimitsView<'a> {
     /// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-    /// STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-    /// Checked by CreateSandbox, ForkSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
+    /// STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+    /// Checked by CreateSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
     /// size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
     /// counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
     /// when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
     ///
     /// Field 4: `vcpus`
     pub vcpus: ::core::option::Option<i32>,
-    /// The largest size it may create, fork, start or change a sandbox to.
+    /// The largest size it may create, start or change a sandbox to.
     ///
     /// Field 5: `largest_size`
     pub largest_size: ::core::option::Option<::buffa::EnumValue<super::super::Size>>,
@@ -2458,8 +2458,7 @@ pub struct LimitsView<'a> {
     /// Field 3: `template_gib`
     pub template_gib: ::core::option::Option<i32>,
     /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox, each copy of a ForkSandbox and a ResumeSandbox of a STOPPED sandbox are each a
-    /// start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
     /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
     /// starts. 0 = no limit.
     ///
@@ -2813,8 +2812,8 @@ impl LimitsOwnedView {
         self.0.into_bytes()
     }
     /// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-    /// STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-    /// Checked by CreateSandbox, ForkSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
+    /// STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+    /// Checked by CreateSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
     /// size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
     /// counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
     /// when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
@@ -2824,7 +2823,7 @@ impl LimitsOwnedView {
     pub fn vcpus(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().vcpus
     }
-    /// The largest size it may create, fork, start or change a sandbox to.
+    /// The largest size it may create, start or change a sandbox to.
     ///
     /// Field 5: `largest_size`
     #[must_use]
@@ -2858,8 +2857,7 @@ impl LimitsOwnedView {
         self.0.reborrow().template_gib
     }
     /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox, each copy of a ForkSandbox and a ResumeSandbox of a STOPPED sandbox are each a
-    /// start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
     /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
     /// starts. 0 = no limit.
     ///
@@ -4249,7 +4247,7 @@ pub struct SandboxView<'a> {
     /// Field 11: `revision`
     pub revision: ::core::option::Option<i64>,
     /// What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-    /// grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+    /// grows it to the new size's. No size whose disk is smaller is allowed
     /// (SIZES).
     ///
     /// Field 12: `disk_gib`
@@ -4276,7 +4274,7 @@ pub struct SandboxView<'a> {
     >,
     /// Field 19: `usage`
     pub usage: ::buffa::MessageFieldView<super::super::__buffa::view::UsageView<'a>>,
-    /// In the answers of CreateSandbox and ForkSandbox only: what ConnectSandbox would answer. An MCP
+    /// In CreateSandbox's answer only: what ConnectSandbox would answer. An MCP
     /// tool's answer leaves it out: ConnectSandbox gives it to an agent that asks.
     ///
     /// Field 20: `connection`
@@ -5301,7 +5299,7 @@ impl SandboxOwnedView {
         self.0.reborrow().revision
     }
     /// What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-    /// grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+    /// grows it to the new size's. No size whose disk is smaller is allowed
     /// (SIZES).
     ///
     /// Field 12: `disk_gib`
@@ -5357,7 +5355,7 @@ impl SandboxOwnedView {
     ) -> &::buffa::MessageFieldView<super::super::__buffa::view::UsageView<'_>> {
         &self.0.reborrow().usage
     }
-    /// In the answers of CreateSandbox and ForkSandbox only: what ConnectSandbox would answer. An MCP
+    /// In CreateSandbox's answer only: what ConnectSandbox would answer. An MCP
     /// tool's answer leaves it out: ConnectSandbox gives it to an agent that asks.
     ///
     /// Field 20: `connection`
@@ -15951,7 +15949,7 @@ pub struct LifecycleEventView<'a> {
     >,
     /// Field 2: `reason`
     pub reason: ::core::option::Option<::buffa::EnumValue<super::super::StateReason>>,
-    /// CREATED by ForkSandbox: the source.
+    /// CREATED as a copy of another sandbox: that one.
     ///
     /// Field 3: `forked_from`
     pub forked_from: ::core::option::Option<&'a str>,
@@ -16280,7 +16278,7 @@ impl LifecycleEventOwnedView {
     ) -> ::core::option::Option<::buffa::EnumValue<super::super::StateReason>> {
         self.0.reborrow().reason
     }
-    /// CREATED by ForkSandbox: the source.
+    /// CREATED as a copy of another sandbox: that one.
     ///
     /// Field 3: `forked_from`
     #[must_use]
@@ -39493,7 +39491,7 @@ pub struct LimitReachedView<'a> {
     /// Field 2: `max`
     pub max: ::core::option::Option<i32>,
     /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a ForkSandbox of more copies than the limit.
+    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
     ///
     /// Field 3: `retry_time`
     pub retry_time: ::buffa::MessageFieldView<
@@ -39787,7 +39785,7 @@ impl LimitReachedOwnedView {
         self.0.reborrow().max
     }
     /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a ForkSandbox of more copies than the limit.
+    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
     ///
     /// Field 3: `retry_time`
     #[must_use]
@@ -40557,7 +40555,7 @@ impl ::serde::Serialize for RestoringOwnedView {
 /// UNAVAILABLE: no room for it now.
 #[derive(Clone, Debug, Default)]
 pub struct NoCapacityView<'a> {
-    /// ForkSandbox: how many copies the source's server has room for.
+    /// Unused: 0.
     ///
     /// Field 1: `fork_count`
     pub fork_count: ::core::option::Option<i32>,
@@ -40791,7 +40789,7 @@ impl NoCapacityOwnedView {
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
     }
-    /// ForkSandbox: how many copies the source's server has room for.
+    /// Unused: 0.
     ///
     /// Field 1: `fork_count`
     #[must_use]

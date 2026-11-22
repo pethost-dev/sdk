@@ -4616,7 +4616,7 @@ export class Pethost {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.6.0");
+      request.header.set("User-Agent", "pethost-typescript/0.6.1");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({

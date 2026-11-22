@@ -107,14 +107,14 @@ type SSHKey struct {
 // [CodeResourceExhausted] + [LimitReached], naming it.
 type Limits struct {
 	// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-	// STOPPED with [Lifecycle.WakeWhenStopped], and every create, fork, start or move under way.
-	// Checked by [Client.CreateSandbox], [Client.ForkSandbox], [Client.ResumeSandbox] of a STOPPED
-	// sandbox, [Client.UpdateSandbox]'s new size of one that counts, and
-	// [Lifecycle.WakeWhenStopped] turned on for a STOPPED one. A sandbox that counts is never
-	// refused for it: a call into a PAUSED one, or into a STOPPED one that wakes when stopped,
-	// wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
+	// STOPPED with [Lifecycle.WakeWhenStopped], and every create, start or move under way. Checked
+	// by [Client.CreateSandbox], [Client.ResumeSandbox] of a STOPPED sandbox,
+	// [Client.UpdateSandbox]'s new size of one that counts, and [Lifecycle.WakeWhenStopped] turned
+	// on for a STOPPED one. A sandbox that counts is never refused for it: a call into a PAUSED
+	// one, or into a STOPPED one that wakes when stopped, wakes it. Stopping one frees its vCPUs,
+	// but for one that wakes when stopped.
 	Vcpus int32
-	// The largest size it may create, fork, start or change a sandbox to.
+	// The largest size it may create, start or change a sandbox to.
 	LargestSize Size
 	// The most GiB its volumes may take together ([Client.CreateVolume]).
 	VolumeGib int32
@@ -127,10 +127,10 @@ type Limits struct {
 	TemplateVersions int32
 	TemplateGib      int32
 	// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-	// [Client.CreateSandbox], each copy of a [Client.ForkSandbox] and a [Client.ResumeSandbox] of
-	// a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused
-	// ([LimitReached], with [LimitReached.RetryTime]). [Client.ResumeSandbox] of a PAUSED sandbox,
-	// and a wake by a call into one (IDLE AND WAKE), are never starts. 0 = no limit.
+	// [Client.CreateSandbox] and a [Client.ResumeSandbox] of a STOPPED sandbox are each a start,
+	// which costs nothing, and one past a limit is refused ([LimitReached], with
+	// [LimitReached.RetryTime]). [Client.ResumeSandbox] of a PAUSED sandbox, and a wake by a call
+	// into one (IDLE AND WAKE), are never starts. 0 = no limit.
 	StartsPerMinute int32
 	StartsPerHour   int32
 	StartsPerDay    int32
@@ -249,8 +249,8 @@ type Sandbox struct {
 	// Grows with every change of its settings ([UpdateSandboxRequest.IfRevision]).
 	Revision int64
 	// What it may write: its size's disk at its create, which a new size keeps unless
-	// [UpdateSandboxRequest.GrowDisk] grows it to the new size's, and a fork its source's. No size
-	// whose disk is smaller is allowed (SIZES).
+	// [UpdateSandboxRequest.GrowDisk] grows it to the new size's. No size whose disk is smaller is
+	// allowed (SIZES).
 	DiskGib int32
 	Mounts  []Mount
 	// Its screen: every sandbox has one ([Client.ControlDesktop]).
@@ -263,9 +263,8 @@ type Sandbox struct {
 	PanelURL   string
 	CreateTime time.Time
 	Usage      *Usage
-	// In the answers of [Client.CreateSandbox] and [Client.ForkSandbox] only: what
-	// [Client.ConnectSandbox] would answer. An MCP tool's answer leaves it out:
-	// [Client.ConnectSandbox] gives it to an agent that asks.
+	// In [Client.CreateSandbox]'s answer only: what [Client.ConnectSandbox] would answer. An MCP
+	// tool's answer leaves it out: [Client.ConnectSandbox] gives it to an agent that asks.
 	Connection *Connection
 	// STOPPED while its disk is fetched from object storage for a start: how far that is. Absent
 	// otherwise.
@@ -404,26 +403,6 @@ type StopSandboxRequest struct {
 // ResumeSandboxRequest is the request of [Client.ResumeSandbox].
 type ResumeSandboxRequest struct {
 	SandboxID string
-}
-
-// ForkSandboxRequest is the request of [Client.ForkSandbox].
-type ForkSandboxRequest struct {
-	SandboxID string
-	// Absent = 1; at most 100.
-	Count int32
-	// The copies', at most 32. None = the source's.
-	Labels []Label
-	// Groups sent replace the source's in the copies. Its size is the source's: another is
-	// [CodeInvalidArgument].
-	Settings *SandboxSettings
-	// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-	// nothing again and answers what the first call did (24 h).
-	RequestID string
-}
-
-// ForkSandboxResponse is the response of [Client.ForkSandbox].
-type ForkSandboxResponse struct {
-	Sandboxes []Sandbox
 }
 
 // DeleteSandboxRequest is the request of [Client.DeleteSandbox].
@@ -673,7 +652,7 @@ type SandboxEventAgentTurn AgentTurnEvent
 type LifecycleEvent struct {
 	Change LifecycleChange
 	Reason StateReason
-	// CREATED by [Client.ForkSandbox]: the source.
+	// CREATED as a copy of another sandbox: that one.
 	ForkedFrom string
 	// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
 	// STOPPED one takes it at its next start.
@@ -1531,8 +1510,7 @@ type LimitReached struct {
 	Limit string
 	Max   int32
 	// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-	// which may be retried then. Absent = never: a [Client.ForkSandbox] of more copies than the
-	// limit.
+	// which may be retried then. Absent = never: a call that asks more starts than the limit.
 	RetryTime time.Time
 }
 
@@ -1563,7 +1541,7 @@ type Restoring struct {
 //
 // [CodeUnavailable]: no room for it now.
 type NoCapacity struct {
-	// [Client.ForkSandbox]: how many copies the source's server has room for.
+	// Unused: 0.
 	ForkCount int32
 	// What the server that refused it lacked; absent when no server was asked, none having room by
 	// what they report.
@@ -2084,7 +2062,7 @@ func (v MouseButton) String() string {
 
 // Coding agents in every sandbox, from our base. One signs in with a secret bound to its
 // variable (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A
-// conversation's history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+// conversation's history stays on the sandbox's disk: a pause keeps it.
 //
 // The API may add values: one that this version of the package does not know keeps its number
 // and prints as "Agent(4)".

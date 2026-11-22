@@ -331,17 +331,6 @@ check("ResumeSandbox: the connection its answer holds is kept", async () => {
   assert.equal(served()[0]?.headers.get("Authorization"), "Bearer sbc.held");
 });
 
-check("ForkSandbox: the connection its answer holds is kept", async () => {
-  const holds = (call: Call): Answer =>
-    call.url.endsWith("/ForkSandbox") ? answer(w.ForkSandboxResponseSchema, { sandboxes: [{ sandboxId: "s1", connection: connection({ token: "sbc.held" }) }] }) : atApi(call);
-  const { api, connects, served } = servers(undefined, holds);
-  await api.forkSandbox({});
-  await into(api, "s1");
-
-  assert.equal(connects().length, 0);
-  assert.equal(served()[0]?.headers.get("Authorization"), "Bearer sbc.held");
-});
-
 check("DeleteSandbox: the connection its answer holds is kept", async () => {
   const holds = (call: Call): Answer =>
     call.url.endsWith("/DeleteSandbox") ? answer(w.SandboxSchema, { sandboxId: "s1", connection: connection({ token: "sbc.held" }) }) : atApi(call);
@@ -370,25 +359,6 @@ check("CreateSandbox: a request_id given is sent as it is", async () => {
   const { api, calls } = servers();
   await api.createSandbox({ requestId: "given" });
   assert.deepStrictEqual(sent(calls, "CreateSandbox", w.CreateSandboxRequestSchema).map((message) => message.requestId), ["given"]);
-});
-
-check("ForkSandbox: a request_id of its own for each call that gives none", async () => {
-  const { api, calls } = servers();
-  const request = {};
-  await api.forkSandbox(request);
-  await api.forkSandbox(request);
-
-  assert.deepStrictEqual(request, {}, "the caller's request was changed");
-  const ids = sent(calls, "ForkSandbox", w.ForkSandboxRequestSchema).map((message) => message.requestId);
-  assert.equal(ids.length, 2);
-  for (const id of ids) assert.match(id, filledId);
-  assert.notEqual(ids[0], ids[1]);
-});
-
-check("ForkSandbox: a request_id given is sent as it is", async () => {
-  const { api, calls } = servers();
-  await api.forkSandbox({ requestId: "given" });
-  assert.deepStrictEqual(sent(calls, "ForkSandbox", w.ForkSandboxRequestSchema).map((message) => message.requestId), ["given"]);
 });
 
 check("CreateTemplate: a request_id of its own for each call that gives none", async () => {

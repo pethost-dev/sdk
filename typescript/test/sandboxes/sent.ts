@@ -124,19 +124,6 @@ import type * as p from "pethost/sandboxes";
 }
 
 {
-  const m = sending(w.ForkSandboxRequestSchema, (leaf: Init<typeof w.ForkSandboxRequestSchema>): Init<typeof w.ForkSandboxRequestSchema> => (leaf), async (api, given: p.ForkSandboxRequest) => api.forkSandbox(given), {}, "requestId");
-  m.sends("ForkSandboxRequest: nothing set", {}, {});
-  m.sends("ForkSandboxRequest.sandbox_id", { sandboxId: "sandbox_id" }, { sandboxId: "sandbox_id" });
-  m.sends("ForkSandboxRequest.sandbox_id: zero is not sent", { sandboxId: "" }, {});
-  m.sends("ForkSandboxRequest.count", { count: -1002 }, { count: -1002 });
-  m.sends("ForkSandboxRequest.count: zero is not sent", { count: 0 }, {});
-  m.sends("ForkSandboxRequest.labels", { labels: [{}] }, { labels: [{}] });
-  m.sends("ForkSandboxRequest.settings", { settings: {} }, { settings: {} });
-  m.sends("ForkSandboxRequest.request_id", { requestId: "request_id" }, { requestId: "request_id" });
-  m.sends("ForkSandboxRequest.request_id: zero is not sent", { requestId: "" }, {});
-}
-
-{
   const m = sending(w.DeleteSandboxRequestSchema, (leaf: Init<typeof w.DeleteSandboxRequestSchema>): Init<typeof w.DeleteSandboxRequestSchema> => (leaf), async (api, given: p.DeleteSandboxRequest) => api.deleteSandbox(given));
   m.sends("DeleteSandboxRequest: nothing set", {}, {});
   m.sends("DeleteSandboxRequest.sandbox_id", { sandboxId: "sandbox_id" }, { sandboxId: "sandbox_id" });

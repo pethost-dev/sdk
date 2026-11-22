@@ -29,7 +29,7 @@
 //! server: the client asks [`Client::connect_sandbox`] where that is and for a token of that
 //! one sandbox, keeps the answer until shortly before it expires, and asks again once when a
 //! call says the token no longer holds, as after the sandbox moved to another server. A
-//! sandbox made or forked comes with its connection already. The program names no server and
+//! sandbox made comes with its connection already. The program names no server and
 //! holds no second token: the request's `sandbox_id` says where it goes.
 //!
 //! The API's own documentation follows; the comments of the methods and the types are its

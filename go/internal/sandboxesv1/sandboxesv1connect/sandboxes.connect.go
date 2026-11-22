@@ -4,8 +4,8 @@
 
 // Pethost Agent Sandboxes: Linux microVMs, each a Firecracker VM with its own kernel, to run code,
 // coding agents and a desktop with Chrome. A sandbox starts from a template in about 0.1 s, pauses
-// with its memory when idle and wakes at the next call, stops to object storage when idle longer,
-// and forks. It is not where an app stays online for people: that is Pethost App Platform, a
+// with its memory when idle and wakes at the next call, and stops to object storage when idle
+// longer. It is not where an app stays online for people: that is Pethost App Platform, a
 // separate connector. Start with ListSandboxes: reuse one before CreateSandbox.
 //
 // Two services, by who answers: SandboxService, the panel, for the workspace and each sandbox as
@@ -492,22 +492,32 @@ type SandboxServiceClient interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on
-	// its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-	// copies of a STOPPED one start from its disk. The copies are the source's size, with its disk,
-	// each with its own id, hostname, machine-id and kernel randomness, and no name (names are
-	// unique: UpdateSandbox gives one); their processes keep the
-	// state they had, their random generators and the keys they made among it.
-	// All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with a
-	// read-write volume.
+	// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
+	// the API's page. A fork's
+	// copies run on its source's server alone, so how many one call makes is what that one server
+	// has free, which no number of servers raises: a copy's memory resumes only on the processor it
+	// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
+	// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
+	// from it, on any server.
+	//
+	// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
+	// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
+	// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
+	// disk. The copies are the source's size, with its disk, each with its own id, hostname,
+	// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
+	// their processes keep the state they had, their random generators and the keys they made
+	// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
+	// a read-write volume.
+	//
+	// Deprecated: do not use.
 	ForkSandbox(context.Context, *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error)
 	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
 	// included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
 	// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
 	// and the SSH command the token is the password of: the header says how to call it. The token
-	// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox and
-	// ForkSandbox answer with one already.
+	// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox answers
+	// with one already.
 	ConnectSandbox(context.Context, *sandboxesv1.ConnectSandboxRequest) (*sandboxesv1.Connection, error)
 	// CPU, memory, disk and network over time.
 	GetSandboxMetrics(context.Context, *sandboxesv1.GetSandboxMetricsRequest) (*sandboxesv1.GetSandboxMetricsResponse, error)
@@ -659,22 +669,32 @@ type SandboxServiceHandler interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Copies a sandbox as it is now, memory, processes and disk, into `count` new RUNNING ones on
-	// its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-	// copies of a STOPPED one start from its disk. The copies are the source's size, with its disk,
-	// each with its own id, hostname, machine-id and kernel randomness, and no name (names are
-	// unique: UpdateSandbox gives one); their processes keep the
-	// state they had, their random generators and the keys they made among it.
-	// All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with a
-	// read-write volume.
+	// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
+	// the API's page. A fork's
+	// copies run on its source's server alone, so how many one call makes is what that one server
+	// has free, which no number of servers raises: a copy's memory resumes only on the processor it
+	// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
+	// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
+	// from it, on any server.
+	//
+	// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
+	// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
+	// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
+	// disk. The copies are the source's size, with its disk, each with its own id, hostname,
+	// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
+	// their processes keep the state they had, their random generators and the keys they made
+	// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
+	// a read-write volume.
+	//
+	// Deprecated: do not use.
 	ForkSandbox(context.Context, *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error)
 	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
 	// included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
 	// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
 	// and the SSH command the token is the password of: the header says how to call it. The token
-	// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox and
-	// ForkSandbox answer with one already.
+	// is root in the sandbox: give it to a program, never to a page or a message. CreateSandbox answers
+	// with one already.
 	ConnectSandbox(context.Context, *sandboxesv1.ConnectSandboxRequest) (*sandboxesv1.Connection, error)
 	// CPU, memory, disk and network over time.
 	GetSandboxMetrics(context.Context, *sandboxesv1.GetSandboxMetricsRequest) (*sandboxesv1.GetSandboxMetricsResponse, error)

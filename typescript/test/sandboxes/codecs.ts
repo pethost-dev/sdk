@@ -294,24 +294,6 @@ import * as p from "pethost/sandboxes";
 }
 
 {
-  const m = json(p.ForkSandboxRequest, w.ForkSandboxRequestSchema);
-  m.converts("ForkSandboxRequest: nothing set", {}, empty.ForkSandboxRequest());
-  m.refuses("ForkSandboxRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("ForkSandboxRequest.sandbox_id", { sandboxId: "sandbox_id" }, { ...empty.ForkSandboxRequest(), sandboxId: "sandbox_id" });
-  m.converts("ForkSandboxRequest.count", { count: -1002 }, { ...empty.ForkSandboxRequest(), count: -1002 });
-  m.converts("ForkSandboxRequest.labels", { labels: [{}] }, { ...empty.ForkSandboxRequest(), labels: [empty.Label()] });
-  m.converts("ForkSandboxRequest.settings", { settings: {} }, { ...empty.ForkSandboxRequest(), settings: empty.SandboxSettings() });
-  m.converts("ForkSandboxRequest.request_id", { requestId: "request_id" }, { ...empty.ForkSandboxRequest(), requestId: "request_id" });
-}
-
-{
-  const m = json(p.ForkSandboxResponse, w.ForkSandboxResponseSchema);
-  m.converts("ForkSandboxResponse: nothing set", {}, empty.ForkSandboxResponse());
-  m.refuses("ForkSandboxResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("ForkSandboxResponse.sandboxes", { sandboxes: [{}] }, { ...empty.ForkSandboxResponse(), sandboxes: [empty.Sandbox()] });
-}
-
-{
   const m = json(p.DeleteSandboxRequest, w.DeleteSandboxRequestSchema);
   m.converts("DeleteSandboxRequest: nothing set", {}, empty.DeleteSandboxRequest());
   m.refuses("DeleteSandboxRequest: a field the API does not have", { no_such_field: true }, "no_such_field");

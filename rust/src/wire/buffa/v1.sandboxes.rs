@@ -2465,7 +2465,7 @@ impl ::buffa::Enumeration for MouseButton {
 ///
 /// Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable
 /// (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A conversation's
-/// history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+/// history stays on the sandbox's disk: a pause keeps it.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(i32)]
@@ -4681,8 +4681,8 @@ pub const __SSH_KEY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
 #[serde(default)]
 pub struct Limits {
     /// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-    /// STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-    /// Checked by CreateSandbox, ForkSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
+    /// STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+    /// Checked by CreateSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
     /// size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
     /// counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
     /// when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
@@ -4694,7 +4694,7 @@ pub struct Limits {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub vcpus: ::core::option::Option<i32>,
-    /// The largest size it may create, fork, start or change a sandbox to.
+    /// The largest size it may create, start or change a sandbox to.
     ///
     /// Field 5: `largest_size`
     #[serde(
@@ -4734,8 +4734,7 @@ pub struct Limits {
     )]
     pub template_gib: ::core::option::Option<i32>,
     /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox, each copy of a ForkSandbox and a ResumeSandbox of a STOPPED sandbox are each a
-    /// start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
     /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
     /// starts. 0 = no limit.
     ///
@@ -5986,7 +5985,7 @@ pub struct Sandbox {
     )]
     pub revision: ::core::option::Option<i64>,
     /// What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-    /// grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+    /// grows it to the new size's. No size whose disk is smaller is allowed
     /// (SIZES).
     ///
     /// Field 12: `disk_gib`
@@ -6044,7 +6043,7 @@ pub struct Sandbox {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
     )]
     pub usage: ::buffa::MessageField<Usage, ::buffa::Inline<Usage>>,
-    /// In the answers of CreateSandbox and ForkSandbox only: what ConnectSandbox would answer. An MCP
+    /// In CreateSandbox's answer only: what ConnectSandbox would answer. An MCP
     /// tool's answer leaves it out: ConnectSandbox gives it to an agent that asks.
     ///
     /// Field 20: `connection`
@@ -13689,7 +13688,7 @@ pub struct LifecycleEvent {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub reason: ::core::option::Option<::buffa::EnumValue<StateReason>>,
-    /// CREATED by ForkSandbox: the source.
+    /// CREATED as a copy of another sandbox: that one.
     ///
     /// Field 3: `forked_from`
     #[serde(
@@ -30784,7 +30783,7 @@ pub struct LimitReached {
     )]
     pub max: ::core::option::Option<i32>,
     /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a ForkSandbox of more copies than the limit.
+    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
     ///
     /// Field 3: `retry_time`
     #[serde(
@@ -31365,7 +31364,7 @@ pub const __RESTORING_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct NoCapacity {
-    /// ForkSandbox: how many copies the source's server has room for.
+    /// Unused: 0.
     ///
     /// Field 1: `fork_count`
     #[serde(

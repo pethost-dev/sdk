@@ -7,7 +7,7 @@
 //!
 //! - A connection is kept per sandbox, and used until 60 seconds before it
 //!   expires; then, or when none is kept, the client asks for one. A connection that an answer
-//!   holds, as a sandbox made or forked has, is kept too.
+//!   holds, as a sandbox made has, is kept too.
 //! - A call made with a kept connection that fails with `UNAUTHENTICATED` (a token expired or
 //!   revoked), `PERMISSION_DENIED` (another server's token, after a move) or `NOT_FOUND` (a
 //!   server that let the sandbox go) did nothing: the client lets go of that connection, unless

@@ -6,8 +6,8 @@
 
 // Pethost Agent Sandboxes: Linux microVMs, each a Firecracker VM with its own kernel, to run code,
 // coding agents and a desktop with Chrome. A sandbox starts from a template in about 0.1 s, pauses
-// with its memory when idle and wakes at the next call, stops to object storage when idle longer,
-// and forks. It is not where an app stays online for people: that is Pethost App Platform, a
+// with its memory when idle and wakes at the next call, and stops to object storage when idle
+// longer. It is not where an app stays online for people: that is Pethost App Platform, a
 // separate connector. Start with ListSandboxes: reuse one before CreateSandbox.
 //
 // Two services, by who answers: SandboxService, the panel, for the workspace and each sandbox as
@@ -833,7 +833,7 @@ func (x MouseButton) Number() protoreflect.EnumNumber {
 
 // Coding agents in every sandbox, from our base. One signs in with a secret bound to its variable
 // (ANTHROPIC_API_KEY, OPENAI_API_KEY), or as a person signed it in in a terminal. A conversation's
-// history stays on the sandbox's disk: a pause keeps it, and a fork carries it.
+// history stays on the sandbox's disk: a pause keeps it.
 type Agent int32
 
 const (
@@ -2398,13 +2398,13 @@ type Limits_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	// The most vCPUs its sandboxes may have together (SIZES) while they count: RUNNING, PAUSED,
-	// STOPPED with Lifecycle.wake_when_stopped, and every create, fork, start or move under way.
-	// Checked by CreateSandbox, ForkSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
+	// STOPPED with Lifecycle.wake_when_stopped, and every create, start or move under way.
+	// Checked by CreateSandbox, ResumeSandbox of a STOPPED sandbox, UpdateSandbox's new
 	// size of one that counts, and wake_when_stopped turned on for a STOPPED one. A sandbox that
 	// counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
 	// when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
 	Vcpus *int32
-	// The largest size it may create, fork, start or change a sandbox to.
+	// The largest size it may create, start or change a sandbox to.
 	LargestSize *Size
 	// The most GiB its volumes may take together (CreateVolume).
 	VolumeGib *int32
@@ -2417,8 +2417,7 @@ type Limits_builder struct {
 	TemplateVersions *int32
 	TemplateGib      *int32
 	// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-	// CreateSandbox, each copy of a ForkSandbox and a ResumeSandbox of a STOPPED sandbox are each a
-	// start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
+	// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
 	// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
 	// starts. 0 = no limit.
 	StartsPerMinute *int32
@@ -3610,7 +3609,7 @@ type Sandbox_builder struct {
 	Settings     *SandboxSettings
 	Revision     *int64
 	// What it may write: its size's disk at its create, which a new size keeps unless grow_disk
-	// grows it to the new size's, and a fork its source's. No size whose disk is smaller is allowed
+	// grows it to the new size's. No size whose disk is smaller is allowed
 	// (SIZES).
 	DiskGib *int32
 	Mounts  []*Mount
@@ -3623,7 +3622,7 @@ type Sandbox_builder struct {
 	PanelUrl   *string
 	CreateTime *timestamppb.Timestamp
 	Usage      *Usage
-	// In the answers of CreateSandbox and ForkSandbox only: what ConnectSandbox would answer. An MCP
+	// In CreateSandbox's answer only: what ConnectSandbox would answer. An MCP
 	// tool's answer leaves it out: ConnectSandbox gives it to an agent that asks.
 	Connection *Connection
 	// STOPPED while its disk is fetched from object storage for a start: how far that is. Absent
@@ -19773,7 +19772,7 @@ type LimitReached_builder struct {
 	Limit *string
 	Max   *int32
 	// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-	// which may be retried then. Absent = never: a ForkSandbox of more copies than the limit.
+	// which may be retried then. Absent = never: a call that asks more starts than the limit.
 	RetryTime *timestamppb.Timestamp
 }
 
@@ -21183,7 +21182,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x11ROOM_BOUND_MEMORY\x10\x01\x12\x1b\n" +
 	"\x17ROOM_BOUND_SHORT_MEMORY\x10\x02\x12\x13\n" +
 	"\x0fROOM_BOUND_DISK\x10\x03\x12\x17\n" +
-	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\xa9\x18\n" +
+	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\x98\x18\n" +
 	"\x0eSandboxService\x12w\n" +
 	"\fGetWorkspace\x12).pethost.sandboxes.v1.GetWorkspaceRequest\x1a\x1f.pethost.sandboxes.v1.Workspace\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Read the workspace\x12q\n" +
 	"\n" +
@@ -21200,8 +21199,8 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\rUpdateSandbox\x12*.pethost.sandboxes.v1.UpdateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bChange a sandbox's settings\x12r\n" +
 	"\fPauseSandbox\x12).pethost.sandboxes.v1.PauseSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x18\x90\x02\x02\x8a\xb5\x18\x11\x12\x0fPause a sandbox\x12q\n" +
 	"\vStopSandbox\x12(.pethost.sandboxes.v1.StopSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\b\x01\x12\x0eStop a sandbox\x12u\n" +
-	"\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12x\n" +
-	"\vForkSandbox\x12(.pethost.sandboxes.v1.ForkSandboxRequest\x1a).pethost.sandboxes.v1.ForkSandboxResponse\"\x14\x8a\xb5\x18\x10\x12\x0eFork a sandbox\x12w\n" +
+	"\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12g\n" +
+	"\vForkSandbox\x12(.pethost.sandboxes.v1.ForkSandboxRequest\x1a).pethost.sandboxes.v1.ForkSandboxResponse\"\x03\x88\x02\x01\x12w\n" +
 	"\rDeleteSandbox\x12*.pethost.sandboxes.v1.DeleteSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x1b\x90\x02\x02\x8a\xb5\x18\x14\b\x01\x12\x10Delete a sandbox\x12\x8d\x01\n" +
 	"\x0eConnectSandbox\x12+.pethost.sandboxes.v1.ConnectSandboxRequest\x1a .pethost.sandboxes.v1.Connection\",\x8a\xb5\x18(\x12&Get a sandbox's address and root token\x12\x97\x01\n" +
 	"\x11GetSandboxMetrics\x12..pethost.sandboxes.v1.GetSandboxMetricsRequest\x1a/.pethost.sandboxes.v1.GetSandboxMetricsResponse\"!\x90\x02\x01\x9a\xb5\x18\x1a\n" +

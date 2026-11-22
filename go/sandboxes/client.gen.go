@@ -271,33 +271,6 @@ func (c *Client) ResumeSandbox(ctx context.Context, request *ResumeSandboxReques
 	return answer, nil
 }
 
-// ForkSandbox: fork a sandbox.
-//
-// An empty RequestID is sent as a new one, made for the call.
-//
-// Copies a sandbox as it is now, memory, processes and disk, into Count new RUNNING ones on
-// its server. A RUNNING source pauses for a moment and goes on; a PAUSED one stays paused; the
-// copies of a STOPPED one start from its disk. The copies are the source's size, with its
-// disk, each with its own id, hostname, machine-id and kernel randomness, and no name (names
-// are unique: [Client.UpdateSandbox] gives one); their processes keep the state they had,
-// their random generators and the keys they made among it. All or none: [CodeUnavailable] +
-// [NoCapacity] says how many fit. Refused for a sandbox with a read-write volume.
-func (c *Client) ForkSandbox(ctx context.Context, request *ForkSandboxRequest) (*ForkSandboxResponse, error) {
-	sent := orZero(request)
-	if sent.RequestID == "" {
-		sent.RequestID = newRequestID()
-	}
-	response, err := c.sandboxService.ForkSandbox(ctx, toWireForkSandboxRequest(sent))
-	if err != nil {
-		return nil, fromWireError(err)
-	}
-	answer := new(fromWireForkSandboxResponse(response))
-	for _, held0 := range answer.Sandboxes {
-		c.connections.keep(held0.SandboxID, held0.Connection)
-	}
-	return answer, nil
-}
-
 // DeleteSandbox: delete a sandbox. It may delete or overwrite.
 //
 // Drops its memory and disk for good; its volumes stay. Answers its final record, usage
@@ -318,7 +291,7 @@ func (c *Client) DeleteSandbox(ctx context.Context, request *DeleteSandboxReques
 // Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which
 // expires, and the SSH command the token is the password of: the header says how to call it.
 // The token is root in the sandbox: give it to a program, never to a page or a message.
-// [Client.CreateSandbox] and [Client.ForkSandbox] answer with one already.
+// [Client.CreateSandbox] answers with one already.
 func (c *Client) ConnectSandbox(ctx context.Context, request *ConnectSandboxRequest) (*Connection, error) {
 	sent := orZero(request)
 	response, err := c.sandboxService.ConnectSandbox(ctx, toWireConnectSandboxRequest(sent))
