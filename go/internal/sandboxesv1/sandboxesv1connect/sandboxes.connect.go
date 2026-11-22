@@ -126,8 +126,6 @@ const (
 	// SandboxServiceResumeSandboxProcedure is the procedure name of the SandboxService's ResumeSandbox
 	// RPC.
 	SandboxServiceResumeSandboxProcedure = "/pethost.sandboxes.v1.SandboxService/ResumeSandbox"
-	// SandboxServiceForkSandboxProcedure is the procedure name of the SandboxService's ForkSandbox RPC.
-	SandboxServiceForkSandboxProcedure = "/pethost.sandboxes.v1.SandboxService/ForkSandbox"
 	// SandboxServiceDeleteSandboxProcedure is the procedure name of the SandboxService's DeleteSandbox
 	// RPC.
 	SandboxServiceDeleteSandboxProcedure = "/pethost.sandboxes.v1.SandboxService/DeleteSandbox"
@@ -300,13 +298,6 @@ var (
 			Schema:           sandboxesv1.File_v1_sandboxes_proto.Services().ByName("SandboxService").Methods().ByName("ResumeSandbox"),
 			Procedure:        SandboxServiceResumeSandboxProcedure,
 			IdempotencyLevel: connect.IdempotencyIdempotent,
-		}
-	})
-	sandboxServiceForkSandboxSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     sandboxesv1.File_v1_sandboxes_proto.Services().ByName("SandboxService").Methods().ByName("ForkSandbox"),
-			Procedure:  SandboxServiceForkSandboxProcedure,
 		}
 	})
 	sandboxServiceDeleteSandboxSpec = sync.OnceValue(func() connect.Spec {
@@ -492,25 +483,6 @@ type SandboxServiceClient interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-	// the API's page. A fork's
-	// copies run on its source's server alone, so how many one call makes is what that one server
-	// has free, which no number of servers raises: a copy's memory resumes only on the processor it
-	// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-	// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-	// from it, on any server.
-	//
-	// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-	// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-	// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-	// disk. The copies are the source's size, with its disk, each with its own id, hostname,
-	// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-	// their processes keep the state they had, their random generators and the keys they made
-	// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-	// a read-write volume.
-	//
-	// Deprecated: do not use.
-	ForkSandbox(context.Context, *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error)
 	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
 	// included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
@@ -669,25 +641,6 @@ type SandboxServiceHandler interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-	// the API's page. A fork's
-	// copies run on its source's server alone, so how many one call makes is what that one server
-	// has free, which no number of servers raises: a copy's memory resumes only on the processor it
-	// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-	// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-	// from it, on any server.
-	//
-	// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-	// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-	// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-	// disk. The copies are the source's size, with its disk, each with its own id, hostname,
-	// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-	// their processes keep the state they had, their random generators and the keys they made
-	// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-	// a read-write volume.
-	//
-	// Deprecated: do not use.
-	ForkSandbox(context.Context, *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error)
 	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
 	// included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
@@ -754,7 +707,6 @@ func RegisterSandboxServiceHandler(server *connect.Server, svc SandboxServiceHan
 		connect.Method{Spec: sandboxServicePauseSandboxSpec(), Handler: adapter.pauseSandbox},
 		connect.Method{Spec: sandboxServiceStopSandboxSpec(), Handler: adapter.stopSandbox},
 		connect.Method{Spec: sandboxServiceResumeSandboxSpec(), Handler: adapter.resumeSandbox},
-		connect.Method{Spec: sandboxServiceForkSandboxSpec(), Handler: adapter.forkSandbox},
 		connect.Method{Spec: sandboxServiceDeleteSandboxSpec(), Handler: adapter.deleteSandbox},
 		connect.Method{Spec: sandboxServiceConnectSandboxSpec(), Handler: adapter.connectSandbox},
 		connect.Method{Spec: sandboxServiceGetSandboxMetricsSpec(), Handler: adapter.getSandboxMetrics},
@@ -832,10 +784,6 @@ func (UnimplementedSandboxServiceHandler) StopSandbox(context.Context, *sandboxe
 
 func (UnimplementedSandboxServiceHandler) ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.ResumeSandbox is not implemented")
-}
-
-func (UnimplementedSandboxServiceHandler) ForkSandbox(context.Context, *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.ForkSandbox is not implemented")
 }
 
 func (UnimplementedSandboxServiceHandler) DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error) {
@@ -977,14 +925,6 @@ func (c *sandboxServiceClient) StopSandbox(ctx context.Context, req *sandboxesv1
 func (c *sandboxServiceClient) ResumeSandbox(ctx context.Context, req *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error) {
 	var res sandboxesv1.Sandbox
 	if err := c.client.CallUnary(ctx, sandboxServiceResumeSandboxSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *sandboxServiceClient) ForkSandbox(ctx context.Context, req *sandboxesv1.ForkSandboxRequest) (*sandboxesv1.ForkSandboxResponse, error) {
-	var res sandboxesv1.ForkSandboxResponse
-	if err := c.client.CallUnary(ctx, sandboxServiceForkSandboxSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1222,18 +1162,6 @@ func (h sandboxServiceHandler) resumeSandbox(ctx context.Context, _ connect.Spec
 		return err
 	}
 	res, err := h.svc.ResumeSandbox(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h sandboxServiceHandler) forkSandbox(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req sandboxesv1.ForkSandboxRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.ForkSandbox(ctx, &req)
 	if err != nil {
 		return err
 	}

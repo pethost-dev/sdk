@@ -25,7 +25,7 @@ export const empty = {
   Secret: () => ({ name: "", hosts: [] }),
   SetSecretRequest: () => ({ name: "", value: "", hosts: [], workspace: "" }),
   DeleteSecretRequest: () => ({ name: "", workspace: "" }),
-  Sandbox: () => ({ sandboxId: "", stateMessage: "", template: "", forkedFrom: "", labels: [], revision: 0n, diskGib: 0, mounts: [], sshCommand: "", panelUrl: "", storedBytes: 0n, name: "" }),
+  Sandbox: () => ({ sandboxId: "", stateMessage: "", template: "", labels: [], revision: 0n, diskGib: 0, mounts: [], sshCommand: "", panelUrl: "", storedBytes: 0n, name: "" }),
   Restore: () => ({ fetchedBytes: 0n, totalBytes: 0n }),
   Usage: () => ({ runningSeconds: 0n, pausedSeconds: 0n, storedGibHours: 0, costMicros: 0n }),
   CreateSandboxRequest: () => ({ template: "", labels: [], mounts: [], name: "", requestId: "", workspace: "" }),
@@ -54,7 +54,7 @@ export const empty = {
   ListSandboxEventsResponse: () => ({ events: [], more: false }),
   WatchSandboxEventsRequest: () => ({ sandboxId: "", kinds: [], after: "" }),
   SandboxEvent: () => ({ eventId: "" }),
-  LifecycleEvent: () => ({ forkedFrom: "", diskGib: 0, stateMessage: "" }),
+  LifecycleEvent: () => ({ diskGib: 0, stateMessage: "" }),
   CommandEvent: () => ({ commandId: "", command: "", durationMs: 0n }),
   EgressEvent: () => ({ host: "", port: 0, allowed: false, connections: 0, bytesOut: 0n, bytesIn: 0n, secrets: [] }),
   PortEvent: () => ({ port: 0, requests: 0, serverErrors: 0, bytesIn: 0n, bytesOut: 0n }),
@@ -124,7 +124,7 @@ export const empty = {
   Stopped: () => ({}),
   UsageUnpaid: () => ({}),
   Restoring: () => ({ fetchedBytes: 0n, totalBytes: 0n }),
-  NoCapacity: () => ({ forkCount: 0 }),
+  NoCapacity: () => ({}),
   NameTaken: () => ({ sandboxId: "" }),
   WorkspaceChoice: () => ({ workspaces: [], total: 0 }),
   AgentSignIn: () => ({ variable: "", signInCommand: "" }),
@@ -242,7 +242,6 @@ export const empty = {
   m.reads("Sandbox.state_message", { stateMessage: "state_message" }, { ...empty.Sandbox(), stateMessage: "state_message" });
   m.reads("Sandbox.state_time", { stateTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Sandbox(), stateTime: new Date(1790000000999) });
   m.reads("Sandbox.template", { template: "template" }, { ...empty.Sandbox(), template: "template" });
-  m.reads("Sandbox.forked_from", { forkedFrom: "forked_from" }, { ...empty.Sandbox(), forkedFrom: "forked_from" });
   m.reads("Sandbox.labels", { labels: [{}] }, { ...empty.Sandbox(), labels: [empty.Label()] });
   m.reads("Sandbox.settings", { settings: {} }, { ...empty.Sandbox(), settings: empty.SandboxSettings() });
   m.reads("Sandbox.revision", { revision: -9007199254740993n }, { ...empty.Sandbox(), revision: -9007199254740993n });
@@ -434,7 +433,6 @@ export const empty = {
   m.reads("LifecycleEvent.reason: MAINTENANCE", { reason: w.StateReason.MAINTENANCE }, { ...empty.LifecycleEvent(), reason: "MAINTENANCE" });
   m.reads("LifecycleEvent.reason: UNPAID", { reason: w.StateReason.UNPAID }, { ...empty.LifecycleEvent(), reason: "UNPAID" });
   m.reads("LifecycleEvent.reason: a value newer than the SDK", { reason: 9999 as w.StateReason }, { ...empty.LifecycleEvent(), reason: 9999 });
-  m.reads("LifecycleEvent.forked_from", { forkedFrom: "forked_from" }, { ...empty.LifecycleEvent(), forkedFrom: "forked_from" });
   m.reads("LifecycleEvent.size: SMALL", { size: w.Size.SMALL }, { ...empty.LifecycleEvent(), size: "SMALL" });
   m.reads("LifecycleEvent.size: DEFAULT", { size: w.Size.DEFAULT }, { ...empty.LifecycleEvent(), size: "DEFAULT" });
   m.reads("LifecycleEvent.size: LARGE", { size: w.Size.LARGE }, { ...empty.LifecycleEvent(), size: "LARGE" });
@@ -875,7 +873,6 @@ export const empty = {
   const m = readingDetail(w.NoCapacitySchema, (leaf: Init<typeof w.NoCapacitySchema>): Init<typeof w.NoCapacitySchema> => (leaf), anyCall, (error) => error.noCapacity);
   m.reads("NoCapacity: nothing set", {}, empty.NoCapacity());
   m.reads("NoCapacity: a field newer than the SDK", newer(w.NoCapacitySchema), empty.NoCapacity());
-  m.reads("NoCapacity.fork_count", { forkCount: -1001 }, { ...empty.NoCapacity(), forkCount: -1001 });
   m.reads("NoCapacity.bound: MEMORY", { bound: w.RoomBound.MEMORY }, { ...empty.NoCapacity(), bound: "MEMORY" });
   m.reads("NoCapacity.bound: SHORT_MEMORY", { bound: w.RoomBound.SHORT_MEMORY }, { ...empty.NoCapacity(), bound: "SHORT_MEMORY" });
   m.reads("NoCapacity.bound: DISK", { bound: w.RoomBound.DISK }, { ...empty.NoCapacity(), bound: "DISK" });

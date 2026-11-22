@@ -233,7 +233,6 @@ func fromWireSandbox(w *sandboxesv1.Sandbox) Sandbox {
 		w.GetStateMessage(),
 		timeFromWire(w.GetStateTime()),
 		w.GetTemplate(),
-		w.GetForkedFrom(),
 		sliceFromWire(w.GetLabels(), fromWireLabel),
 		pointerFromWire(w.GetSettings(), fromWireSandboxSettings),
 		w.GetRevision(),
@@ -261,7 +260,6 @@ func toWireSandbox(v Sandbox) *sandboxesv1.Sandbox {
 		StateMessage:  nonZero(v.StateMessage),
 		StateTime:     timeToWire(v.StateTime),
 		Template:      nonZero(v.Template),
-		ForkedFrom:    nonZero(v.ForkedFrom),
 		Labels:        sliceToWire(v.Labels, toWireLabel),
 		Settings:      pointerToWire(v.Settings, toWireSandboxSettings),
 		Revision:      nonZero(v.Revision),
@@ -838,7 +836,6 @@ func fromWireLifecycleEvent(w *sandboxesv1.LifecycleEvent) LifecycleEvent {
 	return LifecycleEvent{
 		fromWireLifecycleChange(w.GetChange()),
 		fromWireStateReason(w.GetReason()),
-		w.GetForkedFrom(),
 		fromWireSize(w.GetSize()),
 		w.GetDiskGib(),
 		w.GetStateMessage(),
@@ -849,7 +846,6 @@ func toWireLifecycleEvent(v LifecycleEvent) *sandboxesv1.LifecycleEvent {
 	b := sandboxesv1.LifecycleEvent_builder{
 		Change:       nonZero(toWireLifecycleChange(v.Change)),
 		Reason:       nonZero(toWireStateReason(v.Reason)),
-		ForkedFrom:   nonZero(v.ForkedFrom),
 		Size:         nonZero(toWireSize(v.Size)),
 		DiskGib:      nonZero(v.DiskGib),
 		StateMessage: nonZero(v.StateMessage),
@@ -2360,15 +2356,13 @@ func toWireRestoring(v Restoring) *sandboxesv1.Restoring {
 
 func fromWireNoCapacity(w *sandboxesv1.NoCapacity) NoCapacity {
 	return NoCapacity{
-		w.GetForkCount(),
 		fromWireRoomBound(w.GetBound()),
 	}
 }
 
 func toWireNoCapacity(v NoCapacity) *sandboxesv1.NoCapacity {
 	b := sandboxesv1.NoCapacity_builder{
-		ForkCount: nonZero(v.ForkCount),
-		Bound:     nonZero(toWireRoomBound(v.Bound)),
+		Bound: nonZero(toWireRoomBound(v.Bound)),
 	}
 	return b.Build()
 }

@@ -592,21 +592,20 @@ mod samples {
             message.state_message = states::plain(k, states::text("state_message", k));
             message.state_time = states::maybe(k, states::time(states::number(5, k + 4)));
             message.template = states::plain(k, states::text("template", k));
-            message.forked_from = states::plain(k, states::text("forked_from", k));
-            message.labels = states::many(k, [samples::label(k + 7, later), samples::label(k + 8, later)]);
-            message.settings = states::maybe(k, samples::sandbox_settings(k + 8, later));
+            message.labels = states::many(k, [samples::label(k + 6, later), samples::label(k + 7, later)]);
+            message.settings = states::maybe(k, samples::sandbox_settings(k + 7, later));
             message.revision = states::plain(k, -(i64::from(states::number(11, k)) << 44));
             message.disk_gib = states::plain(k, -(states::number(12, k) as i32));
-            message.mounts = states::many(k, [samples::mount(k + 11, later), samples::mount(k + 12, later)]);
-            message.desktop = states::maybe(k, samples::desktop(k + 12, later));
+            message.mounts = states::many(k, [samples::mount(k + 10, later), samples::mount(k + 11, later)]);
+            message.desktop = states::maybe(k, samples::desktop(k + 11, later));
             message.ssh_command = states::plain(k, states::text("ssh_command", k));
             message.panel_url = states::plain(k, states::text("panel_url", k));
-            message.create_time = states::maybe(k, states::time(states::number(17, k + 15)));
-            message.usage = states::maybe(k, samples::usage(k + 16, later));
-            message.connection = states::maybe(k, samples::connection(k + 17, later));
-            message.restore = states::maybe(k, samples::restore(k + 18, later));
-            message.next_state = samples::sandbox_state(k + 19);
-            message.next_state_time = states::maybe(k, states::time(states::number(24, k + 20)));
+            message.create_time = states::maybe(k, states::time(states::number(17, k + 14)));
+            message.usage = states::maybe(k, samples::usage(k + 15, later));
+            message.connection = states::maybe(k, samples::connection(k + 16, later));
+            message.restore = states::maybe(k, samples::restore(k + 17, later));
+            message.next_state = samples::sandbox_state(k + 18);
+            message.next_state_time = states::maybe(k, states::time(states::number(24, k + 19)));
             message.stored_bytes = states::plain(k, -(i64::from(states::number(25, k)) << 44));
             message.name = states::plain(k, states::text("name", k));
         })
@@ -869,8 +868,7 @@ mod samples {
         states::make(|message: &mut types::LifecycleEvent| {
             message.change = samples::lifecycle_change(k);
             message.reason = samples::state_reason(k + 1);
-            message.forked_from = states::plain(k, states::text("forked_from", k));
-            message.size = samples::size(k + 3);
+            message.size = samples::size(k + 2);
             message.disk_gib = states::plain(k, -(states::number(6, k) as i32));
             message.state_message = states::plain(k, states::text("state_message", k));
         })
@@ -1562,8 +1560,7 @@ mod samples {
 
     pub fn no_capacity(k: usize, later: bool) -> types::NoCapacity {
         states::make(|message: &mut types::NoCapacity| {
-            message.fork_count = states::plain(k, -(states::number(1, k) as i32));
-            message.bound = samples::room_bound(k + 1);
+            message.bound = samples::room_bound(k);
         })
     }
 
@@ -1993,21 +1990,20 @@ mod on_wire {
             state_message: states::present(states::plain(k, states::text("state_message", k))),
             state_time: states::maybe(k, states::time_on_wire(states::number(5, k + 4))).into(),
             template: states::present(states::plain(k, states::text("template", k))),
-            forked_from: states::present(states::plain(k, states::text("forked_from", k))),
-            labels: states::many(k, [on_wire::label(k + 7, received), on_wire::label(k + 8, received)]),
-            settings: states::maybe(k, on_wire::sandbox_settings(k + 8, received)).into(),
+            labels: states::many(k, [on_wire::label(k + 6, received), on_wire::label(k + 7, received)]),
+            settings: states::maybe(k, on_wire::sandbox_settings(k + 7, received)).into(),
             revision: states::present(states::plain(k, -(i64::from(states::number(11, k)) << 44))),
             disk_gib: states::present(states::plain(k, -(states::number(12, k) as i32))),
-            mounts: states::many(k, [on_wire::mount(k + 11, received), on_wire::mount(k + 12, received)]),
-            desktop: states::maybe(k, on_wire::desktop(k + 12, received)).into(),
+            mounts: states::many(k, [on_wire::mount(k + 10, received), on_wire::mount(k + 11, received)]),
+            desktop: states::maybe(k, on_wire::desktop(k + 11, received)).into(),
             ssh_command: states::present(states::plain(k, states::text("ssh_command", k))),
             panel_url: states::present(states::plain(k, states::text("panel_url", k))),
-            create_time: states::maybe(k, states::time_on_wire(states::number(17, k + 15))).into(),
-            usage: states::maybe(k, on_wire::usage(k + 16, received)).into(),
-            connection: states::maybe(k, on_wire::connection(k + 17, received)).into(),
-            restore: states::maybe(k, on_wire::restore(k + 18, received)).into(),
-            next_state: states::set(on_wire::sandbox_state(k + 19)),
-            next_state_time: states::maybe(k, states::time_on_wire(states::number(24, k + 20))).into(),
+            create_time: states::maybe(k, states::time_on_wire(states::number(17, k + 14))).into(),
+            usage: states::maybe(k, on_wire::usage(k + 15, received)).into(),
+            connection: states::maybe(k, on_wire::connection(k + 16, received)).into(),
+            restore: states::maybe(k, on_wire::restore(k + 17, received)).into(),
+            next_state: states::set(on_wire::sandbox_state(k + 18)),
+            next_state_time: states::maybe(k, states::time_on_wire(states::number(24, k + 19))).into(),
             stored_bytes: states::present(states::plain(k, -(i64::from(states::number(25, k)) << 44))),
             name: states::present(states::plain(k, states::text("name", k))),
             ..Default::default()
@@ -2432,8 +2428,7 @@ mod on_wire {
         let mut message = wire::LifecycleEvent {
             change: states::set(on_wire::lifecycle_change(k)),
             reason: states::set(on_wire::state_reason(k + 1)),
-            forked_from: states::present(states::plain(k, states::text("forked_from", k))),
-            size: states::set(on_wire::size(k + 3)),
+            size: states::set(on_wire::size(k + 2)),
             disk_gib: states::present(states::plain(k, -(states::number(6, k) as i32))),
             state_message: states::present(states::plain(k, states::text("state_message", k))),
             ..Default::default()
@@ -3536,8 +3531,7 @@ mod on_wire {
 
     pub fn no_capacity(k: usize, received: bool) -> wire::NoCapacity {
         let mut message = wire::NoCapacity {
-            fork_count: states::present(states::plain(k, -(states::number(1, k) as i32))),
-            bound: states::set(on_wire::room_bound(k + 1)),
+            bound: states::set(on_wire::room_bound(k)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -6545,7 +6539,6 @@ fn sandbox_is_json() {
         "state_message",
         "state_time",
         "template",
-        "forked_from",
         "labels",
         "settings",
         "revision",
@@ -6836,7 +6829,7 @@ fn sandbox_event_is_json() {
 
 #[test]
 fn lifecycle_event_is_json() {
-    let names = ["change", "reason", "forked_from", "size", "disk_gib", "state_message"];
+    let names = ["change", "reason", "size", "disk_gib", "state_message"];
     a_message_is_json(8, &names, samples::lifecycle_event, on_wire::lifecycle_event);
 }
 
@@ -7486,7 +7479,7 @@ fn restoring_is_json() {
 
 #[test]
 fn no_capacity_is_json() {
-    let names = ["fork_count", "bound"];
+    let names = ["bound"];
     a_message_is_json(6, &names, samples::no_capacity, on_wire::no_capacity);
 }
 

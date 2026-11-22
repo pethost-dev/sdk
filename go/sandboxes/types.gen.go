@@ -241,9 +241,7 @@ type Sandbox struct {
 	StateTime time.Time
 	// The exact version it started from: "my-app@3".
 	Template string
-	// The sandbox it was copied from, if any.
-	ForkedFrom string
-	Labels     []Label
+	Labels   []Label
 	// In force: every group, its defaults filled in.
 	Settings *SandboxSettings
 	// Grows with every change of its settings ([UpdateSandboxRequest.IfRevision]).
@@ -652,8 +650,6 @@ type SandboxEventAgentTurn AgentTurnEvent
 type LifecycleEvent struct {
 	Change LifecycleChange
 	Reason StateReason
-	// CREATED as a copy of another sandbox: that one.
-	ForkedFrom string
 	// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
 	// STOPPED one takes it at its next start.
 	Size Size
@@ -1541,8 +1537,6 @@ type Restoring struct {
 //
 // [CodeUnavailable]: no room for it now.
 type NoCapacity struct {
-	// Unused: 0.
-	ForkCount int32
 	// What the server that refused it lacked; absent when no server was asked, none having room by
 	// what they report.
 	Bound RoomBound

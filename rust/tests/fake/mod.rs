@@ -21,7 +21,7 @@ use tokio::net::{TcpListener, TcpStream};
 pub const TOKEN: &str = "pth_checks";
 
 /// What every call says of itself beside its token: what makes it, and the protocol's version.
-pub const HEADERS: [(&str, &str); 2] = [("user-agent", "pethost-rust/0.6.1"), ("connect-protocol-version", "1")];
+pub const HEADERS: [(&str, &str); 2] = [("user-agent", "pethost-rust/0.7.0"), ("connect-protocol-version", "1")];
 
 /// The sentence of every error the fake answers.
 pub const MESSAGE: &str = "the fake's sentence";

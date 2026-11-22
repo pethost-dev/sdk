@@ -3004,7 +3004,6 @@ type Sandbox struct {
 	xxx_hidden_StateMessage  *string                `protobuf:"bytes,4,opt,name=state_message,json=stateMessage"`
 	xxx_hidden_StateTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=state_time,json=stateTime"`
 	xxx_hidden_Template      *string                `protobuf:"bytes,6,opt,name=template"`
-	xxx_hidden_ForkedFrom    *string                `protobuf:"bytes,7,opt,name=forked_from,json=forkedFrom"`
 	xxx_hidden_Labels        *[]*Label              `protobuf:"bytes,9,rep,name=labels"`
 	xxx_hidden_Settings      *SandboxSettings       `protobuf:"bytes,10,opt,name=settings"`
 	xxx_hidden_Revision      int64                  `protobuf:"varint,11,opt,name=revision"`
@@ -3107,16 +3106,6 @@ func (x *Sandbox) GetTemplate() string {
 	return ""
 }
 
-func (x *Sandbox) GetForkedFrom() string {
-	if x != nil {
-		if x.xxx_hidden_ForkedFrom != nil {
-			return *x.xxx_hidden_ForkedFrom
-		}
-		return ""
-	}
-	return ""
-}
-
 func (x *Sandbox) GetLabels() []*Label {
 	if x != nil {
 		if x.xxx_hidden_Labels != nil {
@@ -3213,7 +3202,7 @@ func (x *Sandbox) GetRestore() *Restore {
 
 func (x *Sandbox) GetNextState() SandboxState {
 	if x != nil {
-		if protoimpl.X.Present(&(x.XXX_presence[0]), 19) {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 18) {
 			return x.xxx_hidden_NextState
 		}
 	}
@@ -3246,22 +3235,22 @@ func (x *Sandbox) GetName() string {
 
 func (x *Sandbox) SetSandboxId(v string) {
 	x.xxx_hidden_SandboxId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 22)
 }
 
 func (x *Sandbox) SetState(v SandboxState) {
 	x.xxx_hidden_State = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 22)
 }
 
 func (x *Sandbox) SetStateReason(v StateReason) {
 	x.xxx_hidden_StateReason = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 22)
 }
 
 func (x *Sandbox) SetStateMessage(v string) {
 	x.xxx_hidden_StateMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 22)
 }
 
 func (x *Sandbox) SetStateTime(v *timestamppb.Timestamp) {
@@ -3270,12 +3259,7 @@ func (x *Sandbox) SetStateTime(v *timestamppb.Timestamp) {
 
 func (x *Sandbox) SetTemplate(v string) {
 	x.xxx_hidden_Template = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 23)
-}
-
-func (x *Sandbox) SetForkedFrom(v string) {
-	x.xxx_hidden_ForkedFrom = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 22)
 }
 
 func (x *Sandbox) SetLabels(v []*Label) {
@@ -3288,12 +3272,12 @@ func (x *Sandbox) SetSettings(v *SandboxSettings) {
 
 func (x *Sandbox) SetRevision(v int64) {
 	x.xxx_hidden_Revision = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 22)
 }
 
 func (x *Sandbox) SetDiskGib(v int32) {
 	x.xxx_hidden_DiskGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 10, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 22)
 }
 
 func (x *Sandbox) SetMounts(v []*Mount) {
@@ -3306,12 +3290,12 @@ func (x *Sandbox) SetDesktop(v *Desktop) {
 
 func (x *Sandbox) SetSshCommand(v string) {
 	x.xxx_hidden_SshCommand = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 22)
 }
 
 func (x *Sandbox) SetPanelUrl(v string) {
 	x.xxx_hidden_PanelUrl = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 14, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 22)
 }
 
 func (x *Sandbox) SetCreateTime(v *timestamppb.Timestamp) {
@@ -3332,7 +3316,7 @@ func (x *Sandbox) SetRestore(v *Restore) {
 
 func (x *Sandbox) SetNextState(v SandboxState) {
 	x.xxx_hidden_NextState = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 22)
 }
 
 func (x *Sandbox) SetNextStateTime(v *timestamppb.Timestamp) {
@@ -3341,12 +3325,12 @@ func (x *Sandbox) SetNextStateTime(v *timestamppb.Timestamp) {
 
 func (x *Sandbox) SetStoredBytes(v int64) {
 	x.xxx_hidden_StoredBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 21, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 22)
 }
 
 func (x *Sandbox) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 22, 23)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 21, 22)
 }
 
 func (x *Sandbox) HasSandboxId() bool {
@@ -3391,13 +3375,6 @@ func (x *Sandbox) HasTemplate() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
 }
 
-func (x *Sandbox) HasForkedFrom() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
-}
-
 func (x *Sandbox) HasSettings() bool {
 	if x == nil {
 		return false
@@ -3409,14 +3386,14 @@ func (x *Sandbox) HasRevision() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
 }
 
 func (x *Sandbox) HasDiskGib() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 10)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
 }
 
 func (x *Sandbox) HasDesktop() bool {
@@ -3430,14 +3407,14 @@ func (x *Sandbox) HasSshCommand() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
 }
 
 func (x *Sandbox) HasPanelUrl() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 14)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
 }
 
 func (x *Sandbox) HasCreateTime() bool {
@@ -3472,7 +3449,7 @@ func (x *Sandbox) HasNextState() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 19)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 18)
 }
 
 func (x *Sandbox) HasNextStateTime() bool {
@@ -3486,14 +3463,14 @@ func (x *Sandbox) HasStoredBytes() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 21)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 20)
 }
 
 func (x *Sandbox) HasName() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 22)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 21)
 }
 
 func (x *Sandbox) ClearSandboxId() {
@@ -3525,22 +3502,17 @@ func (x *Sandbox) ClearTemplate() {
 	x.xxx_hidden_Template = nil
 }
 
-func (x *Sandbox) ClearForkedFrom() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
-	x.xxx_hidden_ForkedFrom = nil
-}
-
 func (x *Sandbox) ClearSettings() {
 	x.xxx_hidden_Settings = nil
 }
 
 func (x *Sandbox) ClearRevision() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 8)
 	x.xxx_hidden_Revision = 0
 }
 
 func (x *Sandbox) ClearDiskGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 10)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
 	x.xxx_hidden_DiskGib = 0
 }
 
@@ -3549,12 +3521,12 @@ func (x *Sandbox) ClearDesktop() {
 }
 
 func (x *Sandbox) ClearSshCommand() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
 	x.xxx_hidden_SshCommand = nil
 }
 
 func (x *Sandbox) ClearPanelUrl() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 14)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
 	x.xxx_hidden_PanelUrl = nil
 }
 
@@ -3575,7 +3547,7 @@ func (x *Sandbox) ClearRestore() {
 }
 
 func (x *Sandbox) ClearNextState() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 19)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 18)
 	x.xxx_hidden_NextState = SandboxState_SANDBOX_STATE_UNSPECIFIED
 }
 
@@ -3584,12 +3556,12 @@ func (x *Sandbox) ClearNextStateTime() {
 }
 
 func (x *Sandbox) ClearStoredBytes() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 21)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 20)
 	x.xxx_hidden_StoredBytes = 0
 }
 
 func (x *Sandbox) ClearName() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 22)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 21)
 	x.xxx_hidden_Name = nil
 }
 
@@ -3604,7 +3576,6 @@ type Sandbox_builder struct {
 	StateMessage *string
 	StateTime    *timestamppb.Timestamp
 	Template     *string
-	ForkedFrom   *string
 	Labels       []*Label
 	Settings     *SandboxSettings
 	Revision     *int64
@@ -3648,48 +3619,44 @@ func (b0 Sandbox_builder) Build() *Sandbox {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.SandboxId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 22)
 		x.xxx_hidden_SandboxId = b.SandboxId
 	}
 	if b.State != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 22)
 		x.xxx_hidden_State = *b.State
 	}
 	if b.StateReason != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 22)
 		x.xxx_hidden_StateReason = *b.StateReason
 	}
 	if b.StateMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 22)
 		x.xxx_hidden_StateMessage = b.StateMessage
 	}
 	x.xxx_hidden_StateTime = b.StateTime
 	if b.Template != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 22)
 		x.xxx_hidden_Template = b.Template
-	}
-	if b.ForkedFrom != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 23)
-		x.xxx_hidden_ForkedFrom = b.ForkedFrom
 	}
 	x.xxx_hidden_Labels = &b.Labels
 	x.xxx_hidden_Settings = b.Settings
 	if b.Revision != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 22)
 		x.xxx_hidden_Revision = *b.Revision
 	}
 	if b.DiskGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 10, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 22)
 		x.xxx_hidden_DiskGib = *b.DiskGib
 	}
 	x.xxx_hidden_Mounts = &b.Mounts
 	x.xxx_hidden_Desktop = b.Desktop
 	if b.SshCommand != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 22)
 		x.xxx_hidden_SshCommand = b.SshCommand
 	}
 	if b.PanelUrl != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 14, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 22)
 		x.xxx_hidden_PanelUrl = b.PanelUrl
 	}
 	x.xxx_hidden_CreateTime = b.CreateTime
@@ -3697,16 +3664,16 @@ func (b0 Sandbox_builder) Build() *Sandbox {
 	x.xxx_hidden_Connection = b.Connection
 	x.xxx_hidden_Restore = b.Restore
 	if b.NextState != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 22)
 		x.xxx_hidden_NextState = *b.NextState
 	}
 	x.xxx_hidden_NextStateTime = b.NextStateTime
 	if b.StoredBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 21, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 22)
 		x.xxx_hidden_StoredBytes = *b.StoredBytes
 	}
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 22, 23)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 21, 22)
 		x.xxx_hidden_Name = b.Name
 	}
 	return m0
@@ -5084,251 +5051,6 @@ func (b0 ResumeSandboxRequest_builder) Build() *ResumeSandboxRequest {
 	return m0
 }
 
-type ForkSandboxRequest struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_SandboxId   *string                `protobuf:"bytes,1,opt,name=sandbox_id,json=sandboxId"`
-	xxx_hidden_Count       int32                  `protobuf:"varint,2,opt,name=count"`
-	xxx_hidden_Labels      *[]*Label              `protobuf:"bytes,3,rep,name=labels"`
-	xxx_hidden_Settings    *SandboxSettings       `protobuf:"bytes,4,opt,name=settings"`
-	xxx_hidden_RequestId   *string                `protobuf:"bytes,101,opt,name=request_id,json=requestId"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *ForkSandboxRequest) Reset() {
-	*x = ForkSandboxRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[22]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ForkSandboxRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ForkSandboxRequest) ProtoMessage() {}
-
-func (x *ForkSandboxRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[22]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *ForkSandboxRequest) GetSandboxId() string {
-	if x != nil {
-		if x.xxx_hidden_SandboxId != nil {
-			return *x.xxx_hidden_SandboxId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *ForkSandboxRequest) GetCount() int32 {
-	if x != nil {
-		return x.xxx_hidden_Count
-	}
-	return 0
-}
-
-func (x *ForkSandboxRequest) GetLabels() []*Label {
-	if x != nil {
-		if x.xxx_hidden_Labels != nil {
-			return *x.xxx_hidden_Labels
-		}
-	}
-	return nil
-}
-
-func (x *ForkSandboxRequest) GetSettings() *SandboxSettings {
-	if x != nil {
-		return x.xxx_hidden_Settings
-	}
-	return nil
-}
-
-func (x *ForkSandboxRequest) GetRequestId() string {
-	if x != nil {
-		if x.xxx_hidden_RequestId != nil {
-			return *x.xxx_hidden_RequestId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *ForkSandboxRequest) SetSandboxId(v string) {
-	x.xxx_hidden_SandboxId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
-}
-
-func (x *ForkSandboxRequest) SetCount(v int32) {
-	x.xxx_hidden_Count = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
-}
-
-func (x *ForkSandboxRequest) SetLabels(v []*Label) {
-	x.xxx_hidden_Labels = &v
-}
-
-func (x *ForkSandboxRequest) SetSettings(v *SandboxSettings) {
-	x.xxx_hidden_Settings = v
-}
-
-func (x *ForkSandboxRequest) SetRequestId(v string) {
-	x.xxx_hidden_RequestId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
-}
-
-func (x *ForkSandboxRequest) HasSandboxId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *ForkSandboxRequest) HasCount() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *ForkSandboxRequest) HasSettings() bool {
-	if x == nil {
-		return false
-	}
-	return x.xxx_hidden_Settings != nil
-}
-
-func (x *ForkSandboxRequest) HasRequestId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
-}
-
-func (x *ForkSandboxRequest) ClearSandboxId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_SandboxId = nil
-}
-
-func (x *ForkSandboxRequest) ClearCount() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_Count = 0
-}
-
-func (x *ForkSandboxRequest) ClearSettings() {
-	x.xxx_hidden_Settings = nil
-}
-
-func (x *ForkSandboxRequest) ClearRequestId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
-	x.xxx_hidden_RequestId = nil
-}
-
-type ForkSandboxRequest_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	SandboxId *string
-	Count     *int32
-	Labels    []*Label
-	// Groups sent replace the source's in the copies. Its size is the source's: another is
-	// INVALID_ARGUMENT.
-	Settings *SandboxSettings
-	// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-	// nothing again and answers what the first call did (24 h).
-	RequestId *string
-}
-
-func (b0 ForkSandboxRequest_builder) Build() *ForkSandboxRequest {
-	m0 := &ForkSandboxRequest{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.SandboxId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
-		x.xxx_hidden_SandboxId = b.SandboxId
-	}
-	if b.Count != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
-		x.xxx_hidden_Count = *b.Count
-	}
-	x.xxx_hidden_Labels = &b.Labels
-	x.xxx_hidden_Settings = b.Settings
-	if b.RequestId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
-		x.xxx_hidden_RequestId = b.RequestId
-	}
-	return m0
-}
-
-type ForkSandboxResponse struct {
-	state                protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Sandboxes *[]*Sandbox            `protobuf:"bytes,1,rep,name=sandboxes"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
-}
-
-func (x *ForkSandboxResponse) Reset() {
-	*x = ForkSandboxResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ForkSandboxResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ForkSandboxResponse) ProtoMessage() {}
-
-func (x *ForkSandboxResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *ForkSandboxResponse) GetSandboxes() []*Sandbox {
-	if x != nil {
-		if x.xxx_hidden_Sandboxes != nil {
-			return *x.xxx_hidden_Sandboxes
-		}
-	}
-	return nil
-}
-
-func (x *ForkSandboxResponse) SetSandboxes(v []*Sandbox) {
-	x.xxx_hidden_Sandboxes = &v
-}
-
-type ForkSandboxResponse_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	Sandboxes []*Sandbox
-}
-
-func (b0 ForkSandboxResponse_builder) Build() *ForkSandboxResponse {
-	m0 := &ForkSandboxResponse{}
-	b, x := &b0, m0
-	_, _ = b, x
-	x.xxx_hidden_Sandboxes = &b.Sandboxes
-	return m0
-}
-
 type DeleteSandboxRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_SandboxId   *string                `protobuf:"bytes,1,opt,name=sandbox_id,json=sandboxId"`
@@ -5340,7 +5062,7 @@ type DeleteSandboxRequest struct {
 
 func (x *DeleteSandboxRequest) Reset() {
 	*x = DeleteSandboxRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[24]
+	mi := &file_v1_sandboxes_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5352,7 +5074,7 @@ func (x *DeleteSandboxRequest) String() string {
 func (*DeleteSandboxRequest) ProtoMessage() {}
 
 func (x *DeleteSandboxRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[24]
+	mi := &file_v1_sandboxes_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5419,7 +5141,7 @@ type ConnectSandboxRequest struct {
 
 func (x *ConnectSandboxRequest) Reset() {
 	*x = ConnectSandboxRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[25]
+	mi := &file_v1_sandboxes_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5431,7 +5153,7 @@ func (x *ConnectSandboxRequest) String() string {
 func (*ConnectSandboxRequest) ProtoMessage() {}
 
 func (x *ConnectSandboxRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[25]
+	mi := &file_v1_sandboxes_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5529,7 +5251,7 @@ type Connection struct {
 
 func (x *Connection) Reset() {
 	*x = Connection{}
-	mi := &file_v1_sandboxes_proto_msgTypes[26]
+	mi := &file_v1_sandboxes_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5541,7 +5263,7 @@ func (x *Connection) String() string {
 func (*Connection) ProtoMessage() {}
 
 func (x *Connection) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[26]
+	mi := &file_v1_sandboxes_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5704,7 +5426,7 @@ type SandboxSettings struct {
 
 func (x *SandboxSettings) Reset() {
 	*x = SandboxSettings{}
-	mi := &file_v1_sandboxes_proto_msgTypes[27]
+	mi := &file_v1_sandboxes_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5716,7 +5438,7 @@ func (x *SandboxSettings) String() string {
 func (*SandboxSettings) ProtoMessage() {}
 
 func (x *SandboxSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[27]
+	mi := &file_v1_sandboxes_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5881,7 +5603,7 @@ type Lifecycle struct {
 
 func (x *Lifecycle) Reset() {
 	*x = Lifecycle{}
-	mi := &file_v1_sandboxes_proto_msgTypes[28]
+	mi := &file_v1_sandboxes_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5893,7 +5615,7 @@ func (x *Lifecycle) String() string {
 func (*Lifecycle) ProtoMessage() {}
 
 func (x *Lifecycle) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[28]
+	mi := &file_v1_sandboxes_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6047,7 +5769,7 @@ type Egress struct {
 
 func (x *Egress) Reset() {
 	*x = Egress{}
-	mi := &file_v1_sandboxes_proto_msgTypes[29]
+	mi := &file_v1_sandboxes_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6059,7 +5781,7 @@ func (x *Egress) String() string {
 func (*Egress) ProtoMessage() {}
 
 func (x *Egress) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[29]
+	mi := &file_v1_sandboxes_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6125,7 +5847,7 @@ type Ingress struct {
 
 func (x *Ingress) Reset() {
 	*x = Ingress{}
-	mi := &file_v1_sandboxes_proto_msgTypes[30]
+	mi := &file_v1_sandboxes_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6137,7 +5859,7 @@ func (x *Ingress) String() string {
 func (*Ingress) ProtoMessage() {}
 
 func (x *Ingress) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[30]
+	mi := &file_v1_sandboxes_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6187,7 +5909,7 @@ type PublicPort struct {
 
 func (x *PublicPort) Reset() {
 	*x = PublicPort{}
-	mi := &file_v1_sandboxes_proto_msgTypes[31]
+	mi := &file_v1_sandboxes_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6199,7 +5921,7 @@ func (x *PublicPort) String() string {
 func (*PublicPort) ProtoMessage() {}
 
 func (x *PublicPort) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[31]
+	mi := &file_v1_sandboxes_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6293,7 +6015,7 @@ type Environment struct {
 
 func (x *Environment) Reset() {
 	*x = Environment{}
-	mi := &file_v1_sandboxes_proto_msgTypes[32]
+	mi := &file_v1_sandboxes_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6305,7 +6027,7 @@ func (x *Environment) String() string {
 func (*Environment) ProtoMessage() {}
 
 func (x *Environment) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[32]
+	mi := &file_v1_sandboxes_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6355,7 +6077,7 @@ type EnvVar struct {
 
 func (x *EnvVar) Reset() {
 	*x = EnvVar{}
-	mi := &file_v1_sandboxes_proto_msgTypes[33]
+	mi := &file_v1_sandboxes_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6367,7 +6089,7 @@ func (x *EnvVar) String() string {
 func (*EnvVar) ProtoMessage() {}
 
 func (x *EnvVar) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[33]
+	mi := &file_v1_sandboxes_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6521,7 +6243,7 @@ func (b0 EnvVar_builder) Build() *EnvVar {
 type case_EnvVar_Source protoreflect.FieldNumber
 
 func (x case_EnvVar_Source) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[33].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[31].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -6560,7 +6282,7 @@ type Label struct {
 
 func (x *Label) Reset() {
 	*x = Label{}
-	mi := &file_v1_sandboxes_proto_msgTypes[34]
+	mi := &file_v1_sandboxes_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6572,7 +6294,7 @@ func (x *Label) String() string {
 func (*Label) ProtoMessage() {}
 
 func (x *Label) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[34]
+	mi := &file_v1_sandboxes_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6673,7 +6395,7 @@ type GetSandboxMetricsRequest struct {
 
 func (x *GetSandboxMetricsRequest) Reset() {
 	*x = GetSandboxMetricsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[35]
+	mi := &file_v1_sandboxes_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6685,7 +6407,7 @@ func (x *GetSandboxMetricsRequest) String() string {
 func (*GetSandboxMetricsRequest) ProtoMessage() {}
 
 func (x *GetSandboxMetricsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[35]
+	mi := &file_v1_sandboxes_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6828,7 +6550,7 @@ type GetSandboxMetricsResponse struct {
 
 func (x *GetSandboxMetricsResponse) Reset() {
 	*x = GetSandboxMetricsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[36]
+	mi := &file_v1_sandboxes_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6840,7 +6562,7 @@ func (x *GetSandboxMetricsResponse) String() string {
 func (*GetSandboxMetricsResponse) ProtoMessage() {}
 
 func (x *GetSandboxMetricsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[36]
+	mi := &file_v1_sandboxes_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6894,7 +6616,7 @@ type MetricsPoint struct {
 
 func (x *MetricsPoint) Reset() {
 	*x = MetricsPoint{}
-	mi := &file_v1_sandboxes_proto_msgTypes[37]
+	mi := &file_v1_sandboxes_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6906,7 +6628,7 @@ func (x *MetricsPoint) String() string {
 func (*MetricsPoint) ProtoMessage() {}
 
 func (x *MetricsPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[37]
+	mi := &file_v1_sandboxes_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7113,7 +6835,7 @@ type ListSandboxEventsRequest struct {
 
 func (x *ListSandboxEventsRequest) Reset() {
 	*x = ListSandboxEventsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[38]
+	mi := &file_v1_sandboxes_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7125,7 +6847,7 @@ func (x *ListSandboxEventsRequest) String() string {
 func (*ListSandboxEventsRequest) ProtoMessage() {}
 
 func (x *ListSandboxEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[38]
+	mi := &file_v1_sandboxes_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7297,7 +7019,7 @@ type ListSandboxEventsResponse struct {
 
 func (x *ListSandboxEventsResponse) Reset() {
 	*x = ListSandboxEventsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[39]
+	mi := &file_v1_sandboxes_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7309,7 +7031,7 @@ func (x *ListSandboxEventsResponse) String() string {
 func (*ListSandboxEventsResponse) ProtoMessage() {}
 
 func (x *ListSandboxEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[39]
+	mi := &file_v1_sandboxes_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7389,7 +7111,7 @@ type WatchSandboxEventsRequest struct {
 
 func (x *WatchSandboxEventsRequest) Reset() {
 	*x = WatchSandboxEventsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[40]
+	mi := &file_v1_sandboxes_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7401,7 +7123,7 @@ func (x *WatchSandboxEventsRequest) String() string {
 func (*WatchSandboxEventsRequest) ProtoMessage() {}
 
 func (x *WatchSandboxEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[40]
+	mi := &file_v1_sandboxes_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7514,7 +7236,7 @@ type SandboxEvent struct {
 
 func (x *SandboxEvent) Reset() {
 	*x = SandboxEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[41]
+	mi := &file_v1_sandboxes_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7526,7 +7248,7 @@ func (x *SandboxEvent) String() string {
 func (*SandboxEvent) ProtoMessage() {}
 
 func (x *SandboxEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[41]
+	mi := &file_v1_sandboxes_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7823,7 +7545,7 @@ func (b0 SandboxEvent_builder) Build() *SandboxEvent {
 type case_SandboxEvent_Event protoreflect.FieldNumber
 
 func (x case_SandboxEvent_Event) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[41].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[39].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -7869,7 +7591,6 @@ type LifecycleEvent struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Change       LifecycleChange        `protobuf:"varint,1,opt,name=change,enum=pethost.sandboxes.v1.LifecycleChange"`
 	xxx_hidden_Reason       StateReason            `protobuf:"varint,2,opt,name=reason,enum=pethost.sandboxes.v1.StateReason"`
-	xxx_hidden_ForkedFrom   *string                `protobuf:"bytes,3,opt,name=forked_from,json=forkedFrom"`
 	xxx_hidden_Size         Size                   `protobuf:"varint,4,opt,name=size,enum=pethost.sandboxes.v1.Size"`
 	xxx_hidden_DiskGib      int32                  `protobuf:"varint,6,opt,name=disk_gib,json=diskGib"`
 	xxx_hidden_StateMessage *string                `protobuf:"bytes,5,opt,name=state_message,json=stateMessage"`
@@ -7881,7 +7602,7 @@ type LifecycleEvent struct {
 
 func (x *LifecycleEvent) Reset() {
 	*x = LifecycleEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[42]
+	mi := &file_v1_sandboxes_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7893,7 +7614,7 @@ func (x *LifecycleEvent) String() string {
 func (*LifecycleEvent) ProtoMessage() {}
 
 func (x *LifecycleEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[42]
+	mi := &file_v1_sandboxes_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7922,19 +7643,9 @@ func (x *LifecycleEvent) GetReason() StateReason {
 	return StateReason_STATE_REASON_UNSPECIFIED
 }
 
-func (x *LifecycleEvent) GetForkedFrom() string {
-	if x != nil {
-		if x.xxx_hidden_ForkedFrom != nil {
-			return *x.xxx_hidden_ForkedFrom
-		}
-		return ""
-	}
-	return ""
-}
-
 func (x *LifecycleEvent) GetSize() Size {
 	if x != nil {
-		if protoimpl.X.Present(&(x.XXX_presence[0]), 3) {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 2) {
 			return x.xxx_hidden_Size
 		}
 	}
@@ -7960,32 +7671,27 @@ func (x *LifecycleEvent) GetStateMessage() string {
 
 func (x *LifecycleEvent) SetChange(v LifecycleChange) {
 	x.xxx_hidden_Change = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
 }
 
 func (x *LifecycleEvent) SetReason(v StateReason) {
 	x.xxx_hidden_Reason = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
-}
-
-func (x *LifecycleEvent) SetForkedFrom(v string) {
-	x.xxx_hidden_ForkedFrom = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
 }
 
 func (x *LifecycleEvent) SetSize(v Size) {
 	x.xxx_hidden_Size = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
 }
 
 func (x *LifecycleEvent) SetDiskGib(v int32) {
 	x.xxx_hidden_DiskGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
 }
 
 func (x *LifecycleEvent) SetStateMessage(v string) {
 	x.xxx_hidden_StateMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
 }
 
 func (x *LifecycleEvent) HasChange() bool {
@@ -8002,32 +7708,25 @@ func (x *LifecycleEvent) HasReason() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
-func (x *LifecycleEvent) HasForkedFrom() bool {
+func (x *LifecycleEvent) HasSize() bool {
 	if x == nil {
 		return false
 	}
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
-func (x *LifecycleEvent) HasSize() bool {
+func (x *LifecycleEvent) HasDiskGib() bool {
 	if x == nil {
 		return false
 	}
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
-func (x *LifecycleEvent) HasDiskGib() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
-}
-
 func (x *LifecycleEvent) HasStateMessage() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
 func (x *LifecycleEvent) ClearChange() {
@@ -8040,32 +7739,26 @@ func (x *LifecycleEvent) ClearReason() {
 	x.xxx_hidden_Reason = StateReason_STATE_REASON_UNSPECIFIED
 }
 
-func (x *LifecycleEvent) ClearForkedFrom() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_ForkedFrom = nil
-}
-
 func (x *LifecycleEvent) ClearSize() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
 	x.xxx_hidden_Size = Size_SIZE_UNSPECIFIED
 }
 
 func (x *LifecycleEvent) ClearDiskGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
 	x.xxx_hidden_DiskGib = 0
 }
 
 func (x *LifecycleEvent) ClearStateMessage() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
 	x.xxx_hidden_StateMessage = nil
 }
 
 type LifecycleEvent_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	Change     *LifecycleChange
-	Reason     *StateReason
-	ForkedFrom *string
+	Change *LifecycleChange
+	Reason *StateReason
 	// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
 	// STOPPED one takes it at its next start.
 	Size         *Size
@@ -8078,27 +7771,23 @@ func (b0 LifecycleEvent_builder) Build() *LifecycleEvent {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Change != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
 		x.xxx_hidden_Change = *b.Change
 	}
 	if b.Reason != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
 		x.xxx_hidden_Reason = *b.Reason
 	}
-	if b.ForkedFrom != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
-		x.xxx_hidden_ForkedFrom = b.ForkedFrom
-	}
 	if b.Size != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
 		x.xxx_hidden_Size = *b.Size
 	}
 	if b.DiskGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
 		x.xxx_hidden_DiskGib = *b.DiskGib
 	}
 	if b.StateMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
 		x.xxx_hidden_StateMessage = b.StateMessage
 	}
 	return m0
@@ -8121,7 +7810,7 @@ type CommandEvent struct {
 
 func (x *CommandEvent) Reset() {
 	*x = CommandEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[43]
+	mi := &file_v1_sandboxes_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8133,7 +7822,7 @@ func (x *CommandEvent) String() string {
 func (*CommandEvent) ProtoMessage() {}
 
 func (x *CommandEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[43]
+	mi := &file_v1_sandboxes_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8359,7 +8048,7 @@ type EgressEvent struct {
 
 func (x *EgressEvent) Reset() {
 	*x = EgressEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[44]
+	mi := &file_v1_sandboxes_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8371,7 +8060,7 @@ func (x *EgressEvent) String() string {
 func (*EgressEvent) ProtoMessage() {}
 
 func (x *EgressEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[44]
+	mi := &file_v1_sandboxes_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8601,7 +8290,7 @@ type PortEvent struct {
 
 func (x *PortEvent) Reset() {
 	*x = PortEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[45]
+	mi := &file_v1_sandboxes_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8613,7 +8302,7 @@ func (x *PortEvent) String() string {
 func (*PortEvent) ProtoMessage() {}
 
 func (x *PortEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[45]
+	mi := &file_v1_sandboxes_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8799,7 +8488,7 @@ type AgentTurnEvent struct {
 
 func (x *AgentTurnEvent) Reset() {
 	*x = AgentTurnEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[46]
+	mi := &file_v1_sandboxes_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8811,7 +8500,7 @@ func (x *AgentTurnEvent) String() string {
 func (*AgentTurnEvent) ProtoMessage() {}
 
 func (x *AgentTurnEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[46]
+	mi := &file_v1_sandboxes_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9080,7 +8769,7 @@ type Template struct {
 
 func (x *Template) Reset() {
 	*x = Template{}
-	mi := &file_v1_sandboxes_proto_msgTypes[47]
+	mi := &file_v1_sandboxes_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9092,7 +8781,7 @@ func (x *Template) String() string {
 func (*Template) ProtoMessage() {}
 
 func (x *Template) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[47]
+	mi := &file_v1_sandboxes_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9461,7 +9150,7 @@ type CreateTemplateRequest struct {
 
 func (x *CreateTemplateRequest) Reset() {
 	*x = CreateTemplateRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[48]
+	mi := &file_v1_sandboxes_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9473,7 +9162,7 @@ func (x *CreateTemplateRequest) String() string {
 func (*CreateTemplateRequest) ProtoMessage() {}
 
 func (x *CreateTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[48]
+	mi := &file_v1_sandboxes_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9642,7 +9331,7 @@ type GetTemplateRequest struct {
 
 func (x *GetTemplateRequest) Reset() {
 	*x = GetTemplateRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[49]
+	mi := &file_v1_sandboxes_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9654,7 +9343,7 @@ func (x *GetTemplateRequest) String() string {
 func (*GetTemplateRequest) ProtoMessage() {}
 
 func (x *GetTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[49]
+	mi := &file_v1_sandboxes_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9757,7 +9446,7 @@ type ListTemplatesRequest struct {
 
 func (x *ListTemplatesRequest) Reset() {
 	*x = ListTemplatesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[50]
+	mi := &file_v1_sandboxes_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9769,7 +9458,7 @@ func (x *ListTemplatesRequest) String() string {
 func (*ListTemplatesRequest) ProtoMessage() {}
 
 func (x *ListTemplatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[50]
+	mi := &file_v1_sandboxes_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9929,7 +9618,7 @@ type ListTemplatesResponse struct {
 
 func (x *ListTemplatesResponse) Reset() {
 	*x = ListTemplatesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[51]
+	mi := &file_v1_sandboxes_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9941,7 +9630,7 @@ func (x *ListTemplatesResponse) String() string {
 func (*ListTemplatesResponse) ProtoMessage() {}
 
 func (x *ListTemplatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[51]
+	mi := &file_v1_sandboxes_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10023,7 +9712,7 @@ type DeleteTemplateRequest struct {
 
 func (x *DeleteTemplateRequest) Reset() {
 	*x = DeleteTemplateRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[52]
+	mi := &file_v1_sandboxes_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10035,7 +9724,7 @@ func (x *DeleteTemplateRequest) String() string {
 func (*DeleteTemplateRequest) ProtoMessage() {}
 
 func (x *DeleteTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[52]
+	mi := &file_v1_sandboxes_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10138,7 +9827,7 @@ type Volume struct {
 
 func (x *Volume) Reset() {
 	*x = Volume{}
-	mi := &file_v1_sandboxes_proto_msgTypes[53]
+	mi := &file_v1_sandboxes_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10150,7 +9839,7 @@ func (x *Volume) String() string {
 func (*Volume) ProtoMessage() {}
 
 func (x *Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[53]
+	mi := &file_v1_sandboxes_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10347,7 +10036,7 @@ type Mount struct {
 
 func (x *Mount) Reset() {
 	*x = Mount{}
-	mi := &file_v1_sandboxes_proto_msgTypes[54]
+	mi := &file_v1_sandboxes_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10359,7 +10048,7 @@ func (x *Mount) String() string {
 func (*Mount) ProtoMessage() {}
 
 func (x *Mount) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[54]
+	mi := &file_v1_sandboxes_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10489,7 +10178,7 @@ type CreateVolumeRequest struct {
 
 func (x *CreateVolumeRequest) Reset() {
 	*x = CreateVolumeRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[55]
+	mi := &file_v1_sandboxes_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10501,7 +10190,7 @@ func (x *CreateVolumeRequest) String() string {
 func (*CreateVolumeRequest) ProtoMessage() {}
 
 func (x *CreateVolumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[55]
+	mi := &file_v1_sandboxes_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10664,7 +10353,7 @@ type ListVolumesRequest struct {
 
 func (x *ListVolumesRequest) Reset() {
 	*x = ListVolumesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[56]
+	mi := &file_v1_sandboxes_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10676,7 +10365,7 @@ func (x *ListVolumesRequest) String() string {
 func (*ListVolumesRequest) ProtoMessage() {}
 
 func (x *ListVolumesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[56]
+	mi := &file_v1_sandboxes_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10804,7 +10493,7 @@ type ListVolumesResponse struct {
 
 func (x *ListVolumesResponse) Reset() {
 	*x = ListVolumesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[57]
+	mi := &file_v1_sandboxes_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10816,7 +10505,7 @@ func (x *ListVolumesResponse) String() string {
 func (*ListVolumesResponse) ProtoMessage() {}
 
 func (x *ListVolumesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[57]
+	mi := &file_v1_sandboxes_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10898,7 +10587,7 @@ type DeleteVolumeRequest struct {
 
 func (x *DeleteVolumeRequest) Reset() {
 	*x = DeleteVolumeRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[58]
+	mi := &file_v1_sandboxes_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10910,7 +10599,7 @@ func (x *DeleteVolumeRequest) String() string {
 func (*DeleteVolumeRequest) ProtoMessage() {}
 
 func (x *DeleteVolumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[58]
+	mi := &file_v1_sandboxes_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11012,7 +10701,7 @@ type ListUsageRequest struct {
 
 func (x *ListUsageRequest) Reset() {
 	*x = ListUsageRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[59]
+	mi := &file_v1_sandboxes_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11024,7 +10713,7 @@ func (x *ListUsageRequest) String() string {
 func (*ListUsageRequest) ProtoMessage() {}
 
 func (x *ListUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[59]
+	mi := &file_v1_sandboxes_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11200,7 +10889,7 @@ type ListUsageResponse struct {
 
 func (x *ListUsageResponse) Reset() {
 	*x = ListUsageResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[60]
+	mi := &file_v1_sandboxes_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11212,7 +10901,7 @@ func (x *ListUsageResponse) String() string {
 func (*ListUsageResponse) ProtoMessage() {}
 
 func (x *ListUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[60]
+	mi := &file_v1_sandboxes_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11297,7 +10986,7 @@ type UsageRow struct {
 
 func (x *UsageRow) Reset() {
 	*x = UsageRow{}
-	mi := &file_v1_sandboxes_proto_msgTypes[61]
+	mi := &file_v1_sandboxes_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11309,7 +10998,7 @@ func (x *UsageRow) String() string {
 func (*UsageRow) ProtoMessage() {}
 
 func (x *UsageRow) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[61]
+	mi := &file_v1_sandboxes_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11499,7 +11188,7 @@ type RunCommandRequest struct {
 
 func (x *RunCommandRequest) Reset() {
 	*x = RunCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[62]
+	mi := &file_v1_sandboxes_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11511,7 +11200,7 @@ func (x *RunCommandRequest) String() string {
 func (*RunCommandRequest) ProtoMessage() {}
 
 func (x *RunCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[62]
+	mi := &file_v1_sandboxes_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11872,7 +11561,7 @@ type Command struct {
 
 func (x *Command) Reset() {
 	*x = Command{}
-	mi := &file_v1_sandboxes_proto_msgTypes[63]
+	mi := &file_v1_sandboxes_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11884,7 +11573,7 @@ func (x *Command) String() string {
 func (*Command) ProtoMessage() {}
 
 func (x *Command) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[63]
+	mi := &file_v1_sandboxes_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12281,7 +11970,7 @@ type GetCommandRequest struct {
 
 func (x *GetCommandRequest) Reset() {
 	*x = GetCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[64]
+	mi := &file_v1_sandboxes_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12293,7 +11982,7 @@ func (x *GetCommandRequest) String() string {
 func (*GetCommandRequest) ProtoMessage() {}
 
 func (x *GetCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[64]
+	mi := &file_v1_sandboxes_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12481,7 +12170,7 @@ type StopCommandRequest struct {
 
 func (x *StopCommandRequest) Reset() {
 	*x = StopCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[65]
+	mi := &file_v1_sandboxes_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12493,7 +12182,7 @@ func (x *StopCommandRequest) String() string {
 func (*StopCommandRequest) ProtoMessage() {}
 
 func (x *StopCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[65]
+	mi := &file_v1_sandboxes_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12591,7 +12280,7 @@ type ListCommandsRequest struct {
 
 func (x *ListCommandsRequest) Reset() {
 	*x = ListCommandsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[66]
+	mi := &file_v1_sandboxes_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12603,7 +12292,7 @@ func (x *ListCommandsRequest) String() string {
 func (*ListCommandsRequest) ProtoMessage() {}
 
 func (x *ListCommandsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[66]
+	mi := &file_v1_sandboxes_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12667,7 +12356,7 @@ type ListCommandsResponse struct {
 
 func (x *ListCommandsResponse) Reset() {
 	*x = ListCommandsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[67]
+	mi := &file_v1_sandboxes_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12679,7 +12368,7 @@ func (x *ListCommandsResponse) String() string {
 func (*ListCommandsResponse) ProtoMessage() {}
 
 func (x *ListCommandsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[67]
+	mi := &file_v1_sandboxes_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12729,7 +12418,7 @@ type WatchCommandRequest struct {
 
 func (x *WatchCommandRequest) Reset() {
 	*x = WatchCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[68]
+	mi := &file_v1_sandboxes_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12741,7 +12430,7 @@ func (x *WatchCommandRequest) String() string {
 func (*WatchCommandRequest) ProtoMessage() {}
 
 func (x *WatchCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[68]
+	mi := &file_v1_sandboxes_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12837,7 +12526,7 @@ type CommandOutput struct {
 
 func (x *CommandOutput) Reset() {
 	*x = CommandOutput{}
-	mi := &file_v1_sandboxes_proto_msgTypes[69]
+	mi := &file_v1_sandboxes_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12849,7 +12538,7 @@ func (x *CommandOutput) String() string {
 func (*CommandOutput) ProtoMessage() {}
 
 func (x *CommandOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[69]
+	mi := &file_v1_sandboxes_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13012,7 +12701,7 @@ func (b0 CommandOutput_builder) Build() *CommandOutput {
 type case_CommandOutput_Output protoreflect.FieldNumber
 
 func (x case_CommandOutput_Output) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[69].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[67].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -13055,7 +12744,7 @@ type ReadFileRequest struct {
 
 func (x *ReadFileRequest) Reset() {
 	*x = ReadFileRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[70]
+	mi := &file_v1_sandboxes_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13067,7 +12756,7 @@ func (x *ReadFileRequest) String() string {
 func (*ReadFileRequest) ProtoMessage() {}
 
 func (x *ReadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[70]
+	mi := &file_v1_sandboxes_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13225,7 +12914,7 @@ type File struct {
 
 func (x *File) Reset() {
 	*x = File{}
-	mi := &file_v1_sandboxes_proto_msgTypes[71]
+	mi := &file_v1_sandboxes_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13237,7 +12926,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[71]
+	mi := &file_v1_sandboxes_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13421,7 +13110,7 @@ func (b0 File_builder) Build() *File {
 type case_File_Content protoreflect.FieldNumber
 
 func (x case_File_Content) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[71].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[69].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -13459,7 +13148,7 @@ type ListFilesRequest struct {
 
 func (x *ListFilesRequest) Reset() {
 	*x = ListFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[72]
+	mi := &file_v1_sandboxes_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13471,7 +13160,7 @@ func (x *ListFilesRequest) String() string {
 func (*ListFilesRequest) ProtoMessage() {}
 
 func (x *ListFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[72]
+	mi := &file_v1_sandboxes_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13631,7 +13320,7 @@ type ListFilesResponse struct {
 
 func (x *ListFilesResponse) Reset() {
 	*x = ListFilesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[73]
+	mi := &file_v1_sandboxes_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13643,7 +13332,7 @@ func (x *ListFilesResponse) String() string {
 func (*ListFilesResponse) ProtoMessage() {}
 
 func (x *ListFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[73]
+	mi := &file_v1_sandboxes_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13730,7 +13419,7 @@ type FileInfo struct {
 
 func (x *FileInfo) Reset() {
 	*x = FileInfo{}
-	mi := &file_v1_sandboxes_proto_msgTypes[74]
+	mi := &file_v1_sandboxes_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13742,7 +13431,7 @@ func (x *FileInfo) String() string {
 func (*FileInfo) ProtoMessage() {}
 
 func (x *FileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[74]
+	mi := &file_v1_sandboxes_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13989,7 +13678,7 @@ type WriteFilesRequest struct {
 
 func (x *WriteFilesRequest) Reset() {
 	*x = WriteFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[75]
+	mi := &file_v1_sandboxes_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14001,7 +13690,7 @@ func (x *WriteFilesRequest) String() string {
 func (*WriteFilesRequest) ProtoMessage() {}
 
 func (x *WriteFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[75]
+	mi := &file_v1_sandboxes_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14085,7 +13774,7 @@ type FileChange struct {
 
 func (x *FileChange) Reset() {
 	*x = FileChange{}
-	mi := &file_v1_sandboxes_proto_msgTypes[76]
+	mi := &file_v1_sandboxes_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14097,7 +13786,7 @@ func (x *FileChange) String() string {
 func (*FileChange) ProtoMessage() {}
 
 func (x *FileChange) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[76]
+	mi := &file_v1_sandboxes_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14431,7 +14120,7 @@ func (b0 FileChange_builder) Build() *FileChange {
 type case_FileChange_Change protoreflect.FieldNumber
 
 func (x case_FileChange_Change) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[76].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[74].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -14486,7 +14175,7 @@ type Delete struct {
 
 func (x *Delete) Reset() {
 	*x = Delete{}
-	mi := &file_v1_sandboxes_proto_msgTypes[77]
+	mi := &file_v1_sandboxes_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14498,7 +14187,7 @@ func (x *Delete) String() string {
 func (*Delete) ProtoMessage() {}
 
 func (x *Delete) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[77]
+	mi := &file_v1_sandboxes_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14529,7 +14218,7 @@ type MakeDirectory struct {
 
 func (x *MakeDirectory) Reset() {
 	*x = MakeDirectory{}
-	mi := &file_v1_sandboxes_proto_msgTypes[78]
+	mi := &file_v1_sandboxes_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14541,7 +14230,7 @@ func (x *MakeDirectory) String() string {
 func (*MakeDirectory) ProtoMessage() {}
 
 func (x *MakeDirectory) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[78]
+	mi := &file_v1_sandboxes_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14578,7 +14267,7 @@ type TextEdit struct {
 
 func (x *TextEdit) Reset() {
 	*x = TextEdit{}
-	mi := &file_v1_sandboxes_proto_msgTypes[79]
+	mi := &file_v1_sandboxes_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14590,7 +14279,7 @@ func (x *TextEdit) String() string {
 func (*TextEdit) ProtoMessage() {}
 
 func (x *TextEdit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[79]
+	mi := &file_v1_sandboxes_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14690,7 +14379,7 @@ type WriteFilesResponse struct {
 
 func (x *WriteFilesResponse) Reset() {
 	*x = WriteFilesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[80]
+	mi := &file_v1_sandboxes_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14702,7 +14391,7 @@ func (x *WriteFilesResponse) String() string {
 func (*WriteFilesResponse) ProtoMessage() {}
 
 func (x *WriteFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[80]
+	mi := &file_v1_sandboxes_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14830,7 +14519,7 @@ type WatchFilesRequest struct {
 
 func (x *WatchFilesRequest) Reset() {
 	*x = WatchFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[81]
+	mi := &file_v1_sandboxes_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14842,7 +14531,7 @@ func (x *WatchFilesRequest) String() string {
 func (*WatchFilesRequest) ProtoMessage() {}
 
 func (x *WatchFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[81]
+	mi := &file_v1_sandboxes_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14973,7 +14662,7 @@ type FileEvent struct {
 
 func (x *FileEvent) Reset() {
 	*x = FileEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[82]
+	mi := &file_v1_sandboxes_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14985,7 +14674,7 @@ func (x *FileEvent) String() string {
 func (*FileEvent) ProtoMessage() {}
 
 func (x *FileEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[82]
+	mi := &file_v1_sandboxes_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15115,7 +14804,7 @@ type ControlDesktopRequest struct {
 
 func (x *ControlDesktopRequest) Reset() {
 	*x = ControlDesktopRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[83]
+	mi := &file_v1_sandboxes_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15127,7 +14816,7 @@ func (x *ControlDesktopRequest) String() string {
 func (*ControlDesktopRequest) ProtoMessage() {}
 
 func (x *ControlDesktopRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[83]
+	mi := &file_v1_sandboxes_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15211,7 +14900,7 @@ type ControlDesktopResponse struct {
 
 func (x *ControlDesktopResponse) Reset() {
 	*x = ControlDesktopResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[84]
+	mi := &file_v1_sandboxes_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15223,7 +14912,7 @@ func (x *ControlDesktopResponse) String() string {
 func (*ControlDesktopResponse) ProtoMessage() {}
 
 func (x *ControlDesktopResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[84]
+	mi := &file_v1_sandboxes_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15379,7 +15068,7 @@ type Screenshot struct {
 
 func (x *Screenshot) Reset() {
 	*x = Screenshot{}
-	mi := &file_v1_sandboxes_proto_msgTypes[85]
+	mi := &file_v1_sandboxes_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15391,7 +15080,7 @@ func (x *Screenshot) String() string {
 func (*Screenshot) ProtoMessage() {}
 
 func (x *Screenshot) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[85]
+	mi := &file_v1_sandboxes_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15603,7 +15292,7 @@ type DesktopAction struct {
 
 func (x *DesktopAction) Reset() {
 	*x = DesktopAction{}
-	mi := &file_v1_sandboxes_proto_msgTypes[86]
+	mi := &file_v1_sandboxes_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15615,7 +15304,7 @@ func (x *DesktopAction) String() string {
 func (*DesktopAction) ProtoMessage() {}
 
 func (x *DesktopAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[86]
+	mi := &file_v1_sandboxes_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15920,7 +15609,7 @@ func (b0 DesktopAction_builder) Build() *DesktopAction {
 type case_DesktopAction_Action protoreflect.FieldNumber
 
 func (x case_DesktopAction_Action) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[86].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[84].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -15985,7 +15674,7 @@ type Point struct {
 
 func (x *Point) Reset() {
 	*x = Point{}
-	mi := &file_v1_sandboxes_proto_msgTypes[87]
+	mi := &file_v1_sandboxes_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15997,7 +15686,7 @@ func (x *Point) String() string {
 func (*Point) ProtoMessage() {}
 
 func (x *Point) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[87]
+	mi := &file_v1_sandboxes_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16093,7 +15782,7 @@ type Click struct {
 
 func (x *Click) Reset() {
 	*x = Click{}
-	mi := &file_v1_sandboxes_proto_msgTypes[88]
+	mi := &file_v1_sandboxes_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16105,7 +15794,7 @@ func (x *Click) String() string {
 func (*Click) ProtoMessage() {}
 
 func (x *Click) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[88]
+	mi := &file_v1_sandboxes_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16287,7 +15976,7 @@ type Drag struct {
 
 func (x *Drag) Reset() {
 	*x = Drag{}
-	mi := &file_v1_sandboxes_proto_msgTypes[89]
+	mi := &file_v1_sandboxes_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16299,7 +15988,7 @@ func (x *Drag) String() string {
 func (*Drag) ProtoMessage() {}
 
 func (x *Drag) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[89]
+	mi := &file_v1_sandboxes_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16351,7 +16040,7 @@ type Scroll struct {
 
 func (x *Scroll) Reset() {
 	*x = Scroll{}
-	mi := &file_v1_sandboxes_proto_msgTypes[90]
+	mi := &file_v1_sandboxes_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16363,7 +16052,7 @@ func (x *Scroll) String() string {
 func (*Scroll) ProtoMessage() {}
 
 func (x *Scroll) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[90]
+	mi := &file_v1_sandboxes_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16515,7 +16204,7 @@ type Desktop struct {
 
 func (x *Desktop) Reset() {
 	*x = Desktop{}
-	mi := &file_v1_sandboxes_proto_msgTypes[91]
+	mi := &file_v1_sandboxes_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16527,7 +16216,7 @@ func (x *Desktop) String() string {
 func (*Desktop) ProtoMessage() {}
 
 func (x *Desktop) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[91]
+	mi := &file_v1_sandboxes_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16621,7 +16310,7 @@ type CreateLinkRequest struct {
 
 func (x *CreateLinkRequest) Reset() {
 	*x = CreateLinkRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[92]
+	mi := &file_v1_sandboxes_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16633,7 +16322,7 @@ func (x *CreateLinkRequest) String() string {
 func (*CreateLinkRequest) ProtoMessage() {}
 
 func (x *CreateLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[92]
+	mi := &file_v1_sandboxes_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16927,7 +16616,7 @@ func (b0 CreateLinkRequest_builder) Build() *CreateLinkRequest {
 type case_CreateLinkRequest_Target protoreflect.FieldNumber
 
 func (x case_CreateLinkRequest_Target) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[92].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[90].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -16985,7 +16674,7 @@ type TerminalLink struct {
 
 func (x *TerminalLink) Reset() {
 	*x = TerminalLink{}
-	mi := &file_v1_sandboxes_proto_msgTypes[93]
+	mi := &file_v1_sandboxes_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16997,7 +16686,7 @@ func (x *TerminalLink) String() string {
 func (*TerminalLink) ProtoMessage() {}
 
 func (x *TerminalLink) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[93]
+	mi := &file_v1_sandboxes_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17064,7 +16753,7 @@ type DesktopLink struct {
 
 func (x *DesktopLink) Reset() {
 	*x = DesktopLink{}
-	mi := &file_v1_sandboxes_proto_msgTypes[94]
+	mi := &file_v1_sandboxes_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17076,7 +16765,7 @@ func (x *DesktopLink) String() string {
 func (*DesktopLink) ProtoMessage() {}
 
 func (x *DesktopLink) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[94]
+	mi := &file_v1_sandboxes_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17141,7 +16830,7 @@ type Link struct {
 
 func (x *Link) Reset() {
 	*x = Link{}
-	mi := &file_v1_sandboxes_proto_msgTypes[95]
+	mi := &file_v1_sandboxes_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17153,7 +16842,7 @@ func (x *Link) String() string {
 func (*Link) ProtoMessage() {}
 
 func (x *Link) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[95]
+	mi := &file_v1_sandboxes_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17284,7 +16973,7 @@ type PromptAgentRequest struct {
 
 func (x *PromptAgentRequest) Reset() {
 	*x = PromptAgentRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[96]
+	mi := &file_v1_sandboxes_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17296,7 +16985,7 @@ func (x *PromptAgentRequest) String() string {
 func (*PromptAgentRequest) ProtoMessage() {}
 
 func (x *PromptAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[96]
+	mi := &file_v1_sandboxes_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17600,7 +17289,7 @@ type AgentTurn struct {
 
 func (x *AgentTurn) Reset() {
 	*x = AgentTurn{}
-	mi := &file_v1_sandboxes_proto_msgTypes[97]
+	mi := &file_v1_sandboxes_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17612,7 +17301,7 @@ func (x *AgentTurn) String() string {
 func (*AgentTurn) ProtoMessage() {}
 
 func (x *AgentTurn) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[97]
+	mi := &file_v1_sandboxes_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17976,7 +17665,7 @@ type GetAgentTurnRequest struct {
 
 func (x *GetAgentTurnRequest) Reset() {
 	*x = GetAgentTurnRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[98]
+	mi := &file_v1_sandboxes_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17988,7 +17677,7 @@ func (x *GetAgentTurnRequest) String() string {
 func (*GetAgentTurnRequest) ProtoMessage() {}
 
 func (x *GetAgentTurnRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[98]
+	mi := &file_v1_sandboxes_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18117,7 +17806,7 @@ type StopAgentTurnRequest struct {
 
 func (x *StopAgentTurnRequest) Reset() {
 	*x = StopAgentTurnRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[99]
+	mi := &file_v1_sandboxes_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18129,7 +17818,7 @@ func (x *StopAgentTurnRequest) String() string {
 func (*StopAgentTurnRequest) ProtoMessage() {}
 
 func (x *StopAgentTurnRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[99]
+	mi := &file_v1_sandboxes_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18229,7 +17918,7 @@ type ListConversationsRequest struct {
 
 func (x *ListConversationsRequest) Reset() {
 	*x = ListConversationsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[100]
+	mi := &file_v1_sandboxes_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18241,7 +17930,7 @@ func (x *ListConversationsRequest) String() string {
 func (*ListConversationsRequest) ProtoMessage() {}
 
 func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[100]
+	mi := &file_v1_sandboxes_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18369,7 +18058,7 @@ type ListConversationsResponse struct {
 
 func (x *ListConversationsResponse) Reset() {
 	*x = ListConversationsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[101]
+	mi := &file_v1_sandboxes_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18381,7 +18070,7 @@ func (x *ListConversationsResponse) String() string {
 func (*ListConversationsResponse) ProtoMessage() {}
 
 func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[101]
+	mi := &file_v1_sandboxes_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18469,7 +18158,7 @@ type Conversation struct {
 
 func (x *Conversation) Reset() {
 	*x = Conversation{}
-	mi := &file_v1_sandboxes_proto_msgTypes[102]
+	mi := &file_v1_sandboxes_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18481,7 +18170,7 @@ func (x *Conversation) String() string {
 func (*Conversation) ProtoMessage() {}
 
 func (x *Conversation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[102]
+	mi := &file_v1_sandboxes_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18758,7 +18447,7 @@ type WatchConversationRequest struct {
 
 func (x *WatchConversationRequest) Reset() {
 	*x = WatchConversationRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[103]
+	mi := &file_v1_sandboxes_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18770,7 +18459,7 @@ func (x *WatchConversationRequest) String() string {
 func (*WatchConversationRequest) ProtoMessage() {}
 
 func (x *WatchConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[103]
+	mi := &file_v1_sandboxes_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18901,7 +18590,7 @@ type AgentEvent struct {
 
 func (x *AgentEvent) Reset() {
 	*x = AgentEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[104]
+	mi := &file_v1_sandboxes_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18913,7 +18602,7 @@ func (x *AgentEvent) String() string {
 func (*AgentEvent) ProtoMessage() {}
 
 func (x *AgentEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[104]
+	mi := &file_v1_sandboxes_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19273,7 +18962,7 @@ func (b0 AgentEvent_builder) Build() *AgentEvent {
 type case_AgentEvent_Event protoreflect.FieldNumber
 
 func (x case_AgentEvent_Event) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[104].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[102].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -19332,7 +19021,7 @@ type CaughtUp struct {
 
 func (x *CaughtUp) Reset() {
 	*x = CaughtUp{}
-	mi := &file_v1_sandboxes_proto_msgTypes[105]
+	mi := &file_v1_sandboxes_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19344,7 +19033,7 @@ func (x *CaughtUp) String() string {
 func (*CaughtUp) ProtoMessage() {}
 
 func (x *CaughtUp) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[105]
+	mi := &file_v1_sandboxes_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19381,7 +19070,7 @@ type ToolCall struct {
 
 func (x *ToolCall) Reset() {
 	*x = ToolCall{}
-	mi := &file_v1_sandboxes_proto_msgTypes[106]
+	mi := &file_v1_sandboxes_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19393,7 +19082,7 @@ func (x *ToolCall) String() string {
 func (*ToolCall) ProtoMessage() {}
 
 func (x *ToolCall) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[106]
+	mi := &file_v1_sandboxes_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19525,7 +19214,7 @@ type ToolResult struct {
 
 func (x *ToolResult) Reset() {
 	*x = ToolResult{}
-	mi := &file_v1_sandboxes_proto_msgTypes[107]
+	mi := &file_v1_sandboxes_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19537,7 +19226,7 @@ func (x *ToolResult) String() string {
 func (*ToolResult) ProtoMessage() {}
 
 func (x *ToolResult) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[107]
+	mi := &file_v1_sandboxes_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19667,7 +19356,7 @@ type LimitReached struct {
 
 func (x *LimitReached) Reset() {
 	*x = LimitReached{}
-	mi := &file_v1_sandboxes_proto_msgTypes[108]
+	mi := &file_v1_sandboxes_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19679,7 +19368,7 @@ func (x *LimitReached) String() string {
 func (*LimitReached) ProtoMessage() {}
 
 func (x *LimitReached) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[108]
+	mi := &file_v1_sandboxes_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19803,7 +19492,7 @@ type Stopped struct {
 
 func (x *Stopped) Reset() {
 	*x = Stopped{}
-	mi := &file_v1_sandboxes_proto_msgTypes[109]
+	mi := &file_v1_sandboxes_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19815,7 +19504,7 @@ func (x *Stopped) String() string {
 func (*Stopped) ProtoMessage() {}
 
 func (x *Stopped) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[109]
+	mi := &file_v1_sandboxes_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19849,7 +19538,7 @@ type UsageUnpaid struct {
 
 func (x *UsageUnpaid) Reset() {
 	*x = UsageUnpaid{}
-	mi := &file_v1_sandboxes_proto_msgTypes[110]
+	mi := &file_v1_sandboxes_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19861,7 +19550,7 @@ func (x *UsageUnpaid) String() string {
 func (*UsageUnpaid) ProtoMessage() {}
 
 func (x *UsageUnpaid) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[110]
+	mi := &file_v1_sandboxes_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19898,7 +19587,7 @@ type Restoring struct {
 
 func (x *Restoring) Reset() {
 	*x = Restoring{}
-	mi := &file_v1_sandboxes_proto_msgTypes[111]
+	mi := &file_v1_sandboxes_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19910,7 +19599,7 @@ func (x *Restoring) String() string {
 func (*Restoring) ProtoMessage() {}
 
 func (x *Restoring) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[111]
+	mi := &file_v1_sandboxes_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19994,7 +19683,6 @@ func (b0 Restoring_builder) Build() *Restoring {
 // UNAVAILABLE: no room for it now.
 type NoCapacity struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_ForkCount   int32                  `protobuf:"varint,1,opt,name=fork_count,json=forkCount"`
 	xxx_hidden_Bound       RoomBound              `protobuf:"varint,2,opt,name=bound,enum=pethost.sandboxes.v1.RoomBound"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
@@ -20004,7 +19692,7 @@ type NoCapacity struct {
 
 func (x *NoCapacity) Reset() {
 	*x = NoCapacity{}
-	mi := &file_v1_sandboxes_proto_msgTypes[112]
+	mi := &file_v1_sandboxes_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20016,7 +19704,7 @@ func (x *NoCapacity) String() string {
 func (*NoCapacity) ProtoMessage() {}
 
 func (x *NoCapacity) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[112]
+	mi := &file_v1_sandboxes_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20027,60 +19715,35 @@ func (x *NoCapacity) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-func (x *NoCapacity) GetForkCount() int32 {
-	if x != nil {
-		return x.xxx_hidden_ForkCount
-	}
-	return 0
-}
-
 func (x *NoCapacity) GetBound() RoomBound {
 	if x != nil {
-		if protoimpl.X.Present(&(x.XXX_presence[0]), 1) {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 0) {
 			return x.xxx_hidden_Bound
 		}
 	}
 	return RoomBound_ROOM_BOUND_UNSPECIFIED
 }
 
-func (x *NoCapacity) SetForkCount(v int32) {
-	x.xxx_hidden_ForkCount = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
-}
-
 func (x *NoCapacity) SetBound(v RoomBound) {
 	x.xxx_hidden_Bound = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
-}
-
-func (x *NoCapacity) HasForkCount() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
 }
 
 func (x *NoCapacity) HasBound() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *NoCapacity) ClearForkCount() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_ForkCount = 0
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
 }
 
 func (x *NoCapacity) ClearBound() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_Bound = RoomBound_ROOM_BOUND_UNSPECIFIED
 }
 
 type NoCapacity_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	ForkCount *int32
 	// What the server that refused it lacked; absent when no server was asked, none having room
 	// by what they report.
 	Bound *RoomBound
@@ -20090,12 +19753,8 @@ func (b0 NoCapacity_builder) Build() *NoCapacity {
 	m0 := &NoCapacity{}
 	b, x := &b0, m0
 	_, _ = b, x
-	if b.ForkCount != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
-		x.xxx_hidden_ForkCount = *b.ForkCount
-	}
 	if b.Bound != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
 		x.xxx_hidden_Bound = *b.Bound
 	}
 	return m0
@@ -20113,7 +19772,7 @@ type NameTaken struct {
 
 func (x *NameTaken) Reset() {
 	*x = NameTaken{}
-	mi := &file_v1_sandboxes_proto_msgTypes[113]
+	mi := &file_v1_sandboxes_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20125,7 +19784,7 @@ func (x *NameTaken) String() string {
 func (*NameTaken) ProtoMessage() {}
 
 func (x *NameTaken) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[113]
+	mi := &file_v1_sandboxes_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20193,7 +19852,7 @@ type WorkspaceChoice struct {
 
 func (x *WorkspaceChoice) Reset() {
 	*x = WorkspaceChoice{}
-	mi := &file_v1_sandboxes_proto_msgTypes[114]
+	mi := &file_v1_sandboxes_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20205,7 +19864,7 @@ func (x *WorkspaceChoice) String() string {
 func (*WorkspaceChoice) ProtoMessage() {}
 
 func (x *WorkspaceChoice) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[114]
+	mi := &file_v1_sandboxes_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20285,7 +19944,7 @@ type AgentSignIn struct {
 
 func (x *AgentSignIn) Reset() {
 	*x = AgentSignIn{}
-	mi := &file_v1_sandboxes_proto_msgTypes[115]
+	mi := &file_v1_sandboxes_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20297,7 +19956,7 @@ func (x *AgentSignIn) String() string {
 func (*AgentSignIn) ProtoMessage() {}
 
 func (x *AgentSignIn) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[115]
+	mi := &file_v1_sandboxes_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20456,7 +20115,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\tworkspace\x18d \x01(\tR\tworkspace\"G\n" +
 	"\x13DeleteSecretRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"\xe1\b\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\xd3\b\n" +
 	"\aSandbox\x12\x1d\n" +
 	"\n" +
 	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\x128\n" +
@@ -20465,9 +20124,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\rstate_message\x18\x04 \x01(\tR\fstateMessage\x129\n" +
 	"\n" +
 	"state_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tstateTime\x12\x1a\n" +
-	"\btemplate\x18\x06 \x01(\tR\btemplate\x12\x1f\n" +
-	"\vforked_from\x18\a \x01(\tR\n" +
-	"forkedFrom\x123\n" +
+	"\btemplate\x18\x06 \x01(\tR\btemplate\x123\n" +
 	"\x06labels\x18\t \x03(\v2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12A\n" +
 	"\bsettings\x18\n" +
 	" \x01(\v2%.pethost.sandboxes.v1.SandboxSettingsR\bsettings\x12\x1a\n" +
@@ -20489,7 +20146,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"next_state\x18\x17 \x01(\x0e2\".pethost.sandboxes.v1.SandboxStateR\tnextState\x12B\n" +
 	"\x0fnext_state_time\x18\x18 \x01(\v2\x1a.google.protobuf.TimestampR\rnextStateTime\x12!\n" +
 	"\fstored_bytes\x18\x19 \x01(\x03R\vstoredBytes\x12\x12\n" +
-	"\x04name\x18\x1a \x01(\tR\x04nameJ\x04\b\b\x10\tJ\x04\b\x12\x10\x13J\x04\b\x15\x10\x16\"O\n" +
+	"\x04name\x18\x1a \x01(\tR\x04nameJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\x12\x10\x13J\x04\b\x15\x10\x16R\vforked_from\"O\n" +
 	"\aRestore\x12#\n" +
 	"\rfetched_bytes\x18\x01 \x01(\x03R\ffetchedBytes\x12\x1f\n" +
 	"\vtotal_bytes\x18\x02 \x01(\x03R\n" +
@@ -20540,17 +20197,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"sandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\bd\x10e\";\n" +
 	"\x14ResumeSandboxRequest\x12\x1d\n" +
 	"\n" +
-	"sandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\bd\x10e\"\xe6\x01\n" +
-	"\x12ForkSandboxRequest\x12\x1d\n" +
-	"\n" +
-	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x05R\x05count\x123\n" +
-	"\x06labels\x18\x03 \x03(\v2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12A\n" +
-	"\bsettings\x18\x04 \x01(\v2%.pethost.sandboxes.v1.SandboxSettingsR\bsettings\x12\x1d\n" +
-	"\n" +
-	"request_id\x18e \x01(\tR\trequestIdJ\x04\bd\x10e\"R\n" +
-	"\x13ForkSandboxResponse\x12;\n" +
-	"\tsandboxes\x18\x01 \x03(\v2\x1d.pethost.sandboxes.v1.SandboxR\tsandboxes\";\n" +
+	"sandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\bd\x10e\";\n" +
 	"\x14DeleteSandboxRequest\x12\x1d\n" +
 	"\n" +
 	"sandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\bd\x10e\"]\n" +
@@ -20637,15 +20284,13 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x04port\x18\x06 \x01(\v2\x1f.pethost.sandboxes.v1.PortEventH\x00R\x04port\x12E\n" +
 	"\n" +
 	"agent_turn\x18\a \x01(\v2$.pethost.sandboxes.v1.AgentTurnEventH\x00R\tagentTurnB\a\n" +
-	"\x05event\"\x9b\x02\n" +
+	"\x05event\"\x8d\x02\n" +
 	"\x0eLifecycleEvent\x12=\n" +
 	"\x06change\x18\x01 \x01(\x0e2%.pethost.sandboxes.v1.LifecycleChangeR\x06change\x129\n" +
-	"\x06reason\x18\x02 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x06reason\x12\x1f\n" +
-	"\vforked_from\x18\x03 \x01(\tR\n" +
-	"forkedFrom\x12.\n" +
+	"\x06reason\x18\x02 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x06reason\x12.\n" +
 	"\x04size\x18\x04 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x19\n" +
 	"\bdisk_gib\x18\x06 \x01(\x05R\adiskGib\x12#\n" +
-	"\rstate_message\x18\x05 \x01(\tR\fstateMessage\"\x85\x02\n" +
+	"\rstate_message\x18\x05 \x01(\tR\fstateMessageJ\x04\b\x03\x10\x04R\vforked_from\"\x85\x02\n" +
 	"\fCommandEvent\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n" +
@@ -21056,12 +20701,11 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\tRestoring\x12#\n" +
 	"\rfetched_bytes\x18\x01 \x01(\x03R\ffetchedBytes\x12\x1f\n" +
 	"\vtotal_bytes\x18\x02 \x01(\x03R\n" +
-	"totalBytes\"b\n" +
+	"totalBytes\"U\n" +
 	"\n" +
-	"NoCapacity\x12\x1d\n" +
-	"\n" +
-	"fork_count\x18\x01 \x01(\x05R\tforkCount\x125\n" +
-	"\x05bound\x18\x02 \x01(\x0e2\x1f.pethost.sandboxes.v1.RoomBoundR\x05bound\"*\n" +
+	"NoCapacity\x125\n" +
+	"\x05bound\x18\x02 \x01(\x0e2\x1f.pethost.sandboxes.v1.RoomBoundR\x05boundJ\x04\b\x01\x10\x02R\n" +
+	"fork_count\"*\n" +
 	"\tNameTaken\x12\x1d\n" +
 	"\n" +
 	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\"h\n" +
@@ -21182,7 +20826,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x11ROOM_BOUND_MEMORY\x10\x01\x12\x1b\n" +
 	"\x17ROOM_BOUND_SHORT_MEMORY\x10\x02\x12\x13\n" +
 	"\x0fROOM_BOUND_DISK\x10\x03\x12\x17\n" +
-	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\x98\x18\n" +
+	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\xaf\x17\n" +
 	"\x0eSandboxService\x12w\n" +
 	"\fGetWorkspace\x12).pethost.sandboxes.v1.GetWorkspaceRequest\x1a\x1f.pethost.sandboxes.v1.Workspace\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Read the workspace\x12q\n" +
 	"\n" +
@@ -21199,8 +20843,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\rUpdateSandbox\x12*.pethost.sandboxes.v1.UpdateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"&\x90\x02\x02\x8a\xb5\x18\x1f\b\x01\x12\x1bChange a sandbox's settings\x12r\n" +
 	"\fPauseSandbox\x12).pethost.sandboxes.v1.PauseSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x18\x90\x02\x02\x8a\xb5\x18\x11\x12\x0fPause a sandbox\x12q\n" +
 	"\vStopSandbox\x12(.pethost.sandboxes.v1.StopSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\b\x01\x12\x0eStop a sandbox\x12u\n" +
-	"\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12g\n" +
-	"\vForkSandbox\x12(.pethost.sandboxes.v1.ForkSandboxRequest\x1a).pethost.sandboxes.v1.ForkSandboxResponse\"\x03\x88\x02\x01\x12w\n" +
+	"\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12w\n" +
 	"\rDeleteSandbox\x12*.pethost.sandboxes.v1.DeleteSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox\"\x1b\x90\x02\x02\x8a\xb5\x18\x14\b\x01\x12\x10Delete a sandbox\x12\x8d\x01\n" +
 	"\x0eConnectSandbox\x12+.pethost.sandboxes.v1.ConnectSandboxRequest\x1a .pethost.sandboxes.v1.Connection\",\x8a\xb5\x18(\x12&Get a sandbox's address and root token\x12\x97\x01\n" +
 	"\x11GetSandboxMetrics\x12..pethost.sandboxes.v1.GetSandboxMetricsRequest\x1a/.pethost.sandboxes.v1.GetSandboxMetricsResponse\"!\x90\x02\x01\x9a\xb5\x18\x1a\n" +
@@ -21257,7 +20900,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x18com.pethost.sandboxes.v1B\x0eSandboxesProtoZ>github.com/pethost-dev/sdk/go/internal/sandboxesv1;sandboxesv1\xa2\x02\x03PSX\xaa\x02\x14Pethost.Sandboxes.V1\xca\x02\x14Pethost\\Sandboxes\\V1\xe2\x02 Pethost\\Sandboxes\\V1\\GPBMetadata\xea\x02\x16Pethost::Sandboxes::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
 var file_v1_sandboxes_proto_enumTypes = make([]protoimpl.EnumInfo, 17)
-var file_v1_sandboxes_proto_msgTypes = make([]protoimpl.MessageInfo, 116)
+var file_v1_sandboxes_proto_msgTypes = make([]protoimpl.MessageInfo, 114)
 var file_v1_sandboxes_proto_goTypes = []any{
 	(Meter)(0),                        // 0: pethost.sandboxes.v1.Meter
 	(SandboxState)(0),                 // 1: pethost.sandboxes.v1.SandboxState
@@ -21298,101 +20941,99 @@ var file_v1_sandboxes_proto_goTypes = []any{
 	(*PauseSandboxRequest)(nil),       // 36: pethost.sandboxes.v1.PauseSandboxRequest
 	(*StopSandboxRequest)(nil),        // 37: pethost.sandboxes.v1.StopSandboxRequest
 	(*ResumeSandboxRequest)(nil),      // 38: pethost.sandboxes.v1.ResumeSandboxRequest
-	(*ForkSandboxRequest)(nil),        // 39: pethost.sandboxes.v1.ForkSandboxRequest
-	(*ForkSandboxResponse)(nil),       // 40: pethost.sandboxes.v1.ForkSandboxResponse
-	(*DeleteSandboxRequest)(nil),      // 41: pethost.sandboxes.v1.DeleteSandboxRequest
-	(*ConnectSandboxRequest)(nil),     // 42: pethost.sandboxes.v1.ConnectSandboxRequest
-	(*Connection)(nil),                // 43: pethost.sandboxes.v1.Connection
-	(*SandboxSettings)(nil),           // 44: pethost.sandboxes.v1.SandboxSettings
-	(*Lifecycle)(nil),                 // 45: pethost.sandboxes.v1.Lifecycle
-	(*Egress)(nil),                    // 46: pethost.sandboxes.v1.Egress
-	(*Ingress)(nil),                   // 47: pethost.sandboxes.v1.Ingress
-	(*PublicPort)(nil),                // 48: pethost.sandboxes.v1.PublicPort
-	(*Environment)(nil),               // 49: pethost.sandboxes.v1.Environment
-	(*EnvVar)(nil),                    // 50: pethost.sandboxes.v1.EnvVar
-	(*Label)(nil),                     // 51: pethost.sandboxes.v1.Label
-	(*GetSandboxMetricsRequest)(nil),  // 52: pethost.sandboxes.v1.GetSandboxMetricsRequest
-	(*GetSandboxMetricsResponse)(nil), // 53: pethost.sandboxes.v1.GetSandboxMetricsResponse
-	(*MetricsPoint)(nil),              // 54: pethost.sandboxes.v1.MetricsPoint
-	(*ListSandboxEventsRequest)(nil),  // 55: pethost.sandboxes.v1.ListSandboxEventsRequest
-	(*ListSandboxEventsResponse)(nil), // 56: pethost.sandboxes.v1.ListSandboxEventsResponse
-	(*WatchSandboxEventsRequest)(nil), // 57: pethost.sandboxes.v1.WatchSandboxEventsRequest
-	(*SandboxEvent)(nil),              // 58: pethost.sandboxes.v1.SandboxEvent
-	(*LifecycleEvent)(nil),            // 59: pethost.sandboxes.v1.LifecycleEvent
-	(*CommandEvent)(nil),              // 60: pethost.sandboxes.v1.CommandEvent
-	(*EgressEvent)(nil),               // 61: pethost.sandboxes.v1.EgressEvent
-	(*PortEvent)(nil),                 // 62: pethost.sandboxes.v1.PortEvent
-	(*AgentTurnEvent)(nil),            // 63: pethost.sandboxes.v1.AgentTurnEvent
-	(*Template)(nil),                  // 64: pethost.sandboxes.v1.Template
-	(*CreateTemplateRequest)(nil),     // 65: pethost.sandboxes.v1.CreateTemplateRequest
-	(*GetTemplateRequest)(nil),        // 66: pethost.sandboxes.v1.GetTemplateRequest
-	(*ListTemplatesRequest)(nil),      // 67: pethost.sandboxes.v1.ListTemplatesRequest
-	(*ListTemplatesResponse)(nil),     // 68: pethost.sandboxes.v1.ListTemplatesResponse
-	(*DeleteTemplateRequest)(nil),     // 69: pethost.sandboxes.v1.DeleteTemplateRequest
-	(*Volume)(nil),                    // 70: pethost.sandboxes.v1.Volume
-	(*Mount)(nil),                     // 71: pethost.sandboxes.v1.Mount
-	(*CreateVolumeRequest)(nil),       // 72: pethost.sandboxes.v1.CreateVolumeRequest
-	(*ListVolumesRequest)(nil),        // 73: pethost.sandboxes.v1.ListVolumesRequest
-	(*ListVolumesResponse)(nil),       // 74: pethost.sandboxes.v1.ListVolumesResponse
-	(*DeleteVolumeRequest)(nil),       // 75: pethost.sandboxes.v1.DeleteVolumeRequest
-	(*ListUsageRequest)(nil),          // 76: pethost.sandboxes.v1.ListUsageRequest
-	(*ListUsageResponse)(nil),         // 77: pethost.sandboxes.v1.ListUsageResponse
-	(*UsageRow)(nil),                  // 78: pethost.sandboxes.v1.UsageRow
-	(*RunCommandRequest)(nil),         // 79: pethost.sandboxes.v1.RunCommandRequest
-	(*Command)(nil),                   // 80: pethost.sandboxes.v1.Command
-	(*GetCommandRequest)(nil),         // 81: pethost.sandboxes.v1.GetCommandRequest
-	(*StopCommandRequest)(nil),        // 82: pethost.sandboxes.v1.StopCommandRequest
-	(*ListCommandsRequest)(nil),       // 83: pethost.sandboxes.v1.ListCommandsRequest
-	(*ListCommandsResponse)(nil),      // 84: pethost.sandboxes.v1.ListCommandsResponse
-	(*WatchCommandRequest)(nil),       // 85: pethost.sandboxes.v1.WatchCommandRequest
-	(*CommandOutput)(nil),             // 86: pethost.sandboxes.v1.CommandOutput
-	(*ReadFileRequest)(nil),           // 87: pethost.sandboxes.v1.ReadFileRequest
-	(*File)(nil),                      // 88: pethost.sandboxes.v1.File
-	(*ListFilesRequest)(nil),          // 89: pethost.sandboxes.v1.ListFilesRequest
-	(*ListFilesResponse)(nil),         // 90: pethost.sandboxes.v1.ListFilesResponse
-	(*FileInfo)(nil),                  // 91: pethost.sandboxes.v1.FileInfo
-	(*WriteFilesRequest)(nil),         // 92: pethost.sandboxes.v1.WriteFilesRequest
-	(*FileChange)(nil),                // 93: pethost.sandboxes.v1.FileChange
-	(*Delete)(nil),                    // 94: pethost.sandboxes.v1.Delete
-	(*MakeDirectory)(nil),             // 95: pethost.sandboxes.v1.MakeDirectory
-	(*TextEdit)(nil),                  // 96: pethost.sandboxes.v1.TextEdit
-	(*WriteFilesResponse)(nil),        // 97: pethost.sandboxes.v1.WriteFilesResponse
-	(*WatchFilesRequest)(nil),         // 98: pethost.sandboxes.v1.WatchFilesRequest
-	(*FileEvent)(nil),                 // 99: pethost.sandboxes.v1.FileEvent
-	(*ControlDesktopRequest)(nil),     // 100: pethost.sandboxes.v1.ControlDesktopRequest
-	(*ControlDesktopResponse)(nil),    // 101: pethost.sandboxes.v1.ControlDesktopResponse
-	(*Screenshot)(nil),                // 102: pethost.sandboxes.v1.Screenshot
-	(*DesktopAction)(nil),             // 103: pethost.sandboxes.v1.DesktopAction
-	(*Point)(nil),                     // 104: pethost.sandboxes.v1.Point
-	(*Click)(nil),                     // 105: pethost.sandboxes.v1.Click
-	(*Drag)(nil),                      // 106: pethost.sandboxes.v1.Drag
-	(*Scroll)(nil),                    // 107: pethost.sandboxes.v1.Scroll
-	(*Desktop)(nil),                   // 108: pethost.sandboxes.v1.Desktop
-	(*CreateLinkRequest)(nil),         // 109: pethost.sandboxes.v1.CreateLinkRequest
-	(*TerminalLink)(nil),              // 110: pethost.sandboxes.v1.TerminalLink
-	(*DesktopLink)(nil),               // 111: pethost.sandboxes.v1.DesktopLink
-	(*Link)(nil),                      // 112: pethost.sandboxes.v1.Link
-	(*PromptAgentRequest)(nil),        // 113: pethost.sandboxes.v1.PromptAgentRequest
-	(*AgentTurn)(nil),                 // 114: pethost.sandboxes.v1.AgentTurn
-	(*GetAgentTurnRequest)(nil),       // 115: pethost.sandboxes.v1.GetAgentTurnRequest
-	(*StopAgentTurnRequest)(nil),      // 116: pethost.sandboxes.v1.StopAgentTurnRequest
-	(*ListConversationsRequest)(nil),  // 117: pethost.sandboxes.v1.ListConversationsRequest
-	(*ListConversationsResponse)(nil), // 118: pethost.sandboxes.v1.ListConversationsResponse
-	(*Conversation)(nil),              // 119: pethost.sandboxes.v1.Conversation
-	(*WatchConversationRequest)(nil),  // 120: pethost.sandboxes.v1.WatchConversationRequest
-	(*AgentEvent)(nil),                // 121: pethost.sandboxes.v1.AgentEvent
-	(*CaughtUp)(nil),                  // 122: pethost.sandboxes.v1.CaughtUp
-	(*ToolCall)(nil),                  // 123: pethost.sandboxes.v1.ToolCall
-	(*ToolResult)(nil),                // 124: pethost.sandboxes.v1.ToolResult
-	(*LimitReached)(nil),              // 125: pethost.sandboxes.v1.LimitReached
-	(*Stopped)(nil),                   // 126: pethost.sandboxes.v1.Stopped
-	(*UsageUnpaid)(nil),               // 127: pethost.sandboxes.v1.UsageUnpaid
-	(*Restoring)(nil),                 // 128: pethost.sandboxes.v1.Restoring
-	(*NoCapacity)(nil),                // 129: pethost.sandboxes.v1.NoCapacity
-	(*NameTaken)(nil),                 // 130: pethost.sandboxes.v1.NameTaken
-	(*WorkspaceChoice)(nil),           // 131: pethost.sandboxes.v1.WorkspaceChoice
-	(*AgentSignIn)(nil),               // 132: pethost.sandboxes.v1.AgentSignIn
-	(*timestamppb.Timestamp)(nil),     // 133: google.protobuf.Timestamp
+	(*DeleteSandboxRequest)(nil),      // 39: pethost.sandboxes.v1.DeleteSandboxRequest
+	(*ConnectSandboxRequest)(nil),     // 40: pethost.sandboxes.v1.ConnectSandboxRequest
+	(*Connection)(nil),                // 41: pethost.sandboxes.v1.Connection
+	(*SandboxSettings)(nil),           // 42: pethost.sandboxes.v1.SandboxSettings
+	(*Lifecycle)(nil),                 // 43: pethost.sandboxes.v1.Lifecycle
+	(*Egress)(nil),                    // 44: pethost.sandboxes.v1.Egress
+	(*Ingress)(nil),                   // 45: pethost.sandboxes.v1.Ingress
+	(*PublicPort)(nil),                // 46: pethost.sandboxes.v1.PublicPort
+	(*Environment)(nil),               // 47: pethost.sandboxes.v1.Environment
+	(*EnvVar)(nil),                    // 48: pethost.sandboxes.v1.EnvVar
+	(*Label)(nil),                     // 49: pethost.sandboxes.v1.Label
+	(*GetSandboxMetricsRequest)(nil),  // 50: pethost.sandboxes.v1.GetSandboxMetricsRequest
+	(*GetSandboxMetricsResponse)(nil), // 51: pethost.sandboxes.v1.GetSandboxMetricsResponse
+	(*MetricsPoint)(nil),              // 52: pethost.sandboxes.v1.MetricsPoint
+	(*ListSandboxEventsRequest)(nil),  // 53: pethost.sandboxes.v1.ListSandboxEventsRequest
+	(*ListSandboxEventsResponse)(nil), // 54: pethost.sandboxes.v1.ListSandboxEventsResponse
+	(*WatchSandboxEventsRequest)(nil), // 55: pethost.sandboxes.v1.WatchSandboxEventsRequest
+	(*SandboxEvent)(nil),              // 56: pethost.sandboxes.v1.SandboxEvent
+	(*LifecycleEvent)(nil),            // 57: pethost.sandboxes.v1.LifecycleEvent
+	(*CommandEvent)(nil),              // 58: pethost.sandboxes.v1.CommandEvent
+	(*EgressEvent)(nil),               // 59: pethost.sandboxes.v1.EgressEvent
+	(*PortEvent)(nil),                 // 60: pethost.sandboxes.v1.PortEvent
+	(*AgentTurnEvent)(nil),            // 61: pethost.sandboxes.v1.AgentTurnEvent
+	(*Template)(nil),                  // 62: pethost.sandboxes.v1.Template
+	(*CreateTemplateRequest)(nil),     // 63: pethost.sandboxes.v1.CreateTemplateRequest
+	(*GetTemplateRequest)(nil),        // 64: pethost.sandboxes.v1.GetTemplateRequest
+	(*ListTemplatesRequest)(nil),      // 65: pethost.sandboxes.v1.ListTemplatesRequest
+	(*ListTemplatesResponse)(nil),     // 66: pethost.sandboxes.v1.ListTemplatesResponse
+	(*DeleteTemplateRequest)(nil),     // 67: pethost.sandboxes.v1.DeleteTemplateRequest
+	(*Volume)(nil),                    // 68: pethost.sandboxes.v1.Volume
+	(*Mount)(nil),                     // 69: pethost.sandboxes.v1.Mount
+	(*CreateVolumeRequest)(nil),       // 70: pethost.sandboxes.v1.CreateVolumeRequest
+	(*ListVolumesRequest)(nil),        // 71: pethost.sandboxes.v1.ListVolumesRequest
+	(*ListVolumesResponse)(nil),       // 72: pethost.sandboxes.v1.ListVolumesResponse
+	(*DeleteVolumeRequest)(nil),       // 73: pethost.sandboxes.v1.DeleteVolumeRequest
+	(*ListUsageRequest)(nil),          // 74: pethost.sandboxes.v1.ListUsageRequest
+	(*ListUsageResponse)(nil),         // 75: pethost.sandboxes.v1.ListUsageResponse
+	(*UsageRow)(nil),                  // 76: pethost.sandboxes.v1.UsageRow
+	(*RunCommandRequest)(nil),         // 77: pethost.sandboxes.v1.RunCommandRequest
+	(*Command)(nil),                   // 78: pethost.sandboxes.v1.Command
+	(*GetCommandRequest)(nil),         // 79: pethost.sandboxes.v1.GetCommandRequest
+	(*StopCommandRequest)(nil),        // 80: pethost.sandboxes.v1.StopCommandRequest
+	(*ListCommandsRequest)(nil),       // 81: pethost.sandboxes.v1.ListCommandsRequest
+	(*ListCommandsResponse)(nil),      // 82: pethost.sandboxes.v1.ListCommandsResponse
+	(*WatchCommandRequest)(nil),       // 83: pethost.sandboxes.v1.WatchCommandRequest
+	(*CommandOutput)(nil),             // 84: pethost.sandboxes.v1.CommandOutput
+	(*ReadFileRequest)(nil),           // 85: pethost.sandboxes.v1.ReadFileRequest
+	(*File)(nil),                      // 86: pethost.sandboxes.v1.File
+	(*ListFilesRequest)(nil),          // 87: pethost.sandboxes.v1.ListFilesRequest
+	(*ListFilesResponse)(nil),         // 88: pethost.sandboxes.v1.ListFilesResponse
+	(*FileInfo)(nil),                  // 89: pethost.sandboxes.v1.FileInfo
+	(*WriteFilesRequest)(nil),         // 90: pethost.sandboxes.v1.WriteFilesRequest
+	(*FileChange)(nil),                // 91: pethost.sandboxes.v1.FileChange
+	(*Delete)(nil),                    // 92: pethost.sandboxes.v1.Delete
+	(*MakeDirectory)(nil),             // 93: pethost.sandboxes.v1.MakeDirectory
+	(*TextEdit)(nil),                  // 94: pethost.sandboxes.v1.TextEdit
+	(*WriteFilesResponse)(nil),        // 95: pethost.sandboxes.v1.WriteFilesResponse
+	(*WatchFilesRequest)(nil),         // 96: pethost.sandboxes.v1.WatchFilesRequest
+	(*FileEvent)(nil),                 // 97: pethost.sandboxes.v1.FileEvent
+	(*ControlDesktopRequest)(nil),     // 98: pethost.sandboxes.v1.ControlDesktopRequest
+	(*ControlDesktopResponse)(nil),    // 99: pethost.sandboxes.v1.ControlDesktopResponse
+	(*Screenshot)(nil),                // 100: pethost.sandboxes.v1.Screenshot
+	(*DesktopAction)(nil),             // 101: pethost.sandboxes.v1.DesktopAction
+	(*Point)(nil),                     // 102: pethost.sandboxes.v1.Point
+	(*Click)(nil),                     // 103: pethost.sandboxes.v1.Click
+	(*Drag)(nil),                      // 104: pethost.sandboxes.v1.Drag
+	(*Scroll)(nil),                    // 105: pethost.sandboxes.v1.Scroll
+	(*Desktop)(nil),                   // 106: pethost.sandboxes.v1.Desktop
+	(*CreateLinkRequest)(nil),         // 107: pethost.sandboxes.v1.CreateLinkRequest
+	(*TerminalLink)(nil),              // 108: pethost.sandboxes.v1.TerminalLink
+	(*DesktopLink)(nil),               // 109: pethost.sandboxes.v1.DesktopLink
+	(*Link)(nil),                      // 110: pethost.sandboxes.v1.Link
+	(*PromptAgentRequest)(nil),        // 111: pethost.sandboxes.v1.PromptAgentRequest
+	(*AgentTurn)(nil),                 // 112: pethost.sandboxes.v1.AgentTurn
+	(*GetAgentTurnRequest)(nil),       // 113: pethost.sandboxes.v1.GetAgentTurnRequest
+	(*StopAgentTurnRequest)(nil),      // 114: pethost.sandboxes.v1.StopAgentTurnRequest
+	(*ListConversationsRequest)(nil),  // 115: pethost.sandboxes.v1.ListConversationsRequest
+	(*ListConversationsResponse)(nil), // 116: pethost.sandboxes.v1.ListConversationsResponse
+	(*Conversation)(nil),              // 117: pethost.sandboxes.v1.Conversation
+	(*WatchConversationRequest)(nil),  // 118: pethost.sandboxes.v1.WatchConversationRequest
+	(*AgentEvent)(nil),                // 119: pethost.sandboxes.v1.AgentEvent
+	(*CaughtUp)(nil),                  // 120: pethost.sandboxes.v1.CaughtUp
+	(*ToolCall)(nil),                  // 121: pethost.sandboxes.v1.ToolCall
+	(*ToolResult)(nil),                // 122: pethost.sandboxes.v1.ToolResult
+	(*LimitReached)(nil),              // 123: pethost.sandboxes.v1.LimitReached
+	(*Stopped)(nil),                   // 124: pethost.sandboxes.v1.Stopped
+	(*UsageUnpaid)(nil),               // 125: pethost.sandboxes.v1.UsageUnpaid
+	(*Restoring)(nil),                 // 126: pethost.sandboxes.v1.Restoring
+	(*NoCapacity)(nil),                // 127: pethost.sandboxes.v1.NoCapacity
+	(*NameTaken)(nil),                 // 128: pethost.sandboxes.v1.NameTaken
+	(*WorkspaceChoice)(nil),           // 129: pethost.sandboxes.v1.WorkspaceChoice
+	(*AgentSignIn)(nil),               // 130: pethost.sandboxes.v1.AgentSignIn
+	(*timestamppb.Timestamp)(nil),     // 131: google.protobuf.Timestamp
 }
 var file_v1_sandboxes_proto_depIdxs = []int32{
 	23,  // 0: pethost.sandboxes.v1.Workspace.limits:type_name -> pethost.sandboxes.v1.Limits
@@ -21401,204 +21042,199 @@ var file_v1_sandboxes_proto_depIdxs = []int32{
 	20,  // 3: pethost.sandboxes.v1.Workspace.billing:type_name -> pethost.sandboxes.v1.Billing
 	19,  // 4: pethost.sandboxes.v1.Workspace.sizes:type_name -> pethost.sandboxes.v1.SizeInfo
 	3,   // 5: pethost.sandboxes.v1.SizeInfo.size:type_name -> pethost.sandboxes.v1.Size
-	133, // 6: pethost.sandboxes.v1.Billing.period_end_time:type_name -> google.protobuf.Timestamp
+	131, // 6: pethost.sandboxes.v1.Billing.period_end_time:type_name -> google.protobuf.Timestamp
 	21,  // 7: pethost.sandboxes.v1.Billing.rates:type_name -> pethost.sandboxes.v1.Rates
 	3,   // 8: pethost.sandboxes.v1.Limits.largest_size:type_name -> pethost.sandboxes.v1.Size
-	133, // 9: pethost.sandboxes.v1.Secret.update_time:type_name -> google.protobuf.Timestamp
+	131, // 9: pethost.sandboxes.v1.Secret.update_time:type_name -> google.protobuf.Timestamp
 	1,   // 10: pethost.sandboxes.v1.Sandbox.state:type_name -> pethost.sandboxes.v1.SandboxState
 	2,   // 11: pethost.sandboxes.v1.Sandbox.state_reason:type_name -> pethost.sandboxes.v1.StateReason
-	133, // 12: pethost.sandboxes.v1.Sandbox.state_time:type_name -> google.protobuf.Timestamp
-	51,  // 13: pethost.sandboxes.v1.Sandbox.labels:type_name -> pethost.sandboxes.v1.Label
-	44,  // 14: pethost.sandboxes.v1.Sandbox.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	71,  // 15: pethost.sandboxes.v1.Sandbox.mounts:type_name -> pethost.sandboxes.v1.Mount
-	108, // 16: pethost.sandboxes.v1.Sandbox.desktop:type_name -> pethost.sandboxes.v1.Desktop
-	133, // 17: pethost.sandboxes.v1.Sandbox.create_time:type_name -> google.protobuf.Timestamp
+	131, // 12: pethost.sandboxes.v1.Sandbox.state_time:type_name -> google.protobuf.Timestamp
+	49,  // 13: pethost.sandboxes.v1.Sandbox.labels:type_name -> pethost.sandboxes.v1.Label
+	42,  // 14: pethost.sandboxes.v1.Sandbox.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	69,  // 15: pethost.sandboxes.v1.Sandbox.mounts:type_name -> pethost.sandboxes.v1.Mount
+	106, // 16: pethost.sandboxes.v1.Sandbox.desktop:type_name -> pethost.sandboxes.v1.Desktop
+	131, // 17: pethost.sandboxes.v1.Sandbox.create_time:type_name -> google.protobuf.Timestamp
 	30,  // 18: pethost.sandboxes.v1.Sandbox.usage:type_name -> pethost.sandboxes.v1.Usage
-	43,  // 19: pethost.sandboxes.v1.Sandbox.connection:type_name -> pethost.sandboxes.v1.Connection
+	41,  // 19: pethost.sandboxes.v1.Sandbox.connection:type_name -> pethost.sandboxes.v1.Connection
 	29,  // 20: pethost.sandboxes.v1.Sandbox.restore:type_name -> pethost.sandboxes.v1.Restore
 	1,   // 21: pethost.sandboxes.v1.Sandbox.next_state:type_name -> pethost.sandboxes.v1.SandboxState
-	133, // 22: pethost.sandboxes.v1.Sandbox.next_state_time:type_name -> google.protobuf.Timestamp
-	44,  // 23: pethost.sandboxes.v1.CreateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	51,  // 24: pethost.sandboxes.v1.CreateSandboxRequest.labels:type_name -> pethost.sandboxes.v1.Label
-	71,  // 25: pethost.sandboxes.v1.CreateSandboxRequest.mounts:type_name -> pethost.sandboxes.v1.Mount
+	131, // 22: pethost.sandboxes.v1.Sandbox.next_state_time:type_name -> google.protobuf.Timestamp
+	42,  // 23: pethost.sandboxes.v1.CreateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	49,  // 24: pethost.sandboxes.v1.CreateSandboxRequest.labels:type_name -> pethost.sandboxes.v1.Label
+	69,  // 25: pethost.sandboxes.v1.CreateSandboxRequest.mounts:type_name -> pethost.sandboxes.v1.Mount
 	1,   // 26: pethost.sandboxes.v1.ListSandboxesRequest.states:type_name -> pethost.sandboxes.v1.SandboxState
-	51,  // 27: pethost.sandboxes.v1.ListSandboxesRequest.labels:type_name -> pethost.sandboxes.v1.Label
+	49,  // 27: pethost.sandboxes.v1.ListSandboxesRequest.labels:type_name -> pethost.sandboxes.v1.Label
 	28,  // 28: pethost.sandboxes.v1.ListSandboxesResponse.sandboxes:type_name -> pethost.sandboxes.v1.Sandbox
-	44,  // 29: pethost.sandboxes.v1.UpdateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	51,  // 30: pethost.sandboxes.v1.ForkSandboxRequest.labels:type_name -> pethost.sandboxes.v1.Label
-	44,  // 31: pethost.sandboxes.v1.ForkSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	28,  // 32: pethost.sandboxes.v1.ForkSandboxResponse.sandboxes:type_name -> pethost.sandboxes.v1.Sandbox
-	133, // 33: pethost.sandboxes.v1.Connection.expire_time:type_name -> google.protobuf.Timestamp
-	3,   // 34: pethost.sandboxes.v1.SandboxSettings.size:type_name -> pethost.sandboxes.v1.Size
-	45,  // 35: pethost.sandboxes.v1.SandboxSettings.lifecycle:type_name -> pethost.sandboxes.v1.Lifecycle
-	46,  // 36: pethost.sandboxes.v1.SandboxSettings.egress:type_name -> pethost.sandboxes.v1.Egress
-	47,  // 37: pethost.sandboxes.v1.SandboxSettings.ingress:type_name -> pethost.sandboxes.v1.Ingress
-	49,  // 38: pethost.sandboxes.v1.SandboxSettings.environment:type_name -> pethost.sandboxes.v1.Environment
-	48,  // 39: pethost.sandboxes.v1.Ingress.public_ports:type_name -> pethost.sandboxes.v1.PublicPort
-	50,  // 40: pethost.sandboxes.v1.Environment.variables:type_name -> pethost.sandboxes.v1.EnvVar
-	133, // 41: pethost.sandboxes.v1.GetSandboxMetricsRequest.since:type_name -> google.protobuf.Timestamp
-	133, // 42: pethost.sandboxes.v1.GetSandboxMetricsRequest.until:type_name -> google.protobuf.Timestamp
-	54,  // 43: pethost.sandboxes.v1.GetSandboxMetricsResponse.points:type_name -> pethost.sandboxes.v1.MetricsPoint
-	133, // 44: pethost.sandboxes.v1.MetricsPoint.time:type_name -> google.protobuf.Timestamp
-	4,   // 45: pethost.sandboxes.v1.ListSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
-	58,  // 46: pethost.sandboxes.v1.ListSandboxEventsResponse.events:type_name -> pethost.sandboxes.v1.SandboxEvent
-	4,   // 47: pethost.sandboxes.v1.WatchSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
-	133, // 48: pethost.sandboxes.v1.SandboxEvent.time:type_name -> google.protobuf.Timestamp
-	59,  // 49: pethost.sandboxes.v1.SandboxEvent.lifecycle:type_name -> pethost.sandboxes.v1.LifecycleEvent
-	60,  // 50: pethost.sandboxes.v1.SandboxEvent.command:type_name -> pethost.sandboxes.v1.CommandEvent
-	61,  // 51: pethost.sandboxes.v1.SandboxEvent.egress:type_name -> pethost.sandboxes.v1.EgressEvent
-	62,  // 52: pethost.sandboxes.v1.SandboxEvent.port:type_name -> pethost.sandboxes.v1.PortEvent
-	63,  // 53: pethost.sandboxes.v1.SandboxEvent.agent_turn:type_name -> pethost.sandboxes.v1.AgentTurnEvent
-	5,   // 54: pethost.sandboxes.v1.LifecycleEvent.change:type_name -> pethost.sandboxes.v1.LifecycleChange
-	2,   // 55: pethost.sandboxes.v1.LifecycleEvent.reason:type_name -> pethost.sandboxes.v1.StateReason
-	3,   // 56: pethost.sandboxes.v1.LifecycleEvent.size:type_name -> pethost.sandboxes.v1.Size
-	7,   // 57: pethost.sandboxes.v1.CommandEvent.state:type_name -> pethost.sandboxes.v1.CommandState
-	8,   // 58: pethost.sandboxes.v1.CommandEvent.started_by:type_name -> pethost.sandboxes.v1.StartedBy
-	14,  // 59: pethost.sandboxes.v1.AgentTurnEvent.agent:type_name -> pethost.sandboxes.v1.Agent
-	15,  // 60: pethost.sandboxes.v1.AgentTurnEvent.state:type_name -> pethost.sandboxes.v1.AgentTurnState
-	6,   // 61: pethost.sandboxes.v1.Template.state:type_name -> pethost.sandboxes.v1.TemplateState
-	44,  // 62: pethost.sandboxes.v1.Template.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	133, // 63: pethost.sandboxes.v1.Template.create_time:type_name -> google.protobuf.Timestamp
-	3,   // 64: pethost.sandboxes.v1.Template.min_size:type_name -> pethost.sandboxes.v1.Size
-	64,  // 65: pethost.sandboxes.v1.ListTemplatesResponse.templates:type_name -> pethost.sandboxes.v1.Template
-	133, // 66: pethost.sandboxes.v1.Volume.create_time:type_name -> google.protobuf.Timestamp
-	70,  // 67: pethost.sandboxes.v1.ListVolumesResponse.volumes:type_name -> pethost.sandboxes.v1.Volume
-	133, // 68: pethost.sandboxes.v1.ListUsageRequest.since:type_name -> google.protobuf.Timestamp
-	133, // 69: pethost.sandboxes.v1.ListUsageRequest.until:type_name -> google.protobuf.Timestamp
-	78,  // 70: pethost.sandboxes.v1.ListUsageResponse.rows:type_name -> pethost.sandboxes.v1.UsageRow
-	133, // 71: pethost.sandboxes.v1.UsageRow.day:type_name -> google.protobuf.Timestamp
-	0,   // 72: pethost.sandboxes.v1.UsageRow.meter:type_name -> pethost.sandboxes.v1.Meter
-	3,   // 73: pethost.sandboxes.v1.UsageRow.size:type_name -> pethost.sandboxes.v1.Size
-	7,   // 74: pethost.sandboxes.v1.Command.state:type_name -> pethost.sandboxes.v1.CommandState
-	8,   // 75: pethost.sandboxes.v1.Command.started_by:type_name -> pethost.sandboxes.v1.StartedBy
-	133, // 76: pethost.sandboxes.v1.Command.start_time:type_name -> google.protobuf.Timestamp
-	133, // 77: pethost.sandboxes.v1.Command.end_time:type_name -> google.protobuf.Timestamp
-	80,  // 78: pethost.sandboxes.v1.ListCommandsResponse.commands:type_name -> pethost.sandboxes.v1.Command
-	80,  // 79: pethost.sandboxes.v1.CommandOutput.ended:type_name -> pethost.sandboxes.v1.Command
-	91,  // 80: pethost.sandboxes.v1.ListFilesResponse.files:type_name -> pethost.sandboxes.v1.FileInfo
-	9,   // 81: pethost.sandboxes.v1.FileInfo.kind:type_name -> pethost.sandboxes.v1.FileKind
-	133, // 82: pethost.sandboxes.v1.FileInfo.modify_time:type_name -> google.protobuf.Timestamp
-	93,  // 83: pethost.sandboxes.v1.WriteFilesRequest.changes:type_name -> pethost.sandboxes.v1.FileChange
-	96,  // 84: pethost.sandboxes.v1.FileChange.edit:type_name -> pethost.sandboxes.v1.TextEdit
-	94,  // 85: pethost.sandboxes.v1.FileChange.delete:type_name -> pethost.sandboxes.v1.Delete
-	95,  // 86: pethost.sandboxes.v1.FileChange.make_directory:type_name -> pethost.sandboxes.v1.MakeDirectory
-	10,  // 87: pethost.sandboxes.v1.WriteFilesResponse.failure:type_name -> pethost.sandboxes.v1.FileFailure
-	11,  // 88: pethost.sandboxes.v1.FileEvent.kind:type_name -> pethost.sandboxes.v1.FileEventKind
-	103, // 89: pethost.sandboxes.v1.ControlDesktopRequest.actions:type_name -> pethost.sandboxes.v1.DesktopAction
-	102, // 90: pethost.sandboxes.v1.ControlDesktopResponse.screenshot:type_name -> pethost.sandboxes.v1.Screenshot
-	12,  // 91: pethost.sandboxes.v1.ControlDesktopResponse.failure:type_name -> pethost.sandboxes.v1.DesktopFailure
-	105, // 92: pethost.sandboxes.v1.DesktopAction.click:type_name -> pethost.sandboxes.v1.Click
-	104, // 93: pethost.sandboxes.v1.DesktopAction.move_mouse:type_name -> pethost.sandboxes.v1.Point
-	106, // 94: pethost.sandboxes.v1.DesktopAction.drag:type_name -> pethost.sandboxes.v1.Drag
-	107, // 95: pethost.sandboxes.v1.DesktopAction.scroll:type_name -> pethost.sandboxes.v1.Scroll
-	13,  // 96: pethost.sandboxes.v1.Click.button:type_name -> pethost.sandboxes.v1.MouseButton
-	104, // 97: pethost.sandboxes.v1.Drag.path:type_name -> pethost.sandboxes.v1.Point
-	110, // 98: pethost.sandboxes.v1.CreateLinkRequest.terminal:type_name -> pethost.sandboxes.v1.TerminalLink
-	111, // 99: pethost.sandboxes.v1.CreateLinkRequest.desktop:type_name -> pethost.sandboxes.v1.DesktopLink
-	133, // 100: pethost.sandboxes.v1.Link.expire_time:type_name -> google.protobuf.Timestamp
-	14,  // 101: pethost.sandboxes.v1.PromptAgentRequest.agent:type_name -> pethost.sandboxes.v1.Agent
-	14,  // 102: pethost.sandboxes.v1.AgentTurn.agent:type_name -> pethost.sandboxes.v1.Agent
-	15,  // 103: pethost.sandboxes.v1.AgentTurn.state:type_name -> pethost.sandboxes.v1.AgentTurnState
-	133, // 104: pethost.sandboxes.v1.AgentTurn.start_time:type_name -> google.protobuf.Timestamp
-	133, // 105: pethost.sandboxes.v1.AgentTurn.end_time:type_name -> google.protobuf.Timestamp
-	119, // 106: pethost.sandboxes.v1.ListConversationsResponse.conversations:type_name -> pethost.sandboxes.v1.Conversation
-	14,  // 107: pethost.sandboxes.v1.Conversation.agent:type_name -> pethost.sandboxes.v1.Agent
-	133, // 108: pethost.sandboxes.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
-	133, // 109: pethost.sandboxes.v1.AgentEvent.time:type_name -> google.protobuf.Timestamp
-	123, // 110: pethost.sandboxes.v1.AgentEvent.tool_call:type_name -> pethost.sandboxes.v1.ToolCall
-	124, // 111: pethost.sandboxes.v1.AgentEvent.tool_result:type_name -> pethost.sandboxes.v1.ToolResult
-	114, // 112: pethost.sandboxes.v1.AgentEvent.turn_end:type_name -> pethost.sandboxes.v1.AgentTurn
-	122, // 113: pethost.sandboxes.v1.AgentEvent.caught_up:type_name -> pethost.sandboxes.v1.CaughtUp
-	133, // 114: pethost.sandboxes.v1.LimitReached.retry_time:type_name -> google.protobuf.Timestamp
-	16,  // 115: pethost.sandboxes.v1.NoCapacity.bound:type_name -> pethost.sandboxes.v1.RoomBound
-	18,  // 116: pethost.sandboxes.v1.WorkspaceChoice.workspaces:type_name -> pethost.sandboxes.v1.Workspace
-	17,  // 117: pethost.sandboxes.v1.SandboxService.GetWorkspace:input_type -> pethost.sandboxes.v1.GetWorkspaceRequest
-	24,  // 118: pethost.sandboxes.v1.SandboxService.SetSshKeys:input_type -> pethost.sandboxes.v1.SetSshKeysRequest
-	26,  // 119: pethost.sandboxes.v1.SandboxService.SetSecret:input_type -> pethost.sandboxes.v1.SetSecretRequest
-	27,  // 120: pethost.sandboxes.v1.SandboxService.DeleteSecret:input_type -> pethost.sandboxes.v1.DeleteSecretRequest
-	31,  // 121: pethost.sandboxes.v1.SandboxService.CreateSandbox:input_type -> pethost.sandboxes.v1.CreateSandboxRequest
-	32,  // 122: pethost.sandboxes.v1.SandboxService.GetSandbox:input_type -> pethost.sandboxes.v1.GetSandboxRequest
-	33,  // 123: pethost.sandboxes.v1.SandboxService.ListSandboxes:input_type -> pethost.sandboxes.v1.ListSandboxesRequest
-	35,  // 124: pethost.sandboxes.v1.SandboxService.UpdateSandbox:input_type -> pethost.sandboxes.v1.UpdateSandboxRequest
-	36,  // 125: pethost.sandboxes.v1.SandboxService.PauseSandbox:input_type -> pethost.sandboxes.v1.PauseSandboxRequest
-	37,  // 126: pethost.sandboxes.v1.SandboxService.StopSandbox:input_type -> pethost.sandboxes.v1.StopSandboxRequest
-	38,  // 127: pethost.sandboxes.v1.SandboxService.ResumeSandbox:input_type -> pethost.sandboxes.v1.ResumeSandboxRequest
-	39,  // 128: pethost.sandboxes.v1.SandboxService.ForkSandbox:input_type -> pethost.sandboxes.v1.ForkSandboxRequest
-	41,  // 129: pethost.sandboxes.v1.SandboxService.DeleteSandbox:input_type -> pethost.sandboxes.v1.DeleteSandboxRequest
-	42,  // 130: pethost.sandboxes.v1.SandboxService.ConnectSandbox:input_type -> pethost.sandboxes.v1.ConnectSandboxRequest
-	52,  // 131: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:input_type -> pethost.sandboxes.v1.GetSandboxMetricsRequest
-	55,  // 132: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:input_type -> pethost.sandboxes.v1.ListSandboxEventsRequest
-	57,  // 133: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:input_type -> pethost.sandboxes.v1.WatchSandboxEventsRequest
-	65,  // 134: pethost.sandboxes.v1.SandboxService.CreateTemplate:input_type -> pethost.sandboxes.v1.CreateTemplateRequest
-	66,  // 135: pethost.sandboxes.v1.SandboxService.GetTemplate:input_type -> pethost.sandboxes.v1.GetTemplateRequest
-	67,  // 136: pethost.sandboxes.v1.SandboxService.ListTemplates:input_type -> pethost.sandboxes.v1.ListTemplatesRequest
-	69,  // 137: pethost.sandboxes.v1.SandboxService.DeleteTemplate:input_type -> pethost.sandboxes.v1.DeleteTemplateRequest
-	72,  // 138: pethost.sandboxes.v1.SandboxService.CreateVolume:input_type -> pethost.sandboxes.v1.CreateVolumeRequest
-	73,  // 139: pethost.sandboxes.v1.SandboxService.ListVolumes:input_type -> pethost.sandboxes.v1.ListVolumesRequest
-	75,  // 140: pethost.sandboxes.v1.SandboxService.DeleteVolume:input_type -> pethost.sandboxes.v1.DeleteVolumeRequest
-	76,  // 141: pethost.sandboxes.v1.SandboxService.ListUsage:input_type -> pethost.sandboxes.v1.ListUsageRequest
-	79,  // 142: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:input_type -> pethost.sandboxes.v1.RunCommandRequest
-	81,  // 143: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:input_type -> pethost.sandboxes.v1.GetCommandRequest
-	82,  // 144: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:input_type -> pethost.sandboxes.v1.StopCommandRequest
-	83,  // 145: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:input_type -> pethost.sandboxes.v1.ListCommandsRequest
-	85,  // 146: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:input_type -> pethost.sandboxes.v1.WatchCommandRequest
-	87,  // 147: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:input_type -> pethost.sandboxes.v1.ReadFileRequest
-	89,  // 148: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:input_type -> pethost.sandboxes.v1.ListFilesRequest
-	92,  // 149: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:input_type -> pethost.sandboxes.v1.WriteFilesRequest
-	98,  // 150: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:input_type -> pethost.sandboxes.v1.WatchFilesRequest
-	100, // 151: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:input_type -> pethost.sandboxes.v1.ControlDesktopRequest
-	109, // 152: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:input_type -> pethost.sandboxes.v1.CreateLinkRequest
-	113, // 153: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:input_type -> pethost.sandboxes.v1.PromptAgentRequest
-	115, // 154: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:input_type -> pethost.sandboxes.v1.GetAgentTurnRequest
-	116, // 155: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:input_type -> pethost.sandboxes.v1.StopAgentTurnRequest
-	117, // 156: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:input_type -> pethost.sandboxes.v1.ListConversationsRequest
-	120, // 157: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:input_type -> pethost.sandboxes.v1.WatchConversationRequest
-	18,  // 158: pethost.sandboxes.v1.SandboxService.GetWorkspace:output_type -> pethost.sandboxes.v1.Workspace
-	18,  // 159: pethost.sandboxes.v1.SandboxService.SetSshKeys:output_type -> pethost.sandboxes.v1.Workspace
-	25,  // 160: pethost.sandboxes.v1.SandboxService.SetSecret:output_type -> pethost.sandboxes.v1.Secret
-	25,  // 161: pethost.sandboxes.v1.SandboxService.DeleteSecret:output_type -> pethost.sandboxes.v1.Secret
-	28,  // 162: pethost.sandboxes.v1.SandboxService.CreateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 163: pethost.sandboxes.v1.SandboxService.GetSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	34,  // 164: pethost.sandboxes.v1.SandboxService.ListSandboxes:output_type -> pethost.sandboxes.v1.ListSandboxesResponse
-	28,  // 165: pethost.sandboxes.v1.SandboxService.UpdateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 166: pethost.sandboxes.v1.SandboxService.PauseSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 167: pethost.sandboxes.v1.SandboxService.StopSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 168: pethost.sandboxes.v1.SandboxService.ResumeSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	40,  // 169: pethost.sandboxes.v1.SandboxService.ForkSandbox:output_type -> pethost.sandboxes.v1.ForkSandboxResponse
-	28,  // 170: pethost.sandboxes.v1.SandboxService.DeleteSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	43,  // 171: pethost.sandboxes.v1.SandboxService.ConnectSandbox:output_type -> pethost.sandboxes.v1.Connection
-	53,  // 172: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:output_type -> pethost.sandboxes.v1.GetSandboxMetricsResponse
-	56,  // 173: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:output_type -> pethost.sandboxes.v1.ListSandboxEventsResponse
-	58,  // 174: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:output_type -> pethost.sandboxes.v1.SandboxEvent
-	64,  // 175: pethost.sandboxes.v1.SandboxService.CreateTemplate:output_type -> pethost.sandboxes.v1.Template
-	64,  // 176: pethost.sandboxes.v1.SandboxService.GetTemplate:output_type -> pethost.sandboxes.v1.Template
-	68,  // 177: pethost.sandboxes.v1.SandboxService.ListTemplates:output_type -> pethost.sandboxes.v1.ListTemplatesResponse
-	64,  // 178: pethost.sandboxes.v1.SandboxService.DeleteTemplate:output_type -> pethost.sandboxes.v1.Template
-	70,  // 179: pethost.sandboxes.v1.SandboxService.CreateVolume:output_type -> pethost.sandboxes.v1.Volume
-	74,  // 180: pethost.sandboxes.v1.SandboxService.ListVolumes:output_type -> pethost.sandboxes.v1.ListVolumesResponse
-	70,  // 181: pethost.sandboxes.v1.SandboxService.DeleteVolume:output_type -> pethost.sandboxes.v1.Volume
-	77,  // 182: pethost.sandboxes.v1.SandboxService.ListUsage:output_type -> pethost.sandboxes.v1.ListUsageResponse
-	80,  // 183: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:output_type -> pethost.sandboxes.v1.Command
-	80,  // 184: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:output_type -> pethost.sandboxes.v1.Command
-	80,  // 185: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:output_type -> pethost.sandboxes.v1.Command
-	84,  // 186: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:output_type -> pethost.sandboxes.v1.ListCommandsResponse
-	86,  // 187: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:output_type -> pethost.sandboxes.v1.CommandOutput
-	88,  // 188: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:output_type -> pethost.sandboxes.v1.File
-	90,  // 189: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:output_type -> pethost.sandboxes.v1.ListFilesResponse
-	97,  // 190: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:output_type -> pethost.sandboxes.v1.WriteFilesResponse
-	99,  // 191: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:output_type -> pethost.sandboxes.v1.FileEvent
-	101, // 192: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:output_type -> pethost.sandboxes.v1.ControlDesktopResponse
-	112, // 193: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:output_type -> pethost.sandboxes.v1.Link
-	114, // 194: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:output_type -> pethost.sandboxes.v1.AgentTurn
-	114, // 195: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
-	114, // 196: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
-	118, // 197: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:output_type -> pethost.sandboxes.v1.ListConversationsResponse
-	121, // 198: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:output_type -> pethost.sandboxes.v1.AgentEvent
-	158, // [158:199] is the sub-list for method output_type
-	117, // [117:158] is the sub-list for method input_type
-	117, // [117:117] is the sub-list for extension type_name
-	117, // [117:117] is the sub-list for extension extendee
-	0,   // [0:117] is the sub-list for field type_name
+	42,  // 29: pethost.sandboxes.v1.UpdateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	131, // 30: pethost.sandboxes.v1.Connection.expire_time:type_name -> google.protobuf.Timestamp
+	3,   // 31: pethost.sandboxes.v1.SandboxSettings.size:type_name -> pethost.sandboxes.v1.Size
+	43,  // 32: pethost.sandboxes.v1.SandboxSettings.lifecycle:type_name -> pethost.sandboxes.v1.Lifecycle
+	44,  // 33: pethost.sandboxes.v1.SandboxSettings.egress:type_name -> pethost.sandboxes.v1.Egress
+	45,  // 34: pethost.sandboxes.v1.SandboxSettings.ingress:type_name -> pethost.sandboxes.v1.Ingress
+	47,  // 35: pethost.sandboxes.v1.SandboxSettings.environment:type_name -> pethost.sandboxes.v1.Environment
+	46,  // 36: pethost.sandboxes.v1.Ingress.public_ports:type_name -> pethost.sandboxes.v1.PublicPort
+	48,  // 37: pethost.sandboxes.v1.Environment.variables:type_name -> pethost.sandboxes.v1.EnvVar
+	131, // 38: pethost.sandboxes.v1.GetSandboxMetricsRequest.since:type_name -> google.protobuf.Timestamp
+	131, // 39: pethost.sandboxes.v1.GetSandboxMetricsRequest.until:type_name -> google.protobuf.Timestamp
+	52,  // 40: pethost.sandboxes.v1.GetSandboxMetricsResponse.points:type_name -> pethost.sandboxes.v1.MetricsPoint
+	131, // 41: pethost.sandboxes.v1.MetricsPoint.time:type_name -> google.protobuf.Timestamp
+	4,   // 42: pethost.sandboxes.v1.ListSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
+	56,  // 43: pethost.sandboxes.v1.ListSandboxEventsResponse.events:type_name -> pethost.sandboxes.v1.SandboxEvent
+	4,   // 44: pethost.sandboxes.v1.WatchSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
+	131, // 45: pethost.sandboxes.v1.SandboxEvent.time:type_name -> google.protobuf.Timestamp
+	57,  // 46: pethost.sandboxes.v1.SandboxEvent.lifecycle:type_name -> pethost.sandboxes.v1.LifecycleEvent
+	58,  // 47: pethost.sandboxes.v1.SandboxEvent.command:type_name -> pethost.sandboxes.v1.CommandEvent
+	59,  // 48: pethost.sandboxes.v1.SandboxEvent.egress:type_name -> pethost.sandboxes.v1.EgressEvent
+	60,  // 49: pethost.sandboxes.v1.SandboxEvent.port:type_name -> pethost.sandboxes.v1.PortEvent
+	61,  // 50: pethost.sandboxes.v1.SandboxEvent.agent_turn:type_name -> pethost.sandboxes.v1.AgentTurnEvent
+	5,   // 51: pethost.sandboxes.v1.LifecycleEvent.change:type_name -> pethost.sandboxes.v1.LifecycleChange
+	2,   // 52: pethost.sandboxes.v1.LifecycleEvent.reason:type_name -> pethost.sandboxes.v1.StateReason
+	3,   // 53: pethost.sandboxes.v1.LifecycleEvent.size:type_name -> pethost.sandboxes.v1.Size
+	7,   // 54: pethost.sandboxes.v1.CommandEvent.state:type_name -> pethost.sandboxes.v1.CommandState
+	8,   // 55: pethost.sandboxes.v1.CommandEvent.started_by:type_name -> pethost.sandboxes.v1.StartedBy
+	14,  // 56: pethost.sandboxes.v1.AgentTurnEvent.agent:type_name -> pethost.sandboxes.v1.Agent
+	15,  // 57: pethost.sandboxes.v1.AgentTurnEvent.state:type_name -> pethost.sandboxes.v1.AgentTurnState
+	6,   // 58: pethost.sandboxes.v1.Template.state:type_name -> pethost.sandboxes.v1.TemplateState
+	42,  // 59: pethost.sandboxes.v1.Template.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	131, // 60: pethost.sandboxes.v1.Template.create_time:type_name -> google.protobuf.Timestamp
+	3,   // 61: pethost.sandboxes.v1.Template.min_size:type_name -> pethost.sandboxes.v1.Size
+	62,  // 62: pethost.sandboxes.v1.ListTemplatesResponse.templates:type_name -> pethost.sandboxes.v1.Template
+	131, // 63: pethost.sandboxes.v1.Volume.create_time:type_name -> google.protobuf.Timestamp
+	68,  // 64: pethost.sandboxes.v1.ListVolumesResponse.volumes:type_name -> pethost.sandboxes.v1.Volume
+	131, // 65: pethost.sandboxes.v1.ListUsageRequest.since:type_name -> google.protobuf.Timestamp
+	131, // 66: pethost.sandboxes.v1.ListUsageRequest.until:type_name -> google.protobuf.Timestamp
+	76,  // 67: pethost.sandboxes.v1.ListUsageResponse.rows:type_name -> pethost.sandboxes.v1.UsageRow
+	131, // 68: pethost.sandboxes.v1.UsageRow.day:type_name -> google.protobuf.Timestamp
+	0,   // 69: pethost.sandboxes.v1.UsageRow.meter:type_name -> pethost.sandboxes.v1.Meter
+	3,   // 70: pethost.sandboxes.v1.UsageRow.size:type_name -> pethost.sandboxes.v1.Size
+	7,   // 71: pethost.sandboxes.v1.Command.state:type_name -> pethost.sandboxes.v1.CommandState
+	8,   // 72: pethost.sandboxes.v1.Command.started_by:type_name -> pethost.sandboxes.v1.StartedBy
+	131, // 73: pethost.sandboxes.v1.Command.start_time:type_name -> google.protobuf.Timestamp
+	131, // 74: pethost.sandboxes.v1.Command.end_time:type_name -> google.protobuf.Timestamp
+	78,  // 75: pethost.sandboxes.v1.ListCommandsResponse.commands:type_name -> pethost.sandboxes.v1.Command
+	78,  // 76: pethost.sandboxes.v1.CommandOutput.ended:type_name -> pethost.sandboxes.v1.Command
+	89,  // 77: pethost.sandboxes.v1.ListFilesResponse.files:type_name -> pethost.sandboxes.v1.FileInfo
+	9,   // 78: pethost.sandboxes.v1.FileInfo.kind:type_name -> pethost.sandboxes.v1.FileKind
+	131, // 79: pethost.sandboxes.v1.FileInfo.modify_time:type_name -> google.protobuf.Timestamp
+	91,  // 80: pethost.sandboxes.v1.WriteFilesRequest.changes:type_name -> pethost.sandboxes.v1.FileChange
+	94,  // 81: pethost.sandboxes.v1.FileChange.edit:type_name -> pethost.sandboxes.v1.TextEdit
+	92,  // 82: pethost.sandboxes.v1.FileChange.delete:type_name -> pethost.sandboxes.v1.Delete
+	93,  // 83: pethost.sandboxes.v1.FileChange.make_directory:type_name -> pethost.sandboxes.v1.MakeDirectory
+	10,  // 84: pethost.sandboxes.v1.WriteFilesResponse.failure:type_name -> pethost.sandboxes.v1.FileFailure
+	11,  // 85: pethost.sandboxes.v1.FileEvent.kind:type_name -> pethost.sandboxes.v1.FileEventKind
+	101, // 86: pethost.sandboxes.v1.ControlDesktopRequest.actions:type_name -> pethost.sandboxes.v1.DesktopAction
+	100, // 87: pethost.sandboxes.v1.ControlDesktopResponse.screenshot:type_name -> pethost.sandboxes.v1.Screenshot
+	12,  // 88: pethost.sandboxes.v1.ControlDesktopResponse.failure:type_name -> pethost.sandboxes.v1.DesktopFailure
+	103, // 89: pethost.sandboxes.v1.DesktopAction.click:type_name -> pethost.sandboxes.v1.Click
+	102, // 90: pethost.sandboxes.v1.DesktopAction.move_mouse:type_name -> pethost.sandboxes.v1.Point
+	104, // 91: pethost.sandboxes.v1.DesktopAction.drag:type_name -> pethost.sandboxes.v1.Drag
+	105, // 92: pethost.sandboxes.v1.DesktopAction.scroll:type_name -> pethost.sandboxes.v1.Scroll
+	13,  // 93: pethost.sandboxes.v1.Click.button:type_name -> pethost.sandboxes.v1.MouseButton
+	102, // 94: pethost.sandboxes.v1.Drag.path:type_name -> pethost.sandboxes.v1.Point
+	108, // 95: pethost.sandboxes.v1.CreateLinkRequest.terminal:type_name -> pethost.sandboxes.v1.TerminalLink
+	109, // 96: pethost.sandboxes.v1.CreateLinkRequest.desktop:type_name -> pethost.sandboxes.v1.DesktopLink
+	131, // 97: pethost.sandboxes.v1.Link.expire_time:type_name -> google.protobuf.Timestamp
+	14,  // 98: pethost.sandboxes.v1.PromptAgentRequest.agent:type_name -> pethost.sandboxes.v1.Agent
+	14,  // 99: pethost.sandboxes.v1.AgentTurn.agent:type_name -> pethost.sandboxes.v1.Agent
+	15,  // 100: pethost.sandboxes.v1.AgentTurn.state:type_name -> pethost.sandboxes.v1.AgentTurnState
+	131, // 101: pethost.sandboxes.v1.AgentTurn.start_time:type_name -> google.protobuf.Timestamp
+	131, // 102: pethost.sandboxes.v1.AgentTurn.end_time:type_name -> google.protobuf.Timestamp
+	117, // 103: pethost.sandboxes.v1.ListConversationsResponse.conversations:type_name -> pethost.sandboxes.v1.Conversation
+	14,  // 104: pethost.sandboxes.v1.Conversation.agent:type_name -> pethost.sandboxes.v1.Agent
+	131, // 105: pethost.sandboxes.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
+	131, // 106: pethost.sandboxes.v1.AgentEvent.time:type_name -> google.protobuf.Timestamp
+	121, // 107: pethost.sandboxes.v1.AgentEvent.tool_call:type_name -> pethost.sandboxes.v1.ToolCall
+	122, // 108: pethost.sandboxes.v1.AgentEvent.tool_result:type_name -> pethost.sandboxes.v1.ToolResult
+	112, // 109: pethost.sandboxes.v1.AgentEvent.turn_end:type_name -> pethost.sandboxes.v1.AgentTurn
+	120, // 110: pethost.sandboxes.v1.AgentEvent.caught_up:type_name -> pethost.sandboxes.v1.CaughtUp
+	131, // 111: pethost.sandboxes.v1.LimitReached.retry_time:type_name -> google.protobuf.Timestamp
+	16,  // 112: pethost.sandboxes.v1.NoCapacity.bound:type_name -> pethost.sandboxes.v1.RoomBound
+	18,  // 113: pethost.sandboxes.v1.WorkspaceChoice.workspaces:type_name -> pethost.sandboxes.v1.Workspace
+	17,  // 114: pethost.sandboxes.v1.SandboxService.GetWorkspace:input_type -> pethost.sandboxes.v1.GetWorkspaceRequest
+	24,  // 115: pethost.sandboxes.v1.SandboxService.SetSshKeys:input_type -> pethost.sandboxes.v1.SetSshKeysRequest
+	26,  // 116: pethost.sandboxes.v1.SandboxService.SetSecret:input_type -> pethost.sandboxes.v1.SetSecretRequest
+	27,  // 117: pethost.sandboxes.v1.SandboxService.DeleteSecret:input_type -> pethost.sandboxes.v1.DeleteSecretRequest
+	31,  // 118: pethost.sandboxes.v1.SandboxService.CreateSandbox:input_type -> pethost.sandboxes.v1.CreateSandboxRequest
+	32,  // 119: pethost.sandboxes.v1.SandboxService.GetSandbox:input_type -> pethost.sandboxes.v1.GetSandboxRequest
+	33,  // 120: pethost.sandboxes.v1.SandboxService.ListSandboxes:input_type -> pethost.sandboxes.v1.ListSandboxesRequest
+	35,  // 121: pethost.sandboxes.v1.SandboxService.UpdateSandbox:input_type -> pethost.sandboxes.v1.UpdateSandboxRequest
+	36,  // 122: pethost.sandboxes.v1.SandboxService.PauseSandbox:input_type -> pethost.sandboxes.v1.PauseSandboxRequest
+	37,  // 123: pethost.sandboxes.v1.SandboxService.StopSandbox:input_type -> pethost.sandboxes.v1.StopSandboxRequest
+	38,  // 124: pethost.sandboxes.v1.SandboxService.ResumeSandbox:input_type -> pethost.sandboxes.v1.ResumeSandboxRequest
+	39,  // 125: pethost.sandboxes.v1.SandboxService.DeleteSandbox:input_type -> pethost.sandboxes.v1.DeleteSandboxRequest
+	40,  // 126: pethost.sandboxes.v1.SandboxService.ConnectSandbox:input_type -> pethost.sandboxes.v1.ConnectSandboxRequest
+	50,  // 127: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:input_type -> pethost.sandboxes.v1.GetSandboxMetricsRequest
+	53,  // 128: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:input_type -> pethost.sandboxes.v1.ListSandboxEventsRequest
+	55,  // 129: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:input_type -> pethost.sandboxes.v1.WatchSandboxEventsRequest
+	63,  // 130: pethost.sandboxes.v1.SandboxService.CreateTemplate:input_type -> pethost.sandboxes.v1.CreateTemplateRequest
+	64,  // 131: pethost.sandboxes.v1.SandboxService.GetTemplate:input_type -> pethost.sandboxes.v1.GetTemplateRequest
+	65,  // 132: pethost.sandboxes.v1.SandboxService.ListTemplates:input_type -> pethost.sandboxes.v1.ListTemplatesRequest
+	67,  // 133: pethost.sandboxes.v1.SandboxService.DeleteTemplate:input_type -> pethost.sandboxes.v1.DeleteTemplateRequest
+	70,  // 134: pethost.sandboxes.v1.SandboxService.CreateVolume:input_type -> pethost.sandboxes.v1.CreateVolumeRequest
+	71,  // 135: pethost.sandboxes.v1.SandboxService.ListVolumes:input_type -> pethost.sandboxes.v1.ListVolumesRequest
+	73,  // 136: pethost.sandboxes.v1.SandboxService.DeleteVolume:input_type -> pethost.sandboxes.v1.DeleteVolumeRequest
+	74,  // 137: pethost.sandboxes.v1.SandboxService.ListUsage:input_type -> pethost.sandboxes.v1.ListUsageRequest
+	77,  // 138: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:input_type -> pethost.sandboxes.v1.RunCommandRequest
+	79,  // 139: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:input_type -> pethost.sandboxes.v1.GetCommandRequest
+	80,  // 140: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:input_type -> pethost.sandboxes.v1.StopCommandRequest
+	81,  // 141: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:input_type -> pethost.sandboxes.v1.ListCommandsRequest
+	83,  // 142: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:input_type -> pethost.sandboxes.v1.WatchCommandRequest
+	85,  // 143: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:input_type -> pethost.sandboxes.v1.ReadFileRequest
+	87,  // 144: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:input_type -> pethost.sandboxes.v1.ListFilesRequest
+	90,  // 145: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:input_type -> pethost.sandboxes.v1.WriteFilesRequest
+	96,  // 146: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:input_type -> pethost.sandboxes.v1.WatchFilesRequest
+	98,  // 147: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:input_type -> pethost.sandboxes.v1.ControlDesktopRequest
+	107, // 148: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:input_type -> pethost.sandboxes.v1.CreateLinkRequest
+	111, // 149: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:input_type -> pethost.sandboxes.v1.PromptAgentRequest
+	113, // 150: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:input_type -> pethost.sandboxes.v1.GetAgentTurnRequest
+	114, // 151: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:input_type -> pethost.sandboxes.v1.StopAgentTurnRequest
+	115, // 152: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:input_type -> pethost.sandboxes.v1.ListConversationsRequest
+	118, // 153: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:input_type -> pethost.sandboxes.v1.WatchConversationRequest
+	18,  // 154: pethost.sandboxes.v1.SandboxService.GetWorkspace:output_type -> pethost.sandboxes.v1.Workspace
+	18,  // 155: pethost.sandboxes.v1.SandboxService.SetSshKeys:output_type -> pethost.sandboxes.v1.Workspace
+	25,  // 156: pethost.sandboxes.v1.SandboxService.SetSecret:output_type -> pethost.sandboxes.v1.Secret
+	25,  // 157: pethost.sandboxes.v1.SandboxService.DeleteSecret:output_type -> pethost.sandboxes.v1.Secret
+	28,  // 158: pethost.sandboxes.v1.SandboxService.CreateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 159: pethost.sandboxes.v1.SandboxService.GetSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	34,  // 160: pethost.sandboxes.v1.SandboxService.ListSandboxes:output_type -> pethost.sandboxes.v1.ListSandboxesResponse
+	28,  // 161: pethost.sandboxes.v1.SandboxService.UpdateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 162: pethost.sandboxes.v1.SandboxService.PauseSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 163: pethost.sandboxes.v1.SandboxService.StopSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 164: pethost.sandboxes.v1.SandboxService.ResumeSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 165: pethost.sandboxes.v1.SandboxService.DeleteSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	41,  // 166: pethost.sandboxes.v1.SandboxService.ConnectSandbox:output_type -> pethost.sandboxes.v1.Connection
+	51,  // 167: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:output_type -> pethost.sandboxes.v1.GetSandboxMetricsResponse
+	54,  // 168: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:output_type -> pethost.sandboxes.v1.ListSandboxEventsResponse
+	56,  // 169: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:output_type -> pethost.sandboxes.v1.SandboxEvent
+	62,  // 170: pethost.sandboxes.v1.SandboxService.CreateTemplate:output_type -> pethost.sandboxes.v1.Template
+	62,  // 171: pethost.sandboxes.v1.SandboxService.GetTemplate:output_type -> pethost.sandboxes.v1.Template
+	66,  // 172: pethost.sandboxes.v1.SandboxService.ListTemplates:output_type -> pethost.sandboxes.v1.ListTemplatesResponse
+	62,  // 173: pethost.sandboxes.v1.SandboxService.DeleteTemplate:output_type -> pethost.sandboxes.v1.Template
+	68,  // 174: pethost.sandboxes.v1.SandboxService.CreateVolume:output_type -> pethost.sandboxes.v1.Volume
+	72,  // 175: pethost.sandboxes.v1.SandboxService.ListVolumes:output_type -> pethost.sandboxes.v1.ListVolumesResponse
+	68,  // 176: pethost.sandboxes.v1.SandboxService.DeleteVolume:output_type -> pethost.sandboxes.v1.Volume
+	75,  // 177: pethost.sandboxes.v1.SandboxService.ListUsage:output_type -> pethost.sandboxes.v1.ListUsageResponse
+	78,  // 178: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:output_type -> pethost.sandboxes.v1.Command
+	78,  // 179: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:output_type -> pethost.sandboxes.v1.Command
+	78,  // 180: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:output_type -> pethost.sandboxes.v1.Command
+	82,  // 181: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:output_type -> pethost.sandboxes.v1.ListCommandsResponse
+	84,  // 182: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:output_type -> pethost.sandboxes.v1.CommandOutput
+	86,  // 183: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:output_type -> pethost.sandboxes.v1.File
+	88,  // 184: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:output_type -> pethost.sandboxes.v1.ListFilesResponse
+	95,  // 185: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:output_type -> pethost.sandboxes.v1.WriteFilesResponse
+	97,  // 186: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:output_type -> pethost.sandboxes.v1.FileEvent
+	99,  // 187: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:output_type -> pethost.sandboxes.v1.ControlDesktopResponse
+	110, // 188: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:output_type -> pethost.sandboxes.v1.Link
+	112, // 189: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:output_type -> pethost.sandboxes.v1.AgentTurn
+	112, // 190: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
+	112, // 191: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
+	116, // 192: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:output_type -> pethost.sandboxes.v1.ListConversationsResponse
+	119, // 193: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:output_type -> pethost.sandboxes.v1.AgentEvent
+	154, // [154:194] is the sub-list for method output_type
+	114, // [114:154] is the sub-list for method input_type
+	114, // [114:114] is the sub-list for extension type_name
+	114, // [114:114] is the sub-list for extension extendee
+	0,   // [0:114] is the sub-list for field type_name
 }
 
 func init() { file_v1_sandboxes_proto_init() }
@@ -21606,27 +21242,27 @@ func file_v1_sandboxes_proto_init() {
 	if File_v1_sandboxes_proto != nil {
 		return
 	}
-	file_v1_sandboxes_proto_msgTypes[33].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[31].OneofWrappers = []any{
 		(*envVar_Value)(nil),
 		(*envVar_Secret)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[41].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[39].OneofWrappers = []any{
 		(*sandboxEvent_Lifecycle)(nil),
 		(*sandboxEvent_Command)(nil),
 		(*sandboxEvent_Egress)(nil),
 		(*sandboxEvent_Port)(nil),
 		(*sandboxEvent_AgentTurn)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[69].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[67].OneofWrappers = []any{
 		(*commandOutput_Stdout)(nil),
 		(*commandOutput_Stderr)(nil),
 		(*commandOutput_Ended)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[71].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[69].OneofWrappers = []any{
 		(*file_Text)(nil),
 		(*file_Data)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[76].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[74].OneofWrappers = []any{
 		(*fileChange_Text)(nil),
 		(*fileChange_Data)(nil),
 		(*fileChange_Edit)(nil),
@@ -21634,7 +21270,7 @@ func file_v1_sandboxes_proto_init() {
 		(*fileChange_Delete)(nil),
 		(*fileChange_MakeDirectory)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[86].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[84].OneofWrappers = []any{
 		(*desktopAction_Click)(nil),
 		(*desktopAction_MoveMouse)(nil),
 		(*desktopAction_Drag)(nil),
@@ -21643,14 +21279,14 @@ func file_v1_sandboxes_proto_init() {
 		(*desktopAction_PressKeys)(nil),
 		(*desktopAction_WaitMs)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[92].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[90].OneofWrappers = []any{
 		(*createLinkRequest_Port)(nil),
 		(*createLinkRequest_Terminal)(nil),
 		(*createLinkRequest_Desktop)(nil),
 		(*createLinkRequest_DownloadPath)(nil),
 		(*createLinkRequest_UploadPath)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[104].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[102].OneofWrappers = []any{
 		(*agentEvent_Prompt)(nil),
 		(*agentEvent_Message)(nil),
 		(*agentEvent_ToolCall)(nil),
@@ -21664,7 +21300,7 @@ func file_v1_sandboxes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_sandboxes_proto_rawDesc), len(file_v1_sandboxes_proto_rawDesc)),
 			NumEnums:      17,
-			NumMessages:   116,
+			NumMessages:   114,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

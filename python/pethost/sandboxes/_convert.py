@@ -369,7 +369,6 @@ def sandbox_from_wire(_w: _pb.Sandbox) -> _t.Sandbox:
         state_message=_w.state_message,
         state_time=_rt.time_from_wire(_w.state_time) if _w.state_time is not None else None,
         template=_w.template,
-        forked_from=_w.forked_from,
         labels=tuple(label_from_wire(_x) for _x in _w.labels),
         settings=sandbox_settings_from_wire(_w.settings) if _w.settings is not None else None,
         revision=_w.revision,
@@ -397,7 +396,6 @@ def sandbox_to_wire(_v: _t.Sandbox) -> _pb.Sandbox:
         state_message=_v.state_message or None,
         state_time=_rt.time_to_wire(_v.state_time) if _v.state_time is not None else None,
         template=_v.template or None,
-        forked_from=_v.forked_from or None,
         labels=[label_to_wire(_x) for _x in _v.labels],
         settings=sandbox_settings_to_wire(_v.settings) if _v.settings is not None else None,
         revision=_v.revision or None,
@@ -861,7 +859,6 @@ def lifecycle_event_from_wire(_w: _pb.LifecycleEvent) -> _t.LifecycleEvent:
     return _t.LifecycleEvent(
         change=lifecycle_change_from_wire(_w.change),
         reason=state_reason_from_wire(_w.reason),
-        forked_from=_w.forked_from,
         size=size_from_wire(_w.size),
         disk_gib=_w.disk_gib,
         state_message=_w.state_message,
@@ -872,7 +869,6 @@ def lifecycle_event_to_wire(_v: _t.LifecycleEvent) -> _pb.LifecycleEvent:
     return _pb.LifecycleEvent(
         change=lifecycle_change_to_wire(_v.change) if _v.change.value else None,
         reason=state_reason_to_wire(_v.reason) if _v.reason.value else None,
-        forked_from=_v.forked_from or None,
         size=size_to_wire(_v.size) if _v.size.value else None,
         disk_gib=_v.disk_gib or None,
         state_message=_v.state_message or None,
@@ -2191,14 +2187,12 @@ def restoring_from_dict(_j: dict[str, _Any]) -> _t.Restoring:
 
 def no_capacity_from_wire(_w: _pb.NoCapacity) -> _t.NoCapacity:
     return _t.NoCapacity(
-        fork_count=_w.fork_count,
         bound=room_bound_from_wire(_w.bound),
     )
 
 
 def no_capacity_to_wire(_v: _t.NoCapacity) -> _pb.NoCapacity:
     return _pb.NoCapacity(
-        fork_count=_v.fork_count or None,
         bound=room_bound_to_wire(_v.bound) if _v.bound.value else None,
     )
 

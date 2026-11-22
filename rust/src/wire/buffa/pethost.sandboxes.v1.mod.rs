@@ -54,8 +54,6 @@ pub mod __buffa {
         reg.register_json_any(super::__PAUSE_SANDBOX_REQUEST_JSON_ANY);
         reg.register_json_any(super::__STOP_SANDBOX_REQUEST_JSON_ANY);
         reg.register_json_any(super::__RESUME_SANDBOX_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__FORK_SANDBOX_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__FORK_SANDBOX_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_SANDBOX_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CONNECT_SANDBOX_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CONNECTION_JSON_ANY);
@@ -238,14 +236,6 @@ pub use self::__buffa::view::StopSandboxRequestOwnedView;
 pub use self::__buffa::view::ResumeSandboxRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::ResumeSandboxRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::ForkSandboxRequestView;
-#[doc(inline)]
-pub use self::__buffa::view::ForkSandboxRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::ForkSandboxResponseView;
-#[doc(inline)]
-pub use self::__buffa::view::ForkSandboxResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteSandboxRequestView;
 #[doc(inline)]

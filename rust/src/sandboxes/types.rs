@@ -206,8 +206,6 @@ pub struct Sandbox {
     pub state_time: ::core::option::Option<crate::Timestamp>,
     /// The exact version it started from: \"my-app@3\".
     pub template: ::std::string::String,
-    /// The sandbox it was copied from, if any.
-    pub forked_from: ::std::string::String,
     pub labels: ::std::vec::Vec<Label>,
     /// In force: every group, its defaults filled in.
     pub settings: ::core::option::Option<SandboxSettings>,
@@ -625,8 +623,6 @@ pub enum SandboxEventEvent {
 pub struct LifecycleEvent {
     pub change: LifecycleChange,
     pub reason: StateReason,
-    /// CREATED as a copy of another sandbox: that one.
-    pub forked_from: ::std::string::String,
     /// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a STOPPED one takes it at its next start.
     pub size: Size,
     /// CREATED, RESIZED: its disk from then on.
@@ -1634,8 +1630,6 @@ pub struct Restoring {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct NoCapacity {
-    /// Unused: 0.
-    pub fork_count: i32,
     /// What the server that refused it lacked; absent when no server was asked, none having room by what they report.
     pub bound: RoomBound,
 }

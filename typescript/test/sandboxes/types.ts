@@ -24,7 +24,7 @@ optional<p.SetSshKeysRequest>({ sshKeys: true, workspace: true });
 optional<p.Secret>({ name: false, hosts: false, updateTime: true });
 optional<p.SetSecretRequest>({ name: true, value: true, hosts: true, workspace: true });
 optional<p.DeleteSecretRequest>({ name: true, workspace: true });
-optional<p.Sandbox>({ sandboxId: false, state: true, stateReason: true, stateMessage: false, stateTime: true, template: false, forkedFrom: false, labels: false, settings: true, revision: false, diskGib: false, mounts: false, desktop: true, sshCommand: false, panelUrl: false, createTime: true, usage: true, connection: true, restore: true, nextState: true, nextStateTime: true, storedBytes: false, name: false });
+optional<p.Sandbox>({ sandboxId: false, state: true, stateReason: true, stateMessage: false, stateTime: true, template: false, labels: false, settings: true, revision: false, diskGib: false, mounts: false, desktop: true, sshCommand: false, panelUrl: false, createTime: true, usage: true, connection: true, restore: true, nextState: true, nextStateTime: true, storedBytes: false, name: false });
 optional<p.Restore>({ fetchedBytes: false, totalBytes: false });
 optional<p.Usage>({ runningSeconds: false, pausedSeconds: false, storedGibHours: false, costMicros: false });
 optional<p.CreateSandboxRequest>({ template: true, settings: true, labels: true, mounts: true, name: true, requestId: true, workspace: true });
@@ -110,7 +110,7 @@ optional<p.WatchSandboxEventsRequest>({ sandboxId: true, kinds: true, after: tru
   // @ts-expect-error agentTurn is there only when event says so
   accepts<p.AgentTurnEvent>(read.agentTurn);
 }
-optional<p.LifecycleEvent>({ change: true, reason: true, forkedFrom: false, size: true, diskGib: false, stateMessage: false });
+optional<p.LifecycleEvent>({ change: true, reason: true, size: true, diskGib: false, stateMessage: false });
 optional<p.CommandEvent>({ commandId: false, command: false, state: true, exitCode: true, durationMs: false, startedBy: true });
 optional<p.EgressEvent>({ host: false, port: false, allowed: false, connections: false, bytesOut: false, bytesIn: false, secrets: false });
 optional<p.PortEvent>({ port: false, requests: false, serverErrors: false, bytesIn: false, bytesOut: false });
@@ -243,7 +243,7 @@ optional<p.ToolCall>({ toolCallId: false, name: false, input: false });
 optional<p.ToolResult>({ toolCallId: false, output: false, failed: false });
 optional<p.LimitReached>({ limit: false, max: false, retryTime: true });
 optional<p.Restoring>({ fetchedBytes: false, totalBytes: false });
-optional<p.NoCapacity>({ forkCount: false, bound: true });
+optional<p.NoCapacity>({ bound: true });
 optional<p.NameTaken>({ sandboxId: false });
 optional<p.WorkspaceChoice>({ workspaces: false, total: false });
 optional<p.AgentSignIn>({ variable: false, signInCommand: false });

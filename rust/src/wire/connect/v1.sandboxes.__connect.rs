@@ -68,14 +68,6 @@ pub type OwnedResumeSandboxRequestView = ::buffa::view::OwnedView<
         'static,
     >,
 >;
-///Shorthand for `OwnedView<ForkSandboxRequestView<'static>>`.
-pub type OwnedForkSandboxRequestView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxRequestView<'static>,
->;
-///Shorthand for `OwnedView<ForkSandboxResponseView<'static>>`.
-pub type OwnedForkSandboxResponseView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxResponseView<'static>,
->;
 ///Shorthand for `OwnedView<DeleteSandboxRequestView<'static>>`.
 pub type OwnedDeleteSandboxRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::sandboxes::v1::__buffa::view::DeleteSandboxRequestView<
@@ -428,40 +420,6 @@ for ::buffa::view::OwnedView<
     crate::proto::pethost::sandboxes::v1::__buffa::view::ListSandboxesResponseView<
         'static,
     >,
-> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
-    }
-    /// An `OwnedView` still holds the buffer it was decoded from, so
-    /// its large fields can be handed to the response body by
-    /// reference count instead of copied. The bare view impl above
-    /// cannot do this: it has borrows but no buffer to name.
-    fn encode_segments(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body_segments(
-            self.reborrow(),
-            self.bytes(),
-            codec,
-        )
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::ForkSandboxResponse>
-for crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxResponseView<'_> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self, codec)
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::ForkSandboxResponse>
-for ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -1300,12 +1258,6 @@ pub const SANDBOX_SERVICE_RESUME_SANDBOX_SPEC: ::connectrpc::Spec = ::connectrpc
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
-/// Static [`Spec`](::connectrpc::Spec) for the `ForkSandbox` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
-pub const SANDBOX_SERVICE_FORK_SANDBOX_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/pethost.sandboxes.v1.SandboxService/ForkSandbox",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
 /// Static [`Spec`](::connectrpc::Spec) for the `DeleteSandbox` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const SANDBOX_SERVICE_DELETE_SANDBOX_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.sandboxes.v1.SandboxService/DeleteSandbox",
@@ -1757,44 +1709,6 @@ pub trait SandboxService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::sandboxes::v1::Sandbox,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
-    /// Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-    /// the API's page. A fork's
-    /// copies run on its source's server alone, so how many one call makes is what that one server
-    /// has free, which no number of servers raises: a copy's memory resumes only on the processor it
-    /// was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-    /// to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-    /// from it, on any server.
-    ///
-    /// Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-    /// processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-    /// a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-    /// disk. The copies are the source's size, with its disk, each with its own id, hostname,
-    /// machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-    /// their processes keep the state they had, their random generators and the keys they made
-    /// among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-    /// a read-write volume.
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn fork_sandbox<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::pethost::sandboxes::v1::ForkSandboxResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2472,35 +2386,6 @@ impl<S: SandboxService> SandboxServiceExt for S {
             .with_spec(SANDBOX_SERVICE_RESUME_SANDBOX_SPEC)
             .route_view(
                 SANDBOX_SERVICE_SERVICE_NAME,
-                "ForkSandbox",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.fork_sandbox(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::pethost::sandboxes::v1::ForkSandboxResponse,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(SANDBOX_SERVICE_FORK_SANDBOX_SPEC)
-            .route_view(
-                SANDBOX_SERVICE_SERVICE_NAME,
                 "DeleteSandbox",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -2995,12 +2880,6 @@ impl<T: SandboxService> ::connectrpc::Dispatcher for SandboxServiceServer<T> {
                         .with_spec(SANDBOX_SERVICE_RESUME_SANDBOX_SPEC),
                 )
             }
-            "ForkSandbox" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(SANDBOX_SERVICE_FORK_SANDBOX_SPEC),
-                )
-            }
             "DeleteSandbox" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
@@ -3319,28 +3198,6 @@ impl<T: SandboxService> ::connectrpc::Dispatcher for SandboxServiceServer<T> {
                     svc.resume_sandbox(ctx, req)
                         .await?
                         .encode::<crate::proto::pethost::sandboxes::v1::Sandbox>(format)
-                })
-            }
-            "ForkSandbox" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                        ctx.decode_options(),
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-                    >::from_parts(&req, &body);
-                    svc.fork_sandbox(ctx, req)
-                        .await?
-                        .encode::<
-                            crate::proto::pethost::sandboxes::v1::ForkSandboxResponse,
-                        >(format)
                 })
             }
             "DeleteSandbox" => {
@@ -4209,51 +4066,6 @@ where
                 &self.transport,
                 &self.config,
                 SANDBOX_SERVICE_RESUME_SANDBOX_SPEC
-                    .with_origin(::connectrpc::SpecOrigin::Client),
-                request,
-                options,
-            )
-            .await
-    }
-    /// Call the ForkSandbox RPC. Sends a request to /pethost.sandboxes.v1.SandboxService/ForkSandbox.
-    pub async fn fork_sandbox(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.fork_sandbox_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the ForkSandbox RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn fork_sandbox_with_options(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::ForkSandboxRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::ForkSandboxResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                SANDBOX_SERVICE_FORK_SANDBOX_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

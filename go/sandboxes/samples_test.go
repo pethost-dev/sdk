@@ -540,7 +540,6 @@ func sampleSandbox(s seed) Sandbox {
 		StateMessage:  plain[string](s.at("pethost.sandboxes.v1.Sandbox.state_message")),
 		StateTime:     instant(s.at("pethost.sandboxes.v1.Sandbox.state_time")),
 		Template:      plain[string](s.at("pethost.sandboxes.v1.Sandbox.template")),
-		ForkedFrom:    plain[string](s.at("pethost.sandboxes.v1.Sandbox.forked_from")),
 		Labels:        list(s.at("pethost.sandboxes.v1.Sandbox.labels"), sampleLabel),
 		Settings:      pointer(s.at("pethost.sandboxes.v1.Sandbox.settings"), sampleSandboxSettings),
 		Revision:      plain[int64](s.at("pethost.sandboxes.v1.Sandbox.revision")),
@@ -819,7 +818,6 @@ func sampleLifecycleEvent(s seed) LifecycleEvent {
 	return LifecycleEvent{
 		Change:       plain[LifecycleChange](s.at("pethost.sandboxes.v1.LifecycleEvent.change")),
 		Reason:       plain[StateReason](s.at("pethost.sandboxes.v1.LifecycleEvent.reason")),
-		ForkedFrom:   plain[string](s.at("pethost.sandboxes.v1.LifecycleEvent.forked_from")),
 		Size:         plain[Size](s.at("pethost.sandboxes.v1.LifecycleEvent.size")),
 		DiskGib:      plain[int32](s.at("pethost.sandboxes.v1.LifecycleEvent.disk_gib")),
 		StateMessage: plain[string](s.at("pethost.sandboxes.v1.LifecycleEvent.state_message")),
@@ -1505,8 +1503,7 @@ func sampleRestoring(s seed) Restoring {
 
 func sampleNoCapacity(s seed) NoCapacity {
 	return NoCapacity{
-		ForkCount: plain[int32](s.at("pethost.sandboxes.v1.NoCapacity.fork_count")),
-		Bound:     plain[RoomBound](s.at("pethost.sandboxes.v1.NoCapacity.bound")),
+		Bound: plain[RoomBound](s.at("pethost.sandboxes.v1.NoCapacity.bound")),
 	}
 }
 

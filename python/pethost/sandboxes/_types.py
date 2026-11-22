@@ -867,7 +867,6 @@ class Sandbox:
             it when its server was lost. Never parsed: state_reason is the fact.
         state_time: When it entered its state.
         template: The exact version it started from: "my-app@3".
-        forked_from: The sandbox it was copied from, if any.
         settings: In force: every group, its defaults filled in.
         revision: Grows with every change of its settings (update_sandbox(if_revision=)).
         disk_gib: What it may write: its size's disk at its create, which a new size keeps unless grow_disk
@@ -910,9 +909,6 @@ class Sandbox:
 
     template: str = ""
     """The exact version it started from: "my-app@3"."""
-
-    forked_from: str = ""
-    """The sandbox it was copied from, if any."""
 
     labels: Sequence[Label] = ()
 
@@ -1808,7 +1804,6 @@ class LifecycleEvent:
     """It was created, paused, stopped, resumed, resized or deleted.
 
     Attributes:
-        forked_from: CREATED as a copy of another sandbox: that one.
         size: CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
             STOPPED one takes it at its next start.
         disk_gib: CREATED, RESIZED: its disk from then on.
@@ -1818,9 +1813,6 @@ class LifecycleEvent:
     change: LifecycleChange = LifecycleChange.UNSPECIFIED
 
     reason: StateReason = StateReason.UNSPECIFIED
-
-    forked_from: str = ""
-    """CREATED as a copy of another sandbox: that one."""
 
     size: Size = Size.UNSPECIFIED
     """CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
@@ -4208,13 +4200,9 @@ class NoCapacity:
     """UnavailableError: no room for it now.
 
     Attributes:
-        fork_count: Unused: 0.
         bound: What the server that refused it lacked; absent when no server was asked, none having room
             by what they report.
     """
-
-    fork_count: int = 0
-    """Unused: 0."""
 
     bound: RoomBound = RoomBound.UNSPECIFIED
     """What the server that refused it lacked; absent when no server was asked, none having room

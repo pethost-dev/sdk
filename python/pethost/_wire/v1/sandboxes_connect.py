@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import sandboxes_pb
-from .sandboxes_pb import AgentEvent, AgentTurn, Command, CommandOutput, ConnectSandboxRequest, Connection, ControlDesktopRequest, ControlDesktopResponse, CreateLinkRequest, CreateSandboxRequest, CreateTemplateRequest, CreateVolumeRequest, DeleteSandboxRequest, DeleteSecretRequest, DeleteTemplateRequest, DeleteVolumeRequest, File, FileEvent, ForkSandboxRequest, ForkSandboxResponse, GetAgentTurnRequest, GetCommandRequest, GetSandboxMetricsRequest, GetSandboxMetricsResponse, GetSandboxRequest, GetTemplateRequest, GetWorkspaceRequest, Link, ListCommandsRequest, ListCommandsResponse, ListConversationsRequest, ListConversationsResponse, ListFilesRequest, ListFilesResponse, ListSandboxEventsRequest, ListSandboxEventsResponse, ListSandboxesRequest, ListSandboxesResponse, ListTemplatesRequest, ListTemplatesResponse, ListUsageRequest, ListUsageResponse, ListVolumesRequest, ListVolumesResponse, PauseSandboxRequest, PromptAgentRequest, ReadFileRequest, ResumeSandboxRequest, RunCommandRequest, Sandbox, SandboxEvent, Secret, SetSecretRequest, SetSshKeysRequest, StopAgentTurnRequest, StopCommandRequest, StopSandboxRequest, Template, UpdateSandboxRequest, Volume, WatchCommandRequest, WatchConversationRequest, WatchFilesRequest, WatchSandboxEventsRequest, Workspace, WriteFilesRequest, WriteFilesResponse
+from .sandboxes_pb import AgentEvent, AgentTurn, Command, CommandOutput, ConnectSandboxRequest, Connection, ControlDesktopRequest, ControlDesktopResponse, CreateLinkRequest, CreateSandboxRequest, CreateTemplateRequest, CreateVolumeRequest, DeleteSandboxRequest, DeleteSecretRequest, DeleteTemplateRequest, DeleteVolumeRequest, File, FileEvent, GetAgentTurnRequest, GetCommandRequest, GetSandboxMetricsRequest, GetSandboxMetricsResponse, GetSandboxRequest, GetTemplateRequest, GetWorkspaceRequest, Link, ListCommandsRequest, ListCommandsResponse, ListConversationsRequest, ListConversationsResponse, ListFilesRequest, ListFilesResponse, ListSandboxEventsRequest, ListSandboxEventsResponse, ListSandboxesRequest, ListSandboxesResponse, ListTemplatesRequest, ListTemplatesResponse, ListUsageRequest, ListUsageResponse, ListVolumesRequest, ListVolumesResponse, PauseSandboxRequest, PromptAgentRequest, ReadFileRequest, ResumeSandboxRequest, RunCommandRequest, Sandbox, SandboxEvent, Secret, SetSecretRequest, SetSshKeysRequest, StopAgentTurnRequest, StopCommandRequest, StopSandboxRequest, Template, UpdateSandboxRequest, Volume, WatchCommandRequest, WatchConversationRequest, WatchFilesRequest, WatchSandboxEventsRequest, Workspace, WriteFilesRequest, WriteFilesResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -168,27 +168,6 @@ class SandboxService(Protocol):
         While it moves, ResumeSandbox waits for the move within its 45 s, and the calls that change it
         are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
         answers now; try again.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    async def fork_sandbox(self, request: ForkSandboxRequest, ctx: RequestContext[ForkSandboxRequest, ForkSandboxResponse], /) -> ForkSandboxResponse:
-        """
-        Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-        the API's page. A fork's
-        copies run on its source's server alone, so how many one call makes is what that one server
-        has free, which no number of servers raises: a copy's memory resumes only on the processor it
-        was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-        to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-        from it, on any server.
-
-        Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-        processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-        a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-        disk. The copies are the source's size, with its disk, each with its own id, hostname,
-        machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-        their processes keep the state they had, their random generators and the keys they made
-        among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-        a read-write volume.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -419,16 +398,6 @@ class SandboxServiceASGIApplication(ConnectASGIApplication[SandboxService]):
                         idempotency_level=IdempotencyLevel.IDEMPOTENT,
                     ),
                     function=svc.resume_sandbox,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/ForkSandbox": Endpoint.unary(
-                    method=MethodInfo(
-                        name="ForkSandbox",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=ForkSandboxRequest,
-                        output=ForkSandboxResponse,
-                        idempotency_level=IdempotencyLevel.UNKNOWN,
-                    ),
-                    function=svc.fork_sandbox,
                 ),
                 "/pethost.sandboxes.v1.SandboxService/DeleteSandbox": Endpoint.unary(
                     method=MethodInfo(
@@ -905,44 +874,6 @@ class SandboxServiceClient(ConnectClient):
                 input=ResumeSandboxRequest,
                 output=Sandbox,
                 idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-
-    async def fork_sandbox(
-        self,
-        request: ForkSandboxRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> ForkSandboxResponse:
-        """
-        Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-        the API's page. A fork's
-        copies run on its source's server alone, so how many one call makes is what that one server
-        has free, which no number of servers raises: a copy's memory resumes only on the processor it
-        was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-        to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-        from it, on any server.
-
-        Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-        processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-        a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-        disk. The copies are the source's size, with its disk, each with its own id, hostname,
-        machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-        their processes keep the state they had, their random generators and the keys they made
-        among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-        a read-write volume.
-        """
-        return await self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="ForkSandbox",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=ForkSandboxRequest,
-                output=ForkSandboxResponse,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,
             timeout_ms=timeout_ms,
@@ -1425,27 +1356,6 @@ class SandboxServiceSync(Protocol):
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
-    def fork_sandbox(self, request: ForkSandboxRequest, ctx: RequestContext[ForkSandboxRequest, ForkSandboxResponse], /) -> ForkSandboxResponse:
-        """
-        Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-        the API's page. A fork's
-        copies run on its source's server alone, so how many one call makes is what that one server
-        has free, which no number of servers raises: a copy's memory resumes only on the processor it
-        was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-        to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-        from it, on any server.
-
-        Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-        processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-        a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-        disk. The copies are the source's size, with its disk, each with its own id, hostname,
-        machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-        their processes keep the state they had, their random generators and the keys they made
-        among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-        a read-write volume.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
     def delete_sandbox(self, request: DeleteSandboxRequest, ctx: RequestContext[DeleteSandboxRequest, Sandbox], /) -> Sandbox:
         """
         Drops its memory and disk for good; its volumes stay. Answers its final record, usage
@@ -1671,16 +1581,6 @@ class SandboxServiceWSGIApplication(ConnectWSGIApplication):
                         idempotency_level=IdempotencyLevel.IDEMPOTENT,
                     ),
                     function=service.resume_sandbox,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/ForkSandbox": EndpointSync.unary(
-                    method=MethodInfo(
-                        name="ForkSandbox",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=ForkSandboxRequest,
-                        output=ForkSandboxResponse,
-                        idempotency_level=IdempotencyLevel.UNKNOWN,
-                    ),
-                    function=service.fork_sandbox,
                 ),
                 "/pethost.sandboxes.v1.SandboxService/DeleteSandbox": EndpointSync.unary(
                     method=MethodInfo(
@@ -2147,43 +2047,6 @@ class SandboxServiceClientSync(ConnectClientSync):
                 input=ResumeSandboxRequest,
                 output=Sandbox,
                 idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-    def fork_sandbox(
-        self,
-        request: ForkSandboxRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> ForkSandboxResponse:
-        """
-        Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-        the API's page. A fork's
-        copies run on its source's server alone, so how many one call makes is what that one server
-        has free, which no number of servers raises: a copy's memory resumes only on the processor it
-        was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-        to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-        from it, on any server.
-
-        Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-        processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-        a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-        disk. The copies are the source's size, with its disk, each with its own id, hostname,
-        machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-        their processes keep the state they had, their random generators and the keys they made
-        among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-        a read-write volume.
-        """
-        return self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="ForkSandbox",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=ForkSandboxRequest,
-                output=ForkSandboxResponse,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
             ),
             headers=headers,
             timeout_ms=timeout_ms,

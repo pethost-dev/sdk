@@ -4230,10 +4230,6 @@ pub struct SandboxView<'a> {
     ///
     /// Field 6: `template`
     pub template: ::core::option::Option<&'a str>,
-    /// The sandbox it was copied from, if any.
-    ///
-    /// Field 7: `forked_from`
-    pub forked_from: ::core::option::Option<&'a str>,
     /// Field 9: `labels`
     pub labels: ::buffa::RepeatedView<'a, super::super::__buffa::view::LabelView<'a>>,
     /// In force: every group, its defaults filled in.
@@ -4401,13 +4397,6 @@ impl<'a> ::buffa::MessageView<'a> for SandboxView<'a> {
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
                 view.template = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.forked_from = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4679,7 +4668,6 @@ impl<'a> ::buffa::MessageView<'a> for SandboxView<'a> {
                 None => ::buffa::MessageField::none(),
             },
             template: self.template.map(|s| s.to_string()),
-            forked_from: self.forked_from.map(|s| s.to_string()),
             labels: self
                 .labels
                 .iter()
@@ -4792,9 +4780,6 @@ impl<'a> ::buffa::ViewEncode<'a> for SandboxView<'a> {
                     + inner_size as u64;
         }
         if let Some(ref v) = self.template {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.forked_from {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
         for v in &self.labels {
@@ -4923,9 +4908,6 @@ impl<'a> ::buffa::ViewEncode<'a> for SandboxView<'a> {
         }
         if let Some(ref v) = self.template {
             ::buffa::types::put_string_field(6u32, v, buf);
-        }
-        if let Some(ref v) = self.forked_from {
-            ::buffa::types::put_string_field(7u32, v, buf);
         }
         for v in &self.labels {
             ::buffa::types::put_len_delimited_header(
@@ -5060,9 +5042,6 @@ impl<'__a> ::serde::Serialize for SandboxView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.template {
             __map.serialize_entry("template", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.forked_from {
-            __map.serialize_entry("forked_from", __v)?;
         }
         if !self.labels.is_empty() {
             __map.serialize_entry("labels", &*self.labels)?;
@@ -5265,13 +5244,6 @@ impl SandboxOwnedView {
     #[must_use]
     pub fn template(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().template
-    }
-    /// The sandbox it was copied from, if any.
-    ///
-    /// Field 7: `forked_from`
-    #[must_use]
-    pub fn forked_from(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().forked_from
     }
     /// Field 9: `labels`
     #[must_use]
@@ -8828,723 +8800,6 @@ impl ::buffa::HasMessageView for super::super::ResumeSandboxRequest {
     type ViewHandle = ResumeSandboxRequestOwnedView;
 }
 impl ::serde::Serialize for ResumeSandboxRequestOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct ForkSandboxRequestView<'a> {
-    /// Field 1: `sandbox_id`
-    pub sandbox_id: ::core::option::Option<&'a str>,
-    /// Absent = 1; at most 100.
-    ///
-    /// Field 2: `count`
-    pub count: ::core::option::Option<i32>,
-    /// The copies', at most 32. None = the source's.
-    ///
-    /// Field 3: `labels`
-    pub labels: ::buffa::RepeatedView<'a, super::super::__buffa::view::LabelView<'a>>,
-    /// Groups sent replace the source's in the copies. Its size is the source's: another is
-    /// INVALID_ARGUMENT.
-    ///
-    /// Field 4: `settings`
-    pub settings: ::buffa::MessageFieldView<
-        super::super::__buffa::view::SandboxSettingsView<'a>,
-    >,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    pub request_id: ::core::option::Option<&'a str>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for ForkSandboxRequestView<'a> {
-    type Owned = super::super::ForkSandboxRequest;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.sandbox_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.count = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.settings.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.settings = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::SandboxSettingsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
-            }
-            101u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.request_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                ctx.register_element_memory(
-                    ::core::mem::size_of::<super::super::__buffa::view::LabelView>(),
-                )?;
-                view.labels
-                    .push(
-                        <super::super::__buffa::view::LabelView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<super::super::ForkSandboxRequest, ::buffa::DecodeError> {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<super::super::ForkSandboxRequest, ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::ForkSandboxRequest {
-            sandbox_id: self.sandbox_id.map(|s| s.to_string()),
-            count: self.count,
-            labels: self
-                .labels
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
-            settings: match self.settings.as_option() {
-                Some(v) => {
-                    ::buffa::MessageField::<
-                        super::super::SandboxSettings,
-                        ::buffa::Inline<super::super::SandboxSettings>,
-                    >::some(v.to_owned_from_source(__buffa_src)?)
-                }
-                None => ::buffa::MessageField::none(),
-            },
-            request_id: self.request_id.map(|s| s.to_string()),
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for ForkSandboxRequestView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.sandbox_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.count {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        for v in &self.labels {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if self.settings.is_set() {
-            let __slot = __cache.reserve();
-            let inner_size = self.settings.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if let Some(ref v) = self.request_id {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.sandbox_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(v) = self.count {
-            ::buffa::types::put_int32_field(2u32, v, buf);
-        }
-        for v in &self.labels {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        if self.settings.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.settings.write_to(__cache, buf);
-        }
-        if let Some(ref v) = self.request_id {
-            ::buffa::types::put_string_field(101u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for ForkSandboxRequestView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.sandbox_id {
-            __map.serialize_entry("sandbox_id", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.count {
-            __map.serialize_entry("count", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if !self.labels.is_empty() {
-            __map.serialize_entry("labels", &*self.labels)?;
-        }
-        {
-            if let ::core::option::Option::Some(__v) = self.settings.as_option() {
-                __map.serialize_entry("settings", __v)?;
-            }
-        }
-        if let ::core::option::Option::Some(__v) = self.request_id {
-            __map.serialize_entry("request_id", __v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for ForkSandboxRequestView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ForkSandboxRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ForkSandboxRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxRequest";
-}
-::buffa::impl_default_view_instance!(ForkSandboxRequestView);
-::buffa::impl_view_reborrow!(ForkSandboxRequestView);
-/** Self-contained, `'static` owned view of a `ForkSandboxRequest` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`ForkSandboxRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ForkSandboxRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct ForkSandboxRequestOwnedView(
-    ::buffa::OwnedView<ForkSandboxRequestView<'static>>,
-);
-impl ForkSandboxRequestOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxRequestOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::ForkSandboxRequest,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`ForkSandboxRequestView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &ForkSandboxRequestView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::ForkSandboxRequest {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `sandbox_id`
-    #[must_use]
-    pub fn sandbox_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().sandbox_id
-    }
-    /// Absent = 1; at most 100.
-    ///
-    /// Field 2: `count`
-    #[must_use]
-    pub fn count(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().count
-    }
-    /// The copies', at most 32. None = the source's.
-    ///
-    /// Field 3: `labels`
-    #[must_use]
-    pub fn labels(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::LabelView<'_>> {
-        &self.0.reborrow().labels
-    }
-    /// Groups sent replace the source's in the copies. Its size is the source's: another is
-    /// INVALID_ARGUMENT.
-    ///
-    /// Field 4: `settings`
-    #[must_use]
-    pub fn settings(
-        &self,
-    ) -> &::buffa::MessageFieldView<
-        super::super::__buffa::view::SandboxSettingsView<'_>,
-    > {
-        &self.0.reborrow().settings
-    }
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    #[must_use]
-    pub fn request_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().request_id
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<ForkSandboxRequestView<'static>>>
-for ForkSandboxRequestOwnedView {
-    fn from(inner: ::buffa::OwnedView<ForkSandboxRequestView<'static>>) -> Self {
-        ForkSandboxRequestOwnedView(inner)
-    }
-}
-impl ::core::convert::From<ForkSandboxRequestOwnedView>
-for ::buffa::OwnedView<ForkSandboxRequestView<'static>> {
-    fn from(wrapper: ForkSandboxRequestOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<ForkSandboxRequestView<'static>>>
-for ForkSandboxRequestOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<ForkSandboxRequestView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::ForkSandboxRequest {
-    type View<'a> = ForkSandboxRequestView<'a>;
-    type ViewHandle = ForkSandboxRequestOwnedView;
-}
-impl ::serde::Serialize for ForkSandboxRequestOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct ForkSandboxResponseView<'a> {
-    /// Field 1: `sandboxes`
-    pub sandboxes: ::buffa::RepeatedView<
-        'a,
-        super::super::__buffa::view::SandboxView<'a>,
-    >,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for ForkSandboxResponseView<'a> {
-    type Owned = super::super::ForkSandboxResponse;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                ctx.register_element_memory(
-                    ::core::mem::size_of::<super::super::__buffa::view::SandboxView>(),
-                )?;
-                view.sandboxes
-                    .push(
-                        <super::super::__buffa::view::SandboxView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<
-        super::super::ForkSandboxResponse,
-        ::buffa::DecodeError,
-    > {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<
-        super::super::ForkSandboxResponse,
-        ::buffa::DecodeError,
-    > {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::ForkSandboxResponse {
-            sandboxes: self
-                .sandboxes
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for ForkSandboxResponseView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        for v in &self.sandboxes {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        for v in &self.sandboxes {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for ForkSandboxResponseView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if !self.sandboxes.is_empty() {
-            __map.serialize_entry("sandboxes", &*self.sandboxes)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for ForkSandboxResponseView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ForkSandboxResponse";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ForkSandboxResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxResponse";
-}
-::buffa::impl_default_view_instance!(ForkSandboxResponseView);
-::buffa::impl_view_reborrow!(ForkSandboxResponseView);
-/** Self-contained, `'static` owned view of a `ForkSandboxResponse` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`ForkSandboxResponseView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ForkSandboxResponseView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct ForkSandboxResponseOwnedView(
-    ::buffa::OwnedView<ForkSandboxResponseView<'static>>,
-);
-impl ForkSandboxResponseOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxResponseOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxResponseOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::ForkSandboxResponse,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ForkSandboxResponseOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`ForkSandboxResponseView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &ForkSandboxResponseView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::ForkSandboxResponse {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `sandboxes`
-    #[must_use]
-    pub fn sandboxes(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::SandboxView<'_>> {
-        &self.0.reborrow().sandboxes
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<ForkSandboxResponseView<'static>>>
-for ForkSandboxResponseOwnedView {
-    fn from(inner: ::buffa::OwnedView<ForkSandboxResponseView<'static>>) -> Self {
-        ForkSandboxResponseOwnedView(inner)
-    }
-}
-impl ::core::convert::From<ForkSandboxResponseOwnedView>
-for ::buffa::OwnedView<ForkSandboxResponseView<'static>> {
-    fn from(wrapper: ForkSandboxResponseOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<ForkSandboxResponseView<'static>>>
-for ForkSandboxResponseOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<ForkSandboxResponseView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::ForkSandboxResponse {
-    type View<'a> = ForkSandboxResponseView<'a>;
-    type ViewHandle = ForkSandboxResponseOwnedView;
-}
-impl ::serde::Serialize for ForkSandboxResponseOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -15949,10 +15204,6 @@ pub struct LifecycleEventView<'a> {
     >,
     /// Field 2: `reason`
     pub reason: ::core::option::Option<::buffa::EnumValue<super::super::StateReason>>,
-    /// CREATED as a copy of another sandbox: that one.
-    ///
-    /// Field 3: `forked_from`
-    pub forked_from: ::core::option::Option<&'a str>,
     /// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
     /// STOPPED one takes it at its next start.
     ///
@@ -16016,13 +15267,6 @@ impl<'a> ::buffa::MessageView<'a> for LifecycleEventView<'a> {
                     ::buffa::EnumValue::from(::buffa::types::decode_int32(&mut cur)?),
                 );
             }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.forked_from = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -16070,7 +15314,6 @@ impl<'a> ::buffa::MessageView<'a> for LifecycleEventView<'a> {
         ::core::result::Result::Ok(super::super::LifecycleEvent {
             change: self.change,
             reason: self.reason,
-            forked_from: self.forked_from.map(|s| s.to_string()),
             size: self.size,
             disk_gib: self.disk_gib,
             state_message: self.state_message.map(|s| s.to_string()),
@@ -16090,9 +15333,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LifecycleEventView<'a> {
         }
         if let Some(ref v) = self.reason {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
-        }
-        if let Some(ref v) = self.forked_from {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
         if let Some(ref v) = self.size {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
@@ -16119,9 +15359,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LifecycleEventView<'a> {
         }
         if let Some(ref v) = self.reason {
             ::buffa::types::put_int32_field(2u32, v.to_i32(), buf);
-        }
-        if let Some(ref v) = self.forked_from {
-            ::buffa::types::put_string_field(3u32, v, buf);
         }
         if let Some(ref v) = self.size {
             ::buffa::types::put_int32_field(4u32, v.to_i32(), buf);
@@ -16158,9 +15395,6 @@ impl<'__a> ::serde::Serialize for LifecycleEventView<'__a> {
         }
         if let ::core::option::Option::Some(ref __v) = self.reason {
             __map.serialize_entry("reason", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.forked_from {
-            __map.serialize_entry("forked_from", __v)?;
         }
         if let ::core::option::Option::Some(ref __v) = self.size {
             __map.serialize_entry("size", __v)?;
@@ -16277,13 +15511,6 @@ impl LifecycleEventOwnedView {
         &self,
     ) -> ::core::option::Option<::buffa::EnumValue<super::super::StateReason>> {
         self.0.reborrow().reason
-    }
-    /// CREATED as a copy of another sandbox: that one.
-    ///
-    /// Field 3: `forked_from`
-    #[must_use]
-    pub fn forked_from(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().forked_from
     }
     /// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
     /// STOPPED one takes it at its next start.
@@ -40555,10 +39782,6 @@ impl ::serde::Serialize for RestoringOwnedView {
 /// UNAVAILABLE: no room for it now.
 #[derive(Clone, Debug, Default)]
 pub struct NoCapacityView<'a> {
-    /// Unused: 0.
-    ///
-    /// Field 1: `fork_count`
-    pub fork_count: ::core::option::Option<i32>,
     /// What the server that refused it lacked; absent when no server was asked, none having room
     /// by what they report.
     ///
@@ -40596,13 +39819,6 @@ impl<'a> ::buffa::MessageView<'a> for NoCapacityView<'a> {
         let view = self;
         let mut cur = cur;
         match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.fork_count = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -40634,7 +39850,6 @@ impl<'a> ::buffa::MessageView<'a> for NoCapacityView<'a> {
         use ::buffa::alloc::string::ToString as _;
         let _ = __buffa_src;
         ::core::result::Result::Ok(super::super::NoCapacity {
-            fork_count: self.fork_count,
             bound: self.bound,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
@@ -40647,9 +39862,6 @@ impl<'a> ::buffa::ViewEncode<'a> for NoCapacityView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
-        if let Some(v) = self.fork_count {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         if let Some(ref v) = self.bound {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
@@ -40664,9 +39876,6 @@ impl<'a> ::buffa::ViewEncode<'a> for NoCapacityView<'a> {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if let Some(v) = self.fork_count {
-            ::buffa::types::put_int32_field(1u32, v, buf);
-        }
         if let Some(ref v) = self.bound {
             ::buffa::types::put_int32_field(2u32, v.to_i32(), buf);
         }
@@ -40691,10 +39900,6 @@ impl<'__a> ::serde::Serialize for NoCapacityView<'__a> {
     ) -> ::core::result::Result<__S::Ok, __S::Error> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.fork_count {
-            __map
-                .serialize_entry("fork_count", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
         if let ::core::option::Option::Some(ref __v) = self.bound {
             __map.serialize_entry("bound", __v)?;
         }
@@ -40788,13 +39993,6 @@ impl NoCapacityOwnedView {
     #[must_use]
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
-    }
-    /// Unused: 0.
-    ///
-    /// Field 1: `fork_count`
-    #[must_use]
-    pub fn fork_count(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().fork_count
     }
     /// What the server that refused it lacked; absent when no server was asked, none having room
     /// by what they report.

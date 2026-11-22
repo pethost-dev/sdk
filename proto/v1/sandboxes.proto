@@ -214,26 +214,6 @@ service SandboxService {
     option (pethost.panel.v1.mcp_tool) = {title: "Resume a sandbox"};
   }
 
-  // Off: answers UNIMPLEMENTED, and is no MCP tool, no method of the SDKs and, deprecated, not on
-  // the API's page. A fork's
-  // copies run on its source's server alone, so how many one call makes is what that one server
-  // has free, which no number of servers raises: a copy's memory resumes only on the processor it
-  // was taken on, and servers of one processor cannot be bought for ever. We do not know yet how
-  // to sell that (2026-11-22). Many sandboxes from one state: CreateTemplate, then CreateSandbox
-  // from it, on any server.
-  //
-  // Where a panel turns it on (the end-to-end suite's), it copies a sandbox as it is now, memory,
-  // processes and disk, into `count` new RUNNING ones on its server. A RUNNING source pauses for
-  // a moment and goes on; a PAUSED one stays paused; the copies of a STOPPED one start from its
-  // disk. The copies are the source's size, with its disk, each with its own id, hostname,
-  // machine-id and kernel randomness, and no name (names are unique: UpdateSandbox gives one);
-  // their processes keep the state they had, their random generators and the keys they made
-  // among it. All or none: UNAVAILABLE + NoCapacity says how many fit. Refused for a sandbox with
-  // a read-write volume.
-  rpc ForkSandbox(ForkSandboxRequest) returns (ForkSandboxResponse) {
-    option deprecated = true;
-  }
-
   // Drops its memory and disk for good; its volumes stay. Answers its final record, usage
   // included. A DELETED sandbox is answered with that record.
   rpc DeleteSandbox(DeleteSandboxRequest) returns (Sandbox) {
@@ -702,7 +682,8 @@ message DeleteSecretRequest {
 // (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
 // starts.
 message Sandbox {
-  reserved 8, 18, 21;
+  reserved 7, 8, 18, 21;
+  reserved forked_from;
   string sandbox_id = 1; // 16 characters, a-z and 0-9: also its DNS label.
   SandboxState state = 2;
   StateReason state_reason = 3;
@@ -711,7 +692,6 @@ message Sandbox {
   string state_message = 4;
   google.protobuf.Timestamp state_time = 5; // When it entered its state.
   string template = 6; // The exact version it started from: "my-app@3".
-  string forked_from = 7; // The sandbox it was copied from, if any.
   repeated Label labels = 9;
   SandboxSettings settings = 10; // In force: every group, its defaults filled in.
   int64 revision = 11; // Grows with every change of its settings (UpdateSandbox.if_revision).
@@ -888,23 +868,6 @@ message ResumeSandboxRequest {
   reserved 100;
 }
 
-message ForkSandboxRequest {
-  string sandbox_id = 1;
-  int32 count = 2; // Absent = 1; at most 100.
-  repeated Label labels = 3; // The copies', at most 32. None = the source's.
-  // Groups sent replace the source's in the copies. Its size is the source's: another is
-  // INVALID_ARGUMENT.
-  SandboxSettings settings = 4;
-  // Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-  // nothing again and answers what the first call did (24 h).
-  string request_id = 101;
-  reserved 100;
-}
-
-message ForkSandboxResponse {
-  repeated Sandbox sandboxes = 1;
-}
-
 message DeleteSandboxRequest {
   string sandbox_id = 1;
   reserved 100;
@@ -1079,9 +1042,10 @@ message SandboxEvent {
 
 // It was created, paused, stopped, resumed, resized or deleted.
 message LifecycleEvent {
+  reserved 3;
+  reserved forked_from;
   LifecycleChange change = 1;
   StateReason reason = 2;
-  string forked_from = 3; // CREATED as a copy of another sandbox: that one.
   // CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
   // STOPPED one takes it at its next start.
   Size size = 4;
@@ -1812,7 +1776,8 @@ message Restoring {
 
 // UNAVAILABLE: no room for it now.
 message NoCapacity {
-  int32 fork_count = 1; // Unused: 0.
+  reserved 1;
+  reserved fork_count;
   // What the server that refused it lacked; absent when no server was asked, none having room
   // by what they report.
   RoomBound bound = 2;

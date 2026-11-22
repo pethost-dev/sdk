@@ -5949,14 +5949,6 @@ pub struct Sandbox {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub template: ::core::option::Option<::buffa::alloc::string::String>,
-    /// The sandbox it was copied from, if any.
-    ///
-    /// Field 7: `forked_from`
-    #[serde(
-        rename = "forked_from",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub forked_from: ::core::option::Option<::buffa::alloc::string::String>,
     /// Field 9: `labels`
     #[serde(
         rename = "labels",
@@ -6112,7 +6104,6 @@ impl ::core::fmt::Debug for Sandbox {
             .field("state_message", &self.state_message)
             .field("state_time", &self.state_time)
             .field("template", &self.template)
-            .field("forked_from", &self.forked_from)
             .field("labels", &self.labels)
             .field("settings", &self.settings)
             .field("revision", &self.revision)
@@ -6188,16 +6179,6 @@ impl Sandbox {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.template = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::forked_from`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_forked_from(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.forked_from = Some(value.into());
         self
     }
     #[must_use = "with_* setters return `self` by value; assign or chain the result"]
@@ -6303,9 +6284,6 @@ impl ::buffa::Message for Sandbox {
                     + inner_size as u64;
         }
         if let Some(ref v) = self.template {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.forked_from {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
         for v in &self.labels {
@@ -6433,9 +6411,6 @@ impl ::buffa::Message for Sandbox {
         }
         if let Some(ref v) = self.template {
             ::buffa::types::put_string_field(6u32, v, buf);
-        }
-        if let Some(ref v) = self.forked_from {
-            ::buffa::types::put_string_field(7u32, v, buf);
         }
         for v in &self.labels {
             ::buffa::types::put_len_delimited_header(
@@ -6604,18 +6579,6 @@ impl ::buffa::Message for Sandbox {
                 ::buffa::types::merge_string(
                     self
                         .template
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .forked_from
                         .get_or_insert_with(::buffa::alloc::string::String::new),
                     buf,
                 )?;
@@ -6805,7 +6768,6 @@ impl ::buffa::Message for Sandbox {
         self.state_message = ::core::option::Option::None;
         self.state_time = ::buffa::MessageField::none();
         self.template = ::core::option::Option::None;
-        self.forked_from = ::core::option::Option::None;
         self.labels.clear();
         self.settings = ::buffa::MessageField::none();
         self.revision = ::core::option::Option::None;
@@ -9065,441 +9027,6 @@ pub const __RESUME_SANDBOX_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntr
     type_url: "type.googleapis.com/pethost.sandboxes.v1.ResumeSandboxRequest",
     to_json: ::buffa::type_registry::any_to_json::<ResumeSandboxRequest>,
     from_json: ::buffa::type_registry::any_from_json::<ResumeSandboxRequest>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct ForkSandboxRequest {
-    /// Field 1: `sandbox_id`
-    #[serde(
-        rename = "sandbox_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub sandbox_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Absent = 1; at most 100.
-    ///
-    /// Field 2: `count`
-    #[serde(
-        rename = "count",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub count: ::core::option::Option<i32>,
-    /// The copies', at most 32. None = the source's.
-    ///
-    /// Field 3: `labels`
-    #[serde(
-        rename = "labels",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub labels: ::buffa::alloc::vec::Vec<Label>,
-    /// Groups sent replace the source's in the copies. Its size is the source's: another is
-    /// INVALID_ARGUMENT.
-    ///
-    /// Field 4: `settings`
-    #[serde(
-        rename = "settings",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
-    )]
-    pub settings: ::buffa::MessageField<
-        SandboxSettings,
-        ::buffa::Inline<SandboxSettings>,
-    >,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    #[serde(
-        rename = "request_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub request_id: ::core::option::Option<::buffa::alloc::string::String>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for ForkSandboxRequest {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("ForkSandboxRequest")
-            .field("sandbox_id", &self.sandbox_id)
-            .field("count", &self.count)
-            .field("labels", &self.labels)
-            .field("settings", &self.settings)
-            .field("request_id", &self.request_id)
-            .finish()
-    }
-}
-impl ForkSandboxRequest {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxRequest";
-}
-impl ForkSandboxRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::sandbox_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_sandbox_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.sandbox_id = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::count`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_count(mut self, value: i32) -> Self {
-        self.count = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::request_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_request_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.request_id = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(ForkSandboxRequest);
-impl ::buffa::MessageName for ForkSandboxRequest {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ForkSandboxRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ForkSandboxRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxRequest";
-}
-impl ::buffa::Message for ForkSandboxRequest {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.sandbox_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.count {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        for v in &self.labels {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if self.settings.is_set() {
-            let __slot = __cache.reserve();
-            let inner_size = self.settings.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if let Some(ref v) = self.request_id {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.sandbox_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(v) = self.count {
-            ::buffa::types::put_int32_field(2u32, v, buf);
-        }
-        for v in &self.labels {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        if self.settings.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.settings.write_to(__cache, buf);
-        }
-        if let Some(ref v) = self.request_id {
-            ::buffa::types::put_string_field(101u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .sandbox_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.count = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.labels.push(elem);
-            }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::Message::merge_length_delimited(
-                    self.settings.get_or_insert_default(),
-                    buf,
-                    ctx,
-                )?;
-            }
-            101u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .request_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.sandbox_id = ::core::option::Option::None;
-        self.count = ::core::option::Option::None;
-        self.labels.clear();
-        self.settings = ::buffa::MessageField::none();
-        self.request_id = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for ForkSandboxRequest {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.ForkSandboxRequest";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for ForkSandboxRequest {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __FORK_SANDBOX_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxRequest",
-    to_json: ::buffa::type_registry::any_to_json::<ForkSandboxRequest>,
-    from_json: ::buffa::type_registry::any_from_json::<ForkSandboxRequest>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct ForkSandboxResponse {
-    /// Field 1: `sandboxes`
-    #[serde(
-        rename = "sandboxes",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub sandboxes: ::buffa::alloc::vec::Vec<Sandbox>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for ForkSandboxResponse {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("ForkSandboxResponse")
-            .field("sandboxes", &self.sandboxes)
-            .finish()
-    }
-}
-impl ForkSandboxResponse {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxResponse";
-}
-::buffa::impl_default_instance!(ForkSandboxResponse);
-impl ::buffa::MessageName for ForkSandboxResponse {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ForkSandboxResponse";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ForkSandboxResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxResponse";
-}
-impl ::buffa::Message for ForkSandboxResponse {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        for v in &self.sandboxes {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        for v in &self.sandboxes {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.sandboxes.push(elem);
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.sandboxes.clear();
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for ForkSandboxResponse {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.ForkSandboxResponse";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for ForkSandboxResponse {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __FORK_SANDBOX_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.ForkSandboxResponse",
-    to_json: ::buffa::type_registry::any_to_json::<ForkSandboxResponse>,
-    from_json: ::buffa::type_registry::any_from_json::<ForkSandboxResponse>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]
@@ -13688,14 +13215,6 @@ pub struct LifecycleEvent {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub reason: ::core::option::Option<::buffa::EnumValue<StateReason>>,
-    /// CREATED as a copy of another sandbox: that one.
-    ///
-    /// Field 3: `forked_from`
-    #[serde(
-        rename = "forked_from",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub forked_from: ::core::option::Option<::buffa::alloc::string::String>,
     /// CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a
     /// STOPPED one takes it at its next start.
     ///
@@ -13732,7 +13251,6 @@ impl ::core::fmt::Debug for LifecycleEvent {
         f.debug_struct("LifecycleEvent")
             .field("change", &self.change)
             .field("reason", &self.reason)
-            .field("forked_from", &self.forked_from)
             .field("size", &self.size)
             .field("disk_gib", &self.disk_gib)
             .field("state_message", &self.state_message)
@@ -13765,16 +13283,6 @@ impl LifecycleEvent {
         value: impl Into<::buffa::EnumValue<StateReason>>,
     ) -> Self {
         self.reason = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::forked_from`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_forked_from(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.forked_from = Some(value.into());
         self
     }
     #[must_use = "with_* setters return `self` by value; assign or chain the result"]
@@ -13828,9 +13336,6 @@ impl ::buffa::Message for LifecycleEvent {
         if let Some(ref v) = self.reason {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
-        if let Some(ref v) = self.forked_from {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
         if let Some(ref v) = self.size {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
@@ -13855,9 +13360,6 @@ impl ::buffa::Message for LifecycleEvent {
         }
         if let Some(ref v) = self.reason {
             ::buffa::types::put_int32_field(2u32, v.to_i32(), buf);
-        }
-        if let Some(ref v) = self.forked_from {
-            ::buffa::types::put_string_field(3u32, v, buf);
         }
         if let Some(ref v) = self.size {
             ::buffa::types::put_int32_field(4u32, v.to_i32(), buf);
@@ -13899,18 +13401,6 @@ impl ::buffa::Message for LifecycleEvent {
                     ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
                 );
             }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .forked_from
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -13951,7 +13441,6 @@ impl ::buffa::Message for LifecycleEvent {
     fn clear(&mut self) {
         self.change = ::core::option::Option::None;
         self.reason = ::core::option::Option::None;
-        self.forked_from = ::core::option::Option::None;
         self.size = ::core::option::Option::None;
         self.state_message = ::core::option::Option::None;
         self.disk_gib = ::core::option::Option::None;
@@ -31364,15 +30853,6 @@ pub const __RESTORING_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct NoCapacity {
-    /// Unused: 0.
-    ///
-    /// Field 1: `fork_count`
-    #[serde(
-        rename = "fork_count",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub fork_count: ::core::option::Option<i32>,
     /// What the server that refused it lacked; absent when no server was asked, none having room
     /// by what they report.
     ///
@@ -31389,10 +30869,7 @@ pub struct NoCapacity {
 }
 impl ::core::fmt::Debug for NoCapacity {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("NoCapacity")
-            .field("fork_count", &self.fork_count)
-            .field("bound", &self.bound)
-            .finish()
+        f.debug_struct("NoCapacity").field("bound", &self.bound).finish()
     }
 }
 impl NoCapacity {
@@ -31403,13 +30880,6 @@ impl NoCapacity {
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.NoCapacity";
 }
 impl NoCapacity {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::fork_count`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_fork_count(mut self, value: i32) -> Self {
-        self.fork_count = Some(value);
-        self
-    }
     #[must_use = "with_* setters return `self` by value; assign or chain the result"]
     #[inline]
     ///Sets [`Self::bound`] to `Some(value)`, consuming and returning `self`.
@@ -31441,9 +30911,6 @@ impl ::buffa::Message for NoCapacity {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
-        if let Some(v) = self.fork_count {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         if let Some(ref v) = self.bound {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
@@ -31457,9 +30924,6 @@ impl ::buffa::Message for NoCapacity {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if let Some(v) = self.fork_count {
-            ::buffa::types::put_int32_field(1u32, v, buf);
-        }
         if let Some(ref v) = self.bound {
             ::buffa::types::put_int32_field(2u32, v.to_i32(), buf);
         }
@@ -31476,15 +30940,6 @@ impl ::buffa::Message for NoCapacity {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.fork_count = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -31502,7 +30957,6 @@ impl ::buffa::Message for NoCapacity {
         ::core::result::Result::Ok(())
     }
     fn clear(&mut self) {
-        self.fork_count = ::core::option::Option::None;
         self.bound = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }

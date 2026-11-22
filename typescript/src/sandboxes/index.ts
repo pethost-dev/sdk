@@ -723,8 +723,6 @@ export interface Sandbox {
   stateTime?: Date;
   /** The exact version it started from: "my-app@3". */
   template: string;
-  /** The sandbox it was copied from, if any. */
-  forkedFrom: string;
   labels: Label[];
   /** In force: every group, its defaults filled in. */
   settings?: SandboxSettings;
@@ -1448,8 +1446,6 @@ export const SandboxEvent: JsonCodec<SandboxEvent, SandboxEvent> = {
 export interface LifecycleEvent {
   change?: LifecycleChange | number;
   reason?: StateReason | number;
-  /** CREATED as a copy of another sandbox: that one. */
-  forkedFrom: string;
   /**
    * CREATED, RESIZED: its size from then on. RESIZED: a RUNNING sandbox restarted at it, a STOPPED
    * one takes it at its next start.
@@ -2937,8 +2933,6 @@ export const Restoring: JsonCodec<Restoring, Restoring> = {
 
 /** UNAVAILABLE: no room for it now. */
 export interface NoCapacity {
-  /** Unused: 0. */
-  forkCount: number;
   /**
    * What the server that refused it lacked; absent when no server was asked, none having room by
    * what they report.
@@ -3257,7 +3251,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.6.1");
+      request.header.set("User-Agent", "pethost-typescript/0.7.0");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3269,7 +3263,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.6.1");
+      request.header.set("User-Agent", "pethost-typescript/0.7.0");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>

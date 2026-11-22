@@ -551,7 +551,6 @@ export function fromSandbox(m: w.Sandbox): p.Sandbox {
     stateMessage: m.stateMessage,
     stateTime: m.stateTime && toDate(m.stateTime),
     template: m.template,
-    forkedFrom: m.forkedFrom,
     labels: m.labels.map(fromLabel),
     settings: m.settings && fromSandboxSettings(m.settings),
     revision: m.revision,
@@ -579,7 +578,6 @@ export function toSandbox(m: p.Sandbox): MessageInitShape<typeof w.SandboxSchema
     stateMessage: m.stateMessage || undefined,
     stateTime: m.stateTime && toTimestamp(m.stateTime),
     template: m.template || undefined,
-    forkedFrom: m.forkedFrom || undefined,
     labels: m.labels?.map(toLabel),
     settings: m.settings && toSandboxSettings(m.settings),
     revision: m.revision || undefined,
@@ -1083,7 +1081,6 @@ export function fromLifecycleEvent(m: w.LifecycleEvent): p.LifecycleEvent {
   return compact<p.LifecycleEvent>({
     change: known(fromLifecycleChange, m.change),
     reason: known(fromStateReason, m.reason),
-    forkedFrom: m.forkedFrom,
     size: known(fromSize, m.size),
     diskGib: m.diskGib,
     stateMessage: m.stateMessage,
@@ -1094,7 +1091,6 @@ export function toLifecycleEvent(m: p.LifecycleEvent): MessageInitShape<typeof w
   return {
     change: numbered(toLifecycleChange, m.change),
     reason: numbered(toStateReason, m.reason),
-    forkedFrom: m.forkedFrom || undefined,
     size: numbered(toSize, m.size),
     diskGib: m.diskGib || undefined,
     stateMessage: m.stateMessage || undefined,
@@ -2400,14 +2396,12 @@ export function toRestoring(m: p.Restoring): MessageInitShape<typeof w.Restoring
 
 export function fromNoCapacity(m: w.NoCapacity): p.NoCapacity {
   return compact<p.NoCapacity>({
-    forkCount: m.forkCount,
     bound: known(fromRoomBound, m.bound),
   });
 }
 
 export function toNoCapacity(m: p.NoCapacity): MessageInitShape<typeof w.NoCapacitySchema> {
   return {
-    forkCount: m.forkCount || undefined,
     bound: numbered(toRoomBound, m.bound),
   } satisfies Fields<w.NoCapacity>;
 }

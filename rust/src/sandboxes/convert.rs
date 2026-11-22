@@ -868,7 +868,6 @@ impl From<types::Sandbox> for wire::Sandbox {
             state_message,
             state_time,
             template,
-            forked_from,
             labels,
             settings,
             revision,
@@ -894,7 +893,6 @@ impl From<types::Sandbox> for wire::Sandbox {
             state_message: self::present(state_message),
             state_time: state_time.map(crate::timestamp::to_wire).into(),
             template: self::present(template),
-            forked_from: self::present(forked_from),
             labels: labels.into_iter().map(wire::Label::from).collect(),
             settings: settings.map(wire::SandboxSettings::from).into(),
             revision: self::present(revision),
@@ -925,7 +923,6 @@ impl From<wire::Sandbox> for types::Sandbox {
             state_message,
             state_time,
             template,
-            forked_from,
             labels,
             settings,
             revision,
@@ -952,7 +949,6 @@ impl From<wire::Sandbox> for types::Sandbox {
             state_message: state_message.unwrap_or_default(),
             state_time: state_time.into_option().map(crate::timestamp::from_wire),
             template: template.unwrap_or_default(),
-            forked_from: forked_from.unwrap_or_default(),
             labels: labels.into_iter().map(types::Label::from).collect(),
             settings: settings.into_option().map(types::SandboxSettings::from),
             revision: revision.unwrap_or_default(),
@@ -1926,7 +1922,6 @@ impl From<types::LifecycleEvent> for wire::LifecycleEvent {
         let types::LifecycleEvent {
             change,
             reason,
-            forked_from,
             size,
             disk_gib,
             state_message,
@@ -1935,7 +1930,6 @@ impl From<types::LifecycleEvent> for wire::LifecycleEvent {
         Self {
             change: self::present(change).map(lifecycle_change_to_wire),
             reason: self::present(reason).map(state_reason_to_wire),
-            forked_from: self::present(forked_from),
             size: self::present(size).map(size_to_wire),
             disk_gib: self::present(disk_gib),
             state_message: self::present(state_message),
@@ -1949,7 +1943,6 @@ impl From<wire::LifecycleEvent> for types::LifecycleEvent {
         let wire::LifecycleEvent {
             change,
             reason,
-            forked_from,
             size,
             disk_gib,
             state_message,
@@ -1959,7 +1952,6 @@ impl From<wire::LifecycleEvent> for types::LifecycleEvent {
         Self {
             change: change.map(lifecycle_change_from_wire).unwrap_or_default(),
             reason: reason.map(state_reason_from_wire).unwrap_or_default(),
-            forked_from: forked_from.unwrap_or_default(),
             size: size.map(size_from_wire).unwrap_or_default(),
             disk_gib: disk_gib.unwrap_or_default(),
             state_message: state_message.unwrap_or_default(),
@@ -4577,10 +4569,9 @@ impl From<wire::Restoring> for types::Restoring {
 
 impl From<types::NoCapacity> for wire::NoCapacity {
     fn from(message: types::NoCapacity) -> Self {
-        let types::NoCapacity { fork_count, bound } = message;
+        let types::NoCapacity { bound } = message;
 
         Self {
-            fork_count: self::present(fork_count),
             bound: self::present(bound).map(room_bound_to_wire),
             __buffa_unknown_fields: Default::default(),
         }
@@ -4590,13 +4581,11 @@ impl From<types::NoCapacity> for wire::NoCapacity {
 impl From<wire::NoCapacity> for types::NoCapacity {
     fn from(message: wire::NoCapacity) -> Self {
         let wire::NoCapacity {
-            fork_count,
             bound,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
-            fork_count: fork_count.unwrap_or_default(),
             bound: bound.map(room_bound_from_wire).unwrap_or_default(),
         }
     }
