@@ -547,9 +547,6 @@ mod samples {
             message.volume_gib = states::plain(k, -(states::number(6, k) as i32));
             message.template_versions = states::plain(k, -(states::number(2, k) as i32));
             message.template_gib = states::plain(k, -(states::number(3, k) as i32));
-            message.starts_per_minute = states::plain(k, -(states::number(7, k) as i32));
-            message.starts_per_hour = states::plain(k, -(states::number(8, k) as i32));
-            message.starts_per_day = states::plain(k, -(states::number(9, k) as i32));
         })
     }
 
@@ -1920,9 +1917,6 @@ mod on_wire {
             volume_gib: states::present(states::plain(k, -(states::number(6, k) as i32))),
             template_versions: states::present(states::plain(k, -(states::number(2, k) as i32))),
             template_gib: states::present(states::plain(k, -(states::number(3, k) as i32))),
-            starts_per_minute: states::present(states::plain(k, -(states::number(7, k) as i32))),
-            starts_per_hour: states::present(states::plain(k, -(states::number(8, k) as i32))),
-            starts_per_day: states::present(states::plain(k, -(states::number(9, k) as i32))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -6494,9 +6488,6 @@ fn limits_is_json() {
         "volume_gib",
         "template_versions",
         "template_gib",
-        "starts_per_minute",
-        "starts_per_hour",
-        "starts_per_day",
     ];
     a_message_is_json(6, &names, samples::limits, on_wire::limits);
 }

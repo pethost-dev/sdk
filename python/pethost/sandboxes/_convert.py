@@ -310,9 +310,6 @@ def limits_from_wire(_w: _pb.Limits) -> _t.Limits:
         volume_gib=_w.volume_gib,
         template_versions=_w.template_versions,
         template_gib=_w.template_gib,
-        starts_per_minute=_w.starts_per_minute,
-        starts_per_hour=_w.starts_per_hour,
-        starts_per_day=_w.starts_per_day,
     )
 
 
@@ -323,9 +320,6 @@ def limits_to_wire(_v: _t.Limits) -> _pb.Limits:
         volume_gib=_v.volume_gib or None,
         template_versions=_v.template_versions or None,
         template_gib=_v.template_gib or None,
-        starts_per_minute=_v.starts_per_minute or None,
-        starts_per_hour=_v.starts_per_hour or None,
-        starts_per_day=_v.starts_per_day or None,
     )
 
 

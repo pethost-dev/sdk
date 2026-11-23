@@ -102,9 +102,6 @@ import * as p from "pethost/sandboxes";
   m.converts("Limits.volume_gib", { volumeGib: -1006 }, { ...empty.Limits(), volumeGib: -1006 });
   m.converts("Limits.template_versions", { templateVersions: -1002 }, { ...empty.Limits(), templateVersions: -1002 });
   m.converts("Limits.template_gib", { templateGib: -1003 }, { ...empty.Limits(), templateGib: -1003 });
-  m.converts("Limits.starts_per_minute", { startsPerMinute: -1007 }, { ...empty.Limits(), startsPerMinute: -1007 });
-  m.converts("Limits.starts_per_hour", { startsPerHour: -1008 }, { ...empty.Limits(), startsPerHour: -1008 });
-  m.converts("Limits.starts_per_day", { startsPerDay: -1009 }, { ...empty.Limits(), startsPerDay: -1009 });
 }
 
 {

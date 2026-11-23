@@ -126,14 +126,6 @@ type Limits struct {
 	// once. A FAILED version takes nothing, and goes a day after it failed.
 	TemplateVersions int32
 	TemplateGib      int32
-	// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-	// [Client.CreateSandbox] and a [Client.ResumeSandbox] of a STOPPED sandbox are each a start,
-	// which costs nothing, and one past a limit is refused ([LimitReached], with
-	// [LimitReached.RetryTime]). [Client.ResumeSandbox] of a PAUSED sandbox, and a wake by a call
-	// into one (IDLE AND WAKE), are never starts. 0 = no limit.
-	StartsPerMinute int32
-	StartsPerHour   int32
-	StartsPerDay    int32
 }
 
 // SetSSHKeysRequest is the request of [Client.SetSSHKeys].
@@ -1500,13 +1492,15 @@ type ToolResult struct {
 // [CodeResourceExhausted]: a limit of the workspace.
 type LimitReached struct {
 	// A field of [Workspace.Limits]: "vcpus", "[Limits.LargestSize]" (max is that Size's number),
-	// "[Limits.VolumeGib]", "[Limits.TemplateVersions]", "[Limits.TemplateGib]",
-	// "[Limits.StartsPerMinute]", "[Limits.StartsPerHour]", "[Limits.StartsPerDay]"; or "secrets",
-	// a bound of every workspace ([Client.SetSecret]).
+	// "[Limits.VolumeGib]", "[Limits.TemplateVersions]", "[Limits.TemplateGib]"; or a bound of
+	// every workspace: "secrets" ([Client.SetSecret]), or "starts_per_minute", the sandboxes it
+	// may start in any minute, against abuse. A start is free: a [Client.CreateSandbox], or a
+	// [Client.ResumeSandbox] of a STOPPED sandbox. A [Client.ResumeSandbox] of a PAUSED one, and a
+	// wake by a call into one (IDLE AND WAKE), are none.
 	Limit string
 	Max   int32
-	// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-	// which may be retried then. Absent = never: a call that asks more starts than the limit.
+	// starts_per_minute: when enough starts have left the minute for the call to fit, which may be
+	// retried then.
 	RetryTime time.Time
 }
 

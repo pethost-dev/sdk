@@ -568,17 +568,6 @@ export interface Limits {
    */
   templateVersions: number;
   templateGib: number;
-  /**
-   * How many sandboxes it may start in any minute, hour and day, each window sliding: a
-   * {@link Sandboxes.createSandbox | createSandbox} and a
-   * {@link Sandboxes.resumeSandbox | resumeSandbox} of a STOPPED sandbox are each a start, which
-   * costs nothing, and one past a limit is refused ({@link LimitReached}, with retryTime).
-   * {@link Sandboxes.resumeSandbox | resumeSandbox} of a PAUSED sandbox, and a wake by a call into
-   * one (IDLE AND WAKE), are never starts. 0 = no limit.
-   */
-  startsPerMinute: number;
-  startsPerHour: number;
-  startsPerDay: number;
 }
 
 /** {@link Limits} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2872,14 +2861,18 @@ export const ToolResult: JsonCodec<ToolResult, ToolResult> = {
 export interface LimitReached {
   /**
    * A field of Workspace.limits: "vcpus", "largestSize" (max is that Size's number), "volumeGib",
-   * "templateVersions", "templateGib", "startsPerMinute", "startsPerHour", "startsPerDay"; or
-   * "secrets", a bound of every workspace ({@link Sandboxes.setSecret | setSecret}).
+   * "templateVersions", "templateGib"; or a bound of every workspace: "secrets"
+   * ({@link Sandboxes.setSecret | setSecret}), or "starts_per_minute", the sandboxes it may start in
+   * any minute, against abuse. A start is free: a {@link Sandboxes.createSandbox | createSandbox},
+   * or a {@link Sandboxes.resumeSandbox | resumeSandbox} of a STOPPED sandbox. A
+   * {@link Sandboxes.resumeSandbox | resumeSandbox} of a PAUSED one, and a wake by a call into one
+   * (IDLE AND WAKE), are none.
    */
   limit: string;
   max: number;
   /**
-   * A starts_per_* limit: when enough of the window's starts have left it for the call to fit, which
-   * may be retried then. Absent = never: a call that asks more starts than the limit.
+   * starts_per_minute: when enough starts have left the minute for the call to fit, which may be
+   * retried then.
    */
   retryTime?: Date;
 }
@@ -3251,7 +3244,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.7.0");
+      request.header.set("User-Agent", "pethost-typescript/0.8.0");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3263,7 +3256,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.7.0");
+      request.header.set("User-Agent", "pethost-typescript/0.8.0");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>

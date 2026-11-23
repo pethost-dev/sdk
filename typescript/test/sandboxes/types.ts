@@ -19,7 +19,7 @@ optional<p.SizeInfo>({ size: true, vcpus: false, memoryMib: false, diskGib: fals
 optional<p.Billing>({ currency: false, includedMicros: false, includedTotalMicros: false, periodEndTime: true, balanceMicros: false, suspended: false, trial: false, rates: true });
 optional<p.Rates>({ storedGibMonth: false, volumeGibMonth: false });
 optional<p.SshKey>({ publicKey: false, comment: false, fingerprint: false });
-optional<p.Limits>({ vcpus: false, largestSize: true, volumeGib: false, templateVersions: false, templateGib: false, startsPerMinute: false, startsPerHour: false, startsPerDay: false });
+optional<p.Limits>({ vcpus: false, largestSize: true, volumeGib: false, templateVersions: false, templateGib: false });
 optional<p.SetSshKeysRequest>({ sshKeys: true, workspace: true });
 optional<p.Secret>({ name: false, hosts: false, updateTime: true });
 optional<p.SetSecretRequest>({ name: true, value: true, hosts: true, workspace: true });

@@ -462,9 +462,6 @@ export function fromLimits(m: w.Limits): p.Limits {
     volumeGib: m.volumeGib,
     templateVersions: m.templateVersions,
     templateGib: m.templateGib,
-    startsPerMinute: m.startsPerMinute,
-    startsPerHour: m.startsPerHour,
-    startsPerDay: m.startsPerDay,
   });
 }
 
@@ -475,9 +472,6 @@ export function toLimits(m: p.Limits): MessageInitShape<typeof w.LimitsSchema> {
     volumeGib: m.volumeGib || undefined,
     templateVersions: m.templateVersions || undefined,
     templateGib: m.templateGib || undefined,
-    startsPerMinute: m.startsPerMinute || undefined,
-    startsPerHour: m.startsPerHour || undefined,
-    startsPerDay: m.startsPerDay || undefined,
   } satisfies Fields<w.Limits>;
 }
 

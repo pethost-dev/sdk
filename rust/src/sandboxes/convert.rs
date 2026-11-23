@@ -687,9 +687,6 @@ impl From<types::Limits> for wire::Limits {
             volume_gib,
             template_versions,
             template_gib,
-            starts_per_minute,
-            starts_per_hour,
-            starts_per_day,
         } = message;
 
         Self {
@@ -698,9 +695,6 @@ impl From<types::Limits> for wire::Limits {
             volume_gib: self::present(volume_gib),
             template_versions: self::present(template_versions),
             template_gib: self::present(template_gib),
-            starts_per_minute: self::present(starts_per_minute),
-            starts_per_hour: self::present(starts_per_hour),
-            starts_per_day: self::present(starts_per_day),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -714,9 +708,6 @@ impl From<wire::Limits> for types::Limits {
             volume_gib,
             template_versions,
             template_gib,
-            starts_per_minute,
-            starts_per_hour,
-            starts_per_day,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -726,9 +717,6 @@ impl From<wire::Limits> for types::Limits {
             volume_gib: volume_gib.unwrap_or_default(),
             template_versions: template_versions.unwrap_or_default(),
             template_gib: template_gib.unwrap_or_default(),
-            starts_per_minute: starts_per_minute.unwrap_or_default(),
-            starts_per_hour: starts_per_hour.unwrap_or_default(),
-            starts_per_day: starts_per_day.unwrap_or_default(),
         }
     }
 }

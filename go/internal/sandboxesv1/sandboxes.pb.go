@@ -2166,9 +2166,6 @@ type Limits struct {
 	xxx_hidden_VolumeGib        int32                  `protobuf:"varint,6,opt,name=volume_gib,json=volumeGib"`
 	xxx_hidden_TemplateVersions int32                  `protobuf:"varint,2,opt,name=template_versions,json=templateVersions"`
 	xxx_hidden_TemplateGib      int32                  `protobuf:"varint,3,opt,name=template_gib,json=templateGib"`
-	xxx_hidden_StartsPerMinute  int32                  `protobuf:"varint,7,opt,name=starts_per_minute,json=startsPerMinute"`
-	xxx_hidden_StartsPerHour    int32                  `protobuf:"varint,8,opt,name=starts_per_hour,json=startsPerHour"`
-	xxx_hidden_StartsPerDay     int32                  `protobuf:"varint,9,opt,name=starts_per_day,json=startsPerDay"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -2237,65 +2234,29 @@ func (x *Limits) GetTemplateGib() int32 {
 	return 0
 }
 
-func (x *Limits) GetStartsPerMinute() int32 {
-	if x != nil {
-		return x.xxx_hidden_StartsPerMinute
-	}
-	return 0
-}
-
-func (x *Limits) GetStartsPerHour() int32 {
-	if x != nil {
-		return x.xxx_hidden_StartsPerHour
-	}
-	return 0
-}
-
-func (x *Limits) GetStartsPerDay() int32 {
-	if x != nil {
-		return x.xxx_hidden_StartsPerDay
-	}
-	return 0
-}
-
 func (x *Limits) SetVcpus(v int32) {
 	x.xxx_hidden_Vcpus = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
 }
 
 func (x *Limits) SetLargestSize(v Size) {
 	x.xxx_hidden_LargestSize = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
 }
 
 func (x *Limits) SetVolumeGib(v int32) {
 	x.xxx_hidden_VolumeGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
 }
 
 func (x *Limits) SetTemplateVersions(v int32) {
 	x.xxx_hidden_TemplateVersions = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
 }
 
 func (x *Limits) SetTemplateGib(v int32) {
 	x.xxx_hidden_TemplateGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
-}
-
-func (x *Limits) SetStartsPerMinute(v int32) {
-	x.xxx_hidden_StartsPerMinute = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
-}
-
-func (x *Limits) SetStartsPerHour(v int32) {
-	x.xxx_hidden_StartsPerHour = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
-}
-
-func (x *Limits) SetStartsPerDay(v int32) {
-	x.xxx_hidden_StartsPerDay = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 8)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
 }
 
 func (x *Limits) HasVcpus() bool {
@@ -2333,27 +2294,6 @@ func (x *Limits) HasTemplateGib() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
-func (x *Limits) HasStartsPerMinute() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
-}
-
-func (x *Limits) HasStartsPerHour() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
-}
-
-func (x *Limits) HasStartsPerDay() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 7)
-}
-
 func (x *Limits) ClearVcpus() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_Vcpus = 0
@@ -2379,21 +2319,6 @@ func (x *Limits) ClearTemplateGib() {
 	x.xxx_hidden_TemplateGib = 0
 }
 
-func (x *Limits) ClearStartsPerMinute() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
-	x.xxx_hidden_StartsPerMinute = 0
-}
-
-func (x *Limits) ClearStartsPerHour() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
-	x.xxx_hidden_StartsPerHour = 0
-}
-
-func (x *Limits) ClearStartsPerDay() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 7)
-	x.xxx_hidden_StartsPerDay = 0
-}
-
 type Limits_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -2416,13 +2341,6 @@ type Limits_builder struct {
 	// takes nothing, and goes a day after it failed.
 	TemplateVersions *int32
 	TemplateGib      *int32
-	// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-	// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-	// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-	// starts. 0 = no limit.
-	StartsPerMinute *int32
-	StartsPerHour   *int32
-	StartsPerDay    *int32
 }
 
 func (b0 Limits_builder) Build() *Limits {
@@ -2430,36 +2348,24 @@ func (b0 Limits_builder) Build() *Limits {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Vcpus != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
 		x.xxx_hidden_Vcpus = *b.Vcpus
 	}
 	if b.LargestSize != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
 		x.xxx_hidden_LargestSize = *b.LargestSize
 	}
 	if b.VolumeGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
 		x.xxx_hidden_VolumeGib = *b.VolumeGib
 	}
 	if b.TemplateVersions != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
 		x.xxx_hidden_TemplateVersions = *b.TemplateVersions
 	}
 	if b.TemplateGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
 		x.xxx_hidden_TemplateGib = *b.TemplateGib
-	}
-	if b.StartsPerMinute != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
-		x.xxx_hidden_StartsPerMinute = *b.StartsPerMinute
-	}
-	if b.StartsPerHour != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
-		x.xxx_hidden_StartsPerHour = *b.StartsPerHour
-	}
-	if b.StartsPerDay != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 8)
-		x.xxx_hidden_StartsPerDay = *b.StartsPerDay
 	}
 	return m0
 }
@@ -19456,12 +19362,14 @@ type LimitReached_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-	// "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-	// "starts_per_day"; or "secrets", a bound of every workspace (SetSecret).
+	// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+	// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
+	// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
+	// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
 	Limit *string
 	Max   *int32
-	// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-	// which may be retried then. Absent = never: a call that asks more starts than the limit.
+	// starts_per_minute: when enough starts have left the minute for the call to fit, which may
+	// be retried then.
 	RetryTime *timestamppb.Timestamp
 }
 
@@ -20089,17 +19997,15 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\n" +
 	"public_key\x18\x01 \x01(\tR\tpublicKey\x12\x18\n" +
 	"\acomment\x18\x02 \x01(\tR\acomment\x12 \n" +
-	"\vfingerprint\x18\x03 \x01(\tR\vfingerprint\"\xcc\x02\n" +
+	"\vfingerprint\x18\x03 \x01(\tR\vfingerprint\"\x98\x02\n" +
 	"\x06Limits\x12\x14\n" +
 	"\x05vcpus\x18\x04 \x01(\x05R\x05vcpus\x12=\n" +
 	"\flargest_size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\vlargestSize\x12\x1d\n" +
 	"\n" +
 	"volume_gib\x18\x06 \x01(\x05R\tvolumeGib\x12+\n" +
 	"\x11template_versions\x18\x02 \x01(\x05R\x10templateVersions\x12!\n" +
-	"\ftemplate_gib\x18\x03 \x01(\x05R\vtemplateGib\x12*\n" +
-	"\x11starts_per_minute\x18\a \x01(\x05R\x0fstartsPerMinute\x12&\n" +
-	"\x0fstarts_per_hour\x18\b \x01(\x05R\rstartsPerHour\x12$\n" +
-	"\x0estarts_per_day\x18\t \x01(\x05R\fstartsPerDayJ\x04\b\x01\x10\x02\"L\n" +
+	"\ftemplate_gib\x18\x03 \x01(\x05R\vtemplateGibJ\x04\b\x01\x10\x02J\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"R\x11starts_per_minuteR\x0fstarts_per_hourR\x0estarts_per_day\"L\n" +
 	"\x11SetSshKeysRequest\x12\x19\n" +
 	"\bssh_keys\x18\x01 \x03(\tR\asshKeys\x12\x1c\n" +
 	"\tworkspace\x18d \x01(\tR\tworkspace\"o\n" +

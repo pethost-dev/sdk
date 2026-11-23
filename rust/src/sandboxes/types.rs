@@ -111,10 +111,6 @@ pub struct Limits {
     /// The workspace's own templates: at most `template_versions` versions of one name, FAILED ones aside, and `template_gib` GiB in all of what its versions take in object storage ([`Workspace::template_bytes`](crate::sandboxes::types::Workspace::template_bytes)), which is not billed. A [`Client::create_template`](crate::sandboxes::Client::create_template) past either, or while another version is SAVING, is refused ([`LimitReached`](crate::sandboxes::types::LimitReached)); a version whose own bytes would pass `template_gib` is FAILED before its upload. [`Client::delete_template`](crate::sandboxes::Client::delete_template) makes room at once. A FAILED version takes nothing, and goes a day after it failed.
     pub template_versions: i32,
     pub template_gib: i32,
-    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox) and a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused ([`LimitReached`](crate::sandboxes::types::LimitReached), with `retry_time`). [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never starts. 0 = no limit.
-    pub starts_per_minute: i32,
-    pub starts_per_hour: i32,
-    pub starts_per_day: i32,
 }
 
 /// What usage counts (USAGE). Templates are not billed: [`Limits::template_gib`](crate::sandboxes::types::Limits::template_gib) bounds them.
@@ -1601,10 +1597,10 @@ pub struct ToolResult {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct LimitReached {
-    /// A field of [`Workspace::limits`](crate::sandboxes::types::Workspace::limits): \"vcpus\", \"`largest_size`\" (max is that Size's number), \"`volume_gib`\", \"`template_versions`\", \"`template_gib`\", \"`starts_per_minute`\", \"`starts_per_hour`\", \"`starts_per_day`\"; or \"secrets\", a bound of every workspace ([`Client::set_secret`](crate::sandboxes::Client::set_secret)).
+    /// A field of [`Workspace::limits`](crate::sandboxes::types::Workspace::limits): \"vcpus\", \"`largest_size`\" (max is that Size's number), \"`volume_gib`\", \"`template_versions`\", \"`template_gib`\"; or a bound of every workspace: \"secrets\" ([`Client::set_secret`](crate::sandboxes::Client::set_secret)), or \"`starts_per_minute`\", the sandboxes it may start in any minute, against abuse. A start is free: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), or a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox. A [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     pub limit: ::std::string::String,
     pub max: i32,
-    /// A `starts_per_`\* limit: when enough of the window's starts have left it for the call to fit, which may be retried then. Absent = never: a call that asks more starts than the limit.
+    /// `starts_per_minute`: when enough starts have left the minute for the call to fit, which may be retried then.
     pub retry_time: ::core::option::Option<crate::Timestamp>,
 }
 

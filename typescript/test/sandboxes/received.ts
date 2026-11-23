@@ -20,7 +20,7 @@ export const empty = {
   Billing: () => ({ currency: "", includedMicros: 0n, includedTotalMicros: 0n, balanceMicros: 0n, suspended: false, trial: false }),
   Rates: () => ({ storedGibMonth: 0, volumeGibMonth: 0 }),
   SshKey: () => ({ publicKey: "", comment: "", fingerprint: "" }),
-  Limits: () => ({ vcpus: 0, volumeGib: 0, templateVersions: 0, templateGib: 0, startsPerMinute: 0, startsPerHour: 0, startsPerDay: 0 }),
+  Limits: () => ({ vcpus: 0, volumeGib: 0, templateVersions: 0, templateGib: 0 }),
   SetSshKeysRequest: () => ({ sshKeys: [], workspace: "" }),
   Secret: () => ({ name: "", hosts: [] }),
   SetSecretRequest: () => ({ name: "", value: "", hosts: [], workspace: "" }),
@@ -208,9 +208,6 @@ export const empty = {
   m.reads("Limits.volume_gib", { volumeGib: -1006 }, { ...empty.Limits(), volumeGib: -1006 });
   m.reads("Limits.template_versions", { templateVersions: -1002 }, { ...empty.Limits(), templateVersions: -1002 });
   m.reads("Limits.template_gib", { templateGib: -1003 }, { ...empty.Limits(), templateGib: -1003 });
-  m.reads("Limits.starts_per_minute", { startsPerMinute: -1007 }, { ...empty.Limits(), startsPerMinute: -1007 });
-  m.reads("Limits.starts_per_hour", { startsPerHour: -1008 }, { ...empty.Limits(), startsPerHour: -1008 });
-  m.reads("Limits.starts_per_day", { startsPerDay: -1009 }, { ...empty.Limits(), startsPerDay: -1009 });
 }
 
 {

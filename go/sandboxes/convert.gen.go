@@ -139,9 +139,6 @@ func fromWireLimits(w *sandboxesv1.Limits) Limits {
 		w.GetVolumeGib(),
 		w.GetTemplateVersions(),
 		w.GetTemplateGib(),
-		w.GetStartsPerMinute(),
-		w.GetStartsPerHour(),
-		w.GetStartsPerDay(),
 	}
 }
 
@@ -152,9 +149,6 @@ func toWireLimits(v Limits) *sandboxesv1.Limits {
 		VolumeGib:        nonZero(v.VolumeGib),
 		TemplateVersions: nonZero(v.TemplateVersions),
 		TemplateGib:      nonZero(v.TemplateGib),
-		StartsPerMinute:  nonZero(v.StartsPerMinute),
-		StartsPerHour:    nonZero(v.StartsPerHour),
-		StartsPerDay:     nonZero(v.StartsPerDay),
 	}
 	return b.Build()
 }

@@ -698,10 +698,6 @@ class Limits:
             another version is SAVING, is refused (LimitReached); a version whose own bytes would pass
             template_gib is FAILED before its upload. delete_template makes room at once. A FAILED version
             takes nothing, and goes a day after it failed.
-        starts_per_minute: How many sandboxes it may start in any minute, hour and day, each window sliding: a
-            create_sandbox and a resume_sandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-            resume_sandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-            starts. 0 = no limit.
     """
 
     vcpus: int = 0
@@ -729,17 +725,6 @@ class Limits:
     """
 
     template_gib: int = 0
-
-    starts_per_minute: int = 0
-    """How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    create_sandbox and a resume_sandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-    resume_sandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-    starts. 0 = no limit.
-    """
-
-    starts_per_hour: int = 0
-
-    starts_per_day: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -4060,23 +4045,27 @@ class LimitReached:
 
     Attributes:
         limit: A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-            "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-            "starts_per_day"; or "secrets", a bound of every workspace (set_secret).
-        retry_time: A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-            which may be retried then. Absent = never: a call that asks more starts than the limit.
+            "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+            (set_secret), or "starts_per_minute", the sandboxes it may start in any minute, against
+            abuse. A start is free: a create_sandbox, or a resume_sandbox of a STOPPED sandbox. A
+            resume_sandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
+        retry_time: starts_per_minute: when enough starts have left the minute for the call to fit, which may
+            be retried then.
     """
 
     limit: str = ""
     """A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-    "starts_per_day"; or "secrets", a bound of every workspace (set_secret).
+    "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    (set_secret), or "starts_per_minute", the sandboxes it may start in any minute, against
+    abuse. A start is free: a create_sandbox, or a resume_sandbox of a STOPPED sandbox. A
+    resume_sandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     """
 
     max: int = 0
 
     retry_time: datetime | None = None
-    """A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    which may be retried then. Absent = never: a call that asks more starts than the limit.
+    """starts_per_minute: when enough starts have left the minute for the call to fit, which may
+    be retried then.
     """
 
     def to_dict(self) -> dict[str, Any]:

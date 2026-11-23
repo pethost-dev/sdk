@@ -495,9 +495,6 @@ func sampleLimits(s seed) Limits {
 		VolumeGib:        plain[int32](s.at("pethost.sandboxes.v1.Limits.volume_gib")),
 		TemplateVersions: plain[int32](s.at("pethost.sandboxes.v1.Limits.template_versions")),
 		TemplateGib:      plain[int32](s.at("pethost.sandboxes.v1.Limits.template_gib")),
-		StartsPerMinute:  plain[int32](s.at("pethost.sandboxes.v1.Limits.starts_per_minute")),
-		StartsPerHour:    plain[int32](s.at("pethost.sandboxes.v1.Limits.starts_per_hour")),
-		StartsPerDay:     plain[int32](s.at("pethost.sandboxes.v1.Limits.starts_per_day")),
 	}
 }
 

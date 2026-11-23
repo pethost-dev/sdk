@@ -12,7 +12,7 @@ documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.7.0
+go get github.com/pethost-dev/sdk/go@v0.8.0
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an
@@ -379,8 +379,8 @@ holds. In the EU.
   next call wakes it in about 0.1 s, exactly where it was. Idle longer, it stops: its disk goes to
   object storage at $0.03 per GiB a month of its own data. Nothing is deleted unless a timer says
   so.
-- **Starts are free:** creating and starting a stopped sandbox cost nothing, up to a
-  plan's starts per minute, hour and day.
+- **Starts are free and unlimited:** creating and starting a stopped sandbox cost nothing, and no
+  plan counts them; one limit against abuse, 300 a minute, is the same for every workspace.
 - **API keys never enter a sandbox:** it sees a placeholder, and the egress proxy puts the key in
   HTTPS request headers, only to the hosts named. An egress allow-list by domain, wildcard, IP or
   CIDR; DNS answers only allowed names.

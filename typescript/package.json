@@ -1,6 +1,6 @@
 {
   "name": "pethost",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "TypeScript and JavaScript SDK for Pethost: App Platform (Docker Compose projects at one flat price) and Agent Sandboxes (Firecracker microVMs for code and coding agents).",
   "keywords": ["pethost", "hosting", "deploy", "docker", "docker compose", "paas", "sandbox", "firecracker", "microvm", "ai agents", "api", "sdk", "client"],
   "homepage": "https://pethost.dev",

@@ -4733,32 +4733,6 @@ pub struct Limits {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub template_gib: ::core::option::Option<i32>,
-    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-    /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-    /// starts. 0 = no limit.
-    ///
-    /// Field 7: `starts_per_minute`
-    #[serde(
-        rename = "starts_per_minute",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub starts_per_minute: ::core::option::Option<i32>,
-    /// Field 8: `starts_per_hour`
-    #[serde(
-        rename = "starts_per_hour",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub starts_per_hour: ::core::option::Option<i32>,
-    /// Field 9: `starts_per_day`
-    #[serde(
-        rename = "starts_per_day",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub starts_per_day: ::core::option::Option<i32>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -4771,9 +4745,6 @@ impl ::core::fmt::Debug for Limits {
             .field("volume_gib", &self.volume_gib)
             .field("template_versions", &self.template_versions)
             .field("template_gib", &self.template_gib)
-            .field("starts_per_minute", &self.starts_per_minute)
-            .field("starts_per_hour", &self.starts_per_hour)
-            .field("starts_per_day", &self.starts_per_day)
             .finish()
     }
 }
@@ -4823,27 +4794,6 @@ impl Limits {
         self.template_gib = Some(value);
         self
     }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::starts_per_minute`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_starts_per_minute(mut self, value: i32) -> Self {
-        self.starts_per_minute = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::starts_per_hour`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_starts_per_hour(mut self, value: i32) -> Self {
-        self.starts_per_hour = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::starts_per_day`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_starts_per_day(mut self, value: i32) -> Self {
-        self.starts_per_day = Some(value);
-        self
-    }
 }
 ::buffa::impl_default_instance!(Limits);
 impl ::buffa::MessageName for Limits {
@@ -4880,15 +4830,6 @@ impl ::buffa::Message for Limits {
         if let Some(v) = self.volume_gib {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
-        if let Some(v) = self.starts_per_minute {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.starts_per_hour {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.starts_per_day {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4913,15 +4854,6 @@ impl ::buffa::Message for Limits {
         }
         if let Some(v) = self.volume_gib {
             ::buffa::types::put_int32_field(6u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_minute {
-            ::buffa::types::put_int32_field(7u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_hour {
-            ::buffa::types::put_int32_field(8u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_day {
-            ::buffa::types::put_int32_field(9u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -4981,33 +4913,6 @@ impl ::buffa::Message for Limits {
                     ::buffa::types::decode_int32(buf)?,
                 );
             }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.starts_per_minute = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.starts_per_hour = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            9u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.starts_per_day = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -5021,9 +4926,6 @@ impl ::buffa::Message for Limits {
         self.vcpus = ::core::option::Option::None;
         self.largest_size = ::core::option::Option::None;
         self.volume_gib = ::core::option::Option::None;
-        self.starts_per_minute = ::core::option::Option::None;
-        self.starts_per_hour = ::core::option::Option::None;
-        self.starts_per_day = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -30258,8 +30160,10 @@ pub const __TOOL_RESULT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa
 #[serde(default)]
 pub struct LimitReached {
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-    /// "starts_per_day"; or "secrets", a bound of every workspace (SetSecret).
+    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
+    /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
+    /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     ///
     /// Field 1: `limit`
     #[serde(rename = "limit", skip_serializing_if = "::core::option::Option::is_none")]
@@ -30271,8 +30175,8 @@ pub struct LimitReached {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub max: ::core::option::Option<i32>,
-    /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
+    /// starts_per_minute: when enough starts have left the minute for the call to fit, which may
+    /// be retried then.
     ///
     /// Field 3: `retry_time`
     #[serde(

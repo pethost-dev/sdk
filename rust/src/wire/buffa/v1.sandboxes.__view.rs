@@ -2457,17 +2457,6 @@ pub struct LimitsView<'a> {
     pub template_versions: ::core::option::Option<i32>,
     /// Field 3: `template_gib`
     pub template_gib: ::core::option::Option<i32>,
-    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-    /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-    /// starts. 0 = no limit.
-    ///
-    /// Field 7: `starts_per_minute`
-    pub starts_per_minute: ::core::option::Option<i32>,
-    /// Field 8: `starts_per_hour`
-    pub starts_per_hour: ::core::option::Option<i32>,
-    /// Field 9: `starts_per_day`
-    pub starts_per_day: ::core::option::Option<i32>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for LimitsView<'a> {
@@ -2537,27 +2526,6 @@ impl<'a> ::buffa::MessageView<'a> for LimitsView<'a> {
                 )?;
                 view.template_gib = Some(::buffa::types::decode_int32(&mut cur)?);
             }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.starts_per_minute = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.starts_per_hour = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            9u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.starts_per_day = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -2585,9 +2553,6 @@ impl<'a> ::buffa::MessageView<'a> for LimitsView<'a> {
             volume_gib: self.volume_gib,
             template_versions: self.template_versions,
             template_gib: self.template_gib,
-            starts_per_minute: self.starts_per_minute,
-            starts_per_hour: self.starts_per_hour,
-            starts_per_day: self.starts_per_day,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -2612,15 +2577,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LimitsView<'a> {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
         if let Some(v) = self.volume_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.starts_per_minute {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.starts_per_hour {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.starts_per_day {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -2648,15 +2604,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LimitsView<'a> {
         }
         if let Some(v) = self.volume_gib {
             ::buffa::types::put_int32_field(6u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_minute {
-            ::buffa::types::put_int32_field(7u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_hour {
-            ::buffa::types::put_int32_field(8u32, v, buf);
-        }
-        if let Some(v) = self.starts_per_day {
-            ::buffa::types::put_int32_field(9u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -2700,27 +2647,6 @@ impl<'__a> ::serde::Serialize for LimitsView<'__a> {
             __map
                 .serialize_entry(
                     "template_gib",
-                    &::buffa::json_helpers::ProtoJson(&__v),
-                )?;
-        }
-        if let ::core::option::Option::Some(__v) = self.starts_per_minute {
-            __map
-                .serialize_entry(
-                    "starts_per_minute",
-                    &::buffa::json_helpers::ProtoJson(&__v),
-                )?;
-        }
-        if let ::core::option::Option::Some(__v) = self.starts_per_hour {
-            __map
-                .serialize_entry(
-                    "starts_per_hour",
-                    &::buffa::json_helpers::ProtoJson(&__v),
-                )?;
-        }
-        if let ::core::option::Option::Some(__v) = self.starts_per_day {
-            __map
-                .serialize_entry(
-                    "starts_per_day",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -2855,26 +2781,6 @@ impl LimitsOwnedView {
     #[must_use]
     pub fn template_gib(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().template_gib
-    }
-    /// How many sandboxes it may start in any minute, hour and day, each window sliding: a
-    /// CreateSandbox and a ResumeSandbox of a STOPPED sandbox are each a start, which costs nothing, and one past a limit is refused (LimitReached, with retry_time).
-    /// ResumeSandbox of a PAUSED sandbox, and a wake by a call into one (IDLE AND WAKE), are never
-    /// starts. 0 = no limit.
-    ///
-    /// Field 7: `starts_per_minute`
-    #[must_use]
-    pub fn starts_per_minute(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().starts_per_minute
-    }
-    /// Field 8: `starts_per_hour`
-    #[must_use]
-    pub fn starts_per_hour(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().starts_per_hour
-    }
-    /// Field 9: `starts_per_day`
-    #[must_use]
-    pub fn starts_per_day(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().starts_per_day
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<LimitsView<'static>>> for LimitsOwnedView {
@@ -38710,15 +38616,17 @@ impl ::serde::Serialize for ToolResultOwnedView {
 #[derive(Clone, Debug, Default)]
 pub struct LimitReachedView<'a> {
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-    /// "starts_per_day"; or "secrets", a bound of every workspace (SetSecret).
+    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
+    /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
+    /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     ///
     /// Field 1: `limit`
     pub limit: ::core::option::Option<&'a str>,
     /// Field 2: `max`
     pub max: ::core::option::Option<i32>,
-    /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
+    /// starts_per_minute: when enough starts have left the minute for the call to fit, which may
+    /// be retried then.
     ///
     /// Field 3: `retry_time`
     pub retry_time: ::buffa::MessageFieldView<
@@ -38998,8 +38906,10 @@ impl LimitReachedOwnedView {
         self.0.into_bytes()
     }
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib", "starts_per_minute", "starts_per_hour",
-    /// "starts_per_day"; or "secrets", a bound of every workspace (SetSecret).
+    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
+    /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
+    /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     ///
     /// Field 1: `limit`
     #[must_use]
@@ -39011,8 +38921,8 @@ impl LimitReachedOwnedView {
     pub fn max(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().max
     }
-    /// A starts_per_* limit: when enough of the window's starts have left it for the call to fit,
-    /// which may be retried then. Absent = never: a call that asks more starts than the limit.
+    /// starts_per_minute: when enough starts have left the minute for the call to fit, which may
+    /// be retried then.
     ///
     /// Field 3: `retry_time`
     #[must_use]
