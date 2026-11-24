@@ -20,14 +20,13 @@ edition = "2024";
 // Without a shell, give the person Sandbox.panel_url: its terminal and desktop, once signed in.
 //
 // MODEL
-//   Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+//   Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 //     its workspace, any other on its `workspace`, else the caller's only one.
 //   Sandbox (sandbox_id; a name if given, unique in its workspace, which ListSandboxes finds): a
 //     microVM from a template: RUNNING; PAUSED, memory, processes and disk kept on its server,
 //     never refused for room; STOPPED, its disk in object storage, processes ended; DELETED.
 //   Template ("name" or "name@version"): what a sandbox starts from: "base" (Ubuntu, Python,
 //     Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
-//   Volume (volume_id): a disk that outlives sandboxes, mounted into them at a path.
 //   Secret (name): a value the workspace keeps and no sandbox holds.
 //
 // IDLE AND WAKE
@@ -72,7 +71,7 @@ import option "v1/optional.proto";
 import option "v1/sdk.proto";
 
 // The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-// volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+// events and usage. Answered by the panel, at the same address as Pethost's PanelService,
 // with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 //
 // Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -199,7 +198,7 @@ service SandboxService {
   // counts against Limits.vcpus and
   // largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
   // own server when that server has room for it, else
-  // on another with room, when it mounts no volume and its copy is current: its server lets it go
+  // on another with room, when its copy is current: its server lets it go
   // first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
   // in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
   // STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -214,8 +213,7 @@ service SandboxService {
     option (pethost.panel.v1.mcp_tool) = {title: "Resume a sandbox"};
   }
 
-  // Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-  // included. A DELETED sandbox is answered with that record.
+  // Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
   rpc DeleteSandbox(DeleteSandboxRequest) returns (Sandbox) {
     option idempotency_level = IDEMPOTENT;
     option (pethost.panel.v1.mcp_tool) = {title: "Delete a sandbox", destructive: true};
@@ -286,26 +284,6 @@ service SandboxService {
   rpc DeleteTemplate(DeleteTemplateRequest) returns (Template) {
     option idempotency_level = IDEMPOTENT;
     option (pethost.panel.v1.sdk_method) = {title: "Delete a template"};
-  }
-
-  // ── Volumes ──────────────────────────────────────────────────────────────
-
-  // A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-  // while nothing pays for the workspace (UsageUnpaid).
-  rpc CreateVolume(CreateVolumeRequest) returns (Volume) {
-    option (pethost.panel.v1.sdk_method) = {title: "Create a volume"};
-  }
-
-  // The workspace's volumes.
-  rpc ListVolumes(ListVolumesRequest) returns (ListVolumesResponse) {
-    option idempotency_level = NO_SIDE_EFFECTS;
-    option (pethost.panel.v1.sdk_method) = {title: "List volumes"};
-  }
-
-  // Refused while a sandbox mounts it.
-  rpc DeleteVolume(DeleteVolumeRequest) returns (Volume) {
-    option idempotency_level = IDEMPOTENT;
-    option (pethost.panel.v1.sdk_method) = {title: "Delete a volume"};
   }
 
   // ── Usage ────────────────────────────────────────────────────────────────
@@ -490,9 +468,7 @@ message Workspace {
   // What its own template versions take in object storage now (Template.size_bytes, SAVING ones
   // counted as 0): what Limits.template_gib holds.
   int64 template_bytes = 8;
-  // What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
-  int32 vcpus_used = 9;
-  int32 volume_gib_used = 10;
+  int32 vcpus_used = 9; // What its sandboxes count of Limits.vcpus now.
 }
 
 
@@ -532,7 +508,7 @@ message Billing {
   int64 balance_micros = 5;
   // True = nothing pays for its usage now: the included usage is used up and the balance is
   // empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-  // starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+  // starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
   // adds to the balance or the plan's next period begins.
   // What it stores is still counted.
   bool suspended = 6;
@@ -543,12 +519,11 @@ message Billing {
 }
 
 // What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-// the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+// the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
 // PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 message Rates {
   reserved 1, 2, 3, 4;
   double stored_gib_month = 5; // Meter.STORED_GIB: what a STOPPED sandbox holds in object storage.
-  double volume_gib_month = 6; // Meter.VOLUME_GIB: a volume's whole size.
 }
 
 message SshKey {
@@ -571,8 +546,6 @@ message Limits {
   int32 vcpus = 4;
   // The largest size it may create, start or change a sandbox to.
   Size largest_size = 5;
-  // The most GiB its volumes may take together (CreateVolume).
-  int32 volume_gib = 6;
   // The workspace's own templates: at most template_versions versions of one name, FAILED ones
   // aside, and template_gib GiB in all of what its versions take in object storage
   // (Workspace.template_bytes), which is not billed. A CreateTemplate past either, or while
@@ -591,7 +564,6 @@ enum Meter {
   METER_PAUSED = 9; // A second of a PAUSED sandbox, at its size (UsageRow.size).
   // A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
   METER_STORED_GIB = 7;
-  METER_VOLUME_GIB = 8; // A GiB of a volume's size.
 }
 
 message SetSshKeysRequest {
@@ -668,12 +640,11 @@ message DeleteSecretRequest {
 // out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
 // space"), its disk kept.
 //
-// A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-// no room for it (ResumeSandbox), its addresses with it. If a server is lost, each of its
-// sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-// starts on another server at its next ResumeSandbox; one without a copy is DELETED, as are its
-// volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-// (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+// A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+// (ResumeSandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+// is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+// server at its next ResumeSandbox; one without a copy is DELETED. While nothing pays for its
+// workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
 // starts.
 message Sandbox {
   reserved 7, 8, 18, 21;
@@ -693,7 +664,6 @@ message Sandbox {
   // grows it to the new size's. No size whose disk is smaller is allowed
   // (SIZES).
   int32 disk_gib = 12;
-  repeated Mount mounts = 13;
   Desktop desktop = 14; // Its screen: every sandbox has one (ControlDesktop).
   // "ssh <id>@<server> -p 2222": signs in with a key of the workspace, or a ConnectSandbox token
   // as the password.
@@ -780,10 +750,9 @@ enum StateReason {
 // its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
 // place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
 // bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-// empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-// minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-// twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-// ListUsage).
+// empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+// turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+// where the one before it was counted to (Sandbox.usage, ListUsage).
 message Usage {
   reserved 2, 3, 4, 5;
   int64 running_seconds = 1; // At every size, each run 10 seconds at least.
@@ -800,7 +769,6 @@ message CreateSandboxRequest {
   // To add to the template's variables, send them too (ListTemplates: Template.settings).
   SandboxSettings settings = 3;
   repeated Label labels = 4; // For ListSandboxes' filter. At most 32.
-  repeated Mount mounts = 6; // At most 4, at create only.
   // Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
   // and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
   string name = 8;
@@ -1180,51 +1148,6 @@ message ListTemplatesResponse {
 
 message DeleteTemplateRequest {
   string name = 1;
-  string workspace = 100;
-}
-
-// ── Volumes ────────────────────────────────────────────────────────────────
-
-message Volume {
-  reserved 4, 8;
-  string volume_id = 1;
-  string name = 2;
-  int32 size_gib = 3; // Counted as storage, used or not.
-  int64 used_bytes = 5;
-  repeated string mounted_by = 6; // Sandbox ids.
-  google.protobuf.Timestamp create_time = 7;
-}
-
-// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-// any number.
-message Mount {
-  string volume_id = 1;
-  string path = 2; // Absolute: /data. At most 255 bytes.
-  bool read_only = 3;
-}
-
-message CreateVolumeRequest {
-  string name = 1;
-  int32 size_gib = 2; // 1 to 1000.
-  // Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-  // nothing again and answers what the first call did (24 h).
-  string request_id = 101;
-  string workspace = 100;
-}
-
-message ListVolumesRequest {
-  int32 page_size = 1; // Absent = 50; at most 500.
-  string page_token = 2;
-  string workspace = 100;
-}
-
-message ListVolumesResponse {
-  repeated Volume volumes = 1;
-  string next_page_token = 2; // Absent on the last page.
-}
-
-message DeleteVolumeRequest {
-  string volume_id = 1;
   string workspace = 100;
 }
 
@@ -1742,7 +1665,7 @@ message ToolResult {
 // RESOURCE_EXHAUSTED: a limit of the workspace.
 message LimitReached {
   // A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-  // "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+  // "template_versions", "template_gib"; or a bound of every workspace: "secrets"
   // (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
   // abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
   // ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -1759,7 +1682,7 @@ message LimitReached {
 message Stopped {}
 
 // FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the
-// call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+// call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
 // the balance, or starts the plan if it is in its trial, in the workspace's settings.
 message UsageUnpaid {}
 
@@ -1788,7 +1711,7 @@ enum RoomBound {
   ROOM_BOUND_SHORT_MEMORY = 2;
   // Its disk has no more free space than it keeps, what it could evict gone: try again later.
   ROOM_BOUND_DISK = 3;
-  // The disks and volumes it holds reach as much as it holds: try again later.
+  // The disks it holds reach as much as it holds: try again later.
   ROOM_BOUND_DISK_CAP = 4;
   reserved 5, 6;
 }

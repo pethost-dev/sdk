@@ -33,7 +33,7 @@
 //     [EnvVarSource] with [EnvVarValue] and [EnvVarSecret]: set the field to a value of a
 //     member's type, and read it with a type switch. nil = none.
 //   - An enum is an integer type with a constant for each value, which prints as the API's
-//     comments write it: "VOLUME_GIB".
+//     comments write it: "STORED_GIB".
 //
 // # JSON
 //
@@ -68,7 +68,7 @@
 //
 // # Model
 //
-// Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+// Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 //
 //	its workspace, any other on its `workspace`, else the caller's only one.
 //
@@ -82,8 +82,7 @@
 //
 //	Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
 //
-// Volume (VolumeID): a disk that outlives sandboxes, mounted into them at a path. Secret
-// (name): a value the workspace keeps and no sandbox holds.
+// Secret (name): a value the workspace keeps and no sandbox holds.
 //
 // # Idle and wake
 //

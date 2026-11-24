@@ -36,8 +36,8 @@ type Error struct {
 	Stopped *Stopped
 
 	// [CodeFailedPrecondition]: nothing pays for the workspace's usage now ([Billing.Suspended]),
-	// so the call starts, resumes or wakes no sandbox, and makes no volume or template: its owner
-	// adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
+	// so the call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
+	// the balance, or starts the plan if it is in its trial, in the workspace's settings.
 	//
 	// nil = the API sent no such detail.
 	UsageUnpaid *UsageUnpaid

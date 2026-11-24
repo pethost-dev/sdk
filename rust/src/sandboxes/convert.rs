@@ -21,7 +21,6 @@ pub(crate) fn meter_from_wire(value: buffa::EnumValue<wire::Meter>) -> types::Me
         buffa::EnumValue::Known(wire::Meter::METER_RUNNING) => types::Meter::Running,
         buffa::EnumValue::Known(wire::Meter::METER_PAUSED) => types::Meter::Paused,
         buffa::EnumValue::Known(wire::Meter::METER_STORED_GIB) => types::Meter::StoredGib,
-        buffa::EnumValue::Known(wire::Meter::METER_VOLUME_GIB) => types::Meter::VolumeGib,
         buffa::EnumValue::Unknown(number) => types::Meter::Unrecognized(number),
     }
 }
@@ -32,7 +31,6 @@ pub(crate) fn meter_to_wire(value: types::Meter) -> buffa::EnumValue<wire::Meter
         types::Meter::Running => buffa::EnumValue::Known(wire::Meter::METER_RUNNING),
         types::Meter::Paused => buffa::EnumValue::Known(wire::Meter::METER_PAUSED),
         types::Meter::StoredGib => buffa::EnumValue::Known(wire::Meter::METER_STORED_GIB),
-        types::Meter::VolumeGib => buffa::EnumValue::Known(wire::Meter::METER_VOLUME_GIB),
         types::Meter::Unrecognized(number) => buffa::EnumValue::from(number),
     }
 }
@@ -465,7 +463,6 @@ impl From<types::Workspace> for wire::Workspace {
             sizes,
             template_bytes,
             vcpus_used,
-            volume_gib_used,
         } = message;
 
         Self {
@@ -478,7 +475,6 @@ impl From<types::Workspace> for wire::Workspace {
             sizes: sizes.into_iter().map(wire::SizeInfo::from).collect(),
             template_bytes: self::present(template_bytes),
             vcpus_used: self::present(vcpus_used),
-            volume_gib_used: self::present(volume_gib_used),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -496,7 +492,6 @@ impl From<wire::Workspace> for types::Workspace {
             sizes,
             template_bytes,
             vcpus_used,
-            volume_gib_used,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -510,7 +505,6 @@ impl From<wire::Workspace> for types::Workspace {
             sizes: sizes.into_iter().map(types::SizeInfo::from).collect(),
             template_bytes: template_bytes.unwrap_or_default(),
             vcpus_used: vcpus_used.unwrap_or_default(),
-            volume_gib_used: volume_gib_used.unwrap_or_default(),
         }
     }
 }
@@ -617,14 +611,10 @@ impl From<wire::Billing> for types::Billing {
 
 impl From<types::Rates> for wire::Rates {
     fn from(message: types::Rates) -> Self {
-        let types::Rates {
-            stored_gib_month,
-            volume_gib_month,
-        } = message;
+        let types::Rates { stored_gib_month } = message;
 
         Self {
             stored_gib_month: self::present(stored_gib_month),
-            volume_gib_month: self::present(volume_gib_month),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -634,13 +624,11 @@ impl From<wire::Rates> for types::Rates {
     fn from(message: wire::Rates) -> Self {
         let wire::Rates {
             stored_gib_month,
-            volume_gib_month,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             stored_gib_month: stored_gib_month.unwrap_or_default(),
-            volume_gib_month: volume_gib_month.unwrap_or_default(),
         }
     }
 }
@@ -684,7 +672,6 @@ impl From<types::Limits> for wire::Limits {
         let types::Limits {
             vcpus,
             largest_size,
-            volume_gib,
             template_versions,
             template_gib,
         } = message;
@@ -692,7 +679,6 @@ impl From<types::Limits> for wire::Limits {
         Self {
             vcpus: self::present(vcpus),
             largest_size: self::present(largest_size).map(size_to_wire),
-            volume_gib: self::present(volume_gib),
             template_versions: self::present(template_versions),
             template_gib: self::present(template_gib),
             __buffa_unknown_fields: Default::default(),
@@ -705,7 +691,6 @@ impl From<wire::Limits> for types::Limits {
         let wire::Limits {
             vcpus,
             largest_size,
-            volume_gib,
             template_versions,
             template_gib,
             __buffa_unknown_fields: _,
@@ -714,7 +699,6 @@ impl From<wire::Limits> for types::Limits {
         Self {
             vcpus: vcpus.unwrap_or_default(),
             largest_size: largest_size.map(size_from_wire).unwrap_or_default(),
-            volume_gib: volume_gib.unwrap_or_default(),
             template_versions: template_versions.unwrap_or_default(),
             template_gib: template_gib.unwrap_or_default(),
         }
@@ -860,7 +844,6 @@ impl From<types::Sandbox> for wire::Sandbox {
             settings,
             revision,
             disk_gib,
-            mounts,
             desktop,
             ssh_command,
             panel_url,
@@ -885,7 +868,6 @@ impl From<types::Sandbox> for wire::Sandbox {
             settings: settings.map(wire::SandboxSettings::from).into(),
             revision: self::present(revision),
             disk_gib: self::present(disk_gib),
-            mounts: mounts.into_iter().map(wire::Mount::from).collect(),
             desktop: desktop.map(wire::Desktop::from).into(),
             ssh_command: self::present(ssh_command),
             panel_url: self::present(panel_url),
@@ -915,7 +897,6 @@ impl From<wire::Sandbox> for types::Sandbox {
             settings,
             revision,
             disk_gib,
-            mounts,
             desktop,
             ssh_command,
             panel_url,
@@ -941,7 +922,6 @@ impl From<wire::Sandbox> for types::Sandbox {
             settings: settings.into_option().map(types::SandboxSettings::from),
             revision: revision.unwrap_or_default(),
             disk_gib: disk_gib.unwrap_or_default(),
-            mounts: mounts.into_iter().map(types::Mount::from).collect(),
             desktop: desktop.into_option().map(types::Desktop::from),
             ssh_command: ssh_command.unwrap_or_default(),
             panel_url: panel_url.unwrap_or_default(),
@@ -1031,7 +1011,6 @@ impl From<types::CreateSandboxRequest> for wire::CreateSandboxRequest {
             template,
             settings,
             labels,
-            mounts,
             name,
             request_id,
             workspace,
@@ -1041,7 +1020,6 @@ impl From<types::CreateSandboxRequest> for wire::CreateSandboxRequest {
             template: self::present(template),
             settings: settings.map(wire::SandboxSettings::from).into(),
             labels: labels.into_iter().map(wire::Label::from).collect(),
-            mounts: mounts.into_iter().map(wire::Mount::from).collect(),
             name: self::present(name),
             request_id: self::present(request_id),
             workspace: self::present(workspace),
@@ -1056,7 +1034,6 @@ impl From<wire::CreateSandboxRequest> for types::CreateSandboxRequest {
             template,
             settings,
             labels,
-            mounts,
             name,
             request_id,
             workspace,
@@ -1067,7 +1044,6 @@ impl From<wire::CreateSandboxRequest> for types::CreateSandboxRequest {
             template: template.unwrap_or_default(),
             settings: settings.into_option().map(types::SandboxSettings::from),
             labels: labels.into_iter().map(types::Label::from).collect(),
-            mounts: mounts.into_iter().map(types::Mount::from).collect(),
             name: name.unwrap_or_default(),
             request_id: request_id.unwrap_or_default(),
             workspace: workspace.unwrap_or_default(),
@@ -2356,215 +2332,6 @@ impl From<wire::DeleteTemplateRequest> for types::DeleteTemplateRequest {
 
         Self {
             name: name.unwrap_or_default(),
-            workspace: workspace.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<types::Volume> for wire::Volume {
-    fn from(message: types::Volume) -> Self {
-        let types::Volume {
-            volume_id,
-            name,
-            size_gib,
-            used_bytes,
-            mounted_by,
-            create_time,
-        } = message;
-
-        Self {
-            volume_id: self::present(volume_id),
-            name: self::present(name),
-            size_gib: self::present(size_gib),
-            used_bytes: self::present(used_bytes),
-            mounted_by,
-            create_time: create_time.map(crate::timestamp::to_wire).into(),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::Volume> for types::Volume {
-    fn from(message: wire::Volume) -> Self {
-        let wire::Volume {
-            volume_id,
-            name,
-            size_gib,
-            used_bytes,
-            mounted_by,
-            create_time,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            volume_id: volume_id.unwrap_or_default(),
-            name: name.unwrap_or_default(),
-            size_gib: size_gib.unwrap_or_default(),
-            used_bytes: used_bytes.unwrap_or_default(),
-            mounted_by,
-            create_time: create_time.into_option().map(crate::timestamp::from_wire),
-        }
-    }
-}
-
-impl From<types::Mount> for wire::Mount {
-    fn from(message: types::Mount) -> Self {
-        let types::Mount {
-            volume_id,
-            path,
-            read_only,
-        } = message;
-
-        Self {
-            volume_id: self::present(volume_id),
-            path: self::present(path),
-            read_only: self::present(read_only),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::Mount> for types::Mount {
-    fn from(message: wire::Mount) -> Self {
-        let wire::Mount {
-            volume_id,
-            path,
-            read_only,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            volume_id: volume_id.unwrap_or_default(),
-            path: path.unwrap_or_default(),
-            read_only: read_only.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<types::CreateVolumeRequest> for wire::CreateVolumeRequest {
-    fn from(message: types::CreateVolumeRequest) -> Self {
-        let types::CreateVolumeRequest {
-            name,
-            size_gib,
-            request_id,
-            workspace,
-        } = message;
-
-        Self {
-            name: self::present(name),
-            size_gib: self::present(size_gib),
-            request_id: self::present(request_id),
-            workspace: self::present(workspace),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::CreateVolumeRequest> for types::CreateVolumeRequest {
-    fn from(message: wire::CreateVolumeRequest) -> Self {
-        let wire::CreateVolumeRequest {
-            name,
-            size_gib,
-            request_id,
-            workspace,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            name: name.unwrap_or_default(),
-            size_gib: size_gib.unwrap_or_default(),
-            request_id: request_id.unwrap_or_default(),
-            workspace: workspace.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<types::ListVolumesRequest> for wire::ListVolumesRequest {
-    fn from(message: types::ListVolumesRequest) -> Self {
-        let types::ListVolumesRequest {
-            page_size,
-            page_token,
-            workspace,
-        } = message;
-
-        Self {
-            page_size: self::present(page_size),
-            page_token: self::present(page_token),
-            workspace: self::present(workspace),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::ListVolumesRequest> for types::ListVolumesRequest {
-    fn from(message: wire::ListVolumesRequest) -> Self {
-        let wire::ListVolumesRequest {
-            page_size,
-            page_token,
-            workspace,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            page_size: page_size.unwrap_or_default(),
-            page_token: page_token.unwrap_or_default(),
-            workspace: workspace.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<types::ListVolumesResponse> for wire::ListVolumesResponse {
-    fn from(message: types::ListVolumesResponse) -> Self {
-        let types::ListVolumesResponse {
-            volumes,
-            next_page_token,
-        } = message;
-
-        Self {
-            volumes: volumes.into_iter().map(wire::Volume::from).collect(),
-            next_page_token: self::present(next_page_token),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::ListVolumesResponse> for types::ListVolumesResponse {
-    fn from(message: wire::ListVolumesResponse) -> Self {
-        let wire::ListVolumesResponse {
-            volumes,
-            next_page_token,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            volumes: volumes.into_iter().map(types::Volume::from).collect(),
-            next_page_token: next_page_token.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<types::DeleteVolumeRequest> for wire::DeleteVolumeRequest {
-    fn from(message: types::DeleteVolumeRequest) -> Self {
-        let types::DeleteVolumeRequest { volume_id, workspace } = message;
-
-        Self {
-            volume_id: self::present(volume_id),
-            workspace: self::present(workspace),
-            __buffa_unknown_fields: Default::default(),
-        }
-    }
-}
-
-impl From<wire::DeleteVolumeRequest> for types::DeleteVolumeRequest {
-    fn from(message: wire::DeleteVolumeRequest) -> Self {
-        let wire::DeleteVolumeRequest {
-            volume_id,
-            workspace,
-            __buffa_unknown_fields: _,
-        } = message;
-
-        Self {
-            volume_id: volume_id.unwrap_or_default(),
             workspace: workspace.unwrap_or_default(),
         }
     }

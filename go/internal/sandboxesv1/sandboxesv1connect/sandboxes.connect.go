@@ -25,14 +25,13 @@
 //
 // MODEL
 //
-//	Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+//	Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 //	  its workspace, any other on its `workspace`, else the caller's only one.
 //	Sandbox (sandbox_id; a name if given, unique in its workspace, which ListSandboxes finds): a
 //	  microVM from a template: RUNNING; PAUSED, memory, processes and disk kept on its server,
 //	  never refused for room; STOPPED, its disk in object storage, processes ended; DELETED.
 //	Template ("name" or "name@version"): what a sandbox starts from: "base" (Ubuntu, Python,
 //	  Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
-//	Volume (volume_id): a disk that outlives sandboxes, mounted into them at a path.
 //	Secret (name): a value the workspace keeps and no sandbox holds.
 //
 // IDLE AND WAKE
@@ -152,14 +151,6 @@ const (
 	// SandboxServiceDeleteTemplateProcedure is the procedure name of the SandboxService's
 	// DeleteTemplate RPC.
 	SandboxServiceDeleteTemplateProcedure = "/pethost.sandboxes.v1.SandboxService/DeleteTemplate"
-	// SandboxServiceCreateVolumeProcedure is the procedure name of the SandboxService's CreateVolume
-	// RPC.
-	SandboxServiceCreateVolumeProcedure = "/pethost.sandboxes.v1.SandboxService/CreateVolume"
-	// SandboxServiceListVolumesProcedure is the procedure name of the SandboxService's ListVolumes RPC.
-	SandboxServiceListVolumesProcedure = "/pethost.sandboxes.v1.SandboxService/ListVolumes"
-	// SandboxServiceDeleteVolumeProcedure is the procedure name of the SandboxService's DeleteVolume
-	// RPC.
-	SandboxServiceDeleteVolumeProcedure = "/pethost.sandboxes.v1.SandboxService/DeleteVolume"
 	// SandboxServiceListUsageProcedure is the procedure name of the SandboxService's ListUsage RPC.
 	SandboxServiceListUsageProcedure = "/pethost.sandboxes.v1.SandboxService/ListUsage"
 	// SandboxRuntimeServiceRunCommandProcedure is the procedure name of the SandboxRuntimeService's
@@ -369,29 +360,6 @@ var (
 			IdempotencyLevel: connect.IdempotencyIdempotent,
 		}
 	})
-	sandboxServiceCreateVolumeSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     sandboxesv1.File_v1_sandboxes_proto.Services().ByName("SandboxService").Methods().ByName("CreateVolume"),
-			Procedure:  SandboxServiceCreateVolumeProcedure,
-		}
-	})
-	sandboxServiceListVolumesSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType:       connect.StreamTypeUnary,
-			Schema:           sandboxesv1.File_v1_sandboxes_proto.Services().ByName("SandboxService").Methods().ByName("ListVolumes"),
-			Procedure:        SandboxServiceListVolumesProcedure,
-			IdempotencyLevel: connect.IdempotencyNoSideEffects,
-		}
-	})
-	sandboxServiceDeleteVolumeSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType:       connect.StreamTypeUnary,
-			Schema:           sandboxesv1.File_v1_sandboxes_proto.Services().ByName("SandboxService").Methods().ByName("DeleteVolume"),
-			Procedure:        SandboxServiceDeleteVolumeProcedure,
-			IdempotencyLevel: connect.IdempotencyIdempotent,
-		}
-	})
 	sandboxServiceListUsageSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType:       connect.StreamTypeUnary,
@@ -472,7 +440,7 @@ type SandboxServiceClient interface {
 	// counts against Limits.vcpus and
 	// largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
 	// own server when that server has room for it, else
-	// on another with room, when it mounts no volume and its copy is current: its server lets it go
+	// on another with room, when its copy is current: its server lets it go
 	// first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
 	// in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
 	// STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -483,8 +451,7 @@ type SandboxServiceClient interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-	// included. A DELETED sandbox is answered with that record.
+	// Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
 	// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
 	// and the SSH command the token is the password of: the header says how to call it. The token
@@ -522,13 +489,6 @@ type SandboxServiceClient interface {
 	// and resuming: object storage keeps a version until the last of them is deleted.
 	// FAILED_PRECONDITION while a version of it is SAVING.
 	DeleteTemplate(context.Context, *sandboxesv1.DeleteTemplateRequest) (*sandboxesv1.Template, error)
-	// A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-	// while nothing pays for the workspace (UsageUnpaid).
-	CreateVolume(context.Context, *sandboxesv1.CreateVolumeRequest) (*sandboxesv1.Volume, error)
-	// The workspace's volumes.
-	ListVolumes(context.Context, *sandboxesv1.ListVolumesRequest) (*sandboxesv1.ListVolumesResponse, error)
-	// Refused while a sandbox mounts it.
-	DeleteVolume(context.Context, *sandboxesv1.DeleteVolumeRequest) (*sandboxesv1.Volume, error)
 	// What the workspace used: a row per day, meter and size, as it was charged.
 	ListUsage(context.Context, *sandboxesv1.ListUsageRequest) (*sandboxesv1.ListUsageResponse, error)
 }
@@ -630,7 +590,7 @@ type SandboxServiceHandler interface {
 	// counts against Limits.vcpus and
 	// largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
 	// own server when that server has room for it, else
-	// on another with room, when it mounts no volume and its copy is current: its server lets it go
+	// on another with room, when its copy is current: its server lets it go
 	// first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
 	// in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
 	// STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -641,8 +601,7 @@ type SandboxServiceHandler interface {
 	// are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without NoCapacity: no server
 	// answers now; try again.
 	ResumeSandbox(context.Context, *sandboxesv1.ResumeSandboxRequest) (*sandboxesv1.Sandbox, error)
-	// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-	// included. A DELETED sandbox is answered with that record.
+	// Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
 	DeleteSandbox(context.Context, *sandboxesv1.DeleteSandboxRequest) (*sandboxesv1.Sandbox, error)
 	// Where SandboxRuntimeService answers for this one sandbox (url), a token for it, which expires,
 	// and the SSH command the token is the password of: the header says how to call it. The token
@@ -680,13 +639,6 @@ type SandboxServiceHandler interface {
 	// and resuming: object storage keeps a version until the last of them is deleted.
 	// FAILED_PRECONDITION while a version of it is SAVING.
 	DeleteTemplate(context.Context, *sandboxesv1.DeleteTemplateRequest) (*sandboxesv1.Template, error)
-	// A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-	// while nothing pays for the workspace (UsageUnpaid).
-	CreateVolume(context.Context, *sandboxesv1.CreateVolumeRequest) (*sandboxesv1.Volume, error)
-	// The workspace's volumes.
-	ListVolumes(context.Context, *sandboxesv1.ListVolumesRequest) (*sandboxesv1.ListVolumesResponse, error)
-	// Refused while a sandbox mounts it.
-	DeleteVolume(context.Context, *sandboxesv1.DeleteVolumeRequest) (*sandboxesv1.Volume, error)
 	// What the workspace used: a row per day, meter and size, as it was charged.
 	ListUsage(context.Context, *sandboxesv1.ListUsageRequest) (*sandboxesv1.ListUsageResponse, error)
 }
@@ -716,9 +668,6 @@ func RegisterSandboxServiceHandler(server *connect.Server, svc SandboxServiceHan
 		connect.Method{Spec: sandboxServiceGetTemplateSpec(), Handler: adapter.getTemplate},
 		connect.Method{Spec: sandboxServiceListTemplatesSpec(), Handler: adapter.listTemplates},
 		connect.Method{Spec: sandboxServiceDeleteTemplateSpec(), Handler: adapter.deleteTemplate},
-		connect.Method{Spec: sandboxServiceCreateVolumeSpec(), Handler: adapter.createVolume},
-		connect.Method{Spec: sandboxServiceListVolumesSpec(), Handler: adapter.listVolumes},
-		connect.Method{Spec: sandboxServiceDeleteVolumeSpec(), Handler: adapter.deleteVolume},
 		connect.Method{Spec: sandboxServiceListUsageSpec(), Handler: adapter.listUsage},
 	)
 }
@@ -820,18 +769,6 @@ func (UnimplementedSandboxServiceHandler) ListTemplates(context.Context, *sandbo
 
 func (UnimplementedSandboxServiceHandler) DeleteTemplate(context.Context, *sandboxesv1.DeleteTemplateRequest) (*sandboxesv1.Template, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.DeleteTemplate is not implemented")
-}
-
-func (UnimplementedSandboxServiceHandler) CreateVolume(context.Context, *sandboxesv1.CreateVolumeRequest) (*sandboxesv1.Volume, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.CreateVolume is not implemented")
-}
-
-func (UnimplementedSandboxServiceHandler) ListVolumes(context.Context, *sandboxesv1.ListVolumesRequest) (*sandboxesv1.ListVolumesResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.ListVolumes is not implemented")
-}
-
-func (UnimplementedSandboxServiceHandler) DeleteVolume(context.Context, *sandboxesv1.DeleteVolumeRequest) (*sandboxesv1.Volume, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "pethost.sandboxes.v1.SandboxService.DeleteVolume is not implemented")
 }
 
 func (UnimplementedSandboxServiceHandler) ListUsage(context.Context, *sandboxesv1.ListUsageRequest) (*sandboxesv1.ListUsageResponse, error) {
@@ -997,30 +934,6 @@ func (c *sandboxServiceClient) ListTemplates(ctx context.Context, req *sandboxes
 func (c *sandboxServiceClient) DeleteTemplate(ctx context.Context, req *sandboxesv1.DeleteTemplateRequest) (*sandboxesv1.Template, error) {
 	var res sandboxesv1.Template
 	if err := c.client.CallUnary(ctx, sandboxServiceDeleteTemplateSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *sandboxServiceClient) CreateVolume(ctx context.Context, req *sandboxesv1.CreateVolumeRequest) (*sandboxesv1.Volume, error) {
-	var res sandboxesv1.Volume
-	if err := c.client.CallUnary(ctx, sandboxServiceCreateVolumeSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *sandboxServiceClient) ListVolumes(ctx context.Context, req *sandboxesv1.ListVolumesRequest) (*sandboxesv1.ListVolumesResponse, error) {
-	var res sandboxesv1.ListVolumesResponse
-	if err := c.client.CallUnary(ctx, sandboxServiceListVolumesSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *sandboxServiceClient) DeleteVolume(ctx context.Context, req *sandboxesv1.DeleteVolumeRequest) (*sandboxesv1.Volume, error) {
-	var res sandboxesv1.Volume
-	if err := c.client.CallUnary(ctx, sandboxServiceDeleteVolumeSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1266,42 +1179,6 @@ func (h sandboxServiceHandler) deleteTemplate(ctx context.Context, _ connect.Spe
 		return err
 	}
 	res, err := h.svc.DeleteTemplate(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h sandboxServiceHandler) createVolume(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req sandboxesv1.CreateVolumeRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.CreateVolume(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h sandboxServiceHandler) listVolumes(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req sandboxesv1.ListVolumesRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.ListVolumes(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h sandboxServiceHandler) deleteVolume(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req sandboxesv1.DeleteVolumeRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.DeleteVolume(ctx, &req)
 	if err != nil {
 		return err
 	}

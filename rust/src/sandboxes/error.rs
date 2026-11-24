@@ -86,7 +86,7 @@ pub enum ErrorDetail {
     LimitReached(types::LimitReached),
     /// [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) from a call into a sandbox, an SSH login or a request to a port while it is STOPPED and its lifecycle does not wake it ([`Lifecycle::wake_when_stopped`](crate::sandboxes::types::Lifecycle::wake_when_stopped)): [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) starts it.
     Stopped(types::Stopped),
-    /// [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition): nothing pays for the workspace's usage now ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), so the call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
+    /// [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition): nothing pays for the workspace's usage now ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), so the call starts, resumes or wakes no sandbox, and makes no template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
     UsageUnpaid(types::UsageUnpaid),
     /// [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) from a call into a sandbox, an SSH login or a request to a port while its disk is fetched from object storage for its start ([`Sandbox::restore`](crate::sandboxes::types::Sandbox::restore)): try again in a while.
     Restoring(types::Restoring),

@@ -110,18 +110,6 @@ func (f *fake) DeleteTemplate(_ context.Context, request *sandboxesv1.DeleteTemp
 	return answer[*sandboxesv1.Template](&f.exchange, request)
 }
 
-func (f *fake) CreateVolume(_ context.Context, request *sandboxesv1.CreateVolumeRequest) (*sandboxesv1.Volume, error) {
-	return answer[*sandboxesv1.Volume](&f.exchange, request)
-}
-
-func (f *fake) ListVolumes(_ context.Context, request *sandboxesv1.ListVolumesRequest) (*sandboxesv1.ListVolumesResponse, error) {
-	return answer[*sandboxesv1.ListVolumesResponse](&f.exchange, request)
-}
-
-func (f *fake) DeleteVolume(_ context.Context, request *sandboxesv1.DeleteVolumeRequest) (*sandboxesv1.Volume, error) {
-	return answer[*sandboxesv1.Volume](&f.exchange, request)
-}
-
 func (f *fake) ListUsage(_ context.Context, request *sandboxesv1.ListUsageRequest) (*sandboxesv1.ListUsageResponse, error) {
 	return answer[*sandboxesv1.ListUsageResponse](&f.exchange, request)
 }
@@ -212,9 +200,6 @@ var calls = []call{
 	callOf("GetTemplate", (*Client).GetTemplate, sampleGetTemplateRequest, sampleTemplate, &sandboxesv1.GetTemplateRequest{}, &sandboxesv1.Template{}),
 	callOf("ListTemplates", (*Client).ListTemplates, sampleListTemplatesRequest, sampleListTemplatesResponse, &sandboxesv1.ListTemplatesRequest{}, &sandboxesv1.ListTemplatesResponse{}),
 	callOf("DeleteTemplate", (*Client).DeleteTemplate, sampleDeleteTemplateRequest, sampleTemplate, &sandboxesv1.DeleteTemplateRequest{}, &sandboxesv1.Template{}),
-	callOf("CreateVolume", (*Client).CreateVolume, sampleCreateVolumeRequest, sampleVolume, &sandboxesv1.CreateVolumeRequest{}, &sandboxesv1.Volume{}),
-	callOf("ListVolumes", (*Client).ListVolumes, sampleListVolumesRequest, sampleListVolumesResponse, &sandboxesv1.ListVolumesRequest{}, &sandboxesv1.ListVolumesResponse{}),
-	callOf("DeleteVolume", (*Client).DeleteVolume, sampleDeleteVolumeRequest, sampleVolume, &sandboxesv1.DeleteVolumeRequest{}, &sandboxesv1.Volume{}),
 	callOf("ListUsage", (*Client).ListUsage, sampleListUsageRequest, sampleListUsageResponse, &sandboxesv1.ListUsageRequest{}, &sandboxesv1.ListUsageResponse{}),
 	callOf("RunCommand", (*Client).RunCommand, sampleRunCommandRequest, sampleCommand, &sandboxesv1.RunCommandRequest{}, &sandboxesv1.Command{}).atConnection(),
 	callOf("GetCommand", (*Client).GetCommand, sampleGetCommandRequest, sampleCommand, &sandboxesv1.GetCommandRequest{}, &sandboxesv1.Command{}).atConnection(),
@@ -342,12 +327,6 @@ var shapes = []shape{
 	shapeOf(sampleListTemplatesRequest, &sandboxesv1.ListTemplatesRequest{}),
 	shapeOf(sampleListTemplatesResponse, &sandboxesv1.ListTemplatesResponse{}),
 	shapeOf(sampleDeleteTemplateRequest, &sandboxesv1.DeleteTemplateRequest{}),
-	shapeOf(sampleVolume, &sandboxesv1.Volume{}),
-	shapeOf(sampleMount, &sandboxesv1.Mount{}),
-	shapeOf(sampleCreateVolumeRequest, &sandboxesv1.CreateVolumeRequest{}),
-	shapeOf(sampleListVolumesRequest, &sandboxesv1.ListVolumesRequest{}),
-	shapeOf(sampleListVolumesResponse, &sandboxesv1.ListVolumesResponse{}),
-	shapeOf(sampleDeleteVolumeRequest, &sandboxesv1.DeleteVolumeRequest{}),
 	shapeOf(sampleListUsageRequest, &sandboxesv1.ListUsageRequest{}),
 	shapeOf(sampleListUsageResponse, &sandboxesv1.ListUsageResponse{}),
 	shapeOf(sampleUsageRow, &sandboxesv1.UsageRow{}),
@@ -445,7 +424,6 @@ func sampleWorkspace(s seed) Workspace {
 		Sizes:         list(s.at("pethost.sandboxes.v1.Workspace.sizes"), sampleSizeInfo),
 		TemplateBytes: plain[int64](s.at("pethost.sandboxes.v1.Workspace.template_bytes")),
 		VcpusUsed:     plain[int32](s.at("pethost.sandboxes.v1.Workspace.vcpus_used")),
-		VolumeGibUsed: plain[int32](s.at("pethost.sandboxes.v1.Workspace.volume_gib_used")),
 	}
 }
 
@@ -476,7 +454,6 @@ func sampleBilling(s seed) Billing {
 func sampleRates(s seed) Rates {
 	return Rates{
 		StoredGibMonth: plain[float64](s.at("pethost.sandboxes.v1.Rates.stored_gib_month")),
-		VolumeGibMonth: plain[float64](s.at("pethost.sandboxes.v1.Rates.volume_gib_month")),
 	}
 }
 
@@ -492,7 +469,6 @@ func sampleLimits(s seed) Limits {
 	return Limits{
 		Vcpus:            plain[int32](s.at("pethost.sandboxes.v1.Limits.vcpus")),
 		LargestSize:      plain[Size](s.at("pethost.sandboxes.v1.Limits.largest_size")),
-		VolumeGib:        plain[int32](s.at("pethost.sandboxes.v1.Limits.volume_gib")),
 		TemplateVersions: plain[int32](s.at("pethost.sandboxes.v1.Limits.template_versions")),
 		TemplateGib:      plain[int32](s.at("pethost.sandboxes.v1.Limits.template_gib")),
 	}
@@ -541,7 +517,6 @@ func sampleSandbox(s seed) Sandbox {
 		Settings:      pointer(s.at("pethost.sandboxes.v1.Sandbox.settings"), sampleSandboxSettings),
 		Revision:      plain[int64](s.at("pethost.sandboxes.v1.Sandbox.revision")),
 		DiskGib:       plain[int32](s.at("pethost.sandboxes.v1.Sandbox.disk_gib")),
-		Mounts:        list(s.at("pethost.sandboxes.v1.Sandbox.mounts"), sampleMount),
 		Desktop:       pointer(s.at("pethost.sandboxes.v1.Sandbox.desktop"), sampleDesktop),
 		SSHCommand:    plain[string](s.at("pethost.sandboxes.v1.Sandbox.ssh_command")),
 		PanelURL:      plain[string](s.at("pethost.sandboxes.v1.Sandbox.panel_url")),
@@ -577,7 +552,6 @@ func sampleCreateSandboxRequest(s seed) CreateSandboxRequest {
 		Template:  plain[string](s.at("pethost.sandboxes.v1.CreateSandboxRequest.template")),
 		Settings:  pointer(s.at("pethost.sandboxes.v1.CreateSandboxRequest.settings"), sampleSandboxSettings),
 		Labels:    list(s.at("pethost.sandboxes.v1.CreateSandboxRequest.labels"), sampleLabel),
-		Mounts:    list(s.at("pethost.sandboxes.v1.CreateSandboxRequest.mounts"), sampleMount),
 		Name:      plain[string](s.at("pethost.sandboxes.v1.CreateSandboxRequest.name")),
 		RequestID: plain[string](s.at("pethost.sandboxes.v1.CreateSandboxRequest.request_id")),
 		Workspace: plain[string](s.at("pethost.sandboxes.v1.CreateSandboxRequest.workspace")),
@@ -918,57 +892,6 @@ func sampleDeleteTemplateRequest(s seed) DeleteTemplateRequest {
 	return DeleteTemplateRequest{
 		Name:      plain[string](s.at("pethost.sandboxes.v1.DeleteTemplateRequest.name")),
 		Workspace: plain[string](s.at("pethost.sandboxes.v1.DeleteTemplateRequest.workspace")),
-	}
-}
-
-func sampleVolume(s seed) Volume {
-	return Volume{
-		VolumeID:   plain[string](s.at("pethost.sandboxes.v1.Volume.volume_id")),
-		Name:       plain[string](s.at("pethost.sandboxes.v1.Volume.name")),
-		SizeGib:    plain[int32](s.at("pethost.sandboxes.v1.Volume.size_gib")),
-		UsedBytes:  plain[int64](s.at("pethost.sandboxes.v1.Volume.used_bytes")),
-		MountedBy:  list(s.at("pethost.sandboxes.v1.Volume.mounted_by"), scalar[string]),
-		CreateTime: instant(s.at("pethost.sandboxes.v1.Volume.create_time")),
-	}
-}
-
-func sampleMount(s seed) Mount {
-	return Mount{
-		VolumeID: plain[string](s.at("pethost.sandboxes.v1.Mount.volume_id")),
-		Path:     plain[string](s.at("pethost.sandboxes.v1.Mount.path")),
-		ReadOnly: plain[bool](s.at("pethost.sandboxes.v1.Mount.read_only")),
-		unknown:  later(s),
-	}
-}
-
-func sampleCreateVolumeRequest(s seed) CreateVolumeRequest {
-	return CreateVolumeRequest{
-		Name:      plain[string](s.at("pethost.sandboxes.v1.CreateVolumeRequest.name")),
-		SizeGib:   plain[int32](s.at("pethost.sandboxes.v1.CreateVolumeRequest.size_gib")),
-		RequestID: plain[string](s.at("pethost.sandboxes.v1.CreateVolumeRequest.request_id")),
-		Workspace: plain[string](s.at("pethost.sandboxes.v1.CreateVolumeRequest.workspace")),
-	}
-}
-
-func sampleListVolumesRequest(s seed) ListVolumesRequest {
-	return ListVolumesRequest{
-		PageSize:  plain[int32](s.at("pethost.sandboxes.v1.ListVolumesRequest.page_size")),
-		PageToken: plain[string](s.at("pethost.sandboxes.v1.ListVolumesRequest.page_token")),
-		Workspace: plain[string](s.at("pethost.sandboxes.v1.ListVolumesRequest.workspace")),
-	}
-}
-
-func sampleListVolumesResponse(s seed) ListVolumesResponse {
-	return ListVolumesResponse{
-		Volumes:       list(s.at("pethost.sandboxes.v1.ListVolumesResponse.volumes"), sampleVolume),
-		NextPageToken: plain[string](s.at("pethost.sandboxes.v1.ListVolumesResponse.next_page_token")),
-	}
-}
-
-func sampleDeleteVolumeRequest(s seed) DeleteVolumeRequest {
-	return DeleteVolumeRequest{
-		VolumeID:  plain[string](s.at("pethost.sandboxes.v1.DeleteVolumeRequest.volume_id")),
-		Workspace: plain[string](s.at("pethost.sandboxes.v1.DeleteVolumeRequest.workspace")),
 	}
 }
 

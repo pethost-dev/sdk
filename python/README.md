@@ -274,9 +274,6 @@ subclass for each code, such as `pethost.sandboxes.NotFoundError`.
 | `get_template(template, ...)` | Read a template version | read-only |
 | `list_templates(name, ...)` | List templates | read-only |
 | `delete_template(name, ...)` | Delete a template |  |
-| `create_volume(name, ...)` | Create a volume |  |
-| `list_volumes(...)` | List volumes | read-only |
-| `delete_volume(volume_id, ...)` | Delete a volume |  |
 | `list_usage(...)` | List usage | read-only |
 | `run_command(sandbox_id, ...)` | Run a command | destructive |
 | `get_command(sandbox_id, ...)` | Wait for a command | read-only |

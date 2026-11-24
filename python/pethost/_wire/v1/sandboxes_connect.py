@@ -16,7 +16,7 @@ from connectrpc.server import ConnectASGIApplication, ConnectWSGIApplication, DE
 from protobuf import DescService
 
 from . import sandboxes_pb
-from .sandboxes_pb import AgentEvent, AgentTurn, Command, CommandOutput, ConnectSandboxRequest, Connection, ControlDesktopRequest, ControlDesktopResponse, CreateLinkRequest, CreateSandboxRequest, CreateTemplateRequest, CreateVolumeRequest, DeleteSandboxRequest, DeleteSecretRequest, DeleteTemplateRequest, DeleteVolumeRequest, File, FileEvent, GetAgentTurnRequest, GetCommandRequest, GetSandboxMetricsRequest, GetSandboxMetricsResponse, GetSandboxRequest, GetTemplateRequest, GetWorkspaceRequest, Link, ListCommandsRequest, ListCommandsResponse, ListConversationsRequest, ListConversationsResponse, ListFilesRequest, ListFilesResponse, ListSandboxEventsRequest, ListSandboxEventsResponse, ListSandboxesRequest, ListSandboxesResponse, ListTemplatesRequest, ListTemplatesResponse, ListUsageRequest, ListUsageResponse, ListVolumesRequest, ListVolumesResponse, PauseSandboxRequest, PromptAgentRequest, ReadFileRequest, ResumeSandboxRequest, RunCommandRequest, Sandbox, SandboxEvent, Secret, SetSecretRequest, SetSshKeysRequest, StopAgentTurnRequest, StopCommandRequest, StopSandboxRequest, Template, UpdateSandboxRequest, Volume, WatchCommandRequest, WatchConversationRequest, WatchFilesRequest, WatchSandboxEventsRequest, Workspace, WriteFilesRequest, WriteFilesResponse
+from .sandboxes_pb import AgentEvent, AgentTurn, Command, CommandOutput, ConnectSandboxRequest, Connection, ControlDesktopRequest, ControlDesktopResponse, CreateLinkRequest, CreateSandboxRequest, CreateTemplateRequest, DeleteSandboxRequest, DeleteSecretRequest, DeleteTemplateRequest, File, FileEvent, GetAgentTurnRequest, GetCommandRequest, GetSandboxMetricsRequest, GetSandboxMetricsResponse, GetSandboxRequest, GetTemplateRequest, GetWorkspaceRequest, Link, ListCommandsRequest, ListCommandsResponse, ListConversationsRequest, ListConversationsResponse, ListFilesRequest, ListFilesResponse, ListSandboxEventsRequest, ListSandboxEventsResponse, ListSandboxesRequest, ListSandboxesResponse, ListTemplatesRequest, ListTemplatesResponse, ListUsageRequest, ListUsageResponse, PauseSandboxRequest, PromptAgentRequest, ReadFileRequest, ResumeSandboxRequest, RunCommandRequest, Sandbox, SandboxEvent, Secret, SetSecretRequest, SetSshKeysRequest, StopAgentTurnRequest, StopCommandRequest, StopSandboxRequest, Template, UpdateSandboxRequest, WatchCommandRequest, WatchConversationRequest, WatchFilesRequest, WatchSandboxEventsRequest, Workspace, WriteFilesRequest, WriteFilesResponse
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Iterable, Iterator, Mapping
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class SandboxService(Protocol):
     """
     The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-    volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+    events and usage. Answered by the panel, at the same address as Pethost's PanelService,
     with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 
     Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -158,7 +158,7 @@ class SandboxService(Protocol):
         counts against Limits.vcpus and
         largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
         own server when that server has room for it, else
-        on another with room, when it mounts no volume and its copy is current: its server lets it go
+        on another with room, when its copy is current: its server lets it go
         first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
         in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
         STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -173,8 +173,7 @@ class SandboxService(Protocol):
 
     async def delete_sandbox(self, request: DeleteSandboxRequest, ctx: RequestContext[DeleteSandboxRequest, Sandbox], /) -> Sandbox:
         """
-        Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-        included. A DELETED sandbox is answered with that record.
+        Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -243,25 +242,6 @@ class SandboxService(Protocol):
         counting in template_gib at once. Sandboxes made from them go on running, pausing, stopping
         and resuming: object storage keeps a version until the last of them is deleted.
         FAILED_PRECONDITION while a version of it is SAVING.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    async def create_volume(self, request: CreateVolumeRequest, ctx: RequestContext[CreateVolumeRequest, Volume], /) -> Volume:
-        """
-        A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-        while nothing pays for the workspace (UsageUnpaid).
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    async def list_volumes(self, request: ListVolumesRequest, ctx: RequestContext[ListVolumesRequest, ListVolumesResponse], /) -> ListVolumesResponse:
-        """
-        The workspace's volumes.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    async def delete_volume(self, request: DeleteVolumeRequest, ctx: RequestContext[DeleteVolumeRequest, Volume], /) -> Volume:
-        """
-        Refused while a sandbox mounts it.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -489,36 +469,6 @@ class SandboxServiceASGIApplication(ConnectASGIApplication[SandboxService]):
                     ),
                     function=svc.delete_template,
                 ),
-                "/pethost.sandboxes.v1.SandboxService/CreateVolume": Endpoint.unary(
-                    method=MethodInfo(
-                        name="CreateVolume",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=CreateVolumeRequest,
-                        output=Volume,
-                        idempotency_level=IdempotencyLevel.UNKNOWN,
-                    ),
-                    function=svc.create_volume,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/ListVolumes": Endpoint.unary(
-                    method=MethodInfo(
-                        name="ListVolumes",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=ListVolumesRequest,
-                        output=ListVolumesResponse,
-                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
-                    ),
-                    function=svc.list_volumes,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/DeleteVolume": Endpoint.unary(
-                    method=MethodInfo(
-                        name="DeleteVolume",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=DeleteVolumeRequest,
-                        output=Volume,
-                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
-                    ),
-                    function=svc.delete_volume,
-                ),
                 "/pethost.sandboxes.v1.SandboxService/ListUsage": Endpoint.unary(
                     method=MethodInfo(
                         name="ListUsage",
@@ -545,7 +495,7 @@ class SandboxServiceASGIApplication(ConnectASGIApplication[SandboxService]):
 class SandboxServiceClient(ConnectClient):
     """
     The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-    volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+    events and usage. Answered by the panel, at the same address as Pethost's PanelService,
     with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 
     Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -855,7 +805,7 @@ class SandboxServiceClient(ConnectClient):
         counts against Limits.vcpus and
         largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
         own server when that server has room for it, else
-        on another with room, when it mounts no volume and its copy is current: its server lets it go
+        on another with room, when its copy is current: its server lets it go
         first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
         in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
         STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -887,8 +837,7 @@ class SandboxServiceClient(ConnectClient):
         timeout_ms: int | None = None,
     ) -> Sandbox:
         """
-        Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-        included. A DELETED sandbox is answered with that record.
+        Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
         """
         return await self.execute_unary(
             request=request,
@@ -1115,78 +1064,6 @@ class SandboxServiceClient(ConnectClient):
             timeout_ms=timeout_ms,
         )
 
-    async def create_volume(
-        self,
-        request: CreateVolumeRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> Volume:
-        """
-        A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-        while nothing pays for the workspace (UsageUnpaid).
-        """
-        return await self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="CreateVolume",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=CreateVolumeRequest,
-                output=Volume,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-
-    async def list_volumes(
-        self,
-        request: ListVolumesRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-        use_get: bool = False,
-    ) -> ListVolumesResponse:
-        """
-        The workspace's volumes.
-        """
-        return await self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="ListVolumes",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=ListVolumesRequest,
-                output=ListVolumesResponse,
-                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-            use_get=use_get,
-        )
-
-    async def delete_volume(
-        self,
-        request: DeleteVolumeRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> Volume:
-        """
-        Refused while a sandbox mounts it.
-        """
-        return await self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="DeleteVolume",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=DeleteVolumeRequest,
-                output=Volume,
-                idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-
     async def list_usage(
         self,
         request: ListUsageRequest,
@@ -1215,7 +1092,7 @@ class SandboxServiceClient(ConnectClient):
 class SandboxServiceSync(Protocol):
     """
     The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-    volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+    events and usage. Answered by the panel, at the same address as Pethost's PanelService,
     with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 
     Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -1343,7 +1220,7 @@ class SandboxServiceSync(Protocol):
         counts against Limits.vcpus and
         largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
         own server when that server has room for it, else
-        on another with room, when it mounts no volume and its copy is current: its server lets it go
+        on another with room, when its copy is current: its server lets it go
         first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
         in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
         STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -1358,8 +1235,7 @@ class SandboxServiceSync(Protocol):
 
     def delete_sandbox(self, request: DeleteSandboxRequest, ctx: RequestContext[DeleteSandboxRequest, Sandbox], /) -> Sandbox:
         """
-        Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-        included. A DELETED sandbox is answered with that record.
+        Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1428,25 +1304,6 @@ class SandboxServiceSync(Protocol):
         counting in template_gib at once. Sandboxes made from them go on running, pausing, stopping
         and resuming: object storage keeps a version until the last of them is deleted.
         FAILED_PRECONDITION while a version of it is SAVING.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    def create_volume(self, request: CreateVolumeRequest, ctx: RequestContext[CreateVolumeRequest, Volume], /) -> Volume:
-        """
-        A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-        while nothing pays for the workspace (UsageUnpaid).
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    def list_volumes(self, request: ListVolumesRequest, ctx: RequestContext[ListVolumesRequest, ListVolumesResponse], /) -> ListVolumesResponse:
-        """
-        The workspace's volumes.
-        """
-        raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
-
-    def delete_volume(self, request: DeleteVolumeRequest, ctx: RequestContext[DeleteVolumeRequest, Volume], /) -> Volume:
-        """
-        Refused while a sandbox mounts it.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -1672,36 +1529,6 @@ class SandboxServiceWSGIApplication(ConnectWSGIApplication):
                     ),
                     function=service.delete_template,
                 ),
-                "/pethost.sandboxes.v1.SandboxService/CreateVolume": EndpointSync.unary(
-                    method=MethodInfo(
-                        name="CreateVolume",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=CreateVolumeRequest,
-                        output=Volume,
-                        idempotency_level=IdempotencyLevel.UNKNOWN,
-                    ),
-                    function=service.create_volume,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/ListVolumes": EndpointSync.unary(
-                    method=MethodInfo(
-                        name="ListVolumes",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=ListVolumesRequest,
-                        output=ListVolumesResponse,
-                        idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
-                    ),
-                    function=service.list_volumes,
-                ),
-                "/pethost.sandboxes.v1.SandboxService/DeleteVolume": EndpointSync.unary(
-                    method=MethodInfo(
-                        name="DeleteVolume",
-                        service_name="pethost.sandboxes.v1.SandboxService",
-                        input=DeleteVolumeRequest,
-                        output=Volume,
-                        idempotency_level=IdempotencyLevel.IDEMPOTENT,
-                    ),
-                    function=service.delete_volume,
-                ),
                 "/pethost.sandboxes.v1.SandboxService/ListUsage": EndpointSync.unary(
                     method=MethodInfo(
                         name="ListUsage",
@@ -1728,7 +1555,7 @@ class SandboxServiceWSGIApplication(ConnectWSGIApplication):
 class SandboxServiceClientSync(ConnectClientSync):
     """
     The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-    volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+    events and usage. Answered by the panel, at the same address as Pethost's PanelService,
     with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 
     Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -2028,7 +1855,7 @@ class SandboxServiceClientSync(ConnectClientSync):
         counts against Limits.vcpus and
         largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
         own server when that server has room for it, else
-        on another with room, when it mounts no volume and its copy is current: its server lets it go
+        on another with room, when its copy is current: its server lets it go
         first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
         in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
         STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -2059,8 +1886,7 @@ class SandboxServiceClientSync(ConnectClientSync):
         timeout_ms: int | None = None,
     ) -> Sandbox:
         """
-        Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-        included. A DELETED sandbox is answered with that record.
+        Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
         """
         return self.execute_unary(
             request=request,
@@ -2273,75 +2099,6 @@ class SandboxServiceClientSync(ConnectClientSync):
                 service_name="pethost.sandboxes.v1.SandboxService",
                 input=DeleteTemplateRequest,
                 output=Template,
-                idempotency_level=IdempotencyLevel.IDEMPOTENT,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-    def create_volume(
-        self,
-        request: CreateVolumeRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> Volume:
-        """
-        A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-        while nothing pays for the workspace (UsageUnpaid).
-        """
-        return self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="CreateVolume",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=CreateVolumeRequest,
-                output=Volume,
-                idempotency_level=IdempotencyLevel.UNKNOWN,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-        )
-    def list_volumes(
-        self,
-        request: ListVolumesRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-        use_get: bool = False,
-    ) -> ListVolumesResponse:
-        """
-        The workspace's volumes.
-        """
-        return self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="ListVolumes",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=ListVolumesRequest,
-                output=ListVolumesResponse,
-                idempotency_level=IdempotencyLevel.NO_SIDE_EFFECTS,
-            ),
-            headers=headers,
-            timeout_ms=timeout_ms,
-            use_get=use_get,
-        )
-    def delete_volume(
-        self,
-        request: DeleteVolumeRequest,
-        *,
-        headers: Headers | Mapping[str, str] | None = None, 
-        timeout_ms: int | None = None,
-    ) -> Volume:
-        """
-        Refused while a sandbox mounts it.
-        """
-        return self.execute_unary(
-            request=request,
-            method=MethodInfo(
-                name="DeleteVolume",
-                service_name="pethost.sandboxes.v1.SandboxService",
-                input=DeleteVolumeRequest,
-                output=Volume,
                 idempotency_level=IdempotencyLevel.IDEMPOTENT,
             ),
             headers=headers,

@@ -90,13 +90,11 @@ const fromMeter: Record<w.Meter, p.Meter | undefined> = {
   [w.Meter.RUNNING]: "RUNNING",
   [w.Meter.PAUSED]: "PAUSED",
   [w.Meter.STORED_GIB]: "STORED_GIB",
-  [w.Meter.VOLUME_GIB]: "VOLUME_GIB",
 };
 const toMeter: Record<p.Meter, w.Meter> = {
   RUNNING: w.Meter.RUNNING,
   PAUSED: w.Meter.PAUSED,
   STORED_GIB: w.Meter.STORED_GIB,
-  VOLUME_GIB: w.Meter.VOLUME_GIB,
 };
 
 const fromSandboxState: Record<w.SandboxState, p.SandboxState | undefined> = {
@@ -358,7 +356,6 @@ export function fromWorkspace(m: w.Workspace): p.Workspace {
     sizes: m.sizes.map(fromSizeInfo),
     templateBytes: m.templateBytes,
     vcpusUsed: m.vcpusUsed,
-    volumeGibUsed: m.volumeGibUsed,
   });
 }
 
@@ -373,7 +370,6 @@ export function toWorkspace(m: p.Workspace): MessageInitShape<typeof w.Workspace
     sizes: m.sizes?.map(toSizeInfo),
     templateBytes: m.templateBytes || undefined,
     vcpusUsed: m.vcpusUsed || undefined,
-    volumeGibUsed: m.volumeGibUsed || undefined,
   } satisfies Fields<w.Workspace>;
 }
 
@@ -428,14 +424,12 @@ export function toBilling(m: p.Billing): MessageInitShape<typeof w.BillingSchema
 export function fromRates(m: w.Rates): p.Rates {
   return compact<p.Rates>({
     storedGibMonth: m.storedGibMonth,
-    volumeGibMonth: m.volumeGibMonth,
   });
 }
 
 export function toRates(m: p.Rates): MessageInitShape<typeof w.RatesSchema> {
   return {
     storedGibMonth: m.storedGibMonth === 0 ? undefined : m.storedGibMonth,
-    volumeGibMonth: m.volumeGibMonth === 0 ? undefined : m.volumeGibMonth,
   } satisfies Fields<w.Rates>;
 }
 
@@ -459,7 +453,6 @@ export function fromLimits(m: w.Limits): p.Limits {
   return compact<p.Limits>({
     vcpus: m.vcpus,
     largestSize: known(fromSize, m.largestSize),
-    volumeGib: m.volumeGib,
     templateVersions: m.templateVersions,
     templateGib: m.templateGib,
   });
@@ -469,7 +462,6 @@ export function toLimits(m: p.Limits): MessageInitShape<typeof w.LimitsSchema> {
   return {
     vcpus: m.vcpus || undefined,
     largestSize: numbered(toSize, m.largestSize),
-    volumeGib: m.volumeGib || undefined,
     templateVersions: m.templateVersions || undefined,
     templateGib: m.templateGib || undefined,
   } satisfies Fields<w.Limits>;
@@ -549,7 +541,6 @@ export function fromSandbox(m: w.Sandbox): p.Sandbox {
     settings: m.settings && fromSandboxSettings(m.settings),
     revision: m.revision,
     diskGib: m.diskGib,
-    mounts: m.mounts.map(fromMount),
     desktop: m.desktop && fromDesktop(m.desktop),
     sshCommand: m.sshCommand,
     panelUrl: m.panelUrl,
@@ -576,7 +567,6 @@ export function toSandbox(m: p.Sandbox): MessageInitShape<typeof w.SandboxSchema
     settings: m.settings && toSandboxSettings(m.settings),
     revision: m.revision || undefined,
     diskGib: m.diskGib || undefined,
-    mounts: m.mounts?.map(toMount),
     desktop: m.desktop && toDesktop(m.desktop),
     sshCommand: m.sshCommand || undefined,
     panelUrl: m.panelUrl || undefined,
@@ -628,7 +618,6 @@ export function fromCreateSandboxRequest(m: w.CreateSandboxRequest): p.CreateSan
     template: m.template,
     settings: m.settings && fromSandboxSettings(m.settings),
     labels: m.labels.map(fromLabel),
-    mounts: m.mounts.map(fromMount),
     name: m.name,
     requestId: m.requestId,
     workspace: m.workspace,
@@ -640,7 +629,6 @@ export function toCreateSandboxRequest(m: p.CreateSandboxRequest): MessageInitSh
     template: m.template || undefined,
     settings: m.settings && toSandboxSettings(m.settings),
     labels: m.labels?.map(toLabel),
-    mounts: m.mounts?.map(toMount),
     name: m.name || undefined,
     requestId: m.requestId || undefined,
     workspace: m.workspace || undefined,
@@ -1289,106 +1277,6 @@ export function toDeleteTemplateRequest(m: p.DeleteTemplateRequest): MessageInit
     name: m.name || undefined,
     workspace: m.workspace || undefined,
   } satisfies Fields<w.DeleteTemplateRequest>;
-}
-
-export function fromVolume(m: w.Volume): p.Volume {
-  return compact<p.Volume>({
-    volumeId: m.volumeId,
-    name: m.name,
-    sizeGib: m.sizeGib,
-    usedBytes: m.usedBytes,
-    mountedBy: m.mountedBy,
-    createTime: m.createTime && toDate(m.createTime),
-  });
-}
-
-export function toVolume(m: p.Volume): MessageInitShape<typeof w.VolumeSchema> {
-  return {
-    volumeId: m.volumeId || undefined,
-    name: m.name || undefined,
-    sizeGib: m.sizeGib || undefined,
-    usedBytes: m.usedBytes || undefined,
-    mountedBy: m.mountedBy && [...m.mountedBy],
-    createTime: m.createTime && toTimestamp(m.createTime),
-  } satisfies Fields<w.Volume>;
-}
-
-export function fromMount(m: w.Mount): p.Mount {
-  return compact<p.Mount>({
-    volumeId: m.volumeId,
-    path: m.path,
-    readOnly: m.readOnly,
-  });
-}
-
-export function toMount(m: p.MountInput): MessageInitShape<typeof w.MountSchema> {
-  return {
-    volumeId: m.volumeId || undefined,
-    path: m.path || undefined,
-    readOnly: m.readOnly || undefined,
-  } satisfies Fields<w.Mount>;
-}
-
-export function fromCreateVolumeRequest(m: w.CreateVolumeRequest): p.CreateVolumeRequest {
-  return compact<p.CreateVolumeRequest>({
-    name: m.name,
-    sizeGib: m.sizeGib,
-    requestId: m.requestId,
-    workspace: m.workspace,
-  });
-}
-
-export function toCreateVolumeRequest(m: p.CreateVolumeRequest): MessageInitShape<typeof w.CreateVolumeRequestSchema> {
-  return {
-    name: m.name || undefined,
-    sizeGib: m.sizeGib || undefined,
-    requestId: m.requestId || undefined,
-    workspace: m.workspace || undefined,
-  } satisfies Fields<w.CreateVolumeRequest>;
-}
-
-export function fromListVolumesRequest(m: w.ListVolumesRequest): p.ListVolumesRequest {
-  return compact<p.ListVolumesRequest>({
-    pageSize: m.pageSize,
-    pageToken: m.pageToken,
-    workspace: m.workspace,
-  });
-}
-
-export function toListVolumesRequest(m: p.ListVolumesRequest): MessageInitShape<typeof w.ListVolumesRequestSchema> {
-  return {
-    pageSize: m.pageSize || undefined,
-    pageToken: m.pageToken || undefined,
-    workspace: m.workspace || undefined,
-  } satisfies Fields<w.ListVolumesRequest>;
-}
-
-export function fromListVolumesResponse(m: w.ListVolumesResponse): p.ListVolumesResponse {
-  return compact<p.ListVolumesResponse>({
-    volumes: m.volumes.map(fromVolume),
-    nextPageToken: m.nextPageToken,
-  });
-}
-
-export function toListVolumesResponse(m: p.ListVolumesResponse): MessageInitShape<typeof w.ListVolumesResponseSchema> {
-  return {
-    volumes: m.volumes?.map(toVolume),
-    nextPageToken: m.nextPageToken || undefined,
-  } satisfies Fields<w.ListVolumesResponse>;
-}
-
-export function fromDeleteVolumeRequest(m: w.DeleteVolumeRequest): p.DeleteVolumeRequest {
-  return compact<p.DeleteVolumeRequest>({
-    volumeId: m.volumeId,
-    workspace: m.workspace,
-  });
-}
-
-export function toDeleteVolumeRequest(m: p.DeleteVolumeRequest): MessageInitShape<typeof w.DeleteVolumeRequestSchema> {
-  return {
-    volumeId: m.volumeId || undefined,
-    workspace: m.workspace || undefined,
-  } satisfies Fields<w.DeleteVolumeRequest>;
 }
 
 export function fromListUsageRequest(m: w.ListUsageRequest): p.ListUsageRequest {

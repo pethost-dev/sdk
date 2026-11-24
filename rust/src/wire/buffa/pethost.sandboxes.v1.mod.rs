@@ -83,12 +83,6 @@ pub mod __buffa {
         reg.register_json_any(super::__LIST_TEMPLATES_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_TEMPLATES_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_TEMPLATE_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__VOLUME_JSON_ANY);
-        reg.register_json_any(super::__MOUNT_JSON_ANY);
-        reg.register_json_any(super::__CREATE_VOLUME_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__LIST_VOLUMES_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__LIST_VOLUMES_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__DELETE_VOLUME_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_USAGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_USAGE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__USAGE_ROW_JSON_ANY);
@@ -352,30 +346,6 @@ pub use self::__buffa::view::ListTemplatesResponseOwnedView;
 pub use self::__buffa::view::DeleteTemplateRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteTemplateRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::VolumeView;
-#[doc(inline)]
-pub use self::__buffa::view::VolumeOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::MountView;
-#[doc(inline)]
-pub use self::__buffa::view::MountOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::CreateVolumeRequestView;
-#[doc(inline)]
-pub use self::__buffa::view::CreateVolumeRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::ListVolumesRequestView;
-#[doc(inline)]
-pub use self::__buffa::view::ListVolumesRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::ListVolumesResponseView;
-#[doc(inline)]
-pub use self::__buffa::view::ListVolumesResponseOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::DeleteVolumeRequestView;
-#[doc(inline)]
-pub use self::__buffa::view::DeleteVolumeRequestOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::ListUsageRequestView;
 #[doc(inline)]

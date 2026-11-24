@@ -18,7 +18,6 @@ class Meter(OpenEnum):
         RUNNING: A second of a RUNNING sandbox, at its size (UsageRow.size).
         PAUSED: A second of a PAUSED sandbox, at its size (UsageRow.size).
         STORED_GIB: A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
-        VOLUME_GIB: A GiB of a volume's size.
     """
 
     UNSPECIFIED = 0
@@ -31,9 +30,6 @@ class Meter(OpenEnum):
 
     STORED_GIB = 7
     """A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own."""
-
-    VOLUME_GIB = 8
-    """A GiB of a volume's size."""
 
 
 class SandboxState(OpenEnum):
@@ -377,7 +373,7 @@ class RoomBound(OpenEnum):
         MEMORY: The memory it sells is held by the sandboxes running or paused there: try again later.
         SHORT_MEMORY: Its own memory runs short, so it starts no sandbox for now: try again later.
         DISK: Its disk has no more free space than it keeps, what it could evict gone: try again later.
-        DISK_CAP: The disks and volumes it holds reach as much as it holds: try again later.
+        DISK_CAP: The disks it holds reach as much as it holds: try again later.
     """
 
     UNSPECIFIED = 0
@@ -392,7 +388,7 @@ class RoomBound(OpenEnum):
     """Its disk has no more free space than it keeps, what it could evict gone: try again later."""
 
     DISK_CAP = 4
-    """The disks and volumes it holds reach as much as it holds: try again later."""
+    """The disks it holds reach as much as it holds: try again later."""
 
 
 @final
@@ -406,7 +402,7 @@ class Workspace:
         sizes: Every size, smallest first: the header's SIZES.
         template_bytes: What its own template versions take in object storage now (Template.size_bytes, SAVING ones
             counted as 0): what Limits.template_gib holds.
-        vcpus_used: What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
+        vcpus_used: What its sandboxes count of Limits.vcpus now.
     """
 
     workspace_id: str = ""
@@ -433,9 +429,7 @@ class Workspace:
     """
 
     vcpus_used: int = 0
-    """What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib."""
-
-    volume_gib_used: int = 0
+    """What its sandboxes count of Limits.vcpus now."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -532,7 +526,7 @@ class Billing:
             stop, and by what is stored meanwhile; the next period's amount pays that first.
         suspended: True = nothing pays for its usage now: the included usage is used up and the balance is
             empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-            starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+            starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
             adds to the balance or the plan's next period begins.
             What it stores is still counted.
         trial: True = it is in its plan's free trial: the included usage is the trial's, and the plan's
@@ -562,7 +556,7 @@ class Billing:
     suspended: bool = False
     """True = nothing pays for its usage now: the included usage is used up and the balance is
     empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-    starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+    starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
     adds to the balance or the plan's next period begins.
     What it stores is still counted.
     """
@@ -600,19 +594,15 @@ class Billing:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Rates:
     """What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-    the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+    the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
     PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 
     Attributes:
         stored_gib_month: Meter.STORED_GIB: what a STOPPED sandbox holds in object storage.
-        volume_gib_month: Meter.VOLUME_GIB: a volume's whole size.
     """
 
     stored_gib_month: float = 0.0
     """Meter.STORED_GIB: what a STOPPED sandbox holds in object storage."""
-
-    volume_gib_month: float = 0.0
-    """Meter.VOLUME_GIB: a volume's whole size."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -691,7 +681,6 @@ class Limits:
             counts is never refused for it: a call into a PAUSED one, or into a STOPPED one that wakes
             when stopped, wakes it. Stopping one frees its vCPUs, but for one that wakes when stopped.
         largest_size: The largest size it may create, start or change a sandbox to.
-        volume_gib: The most GiB its volumes may take together (create_volume).
         template_versions: The workspace's own templates: at most template_versions versions of one name, FAILED ones
             aside, and template_gib GiB in all of what its versions take in object storage
             (Workspace.template_bytes), which is not billed. A create_template past either, or while
@@ -711,9 +700,6 @@ class Limits:
 
     largest_size: Size = Size.UNSPECIFIED
     """The largest size it may create, start or change a sandbox to."""
-
-    volume_gib: int = 0
-    """The most GiB its volumes may take together (create_volume)."""
 
     template_versions: int = 0
     """The workspace's own templates: at most template_versions versions of one name, FAILED ones
@@ -838,12 +824,11 @@ class Sandbox:
     out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
     space"), its disk kept.
 
-    A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-    no room for it (resume_sandbox), its addresses with it. If a server is lost, each of its
-    sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-    starts on another server at its next resume_sandbox; one without a copy is DELETED, as are its
-    volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-    (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+    A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+    (resume_sandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+    is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+    server at its next resume_sandbox; one without a copy is DELETED. While nothing pays for its
+    workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
     starts.
 
     Attributes:
@@ -908,8 +893,6 @@ class Sandbox:
     grows it to the new size's. No size whose disk is smaller is allowed
     (SIZES).
     """
-
-    mounts: Sequence[Mount] = ()
 
     desktop: Desktop | None = None
     """Its screen: every sandbox has one (control_desktop)."""
@@ -1031,10 +1014,9 @@ class Usage:
     its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
     place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
     bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-    empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-    minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-    twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-    list_usage).
+    empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+    turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+    where the one before it was counted to (Sandbox.usage, list_usage).
 
     Attributes:
         running_seconds: At every size, each run 10 seconds at least.
@@ -2136,125 +2118,6 @@ class ListTemplatesResponse:
         from . import _convert
 
         return _convert.list_templates_response_from_dict(data)
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class Volume:
-    """
-    Attributes:
-        size_gib: Counted as storage, used or not.
-        mounted_by: Sandbox ids.
-    """
-
-    volume_id: str = ""
-
-    name: str = ""
-
-    size_gib: int = 0
-    """Counted as storage, used or not."""
-
-    used_bytes: int = 0
-
-    mounted_by: Sequence[str] = ()
-    """Sandbox ids."""
-
-    create_time: datetime | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
-        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
-        absent is left out, a zero where the type has no None too, and an enum's value this version does
-        not know is its number.
-        """
-        from . import _convert
-
-        return _convert.volume_to_dict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Volume:
-        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
-        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
-        and so is an enum's name this version does not know; a value that is not of its field's kind is
-        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
-        """
-        from . import _convert
-
-        return _convert.volume_from_dict(data)
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class Mount:
-    """A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-    any number.
-
-    Attributes:
-        path: Absolute: /data. At most 255 bytes.
-    """
-
-    volume_id: str = ""
-
-    path: str = ""
-    """Absolute: /data. At most 255 bytes."""
-
-    read_only: bool = False
-
-    def to_dict(self) -> dict[str, Any]:
-        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
-        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
-        absent is left out, a zero where the type has no None too, and an enum's value this version does
-        not know is its number.
-        """
-        from . import _convert
-
-        return _convert.mount_to_dict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Mount:
-        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
-        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
-        and so is an enum's name this version does not know; a value that is not of its field's kind is
-        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
-        """
-        from . import _convert
-
-        return _convert.mount_from_dict(data)
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class ListVolumesResponse:
-    """
-    Attributes:
-        next_page_token: Absent on the last page.
-    """
-
-    volumes: Sequence[Volume] = ()
-
-    next_page_token: str = ""
-    """Absent on the last page."""
-
-    def to_dict(self) -> dict[str, Any]:
-        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
-        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
-        absent is left out, a zero where the type has no None too, and an enum's value this version does
-        not know is its number.
-        """
-        from . import _convert
-
-        return _convert.list_volumes_response_to_dict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ListVolumesResponse:
-        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
-        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
-        and so is an enum's name this version does not know; a value that is not of its field's kind is
-        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
-        """
-        from . import _convert
-
-        return _convert.list_volumes_response_from_dict(data)
 
 
 @final
@@ -4045,7 +3908,7 @@ class LimitReached:
 
     Attributes:
         limit: A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-            "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+            "template_versions", "template_gib"; or a bound of every workspace: "secrets"
             (set_secret), or "starts_per_minute", the sandboxes it may start in any minute, against
             abuse. A start is free: a create_sandbox, or a resume_sandbox of a STOPPED sandbox. A
             resume_sandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -4055,7 +3918,7 @@ class LimitReached:
 
     limit: str = ""
     """A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    "template_versions", "template_gib"; or a bound of every workspace: "secrets"
     (set_secret), or "starts_per_minute", the sandboxes it may start in any minute, against
     abuse. A start is free: a create_sandbox, or a resume_sandbox of a STOPPED sandbox. A
     resume_sandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -4124,7 +3987,7 @@ class Stopped:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class UsageUnpaid:
     """FailedPreconditionError: nothing pays for the workspace's usage now (Billing.suspended), so the
-    call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+    call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
     the balance, or starts the plan if it is in its trial, in the workspace's settings.
     """
 

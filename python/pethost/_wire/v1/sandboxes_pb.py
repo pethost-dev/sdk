@@ -45,7 +45,7 @@ class GetWorkspaceRequest(Message[_GetWorkspaceRequestFields]):
 
         workspace: str
 
-_WorkspaceFields: TypeAlias = Literal["workspace_id", "name", "limits", "ssh_keys", "secrets", "billing", "sizes", "template_bytes", "vcpus_used", "volume_gib_used"]
+_WorkspaceFields: TypeAlias = Literal["workspace_id", "name", "limits", "ssh_keys", "secrets", "billing", "sizes", "template_bytes", "vcpus_used"]
 
 class Workspace(Message[_WorkspaceFields]):
     """
@@ -98,18 +98,14 @@ class Workspace(Message[_WorkspaceFields]):
             optional int64 template_bytes = 8;
             ```
         vcpus_used:
-            What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
+            What its sandboxes count of Limits.vcpus now.
 
             ```proto
             optional int32 vcpus_used = 9;
             ```
-        volume_gib_used:
-            ```proto
-            optional int32 volume_gib_used = 10;
-            ```
     """
 
-    __slots__ = ("workspace_id", "name", "limits", "ssh_keys", "secrets", "billing", "sizes", "template_bytes", "vcpus_used", "volume_gib_used")
+    __slots__ = ("workspace_id", "name", "limits", "ssh_keys", "secrets", "billing", "sizes", "template_bytes", "vcpus_used")
 
     if TYPE_CHECKING:
 
@@ -125,7 +121,6 @@ class Workspace(Message[_WorkspaceFields]):
             sizes: list[SizeInfo] | None = None,
             template_bytes: int | None = None,
             vcpus_used: int | None = None,
-            volume_gib_used: int | None = None,
         ) -> None:
             pass
 
@@ -138,7 +133,6 @@ class Workspace(Message[_WorkspaceFields]):
         sizes: list[SizeInfo]
         template_bytes: int
         vcpus_used: int
-        volume_gib_used: int
 
 _SizeInfoFields: TypeAlias = Literal["size", "vcpus", "memory_mib", "disk_gib", "running_hour", "paused_hour"]
 
@@ -259,7 +253,7 @@ class Billing(Message[_BillingFields]):
         suspended:
             True = nothing pays for its usage now: the included usage is used up and the balance is
             empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-            starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+            starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
             adds to the balance or the plan's next period begins.
             What it stores is still counted.
 
@@ -306,12 +300,12 @@ class Billing(Message[_BillingFields]):
         trial: bool
         rates: Rates | None
 
-_RatesFields: TypeAlias = Literal["stored_gib_month", "volume_gib_month"]
+_RatesFields: TypeAlias = Literal["stored_gib_month"]
 
 class Rates(Message[_RatesFields]):
     """
     What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-    the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+    the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
     PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 
     ```proto
@@ -325,15 +319,9 @@ class Rates(Message[_RatesFields]):
             ```proto
             optional double stored_gib_month = 5;
             ```
-        volume_gib_month:
-            Meter.VOLUME_GIB: a volume's whole size.
-
-            ```proto
-            optional double volume_gib_month = 6;
-            ```
     """
 
-    __slots__ = ("stored_gib_month", "volume_gib_month")
+    __slots__ = ("stored_gib_month",)
 
     if TYPE_CHECKING:
 
@@ -341,12 +329,10 @@ class Rates(Message[_RatesFields]):
             self,
             *,
             stored_gib_month: float | None = None,
-            volume_gib_month: float | None = None,
         ) -> None:
             pass
 
         stored_gib_month: float
-        volume_gib_month: float
 
 _SshKeyFields: TypeAlias = Literal["public_key", "comment", "fingerprint"]
 
@@ -394,7 +380,7 @@ class SshKey(Message[_SshKeyFields]):
         comment: str
         fingerprint: str
 
-_LimitsFields: TypeAlias = Literal["vcpus", "largest_size", "volume_gib", "template_versions", "template_gib"]
+_LimitsFields: TypeAlias = Literal["vcpus", "largest_size", "template_versions", "template_gib"]
 
 class Limits(Message[_LimitsFields]):
     """
@@ -423,12 +409,6 @@ class Limits(Message[_LimitsFields]):
             ```proto
             optional pethost.sandboxes.v1.Size largest_size = 5;
             ```
-        volume_gib:
-            The most GiB its volumes may take together (CreateVolume).
-
-            ```proto
-            optional int32 volume_gib = 6;
-            ```
         template_versions:
             The workspace's own templates: at most template_versions versions of one name, FAILED ones
             aside, and template_gib GiB in all of what its versions take in object storage
@@ -446,7 +426,7 @@ class Limits(Message[_LimitsFields]):
             ```
     """
 
-    __slots__ = ("vcpus", "largest_size", "volume_gib", "template_versions", "template_gib")
+    __slots__ = ("vcpus", "largest_size", "template_versions", "template_gib")
 
     if TYPE_CHECKING:
 
@@ -455,7 +435,6 @@ class Limits(Message[_LimitsFields]):
             *,
             vcpus: int | None = None,
             largest_size: Size | None = None,
-            volume_gib: int | None = None,
             template_versions: int | None = None,
             template_gib: int | None = None,
         ) -> None:
@@ -463,7 +442,6 @@ class Limits(Message[_LimitsFields]):
 
         vcpus: int
         largest_size: Size
-        volume_gib: int
         template_versions: int
         template_gib: int
 
@@ -634,7 +612,7 @@ class DeleteSecretRequest(Message[_DeleteSecretRequestFields]):
         name: str
         workspace: str
 
-_SandboxFields: TypeAlias = Literal["sandbox_id", "state", "state_reason", "state_message", "state_time", "template", "labels", "settings", "revision", "disk_gib", "mounts", "desktop", "ssh_command", "panel_url", "create_time", "usage", "connection", "restore", "next_state", "next_state_time", "stored_bytes", "name"]
+_SandboxFields: TypeAlias = Literal["sandbox_id", "state", "state_reason", "state_message", "state_time", "template", "labels", "settings", "revision", "disk_gib", "desktop", "ssh_command", "panel_url", "create_time", "usage", "connection", "restore", "next_state", "next_state_time", "stored_bytes", "name"]
 
 class Sandbox(Message[_SandboxFields]):
     """
@@ -682,12 +660,11 @@ class Sandbox(Message[_SandboxFields]):
     out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
     space"), its disk kept.
 
-    A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-    no room for it (ResumeSandbox), its addresses with it. If a server is lost, each of its
-    sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-    starts on another server at its next ResumeSandbox; one without a copy is DELETED, as are its
-    volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-    (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+    A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+    (ResumeSandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+    is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+    server at its next ResumeSandbox; one without a copy is DELETED. While nothing pays for its
+    workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
     starts.
 
     ```proto
@@ -751,10 +728,6 @@ class Sandbox(Message[_SandboxFields]):
 
             ```proto
             optional int32 disk_gib = 12;
-            ```
-        mounts:
-            ```proto
-            repeated pethost.sandboxes.v1.Mount mounts = 13;
             ```
         desktop:
             Its screen: every sandbox has one (ControlDesktop).
@@ -828,7 +801,7 @@ class Sandbox(Message[_SandboxFields]):
             ```
     """
 
-    __slots__ = ("sandbox_id", "state", "state_reason", "state_message", "state_time", "template", "labels", "settings", "revision", "disk_gib", "mounts", "desktop", "ssh_command", "panel_url", "create_time", "usage", "connection", "restore", "next_state", "next_state_time", "stored_bytes", "name")
+    __slots__ = ("sandbox_id", "state", "state_reason", "state_message", "state_time", "template", "labels", "settings", "revision", "disk_gib", "desktop", "ssh_command", "panel_url", "create_time", "usage", "connection", "restore", "next_state", "next_state_time", "stored_bytes", "name")
 
     if TYPE_CHECKING:
 
@@ -845,7 +818,6 @@ class Sandbox(Message[_SandboxFields]):
             settings: SandboxSettings | None = None,
             revision: int | None = None,
             disk_gib: int | None = None,
-            mounts: list[Mount] | None = None,
             desktop: Desktop | None = None,
             ssh_command: str | None = None,
             panel_url: str | None = None,
@@ -870,7 +842,6 @@ class Sandbox(Message[_SandboxFields]):
         settings: SandboxSettings | None
         revision: int
         disk_gib: int
-        mounts: list[Mount]
         desktop: Desktop | None
         ssh_command: str
         panel_url: str
@@ -937,10 +908,9 @@ class Usage(Message[_UsageFields]):
     its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
     place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
     bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-    empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-    minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-    twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-    ListUsage).
+    empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+    turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+    where the one before it was counted to (Sandbox.usage, ListUsage).
 
     ```proto
     message pethost.sandboxes.v1.Usage
@@ -993,7 +963,7 @@ class Usage(Message[_UsageFields]):
         stored_gib_hours: float
         cost_micros: int
 
-_CreateSandboxRequestFields: TypeAlias = Literal["template", "settings", "labels", "mounts", "name", "request_id", "workspace"]
+_CreateSandboxRequestFields: TypeAlias = Literal["template", "settings", "labels", "name", "request_id", "workspace"]
 
 class CreateSandboxRequest(Message[_CreateSandboxRequestFields]):
     """
@@ -1020,12 +990,6 @@ class CreateSandboxRequest(Message[_CreateSandboxRequestFields]):
             ```proto
             repeated pethost.sandboxes.v1.Label labels = 4;
             ```
-        mounts:
-            At most 4, at create only.
-
-            ```proto
-            repeated pethost.sandboxes.v1.Mount mounts = 6;
-            ```
         name:
             Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
             and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
@@ -1046,7 +1010,7 @@ class CreateSandboxRequest(Message[_CreateSandboxRequestFields]):
             ```
     """
 
-    __slots__ = ("template", "settings", "labels", "mounts", "name", "request_id", "workspace")
+    __slots__ = ("template", "settings", "labels", "name", "request_id", "workspace")
 
     if TYPE_CHECKING:
 
@@ -1056,7 +1020,6 @@ class CreateSandboxRequest(Message[_CreateSandboxRequestFields]):
             template: str | None = None,
             settings: SandboxSettings | None = None,
             labels: list[Label] | None = None,
-            mounts: list[Mount] | None = None,
             name: str | None = None,
             request_id: str | None = None,
             workspace: str | None = None,
@@ -1066,7 +1029,6 @@ class CreateSandboxRequest(Message[_CreateSandboxRequestFields]):
         template: str
         settings: SandboxSettings | None
         labels: list[Label]
-        mounts: list[Mount]
         name: str
         request_id: str
         workspace: str
@@ -2793,276 +2755,6 @@ class DeleteTemplateRequest(Message[_DeleteTemplateRequestFields]):
             pass
 
         name: str
-        workspace: str
-
-_VolumeFields: TypeAlias = Literal["volume_id", "name", "size_gib", "used_bytes", "mounted_by", "create_time"]
-
-class Volume(Message[_VolumeFields]):
-    """
-    ```proto
-    message pethost.sandboxes.v1.Volume
-    ```
-
-    Attributes:
-        volume_id:
-            ```proto
-            optional string volume_id = 1;
-            ```
-        name:
-            ```proto
-            optional string name = 2;
-            ```
-        size_gib:
-            Counted as storage, used or not.
-
-            ```proto
-            optional int32 size_gib = 3;
-            ```
-        used_bytes:
-            ```proto
-            optional int64 used_bytes = 5;
-            ```
-        mounted_by:
-            Sandbox ids.
-
-            ```proto
-            repeated string mounted_by = 6;
-            ```
-        create_time:
-            ```proto
-            optional google.protobuf.Timestamp create_time = 7;
-            ```
-    """
-
-    __slots__ = ("volume_id", "name", "size_gib", "used_bytes", "mounted_by", "create_time")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            volume_id: str | None = None,
-            name: str | None = None,
-            size_gib: int | None = None,
-            used_bytes: int | None = None,
-            mounted_by: list[str] | None = None,
-            create_time: Timestamp | None = None,
-        ) -> None:
-            pass
-
-        volume_id: str
-        name: str
-        size_gib: int
-        used_bytes: int
-        mounted_by: list[str]
-        create_time: Timestamp | None
-
-_MountFields: TypeAlias = Literal["volume_id", "path", "read_only"]
-
-class Mount(Message[_MountFields]):
-    """
-    A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-    any number.
-
-    ```proto
-    message pethost.sandboxes.v1.Mount
-    ```
-
-    Attributes:
-        volume_id:
-            ```proto
-            optional string volume_id = 1;
-            ```
-        path:
-            Absolute: /data. At most 255 bytes.
-
-            ```proto
-            optional string path = 2;
-            ```
-        read_only:
-            ```proto
-            optional bool read_only = 3;
-            ```
-    """
-
-    __slots__ = ("volume_id", "path", "read_only")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            volume_id: str | None = None,
-            path: str | None = None,
-            read_only: bool | None = None,
-        ) -> None:
-            pass
-
-        volume_id: str
-        path: str
-        read_only: bool
-
-_CreateVolumeRequestFields: TypeAlias = Literal["name", "size_gib", "request_id", "workspace"]
-
-class CreateVolumeRequest(Message[_CreateVolumeRequestFields]):
-    """
-    ```proto
-    message pethost.sandboxes.v1.CreateVolumeRequest
-    ```
-
-    Attributes:
-        name:
-            ```proto
-            optional string name = 1;
-            ```
-        size_gib:
-            1 to 1000.
-
-            ```proto
-            optional int32 size_gib = 2;
-            ```
-        request_id:
-            Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-            nothing again and answers what the first call did (24 h).
-
-            ```proto
-            optional string request_id = 101;
-            ```
-        workspace:
-            ```proto
-            optional string workspace = 100;
-            ```
-    """
-
-    __slots__ = ("name", "size_gib", "request_id", "workspace")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            name: str | None = None,
-            size_gib: int | None = None,
-            request_id: str | None = None,
-            workspace: str | None = None,
-        ) -> None:
-            pass
-
-        name: str
-        size_gib: int
-        request_id: str
-        workspace: str
-
-_ListVolumesRequestFields: TypeAlias = Literal["page_size", "page_token", "workspace"]
-
-class ListVolumesRequest(Message[_ListVolumesRequestFields]):
-    """
-    ```proto
-    message pethost.sandboxes.v1.ListVolumesRequest
-    ```
-
-    Attributes:
-        page_size:
-            Absent = 50; at most 500.
-
-            ```proto
-            optional int32 page_size = 1;
-            ```
-        page_token:
-            ```proto
-            optional string page_token = 2;
-            ```
-        workspace:
-            ```proto
-            optional string workspace = 100;
-            ```
-    """
-
-    __slots__ = ("page_size", "page_token", "workspace")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            page_size: int | None = None,
-            page_token: str | None = None,
-            workspace: str | None = None,
-        ) -> None:
-            pass
-
-        page_size: int
-        page_token: str
-        workspace: str
-
-_ListVolumesResponseFields: TypeAlias = Literal["volumes", "next_page_token"]
-
-class ListVolumesResponse(Message[_ListVolumesResponseFields]):
-    """
-    ```proto
-    message pethost.sandboxes.v1.ListVolumesResponse
-    ```
-
-    Attributes:
-        volumes:
-            ```proto
-            repeated pethost.sandboxes.v1.Volume volumes = 1;
-            ```
-        next_page_token:
-            Absent on the last page.
-
-            ```proto
-            optional string next_page_token = 2;
-            ```
-    """
-
-    __slots__ = ("volumes", "next_page_token")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            volumes: list[Volume] | None = None,
-            next_page_token: str | None = None,
-        ) -> None:
-            pass
-
-        volumes: list[Volume]
-        next_page_token: str
-
-_DeleteVolumeRequestFields: TypeAlias = Literal["volume_id", "workspace"]
-
-class DeleteVolumeRequest(Message[_DeleteVolumeRequestFields]):
-    """
-    ```proto
-    message pethost.sandboxes.v1.DeleteVolumeRequest
-    ```
-
-    Attributes:
-        volume_id:
-            ```proto
-            optional string volume_id = 1;
-            ```
-        workspace:
-            ```proto
-            optional string workspace = 100;
-            ```
-    """
-
-    __slots__ = ("volume_id", "workspace")
-
-    if TYPE_CHECKING:
-
-        def __init__(
-            self,
-            *,
-            volume_id: str | None = None,
-            workspace: str | None = None,
-        ) -> None:
-            pass
-
-        volume_id: str
         workspace: str
 
 _ListUsageRequestFields: TypeAlias = Literal["since", "until", "page_size", "page_token", "workspace"]
@@ -5335,7 +5027,7 @@ class LimitReached(Message[_LimitReachedFields]):
     Attributes:
         limit:
             A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-            "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+            "template_versions", "template_gib"; or a bound of every workspace: "secrets"
             (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
             abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
             ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -5400,7 +5092,7 @@ _UsageUnpaidFields: TypeAlias = NoReturn
 class UsageUnpaid(Message[_UsageUnpaidFields]):
     """
     FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the
-    call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+    call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
     the balance, or starts the plan if it is in its trial, in the workspace's settings.
 
     ```proto
@@ -5628,19 +5320,12 @@ class Meter(Enum):
             ```proto
             METER_STORED_GIB = 7
             ```
-        VOLUME_GIB:
-            A GiB of a volume's size.
-
-            ```proto
-            METER_VOLUME_GIB = 8
-            ```
     """
 
     UNSPECIFIED = 0
     RUNNING = 5
     PAUSED = 9
     STORED_GIB = 7
-    VOLUME_GIB = 8
 
 class SandboxState(Enum):
     """
@@ -6310,7 +5995,7 @@ class RoomBound(Enum):
             ROOM_BOUND_DISK = 3
             ```
         DISK_CAP:
-            The disks and volumes it holds reach as much as it holds: try again later.
+            The disks it holds reach as much as it holds: try again later.
 
             ```proto
             ROOM_BOUND_DISK_CAP = 4
@@ -6325,7 +6010,7 @@ class RoomBound(Enum):
 
 
 _DESC = file_desc(
-    b'\n\x12v1/sandboxes.proto\x12\x14pethost.sandboxes.v1\x1a\x1fgoogle/protobuf/timestamp.protoz\x0cv1/mcp.protoz\x11v1/optional.protoz\x0cv1/sdk.proto"3\n\x13GetWorkspaceRequest\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xc6\x03\n\tWorkspace\x12!\n\x0cworkspace_id\x18\x01 \x01(\tR\x0bworkspaceId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x124\n\x06limits\x18\x03 \x01(\x0b2\x1c.pethost.sandboxes.v1.LimitsR\x06limits\x127\n\x08ssh_keys\x18\x04 \x03(\x0b2\x1c.pethost.sandboxes.v1.SshKeyR\x07sshKeys\x126\n\x07secrets\x18\x05 \x03(\x0b2\x1c.pethost.sandboxes.v1.SecretR\x07secrets\x127\n\x07billing\x18\x06 \x01(\x0b2\x1d.pethost.sandboxes.v1.BillingR\x07billing\x124\n\x05sizes\x18\x07 \x03(\x0b2\x1e.pethost.sandboxes.v1.SizeInfoR\x05sizes\x12%\n\x0etemplate_bytes\x18\x08 \x01(\x03R\rtemplateBytes\x12\x1d\n\nvcpus_used\x18\t \x01(\x05R\tvcpusUsed\x12&\n\x0fvolume_gib_used\x18\n \x01(\x05R\rvolumeGibUsed"\xda\x01\n\x08SizeInfo\x12.\n\x04size\x18\x01 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x14\n\x05vcpus\x18\x02 \x01(\x05R\x05vcpus\x12\x1d\n\nmemory_mib\x18\x03 \x01(\x05R\tmemoryMib\x12\x19\n\x08disk_gib\x18\x04 \x01(\x05R\x07diskGib\x12\'\n\x0crunning_hour\x18\x05 \x01(\x01R\x0brunningHourB\x04\x90\xb5\x18\x01\x12%\n\x0bpaused_hour\x18\x06 \x01(\x01R\npausedHourB\x04\x90\xb5\x18\x01"\xd4\x02\n\x07Billing\x12\x1a\n\x08currency\x18\x01 \x01(\tR\x08currency\x12\'\n\x0fincluded_micros\x18\x02 \x01(\x03R\x0eincludedMicros\x122\n\x15included_total_micros\x18\x03 \x01(\x03R\x13includedTotalMicros\x12B\n\x0fperiod_end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\rperiodEndTime\x12%\n\x0ebalance_micros\x18\x05 \x01(\x03R\rbalanceMicros\x12\x1c\n\tsuspended\x18\x06 \x01(\x08R\tsuspended\x12\x14\n\x05trial\x18\x07 \x01(\x08R\x05trial\x121\n\x05rates\x18\x08 \x01(\x0b2\x1b.pethost.sandboxes.v1.RatesR\x05rates"s\n\x05Rates\x12(\n\x10stored_gib_month\x18\x05 \x01(\x01R\x0estoredGibMonth\x12(\n\x10volume_gib_month\x18\x06 \x01(\x01R\x0evolumeGibMonthJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05"c\n\x06SshKey\x12\x1d\n\npublic_key\x18\x01 \x01(\tR\tpublicKey\x12\x18\n\x07comment\x18\x02 \x01(\tR\x07comment\x12 \n\x0bfingerprint\x18\x03 \x01(\tR\x0bfingerprint"\x98\x02\n\x06Limits\x12\x14\n\x05vcpus\x18\x04 \x01(\x05R\x05vcpus\x12=\n\x0clargest_size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x0blargestSize\x12\x1d\n\nvolume_gib\x18\x06 \x01(\x05R\tvolumeGib\x12+\n\x11template_versions\x18\x02 \x01(\x05R\x10templateVersions\x12!\n\x0ctemplate_gib\x18\x03 \x01(\x05R\x0btemplateGibJ\x04\x08\x01\x10\x02J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\nR\x11starts_per_minuteR\x0fstarts_per_hourR\x0estarts_per_day"L\n\x11SetSshKeysRequest\x12\x19\n\x08ssh_keys\x18\x01 \x03(\tR\x07sshKeys\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"o\n\x06Secret\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05hosts\x18\x02 \x03(\tR\x05hosts\x12;\n\x0bupdate_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nupdateTime"u\n\x10SetSecretRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n\x05value\x18\x02 \x01(\tR\x05valueB\x03\x80\x01\x01\x12\x14\n\x05hosts\x18\x03 \x03(\tR\x05hosts\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"G\n\x13DeleteSecretRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xd3\x08\n\x07Sandbox\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x128\n\x05state\x18\x02 \x01(\x0e2".pethost.sandboxes.v1.SandboxStateR\x05state\x12D\n\x0cstate_reason\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x0bstateReason\x12#\n\rstate_message\x18\x04 \x01(\tR\x0cstateMessage\x129\n\nstate_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstateTime\x12\x1a\n\x08template\x18\x06 \x01(\tR\x08template\x123\n\x06labels\x18\t \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12A\n\x08settings\x18\n \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12\x1a\n\x08revision\x18\x0b \x01(\x03R\x08revision\x12\x19\n\x08disk_gib\x18\x0c \x01(\x05R\x07diskGib\x123\n\x06mounts\x18\r \x03(\x0b2\x1b.pethost.sandboxes.v1.MountR\x06mounts\x127\n\x07desktop\x18\x0e \x01(\x0b2\x1d.pethost.sandboxes.v1.DesktopR\x07desktop\x12\x1f\n\x0bssh_command\x18\x0f \x01(\tR\nsshCommand\x12\x1b\n\tpanel_url\x18\x10 \x01(\tR\x08panelUrl\x12;\n\x0bcreate_time\x18\x11 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x121\n\x05usage\x18\x13 \x01(\x0b2\x1b.pethost.sandboxes.v1.UsageR\x05usage\x12F\n\nconnection\x18\x14 \x01(\x0b2 .pethost.sandboxes.v1.ConnectionR\nconnectionB\x04\xc8\xb5\x18\x01\x127\n\x07restore\x18\x16 \x01(\x0b2\x1d.pethost.sandboxes.v1.RestoreR\x07restore\x12A\n\nnext_state\x18\x17 \x01(\x0e2".pethost.sandboxes.v1.SandboxStateR\tnextState\x12B\n\x0fnext_state_time\x18\x18 \x01(\x0b2\x1a.google.protobuf.TimestampR\rnextStateTime\x12!\n\x0cstored_bytes\x18\x19 \x01(\x03R\x0bstoredBytes\x12\x12\n\x04name\x18\x1a \x01(\tR\x04nameJ\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\x12\x10\x13J\x04\x08\x15\x10\x16R\x0bforked_from"O\n\x07Restore\x12#\n\rfetched_bytes\x18\x01 \x01(\x03R\x0cfetchedBytes\x12\x1f\n\x0btotal_bytes\x18\x02 \x01(\x03R\ntotalBytes"\xba\x01\n\x05Usage\x12\'\n\x0frunning_seconds\x18\x01 \x01(\x03R\x0erunningSeconds\x12%\n\x0epaused_seconds\x18\x08 \x01(\x03R\rpausedSeconds\x12(\n\x10stored_gib_hours\x18\x06 \x01(\x01R\x0estoredGibHours\x12\x1f\n\x0bcost_micros\x18\x07 \x01(\x03R\ncostMicrosJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06"\xc2\x02\n\x14CreateSandboxRequest\x12\x1a\n\x08template\x18\x01 \x01(\tR\x08template\x12A\n\x08settings\x18\x03 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x123\n\x06labels\x18\x04 \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x123\n\x06mounts\x18\x06 \x03(\x0b2\x1b.pethost.sandboxes.v1.MountR\x06mounts\x12\x12\n\x04name\x18\x08 \x01(\tR\x04name\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\x08\x02\x10\x03J\x04\x08\x05\x10\x06J\x04\x08\x07\x10\x08"8\n\x11GetSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"\xf5\x01\n\x14ListSandboxesRequest\x12:\n\x06states\x18\x01 \x03(\x0e2".pethost.sandboxes.v1.SandboxStateR\x06states\x123\n\x06labels\x18\x02 \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\x12\x12\n\x04name\x18\x05 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"|\n\x15ListSandboxesResponse\x12;\n\tsandboxes\x18\x01 \x03(\x0b2\x1d.pethost.sandboxes.v1.SandboxR\tsandboxes\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xfb\x01\n\x14UpdateSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12A\n\x08settings\x18\x02 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12\x1f\n\x0bif_revision\x18\x03 \x01(\x03R\nifRevision\x12#\n\rrevoke_tokens\x18\x04 \x01(\x08R\x0crevokeTokens\x12\x1b\n\tgrow_disk\x18\x05 \x01(\x08R\x08growDisk\x12\x18\n\x04name\x18\x06 \x01(\tR\x04nameB\x04\x90\xb5\x18\x01J\x04\x08d\x10e":\n\x13PauseSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"9\n\x12StopSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e";\n\x14ResumeSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e";\n\x14DeleteSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"]\n\x15ConnectSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1f\n\x0bttl_seconds\x18\x02 \x01(\rR\nttlSecondsJ\x04\x08d\x10e"\x97\x01\n\nConnection\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x19\n\x05token\x18\x02 \x01(\tR\x05tokenB\x03\x80\x01\x01\x12;\n\x0bexpire_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x1f\n\x0bssh_command\x18\x04 \x01(\tR\nsshCommand"\xb4\x02\n\x0fSandboxSettings\x12.\n\x04size\x18\x01 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12=\n\tlifecycle\x18\x02 \x01(\x0b2\x1f.pethost.sandboxes.v1.LifecycleR\tlifecycle\x124\n\x06egress\x18\x03 \x01(\x0b2\x1c.pethost.sandboxes.v1.EgressR\x06egress\x127\n\x07ingress\x18\x04 \x01(\x0b2\x1d.pethost.sandboxes.v1.IngressR\x07ingress\x12C\n\x0benvironment\x18\x05 \x01(\x0b2!.pethost.sandboxes.v1.EnvironmentR\x0benvironment"\x80\x02\n\tLifecycle\x12=\n\x18pause_after_idle_seconds\x18\x05 \x01(\rR\x15pauseAfterIdleSecondsB\x04\x90\xb5\x18\x01\x12;\n\x17stop_after_idle_seconds\x18\x06 \x01(\rR\x14stopAfterIdleSecondsB\x04\x90\xb5\x18\x01\x129\n\x19delete_after_idle_seconds\x18\x02 \x01(\rR\x16deleteAfterIdleSeconds\x12*\n\x11wake_when_stopped\x18\x07 \x01(\x08R\x0fwakeWhenStoppedJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05"2\n\x06Egress\x12\x14\n\x05allow\x18\x01 \x03(\tR\x05allow\x12\x12\n\x04deny\x18\x02 \x03(\tR\x04deny"N\n\x07Ingress\x12C\n\x0cpublic_ports\x18\x01 \x03(\x0b2 .pethost.sandboxes.v1.PublicPortR\x0bpublicPorts"2\n\nPublicPort\x12\x12\n\x04port\x18\x01 \x01(\rR\x04port\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url"I\n\x0bEnvironment\x12:\n\tvariables\x18\x01 \x03(\x0b2\x1c.pethost.sandboxes.v1.EnvVarR\tvariables"X\n\x06EnvVar\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n\x05value\x18\x02 \x01(\tH\x00R\x05value\x12\x18\n\x06secret\x18\x03 \x01(\tH\x00R\x06secretB\x08\n\x06source"/\n\x05Label\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value"\xc6\x01\n\x18GetSandboxMetricsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x120\n\x05since\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05since\x120\n\x05until\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05until\x12!\n\x0cstep_seconds\x18\x04 \x01(\rR\x0bstepSecondsJ\x04\x08d\x10e"W\n\x19GetSandboxMetricsResponse\x12:\n\x06points\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.MetricsPointR\x06points"\x89\x02\n\x0cMetricsPoint\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x1f\n\x0bcpu_percent\x18\x02 \x01(\x02R\ncpuPercent\x12*\n\x11memory_used_bytes\x18\x03 \x01(\x03R\x0fmemoryUsedBytes\x12&\n\x0fdisk_used_bytes\x18\x04 \x01(\x03R\rdiskUsedBytes\x12(\n\x10network_in_bytes\x18\x05 \x01(\x03R\x0enetworkInBytes\x12*\n\x11network_out_bytes\x18\x06 \x01(\x03R\x0fnetworkOutBytes"\xcc\x01\n\x18ListSandboxEventsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12<\n\x05kinds\x18\x02 \x03(\x0e2&.pethost.sandboxes.v1.SandboxEventKindR\x05kinds\x12\x14\n\x05after\x18\x03 \x01(\tR\x05after\x12!\n\x0cnewest_first\x18\x04 \x01(\x08R\x0bnewestFirst\x12\x14\n\x05limit\x18\x05 \x01(\x05R\x05limitJ\x04\x08d\x10e"k\n\x19ListSandboxEventsResponse\x12:\n\x06events\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.SandboxEventR\x06events\x12\x12\n\x04more\x18\x02 \x01(\x08R\x04more"\x94\x01\n\x19WatchSandboxEventsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12<\n\x05kinds\x18\x02 \x03(\x0e2&.pethost.sandboxes.v1.SandboxEventKindR\x05kinds\x12\x14\n\x05after\x18\x03 \x01(\tR\x05afterJ\x04\x08d\x10e"\xa3\x03\n\x0cSandboxEvent\x12\x19\n\x08event_id\x18\x01 \x01(\tR\x07eventId\x12.\n\x04time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12D\n\tlifecycle\x18\x03 \x01(\x0b2$.pethost.sandboxes.v1.LifecycleEventH\x00R\tlifecycle\x12>\n\x07command\x18\x04 \x01(\x0b2".pethost.sandboxes.v1.CommandEventH\x00R\x07command\x12;\n\x06egress\x18\x05 \x01(\x0b2!.pethost.sandboxes.v1.EgressEventH\x00R\x06egress\x125\n\x04port\x18\x06 \x01(\x0b2\x1f.pethost.sandboxes.v1.PortEventH\x00R\x04port\x12E\n\nagent_turn\x18\x07 \x01(\x0b2$.pethost.sandboxes.v1.AgentTurnEventH\x00R\tagentTurnB\x07\n\x05event"\x8d\x02\n\x0eLifecycleEvent\x12=\n\x06change\x18\x01 \x01(\x0e2%.pethost.sandboxes.v1.LifecycleChangeR\x06change\x129\n\x06reason\x18\x02 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x06reason\x12.\n\x04size\x18\x04 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x19\n\x08disk_gib\x18\x06 \x01(\x05R\x07diskGib\x12#\n\rstate_message\x18\x05 \x01(\tR\x0cstateMessageJ\x04\x08\x03\x10\x04R\x0bforked_from"\x85\x02\n\x0cCommandEvent\x12\x1d\n\ncommand_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x128\n\x05state\x18\x03 \x01(\x0e2".pethost.sandboxes.v1.CommandStateR\x05state\x12!\n\texit_code\x18\x04 \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12\x1f\n\x0bduration_ms\x18\x05 \x01(\x03R\ndurationMs\x12>\n\nstarted_by\x18\x06 \x01(\x0e2\x1f.pethost.sandboxes.v1.StartedByR\tstartedBy"\xc3\x01\n\x0bEgressEvent\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04port\x18\x02 \x01(\x05R\x04port\x12\x18\n\x07allowed\x18\x03 \x01(\x08R\x07allowed\x12 \n\x0bconnections\x18\x04 \x01(\x05R\x0bconnections\x12\x1b\n\tbytes_out\x18\x05 \x01(\x03R\x08bytesOut\x12\x19\n\x08bytes_in\x18\x06 \x01(\x03R\x07bytesIn\x12\x18\n\x07secrets\x18\x07 \x03(\tR\x07secrets"\x98\x01\n\tPortEvent\x12\x12\n\x04port\x18\x01 \x01(\x05R\x04port\x12\x1a\n\x08requests\x18\x02 \x01(\x05R\x08requests\x12#\n\rserver_errors\x18\x03 \x01(\x05R\x0cserverErrors\x12\x19\n\x08bytes_in\x18\x04 \x01(\x03R\x07bytesIn\x12\x1b\n\tbytes_out\x18\x05 \x01(\x03R\x08bytesOut"\xa1\x02\n\x0eAgentTurnEvent\x12\x17\n\x07turn_id\x18\x01 \x01(\tR\x06turnId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x16\n\x06prompt\x18\x04 \x01(\tR\x06prompt\x12:\n\x05state\x18\x05 \x01(\x0e2$.pethost.sandboxes.v1.AgentTurnStateR\x05state\x12!\n\x0cinput_tokens\x18\x06 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\x07 \x01(\x03R\x0coutputTokens"\xdb\x03\n\x08Template\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07version\x18\x02 \x01(\x05R\x07version\x129\n\x05state\x18\x03 \x01(\x0e2#.pethost.sandboxes.v1.TemplateStateR\x05state\x12\'\n\x0ffailure_message\x18\x04 \x01(\tR\x0efailureMessage\x12\x19\n\x08built_in\x18\x06 \x01(\x08R\x07builtIn\x12 \n\x0bdescription\x18\x07 \x01(\tR\x0bdescription\x12A\n\x08settings\x18\x08 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12;\n\x0bcreate_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x12\x1d\n\nsize_bytes\x18\r \x01(\x03R\tsizeBytes\x12\x12\n\x04base\x18\x0e \x01(\tR\x04base\x125\n\x08min_size\x18\x0f \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x07minSizeJ\x04\x08\x05\x10\x06J\x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c"\xa3\x01\n\x15CreateTemplateRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n\nsandbox_id\x18\x03 \x01(\tR\tsandboxId\x12 \n\x0bdescription\x18\x05 \x01(\tR\x0bdescription\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08\x02\x10\x03J\x04\x08\x04\x10\x05J\x04\x08\x06\x10\x07J\x04\x08d\x10e"T\n\x12GetTemplateRequest\x12\x1a\n\x08template\x18\x01 \x01(\tR\x08template\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\x08\x02\x10\x03"\x84\x01\n\x14ListTemplatesRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"}\n\x15ListTemplatesResponse\x12<\n\ttemplates\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.TemplateR\ttemplates\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"I\n\x15DeleteTemplateRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xdb\x01\n\x06Volume\x12\x1b\n\tvolume_id\x18\x01 \x01(\tR\x08volumeId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n\x08size_gib\x18\x03 \x01(\x05R\x07sizeGib\x12\x1d\n\nused_bytes\x18\x05 \x01(\x03R\tusedBytes\x12\x1d\n\nmounted_by\x18\x06 \x03(\tR\tmountedBy\x12;\n\x0bcreate_time\x18\x07 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTimeJ\x04\x08\x04\x10\x05J\x04\x08\x08\x10\t"U\n\x05Mount\x12\x1b\n\tvolume_id\x18\x01 \x01(\tR\x08volumeId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x1b\n\tread_only\x18\x03 \x01(\x08R\x08readOnly"\x81\x01\n\x13CreateVolumeRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n\x08size_gib\x18\x02 \x01(\x05R\x07sizeGib\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"n\n\x12ListVolumesRequest\x12\x1b\n\tpage_size\x18\x01 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x02 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"u\n\x13ListVolumesResponse\x126\n\x07volumes\x18\x01 \x03(\x0b2\x1c.pethost.sandboxes.v1.VolumeR\x07volumes\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"P\n\x13DeleteVolumeRequest\x12\x1b\n\tvolume_id\x18\x01 \x01(\tR\x08volumeId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xd0\x01\n\x10ListUsageRequest\x120\n\x05since\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05since\x120\n\x05until\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05until\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"o\n\x11ListUsageResponse\x122\n\x04rows\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.UsageRowR\x04rows\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xdb\x01\n\x08UsageRow\x12,\n\x03day\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x03day\x121\n\x05meter\x18\x02 \x01(\x0e2\x1b.pethost.sandboxes.v1.MeterR\x05meter\x12\x1d\n\nunit_hours\x18\x03 \x01(\x01R\tunitHours\x12.\n\x04size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x1f\n\x0bcost_micros\x18\x04 \x01(\x03R\ncostMicros"\xc2\x02\n\x11RunCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x12\x10\n\x03cwd\x18\x03 \x01(\tR\x03cwd\x12\x12\n\x04user\x18\x04 \x01(\tR\x04user\x12\x14\n\x05stdin\x18\x05 \x01(\tR\x05stdin\x12\'\n\x0cwait_seconds\x18\x06 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12"\n\rwait_for_port\x18\x07 \x01(\rR\x0bwaitForPort\x12\'\n\x0ftimeout_seconds\x18\x08 \x01(\rR\x0etimeoutSeconds\x12\x1d\n\nkeep_awake\x18\t \x01(\x08R\tkeepAwake\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08d\x10e"\xf2\x03\n\x07Command\x12\x1d\n\ncommand_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x128\n\x05state\x18\x03 \x01(\x0e2".pethost.sandboxes.v1.CommandStateR\x05state\x12!\n\texit_code\x18\x04 \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12\x16\n\x06stdout\x18\x05 \x01(\tR\x06stdout\x12\x16\n\x06stderr\x18\x06 \x01(\tR\x06stderr\x12!\n\x0cstdout_bytes\x18\x07 \x01(\x03R\x0bstdoutBytes\x12!\n\x0cstderr_bytes\x18\x08 \x01(\x03R\x0bstderrBytes\x12)\n\x10output_truncated\x18\t \x01(\x08R\x0foutputTruncated\x12>\n\nstarted_by\x18\n \x01(\x0e2\x1f.pethost.sandboxes.v1.StartedByR\tstartedBy\x129\n\nstart_time\x18\x0b \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime"\xdc\x01\n\x11GetCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12,\n\x12stdout_after_bytes\x18\x04 \x01(\x03R\x10stdoutAfterBytes\x12,\n\x12stderr_after_bytes\x18\x05 \x01(\x03R\x10stderrAfterBytesJ\x04\x08d\x10e"X\n\x12StopCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandIdJ\x04\x08d\x10e":\n\x13ListCommandsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"Q\n\x14ListCommandsResponse\x129\n\x08commands\x18\x01 \x03(\x0b2\x1d.pethost.sandboxes.v1.CommandR\x08commands"Y\n\x13WatchCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandIdJ\x04\x08d\x10e"\x84\x01\n\rCommandOutput\x12\x18\n\x06stdout\x18\x01 \x01(\x0cH\x00R\x06stdout\x12\x18\n\x06stderr\x18\x02 \x01(\x0cH\x00R\x06stderr\x125\n\x05ended\x18\x03 \x01(\x0b2\x1d.pethost.sandboxes.v1.CommandH\x00R\x05endedB\x08\n\x06output"\x90\x01\n\x0fReadFileRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12!\n\x0coffset_bytes\x18\x03 \x01(\x03R\x0boffsetBytes\x12!\n\x0clength_bytes\x18\x04 \x01(\x03R\x0blengthBytesJ\x04\x08d\x10e"v\n\x04File\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x1a\n\x04data\x18\x03 \x01(\x0cH\x00R\x04dataB\x04\xc8\xb5\x18\x01\x12\x1d\n\nsize_bytes\x18\x04 \x01(\x03R\tsizeBytesB\t\n\x07content"\x80\x01\n\x10ListFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x14\n\x05depth\x18\x03 \x01(\x05R\x05depth\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageTokenJ\x04\x08d\x10e"q\n\x11ListFilesResponse\x124\n\x05files\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.FileInfoR\x05files\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xff\x01\n\x08FileInfo\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x122\n\x04kind\x18\x02 \x01(\x0e2\x1e.pethost.sandboxes.v1.FileKindR\x04kind\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x12\n\x04mode\x18\x04 \x01(\tR\x04mode\x12\x14\n\x05owner\x18\x05 \x01(\tR\x05owner\x12;\n\x0bmodify_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\nmodifyTime\x12%\n\x0esymlink_target\x18\x07 \x01(\tR\rsymlinkTarget"t\n\x11WriteFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12:\n\x07changes\x18\x02 \x03(\x0b2 .pethost.sandboxes.v1.FileChangeR\x07changesJ\x04\x08d\x10e"\xc1\x02\n\nFileChange\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x14\n\x04data\x18\x03 \x01(\x0cH\x00R\x04data\x124\n\x04edit\x18\x04 \x01(\x0b2\x1e.pethost.sandboxes.v1.TextEditH\x00R\x04edit\x12\x19\n\x07move_to\x18\x05 \x01(\tH\x00R\x06moveTo\x126\n\x06delete\x18\x06 \x01(\x0b2\x1c.pethost.sandboxes.v1.DeleteH\x00R\x06delete\x12L\n\x0emake_directory\x18\x07 \x01(\x0b2#.pethost.sandboxes.v1.MakeDirectoryH\x00R\rmakeDirectory\x12\x12\n\x04mode\x18\x08 \x01(\tR\x04modeB\x08\n\x06change"\x08\n\x06Delete"\x0f\n\rMakeDirectory"@\n\x08TextEdit\x12\x19\n\x08old_text\x18\x01 \x01(\tR\x07oldText\x12\x19\n\x08new_text\x18\x02 \x01(\tR\x07newText"\x9f\x01\n\x12WriteFilesResponse\x12\x1d\n\ndone_count\x18\x01 \x01(\x05R\tdoneCount\x12-\n\x0ffailure_message\x18\x02 \x01(\tR\x0efailureMessageB\x04\xd0\xb5\x18\x01\x12;\n\x07failure\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.FileFailureR\x07failure"j\n\x11WatchFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x1c\n\trecursive\x18\x03 \x01(\x08R\trecursiveJ\x04\x08d\x10e"q\n\tFileEvent\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x127\n\x04kind\x18\x02 \x01(\x0e2#.pethost.sandboxes.v1.FileEventKindR\x04kind\x12\x17\n\x07to_path\x18\x03 \x01(\tR\x06toPath"{\n\x15ControlDesktopRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12=\n\x07actions\x18\x02 \x03(\x0b2#.pethost.sandboxes.v1.DesktopActionR\x07actionsJ\x04\x08d\x10e"\xe8\x01\n\x16ControlDesktopResponse\x12\x1d\n\ndone_count\x18\x01 \x01(\x05R\tdoneCount\x12-\n\x0ffailure_message\x18\x02 \x01(\tR\x0efailureMessageB\x04\xd0\xb5\x18\x01\x12@\n\nscreenshot\x18\x03 \x01(\x0b2 .pethost.sandboxes.v1.ScreenshotR\nscreenshot\x12>\n\x07failure\x18\x04 \x01(\x0e2$.pethost.sandboxes.v1.DesktopFailureR\x07failure"\xa9\x01\n\nScreenshot\x12\x1a\n\x05image\x18\x01 \x01(\x0cR\x05imageB\x04\xb8\xb5\x18\x01\x12\x1b\n\tmime_type\x18\x02 \x01(\tR\x08mimeType\x12\x14\n\x05width\x18\x03 \x01(\x05R\x05width\x12\x16\n\x06height\x18\x04 \x01(\x05R\x06height\x12\x19\n\x08cursor_x\x18\x05 \x01(\x05R\x07cursorX\x12\x19\n\x08cursor_y\x18\x06 \x01(\x05R\x07cursorY"\xd1\x02\n\rDesktopAction\x123\n\x05click\x18\x01 \x01(\x0b2\x1b.pethost.sandboxes.v1.ClickH\x00R\x05click\x12<\n\nmove_mouse\x18\x02 \x01(\x0b2\x1b.pethost.sandboxes.v1.PointH\x00R\tmoveMouse\x120\n\x04drag\x18\x03 \x01(\x0b2\x1a.pethost.sandboxes.v1.DragH\x00R\x04drag\x126\n\x06scroll\x18\x04 \x01(\x0b2\x1c.pethost.sandboxes.v1.ScrollH\x00R\x06scroll\x12\x1d\n\ttype_text\x18\x05 \x01(\tH\x00R\x08typeText\x12\x1f\n\npress_keys\x18\x06 \x01(\tH\x00R\tpressKeys\x12\x19\n\x07wait_ms\x18\x07 \x01(\rH\x00R\x06waitMsB\x08\n\x06action"#\n\x05Point\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y"\x91\x01\n\x05Click\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y\x129\n\x06button\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.MouseButtonR\x06button\x12\x14\n\x05count\x18\x04 \x01(\x05R\x05count\x12\x1b\n\thold_keys\x18\x05 \x01(\tR\x08holdKeys"7\n\x04Drag\x12/\n\x04path\x18\x01 \x03(\x0b2\x1b.pethost.sandboxes.v1.PointR\x04path"N\n\x06Scroll\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y\x12\x12\n\x04down\x18\x03 \x01(\x05R\x04down\x12\x14\n\x05right\x18\x04 \x01(\x05R\x05right"7\n\x07Desktop\x12\x14\n\x05width\x18\x01 \x01(\x05R\x05width\x12\x16\n\x06height\x18\x02 \x01(\x05R\x06height"\xc4\x02\n\x11CreateLinkRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x14\n\x04port\x18\x02 \x01(\rH\x00R\x04port\x12@\n\x08terminal\x18\x03 \x01(\x0b2".pethost.sandboxes.v1.TerminalLinkH\x00R\x08terminal\x12=\n\x07desktop\x18\x04 \x01(\x0b2!.pethost.sandboxes.v1.DesktopLinkH\x00R\x07desktop\x12%\n\rdownload_path\x18\x05 \x01(\tH\x00R\x0cdownloadPath\x12!\n\x0bupload_path\x18\x06 \x01(\tH\x00R\nuploadPath\x12\x1f\n\x0bttl_seconds\x18\x07 \x01(\rR\nttlSecondsB\x08\n\x06targetJ\x04\x08d\x10e"(\n\x0cTerminalLink\x12\x18\n\x07command\x18\x01 \x01(\tR\x07command"*\n\x0bDesktopLink\x12\x1b\n\tview_only\x18\x01 \x01(\x08R\x08viewOnly"u\n\x04Link\x12\x15\n\x03url\x18\x01 \x01(\tR\x03urlB\x03\x80\x01\x01\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x19\n\x05token\x18\x03 \x01(\tR\x05tokenB\x03\x80\x01\x01"\x9d\x02\n\x12PromptAgentRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x16\n\x06prompt\x18\x02 \x01(\tR\x06prompt\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\'\n\x0fconversation_id\x18\x04 \x01(\tR\x0econversationId\x12\x14\n\x05model\x18\x05 \x01(\tR\x05model\x12\x10\n\x03cwd\x18\x06 \x01(\tR\x03cwd\x12\'\n\x0cwait_seconds\x18\x07 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08d\x10e"\xcb\x03\n\tAgentTurn\x12\x17\n\x07turn_id\x18\x01 \x01(\tR\x06turnId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\x12:\n\x05state\x18\x05 \x01(\x0e2$.pethost.sandboxes.v1.AgentTurnStateR\x05state\x12\x14\n\x05reply\x18\x06 \x01(\tR\x05reply\x12\'\n\x0ffailure_message\x18\x07 \x01(\tR\x0efailureMessage\x12!\n\x0cinput_tokens\x18\x08 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\t \x01(\x03R\x0coutputTokens\x129\n\nstart_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x0b \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime"|\n\x13GetAgentTurnRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x17\n\x07turn_id\x18\x02 \x01(\tR\x06turnId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01J\x04\x08d\x10e"T\n\x14StopAgentTurnRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x17\n\x07turn_id\x18\x02 \x01(\tR\x06turnIdJ\x04\x08d\x10e"{\n\x18ListConversationsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageTokenJ\x04\x08d\x10e"\x8d\x01\n\x19ListConversationsResponse\x12H\n\rconversations\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.ConversationR\rconversations\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xbf\x02\n\x0cConversation\x12\'\n\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x02 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x14\n\x05model\x18\x03 \x01(\tR\x05model\x12\x10\n\x03cwd\x18\x04 \x01(\tR\x03cwd\x12&\n\x0frunning_turn_id\x18\x05 \x01(\tR\rrunningTurnId\x12!\n\x0cinput_tokens\x18\x06 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\x07 \x01(\x03R\x0coutputTokens\x12;\n\x0bcreate_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime"\x85\x01\n\x18WatchConversationRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x12\x1b\n\tafter_seq\x18\x03 \x01(\x03R\x08afterSeqJ\x04\x08d\x10e"\xa7\x03\n\nAgentEvent\x12\x10\n\x03seq\x18\x01 \x01(\x03R\x03seq\x12.\n\x04time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x17\n\x07turn_id\x18\x03 \x01(\tR\x06turnId\x12\x18\n\x06prompt\x18\x04 \x01(\tH\x00R\x06prompt\x12\x1a\n\x07message\x18\x05 \x01(\tH\x00R\x07message\x12=\n\ttool_call\x18\x06 \x01(\x0b2\x1e.pethost.sandboxes.v1.ToolCallH\x00R\x08toolCall\x12C\n\x0btool_result\x18\x07 \x01(\x0b2 .pethost.sandboxes.v1.ToolResultH\x00R\ntoolResult\x12<\n\x08turn_end\x18\x08 \x01(\x0b2\x1f.pethost.sandboxes.v1.AgentTurnH\x00R\x07turnEnd\x12=\n\tcaught_up\x18\t \x01(\x0b2\x1e.pethost.sandboxes.v1.CaughtUpH\x00R\x08caughtUpB\x07\n\x05event"\n\n\x08CaughtUp"V\n\x08ToolCall\x12 \n\x0ctool_call_id\x18\x01 \x01(\tR\ntoolCallId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05input\x18\x03 \x01(\tR\x05input"^\n\nToolResult\x12 \n\x0ctool_call_id\x18\x01 \x01(\tR\ntoolCallId\x12\x16\n\x06output\x18\x02 \x01(\tR\x06output\x12\x16\n\x06failed\x18\x03 \x01(\x08R\x06failed"q\n\x0cLimitReached\x12\x14\n\x05limit\x18\x01 \x01(\tR\x05limit\x12\x10\n\x03max\x18\x02 \x01(\x05R\x03max\x129\n\nretry_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tretryTime"\t\n\x07Stopped"\r\n\x0bUsageUnpaid"Q\n\tRestoring\x12#\n\rfetched_bytes\x18\x01 \x01(\x03R\x0cfetchedBytes\x12\x1f\n\x0btotal_bytes\x18\x02 \x01(\x03R\ntotalBytes"U\n\nNoCapacity\x125\n\x05bound\x18\x02 \x01(\x0e2\x1f.pethost.sandboxes.v1.RoomBoundR\x05boundJ\x04\x08\x01\x10\x02R\nfork_count"*\n\tNameTaken\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId"h\n\x0fWorkspaceChoice\x12?\n\nworkspaces\x18\x01 \x03(\x0b2\x1f.pethost.sandboxes.v1.WorkspaceR\nworkspaces\x12\x14\n\x05total\x18\x02 \x01(\x05R\x05total"Q\n\x0bAgentSignIn\x12\x1a\n\x08variable\x18\x01 \x01(\tR\x08variable\x12&\n\x0fsign_in_command\x18\x02 \x01(\tR\rsignInCommand*\x8d\x01\n\x05Meter\x12\x15\n\x11METER_UNSPECIFIED\x10\x00\x12\x11\n\rMETER_RUNNING\x10\x05\x12\x10\n\x0cMETER_PAUSED\x10\t\x12\x14\n\x10METER_STORED_GIB\x10\x07\x12\x14\n\x10METER_VOLUME_GIB\x10\x08"\x04\x08\x01\x10\x01"\x04\x08\x02\x10\x02"\x04\x08\x03\x10\x03"\x04\x08\x04\x10\x04"\x04\x08\x06\x10\x06*\x98\x01\n\x0cSandboxState\x12\x1d\n\x19SANDBOX_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15SANDBOX_STATE_RUNNING\x10\x01\x12\x18\n\x14SANDBOX_STATE_PAUSED\x10\x02\x12\x19\n\x15SANDBOX_STATE_STOPPED\x10\x03\x12\x19\n\x15SANDBOX_STATE_DELETED\x10\x04*\xc8\x01\n\x0bStateReason\x12\x1c\n\x18STATE_REASON_UNSPECIFIED\x10\x00\x12\x18\n\x14STATE_REASON_REQUEST\x10\x01\x12\x15\n\x11STATE_REASON_IDLE\x10\x02\x12\x15\n\x11STATE_REASON_WAKE\x10\x03\x12\x16\n\x12STATE_REASON_CRASH\x10\x05\x12\x1c\n\x18STATE_REASON_MAINTENANCE\x10\x06\x12\x17\n\x13STATE_REASON_UNPAID\x10\x07"\x04\x08\x04\x10\x04*_\n\x04Size\x12\x14\n\x10SIZE_UNSPECIFIED\x10\x00\x12\x0e\n\nSIZE_SMALL\x10\x01\x12\x10\n\x0cSIZE_DEFAULT\x10\x02\x12\x0e\n\nSIZE_LARGE\x10\x03\x12\x0f\n\x0bSIZE_XLARGE\x10\x04*\xd7\x01\n\x10SandboxEventKind\x12"\n\x1eSANDBOX_EVENT_KIND_UNSPECIFIED\x10\x00\x12 \n\x1cSANDBOX_EVENT_KIND_LIFECYCLE\x10\x01\x12\x1e\n\x1aSANDBOX_EVENT_KIND_COMMAND\x10\x02\x12\x1d\n\x19SANDBOX_EVENT_KIND_EGRESS\x10\x03\x12\x1b\n\x17SANDBOX_EVENT_KIND_PORT\x10\x04\x12!\n\x1dSANDBOX_EVENT_KIND_AGENT_TURN\x10\x05*\xe6\x01\n\x0fLifecycleChange\x12 \n\x1cLIFECYCLE_CHANGE_UNSPECIFIED\x10\x00\x12\x1c\n\x18LIFECYCLE_CHANGE_CREATED\x10\x01\x12\x1b\n\x17LIFECYCLE_CHANGE_PAUSED\x10\x02\x12\x1c\n\x18LIFECYCLE_CHANGE_STOPPED\x10\x03\x12\x1c\n\x18LIFECYCLE_CHANGE_RESUMED\x10\x04\x12\x1c\n\x18LIFECYCLE_CHANGE_RESIZED\x10\x05\x12\x1c\n\x18LIFECYCLE_CHANGE_DELETED\x10\x06*\x7f\n\rTemplateState\x12\x1e\n\x1aTEMPLATE_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15TEMPLATE_STATE_SAVING\x10\x01\x12\x18\n\x14TEMPLATE_STATE_READY\x10\x02\x12\x19\n\x15TEMPLATE_STATE_FAILED\x10\x03*\xb2\x01\n\x0cCommandState\x12\x1d\n\x19COMMAND_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15COMMAND_STATE_RUNNING\x10\x01\x12\x18\n\x14COMMAND_STATE_EXITED\x10\x02\x12\x1b\n\x17COMMAND_STATE_TIMED_OUT\x10\x03\x12\x19\n\x15COMMAND_STATE_STOPPED\x10\x04\x12\x16\n\x12COMMAND_STATE_LOST\x10\x05*~\n\tStartedBy\x12\x1a\n\x16STARTED_BY_UNSPECIFIED\x10\x00\x12\x12\n\x0eSTARTED_BY_API\x10\x01\x12\x12\n\x0eSTARTED_BY_SSH\x10\x02\x12\x17\n\x13STARTED_BY_TERMINAL\x10\x03\x12\x14\n\x10STARTED_BY_AGENT\x10\x04*i\n\x08FileKind\x12\x19\n\x15FILE_KIND_UNSPECIFIED\x10\x00\x12\x12\n\x0eFILE_KIND_FILE\x10\x01\x12\x17\n\x13FILE_KIND_DIRECTORY\x10\x02\x12\x15\n\x11FILE_KIND_SYMLINK\x10\x03*\x8b\x02\n\x0bFileFailure\x12\x1c\n\x18FILE_FAILURE_UNSPECIFIED\x10\x00\x12\x1a\n\x16FILE_FAILURE_NOT_FOUND\x10\x01\x12"\n\x1eFILE_FAILURE_PERMISSION_DENIED\x10\x02\x12 \n\x1cFILE_FAILURE_NOT_A_DIRECTORY\x10\x03\x12\x1f\n\x1bFILE_FAILURE_IS_A_DIRECTORY\x10\x04\x12\x19\n\x15FILE_FAILURE_NO_SPACE\x10\x05\x12\x1f\n\x1bFILE_FAILURE_EDIT_NOT_FOUND\x10\x06\x12\x1f\n\x1bFILE_FAILURE_EDIT_AMBIGUOUS\x10\x07*\xc2\x01\n\rFileEventKind\x12\x1f\n\x1bFILE_EVENT_KIND_UNSPECIFIED\x10\x00\x12\x1b\n\x17FILE_EVENT_KIND_CREATED\x10\x01\x12\x1b\n\x17FILE_EVENT_KIND_WRITTEN\x10\x02\x12\x1b\n\x17FILE_EVENT_KIND_REMOVED\x10\x03\x12\x1b\n\x17FILE_EVENT_KIND_RENAMED\x10\x04\x12\x1c\n\x18FILE_EVENT_KIND_OVERFLOW\x10\x05*r\n\x0eDesktopFailure\x12\x1f\n\x1bDESKTOP_FAILURE_UNSPECIFIED\x10\x00\x12\x1e\n\x1aDESKTOP_FAILURE_OFF_SCREEN\x10\x01\x12\x1f\n\x1bDESKTOP_FAILURE_UNKNOWN_KEY\x10\x02*s\n\x0bMouseButton\x12\x1c\n\x18MOUSE_BUTTON_UNSPECIFIED\x10\x00\x12\x15\n\x11MOUSE_BUTTON_LEFT\x10\x01\x12\x16\n\x12MOUSE_BUTTON_RIGHT\x10\x02\x12\x17\n\x13MOUSE_BUTTON_MIDDLE\x10\x03*`\n\x05Agent\x12\x15\n\x11AGENT_UNSPECIFIED\x10\x00\x12\x15\n\x11AGENT_CLAUDE_CODE\x10\x01\x12\x0f\n\x0bAGENT_CODEX\x10\x02\x12\x12\n\x0eAGENT_OPENCODE\x10\x03"\x04\x08\x04\x10\x04*\xde\x01\n\x0eAgentTurnState\x12 \n\x1cAGENT_TURN_STATE_UNSPECIFIED\x10\x00\x12\x1b\n\x17AGENT_TURN_STATE_QUEUED\x10\x01\x12\x1c\n\x18AGENT_TURN_STATE_RUNNING\x10\x02\x12\x19\n\x15AGENT_TURN_STATE_DONE\x10\x03\x12\x1b\n\x17AGENT_TURN_STATE_FAILED\x10\x04\x12\x1c\n\x18AGENT_TURN_STATE_STOPPED\x10\x05\x12\x19\n\x15AGENT_TURN_STATE_LOST\x10\x06*\x95\x01\n\tRoomBound\x12\x1a\n\x16ROOM_BOUND_UNSPECIFIED\x10\x00\x12\x15\n\x11ROOM_BOUND_MEMORY\x10\x01\x12\x1b\n\x17ROOM_BOUND_SHORT_MEMORY\x10\x02\x12\x13\n\x0fROOM_BOUND_DISK\x10\x03\x12\x17\n\x13ROOM_BOUND_DISK_CAP\x10\x04"\x04\x08\x05\x10\x05"\x04\x08\x06\x10\x062\xaf\x17\n\x0eSandboxService\x12w\n\x0cGetWorkspace\x12).pethost.sandboxes.v1.GetWorkspaceRequest\x1a\x1f.pethost.sandboxes.v1.Workspace"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Read the workspace\x12q\n\nSetSshKeys\x12\'.pethost.sandboxes.v1.SetSshKeysRequest\x1a\x1f.pethost.sandboxes.v1.Workspace"\x19\x90\x02\x02\x9a\xb5\x18\x12\n\x10Set the SSH keys\x12h\n\tSetSecret\x12&.pethost.sandboxes.v1.SetSecretRequest\x1a\x1c.pethost.sandboxes.v1.Secret"\x15\x90\x02\x02\x9a\xb5\x18\x0e\n\x0cSet a secret\x12q\n\x0cDeleteSecret\x12).pethost.sandboxes.v1.DeleteSecretRequest\x1a\x1c.pethost.sandboxes.v1.Secret"\x18\x90\x02\x02\x9a\xb5\x18\x11\n\x0fDelete a secret\x12r\n\rCreateSandbox\x12*.pethost.sandboxes.v1.CreateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x16\x8a\xb5\x18\x12\x12\x10Create a sandbox\x12m\n\nGetSandbox\x12\'.pethost.sandboxes.v1.GetSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eRead a sandbox\x12\x81\x01\n\rListSandboxes\x12*.pethost.sandboxes.v1.ListSandboxesRequest\x1a+.pethost.sandboxes.v1.ListSandboxesResponse"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eList sandboxes\x12\x82\x01\n\rUpdateSandbox\x12*.pethost.sandboxes.v1.UpdateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"&\x90\x02\x02\x8a\xb5\x18\x1f\x08\x01\x12\x1bChange a sandbox\'s settings\x12r\n\x0cPauseSandbox\x12).pethost.sandboxes.v1.PauseSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x18\x90\x02\x02\x8a\xb5\x18\x11\x12\x0fPause a sandbox\x12q\n\x0bStopSandbox\x12(.pethost.sandboxes.v1.StopSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x19\x90\x02\x02\x8a\xb5\x18\x12\x08\x01\x12\x0eStop a sandbox\x12u\n\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12w\n\rDeleteSandbox\x12*.pethost.sandboxes.v1.DeleteSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x1b\x90\x02\x02\x8a\xb5\x18\x14\x08\x01\x12\x10Delete a sandbox\x12\x8d\x01\n\x0eConnectSandbox\x12+.pethost.sandboxes.v1.ConnectSandboxRequest\x1a .pethost.sandboxes.v1.Connection",\x8a\xb5\x18(\x12&Get a sandbox\'s address and root token\x12\x97\x01\n\x11GetSandboxMetrics\x12..pethost.sandboxes.v1.GetSandboxMetricsRequest\x1a/.pethost.sandboxes.v1.GetSandboxMetricsResponse"!\x90\x02\x01\x9a\xb5\x18\x1a\n\x18Read a sandbox\'s metrics\x12\x96\x01\n\x11ListSandboxEvents\x12..pethost.sandboxes.v1.ListSandboxEventsRequest\x1a/.pethost.sandboxes.v1.ListSandboxEventsResponse" \x90\x02\x01\x9a\xb5\x18\x19\n\x17List a sandbox\'s events\x12\x8c\x01\n\x12WatchSandboxEvents\x12/.pethost.sandboxes.v1.WatchSandboxEventsRequest\x1a".pethost.sandboxes.v1.SandboxEvent"\x1f\x9a\xb5\x18\x1b\n\x19Follow a sandbox\'s events0\x01\x12t\n\x0eCreateTemplate\x12+.pethost.sandboxes.v1.CreateTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template"\x15\x8a\xb5\x18\x11\x12\x0fSave a template\x12y\n\x0bGetTemplate\x12(.pethost.sandboxes.v1.GetTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template" \x90\x02\x01\x9a\xb5\x18\x19\n\x17Read a template version\x12\x81\x01\n\rListTemplates\x12*.pethost.sandboxes.v1.ListTemplatesRequest\x1a+.pethost.sandboxes.v1.ListTemplatesResponse"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eList templates\x12y\n\x0eDeleteTemplate\x12+.pethost.sandboxes.v1.DeleteTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template"\x1a\x90\x02\x02\x9a\xb5\x18\x13\n\x11Delete a template\x12n\n\x0cCreateVolume\x12).pethost.sandboxes.v1.CreateVolumeRequest\x1a\x1c.pethost.sandboxes.v1.Volume"\x15\x9a\xb5\x18\x11\n\x0fCreate a volume\x12y\n\x0bListVolumes\x12(.pethost.sandboxes.v1.ListVolumesRequest\x1a).pethost.sandboxes.v1.ListVolumesResponse"\x15\x90\x02\x01\x9a\xb5\x18\x0e\n\x0cList volumes\x12q\n\x0cDeleteVolume\x12).pethost.sandboxes.v1.DeleteVolumeRequest\x1a\x1c.pethost.sandboxes.v1.Volume"\x18\x90\x02\x02\x9a\xb5\x18\x11\n\x0fDelete a volume\x12q\n\tListUsage\x12&.pethost.sandboxes.v1.ListUsageRequest\x1a\'.pethost.sandboxes.v1.ListUsageResponse"\x13\x90\x02\x01\x9a\xb5\x18\x0c\n\nList usage2\xd9\x0f\n\x15SandboxRuntimeService\x12k\n\nRunCommand\x12\'.pethost.sandboxes.v1.RunCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x15\x8a\xb5\x18\x11\x08\x01\x12\rRun a command\x12q\n\nGetCommand\x12\'.pethost.sandboxes.v1.GetCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Wait for a command\x12q\n\x0bStopCommand\x12(.pethost.sandboxes.v1.StopCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x19\x90\x02\x02\x8a\xb5\x18\x12\x08\x01\x12\x0eStop a command\x12\x85\x01\n\x0cListCommands\x12).pethost.sandboxes.v1.ListCommandsRequest\x1a*.pethost.sandboxes.v1.ListCommandsResponse"\x1e\x90\x02\x01\x9a\xb5\x18\x17\n\x15List running commands\x12\x81\x01\n\x0cWatchCommand\x12).pethost.sandboxes.v1.WatchCommandRequest\x1a#.pethost.sandboxes.v1.CommandOutput"\x1f\x9a\xb5\x18\x1b\n\x19Follow a command\'s output0\x01\x12c\n\x08ReadFile\x12%.pethost.sandboxes.v1.ReadFileRequest\x1a\x1a.pethost.sandboxes.v1.File"\x14\x90\x02\x01\x8a\xb5\x18\r\x12\x0bRead a file\x12q\n\tListFiles\x12&.pethost.sandboxes.v1.ListFilesRequest\x1a\'.pethost.sandboxes.v1.ListFilesResponse"\x13\x90\x02\x01\x8a\xb5\x18\x0c\x12\nList files\x12t\n\nWriteFiles\x12\'.pethost.sandboxes.v1.WriteFilesRequest\x1a(.pethost.sandboxes.v1.WriteFilesResponse"\x13\x8a\xb5\x18\x0f\x08\x01\x12\x0bWrite files\x12s\n\nWatchFiles\x12\'.pethost.sandboxes.v1.WatchFilesRequest\x1a\x1f.pethost.sandboxes.v1.FileEvent"\x19\x9a\xb5\x18\x15\n\x13Follow file changes0\x01\x12\x84\x01\n\x0eControlDesktop\x12+.pethost.sandboxes.v1.ControlDesktopRequest\x1a,.pethost.sandboxes.v1.ControlDesktopResponse"\x17\x8a\xb5\x18\x13\x08\x01\x12\x0fUse the desktop\x12d\n\nCreateLink\x12\'.pethost.sandboxes.v1.CreateLinkRequest\x1a\x1a.pethost.sandboxes.v1.Link"\x11\x8a\xb5\x18\r\x12\x0bMake a link\x12w\n\x0bPromptAgent\x12(.pethost.sandboxes.v1.PromptAgentRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"\x1d\x8a\xb5\x18\x19\x08\x01\x12\x15Prompt a coding agent\x12}\n\x0cGetAgentTurn\x12).pethost.sandboxes.v1.GetAgentTurnRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18Wait for an agent\'s turn\x12{\n\rStopAgentTurn\x12*.pethost.sandboxes.v1.StopAgentTurnRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"\x1d\x90\x02\x02\x9a\xb5\x18\x16\n\x14Stop an agent\'s turn\x12\x97\x01\n\x11ListConversations\x12..pethost.sandboxes.v1.ListConversationsRequest\x1a/.pethost.sandboxes.v1.ListConversationsResponse"!\x90\x02\x01\x9a\xb5\x18\x1a\n\x18List agent conversations\x12\x8b\x01\n\x11WatchConversation\x12..pethost.sandboxes.v1.WatchConversationRequest\x1a .pethost.sandboxes.v1.AgentEvent""\x9a\xb5\x18\x1e\n\x1cFollow an agent conversation0\x01\x1a\x14\xc2\xb5\x18\x10\n\x0eConnectSandboxB\xb4\x01\n\x18com.pethost.sandboxes.v1B\x0eSandboxesProtoZ\x18pethost/panel/v1;panelv1\xa2\x02\x03PSX\xaa\x02\x14Pethost.Sandboxes.V1\xca\x02\x14Pethost\\Sandboxes\\V1\xe2\x02 Pethost\\Sandboxes\\V1\\GPBMetadata\xea\x02\x16Pethost::Sandboxes::V1b\x08editionsp\xe9\x07',
+    b'\n\x12v1/sandboxes.proto\x12\x14pethost.sandboxes.v1\x1a\x1fgoogle/protobuf/timestamp.protoz\x0cv1/mcp.protoz\x11v1/optional.protoz\x0cv1/sdk.proto"3\n\x13GetWorkspaceRequest\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\x9e\x03\n\tWorkspace\x12!\n\x0cworkspace_id\x18\x01 \x01(\tR\x0bworkspaceId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x124\n\x06limits\x18\x03 \x01(\x0b2\x1c.pethost.sandboxes.v1.LimitsR\x06limits\x127\n\x08ssh_keys\x18\x04 \x03(\x0b2\x1c.pethost.sandboxes.v1.SshKeyR\x07sshKeys\x126\n\x07secrets\x18\x05 \x03(\x0b2\x1c.pethost.sandboxes.v1.SecretR\x07secrets\x127\n\x07billing\x18\x06 \x01(\x0b2\x1d.pethost.sandboxes.v1.BillingR\x07billing\x124\n\x05sizes\x18\x07 \x03(\x0b2\x1e.pethost.sandboxes.v1.SizeInfoR\x05sizes\x12%\n\x0etemplate_bytes\x18\x08 \x01(\x03R\rtemplateBytes\x12\x1d\n\nvcpus_used\x18\t \x01(\x05R\tvcpusUsed"\xda\x01\n\x08SizeInfo\x12.\n\x04size\x18\x01 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x14\n\x05vcpus\x18\x02 \x01(\x05R\x05vcpus\x12\x1d\n\nmemory_mib\x18\x03 \x01(\x05R\tmemoryMib\x12\x19\n\x08disk_gib\x18\x04 \x01(\x05R\x07diskGib\x12\'\n\x0crunning_hour\x18\x05 \x01(\x01R\x0brunningHourB\x04\x90\xb5\x18\x01\x12%\n\x0bpaused_hour\x18\x06 \x01(\x01R\npausedHourB\x04\x90\xb5\x18\x01"\xd4\x02\n\x07Billing\x12\x1a\n\x08currency\x18\x01 \x01(\tR\x08currency\x12\'\n\x0fincluded_micros\x18\x02 \x01(\x03R\x0eincludedMicros\x122\n\x15included_total_micros\x18\x03 \x01(\x03R\x13includedTotalMicros\x12B\n\x0fperiod_end_time\x18\x04 \x01(\x0b2\x1a.google.protobuf.TimestampR\rperiodEndTime\x12%\n\x0ebalance_micros\x18\x05 \x01(\x03R\rbalanceMicros\x12\x1c\n\tsuspended\x18\x06 \x01(\x08R\tsuspended\x12\x14\n\x05trial\x18\x07 \x01(\x08R\x05trial\x121\n\x05rates\x18\x08 \x01(\x0b2\x1b.pethost.sandboxes.v1.RatesR\x05rates"I\n\x05Rates\x12(\n\x10stored_gib_month\x18\x05 \x01(\x01R\x0estoredGibMonthJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05"c\n\x06SshKey\x12\x1d\n\npublic_key\x18\x01 \x01(\tR\tpublicKey\x12\x18\n\x07comment\x18\x02 \x01(\tR\x07comment\x12 \n\x0bfingerprint\x18\x03 \x01(\tR\x0bfingerprint"\xf9\x01\n\x06Limits\x12\x14\n\x05vcpus\x18\x04 \x01(\x05R\x05vcpus\x12=\n\x0clargest_size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x0blargestSize\x12+\n\x11template_versions\x18\x02 \x01(\x05R\x10templateVersions\x12!\n\x0ctemplate_gib\x18\x03 \x01(\x05R\x0btemplateGibJ\x04\x08\x01\x10\x02J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\nR\x11starts_per_minuteR\x0fstarts_per_hourR\x0estarts_per_day"L\n\x11SetSshKeysRequest\x12\x19\n\x08ssh_keys\x18\x01 \x03(\tR\x07sshKeys\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"o\n\x06Secret\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05hosts\x18\x02 \x03(\tR\x05hosts\x12;\n\x0bupdate_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nupdateTime"u\n\x10SetSecretRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n\x05value\x18\x02 \x01(\tR\x05valueB\x03\x80\x01\x01\x12\x14\n\x05hosts\x18\x03 \x03(\tR\x05hosts\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"G\n\x13DeleteSecretRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\x9e\x08\n\x07Sandbox\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x128\n\x05state\x18\x02 \x01(\x0e2".pethost.sandboxes.v1.SandboxStateR\x05state\x12D\n\x0cstate_reason\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x0bstateReason\x12#\n\rstate_message\x18\x04 \x01(\tR\x0cstateMessage\x129\n\nstate_time\x18\x05 \x01(\x0b2\x1a.google.protobuf.TimestampR\tstateTime\x12\x1a\n\x08template\x18\x06 \x01(\tR\x08template\x123\n\x06labels\x18\t \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12A\n\x08settings\x18\n \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12\x1a\n\x08revision\x18\x0b \x01(\x03R\x08revision\x12\x19\n\x08disk_gib\x18\x0c \x01(\x05R\x07diskGib\x127\n\x07desktop\x18\x0e \x01(\x0b2\x1d.pethost.sandboxes.v1.DesktopR\x07desktop\x12\x1f\n\x0bssh_command\x18\x0f \x01(\tR\nsshCommand\x12\x1b\n\tpanel_url\x18\x10 \x01(\tR\x08panelUrl\x12;\n\x0bcreate_time\x18\x11 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x121\n\x05usage\x18\x13 \x01(\x0b2\x1b.pethost.sandboxes.v1.UsageR\x05usage\x12F\n\nconnection\x18\x14 \x01(\x0b2 .pethost.sandboxes.v1.ConnectionR\nconnectionB\x04\xc8\xb5\x18\x01\x127\n\x07restore\x18\x16 \x01(\x0b2\x1d.pethost.sandboxes.v1.RestoreR\x07restore\x12A\n\nnext_state\x18\x17 \x01(\x0e2".pethost.sandboxes.v1.SandboxStateR\tnextState\x12B\n\x0fnext_state_time\x18\x18 \x01(\x0b2\x1a.google.protobuf.TimestampR\rnextStateTime\x12!\n\x0cstored_bytes\x18\x19 \x01(\x03R\x0bstoredBytes\x12\x12\n\x04name\x18\x1a \x01(\tR\x04nameJ\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\x12\x10\x13J\x04\x08\x15\x10\x16R\x0bforked_from"O\n\x07Restore\x12#\n\rfetched_bytes\x18\x01 \x01(\x03R\x0cfetchedBytes\x12\x1f\n\x0btotal_bytes\x18\x02 \x01(\x03R\ntotalBytes"\xba\x01\n\x05Usage\x12\'\n\x0frunning_seconds\x18\x01 \x01(\x03R\x0erunningSeconds\x12%\n\x0epaused_seconds\x18\x08 \x01(\x03R\rpausedSeconds\x12(\n\x10stored_gib_hours\x18\x06 \x01(\x01R\x0estoredGibHours\x12\x1f\n\x0bcost_micros\x18\x07 \x01(\x03R\ncostMicrosJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06"\x8d\x02\n\x14CreateSandboxRequest\x12\x1a\n\x08template\x18\x01 \x01(\tR\x08template\x12A\n\x08settings\x18\x03 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x123\n\x06labels\x18\x04 \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12\x12\n\x04name\x18\x08 \x01(\tR\x04name\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestId\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\x08\x02\x10\x03J\x04\x08\x05\x10\x06J\x04\x08\x07\x10\x08"8\n\x11GetSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"\xf5\x01\n\x14ListSandboxesRequest\x12:\n\x06states\x18\x01 \x03(\x0e2".pethost.sandboxes.v1.SandboxStateR\x06states\x123\n\x06labels\x18\x02 \x03(\x0b2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\x12\x12\n\x04name\x18\x05 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"|\n\x15ListSandboxesResponse\x12;\n\tsandboxes\x18\x01 \x03(\x0b2\x1d.pethost.sandboxes.v1.SandboxR\tsandboxes\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xfb\x01\n\x14UpdateSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12A\n\x08settings\x18\x02 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12\x1f\n\x0bif_revision\x18\x03 \x01(\x03R\nifRevision\x12#\n\rrevoke_tokens\x18\x04 \x01(\x08R\x0crevokeTokens\x12\x1b\n\tgrow_disk\x18\x05 \x01(\x08R\x08growDisk\x12\x18\n\x04name\x18\x06 \x01(\tR\x04nameB\x04\x90\xb5\x18\x01J\x04\x08d\x10e":\n\x13PauseSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"9\n\x12StopSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e";\n\x14ResumeSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e";\n\x14DeleteSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"]\n\x15ConnectSandboxRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1f\n\x0bttl_seconds\x18\x02 \x01(\rR\nttlSecondsJ\x04\x08d\x10e"\x97\x01\n\nConnection\x12\x10\n\x03url\x18\x01 \x01(\tR\x03url\x12\x19\n\x05token\x18\x02 \x01(\tR\x05tokenB\x03\x80\x01\x01\x12;\n\x0bexpire_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x1f\n\x0bssh_command\x18\x04 \x01(\tR\nsshCommand"\xb4\x02\n\x0fSandboxSettings\x12.\n\x04size\x18\x01 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12=\n\tlifecycle\x18\x02 \x01(\x0b2\x1f.pethost.sandboxes.v1.LifecycleR\tlifecycle\x124\n\x06egress\x18\x03 \x01(\x0b2\x1c.pethost.sandboxes.v1.EgressR\x06egress\x127\n\x07ingress\x18\x04 \x01(\x0b2\x1d.pethost.sandboxes.v1.IngressR\x07ingress\x12C\n\x0benvironment\x18\x05 \x01(\x0b2!.pethost.sandboxes.v1.EnvironmentR\x0benvironment"\x80\x02\n\tLifecycle\x12=\n\x18pause_after_idle_seconds\x18\x05 \x01(\rR\x15pauseAfterIdleSecondsB\x04\x90\xb5\x18\x01\x12;\n\x17stop_after_idle_seconds\x18\x06 \x01(\rR\x14stopAfterIdleSecondsB\x04\x90\xb5\x18\x01\x129\n\x19delete_after_idle_seconds\x18\x02 \x01(\rR\x16deleteAfterIdleSeconds\x12*\n\x11wake_when_stopped\x18\x07 \x01(\x08R\x0fwakeWhenStoppedJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05"2\n\x06Egress\x12\x14\n\x05allow\x18\x01 \x03(\tR\x05allow\x12\x12\n\x04deny\x18\x02 \x03(\tR\x04deny"N\n\x07Ingress\x12C\n\x0cpublic_ports\x18\x01 \x03(\x0b2 .pethost.sandboxes.v1.PublicPortR\x0bpublicPorts"2\n\nPublicPort\x12\x12\n\x04port\x18\x01 \x01(\rR\x04port\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url"I\n\x0bEnvironment\x12:\n\tvariables\x18\x01 \x03(\x0b2\x1c.pethost.sandboxes.v1.EnvVarR\tvariables"X\n\x06EnvVar\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n\x05value\x18\x02 \x01(\tH\x00R\x05value\x12\x18\n\x06secret\x18\x03 \x01(\tH\x00R\x06secretB\x08\n\x06source"/\n\x05Label\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value"\xc6\x01\n\x18GetSandboxMetricsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x120\n\x05since\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05since\x120\n\x05until\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05until\x12!\n\x0cstep_seconds\x18\x04 \x01(\rR\x0bstepSecondsJ\x04\x08d\x10e"W\n\x19GetSandboxMetricsResponse\x12:\n\x06points\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.MetricsPointR\x06points"\x89\x02\n\x0cMetricsPoint\x12.\n\x04time\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x1f\n\x0bcpu_percent\x18\x02 \x01(\x02R\ncpuPercent\x12*\n\x11memory_used_bytes\x18\x03 \x01(\x03R\x0fmemoryUsedBytes\x12&\n\x0fdisk_used_bytes\x18\x04 \x01(\x03R\rdiskUsedBytes\x12(\n\x10network_in_bytes\x18\x05 \x01(\x03R\x0enetworkInBytes\x12*\n\x11network_out_bytes\x18\x06 \x01(\x03R\x0fnetworkOutBytes"\xcc\x01\n\x18ListSandboxEventsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12<\n\x05kinds\x18\x02 \x03(\x0e2&.pethost.sandboxes.v1.SandboxEventKindR\x05kinds\x12\x14\n\x05after\x18\x03 \x01(\tR\x05after\x12!\n\x0cnewest_first\x18\x04 \x01(\x08R\x0bnewestFirst\x12\x14\n\x05limit\x18\x05 \x01(\x05R\x05limitJ\x04\x08d\x10e"k\n\x19ListSandboxEventsResponse\x12:\n\x06events\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.SandboxEventR\x06events\x12\x12\n\x04more\x18\x02 \x01(\x08R\x04more"\x94\x01\n\x19WatchSandboxEventsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12<\n\x05kinds\x18\x02 \x03(\x0e2&.pethost.sandboxes.v1.SandboxEventKindR\x05kinds\x12\x14\n\x05after\x18\x03 \x01(\tR\x05afterJ\x04\x08d\x10e"\xa3\x03\n\x0cSandboxEvent\x12\x19\n\x08event_id\x18\x01 \x01(\tR\x07eventId\x12.\n\x04time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12D\n\tlifecycle\x18\x03 \x01(\x0b2$.pethost.sandboxes.v1.LifecycleEventH\x00R\tlifecycle\x12>\n\x07command\x18\x04 \x01(\x0b2".pethost.sandboxes.v1.CommandEventH\x00R\x07command\x12;\n\x06egress\x18\x05 \x01(\x0b2!.pethost.sandboxes.v1.EgressEventH\x00R\x06egress\x125\n\x04port\x18\x06 \x01(\x0b2\x1f.pethost.sandboxes.v1.PortEventH\x00R\x04port\x12E\n\nagent_turn\x18\x07 \x01(\x0b2$.pethost.sandboxes.v1.AgentTurnEventH\x00R\tagentTurnB\x07\n\x05event"\x8d\x02\n\x0eLifecycleEvent\x12=\n\x06change\x18\x01 \x01(\x0e2%.pethost.sandboxes.v1.LifecycleChangeR\x06change\x129\n\x06reason\x18\x02 \x01(\x0e2!.pethost.sandboxes.v1.StateReasonR\x06reason\x12.\n\x04size\x18\x04 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x19\n\x08disk_gib\x18\x06 \x01(\x05R\x07diskGib\x12#\n\rstate_message\x18\x05 \x01(\tR\x0cstateMessageJ\x04\x08\x03\x10\x04R\x0bforked_from"\x85\x02\n\x0cCommandEvent\x12\x1d\n\ncommand_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x128\n\x05state\x18\x03 \x01(\x0e2".pethost.sandboxes.v1.CommandStateR\x05state\x12!\n\texit_code\x18\x04 \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12\x1f\n\x0bduration_ms\x18\x05 \x01(\x03R\ndurationMs\x12>\n\nstarted_by\x18\x06 \x01(\x0e2\x1f.pethost.sandboxes.v1.StartedByR\tstartedBy"\xc3\x01\n\x0bEgressEvent\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n\x04port\x18\x02 \x01(\x05R\x04port\x12\x18\n\x07allowed\x18\x03 \x01(\x08R\x07allowed\x12 \n\x0bconnections\x18\x04 \x01(\x05R\x0bconnections\x12\x1b\n\tbytes_out\x18\x05 \x01(\x03R\x08bytesOut\x12\x19\n\x08bytes_in\x18\x06 \x01(\x03R\x07bytesIn\x12\x18\n\x07secrets\x18\x07 \x03(\tR\x07secrets"\x98\x01\n\tPortEvent\x12\x12\n\x04port\x18\x01 \x01(\x05R\x04port\x12\x1a\n\x08requests\x18\x02 \x01(\x05R\x08requests\x12#\n\rserver_errors\x18\x03 \x01(\x05R\x0cserverErrors\x12\x19\n\x08bytes_in\x18\x04 \x01(\x03R\x07bytesIn\x12\x1b\n\tbytes_out\x18\x05 \x01(\x03R\x08bytesOut"\xa1\x02\n\x0eAgentTurnEvent\x12\x17\n\x07turn_id\x18\x01 \x01(\tR\x06turnId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x16\n\x06prompt\x18\x04 \x01(\tR\x06prompt\x12:\n\x05state\x18\x05 \x01(\x0e2$.pethost.sandboxes.v1.AgentTurnStateR\x05state\x12!\n\x0cinput_tokens\x18\x06 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\x07 \x01(\x03R\x0coutputTokens"\xdb\x03\n\x08Template\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07version\x18\x02 \x01(\x05R\x07version\x129\n\x05state\x18\x03 \x01(\x0e2#.pethost.sandboxes.v1.TemplateStateR\x05state\x12\'\n\x0ffailure_message\x18\x04 \x01(\tR\x0efailureMessage\x12\x19\n\x08built_in\x18\x06 \x01(\x08R\x07builtIn\x12 \n\x0bdescription\x18\x07 \x01(\tR\x0bdescription\x12A\n\x08settings\x18\x08 \x01(\x0b2%.pethost.sandboxes.v1.SandboxSettingsR\x08settings\x12;\n\x0bcreate_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime\x12\x1d\n\nsize_bytes\x18\r \x01(\x03R\tsizeBytes\x12\x12\n\x04base\x18\x0e \x01(\tR\x04base\x125\n\x08min_size\x18\x0f \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x07minSizeJ\x04\x08\x05\x10\x06J\x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c"\xa3\x01\n\x15CreateTemplateRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n\nsandbox_id\x18\x03 \x01(\tR\tsandboxId\x12 \n\x0bdescription\x18\x05 \x01(\tR\x0bdescription\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08\x02\x10\x03J\x04\x08\x04\x10\x05J\x04\x08\x06\x10\x07J\x04\x08d\x10e"T\n\x12GetTemplateRequest\x12\x1a\n\x08template\x18\x01 \x01(\tR\x08template\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspaceJ\x04\x08\x02\x10\x03"\x84\x01\n\x14ListTemplatesRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"}\n\x15ListTemplatesResponse\x12<\n\ttemplates\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.TemplateR\ttemplates\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"I\n\x15DeleteTemplateRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"\xd0\x01\n\x10ListUsageRequest\x120\n\x05since\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05since\x120\n\x05until\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x05until\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\x12\x1c\n\tworkspace\x18d \x01(\tR\tworkspace"o\n\x11ListUsageResponse\x122\n\x04rows\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.UsageRowR\x04rows\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xdb\x01\n\x08UsageRow\x12,\n\x03day\x18\x01 \x01(\x0b2\x1a.google.protobuf.TimestampR\x03day\x121\n\x05meter\x18\x02 \x01(\x0e2\x1b.pethost.sandboxes.v1.MeterR\x05meter\x12\x1d\n\nunit_hours\x18\x03 \x01(\x01R\tunitHours\x12.\n\x04size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x1f\n\x0bcost_micros\x18\x04 \x01(\x03R\ncostMicros"\xc2\x02\n\x11RunCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x12\x10\n\x03cwd\x18\x03 \x01(\tR\x03cwd\x12\x12\n\x04user\x18\x04 \x01(\tR\x04user\x12\x14\n\x05stdin\x18\x05 \x01(\tR\x05stdin\x12\'\n\x0cwait_seconds\x18\x06 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12"\n\rwait_for_port\x18\x07 \x01(\rR\x0bwaitForPort\x12\'\n\x0ftimeout_seconds\x18\x08 \x01(\rR\x0etimeoutSeconds\x12\x1d\n\nkeep_awake\x18\t \x01(\x08R\tkeepAwake\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08d\x10e"\xf2\x03\n\x07Command\x12\x1d\n\ncommand_id\x18\x01 \x01(\tR\tcommandId\x12\x18\n\x07command\x18\x02 \x01(\tR\x07command\x128\n\x05state\x18\x03 \x01(\x0e2".pethost.sandboxes.v1.CommandStateR\x05state\x12!\n\texit_code\x18\x04 \x01(\x05R\x08exitCodeB\x04\x90\xb5\x18\x01\x12\x16\n\x06stdout\x18\x05 \x01(\tR\x06stdout\x12\x16\n\x06stderr\x18\x06 \x01(\tR\x06stderr\x12!\n\x0cstdout_bytes\x18\x07 \x01(\x03R\x0bstdoutBytes\x12!\n\x0cstderr_bytes\x18\x08 \x01(\x03R\x0bstderrBytes\x12)\n\x10output_truncated\x18\t \x01(\x08R\x0foutputTruncated\x12>\n\nstarted_by\x18\n \x01(\x0e2\x1f.pethost.sandboxes.v1.StartedByR\tstartedBy\x129\n\nstart_time\x18\x0b \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x0c \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime"\xdc\x01\n\x11GetCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12,\n\x12stdout_after_bytes\x18\x04 \x01(\x03R\x10stdoutAfterBytes\x12,\n\x12stderr_after_bytes\x18\x05 \x01(\x03R\x10stderrAfterBytesJ\x04\x08d\x10e"X\n\x12StopCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandIdJ\x04\x08d\x10e":\n\x13ListCommandsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxIdJ\x04\x08d\x10e"Q\n\x14ListCommandsResponse\x129\n\x08commands\x18\x01 \x03(\x0b2\x1d.pethost.sandboxes.v1.CommandR\x08commands"Y\n\x13WatchCommandRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1d\n\ncommand_id\x18\x02 \x01(\tR\tcommandIdJ\x04\x08d\x10e"\x84\x01\n\rCommandOutput\x12\x18\n\x06stdout\x18\x01 \x01(\x0cH\x00R\x06stdout\x12\x18\n\x06stderr\x18\x02 \x01(\x0cH\x00R\x06stderr\x125\n\x05ended\x18\x03 \x01(\x0b2\x1d.pethost.sandboxes.v1.CommandH\x00R\x05endedB\x08\n\x06output"\x90\x01\n\x0fReadFileRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12!\n\x0coffset_bytes\x18\x03 \x01(\x03R\x0boffsetBytes\x12!\n\x0clength_bytes\x18\x04 \x01(\x03R\x0blengthBytesJ\x04\x08d\x10e"v\n\x04File\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x1a\n\x04data\x18\x03 \x01(\x0cH\x00R\x04dataB\x04\xc8\xb5\x18\x01\x12\x1d\n\nsize_bytes\x18\x04 \x01(\x03R\tsizeBytesB\t\n\x07content"\x80\x01\n\x10ListFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x14\n\x05depth\x18\x03 \x01(\x05R\x05depth\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageTokenJ\x04\x08d\x10e"q\n\x11ListFilesResponse\x124\n\x05files\x18\x01 \x03(\x0b2\x1e.pethost.sandboxes.v1.FileInfoR\x05files\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xff\x01\n\x08FileInfo\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x122\n\x04kind\x18\x02 \x01(\x0e2\x1e.pethost.sandboxes.v1.FileKindR\x04kind\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x12\n\x04mode\x18\x04 \x01(\tR\x04mode\x12\x14\n\x05owner\x18\x05 \x01(\tR\x05owner\x12;\n\x0bmodify_time\x18\x06 \x01(\x0b2\x1a.google.protobuf.TimestampR\nmodifyTime\x12%\n\x0esymlink_target\x18\x07 \x01(\tR\rsymlinkTarget"t\n\x11WriteFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12:\n\x07changes\x18\x02 \x03(\x0b2 .pethost.sandboxes.v1.FileChangeR\x07changesJ\x04\x08d\x10e"\xc1\x02\n\nFileChange\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x14\n\x04text\x18\x02 \x01(\tH\x00R\x04text\x12\x14\n\x04data\x18\x03 \x01(\x0cH\x00R\x04data\x124\n\x04edit\x18\x04 \x01(\x0b2\x1e.pethost.sandboxes.v1.TextEditH\x00R\x04edit\x12\x19\n\x07move_to\x18\x05 \x01(\tH\x00R\x06moveTo\x126\n\x06delete\x18\x06 \x01(\x0b2\x1c.pethost.sandboxes.v1.DeleteH\x00R\x06delete\x12L\n\x0emake_directory\x18\x07 \x01(\x0b2#.pethost.sandboxes.v1.MakeDirectoryH\x00R\rmakeDirectory\x12\x12\n\x04mode\x18\x08 \x01(\tR\x04modeB\x08\n\x06change"\x08\n\x06Delete"\x0f\n\rMakeDirectory"@\n\x08TextEdit\x12\x19\n\x08old_text\x18\x01 \x01(\tR\x07oldText\x12\x19\n\x08new_text\x18\x02 \x01(\tR\x07newText"\x9f\x01\n\x12WriteFilesResponse\x12\x1d\n\ndone_count\x18\x01 \x01(\x05R\tdoneCount\x12-\n\x0ffailure_message\x18\x02 \x01(\tR\x0efailureMessageB\x04\xd0\xb5\x18\x01\x12;\n\x07failure\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.FileFailureR\x07failure"j\n\x11WatchFilesRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x12\n\x04path\x18\x02 \x01(\tR\x04path\x12\x1c\n\trecursive\x18\x03 \x01(\x08R\trecursiveJ\x04\x08d\x10e"q\n\tFileEvent\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x127\n\x04kind\x18\x02 \x01(\x0e2#.pethost.sandboxes.v1.FileEventKindR\x04kind\x12\x17\n\x07to_path\x18\x03 \x01(\tR\x06toPath"{\n\x15ControlDesktopRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12=\n\x07actions\x18\x02 \x03(\x0b2#.pethost.sandboxes.v1.DesktopActionR\x07actionsJ\x04\x08d\x10e"\xe8\x01\n\x16ControlDesktopResponse\x12\x1d\n\ndone_count\x18\x01 \x01(\x05R\tdoneCount\x12-\n\x0ffailure_message\x18\x02 \x01(\tR\x0efailureMessageB\x04\xd0\xb5\x18\x01\x12@\n\nscreenshot\x18\x03 \x01(\x0b2 .pethost.sandboxes.v1.ScreenshotR\nscreenshot\x12>\n\x07failure\x18\x04 \x01(\x0e2$.pethost.sandboxes.v1.DesktopFailureR\x07failure"\xa9\x01\n\nScreenshot\x12\x1a\n\x05image\x18\x01 \x01(\x0cR\x05imageB\x04\xb8\xb5\x18\x01\x12\x1b\n\tmime_type\x18\x02 \x01(\tR\x08mimeType\x12\x14\n\x05width\x18\x03 \x01(\x05R\x05width\x12\x16\n\x06height\x18\x04 \x01(\x05R\x06height\x12\x19\n\x08cursor_x\x18\x05 \x01(\x05R\x07cursorX\x12\x19\n\x08cursor_y\x18\x06 \x01(\x05R\x07cursorY"\xd1\x02\n\rDesktopAction\x123\n\x05click\x18\x01 \x01(\x0b2\x1b.pethost.sandboxes.v1.ClickH\x00R\x05click\x12<\n\nmove_mouse\x18\x02 \x01(\x0b2\x1b.pethost.sandboxes.v1.PointH\x00R\tmoveMouse\x120\n\x04drag\x18\x03 \x01(\x0b2\x1a.pethost.sandboxes.v1.DragH\x00R\x04drag\x126\n\x06scroll\x18\x04 \x01(\x0b2\x1c.pethost.sandboxes.v1.ScrollH\x00R\x06scroll\x12\x1d\n\ttype_text\x18\x05 \x01(\tH\x00R\x08typeText\x12\x1f\n\npress_keys\x18\x06 \x01(\tH\x00R\tpressKeys\x12\x19\n\x07wait_ms\x18\x07 \x01(\rH\x00R\x06waitMsB\x08\n\x06action"#\n\x05Point\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y"\x91\x01\n\x05Click\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y\x129\n\x06button\x18\x03 \x01(\x0e2!.pethost.sandboxes.v1.MouseButtonR\x06button\x12\x14\n\x05count\x18\x04 \x01(\x05R\x05count\x12\x1b\n\thold_keys\x18\x05 \x01(\tR\x08holdKeys"7\n\x04Drag\x12/\n\x04path\x18\x01 \x03(\x0b2\x1b.pethost.sandboxes.v1.PointR\x04path"N\n\x06Scroll\x12\x0c\n\x01x\x18\x01 \x01(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x01(\x05R\x01y\x12\x12\n\x04down\x18\x03 \x01(\x05R\x04down\x12\x14\n\x05right\x18\x04 \x01(\x05R\x05right"7\n\x07Desktop\x12\x14\n\x05width\x18\x01 \x01(\x05R\x05width\x12\x16\n\x06height\x18\x02 \x01(\x05R\x06height"\xc4\x02\n\x11CreateLinkRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x14\n\x04port\x18\x02 \x01(\rH\x00R\x04port\x12@\n\x08terminal\x18\x03 \x01(\x0b2".pethost.sandboxes.v1.TerminalLinkH\x00R\x08terminal\x12=\n\x07desktop\x18\x04 \x01(\x0b2!.pethost.sandboxes.v1.DesktopLinkH\x00R\x07desktop\x12%\n\rdownload_path\x18\x05 \x01(\tH\x00R\x0cdownloadPath\x12!\n\x0bupload_path\x18\x06 \x01(\tH\x00R\nuploadPath\x12\x1f\n\x0bttl_seconds\x18\x07 \x01(\rR\nttlSecondsB\x08\n\x06targetJ\x04\x08d\x10e"(\n\x0cTerminalLink\x12\x18\n\x07command\x18\x01 \x01(\tR\x07command"*\n\x0bDesktopLink\x12\x1b\n\tview_only\x18\x01 \x01(\x08R\x08viewOnly"u\n\x04Link\x12\x15\n\x03url\x18\x01 \x01(\tR\x03urlB\x03\x80\x01\x01\x12;\n\x0bexpire_time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\nexpireTime\x12\x19\n\x05token\x18\x03 \x01(\tR\x05tokenB\x03\x80\x01\x01"\x9d\x02\n\x12PromptAgentRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x16\n\x06prompt\x18\x02 \x01(\tR\x06prompt\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\'\n\x0fconversation_id\x18\x04 \x01(\tR\x0econversationId\x12\x14\n\x05model\x18\x05 \x01(\tR\x05model\x12\x10\n\x03cwd\x18\x06 \x01(\tR\x03cwd\x12\'\n\x0cwait_seconds\x18\x07 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01\x12\x1d\n\nrequest_id\x18e \x01(\tR\trequestIdJ\x04\x08d\x10e"\xcb\x03\n\tAgentTurn\x12\x17\n\x07turn_id\x18\x01 \x01(\tR\x06turnId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x03 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\x12:\n\x05state\x18\x05 \x01(\x0e2$.pethost.sandboxes.v1.AgentTurnStateR\x05state\x12\x14\n\x05reply\x18\x06 \x01(\tR\x05reply\x12\'\n\x0ffailure_message\x18\x07 \x01(\tR\x0efailureMessage\x12!\n\x0cinput_tokens\x18\x08 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\t \x01(\x03R\x0coutputTokens\x129\n\nstart_time\x18\n \x01(\x0b2\x1a.google.protobuf.TimestampR\tstartTime\x125\n\x08end_time\x18\x0b \x01(\x0b2\x1a.google.protobuf.TimestampR\x07endTime"|\n\x13GetAgentTurnRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x17\n\x07turn_id\x18\x02 \x01(\tR\x06turnId\x12\'\n\x0cwait_seconds\x18\x03 \x01(\rR\x0bwaitSecondsB\x04\x90\xb5\x18\x01J\x04\x08d\x10e"T\n\x14StopAgentTurnRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x17\n\x07turn_id\x18\x02 \x01(\tR\x06turnIdJ\x04\x08d\x10e"{\n\x18ListConversationsRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageTokenJ\x04\x08d\x10e"\x8d\x01\n\x19ListConversationsResponse\x12H\n\rconversations\x18\x01 \x03(\x0b2".pethost.sandboxes.v1.ConversationR\rconversations\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken"\xbf\x02\n\x0cConversation\x12\'\n\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x121\n\x05agent\x18\x02 \x01(\x0e2\x1b.pethost.sandboxes.v1.AgentR\x05agent\x12\x14\n\x05model\x18\x03 \x01(\tR\x05model\x12\x10\n\x03cwd\x18\x04 \x01(\tR\x03cwd\x12&\n\x0frunning_turn_id\x18\x05 \x01(\tR\rrunningTurnId\x12!\n\x0cinput_tokens\x18\x06 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\x07 \x01(\x03R\x0coutputTokens\x12;\n\x0bcreate_time\x18\x08 \x01(\x0b2\x1a.google.protobuf.TimestampR\ncreateTime"\x85\x01\n\x18WatchConversationRequest\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\'\n\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x12\x1b\n\tafter_seq\x18\x03 \x01(\x03R\x08afterSeqJ\x04\x08d\x10e"\xa7\x03\n\nAgentEvent\x12\x10\n\x03seq\x18\x01 \x01(\x03R\x03seq\x12.\n\x04time\x18\x02 \x01(\x0b2\x1a.google.protobuf.TimestampR\x04time\x12\x17\n\x07turn_id\x18\x03 \x01(\tR\x06turnId\x12\x18\n\x06prompt\x18\x04 \x01(\tH\x00R\x06prompt\x12\x1a\n\x07message\x18\x05 \x01(\tH\x00R\x07message\x12=\n\ttool_call\x18\x06 \x01(\x0b2\x1e.pethost.sandboxes.v1.ToolCallH\x00R\x08toolCall\x12C\n\x0btool_result\x18\x07 \x01(\x0b2 .pethost.sandboxes.v1.ToolResultH\x00R\ntoolResult\x12<\n\x08turn_end\x18\x08 \x01(\x0b2\x1f.pethost.sandboxes.v1.AgentTurnH\x00R\x07turnEnd\x12=\n\tcaught_up\x18\t \x01(\x0b2\x1e.pethost.sandboxes.v1.CaughtUpH\x00R\x08caughtUpB\x07\n\x05event"\n\n\x08CaughtUp"V\n\x08ToolCall\x12 \n\x0ctool_call_id\x18\x01 \x01(\tR\ntoolCallId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05input\x18\x03 \x01(\tR\x05input"^\n\nToolResult\x12 \n\x0ctool_call_id\x18\x01 \x01(\tR\ntoolCallId\x12\x16\n\x06output\x18\x02 \x01(\tR\x06output\x12\x16\n\x06failed\x18\x03 \x01(\x08R\x06failed"q\n\x0cLimitReached\x12\x14\n\x05limit\x18\x01 \x01(\tR\x05limit\x12\x10\n\x03max\x18\x02 \x01(\x05R\x03max\x129\n\nretry_time\x18\x03 \x01(\x0b2\x1a.google.protobuf.TimestampR\tretryTime"\t\n\x07Stopped"\r\n\x0bUsageUnpaid"Q\n\tRestoring\x12#\n\rfetched_bytes\x18\x01 \x01(\x03R\x0cfetchedBytes\x12\x1f\n\x0btotal_bytes\x18\x02 \x01(\x03R\ntotalBytes"U\n\nNoCapacity\x125\n\x05bound\x18\x02 \x01(\x0e2\x1f.pethost.sandboxes.v1.RoomBoundR\x05boundJ\x04\x08\x01\x10\x02R\nfork_count"*\n\tNameTaken\x12\x1d\n\nsandbox_id\x18\x01 \x01(\tR\tsandboxId"h\n\x0fWorkspaceChoice\x12?\n\nworkspaces\x18\x01 \x03(\x0b2\x1f.pethost.sandboxes.v1.WorkspaceR\nworkspaces\x12\x14\n\x05total\x18\x02 \x01(\x05R\x05total"Q\n\x0bAgentSignIn\x12\x1a\n\x08variable\x18\x01 \x01(\tR\x08variable\x12&\n\x0fsign_in_command\x18\x02 \x01(\tR\rsignInCommand*w\n\x05Meter\x12\x15\n\x11METER_UNSPECIFIED\x10\x00\x12\x11\n\rMETER_RUNNING\x10\x05\x12\x10\n\x0cMETER_PAUSED\x10\t\x12\x14\n\x10METER_STORED_GIB\x10\x07"\x04\x08\x01\x10\x01"\x04\x08\x02\x10\x02"\x04\x08\x03\x10\x03"\x04\x08\x04\x10\x04"\x04\x08\x06\x10\x06*\x98\x01\n\x0cSandboxState\x12\x1d\n\x19SANDBOX_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15SANDBOX_STATE_RUNNING\x10\x01\x12\x18\n\x14SANDBOX_STATE_PAUSED\x10\x02\x12\x19\n\x15SANDBOX_STATE_STOPPED\x10\x03\x12\x19\n\x15SANDBOX_STATE_DELETED\x10\x04*\xc8\x01\n\x0bStateReason\x12\x1c\n\x18STATE_REASON_UNSPECIFIED\x10\x00\x12\x18\n\x14STATE_REASON_REQUEST\x10\x01\x12\x15\n\x11STATE_REASON_IDLE\x10\x02\x12\x15\n\x11STATE_REASON_WAKE\x10\x03\x12\x16\n\x12STATE_REASON_CRASH\x10\x05\x12\x1c\n\x18STATE_REASON_MAINTENANCE\x10\x06\x12\x17\n\x13STATE_REASON_UNPAID\x10\x07"\x04\x08\x04\x10\x04*_\n\x04Size\x12\x14\n\x10SIZE_UNSPECIFIED\x10\x00\x12\x0e\n\nSIZE_SMALL\x10\x01\x12\x10\n\x0cSIZE_DEFAULT\x10\x02\x12\x0e\n\nSIZE_LARGE\x10\x03\x12\x0f\n\x0bSIZE_XLARGE\x10\x04*\xd7\x01\n\x10SandboxEventKind\x12"\n\x1eSANDBOX_EVENT_KIND_UNSPECIFIED\x10\x00\x12 \n\x1cSANDBOX_EVENT_KIND_LIFECYCLE\x10\x01\x12\x1e\n\x1aSANDBOX_EVENT_KIND_COMMAND\x10\x02\x12\x1d\n\x19SANDBOX_EVENT_KIND_EGRESS\x10\x03\x12\x1b\n\x17SANDBOX_EVENT_KIND_PORT\x10\x04\x12!\n\x1dSANDBOX_EVENT_KIND_AGENT_TURN\x10\x05*\xe6\x01\n\x0fLifecycleChange\x12 \n\x1cLIFECYCLE_CHANGE_UNSPECIFIED\x10\x00\x12\x1c\n\x18LIFECYCLE_CHANGE_CREATED\x10\x01\x12\x1b\n\x17LIFECYCLE_CHANGE_PAUSED\x10\x02\x12\x1c\n\x18LIFECYCLE_CHANGE_STOPPED\x10\x03\x12\x1c\n\x18LIFECYCLE_CHANGE_RESUMED\x10\x04\x12\x1c\n\x18LIFECYCLE_CHANGE_RESIZED\x10\x05\x12\x1c\n\x18LIFECYCLE_CHANGE_DELETED\x10\x06*\x7f\n\rTemplateState\x12\x1e\n\x1aTEMPLATE_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15TEMPLATE_STATE_SAVING\x10\x01\x12\x18\n\x14TEMPLATE_STATE_READY\x10\x02\x12\x19\n\x15TEMPLATE_STATE_FAILED\x10\x03*\xb2\x01\n\x0cCommandState\x12\x1d\n\x19COMMAND_STATE_UNSPECIFIED\x10\x00\x12\x19\n\x15COMMAND_STATE_RUNNING\x10\x01\x12\x18\n\x14COMMAND_STATE_EXITED\x10\x02\x12\x1b\n\x17COMMAND_STATE_TIMED_OUT\x10\x03\x12\x19\n\x15COMMAND_STATE_STOPPED\x10\x04\x12\x16\n\x12COMMAND_STATE_LOST\x10\x05*~\n\tStartedBy\x12\x1a\n\x16STARTED_BY_UNSPECIFIED\x10\x00\x12\x12\n\x0eSTARTED_BY_API\x10\x01\x12\x12\n\x0eSTARTED_BY_SSH\x10\x02\x12\x17\n\x13STARTED_BY_TERMINAL\x10\x03\x12\x14\n\x10STARTED_BY_AGENT\x10\x04*i\n\x08FileKind\x12\x19\n\x15FILE_KIND_UNSPECIFIED\x10\x00\x12\x12\n\x0eFILE_KIND_FILE\x10\x01\x12\x17\n\x13FILE_KIND_DIRECTORY\x10\x02\x12\x15\n\x11FILE_KIND_SYMLINK\x10\x03*\x8b\x02\n\x0bFileFailure\x12\x1c\n\x18FILE_FAILURE_UNSPECIFIED\x10\x00\x12\x1a\n\x16FILE_FAILURE_NOT_FOUND\x10\x01\x12"\n\x1eFILE_FAILURE_PERMISSION_DENIED\x10\x02\x12 \n\x1cFILE_FAILURE_NOT_A_DIRECTORY\x10\x03\x12\x1f\n\x1bFILE_FAILURE_IS_A_DIRECTORY\x10\x04\x12\x19\n\x15FILE_FAILURE_NO_SPACE\x10\x05\x12\x1f\n\x1bFILE_FAILURE_EDIT_NOT_FOUND\x10\x06\x12\x1f\n\x1bFILE_FAILURE_EDIT_AMBIGUOUS\x10\x07*\xc2\x01\n\rFileEventKind\x12\x1f\n\x1bFILE_EVENT_KIND_UNSPECIFIED\x10\x00\x12\x1b\n\x17FILE_EVENT_KIND_CREATED\x10\x01\x12\x1b\n\x17FILE_EVENT_KIND_WRITTEN\x10\x02\x12\x1b\n\x17FILE_EVENT_KIND_REMOVED\x10\x03\x12\x1b\n\x17FILE_EVENT_KIND_RENAMED\x10\x04\x12\x1c\n\x18FILE_EVENT_KIND_OVERFLOW\x10\x05*r\n\x0eDesktopFailure\x12\x1f\n\x1bDESKTOP_FAILURE_UNSPECIFIED\x10\x00\x12\x1e\n\x1aDESKTOP_FAILURE_OFF_SCREEN\x10\x01\x12\x1f\n\x1bDESKTOP_FAILURE_UNKNOWN_KEY\x10\x02*s\n\x0bMouseButton\x12\x1c\n\x18MOUSE_BUTTON_UNSPECIFIED\x10\x00\x12\x15\n\x11MOUSE_BUTTON_LEFT\x10\x01\x12\x16\n\x12MOUSE_BUTTON_RIGHT\x10\x02\x12\x17\n\x13MOUSE_BUTTON_MIDDLE\x10\x03*`\n\x05Agent\x12\x15\n\x11AGENT_UNSPECIFIED\x10\x00\x12\x15\n\x11AGENT_CLAUDE_CODE\x10\x01\x12\x0f\n\x0bAGENT_CODEX\x10\x02\x12\x12\n\x0eAGENT_OPENCODE\x10\x03"\x04\x08\x04\x10\x04*\xde\x01\n\x0eAgentTurnState\x12 \n\x1cAGENT_TURN_STATE_UNSPECIFIED\x10\x00\x12\x1b\n\x17AGENT_TURN_STATE_QUEUED\x10\x01\x12\x1c\n\x18AGENT_TURN_STATE_RUNNING\x10\x02\x12\x19\n\x15AGENT_TURN_STATE_DONE\x10\x03\x12\x1b\n\x17AGENT_TURN_STATE_FAILED\x10\x04\x12\x1c\n\x18AGENT_TURN_STATE_STOPPED\x10\x05\x12\x19\n\x15AGENT_TURN_STATE_LOST\x10\x06*\x95\x01\n\tRoomBound\x12\x1a\n\x16ROOM_BOUND_UNSPECIFIED\x10\x00\x12\x15\n\x11ROOM_BOUND_MEMORY\x10\x01\x12\x1b\n\x17ROOM_BOUND_SHORT_MEMORY\x10\x02\x12\x13\n\x0fROOM_BOUND_DISK\x10\x03\x12\x17\n\x13ROOM_BOUND_DISK_CAP\x10\x04"\x04\x08\x05\x10\x05"\x04\x08\x06\x10\x062\xd1\x14\n\x0eSandboxService\x12w\n\x0cGetWorkspace\x12).pethost.sandboxes.v1.GetWorkspaceRequest\x1a\x1f.pethost.sandboxes.v1.Workspace"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Read the workspace\x12q\n\nSetSshKeys\x12\'.pethost.sandboxes.v1.SetSshKeysRequest\x1a\x1f.pethost.sandboxes.v1.Workspace"\x19\x90\x02\x02\x9a\xb5\x18\x12\n\x10Set the SSH keys\x12h\n\tSetSecret\x12&.pethost.sandboxes.v1.SetSecretRequest\x1a\x1c.pethost.sandboxes.v1.Secret"\x15\x90\x02\x02\x9a\xb5\x18\x0e\n\x0cSet a secret\x12q\n\x0cDeleteSecret\x12).pethost.sandboxes.v1.DeleteSecretRequest\x1a\x1c.pethost.sandboxes.v1.Secret"\x18\x90\x02\x02\x9a\xb5\x18\x11\n\x0fDelete a secret\x12r\n\rCreateSandbox\x12*.pethost.sandboxes.v1.CreateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x16\x8a\xb5\x18\x12\x12\x10Create a sandbox\x12m\n\nGetSandbox\x12\'.pethost.sandboxes.v1.GetSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eRead a sandbox\x12\x81\x01\n\rListSandboxes\x12*.pethost.sandboxes.v1.ListSandboxesRequest\x1a+.pethost.sandboxes.v1.ListSandboxesResponse"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eList sandboxes\x12\x82\x01\n\rUpdateSandbox\x12*.pethost.sandboxes.v1.UpdateSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"&\x90\x02\x02\x8a\xb5\x18\x1f\x08\x01\x12\x1bChange a sandbox\'s settings\x12r\n\x0cPauseSandbox\x12).pethost.sandboxes.v1.PauseSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x18\x90\x02\x02\x8a\xb5\x18\x11\x12\x0fPause a sandbox\x12q\n\x0bStopSandbox\x12(.pethost.sandboxes.v1.StopSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x19\x90\x02\x02\x8a\xb5\x18\x12\x08\x01\x12\x0eStop a sandbox\x12u\n\rResumeSandbox\x12*.pethost.sandboxes.v1.ResumeSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x19\x90\x02\x02\x8a\xb5\x18\x12\x12\x10Resume a sandbox\x12w\n\rDeleteSandbox\x12*.pethost.sandboxes.v1.DeleteSandboxRequest\x1a\x1d.pethost.sandboxes.v1.Sandbox"\x1b\x90\x02\x02\x8a\xb5\x18\x14\x08\x01\x12\x10Delete a sandbox\x12\x8d\x01\n\x0eConnectSandbox\x12+.pethost.sandboxes.v1.ConnectSandboxRequest\x1a .pethost.sandboxes.v1.Connection",\x8a\xb5\x18(\x12&Get a sandbox\'s address and root token\x12\x97\x01\n\x11GetSandboxMetrics\x12..pethost.sandboxes.v1.GetSandboxMetricsRequest\x1a/.pethost.sandboxes.v1.GetSandboxMetricsResponse"!\x90\x02\x01\x9a\xb5\x18\x1a\n\x18Read a sandbox\'s metrics\x12\x96\x01\n\x11ListSandboxEvents\x12..pethost.sandboxes.v1.ListSandboxEventsRequest\x1a/.pethost.sandboxes.v1.ListSandboxEventsResponse" \x90\x02\x01\x9a\xb5\x18\x19\n\x17List a sandbox\'s events\x12\x8c\x01\n\x12WatchSandboxEvents\x12/.pethost.sandboxes.v1.WatchSandboxEventsRequest\x1a".pethost.sandboxes.v1.SandboxEvent"\x1f\x9a\xb5\x18\x1b\n\x19Follow a sandbox\'s events0\x01\x12t\n\x0eCreateTemplate\x12+.pethost.sandboxes.v1.CreateTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template"\x15\x8a\xb5\x18\x11\x12\x0fSave a template\x12y\n\x0bGetTemplate\x12(.pethost.sandboxes.v1.GetTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template" \x90\x02\x01\x9a\xb5\x18\x19\n\x17Read a template version\x12\x81\x01\n\rListTemplates\x12*.pethost.sandboxes.v1.ListTemplatesRequest\x1a+.pethost.sandboxes.v1.ListTemplatesResponse"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eList templates\x12y\n\x0eDeleteTemplate\x12+.pethost.sandboxes.v1.DeleteTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template"\x1a\x90\x02\x02\x9a\xb5\x18\x13\n\x11Delete a template\x12q\n\tListUsage\x12&.pethost.sandboxes.v1.ListUsageRequest\x1a\'.pethost.sandboxes.v1.ListUsageResponse"\x13\x90\x02\x01\x9a\xb5\x18\x0c\n\nList usage2\xd9\x0f\n\x15SandboxRuntimeService\x12k\n\nRunCommand\x12\'.pethost.sandboxes.v1.RunCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x15\x8a\xb5\x18\x11\x08\x01\x12\rRun a command\x12q\n\nGetCommand\x12\'.pethost.sandboxes.v1.GetCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Wait for a command\x12q\n\x0bStopCommand\x12(.pethost.sandboxes.v1.StopCommandRequest\x1a\x1d.pethost.sandboxes.v1.Command"\x19\x90\x02\x02\x8a\xb5\x18\x12\x08\x01\x12\x0eStop a command\x12\x85\x01\n\x0cListCommands\x12).pethost.sandboxes.v1.ListCommandsRequest\x1a*.pethost.sandboxes.v1.ListCommandsResponse"\x1e\x90\x02\x01\x9a\xb5\x18\x17\n\x15List running commands\x12\x81\x01\n\x0cWatchCommand\x12).pethost.sandboxes.v1.WatchCommandRequest\x1a#.pethost.sandboxes.v1.CommandOutput"\x1f\x9a\xb5\x18\x1b\n\x19Follow a command\'s output0\x01\x12c\n\x08ReadFile\x12%.pethost.sandboxes.v1.ReadFileRequest\x1a\x1a.pethost.sandboxes.v1.File"\x14\x90\x02\x01\x8a\xb5\x18\r\x12\x0bRead a file\x12q\n\tListFiles\x12&.pethost.sandboxes.v1.ListFilesRequest\x1a\'.pethost.sandboxes.v1.ListFilesResponse"\x13\x90\x02\x01\x8a\xb5\x18\x0c\x12\nList files\x12t\n\nWriteFiles\x12\'.pethost.sandboxes.v1.WriteFilesRequest\x1a(.pethost.sandboxes.v1.WriteFilesResponse"\x13\x8a\xb5\x18\x0f\x08\x01\x12\x0bWrite files\x12s\n\nWatchFiles\x12\'.pethost.sandboxes.v1.WatchFilesRequest\x1a\x1f.pethost.sandboxes.v1.FileEvent"\x19\x9a\xb5\x18\x15\n\x13Follow file changes0\x01\x12\x84\x01\n\x0eControlDesktop\x12+.pethost.sandboxes.v1.ControlDesktopRequest\x1a,.pethost.sandboxes.v1.ControlDesktopResponse"\x17\x8a\xb5\x18\x13\x08\x01\x12\x0fUse the desktop\x12d\n\nCreateLink\x12\'.pethost.sandboxes.v1.CreateLinkRequest\x1a\x1a.pethost.sandboxes.v1.Link"\x11\x8a\xb5\x18\r\x12\x0bMake a link\x12w\n\x0bPromptAgent\x12(.pethost.sandboxes.v1.PromptAgentRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"\x1d\x8a\xb5\x18\x19\x08\x01\x12\x15Prompt a coding agent\x12}\n\x0cGetAgentTurn\x12).pethost.sandboxes.v1.GetAgentTurnRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"!\x90\x02\x01\x8a\xb5\x18\x1a\x12\x18Wait for an agent\'s turn\x12{\n\rStopAgentTurn\x12*.pethost.sandboxes.v1.StopAgentTurnRequest\x1a\x1f.pethost.sandboxes.v1.AgentTurn"\x1d\x90\x02\x02\x9a\xb5\x18\x16\n\x14Stop an agent\'s turn\x12\x97\x01\n\x11ListConversations\x12..pethost.sandboxes.v1.ListConversationsRequest\x1a/.pethost.sandboxes.v1.ListConversationsResponse"!\x90\x02\x01\x9a\xb5\x18\x1a\n\x18List agent conversations\x12\x8b\x01\n\x11WatchConversation\x12..pethost.sandboxes.v1.WatchConversationRequest\x1a .pethost.sandboxes.v1.AgentEvent""\x9a\xb5\x18\x1e\n\x1cFollow an agent conversation0\x01\x1a\x14\xc2\xb5\x18\x10\n\x0eConnectSandboxB\xb4\x01\n\x18com.pethost.sandboxes.v1B\x0eSandboxesProtoZ\x18pethost/panel/v1;panelv1\xa2\x02\x03PSX\xaa\x02\x14Pethost.Sandboxes.V1\xca\x02\x14Pethost\\Sandboxes\\V1\xe2\x02 Pethost\\Sandboxes\\V1\\GPBMetadata\xea\x02\x16Pethost::Sandboxes::V1b\x08editionsp\xe9\x07',
     [
         timestamp_pb.desc(),
     ],
@@ -6381,12 +6066,6 @@ _DESC = file_desc(
         "ListTemplatesRequest": ListTemplatesRequest,
         "ListTemplatesResponse": ListTemplatesResponse,
         "DeleteTemplateRequest": DeleteTemplateRequest,
-        "Volume": Volume,
-        "Mount": Mount,
-        "CreateVolumeRequest": CreateVolumeRequest,
-        "ListVolumesRequest": ListVolumesRequest,
-        "ListVolumesResponse": ListVolumesResponse,
-        "DeleteVolumeRequest": DeleteVolumeRequest,
         "ListUsageRequest": ListUsageRequest,
         "ListUsageResponse": ListUsageResponse,
         "UsageRow": UsageRow,

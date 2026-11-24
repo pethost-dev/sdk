@@ -166,7 +166,6 @@ def workspace_from_wire(_w: _pb.Workspace) -> _t.Workspace:
         sizes=tuple(size_info_from_wire(_x) for _x in _w.sizes),
         template_bytes=_w.template_bytes,
         vcpus_used=_w.vcpus_used,
-        volume_gib_used=_w.volume_gib_used,
     )
 
 
@@ -181,7 +180,6 @@ def workspace_to_wire(_v: _t.Workspace) -> _pb.Workspace:
         sizes=[size_info_to_wire(_x) for _x in _v.sizes],
         template_bytes=_v.template_bytes or None,
         vcpus_used=_v.vcpus_used or None,
-        volume_gib_used=_v.volume_gib_used or None,
     )
 
 
@@ -260,14 +258,12 @@ def billing_from_dict(_j: dict[str, _Any]) -> _t.Billing:
 def rates_from_wire(_w: _pb.Rates) -> _t.Rates:
     return _t.Rates(
         stored_gib_month=_w.stored_gib_month,
-        volume_gib_month=_w.volume_gib_month,
     )
 
 
 def rates_to_wire(_v: _t.Rates) -> _pb.Rates:
     return _pb.Rates(
         stored_gib_month=_v.stored_gib_month or None,
-        volume_gib_month=_v.volume_gib_month or None,
     )
 
 
@@ -307,7 +303,6 @@ def limits_from_wire(_w: _pb.Limits) -> _t.Limits:
     return _t.Limits(
         vcpus=_w.vcpus,
         largest_size=size_from_wire(_w.largest_size),
-        volume_gib=_w.volume_gib,
         template_versions=_w.template_versions,
         template_gib=_w.template_gib,
     )
@@ -317,7 +312,6 @@ def limits_to_wire(_v: _t.Limits) -> _pb.Limits:
     return _pb.Limits(
         vcpus=_v.vcpus or None,
         largest_size=size_to_wire(_v.largest_size) if _v.largest_size.value else None,
-        volume_gib=_v.volume_gib or None,
         template_versions=_v.template_versions or None,
         template_gib=_v.template_gib or None,
     )
@@ -367,7 +361,6 @@ def sandbox_from_wire(_w: _pb.Sandbox) -> _t.Sandbox:
         settings=sandbox_settings_from_wire(_w.settings) if _w.settings is not None else None,
         revision=_w.revision,
         disk_gib=_w.disk_gib,
-        mounts=tuple(mount_from_wire(_x) for _x in _w.mounts),
         desktop=desktop_from_wire(_w.desktop) if _w.desktop is not None else None,
         ssh_command=_w.ssh_command,
         panel_url=_w.panel_url,
@@ -394,7 +387,6 @@ def sandbox_to_wire(_v: _t.Sandbox) -> _pb.Sandbox:
         settings=sandbox_settings_to_wire(_v.settings) if _v.settings is not None else None,
         revision=_v.revision or None,
         disk_gib=_v.disk_gib or None,
-        mounts=[mount_to_wire(_x) for _x in _v.mounts],
         desktop=desktop_to_wire(_v.desktop) if _v.desktop is not None else None,
         ssh_command=_v.ssh_command or None,
         panel_url=_v.panel_url or None,
@@ -1059,82 +1051,6 @@ def list_templates_response_to_dict(_v: _t.ListTemplatesResponse) -> dict[str, _
 
 def list_templates_response_from_dict(_j: dict[str, _Any]) -> _t.ListTemplatesResponse:
     return list_templates_response_from_wire(_rt.from_dict(_pb.ListTemplatesResponse, _j))
-
-
-def volume_from_wire(_w: _pb.Volume) -> _t.Volume:
-    return _t.Volume(
-        volume_id=_w.volume_id,
-        name=_w.name,
-        size_gib=_w.size_gib,
-        used_bytes=_w.used_bytes,
-        mounted_by=tuple(_w.mounted_by),
-        create_time=_rt.time_from_wire(_w.create_time) if _w.create_time is not None else None,
-    )
-
-
-def volume_to_wire(_v: _t.Volume) -> _pb.Volume:
-    return _pb.Volume(
-        volume_id=_v.volume_id or None,
-        name=_v.name or None,
-        size_gib=_v.size_gib or None,
-        used_bytes=_v.used_bytes or None,
-        mounted_by=_rt.strings("Volume.mounted_by", _v.mounted_by),
-        create_time=_rt.time_to_wire(_v.create_time) if _v.create_time is not None else None,
-    )
-
-
-def volume_to_dict(_v: _t.Volume) -> dict[str, _Any]:
-    return _rt.to_dict(volume_to_wire(_v))
-
-
-def volume_from_dict(_j: dict[str, _Any]) -> _t.Volume:
-    return volume_from_wire(_rt.from_dict(_pb.Volume, _j))
-
-
-def mount_from_wire(_w: _pb.Mount) -> _t.Mount:
-    return _t.Mount(
-        volume_id=_w.volume_id,
-        path=_w.path,
-        read_only=_w.read_only,
-    )
-
-
-def mount_to_wire(_v: _t.Mount) -> _pb.Mount:
-    return _pb.Mount(
-        volume_id=_v.volume_id or None,
-        path=_v.path or None,
-        read_only=_v.read_only or None,
-    )
-
-
-def mount_to_dict(_v: _t.Mount) -> dict[str, _Any]:
-    return _rt.to_dict(mount_to_wire(_v))
-
-
-def mount_from_dict(_j: dict[str, _Any]) -> _t.Mount:
-    return mount_from_wire(_rt.from_dict(_pb.Mount, _j))
-
-
-def list_volumes_response_from_wire(_w: _pb.ListVolumesResponse) -> _t.ListVolumesResponse:
-    return _t.ListVolumesResponse(
-        volumes=tuple(volume_from_wire(_x) for _x in _w.volumes),
-        next_page_token=_w.next_page_token,
-    )
-
-
-def list_volumes_response_to_wire(_v: _t.ListVolumesResponse) -> _pb.ListVolumesResponse:
-    return _pb.ListVolumesResponse(
-        volumes=[volume_to_wire(_x) for _x in _v.volumes],
-        next_page_token=_v.next_page_token or None,
-    )
-
-
-def list_volumes_response_to_dict(_v: _t.ListVolumesResponse) -> dict[str, _Any]:
-    return _rt.to_dict(list_volumes_response_to_wire(_v))
-
-
-def list_volumes_response_from_dict(_j: dict[str, _Any]) -> _t.ListVolumesResponse:
-    return list_volumes_response_from_wire(_rt.from_dict(_pb.ListVolumesResponse, _j))
 
 
 def list_usage_response_from_wire(_w: _pb.ListUsageResponse) -> _t.ListUsageResponse:
@@ -2318,7 +2234,6 @@ def create_sandbox_request(
     template: str,
     settings: _t.SandboxSettings | None,
     labels: Sequence[_t.Label],
-    mounts: Sequence[_t.Mount],
     name: str,
     request_id: str,
     workspace: str,
@@ -2327,7 +2242,6 @@ def create_sandbox_request(
         template=template or None,
         settings=sandbox_settings_to_wire(settings) if settings is not None else None,
         labels=[label_to_wire(_x) for _x in labels],
-        mounts=[mount_to_wire(_x) for _x in mounts],
         name=name or None,
         request_id=request_id or None,
         workspace=workspace or None,
@@ -2536,48 +2450,6 @@ def delete_template_request(
 ) -> _pb.DeleteTemplateRequest:
     _w = _pb.DeleteTemplateRequest(
         name=name or None,
-        workspace=workspace or None,
-    )
-    return _rt.checked(_w)
-
-
-def create_volume_request(
-    *,
-    name: str,
-    size_gib: int,
-    request_id: str,
-    workspace: str,
-) -> _pb.CreateVolumeRequest:
-    _w = _pb.CreateVolumeRequest(
-        name=name or None,
-        size_gib=size_gib or None,
-        request_id=request_id or None,
-        workspace=workspace or None,
-    )
-    return _rt.checked(_w)
-
-
-def list_volumes_request(
-    *,
-    page_size: int,
-    page_token: str,
-    workspace: str,
-) -> _pb.ListVolumesRequest:
-    _w = _pb.ListVolumesRequest(
-        page_size=page_size or None,
-        page_token=page_token or None,
-        workspace=workspace or None,
-    )
-    return _rt.checked(_w)
-
-
-def delete_volume_request(
-    *,
-    volume_id: str,
-    workspace: str,
-) -> _pb.DeleteVolumeRequest:
-    _w = _pb.DeleteVolumeRequest(
-        volume_id=volume_id or None,
         workspace=workspace or None,
     )
     return _rt.checked(_w)

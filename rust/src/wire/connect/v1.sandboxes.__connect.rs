@@ -150,26 +150,6 @@ pub type OwnedDeleteTemplateRequestView = ::buffa::view::OwnedView<
         'static,
     >,
 >;
-///Shorthand for `OwnedView<CreateVolumeRequestView<'static>>`.
-pub type OwnedCreateVolumeRequestView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::CreateVolumeRequestView<'static>,
->;
-///Shorthand for `OwnedView<VolumeView<'static>>`.
-pub type OwnedVolumeView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
->;
-///Shorthand for `OwnedView<ListVolumesRequestView<'static>>`.
-pub type OwnedListVolumesRequestView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesRequestView<'static>,
->;
-///Shorthand for `OwnedView<ListVolumesResponseView<'static>>`.
-pub type OwnedListVolumesResponseView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesResponseView<'static>,
->;
-///Shorthand for `OwnedView<DeleteVolumeRequestView<'static>>`.
-pub type OwnedDeleteVolumeRequestView = ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::DeleteVolumeRequestView<'static>,
->;
 ///Shorthand for `OwnedView<ListUsageRequestView<'static>>`.
 pub type OwnedListUsageRequestView = ::buffa::view::OwnedView<
     crate::proto::pethost::sandboxes::v1::__buffa::view::ListUsageRequestView<'static>,
@@ -642,74 +622,6 @@ for ::buffa::view::OwnedView<
     crate::proto::pethost::sandboxes::v1::__buffa::view::ListTemplatesResponseView<
         'static,
     >,
-> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
-    }
-    /// An `OwnedView` still holds the buffer it was decoded from, so
-    /// its large fields can be handed to the response body by
-    /// reference count instead of copied. The bare view impl above
-    /// cannot do this: it has borrows but no buffer to name.
-    fn encode_segments(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body_segments(
-            self.reborrow(),
-            self.bytes(),
-            codec,
-        )
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::Volume>
-for crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'_> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self, codec)
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::Volume>
-for ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
-> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
-    }
-    /// An `OwnedView` still holds the buffer it was decoded from, so
-    /// its large fields can be handed to the response body by
-    /// reference count instead of copied. The bare view impl above
-    /// cannot do this: it has borrows but no buffer to name.
-    fn encode_segments(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::connectrpc::EncodedBody, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body_segments(
-            self.reborrow(),
-            self.bytes(),
-            codec,
-        )
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::ListVolumesResponse>
-for crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesResponseView<'_> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self, codec)
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::pethost::sandboxes::v1::ListVolumesResponse>
-for ::buffa::view::OwnedView<
-    crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -1312,24 +1224,6 @@ pub const SANDBOX_SERVICE_DELETE_TEMPLATE_SPEC: ::connectrpc::Spec = ::connectrp
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
-/// Static [`Spec`](::connectrpc::Spec) for the `CreateVolume` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
-pub const SANDBOX_SERVICE_CREATE_VOLUME_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/pethost.sandboxes.v1.SandboxService/CreateVolume",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// Static [`Spec`](::connectrpc::Spec) for the `ListVolumes` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
-pub const SANDBOX_SERVICE_LIST_VOLUMES_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/pethost.sandboxes.v1.SandboxService/ListVolumes",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
-/// Static [`Spec`](::connectrpc::Spec) for the `DeleteVolume` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
-pub const SANDBOX_SERVICE_DELETE_VOLUME_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/pethost.sandboxes.v1.SandboxService/DeleteVolume",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::Idempotent);
 /// Static [`Spec`](::connectrpc::Spec) for the `ListUsage` RPC, as seen by the server; the generated client passes it with [`origin`](::connectrpc::Spec::origin) `Client` (compare across sides with [`Spec::same_method`](::connectrpc::Spec::same_method)).
 pub const SANDBOX_SERVICE_LIST_USAGE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/pethost.sandboxes.v1.SandboxService/ListUsage",
@@ -1337,7 +1231,7 @@ pub const SANDBOX_SERVICE_LIST_USAGE_SPEC: ::connectrpc::Spec = ::connectrpc::Sp
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::NoSideEffects);
 /// The workspace, and each sandbox as a record: create, settings, pause, delete; templates,
-/// volumes, events and usage. Answered by the panel, at the same address as Pethost's PanelService,
+/// events and usage. Answered by the panel, at the same address as Pethost's PanelService,
 /// with `Authorization: Bearer <a Pethost API token granted the workspace>`.
 ///
 /// Its refusals, beside the header's: INVALID_ARGUMENT = a bad field, named, with what it takes (a
@@ -1680,7 +1574,7 @@ pub trait SandboxService: Send + Sync + 'static {
     /// counts against Limits.vcpus and
     /// largest_size from here on (RESOURCE_EXHAUSTED + LimitReached past them), and starts on its
     /// own server when that server has room for it, else
-    /// on another with room, when it mounts no volume and its copy is current: its server lets it go
+    /// on another with room, when its copy is current: its server lets it go
     /// first, and one its server cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is
     /// in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
     /// STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -1712,8 +1606,7 @@ pub trait SandboxService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-    /// included. A DELETED sandbox is answered with that record.
+    /// Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1937,76 +1830,6 @@ pub trait SandboxService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::pethost::sandboxes::v1::Template,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
-    /// A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-    /// while nothing pays for the workspace (UsageUnpaid).
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn create_volume<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::pethost::sandboxes::v1::Volume,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
-    /// The workspace's volumes.
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn list_volumes<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::pethost::sandboxes::v1::ListVolumesResponse,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
-    /// Refused while a sandbox mounts it.
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn delete_volume<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::pethost::sandboxes::v1::Volume,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -2644,93 +2467,6 @@ impl<S: SandboxService> SandboxServiceExt for S {
                 },
             )
             .with_spec(SANDBOX_SERVICE_DELETE_TEMPLATE_SPEC)
-            .route_view(
-                SANDBOX_SERVICE_SERVICE_NAME,
-                "CreateVolume",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::pethost::sandboxes::v1::__buffa::view::CreateVolumeRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.create_volume(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::pethost::sandboxes::v1::Volume,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(SANDBOX_SERVICE_CREATE_VOLUME_SPEC)
-            .route_view_idempotent(
-                SANDBOX_SERVICE_SERVICE_NAME,
-                "ListVolumes",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.list_volumes(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::pethost::sandboxes::v1::ListVolumesResponse,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(SANDBOX_SERVICE_LIST_VOLUMES_SPEC)
-            .route_view(
-                SANDBOX_SERVICE_SERVICE_NAME,
-                "DeleteVolume",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::pethost::sandboxes::v1::__buffa::view::DeleteVolumeRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.delete_volume(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::pethost::sandboxes::v1::Volume,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(SANDBOX_SERVICE_DELETE_VOLUME_SPEC)
             .route_view_idempotent(
                 SANDBOX_SERVICE_SERVICE_NAME,
                 "ListUsage",
@@ -2932,24 +2668,6 @@ impl<T: SandboxService> ::connectrpc::Dispatcher for SandboxServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(SANDBOX_SERVICE_DELETE_TEMPLATE_SPEC),
-                )
-            }
-            "CreateVolume" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(SANDBOX_SERVICE_CREATE_VOLUME_SPEC),
-                )
-            }
-            "ListVolumes" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(true)
-                        .with_spec(SANDBOX_SERVICE_LIST_VOLUMES_SPEC),
-                )
-            }
-            "DeleteVolume" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(SANDBOX_SERVICE_DELETE_VOLUME_SPEC),
                 )
             }
             "ListUsage" => {
@@ -3366,68 +3084,6 @@ impl<T: SandboxService> ::connectrpc::Dispatcher for SandboxServiceServer<T> {
                     svc.delete_template(ctx, req)
                         .await?
                         .encode::<crate::proto::pethost::sandboxes::v1::Template>(format)
-                })
-            }
-            "CreateVolume" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::pethost::sandboxes::v1::__buffa::view::CreateVolumeRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                        ctx.decode_options(),
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-                    >::from_parts(&req, &body);
-                    svc.create_volume(ctx, req)
-                        .await?
-                        .encode::<crate::proto::pethost::sandboxes::v1::Volume>(format)
-                })
-            }
-            "ListVolumes" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                        ctx.decode_options(),
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-                    >::from_parts(&req, &body);
-                    svc.list_volumes(ctx, req)
-                        .await?
-                        .encode::<
-                            crate::proto::pethost::sandboxes::v1::ListVolumesResponse,
-                        >(format)
-                })
-            }
-            "DeleteVolume" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::pethost::sandboxes::v1::__buffa::view::DeleteVolumeRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                        ctx.decode_options(),
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-                    >::from_parts(&req, &body);
-                    svc.delete_volume(ctx, req)
-                        .await?
-                        .encode::<crate::proto::pethost::sandboxes::v1::Volume>(format)
                 })
             }
             "ListUsage" => {
@@ -4465,133 +4121,6 @@ where
                 &self.transport,
                 &self.config,
                 SANDBOX_SERVICE_DELETE_TEMPLATE_SPEC
-                    .with_origin(::connectrpc::SpecOrigin::Client),
-                request,
-                options,
-            )
-            .await
-    }
-    /// Call the CreateVolume RPC. Sends a request to /pethost.sandboxes.v1.SandboxService/CreateVolume.
-    pub async fn create_volume(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.create_volume_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the CreateVolume RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn create_volume_with_options(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::CreateVolumeRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                SANDBOX_SERVICE_CREATE_VOLUME_SPEC
-                    .with_origin(::connectrpc::SpecOrigin::Client),
-                request,
-                options,
-            )
-            .await
-    }
-    /// Call the ListVolumes RPC. Sends a request to /pethost.sandboxes.v1.SandboxService/ListVolumes.
-    pub async fn list_volumes(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.list_volumes_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the ListVolumes RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn list_volumes_with_options(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::ListVolumesRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::ListVolumesResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                SANDBOX_SERVICE_LIST_VOLUMES_SPEC
-                    .with_origin(::connectrpc::SpecOrigin::Client),
-                request,
-                options,
-            )
-            .await
-    }
-    /// Call the DeleteVolume RPC. Sends a request to /pethost.sandboxes.v1.SandboxService/DeleteVolume.
-    pub async fn delete_volume(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.delete_volume_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the DeleteVolume RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn delete_volume_with_options(
-        &self,
-        request: crate::proto::pethost::sandboxes::v1::DeleteVolumeRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::pethost::sandboxes::v1::__buffa::view::VolumeView<'static>,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                SANDBOX_SERVICE_DELETE_VOLUME_SPEC
                     .with_origin(::connectrpc::SpecOrigin::Client),
                 request,
                 options,

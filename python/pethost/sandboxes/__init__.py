@@ -3,8 +3,8 @@
 Pethost Agent Sandboxes (https://pethost.dev/sandboxes/) are Firecracker microVMs for AI agents, each
 with its own kernel and root inside. A sandbox starts in about 0.15 s, pauses with its memory and
 processes while the agent thinks, and wakes in 0.1 s at the next call. The package has every call
-of its API: the workspace, its sandboxes, templates and volumes, and what runs inside a sandbox:
-commands, files, the desktop, links and coding agents.
+of its API: the workspace, its sandboxes and templates, and what runs inside a sandbox: commands,
+files, the desktop, links and coding agents.
 
     from pethost.sandboxes import Sandboxes
 
@@ -29,7 +29,7 @@ The API's own documentation follows; each method's and each class's docstring is
 Model
 -----
 
-Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 
     its workspace, any other on its `workspace`, else the caller's only one.
 
@@ -42,8 +42,7 @@ Template ("name" or "name@version"): what a sandbox starts from: "base" (Ubuntu,
 
     Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
 
-Volume (volume_id): a disk that outlives sandboxes, mounted into them at a path. Secret (name):
-a value the workspace keeps and no sandbox holds.
+Secret (name): a value the workspace keeps and no sandbox holds.
 
 Idle and wake
 -------------
@@ -162,11 +161,9 @@ from ._types import (
     ListSandboxesResponse,
     ListTemplatesResponse,
     ListUsageResponse,
-    ListVolumesResponse,
     MakeDirectory,
     Meter,
     MetricsPoint,
-    Mount,
     MouseButton,
     NameTaken,
     NoCapacity,
@@ -200,7 +197,6 @@ from ._types import (
     Usage,
     UsageRow,
     UsageUnpaid,
-    Volume,
     Workspace,
     WorkspaceChoice,
     WriteFilesResponse,
@@ -266,11 +262,9 @@ __all__ = [
     "ListSandboxesResponse",
     "ListTemplatesResponse",
     "ListUsageResponse",
-    "ListVolumesResponse",
     "MakeDirectory",
     "Meter",
     "MetricsPoint",
-    "Mount",
     "MouseButton",
     "NameTaken",
     "NoCapacity",
@@ -314,7 +308,6 @@ __all__ = [
     "Usage",
     "UsageRow",
     "UsageUnpaid",
-    "Volume",
     "Workspace",
     "WorkspaceChoice",
     "WriteFilesResponse",

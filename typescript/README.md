@@ -215,7 +215,7 @@ per sandbox until 60 s before it expires, and asks for a new one, once, when the
 refuses it: a token that expired or was revoked, or a sandbox that moved to another server. You
 write no URL and no token, and your API token never goes to a sandbox's server. A request with a
 `requestId` that you leave out gets one of its own for each call:
-`createSandbox`, `createTemplate`, `createVolume`, `runCommand`, `promptAgent`.
+`createSandbox`, `createTemplate`, `runCommand`, `promptAgent`.
 A call made again at a new connection keeps it, so the server does it once.
 
 | Method | What it does | Effect |
@@ -240,9 +240,6 @@ A call made again at a new connection keeps it, so the server does it once.
 | `getTemplate` | Read a template version | Reads only |
 | `listTemplates` | List templates | Reads only |
 | `deleteTemplate` | Delete a template |  |
-| `createVolume` | Create a volume |  |
-| `listVolumes` | List volumes | Reads only |
-| `deleteVolume` | Delete a volume |  |
 | `listUsage` | List usage | Reads only |
 | `runCommand` | Run a command | Destructive |
 | `getCommand` | Wait for a command | Reads only |
@@ -266,7 +263,7 @@ them, and a detail, when the server sent one:
 
 - `error.limitReached`: RESOURCE_EXHAUSTED: a limit of the workspace.
 - `error.stopped`: FAILED_PRECONDITION from a call into a sandbox, an SSH login or a request to a port while it is STOPPED and its lifecycle does not wake it (Lifecycle.wakeWhenStopped): resumeSandbox starts it.
-- `error.usageUnpaid`: FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
+- `error.usageUnpaid`: FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the call starts, resumes or wakes no sandbox, and makes no template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
 - `error.restoring`: UNAVAILABLE from a call into a sandbox, an SSH login or a request to a port while its disk is fetched from object storage for its start (Sandbox.restore): try again in a while.
 - `error.noCapacity`: UNAVAILABLE: no room for it now.
 - `error.nameTaken`: ALREADY_EXISTS: a sandbox of the workspace that is not DELETED has the name.

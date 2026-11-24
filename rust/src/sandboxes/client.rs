@@ -276,7 +276,7 @@ impl Client {
 
     /// Resume a sandbox.
     ///
-    /// Resumes a PAUSED or STOPPED sandbox without doing anything in it; any call into a PAUSED one, or a STOPPED one whose lifecycle says `wake_when_stopped`, does as much. A RUNNING one is answered as it is. A PAUSED one counts against [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) already, and is refused ([`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) + [`LimitReached`](crate::sandboxes::types::LimitReached)) only where the workspace counts more than its plan allows now; it resumes on its server, which kept its place, never refused for room. A STOPPED one counts against [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) and `largest_size` from here on ([`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) + [`LimitReached`](crate::sandboxes::types::LimitReached) past them), and starts on its own server when that server has room for it, else on another with room, when it mounts no volume and its copy is current: its server lets it go first, and one its server cannot be reached for is [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable), saying so. Its disk, when it is in object storage alone, is fetched first: waited for up to 45 s, after which it is answered STOPPED with how far that is ([`Sandbox::restore`](crate::sandboxes::types::Sandbox::restore)), and starts once whole; call again to wait on. A STOPPED one whose server is gone (`state_message` says so) starts on a server from its last copy in object storage. A sandbox that starts on another server changes its addresses with it (connection.url, its ports\' URLs, `ssh_command`), and its events and metrics begin again there. While it moves, [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) waits for the move within its 45 s, and the calls that change it are [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) (\"moving\"): try again in a moment. [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) without [`NoCapacity`](crate::sandboxes::types::NoCapacity): no server answers now; try again.
+    /// Resumes a PAUSED or STOPPED sandbox without doing anything in it; any call into a PAUSED one, or a STOPPED one whose lifecycle says `wake_when_stopped`, does as much. A RUNNING one is answered as it is. A PAUSED one counts against [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) already, and is refused ([`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) + [`LimitReached`](crate::sandboxes::types::LimitReached)) only where the workspace counts more than its plan allows now; it resumes on its server, which kept its place, never refused for room. A STOPPED one counts against [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) and `largest_size` from here on ([`ErrorCode::ResourceExhausted`](crate::ErrorCode::ResourceExhausted) + [`LimitReached`](crate::sandboxes::types::LimitReached) past them), and starts on its own server when that server has room for it, else on another with room, when its copy is current: its server lets it go first, and one its server cannot be reached for is [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable), saying so. Its disk, when it is in object storage alone, is fetched first: waited for up to 45 s, after which it is answered STOPPED with how far that is ([`Sandbox::restore`](crate::sandboxes::types::Sandbox::restore)), and starts once whole; call again to wait on. A STOPPED one whose server is gone (`state_message` says so) starts on a server from its last copy in object storage. A sandbox that starts on another server changes its addresses with it (connection.url, its ports\' URLs, `ssh_command`), and its events and metrics begin again there. While it moves, [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) waits for the move within its 45 s, and the calls that change it are [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) (\"moving\"): try again in a moment. [`ErrorCode::Unavailable`](crate::ErrorCode::Unavailable) without [`NoCapacity`](crate::sandboxes::types::NoCapacity): no server answers now; try again.
     pub async fn resume_sandbox(&self, request: types::ResumeSandboxRequest) -> Result<types::Sandbox, Error> {
         let response = self
             .sandbox_service
@@ -293,7 +293,7 @@ impl Client {
 
     /// Delete a sandbox.
     ///
-    /// Drops its memory and disk for good; its volumes stay. Answers its final record, usage included. A DELETED sandbox is answered with that record.
+    /// Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
     pub async fn delete_sandbox(&self, request: types::DeleteSandboxRequest) -> Result<types::Sandbox, Error> {
         let response = self
             .sandbox_service
@@ -439,57 +439,6 @@ impl Client {
         let response = self
             .sandbox_service
             .delete_template(request.into())
-            .await
-            .map_err(Error::from_wire)?;
-        Ok(response.into_owned().into())
-    }
-
-    /// Create a volume.
-    ///
-    /// A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused while nothing pays for the workspace ([`UsageUnpaid`](crate::sandboxes::types::UsageUnpaid)).
-    pub async fn create_volume(&self, request: types::CreateVolumeRequest) -> Result<types::Volume, Error> {
-        let mut request = request;
-        if request.workspace.is_empty() {
-            request.workspace.clone_from(&self.workspace);
-        }
-        if request.request_id.is_empty() {
-            request.request_id = connection::request_id();
-        }
-        let response = self
-            .sandbox_service
-            .create_volume(request.into())
-            .await
-            .map_err(Error::from_wire)?;
-        Ok(response.into_owned().into())
-    }
-
-    /// List volumes.
-    ///
-    /// The workspace's volumes.
-    pub async fn list_volumes(&self, request: types::ListVolumesRequest) -> Result<types::ListVolumesResponse, Error> {
-        let mut request = request;
-        if request.workspace.is_empty() {
-            request.workspace.clone_from(&self.workspace);
-        }
-        let response = self
-            .sandbox_service
-            .list_volumes(request.into())
-            .await
-            .map_err(Error::from_wire)?;
-        Ok(response.into_owned().into())
-    }
-
-    /// Delete a volume.
-    ///
-    /// Refused while a sandbox mounts it.
-    pub async fn delete_volume(&self, request: types::DeleteVolumeRequest) -> Result<types::Volume, Error> {
-        let mut request = request;
-        if request.workspace.is_empty() {
-            request.workspace.clone_from(&self.workspace);
-        }
-        let response = self
-            .sandbox_service
-            .delete_volume(request.into())
             .await
             .map_err(Error::from_wire)?;
         Ok(response.into_owned().into())

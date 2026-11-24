@@ -13,8 +13,6 @@ pub enum Meter {
     METER_PAUSED = 9i32,
     /// A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
     METER_STORED_GIB = 7i32,
-    /// A GiB of a volume's size.
-    METER_VOLUME_GIB = 8i32,
 }
 impl Meter {
     ///Idiomatic alias for [`Self::METER_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -29,9 +27,6 @@ impl Meter {
     ///Idiomatic alias for [`Self::METER_STORED_GIB`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const StoredGib: Self = Self::METER_STORED_GIB;
-    ///Idiomatic alias for [`Self::METER_VOLUME_GIB`]; `Debug` prints the variant name.
-    #[allow(non_upper_case_globals)]
-    pub const VolumeGib: Self = Self::METER_VOLUME_GIB;
 }
 impl ::core::default::Default for Meter {
     fn default() -> Self {
@@ -131,7 +126,6 @@ impl ::buffa::Enumeration for Meter {
             5i32 => ::core::option::Option::Some(Self::METER_RUNNING),
             9i32 => ::core::option::Option::Some(Self::METER_PAUSED),
             7i32 => ::core::option::Option::Some(Self::METER_STORED_GIB),
-            8i32 => ::core::option::Option::Some(Self::METER_VOLUME_GIB),
             _ => ::core::option::Option::None,
         }
     }
@@ -144,7 +138,6 @@ impl ::buffa::Enumeration for Meter {
             Self::METER_RUNNING => "METER_RUNNING",
             Self::METER_PAUSED => "METER_PAUSED",
             Self::METER_STORED_GIB => "METER_STORED_GIB",
-            Self::METER_VOLUME_GIB => "METER_VOLUME_GIB",
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -153,7 +146,6 @@ impl ::buffa::Enumeration for Meter {
             "METER_RUNNING" => ::core::option::Option::Some(Self::METER_RUNNING),
             "METER_PAUSED" => ::core::option::Option::Some(Self::METER_PAUSED),
             "METER_STORED_GIB" => ::core::option::Option::Some(Self::METER_STORED_GIB),
-            "METER_VOLUME_GIB" => ::core::option::Option::Some(Self::METER_VOLUME_GIB),
             _ => ::core::option::Option::None,
         }
     }
@@ -163,7 +155,6 @@ impl ::buffa::Enumeration for Meter {
             Self::METER_RUNNING,
             Self::METER_PAUSED,
             Self::METER_STORED_GIB,
-            Self::METER_VOLUME_GIB,
         ]
     }
 }
@@ -2828,7 +2819,7 @@ pub enum RoomBound {
     ROOM_BOUND_SHORT_MEMORY = 2i32,
     /// Its disk has no more free space than it keeps, what it could evict gone: try again later.
     ROOM_BOUND_DISK = 3i32,
-    /// The disks and volumes it holds reach as much as it holds: try again later.
+    /// The disks it holds reach as much as it holds: try again later.
     ROOM_BOUND_DISK_CAP = 4i32,
 }
 impl RoomBound {
@@ -3195,7 +3186,7 @@ pub struct Workspace {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub template_bytes: ::core::option::Option<i64>,
-    /// What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
+    /// What its sandboxes count of Limits.vcpus now.
     ///
     /// Field 9: `vcpus_used`
     #[serde(
@@ -3204,13 +3195,6 @@ pub struct Workspace {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub vcpus_used: ::core::option::Option<i32>,
-    /// Field 10: `volume_gib_used`
-    #[serde(
-        rename = "volume_gib_used",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_gib_used: ::core::option::Option<i32>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -3227,7 +3211,6 @@ impl ::core::fmt::Debug for Workspace {
             .field("sizes", &self.sizes)
             .field("template_bytes", &self.template_bytes)
             .field("vcpus_used", &self.vcpus_used)
-            .field("volume_gib_used", &self.volume_gib_used)
             .finish()
     }
 }
@@ -3271,13 +3254,6 @@ impl Workspace {
     ///Sets [`Self::vcpus_used`] to `Some(value)`, consuming and returning `self`.
     pub fn with_vcpus_used(mut self, value: i32) -> Self {
         self.vcpus_used = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_gib_used`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_gib_used(mut self, value: i32) -> Self {
-        self.volume_gib_used = Some(value);
         self
     }
 }
@@ -3353,9 +3329,6 @@ impl ::buffa::Message for Workspace {
         if let Some(v) = self.vcpus_used {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
-        if let Some(v) = self.volume_gib_used {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -3417,9 +3390,6 @@ impl ::buffa::Message for Workspace {
         }
         if let Some(v) = self.vcpus_used {
             ::buffa::types::put_int32_field(9u32, v, buf);
-        }
-        if let Some(v) = self.volume_gib_used {
-            ::buffa::types::put_int32_field(10u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3532,15 +3502,6 @@ impl ::buffa::Message for Workspace {
                     ::buffa::types::decode_int32(buf)?,
                 );
             }
-            10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.volume_gib_used = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -3558,7 +3519,6 @@ impl ::buffa::Message for Workspace {
         self.sizes.clear();
         self.template_bytes = ::core::option::Option::None;
         self.vcpus_used = ::core::option::Option::None;
-        self.volume_gib_used = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -3952,7 +3912,7 @@ pub struct Billing {
     pub balance_micros: ::core::option::Option<i64>,
     /// True = nothing pays for its usage now: the included usage is used up and the balance is
     /// empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-    /// starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+    /// starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
     /// adds to the balance or the plan's next period begins.
     /// What it stores is still counted.
     ///
@@ -4285,7 +4245,7 @@ pub const __BILLING_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
     is_wkt: false,
 };
 /// What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-/// the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+/// the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
 /// PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
@@ -4300,15 +4260,6 @@ pub struct Rates {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub stored_gib_month: ::core::option::Option<f64>,
-    /// Meter.VOLUME_GIB: a volume's whole size.
-    ///
-    /// Field 6: `volume_gib_month`
-    #[serde(
-        rename = "volume_gib_month",
-        with = "::buffa::json_helpers::opt_double",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_gib_month: ::core::option::Option<f64>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -4317,7 +4268,6 @@ impl ::core::fmt::Debug for Rates {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("Rates")
             .field("stored_gib_month", &self.stored_gib_month)
-            .field("volume_gib_month", &self.volume_gib_month)
             .finish()
     }
 }
@@ -4334,13 +4284,6 @@ impl Rates {
     ///Sets [`Self::stored_gib_month`] to `Some(value)`, consuming and returning `self`.
     pub fn with_stored_gib_month(mut self, value: f64) -> Self {
         self.stored_gib_month = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_gib_month`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_gib_month(mut self, value: f64) -> Self {
-        self.volume_gib_month = Some(value);
         self
     }
 }
@@ -4367,9 +4310,6 @@ impl ::buffa::Message for Rates {
         if self.stored_gib_month.is_some() {
             size += 1u64 + ::buffa::types::FIXED64_ENCODED_LEN as u64;
         }
-        if self.volume_gib_month.is_some() {
-            size += 1u64 + ::buffa::types::FIXED64_ENCODED_LEN as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4382,9 +4322,6 @@ impl ::buffa::Message for Rates {
         use ::buffa::Enumeration as _;
         if let Some(v) = self.stored_gib_month {
             ::buffa::types::put_double_field(5u32, v, buf);
-        }
-        if let Some(v) = self.volume_gib_month {
-            ::buffa::types::put_double_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -4408,15 +4345,6 @@ impl ::buffa::Message for Rates {
                     ::buffa::types::decode_double(buf)?,
                 );
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                self.volume_gib_month = ::core::option::Option::Some(
-                    ::buffa::types::decode_double(buf)?,
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -4426,7 +4354,6 @@ impl ::buffa::Message for Rates {
     }
     fn clear(&mut self) {
         self.stored_gib_month = ::core::option::Option::None;
-        self.volume_gib_month = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -4703,15 +4630,6 @@ pub struct Limits {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub largest_size: ::core::option::Option<::buffa::EnumValue<Size>>,
-    /// The most GiB its volumes may take together (CreateVolume).
-    ///
-    /// Field 6: `volume_gib`
-    #[serde(
-        rename = "volume_gib",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_gib: ::core::option::Option<i32>,
     /// The workspace's own templates: at most template_versions versions of one name, FAILED ones
     /// aside, and template_gib GiB in all of what its versions take in object storage
     /// (Workspace.template_bytes), which is not billed. A CreateTemplate past either, or while
@@ -4742,7 +4660,6 @@ impl ::core::fmt::Debug for Limits {
         f.debug_struct("Limits")
             .field("vcpus", &self.vcpus)
             .field("largest_size", &self.largest_size)
-            .field("volume_gib", &self.volume_gib)
             .field("template_versions", &self.template_versions)
             .field("template_gib", &self.template_gib)
             .finish()
@@ -4771,13 +4688,6 @@ impl Limits {
         value: impl Into<::buffa::EnumValue<Size>>,
     ) -> Self {
         self.largest_size = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_gib`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_gib(mut self, value: i32) -> Self {
-        self.volume_gib = Some(value);
         self
     }
     #[must_use = "with_* setters return `self` by value; assign or chain the result"]
@@ -4827,9 +4737,6 @@ impl ::buffa::Message for Limits {
         if let Some(ref v) = self.largest_size {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
-        if let Some(v) = self.volume_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4851,9 +4758,6 @@ impl ::buffa::Message for Limits {
         }
         if let Some(ref v) = self.largest_size {
             ::buffa::types::put_int32_field(5u32, v.to_i32(), buf);
-        }
-        if let Some(v) = self.volume_gib {
-            ::buffa::types::put_int32_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -4904,15 +4808,6 @@ impl ::buffa::Message for Limits {
                     ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
                 );
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.volume_gib = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -4925,7 +4820,6 @@ impl ::buffa::Message for Limits {
         self.template_gib = ::core::option::Option::None;
         self.vcpus = ::core::option::Option::None;
         self.largest_size = ::core::option::Option::None;
-        self.volume_gib = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -5790,12 +5684,11 @@ pub const __DELETE_SECRET_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry
 /// out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
 /// space"), its disk kept.
 ///
-/// A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-/// no room for it (ResumeSandbox), its addresses with it. If a server is lost, each of its
-/// sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-/// starts on another server at its next ResumeSandbox; one without a copy is DELETED, as are its
-/// volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-/// (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+/// A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+/// (ResumeSandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+/// is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+/// server at its next ResumeSandbox; one without a copy is DELETED. While nothing pays for its
+/// workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
 /// starts.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
@@ -5889,13 +5782,6 @@ pub struct Sandbox {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub disk_gib: ::core::option::Option<i32>,
-    /// Field 13: `mounts`
-    #[serde(
-        rename = "mounts",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub mounts: ::buffa::alloc::vec::Vec<Mount>,
     /// Its screen: every sandbox has one (ControlDesktop).
     ///
     /// Field 14: `desktop`
@@ -6010,7 +5896,6 @@ impl ::core::fmt::Debug for Sandbox {
             .field("settings", &self.settings)
             .field("revision", &self.revision)
             .field("disk_gib", &self.disk_gib)
-            .field("mounts", &self.mounts)
             .field("desktop", &self.desktop)
             .field("ssh_command", &self.ssh_command)
             .field("panel_url", &self.panel_url)
@@ -6210,14 +6095,6 @@ impl ::buffa::Message for Sandbox {
         if let Some(v) = self.disk_gib {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
-        for v in &self.mounts {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
         if self.desktop.is_set() {
             let __slot = __cache.reserve();
             let inner_size = self.desktop.compute_size(__cache);
@@ -6335,14 +6212,6 @@ impl ::buffa::Message for Sandbox {
         }
         if let Some(v) = self.disk_gib {
             ::buffa::types::put_int32_field(12u32, v, buf);
-        }
-        for v in &self.mounts {
-            ::buffa::types::put_len_delimited_header(
-                13u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
         }
         if self.desktop.is_set() {
             ::buffa::types::put_len_delimited_header(
@@ -6526,18 +6395,6 @@ impl ::buffa::Message for Sandbox {
                     ::buffa::types::decode_int32(buf)?,
                 );
             }
-            13u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.mounts.push(elem);
-            }
             14u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -6674,7 +6531,6 @@ impl ::buffa::Message for Sandbox {
         self.settings = ::buffa::MessageField::none();
         self.revision = ::core::option::Option::None;
         self.disk_gib = ::core::option::Option::None;
-        self.mounts.clear();
         self.desktop = ::buffa::MessageField::none();
         self.ssh_command = ::core::option::Option::None;
         self.panel_url = ::core::option::Option::None;
@@ -6901,10 +6757,9 @@ pub const __RESTORE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
 /// its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
 /// place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
 /// bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-/// empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-/// minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-/// twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-/// ListUsage).
+/// empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+/// turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+/// where the one before it was counted to (Sandbox.usage, ListUsage).
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -7176,15 +7031,6 @@ pub struct CreateSandboxRequest {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub labels: ::buffa::alloc::vec::Vec<Label>,
-    /// At most 4, at create only.
-    ///
-    /// Field 6: `mounts`
-    #[serde(
-        rename = "mounts",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub mounts: ::buffa::alloc::vec::Vec<Mount>,
     /// Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
     /// and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
     ///
@@ -7216,7 +7062,6 @@ impl ::core::fmt::Debug for CreateSandboxRequest {
             .field("template", &self.template)
             .field("settings", &self.settings)
             .field("labels", &self.labels)
-            .field("mounts", &self.mounts)
             .field("name", &self.name)
             .field("request_id", &self.request_id)
             .field("workspace", &self.workspace)
@@ -7311,14 +7156,6 @@ impl ::buffa::Message for CreateSandboxRequest {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
-        for v in &self.mounts {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
         if let Some(ref v) = self.name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
@@ -7352,14 +7189,6 @@ impl ::buffa::Message for CreateSandboxRequest {
         for v in &self.labels {
             ::buffa::types::put_len_delimited_header(
                 4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        for v in &self.mounts {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
                 u64::from(__cache.consume_next()),
                 buf,
             );
@@ -7422,18 +7251,6 @@ impl ::buffa::Message for CreateSandboxRequest {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.labels.push(elem);
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.mounts.push(elem);
-            }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -7479,7 +7296,6 @@ impl ::buffa::Message for CreateSandboxRequest {
         self.template = ::core::option::Option::None;
         self.settings = ::buffa::MessageField::none();
         self.labels.clear();
-        self.mounts.clear();
         self.name = ::core::option::Option::None;
         self.workspace = ::core::option::Option::None;
         self.request_id = ::core::option::Option::None;
@@ -16143,1332 +15959,6 @@ pub const __DELETE_TEMPLATE_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEnt
     type_url: "type.googleapis.com/pethost.sandboxes.v1.DeleteTemplateRequest",
     to_json: ::buffa::type_registry::any_to_json::<DeleteTemplateRequest>,
     from_json: ::buffa::type_registry::any_from_json::<DeleteTemplateRequest>,
-    is_wkt: false,
-};
-/// ── Volumes ────────────────────────────────────────────────────────────────
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct Volume {
-    /// Field 1: `volume_id`
-    #[serde(
-        rename = "volume_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 2: `name`
-    #[serde(rename = "name", skip_serializing_if = "::core::option::Option::is_none")]
-    pub name: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Counted as storage, used or not.
-    ///
-    /// Field 3: `size_gib`
-    #[serde(
-        rename = "size_gib",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub size_gib: ::core::option::Option<i32>,
-    /// Field 5: `used_bytes`
-    #[serde(
-        rename = "used_bytes",
-        with = "::buffa::json_helpers::opt_int64",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub used_bytes: ::core::option::Option<i64>,
-    /// Sandbox ids.
-    ///
-    /// Field 6: `mounted_by`
-    #[serde(
-        rename = "mounted_by",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub mounted_by: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
-    /// Field 7: `create_time`
-    #[serde(
-        rename = "create_time",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
-    )]
-    pub create_time: ::buffa::MessageField<
-        ::buffa_types::google::protobuf::Timestamp,
-        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
-    >,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for Volume {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("Volume")
-            .field("volume_id", &self.volume_id)
-            .field("name", &self.name)
-            .field("size_gib", &self.size_gib)
-            .field("used_bytes", &self.used_bytes)
-            .field("mounted_by", &self.mounted_by)
-            .field("create_time", &self.create_time)
-            .finish()
-    }
-}
-impl Volume {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Volume";
-}
-impl Volume {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.volume_id = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::name`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_name(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.name = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::size_gib`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_size_gib(mut self, value: i32) -> Self {
-        self.size_gib = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::used_bytes`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_used_bytes(mut self, value: i64) -> Self {
-        self.used_bytes = Some(value);
-        self
-    }
-}
-::buffa::impl_default_instance!(Volume);
-impl ::buffa::MessageName for Volume {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "Volume";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.Volume";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Volume";
-}
-impl ::buffa::Message for Volume {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.name {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.size_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.used_bytes {
-            size += 1u64 + ::buffa::types::int64_encoded_len(v) as u64;
-        }
-        for v in &self.mounted_by {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if self.create_time.is_set() {
-            let __slot = __cache.reserve();
-            let inner_size = self.create_time.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.name {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(v) = self.size_gib {
-            ::buffa::types::put_int32_field(3u32, v, buf);
-        }
-        if let Some(v) = self.used_bytes {
-            ::buffa::types::put_int64_field(5u32, v, buf);
-        }
-        for v in &self.mounted_by {
-            ::buffa::types::put_string_field(6u32, v, buf);
-        }
-        if self.create_time.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.create_time.write_to(__cache, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .volume_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.name.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.size_gib = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            5u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.used_bytes = ::core::option::Option::Some(
-                    ::buffa::types::decode_int64(buf)?,
-                );
-            }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.mounted_by.push(__elem);
-            }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::Message::merge_length_delimited(
-                    self.create_time.get_or_insert_default(),
-                    buf,
-                    ctx,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.volume_id = ::core::option::Option::None;
-        self.name = ::core::option::Option::None;
-        self.size_gib = ::core::option::Option::None;
-        self.used_bytes = ::core::option::Option::None;
-        self.mounted_by.clear();
-        self.create_time = ::buffa::MessageField::none();
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for Volume {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.Volume";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for Volume {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __VOLUME_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.Volume",
-    to_json: ::buffa::type_registry::any_to_json::<Volume>,
-    from_json: ::buffa::type_registry::any_from_json::<Volume>,
-    is_wkt: false,
-};
-/// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-/// any number.
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct Mount {
-    /// Field 1: `volume_id`
-    #[serde(
-        rename = "volume_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Absolute: /data. At most 255 bytes.
-    ///
-    /// Field 2: `path`
-    #[serde(rename = "path", skip_serializing_if = "::core::option::Option::is_none")]
-    pub path: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 3: `read_only`
-    #[serde(
-        rename = "read_only",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub read_only: ::core::option::Option<bool>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for Mount {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("Mount")
-            .field("volume_id", &self.volume_id)
-            .field("path", &self.path)
-            .field("read_only", &self.read_only)
-            .finish()
-    }
-}
-impl Mount {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Mount";
-}
-impl Mount {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.volume_id = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::path`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_path(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.path = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::read_only`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_read_only(mut self, value: bool) -> Self {
-        self.read_only = Some(value);
-        self
-    }
-}
-::buffa::impl_default_instance!(Mount);
-impl ::buffa::MessageName for Mount {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "Mount";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.Mount";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Mount";
-}
-impl ::buffa::Message for Mount {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.path {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if self.read_only.is_some() {
-            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.path {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(v) = self.read_only {
-            ::buffa::types::put_bool_field(3u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .volume_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.path.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.read_only = ::core::option::Option::Some(
-                    ::buffa::types::decode_bool(buf)?,
-                );
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.volume_id = ::core::option::Option::None;
-        self.path = ::core::option::Option::None;
-        self.read_only = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for Mount {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.Mount";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for Mount {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __MOUNT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.Mount",
-    to_json: ::buffa::type_registry::any_to_json::<Mount>,
-    from_json: ::buffa::type_registry::any_from_json::<Mount>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct CreateVolumeRequest {
-    /// Field 1: `name`
-    #[serde(rename = "name", skip_serializing_if = "::core::option::Option::is_none")]
-    pub name: ::core::option::Option<::buffa::alloc::string::String>,
-    /// 1 to 1000.
-    ///
-    /// Field 2: `size_gib`
-    #[serde(
-        rename = "size_gib",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub size_gib: ::core::option::Option<i32>,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    #[serde(
-        rename = "request_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub request_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 100: `workspace`
-    #[serde(
-        rename = "workspace",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for CreateVolumeRequest {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("CreateVolumeRequest")
-            .field("name", &self.name)
-            .field("size_gib", &self.size_gib)
-            .field("request_id", &self.request_id)
-            .field("workspace", &self.workspace)
-            .finish()
-    }
-}
-impl CreateVolumeRequest {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.CreateVolumeRequest";
-}
-impl CreateVolumeRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::name`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_name(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.name = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::size_gib`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_size_gib(mut self, value: i32) -> Self {
-        self.size_gib = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::request_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_request_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.request_id = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_workspace(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.workspace = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(CreateVolumeRequest);
-impl ::buffa::MessageName for CreateVolumeRequest {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "CreateVolumeRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.CreateVolumeRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.CreateVolumeRequest";
-}
-impl ::buffa::Message for CreateVolumeRequest {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.name {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.size_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.request_id {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.name {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(v) = self.size_gib {
-            ::buffa::types::put_int32_field(2u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        if let Some(ref v) = self.request_id {
-            ::buffa::types::put_string_field(101u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.name.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.size_gib = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .workspace
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            101u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .request_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.name = ::core::option::Option::None;
-        self.size_gib = ::core::option::Option::None;
-        self.workspace = ::core::option::Option::None;
-        self.request_id = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for CreateVolumeRequest {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.CreateVolumeRequest";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for CreateVolumeRequest {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __CREATE_VOLUME_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.CreateVolumeRequest",
-    to_json: ::buffa::type_registry::any_to_json::<CreateVolumeRequest>,
-    from_json: ::buffa::type_registry::any_from_json::<CreateVolumeRequest>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct ListVolumesRequest {
-    /// Absent = 50; at most 500.
-    ///
-    /// Field 1: `page_size`
-    #[serde(
-        rename = "page_size",
-        with = "::buffa::json_helpers::opt_int32",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub page_size: ::core::option::Option<i32>,
-    /// Field 2: `page_token`
-    #[serde(
-        rename = "page_token",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub page_token: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 100: `workspace`
-    #[serde(
-        rename = "workspace",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for ListVolumesRequest {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("ListVolumesRequest")
-            .field("page_size", &self.page_size)
-            .field("page_token", &self.page_token)
-            .field("workspace", &self.workspace)
-            .finish()
-    }
-}
-impl ListVolumesRequest {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesRequest";
-}
-impl ListVolumesRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::page_size`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_page_size(mut self, value: i32) -> Self {
-        self.page_size = Some(value);
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::page_token`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_page_token(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.page_token = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_workspace(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.workspace = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(ListVolumesRequest);
-impl ::buffa::MessageName for ListVolumesRequest {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ListVolumesRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ListVolumesRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesRequest";
-}
-impl ::buffa::Message for ListVolumesRequest {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(v) = self.page_size {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.page_token {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(v) = self.page_size {
-            ::buffa::types::put_int32_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.page_token {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.page_size = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .page_token
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .workspace
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.page_size = ::core::option::Option::None;
-        self.page_token = ::core::option::Option::None;
-        self.workspace = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for ListVolumesRequest {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.ListVolumesRequest";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for ListVolumesRequest {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __LIST_VOLUMES_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.ListVolumesRequest",
-    to_json: ::buffa::type_registry::any_to_json::<ListVolumesRequest>,
-    from_json: ::buffa::type_registry::any_from_json::<ListVolumesRequest>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct ListVolumesResponse {
-    /// Field 1: `volumes`
-    #[serde(
-        rename = "volumes",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub volumes: ::buffa::alloc::vec::Vec<Volume>,
-    /// Absent on the last page.
-    ///
-    /// Field 2: `next_page_token`
-    #[serde(
-        rename = "next_page_token",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub next_page_token: ::core::option::Option<::buffa::alloc::string::String>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for ListVolumesResponse {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("ListVolumesResponse")
-            .field("volumes", &self.volumes)
-            .field("next_page_token", &self.next_page_token)
-            .finish()
-    }
-}
-impl ListVolumesResponse {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesResponse";
-}
-impl ListVolumesResponse {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::next_page_token`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_next_page_token(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.next_page_token = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(ListVolumesResponse);
-impl ::buffa::MessageName for ListVolumesResponse {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ListVolumesResponse";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ListVolumesResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesResponse";
-}
-impl ::buffa::Message for ListVolumesResponse {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        for v in &self.volumes {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if let Some(ref v) = self.next_page_token {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        for v in &self.volumes {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        if let Some(ref v) = self.next_page_token {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.volumes.push(elem);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .next_page_token
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.volumes.clear();
-        self.next_page_token = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for ListVolumesResponse {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.ListVolumesResponse";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for ListVolumesResponse {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __LIST_VOLUMES_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.ListVolumesResponse",
-    to_json: ::buffa::type_registry::any_to_json::<ListVolumesResponse>,
-    from_json: ::buffa::type_registry::any_from_json::<ListVolumesResponse>,
-    is_wkt: false,
-};
-#[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(default)]
-pub struct DeleteVolumeRequest {
-    /// Field 1: `volume_id`
-    #[serde(
-        rename = "volume_id",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub volume_id: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 100: `workspace`
-    #[serde(
-        rename = "workspace",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub workspace: ::core::option::Option<::buffa::alloc::string::String>,
-    #[serde(skip)]
-    #[doc(hidden)]
-    pub __buffa_unknown_fields: ::buffa::UnknownFields,
-}
-impl ::core::fmt::Debug for DeleteVolumeRequest {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("DeleteVolumeRequest")
-            .field("volume_id", &self.volume_id)
-            .field("workspace", &self.workspace)
-            .finish()
-    }
-}
-impl DeleteVolumeRequest {
-    /// Protobuf type URL for this message, for use with `Any::pack` and
-    /// `Any::unpack_if`.
-    ///
-    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.DeleteVolumeRequest";
-}
-impl DeleteVolumeRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::volume_id`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_volume_id(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.volume_id = Some(value.into());
-        self
-    }
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::workspace`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_workspace(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.workspace = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(DeleteVolumeRequest);
-impl ::buffa::MessageName for DeleteVolumeRequest {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "DeleteVolumeRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.DeleteVolumeRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.DeleteVolumeRequest";
-}
-impl ::buffa::Message for DeleteVolumeRequest {
-    /// Returns the total encoded size in bytes.
-    ///
-    /// Accumulates in `u64` (which cannot overflow for in-memory
-    /// data) and saturates to `u32` at return, so a message whose
-    /// encoded size exceeds the 2 GiB protobuf limit yields a value
-    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
-    /// points reject, never a silently wrapped size.
-    #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-    fn merge_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::bytes::Buf as _;
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .volume_id
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .workspace
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
-            }
-            _ => {
-                self.__buffa_unknown_fields
-                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
-            }
-        }
-        ::core::result::Result::Ok(())
-    }
-    fn clear(&mut self) {
-        self.volume_id = ::core::option::Option::None;
-        self.workspace = ::core::option::Option::None;
-        self.__buffa_unknown_fields.clear();
-    }
-}
-impl ::buffa::ExtensionSet for DeleteVolumeRequest {
-    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.DeleteVolumeRequest";
-    fn unknown_fields(&self) -> &::buffa::UnknownFields {
-        &self.__buffa_unknown_fields
-    }
-    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
-        &mut self.__buffa_unknown_fields
-    }
-}
-impl ::buffa::json_helpers::ProtoElemJson for DeleteVolumeRequest {
-    fn serialize_proto_json<S: ::serde::Serializer>(
-        v: &Self,
-        s: S,
-    ) -> ::core::result::Result<S::Ok, S::Error> {
-        ::serde::Serialize::serialize(v, s)
-    }
-    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
-        d: D,
-    ) -> ::core::result::Result<Self, D::Error> {
-        <Self as ::serde::Deserialize>::deserialize(d)
-    }
-}
-#[doc(hidden)]
-pub const __DELETE_VOLUME_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/pethost.sandboxes.v1.DeleteVolumeRequest",
-    to_json: ::buffa::type_registry::any_to_json::<DeleteVolumeRequest>,
-    from_json: ::buffa::type_registry::any_from_json::<DeleteVolumeRequest>,
     is_wkt: false,
 };
 /// ── Usage ──────────────────────────────────────────────────────────────────
@@ -30160,7 +28650,7 @@ pub const __TOOL_RESULT_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa
 #[serde(default)]
 pub struct LimitReached {
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// "template_versions", "template_gib"; or a bound of every workspace: "secrets"
     /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
     /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
     /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -30477,7 +28967,7 @@ pub const __STOPPED_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::ty
     is_wkt: false,
 };
 /// FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the
-/// call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+/// call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
 /// the balance, or starts the plan if it is in its trial, in the workspace's settings.
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]

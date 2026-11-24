@@ -38,9 +38,8 @@ pub struct Workspace {
     pub sizes: ::std::vec::Vec<SizeInfo>,
     /// What its own template versions take in object storage now ([`Template::size_bytes`](crate::sandboxes::types::Template::size_bytes), SAVING ones counted as 0): what [`Limits::template_gib`](crate::sandboxes::types::Limits::template_gib) holds.
     pub template_bytes: i64,
-    /// What its sandboxes count of [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) now, and its volumes of [`Limits::volume_gib`](crate::sandboxes::types::Limits::volume_gib).
+    /// What its sandboxes count of [`Limits::vcpus`](crate::sandboxes::types::Limits::vcpus) now.
     pub vcpus_used: i32,
-    pub volume_gib_used: i32,
 }
 
 /// What a size is: the header's SIZES. A sandbox runs in a VM of its size, of that VM's whole life, which keeps it: a new size restarts a RUNNING sandbox ([`Client::update_sandbox`](crate::sandboxes::Client::update_sandbox)), its processes ended and its files kept, is refused while PAUSED, and is taken at a STOPPED sandbox's next start. The disk is what the sandbox may write: its base's files do not count. It is its size's at the create, and a new size keeps it unless `grow_disk` grows it to the new size's: a size is allowed while its disk is at least the sandbox's ([`Sandbox::disk_gib`](crate::sandboxes::types::Sandbox::disk_gib)), else it is refused ([`ErrorCode::InvalidArgument`](crate::ErrorCode::InvalidArgument), naming the smallest size that holds it), and a template's sandboxes take any size from its `min_size` up, the smallest whose disk holds what it saved.
@@ -70,21 +69,19 @@ pub struct Billing {
     pub period_end_time: ::core::option::Option<crate::Timestamp>,
     /// The balance, which pays once the included usage is used up: what its owner added less what was used from it. It does not expire. Below zero by what ran between its last cent and the stop, and by what is stored meanwhile; the next period's amount pays that first.
     pub balance_micros: i64,
-    /// True = nothing pays for its usage now: the included usage is used up and the balance is empty. Its RUNNING and PAUSED sandboxes were STOPPED (`STATE_REASON_UNPAID`), no sandbox starts, resumes or wakes, and no volume or template is made ([`UsageUnpaid`](crate::sandboxes::types::UsageUnpaid)), until its owner adds to the balance or the plan's next period begins. What it stores is still counted.
+    /// True = nothing pays for its usage now: the included usage is used up and the balance is empty. Its RUNNING and PAUSED sandboxes were STOPPED (`STATE_REASON_UNPAID`), no sandbox starts, resumes or wakes, and no template is made ([`UsageUnpaid`](crate::sandboxes::types::UsageUnpaid)), until its owner adds to the balance or the plan's next period begins. What it stores is still counted.
     pub suspended: bool,
     /// True = it is in its plan's free trial: the included usage is the trial's, and the plan's first payment comes at `period_end_time`.
     pub trial: bool,
     pub rates: ::core::option::Option<Rates>,
 }
 
-/// What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a PAUSED sandbox costs is its size's ([`SizeInfo::running_hour`](crate::sandboxes::types::SizeInfo::running_hour), `paused_hour`).
+/// What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a PAUSED sandbox costs is its size's ([`SizeInfo::running_hour`](crate::sandboxes::types::SizeInfo::running_hour), `paused_hour`).
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Rates {
     /// Meter.`STORED_GIB`: what a STOPPED sandbox holds in object storage.
     pub stored_gib_month: f64,
-    /// Meter.`VOLUME_GIB`: a volume's whole size.
-    pub volume_gib_month: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -106,8 +103,6 @@ pub struct Limits {
     pub vcpus: i32,
     /// The largest size it may create, start or change a sandbox to.
     pub largest_size: Size,
-    /// The most GiB its volumes may take together ([`Client::create_volume`](crate::sandboxes::Client::create_volume)).
-    pub volume_gib: i32,
     /// The workspace's own templates: at most `template_versions` versions of one name, FAILED ones aside, and `template_gib` GiB in all of what its versions take in object storage ([`Workspace::template_bytes`](crate::sandboxes::types::Workspace::template_bytes)), which is not billed. A [`Client::create_template`](crate::sandboxes::Client::create_template) past either, or while another version is SAVING, is refused ([`LimitReached`](crate::sandboxes::types::LimitReached)); a version whose own bytes would pass `template_gib` is FAILED before its upload. [`Client::delete_template`](crate::sandboxes::Client::delete_template) makes room at once. A FAILED version takes nothing, and goes a day after it failed.
     pub template_versions: i32,
     pub template_gib: i32,
@@ -126,8 +121,6 @@ pub enum Meter {
     Paused,
     /// A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
     StoredGib,
-    /// A GiB of a volume's size.
-    VolumeGib,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -188,7 +181,7 @@ pub struct DeleteSecretRequest {
 ///
 /// A server's disk holds only what its sandboxes use. When it runs short, the server stops the PAUSED sandboxes idle the longest ahead of their lifecycles (IDLE, \"stopped early: its server's disk ran short\"), and a pause is a stop meanwhile (\"stopped instead of paused\"); when it runs out, it stops the RUNNING sandbox whose disk grew most (CRASH, \"its server ran out of disk space\"), its disk kept.
 ///
-/// A STOPPED sandbox without volumes, its copy current, starts on another server when its own has no room for it ([`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox)), its addresses with it. If a server is lost, each of its sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and starts on another server at its next [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox); one without a copy is DELETED, as are its volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them starts.
+/// A STOPPED sandbox, its copy current, starts on another server when its own has no room for it ([`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox)), its addresses with it. If a server is lost, each of its sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and starts on another server at its next [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox); one without a copy is DELETED. While nothing pays for its workspace ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them starts.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Sandbox {
@@ -209,7 +202,6 @@ pub struct Sandbox {
     pub revision: i64,
     /// What it may write: its size's disk at its create, which a new size keeps unless `grow_disk` grows it to the new size's. No size whose disk is smaller is allowed (SIZES).
     pub disk_gib: i32,
-    pub mounts: ::std::vec::Vec<Mount>,
     /// Its screen: every sandbox has one ([`Client::control_desktop`](crate::sandboxes::Client::control_desktop)).
     pub desktop: ::core::option::Option<Desktop>,
     /// \"ssh \<id\>@\<server\> -p 2222\": signs in with a key of the workspace, or a [`Client::connect_sandbox`](crate::sandboxes::Client::connect_sandbox) token as the password.
@@ -282,7 +274,7 @@ pub enum StateReason {
 
 /// What a sandbox has used so far, by the meters of USAGE: as its server counted it, up to the last word the panel had from that server, some 10 seconds ago at most while it is in reach. One that moved to another server counts from its move there; `cost_micros` is what it was charged on every server.
 ///
-/// Four meters (Meter), each priced at [`Workspace::billing`](crate::sandboxes::types::Workspace::billing)\'s rates. A RUNNING sandbox counts its size's seconds, each run rounded up to a whole second and 10 seconds at least, unless its server ended it (out of memory or of disk space, its machine's restart, an unpaid workspace, a new size), and a second counts at one size only. A PAUSED sandbox counts its size's seconds at its paused price ([`SizeInfo::paused_hour`](crate::sandboxes::types::SizeInfo::paused_hour), a share of `running_hour`), since its server keeps its place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the bytes of its own its disk holds ([`Sandbox::stored_bytes`](crate::sandboxes::types::Sandbox::stored_bytes)), which object storage keeps, never its empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other minimum: pausing and waking never turns running time into a cheaper one, nor counts a second twice, since a stretch counts from where the one before it was counted to ([`Sandbox::usage`](crate::sandboxes::types::Sandbox::usage), [`Client::list_usage`](crate::sandboxes::Client::list_usage)).
+/// Four meters (Meter), each priced at [`Workspace::billing`](crate::sandboxes::types::Workspace::billing)\'s rates. A RUNNING sandbox counts its size's seconds, each run rounded up to a whole second and 10 seconds at least, unless its server ended it (out of memory or of disk space, its machine's restart, an unpaid workspace, a new size), and a second counts at one size only. A PAUSED sandbox counts its size's seconds at its paused price ([`SizeInfo::paused_hour`](crate::sandboxes::types::SizeInfo::paused_hour), a share of `running_hour`), since its server keeps its place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the bytes of its own its disk holds ([`Sandbox::stored_bytes`](crate::sandboxes::types::Sandbox::stored_bytes)), which object storage keeps, never its empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never turns running time into a cheaper one, nor counts a second twice, since a stretch counts from where the one before it was counted to ([`Sandbox::usage`](crate::sandboxes::types::Sandbox::usage), [`Client::list_usage`](crate::sandboxes::Client::list_usage)).
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Usage {
@@ -305,8 +297,6 @@ pub struct CreateSandboxRequest {
     pub settings: ::core::option::Option<SandboxSettings>,
     /// For [`Client::list_sandboxes`](crate::sandboxes::Client::list_sandboxes)\' filter. At most 32.
     pub labels: ::std::vec::Vec<Label>,
-    /// At most 4, at create only.
-    pub mounts: ::std::vec::Vec<Mount>,
     /// Unique in the workspace ([`ErrorCode::AlreadyExists`](crate::ErrorCode::AlreadyExists) + [`NameTaken`](crate::sandboxes::types::NameTaken) names the sandbox that has it): a-z, 0-9 and \"-\", at most 63, not 16 of a-z and 0-9 alone, a `sandbox_id`\'s shape. Absent = none.
     pub name: ::std::string::String,
     /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
@@ -787,68 +777,6 @@ pub struct ListTemplatesResponse {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct DeleteTemplateRequest {
     pub name: ::std::string::String,
-    /// The workspace: its id or name. Omit when the account has one ([`WorkspaceChoice`](crate::sandboxes::types::WorkspaceChoice) lists them).
-    pub workspace: ::std::string::String,
-}
-
-/// What [`Client::delete_volume`](crate::sandboxes::Client::delete_volume) returns.
-#[derive(Debug, Clone, PartialEq, Default)]
-#[non_exhaustive]
-pub struct Volume {
-    pub volume_id: ::std::string::String,
-    pub name: ::std::string::String,
-    /// Counted as storage, used or not.
-    pub size_gib: i32,
-    pub used_bytes: i64,
-    /// Sandbox ids.
-    pub mounted_by: ::std::vec::Vec<::std::string::String>,
-    pub create_time: ::core::option::Option<crate::Timestamp>,
-}
-
-/// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by any number.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Mount {
-    pub volume_id: ::std::string::String,
-    /// Absolute: /data. At most 255 bytes.
-    pub path: ::std::string::String,
-    pub read_only: bool,
-}
-
-/// What [`Client::create_volume`](crate::sandboxes::Client::create_volume) takes.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct CreateVolumeRequest {
-    pub name: ::std::string::String,
-    /// 1 to 1000.
-    pub size_gib: i32,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
-    pub request_id: ::std::string::String,
-    /// The workspace: its id or name. Omit when the account has one ([`WorkspaceChoice`](crate::sandboxes::types::WorkspaceChoice) lists them).
-    pub workspace: ::std::string::String,
-}
-
-/// What [`Client::list_volumes`](crate::sandboxes::Client::list_volumes) takes.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ListVolumesRequest {
-    /// Absent = 50; at most 500.
-    pub page_size: i32,
-    pub page_token: ::std::string::String,
-    /// The workspace: its id or name. Omit when the account has one ([`WorkspaceChoice`](crate::sandboxes::types::WorkspaceChoice) lists them).
-    pub workspace: ::std::string::String,
-}
-
-/// What [`Client::list_volumes`](crate::sandboxes::Client::list_volumes) returns.
-#[derive(Debug, Clone, PartialEq, Default)]
-#[non_exhaustive]
-pub struct ListVolumesResponse {
-    pub volumes: ::std::vec::Vec<Volume>,
-    /// Absent on the last page.
-    pub next_page_token: ::std::string::String,
-}
-
-/// What [`Client::delete_volume`](crate::sandboxes::Client::delete_volume) takes.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct DeleteVolumeRequest {
-    pub volume_id: ::std::string::String,
     /// The workspace: its id or name. Omit when the account has one ([`WorkspaceChoice`](crate::sandboxes::types::WorkspaceChoice) lists them).
     pub workspace: ::std::string::String,
 }
@@ -1597,7 +1525,7 @@ pub struct ToolResult {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct LimitReached {
-    /// A field of [`Workspace::limits`](crate::sandboxes::types::Workspace::limits): \"vcpus\", \"`largest_size`\" (max is that Size's number), \"`volume_gib`\", \"`template_versions`\", \"`template_gib`\"; or a bound of every workspace: \"secrets\" ([`Client::set_secret`](crate::sandboxes::Client::set_secret)), or \"`starts_per_minute`\", the sandboxes it may start in any minute, against abuse. A start is free: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), or a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox. A [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
+    /// A field of [`Workspace::limits`](crate::sandboxes::types::Workspace::limits): \"vcpus\", \"`largest_size`\" (max is that Size's number), \"`template_versions`\", \"`template_gib`\"; or a bound of every workspace: \"secrets\" ([`Client::set_secret`](crate::sandboxes::Client::set_secret)), or \"`starts_per_minute`\", the sandboxes it may start in any minute, against abuse. A start is free: a [`Client::create_sandbox`](crate::sandboxes::Client::create_sandbox), or a [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a STOPPED sandbox. A [`Client::resume_sandbox`](crate::sandboxes::Client::resume_sandbox) of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
     pub limit: ::std::string::String,
     pub max: i32,
     /// `starts_per_minute`: when enough starts have left the minute for the call to fit, which may be retried then.
@@ -1609,7 +1537,7 @@ pub struct LimitReached {
 #[non_exhaustive]
 pub struct Stopped {}
 
-/// [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition): nothing pays for the workspace's usage now ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), so the call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
+/// [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition): nothing pays for the workspace's usage now ([`Billing::suspended`](crate::sandboxes::types::Billing::suspended)), so the call starts, resumes or wakes no sandbox, and makes no template: its owner adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct UsageUnpaid {}
@@ -1643,7 +1571,7 @@ pub enum RoomBound {
     ShortMemory,
     /// Its disk has no more free space than it keeps, what it could evict gone: try again later.
     Disk,
-    /// The disks and volumes it holds reach as much as it holds: try again later.
+    /// The disks it holds reach as much as it holds: try again later.
     DiskCap,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),

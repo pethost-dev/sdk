@@ -31,9 +31,8 @@ type Workspace struct {
 	// What its own template versions take in object storage now ([Template.SizeBytes], SAVING ones
 	// counted as 0): what [Limits.TemplateGib] holds.
 	TemplateBytes int64
-	// What its sandboxes count of [Limits.Vcpus] now, and its volumes of [Limits.VolumeGib].
-	VcpusUsed     int32
-	VolumeGibUsed int32
+	// What its sandboxes count of [Limits.Vcpus] now.
+	VcpusUsed int32
 }
 
 // What a size is: the header's SIZES. A sandbox runs in a VM of its size, of that VM's whole
@@ -75,8 +74,8 @@ type Billing struct {
 	BalanceMicros int64
 	// True = nothing pays for its usage now: the included usage is used up and the balance is
 	// empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-	// starts, resumes or wakes, and no volume or template is made ([UsageUnpaid]), until its owner
-	// adds to the balance or the plan's next period begins. What it stores is still counted.
+	// starts, resumes or wakes, and no template is made ([UsageUnpaid]), until its owner adds to
+	// the balance or the plan's next period begins. What it stores is still counted.
 	Suspended bool
 	// True = it is in its plan's free trial: the included usage is the trial's, and the plan's
 	// first payment comes at PeriodEndTime.
@@ -85,13 +84,11 @@ type Billing struct {
 }
 
 // What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-// the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+// the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
 // PAUSED sandbox costs is its size's ([SizeInfo.RunningHour], [SizeInfo.PausedHour]).
 type Rates struct {
 	// Meter.STORED_GIB: what a STOPPED sandbox holds in object storage.
 	StoredGibMonth float64
-	// Meter.VOLUME_GIB: a volume's whole size.
-	VolumeGibMonth float64
 }
 
 type SSHKey struct {
@@ -116,8 +113,6 @@ type Limits struct {
 	Vcpus int32
 	// The largest size it may create, start or change a sandbox to.
 	LargestSize Size
-	// The most GiB its volumes may take together ([Client.CreateVolume]).
-	VolumeGib int32
 	// The workspace's own templates: at most TemplateVersions versions of one name, FAILED ones
 	// aside, and TemplateGib GiB in all of what its versions take in object storage
 	// ([Workspace.TemplateBytes]), which is not billed. A [Client.CreateTemplate] past either, or
@@ -214,13 +209,12 @@ type DeleteSecretRequest struct {
 // when it runs out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran
 // out of disk space"), its disk kept.
 //
-// A STOPPED sandbox without volumes, its copy current, starts on another server when its own
-// has no room for it ([Client.ResumeSandbox]), its addresses with it. If a server is lost,
-// each of its sandboxes with a copy is STOPPED from its last copy, saying when that was if it
-// ran since, and starts on another server at its next [Client.ResumeSandbox]; one without a
-// copy is DELETED, as are its volumes, which the sandboxes that mounted them lose. While
-// nothing pays for its workspace ([Billing.Suspended]), its RUNNING and PAUSED sandboxes are
-// STOPPED (UNPAID), and none of them starts.
+// A STOPPED sandbox, its copy current, starts on another server when its own has no room for
+// it ([Client.ResumeSandbox]), its addresses with it. If a server is lost, each of its
+// sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since,
+// and starts on another server at its next [Client.ResumeSandbox]; one without a copy is
+// DELETED. While nothing pays for its workspace ([Billing.Suspended]), its RUNNING and PAUSED
+// sandboxes are STOPPED (UNPAID), and none of them starts.
 type Sandbox struct {
 	// 16 characters, a-z and 0-9: also its DNS label.
 	SandboxID   string
@@ -242,7 +236,6 @@ type Sandbox struct {
 	// [UpdateSandboxRequest.GrowDisk] grows it to the new size's. No size whose disk is smaller is
 	// allowed (SIZES).
 	DiskGib int32
-	Mounts  []Mount
 	// Its screen: every sandbox has one ([Client.ControlDesktop]).
 	Desktop *Desktop
 	// "ssh <id>@<server> -p 2222": signs in with a key of the workspace, or a
@@ -296,10 +289,9 @@ type Restore struct {
 // [SizeInfo.RunningHour]), since its server keeps its place for it; one paused for its
 // server's restart counts nothing. A STOPPED sandbox counts the bytes of its own its disk
 // holds ([Sandbox.StoredBytes]), which object storage keeps, never its empty space: a long
-// sleep costs least STOPPED. A volume counts its whole size. No other minimum: pausing and
-// waking never turns running time into a cheaper one, nor counts a second twice, since a
-// stretch counts from where the one before it was counted to ([Sandbox.Usage],
-// [Client.ListUsage]).
+// sleep costs least STOPPED. No other minimum: pausing and waking never turns running time
+// into a cheaper one, nor counts a second twice, since a stretch counts from where the one
+// before it was counted to ([Sandbox.Usage], [Client.ListUsage]).
 type Usage struct {
 	// At every size, each run 10 seconds at least.
 	RunningSeconds int64
@@ -321,8 +313,6 @@ type CreateSandboxRequest struct {
 	Settings *SandboxSettings
 	// For [Client.ListSandboxes]' filter. At most 32.
 	Labels []Label
-	// At most 4, at create only.
-	Mounts []Mount
 	// Unique in the workspace ([CodeAlreadyExists] + [NameTaken] names the sandbox that has it):
 	// a-z, 0-9 and "-", at most 63, not 16 of a-z and 0-9 alone, a SandboxID's shape. Absent =
 	// none.
@@ -783,66 +773,6 @@ type ListTemplatesResponse struct {
 // DeleteTemplateRequest is the request of [Client.DeleteTemplate].
 type DeleteTemplateRequest struct {
 	Name string
-	// The workspace: its id or name. Omit when the account has one ([WorkspaceChoice] lists them).
-	Workspace string
-}
-
-// Volume is the response of [Client.CreateVolume].
-type Volume struct {
-	VolumeID string
-	Name     string
-	// Counted as storage, used or not.
-	SizeGib   int32
-	UsedBytes int64
-	// Sandbox ids.
-	MountedBy  []string
-	CreateTime time.Time
-}
-
-// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-// any number.
-type Mount struct {
-	VolumeID string
-	// Absolute: /data. At most 255 bytes.
-	Path     string
-	ReadOnly bool
-
-	// What a newer API sent in this message that this version of the package has no field
-	// for. It goes back as it came when the message is sent.
-	unknown string
-}
-
-// CreateVolumeRequest is the request of [Client.CreateVolume].
-type CreateVolumeRequest struct {
-	Name string
-	// 1 to 1000.
-	SizeGib int32
-	// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-	// nothing again and answers what the first call did (24 h).
-	RequestID string
-	// The workspace: its id or name. Omit when the account has one ([WorkspaceChoice] lists them).
-	Workspace string
-}
-
-// ListVolumesRequest is the request of [Client.ListVolumes].
-type ListVolumesRequest struct {
-	// Absent = 50; at most 500.
-	PageSize  int32
-	PageToken string
-	// The workspace: its id or name. Omit when the account has one ([WorkspaceChoice] lists them).
-	Workspace string
-}
-
-// ListVolumesResponse is the response of [Client.ListVolumes].
-type ListVolumesResponse struct {
-	Volumes []Volume
-	// Absent on the last page.
-	NextPageToken string
-}
-
-// DeleteVolumeRequest is the request of [Client.DeleteVolume].
-type DeleteVolumeRequest struct {
-	VolumeID string
 	// The workspace: its id or name. Omit when the account has one ([WorkspaceChoice] lists them).
 	Workspace string
 }
@@ -1492,9 +1422,9 @@ type ToolResult struct {
 // [CodeResourceExhausted]: a limit of the workspace.
 type LimitReached struct {
 	// A field of [Workspace.Limits]: "vcpus", "[Limits.LargestSize]" (max is that Size's number),
-	// "[Limits.VolumeGib]", "[Limits.TemplateVersions]", "[Limits.TemplateGib]"; or a bound of
-	// every workspace: "secrets" ([Client.SetSecret]), or "starts_per_minute", the sandboxes it
-	// may start in any minute, against abuse. A start is free: a [Client.CreateSandbox], or a
+	// "[Limits.TemplateVersions]", "[Limits.TemplateGib]"; or a bound of every workspace:
+	// "secrets" ([Client.SetSecret]), or "starts_per_minute", the sandboxes it may start in any
+	// minute, against abuse. A start is free: a [Client.CreateSandbox], or a
 	// [Client.ResumeSandbox] of a STOPPED sandbox. A [Client.ResumeSandbox] of a PAUSED one, and a
 	// wake by a call into one (IDLE AND WAKE), are none.
 	Limit string
@@ -1514,8 +1444,8 @@ type Stopped struct{}
 // UsageUnpaid is a detail of an [Error]: [Error.UsageUnpaid].
 //
 // [CodeFailedPrecondition]: nothing pays for the workspace's usage now ([Billing.Suspended]),
-// so the call starts, resumes or wakes no sandbox, and makes no volume or template: its owner
-// adds to the balance, or starts the plan if it is in its trial, in the workspace's settings.
+// so the call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
+// the balance, or starts the plan if it is in its trial, in the workspace's settings.
 type UsageUnpaid struct{}
 
 // Restoring is a detail of an [Error]: [Error.Restoring].
@@ -1577,12 +1507,10 @@ const (
 	MeterPaused Meter = 9
 	// A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
 	MeterStoredGib Meter = 7
-	// A GiB of a volume's size.
-	MeterVolumeGib Meter = 8
 )
 
-// String is the value's name as the API's documentation writes it: "VOLUME_GIB" for
-// [MeterVolumeGib].
+// String is the value's name as the API's documentation writes it: "STORED_GIB" for
+// [MeterStoredGib].
 func (v Meter) String() string {
 	switch v {
 	case MeterUnspecified:
@@ -1593,8 +1521,6 @@ func (v Meter) String() string {
 		return "PAUSED"
 	case MeterStoredGib:
 		return "STORED_GIB"
-	case MeterVolumeGib:
-		return "VOLUME_GIB"
 	}
 	return "Meter(" + strconv.Itoa(int(v)) + ")"
 }
@@ -2133,7 +2059,7 @@ const (
 	RoomBoundShortMemory RoomBound = 2
 	// Its disk has no more free space than it keeps, what it could evict gone: try again later.
 	RoomBoundDisk RoomBound = 3
-	// The disks and volumes it holds reach as much as it holds: try again later.
+	// The disks it holds reach as much as it holds: try again later.
 	RoomBoundDiskCap RoomBound = 4
 )
 

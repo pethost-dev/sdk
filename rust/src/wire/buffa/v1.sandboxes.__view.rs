@@ -286,12 +286,10 @@ pub struct WorkspaceView<'a> {
     ///
     /// Field 8: `template_bytes`
     pub template_bytes: ::core::option::Option<i64>,
-    /// What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
+    /// What its sandboxes count of Limits.vcpus now.
     ///
     /// Field 9: `vcpus_used`
     pub vcpus_used: ::core::option::Option<i32>,
-    /// Field 10: `volume_gib_used`
-    pub volume_gib_used: ::core::option::Option<i32>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for WorkspaceView<'a> {
@@ -393,13 +391,6 @@ impl<'a> ::buffa::MessageView<'a> for WorkspaceView<'a> {
                     ::buffa::encoding::WireType::Varint,
                 )?;
                 view.vcpus_used = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.volume_gib_used = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -514,7 +505,6 @@ impl<'a> ::buffa::MessageView<'a> for WorkspaceView<'a> {
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
             template_bytes: self.template_bytes,
             vcpus_used: self.vcpus_used,
-            volume_gib_used: self.volume_gib_used,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -576,9 +566,6 @@ impl<'a> ::buffa::ViewEncode<'a> for WorkspaceView<'a> {
             size += 1u64 + ::buffa::types::int64_encoded_len(v) as u64;
         }
         if let Some(v) = self.vcpus_used {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.volume_gib_used {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -644,9 +631,6 @@ impl<'a> ::buffa::ViewEncode<'a> for WorkspaceView<'a> {
         if let Some(v) = self.vcpus_used {
             ::buffa::types::put_int32_field(9u32, v, buf);
         }
-        if let Some(v) = self.volume_gib_used {
-            ::buffa::types::put_int32_field(10u32, v, buf);
-        }
         self.__buffa_unknown_fields.write_to(buf);
     }
 }
@@ -703,13 +687,6 @@ impl<'__a> ::serde::Serialize for WorkspaceView<'__a> {
         if let ::core::option::Option::Some(__v) = self.vcpus_used {
             __map
                 .serialize_entry("vcpus_used", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if let ::core::option::Option::Some(__v) = self.volume_gib_used {
-            __map
-                .serialize_entry(
-                    "volume_gib_used",
-                    &::buffa::json_helpers::ProtoJson(&__v),
-                )?;
         }
         __map.end()
     }
@@ -863,17 +840,12 @@ impl WorkspaceOwnedView {
     pub fn template_bytes(&self) -> ::core::option::Option<i64> {
         self.0.reborrow().template_bytes
     }
-    /// What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
+    /// What its sandboxes count of Limits.vcpus now.
     ///
     /// Field 9: `vcpus_used`
     #[must_use]
     pub fn vcpus_used(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().vcpus_used
-    }
-    /// Field 10: `volume_gib_used`
-    #[must_use]
-    pub fn volume_gib_used(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().volume_gib_used
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<WorkspaceView<'static>>>
@@ -1330,7 +1302,7 @@ pub struct BillingView<'a> {
     pub balance_micros: ::core::option::Option<i64>,
     /// True = nothing pays for its usage now: the included usage is used up and the balance is
     /// empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-    /// starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+    /// starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
     /// adds to the balance or the plan's next period begins.
     /// What it stores is still counted.
     ///
@@ -1790,7 +1762,7 @@ impl BillingOwnedView {
     }
     /// True = nothing pays for its usage now: the included usage is used up and the balance is
     /// empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-    /// starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+    /// starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
     /// adds to the balance or the plan's next period begins.
     /// What it stores is still counted.
     ///
@@ -1846,7 +1818,7 @@ impl ::serde::Serialize for BillingOwnedView {
     }
 }
 /// What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-/// the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+/// the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
 /// PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 #[derive(Clone, Debug, Default)]
 pub struct RatesView<'a> {
@@ -1854,10 +1826,6 @@ pub struct RatesView<'a> {
     ///
     /// Field 5: `stored_gib_month`
     pub stored_gib_month: ::core::option::Option<f64>,
-    /// Meter.VOLUME_GIB: a volume's whole size.
-    ///
-    /// Field 6: `volume_gib_month`
-    pub volume_gib_month: ::core::option::Option<f64>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for RatesView<'a> {
@@ -1897,13 +1865,6 @@ impl<'a> ::buffa::MessageView<'a> for RatesView<'a> {
                 )?;
                 view.stored_gib_month = Some(::buffa::types::decode_double(&mut cur)?);
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                view.volume_gib_month = Some(::buffa::types::decode_double(&mut cur)?);
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -1927,7 +1888,6 @@ impl<'a> ::buffa::MessageView<'a> for RatesView<'a> {
         let _ = __buffa_src;
         ::core::result::Result::Ok(super::super::Rates {
             stored_gib_month: self.stored_gib_month,
-            volume_gib_month: self.volume_gib_month,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -1940,9 +1900,6 @@ impl<'a> ::buffa::ViewEncode<'a> for RatesView<'a> {
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
         if self.stored_gib_month.is_some() {
-            size += 1u64 + ::buffa::types::FIXED64_ENCODED_LEN as u64;
-        }
-        if self.volume_gib_month.is_some() {
             size += 1u64 + ::buffa::types::FIXED64_ENCODED_LEN as u64;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -1958,9 +1915,6 @@ impl<'a> ::buffa::ViewEncode<'a> for RatesView<'a> {
         use ::buffa::Enumeration as _;
         if let Some(v) = self.stored_gib_month {
             ::buffa::types::put_double_field(5u32, v, buf);
-        }
-        if let Some(v) = self.volume_gib_month {
-            ::buffa::types::put_double_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -1987,13 +1941,6 @@ impl<'__a> ::serde::Serialize for RatesView<'__a> {
             __map
                 .serialize_entry(
                     "stored_gib_month",
-                    &::buffa::json_helpers::ProtoJson(&__v),
-                )?;
-        }
-        if let ::core::option::Option::Some(__v) = self.volume_gib_month {
-            __map
-                .serialize_entry(
-                    "volume_gib_month",
                     &::buffa::json_helpers::ProtoJson(&__v),
                 )?;
         }
@@ -2090,13 +2037,6 @@ impl RatesOwnedView {
     #[must_use]
     pub fn stored_gib_month(&self) -> ::core::option::Option<f64> {
         self.0.reborrow().stored_gib_month
-    }
-    /// Meter.VOLUME_GIB: a volume's whole size.
-    ///
-    /// Field 6: `volume_gib_month`
-    #[must_use]
-    pub fn volume_gib_month(&self) -> ::core::option::Option<f64> {
-        self.0.reborrow().volume_gib_month
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<RatesView<'static>>> for RatesOwnedView {
@@ -2442,10 +2382,6 @@ pub struct LimitsView<'a> {
     ///
     /// Field 5: `largest_size`
     pub largest_size: ::core::option::Option<::buffa::EnumValue<super::super::Size>>,
-    /// The most GiB its volumes may take together (CreateVolume).
-    ///
-    /// Field 6: `volume_gib`
-    pub volume_gib: ::core::option::Option<i32>,
     /// The workspace's own templates: at most template_versions versions of one name, FAILED ones
     /// aside, and template_gib GiB in all of what its versions take in object storage
     /// (Workspace.template_bytes), which is not billed. A CreateTemplate past either, or while
@@ -2505,13 +2441,6 @@ impl<'a> ::buffa::MessageView<'a> for LimitsView<'a> {
                     ::buffa::EnumValue::from(::buffa::types::decode_int32(&mut cur)?),
                 );
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.volume_gib = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -2550,7 +2479,6 @@ impl<'a> ::buffa::MessageView<'a> for LimitsView<'a> {
         ::core::result::Result::Ok(super::super::Limits {
             vcpus: self.vcpus,
             largest_size: self.largest_size,
-            volume_gib: self.volume_gib,
             template_versions: self.template_versions,
             template_gib: self.template_gib,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
@@ -2576,9 +2504,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LimitsView<'a> {
         if let Some(ref v) = self.largest_size {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
-        if let Some(v) = self.volume_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -2601,9 +2526,6 @@ impl<'a> ::buffa::ViewEncode<'a> for LimitsView<'a> {
         }
         if let Some(ref v) = self.largest_size {
             ::buffa::types::put_int32_field(5u32, v.to_i32(), buf);
-        }
-        if let Some(v) = self.volume_gib {
-            ::buffa::types::put_int32_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -2631,10 +2553,6 @@ impl<'__a> ::serde::Serialize for LimitsView<'__a> {
         }
         if let ::core::option::Option::Some(ref __v) = self.largest_size {
             __map.serialize_entry("largest_size", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.volume_gib {
-            __map
-                .serialize_entry("volume_gib", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         if let ::core::option::Option::Some(__v) = self.template_versions {
             __map
@@ -2757,13 +2675,6 @@ impl LimitsOwnedView {
         &self,
     ) -> ::core::option::Option<::buffa::EnumValue<super::super::Size>> {
         self.0.reborrow().largest_size
-    }
-    /// The most GiB its volumes may take together (CreateVolume).
-    ///
-    /// Field 6: `volume_gib`
-    #[must_use]
-    pub fn volume_gib(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().volume_gib
     }
     /// The workspace's own templates: at most template_versions versions of one name, FAILED ones
     /// aside, and template_gib GiB in all of what its versions take in object storage
@@ -4102,12 +4013,11 @@ impl ::serde::Serialize for DeleteSecretRequestOwnedView {
 /// out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
 /// space"), its disk kept.
 ///
-/// A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-/// no room for it (ResumeSandbox), its addresses with it. If a server is lost, each of its
-/// sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-/// starts on another server at its next ResumeSandbox; one without a copy is DELETED, as are its
-/// volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-/// (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+/// A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+/// (ResumeSandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+/// is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+/// server at its next ResumeSandbox; one without a copy is DELETED. While nothing pays for its
+/// workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
 /// starts.
 #[derive(Clone, Debug, Default)]
 pub struct SandboxView<'a> {
@@ -4154,8 +4064,6 @@ pub struct SandboxView<'a> {
     ///
     /// Field 12: `disk_gib`
     pub disk_gib: ::core::option::Option<i32>,
-    /// Field 13: `mounts`
-    pub mounts: ::buffa::RepeatedView<'a, super::super::__buffa::view::MountView<'a>>,
     /// Its screen: every sandbox has one (ControlDesktop).
     ///
     /// Field 14: `desktop`
@@ -4520,24 +4428,6 @@ impl<'a> ::buffa::MessageView<'a> for SandboxView<'a> {
                         )?,
                     );
             }
-            13u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                ctx.register_element_memory(
-                    ::core::mem::size_of::<super::super::__buffa::view::MountView>(),
-                )?;
-                view.mounts
-                    .push(
-                        <super::super::__buffa::view::MountView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -4590,11 +4480,6 @@ impl<'a> ::buffa::MessageView<'a> for SandboxView<'a> {
             },
             revision: self.revision,
             disk_gib: self.disk_gib,
-            mounts: self
-                .mounts
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
             desktop: match self.desktop.as_option() {
                 Some(v) => {
                     ::buffa::MessageField::<
@@ -4709,14 +4594,6 @@ impl<'a> ::buffa::ViewEncode<'a> for SandboxView<'a> {
         }
         if let Some(v) = self.disk_gib {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        for v in &self.mounts {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
         }
         if self.desktop.is_set() {
             let __slot = __cache.reserve();
@@ -4837,14 +4714,6 @@ impl<'a> ::buffa::ViewEncode<'a> for SandboxView<'a> {
         if let Some(v) = self.disk_gib {
             ::buffa::types::put_int32_field(12u32, v, buf);
         }
-        for v in &self.mounts {
-            ::buffa::types::put_len_delimited_header(
-                13u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
         if self.desktop.is_set() {
             ::buffa::types::put_len_delimited_header(
                 14u32,
@@ -4962,9 +4831,6 @@ impl<'__a> ::serde::Serialize for SandboxView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.disk_gib {
             __map.serialize_entry("disk_gib", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if !self.mounts.is_empty() {
-            __map.serialize_entry("mounts", &*self.mounts)?;
         }
         {
             if let ::core::option::Option::Some(__v) = self.desktop.as_option() {
@@ -5184,13 +5050,6 @@ impl SandboxOwnedView {
     #[must_use]
     pub fn disk_gib(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().disk_gib
-    }
-    /// Field 13: `mounts`
-    #[must_use]
-    pub fn mounts(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::MountView<'_>> {
-        &self.0.reborrow().mounts
     }
     /// Its screen: every sandbox has one (ControlDesktop).
     ///
@@ -5614,10 +5473,9 @@ impl ::serde::Serialize for RestoreOwnedView {
 /// its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
 /// place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
 /// bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-/// empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-/// minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-/// twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-/// ListUsage).
+/// empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+/// turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+/// where the one before it was counted to (Sandbox.usage, ListUsage).
 #[derive(Clone, Debug, Default)]
 pub struct UsageView<'a> {
     /// At every size, each run 10 seconds at least.
@@ -5978,10 +5836,6 @@ pub struct CreateSandboxRequestView<'a> {
     ///
     /// Field 4: `labels`
     pub labels: ::buffa::RepeatedView<'a, super::super::__buffa::view::LabelView<'a>>,
-    /// At most 4, at create only.
-    ///
-    /// Field 6: `mounts`
-    pub mounts: ::buffa::RepeatedView<'a, super::super::__buffa::view::MountView<'a>>,
     /// Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
     /// and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
     ///
@@ -6093,24 +5947,6 @@ impl<'a> ::buffa::MessageView<'a> for CreateSandboxRequestView<'a> {
                         )?,
                     );
             }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                ctx.register_element_memory(
-                    ::core::mem::size_of::<super::super::__buffa::view::MountView>(),
-                )?;
-                view.mounts
-                    .push(
-                        <super::super::__buffa::view::MountView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -6154,11 +5990,6 @@ impl<'a> ::buffa::MessageView<'a> for CreateSandboxRequestView<'a> {
                 .iter()
                 .map(|v| v.to_owned_from_source(__buffa_src))
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
-            mounts: self
-                .mounts
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
             name: self.name.map(|s| s.to_string()),
             request_id: self.request_id.map(|s| s.to_string()),
             workspace: self.workspace.map(|s| s.to_string()),
@@ -6185,14 +6016,6 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateSandboxRequestView<'a> {
                     + inner_size as u64;
         }
         for v in &self.labels {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        for v in &self.mounts {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
             __cache.set(__slot, inner_size);
@@ -6239,14 +6062,6 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateSandboxRequestView<'a> {
             );
             v.write_to(__cache, buf);
         }
-        for v in &self.mounts {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
         if let Some(ref v) = self.name {
             ::buffa::types::put_string_field(8u32, v, buf);
         }
@@ -6287,9 +6102,6 @@ impl<'__a> ::serde::Serialize for CreateSandboxRequestView<'__a> {
         }
         if !self.labels.is_empty() {
             __map.serialize_entry("labels", &*self.labels)?;
-        }
-        if !self.mounts.is_empty() {
-            __map.serialize_entry("mounts", &*self.mounts)?;
         }
         if let ::core::option::Option::Some(__v) = self.name {
             __map.serialize_entry("name", __v)?;
@@ -6421,15 +6233,6 @@ impl CreateSandboxRequestOwnedView {
         &self,
     ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::LabelView<'_>> {
         &self.0.reborrow().labels
-    }
-    /// At most 4, at create only.
-    ///
-    /// Field 6: `mounts`
-    #[must_use]
-    pub fn mounts(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::MountView<'_>> {
-        &self.0.reborrow().mounts
     }
     /// Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
     /// and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
@@ -19202,1938 +19005,6 @@ impl ::buffa::HasMessageView for super::super::DeleteTemplateRequest {
     type ViewHandle = DeleteTemplateRequestOwnedView;
 }
 impl ::serde::Serialize for DeleteTemplateRequestOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-/// ── Volumes ────────────────────────────────────────────────────────────────
-#[derive(Clone, Debug, Default)]
-pub struct VolumeView<'a> {
-    /// Field 1: `volume_id`
-    pub volume_id: ::core::option::Option<&'a str>,
-    /// Field 2: `name`
-    pub name: ::core::option::Option<&'a str>,
-    /// Counted as storage, used or not.
-    ///
-    /// Field 3: `size_gib`
-    pub size_gib: ::core::option::Option<i32>,
-    /// Field 5: `used_bytes`
-    pub used_bytes: ::core::option::Option<i64>,
-    /// Sandbox ids.
-    ///
-    /// Field 6: `mounted_by`
-    pub mounted_by: ::buffa::RepeatedView<'a, &'a str>,
-    /// Field 7: `create_time`
-    pub create_time: ::buffa::MessageFieldView<
-        ::buffa_types::google::protobuf::__buffa::view::TimestampView<'a>,
-    >,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for VolumeView<'a> {
-    type Owned = super::super::Volume;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.volume_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.size_gib = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            5u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.used_bytes = Some(::buffa::types::decode_int64(&mut cur)?);
-            }
-            7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.create_time.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.create_time = ::buffa::MessageFieldView::set(
-                            <::buffa_types::google::protobuf::__buffa::view::TimestampView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
-            }
-            6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.mounted_by.push(__elem);
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<super::super::Volume, ::buffa::DecodeError> {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<super::super::Volume, ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::Volume {
-            volume_id: self.volume_id.map(|s| s.to_string()),
-            name: self.name.map(|s| s.to_string()),
-            size_gib: self.size_gib,
-            used_bytes: self.used_bytes,
-            mounted_by: self.mounted_by.iter().map(|s| s.to_string()).collect(),
-            create_time: match self.create_time.as_option() {
-                Some(v) => {
-                    ::buffa::MessageField::<
-                        ::buffa_types::google::protobuf::Timestamp,
-                        ::buffa::Inline<::buffa_types::google::protobuf::Timestamp>,
-                    >::some(v.to_owned_from_source(__buffa_src)?)
-                }
-                None => ::buffa::MessageField::none(),
-            },
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for VolumeView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.name {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.size_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.used_bytes {
-            size += 1u64 + ::buffa::types::int64_encoded_len(v) as u64;
-        }
-        for v in &self.mounted_by {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if self.create_time.is_set() {
-            let __slot = __cache.reserve();
-            let inner_size = self.create_time.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.name {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(v) = self.size_gib {
-            ::buffa::types::put_int32_field(3u32, v, buf);
-        }
-        if let Some(v) = self.used_bytes {
-            ::buffa::types::put_int64_field(5u32, v, buf);
-        }
-        for v in &self.mounted_by {
-            ::buffa::types::put_string_field(6u32, v, buf);
-        }
-        if self.create_time.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.create_time.write_to(__cache, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for VolumeView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.volume_id {
-            __map.serialize_entry("volume_id", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.name {
-            __map.serialize_entry("name", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.size_gib {
-            __map.serialize_entry("size_gib", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if let ::core::option::Option::Some(__v) = self.used_bytes {
-            __map
-                .serialize_entry("used_bytes", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if !self.mounted_by.is_empty() {
-            __map.serialize_entry("mounted_by", &*self.mounted_by)?;
-        }
-        {
-            if let ::core::option::Option::Some(__v) = self.create_time.as_option() {
-                __map.serialize_entry("create_time", __v)?;
-            }
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for VolumeView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "Volume";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.Volume";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Volume";
-}
-::buffa::impl_default_view_instance!(VolumeView);
-::buffa::impl_view_reborrow!(VolumeView);
-/** Self-contained, `'static` owned view of a `Volume` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`VolumeView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`VolumeView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct VolumeOwnedView(::buffa::OwnedView<VolumeView<'static>>);
-impl VolumeOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(VolumeOwnedView(::buffa::OwnedView::decode(bytes)?))
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            VolumeOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::Volume,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(VolumeOwnedView(::buffa::OwnedView::from_owned(msg)?))
-    }
-    /// Borrow the full [`VolumeView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &VolumeView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::Volume {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `volume_id`
-    #[must_use]
-    pub fn volume_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().volume_id
-    }
-    /// Field 2: `name`
-    #[must_use]
-    pub fn name(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().name
-    }
-    /// Counted as storage, used or not.
-    ///
-    /// Field 3: `size_gib`
-    #[must_use]
-    pub fn size_gib(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().size_gib
-    }
-    /// Field 5: `used_bytes`
-    #[must_use]
-    pub fn used_bytes(&self) -> ::core::option::Option<i64> {
-        self.0.reborrow().used_bytes
-    }
-    /// Sandbox ids.
-    ///
-    /// Field 6: `mounted_by`
-    #[must_use]
-    pub fn mounted_by(&self) -> &::buffa::RepeatedView<'_, &'_ str> {
-        &self.0.reborrow().mounted_by
-    }
-    /// Field 7: `create_time`
-    #[must_use]
-    pub fn create_time(
-        &self,
-    ) -> &::buffa::MessageFieldView<
-        ::buffa_types::google::protobuf::__buffa::view::TimestampView<'_>,
-    > {
-        &self.0.reborrow().create_time
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<VolumeView<'static>>> for VolumeOwnedView {
-    fn from(inner: ::buffa::OwnedView<VolumeView<'static>>) -> Self {
-        VolumeOwnedView(inner)
-    }
-}
-impl ::core::convert::From<VolumeOwnedView> for ::buffa::OwnedView<VolumeView<'static>> {
-    fn from(wrapper: VolumeOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<VolumeView<'static>>>
-for VolumeOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<VolumeView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::Volume {
-    type View<'a> = VolumeView<'a>;
-    type ViewHandle = VolumeOwnedView;
-}
-impl ::serde::Serialize for VolumeOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-/// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-/// any number.
-#[derive(Clone, Debug, Default)]
-pub struct MountView<'a> {
-    /// Field 1: `volume_id`
-    pub volume_id: ::core::option::Option<&'a str>,
-    /// Absolute: /data. At most 255 bytes.
-    ///
-    /// Field 2: `path`
-    pub path: ::core::option::Option<&'a str>,
-    /// Field 3: `read_only`
-    pub read_only: ::core::option::Option<bool>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for MountView<'a> {
-    type Owned = super::super::Mount;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.volume_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.path = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.read_only = Some(::buffa::types::decode_bool(&mut cur)?);
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<super::super::Mount, ::buffa::DecodeError> {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<super::super::Mount, ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::Mount {
-            volume_id: self.volume_id.map(|s| s.to_string()),
-            path: self.path.map(|s| s.to_string()),
-            read_only: self.read_only,
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for MountView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.path {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if self.read_only.is_some() {
-            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.path {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(v) = self.read_only {
-            ::buffa::types::put_bool_field(3u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for MountView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.volume_id {
-            __map.serialize_entry("volume_id", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.path {
-            __map.serialize_entry("path", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.read_only {
-            __map.serialize_entry("read_only", &__v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for MountView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "Mount";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.Mount";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Mount";
-}
-::buffa::impl_default_view_instance!(MountView);
-::buffa::impl_view_reborrow!(MountView);
-/** Self-contained, `'static` owned view of a `Mount` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`MountView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`MountView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct MountOwnedView(::buffa::OwnedView<MountView<'static>>);
-impl MountOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(MountOwnedView(::buffa::OwnedView::decode(bytes)?))
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            MountOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::Mount,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(MountOwnedView(::buffa::OwnedView::from_owned(msg)?))
-    }
-    /// Borrow the full [`MountView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &MountView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::Mount {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `volume_id`
-    #[must_use]
-    pub fn volume_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().volume_id
-    }
-    /// Absolute: /data. At most 255 bytes.
-    ///
-    /// Field 2: `path`
-    #[must_use]
-    pub fn path(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().path
-    }
-    /// Field 3: `read_only`
-    #[must_use]
-    pub fn read_only(&self) -> ::core::option::Option<bool> {
-        self.0.reborrow().read_only
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<MountView<'static>>> for MountOwnedView {
-    fn from(inner: ::buffa::OwnedView<MountView<'static>>) -> Self {
-        MountOwnedView(inner)
-    }
-}
-impl ::core::convert::From<MountOwnedView> for ::buffa::OwnedView<MountView<'static>> {
-    fn from(wrapper: MountOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<MountView<'static>>> for MountOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<MountView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::Mount {
-    type View<'a> = MountView<'a>;
-    type ViewHandle = MountOwnedView;
-}
-impl ::serde::Serialize for MountOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct CreateVolumeRequestView<'a> {
-    /// Field 1: `name`
-    pub name: ::core::option::Option<&'a str>,
-    /// 1 to 1000.
-    ///
-    /// Field 2: `size_gib`
-    pub size_gib: ::core::option::Option<i32>,
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    pub request_id: ::core::option::Option<&'a str>,
-    /// Field 100: `workspace`
-    pub workspace: ::core::option::Option<&'a str>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for CreateVolumeRequestView<'a> {
-    type Owned = super::super::CreateVolumeRequest;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.size_gib = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            101u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.request_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.workspace = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<
-        super::super::CreateVolumeRequest,
-        ::buffa::DecodeError,
-    > {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<
-        super::super::CreateVolumeRequest,
-        ::buffa::DecodeError,
-    > {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::CreateVolumeRequest {
-            name: self.name.map(|s| s.to_string()),
-            size_gib: self.size_gib,
-            request_id: self.request_id.map(|s| s.to_string()),
-            workspace: self.workspace.map(|s| s.to_string()),
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for CreateVolumeRequestView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.name {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(v) = self.size_gib {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.request_id {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.name {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(v) = self.size_gib {
-            ::buffa::types::put_int32_field(2u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        if let Some(ref v) = self.request_id {
-            ::buffa::types::put_string_field(101u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for CreateVolumeRequestView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.name {
-            __map.serialize_entry("name", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.size_gib {
-            __map.serialize_entry("size_gib", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if let ::core::option::Option::Some(__v) = self.request_id {
-            __map.serialize_entry("request_id", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.workspace {
-            __map.serialize_entry("workspace", __v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for CreateVolumeRequestView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "CreateVolumeRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.CreateVolumeRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.CreateVolumeRequest";
-}
-::buffa::impl_default_view_instance!(CreateVolumeRequestView);
-::buffa::impl_view_reborrow!(CreateVolumeRequestView);
-/** Self-contained, `'static` owned view of a `CreateVolumeRequest` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`CreateVolumeRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`CreateVolumeRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct CreateVolumeRequestOwnedView(
-    ::buffa::OwnedView<CreateVolumeRequestView<'static>>,
-);
-impl CreateVolumeRequestOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            CreateVolumeRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            CreateVolumeRequestOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::CreateVolumeRequest,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            CreateVolumeRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`CreateVolumeRequestView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &CreateVolumeRequestView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::CreateVolumeRequest {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `name`
-    #[must_use]
-    pub fn name(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().name
-    }
-    /// 1 to 1000.
-    ///
-    /// Field 2: `size_gib`
-    #[must_use]
-    pub fn size_gib(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().size_gib
-    }
-    /// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-    /// nothing again and answers what the first call did (24 h).
-    ///
-    /// Field 101: `request_id`
-    #[must_use]
-    pub fn request_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().request_id
-    }
-    /// Field 100: `workspace`
-    #[must_use]
-    pub fn workspace(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().workspace
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<CreateVolumeRequestView<'static>>>
-for CreateVolumeRequestOwnedView {
-    fn from(inner: ::buffa::OwnedView<CreateVolumeRequestView<'static>>) -> Self {
-        CreateVolumeRequestOwnedView(inner)
-    }
-}
-impl ::core::convert::From<CreateVolumeRequestOwnedView>
-for ::buffa::OwnedView<CreateVolumeRequestView<'static>> {
-    fn from(wrapper: CreateVolumeRequestOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<CreateVolumeRequestView<'static>>>
-for CreateVolumeRequestOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<CreateVolumeRequestView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::CreateVolumeRequest {
-    type View<'a> = CreateVolumeRequestView<'a>;
-    type ViewHandle = CreateVolumeRequestOwnedView;
-}
-impl ::serde::Serialize for CreateVolumeRequestOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct ListVolumesRequestView<'a> {
-    /// Absent = 50; at most 500.
-    ///
-    /// Field 1: `page_size`
-    pub page_size: ::core::option::Option<i32>,
-    /// Field 2: `page_token`
-    pub page_token: ::core::option::Option<&'a str>,
-    /// Field 100: `workspace`
-    pub workspace: ::core::option::Option<&'a str>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for ListVolumesRequestView<'a> {
-    type Owned = super::super::ListVolumesRequest;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.page_size = Some(::buffa::types::decode_int32(&mut cur)?);
-            }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.page_token = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.workspace = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<super::super::ListVolumesRequest, ::buffa::DecodeError> {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<super::super::ListVolumesRequest, ::buffa::DecodeError> {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::ListVolumesRequest {
-            page_size: self.page_size,
-            page_token: self.page_token.map(|s| s.to_string()),
-            workspace: self.workspace.map(|s| s.to_string()),
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for ListVolumesRequestView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(v) = self.page_size {
-            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.page_token {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(v) = self.page_size {
-            ::buffa::types::put_int32_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.page_token {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for ListVolumesRequestView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.page_size {
-            __map.serialize_entry("page_size", &::buffa::json_helpers::ProtoJson(&__v))?;
-        }
-        if let ::core::option::Option::Some(__v) = self.page_token {
-            __map.serialize_entry("page_token", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.workspace {
-            __map.serialize_entry("workspace", __v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for ListVolumesRequestView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ListVolumesRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ListVolumesRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesRequest";
-}
-::buffa::impl_default_view_instance!(ListVolumesRequestView);
-::buffa::impl_view_reborrow!(ListVolumesRequestView);
-/** Self-contained, `'static` owned view of a `ListVolumesRequest` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`ListVolumesRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ListVolumesRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct ListVolumesRequestOwnedView(
-    ::buffa::OwnedView<ListVolumesRequestView<'static>>,
-);
-impl ListVolumesRequestOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesRequestOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::ListVolumesRequest,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`ListVolumesRequestView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &ListVolumesRequestView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::ListVolumesRequest {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Absent = 50; at most 500.
-    ///
-    /// Field 1: `page_size`
-    #[must_use]
-    pub fn page_size(&self) -> ::core::option::Option<i32> {
-        self.0.reborrow().page_size
-    }
-    /// Field 2: `page_token`
-    #[must_use]
-    pub fn page_token(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().page_token
-    }
-    /// Field 100: `workspace`
-    #[must_use]
-    pub fn workspace(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().workspace
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<ListVolumesRequestView<'static>>>
-for ListVolumesRequestOwnedView {
-    fn from(inner: ::buffa::OwnedView<ListVolumesRequestView<'static>>) -> Self {
-        ListVolumesRequestOwnedView(inner)
-    }
-}
-impl ::core::convert::From<ListVolumesRequestOwnedView>
-for ::buffa::OwnedView<ListVolumesRequestView<'static>> {
-    fn from(wrapper: ListVolumesRequestOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<ListVolumesRequestView<'static>>>
-for ListVolumesRequestOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<ListVolumesRequestView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::ListVolumesRequest {
-    type View<'a> = ListVolumesRequestView<'a>;
-    type ViewHandle = ListVolumesRequestOwnedView;
-}
-impl ::serde::Serialize for ListVolumesRequestOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct ListVolumesResponseView<'a> {
-    /// Field 1: `volumes`
-    pub volumes: ::buffa::RepeatedView<'a, super::super::__buffa::view::VolumeView<'a>>,
-    /// Absent on the last page.
-    ///
-    /// Field 2: `next_page_token`
-    pub next_page_token: ::core::option::Option<&'a str>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for ListVolumesResponseView<'a> {
-    type Owned = super::super::ListVolumesResponse;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.next_page_token = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                ctx.register_element_memory(
-                    ::core::mem::size_of::<super::super::__buffa::view::VolumeView>(),
-                )?;
-                view.volumes
-                    .push(
-                        <super::super::__buffa::view::VolumeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<
-        super::super::ListVolumesResponse,
-        ::buffa::DecodeError,
-    > {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<
-        super::super::ListVolumesResponse,
-        ::buffa::DecodeError,
-    > {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::ListVolumesResponse {
-            volumes: self
-                .volumes
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
-            next_page_token: self.next_page_token.map(|s| s.to_string()),
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for ListVolumesResponseView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        for v in &self.volumes {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
-        }
-        if let Some(ref v) = self.next_page_token {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        __cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        for v in &self.volumes {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            v.write_to(__cache, buf);
-        }
-        if let Some(ref v) = self.next_page_token {
-            ::buffa::types::put_string_field(2u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for ListVolumesResponseView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if !self.volumes.is_empty() {
-            __map.serialize_entry("volumes", &*self.volumes)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.next_page_token {
-            __map.serialize_entry("next_page_token", __v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for ListVolumesResponseView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "ListVolumesResponse";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ListVolumesResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ListVolumesResponse";
-}
-::buffa::impl_default_view_instance!(ListVolumesResponseView);
-::buffa::impl_view_reborrow!(ListVolumesResponseView);
-/** Self-contained, `'static` owned view of a `ListVolumesResponse` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`ListVolumesResponseView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ListVolumesResponseView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct ListVolumesResponseOwnedView(
-    ::buffa::OwnedView<ListVolumesResponseView<'static>>,
-);
-impl ListVolumesResponseOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesResponseOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesResponseOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::ListVolumesResponse,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            ListVolumesResponseOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`ListVolumesResponseView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &ListVolumesResponseView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::ListVolumesResponse {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `volumes`
-    #[must_use]
-    pub fn volumes(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::VolumeView<'_>> {
-        &self.0.reborrow().volumes
-    }
-    /// Absent on the last page.
-    ///
-    /// Field 2: `next_page_token`
-    #[must_use]
-    pub fn next_page_token(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().next_page_token
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<ListVolumesResponseView<'static>>>
-for ListVolumesResponseOwnedView {
-    fn from(inner: ::buffa::OwnedView<ListVolumesResponseView<'static>>) -> Self {
-        ListVolumesResponseOwnedView(inner)
-    }
-}
-impl ::core::convert::From<ListVolumesResponseOwnedView>
-for ::buffa::OwnedView<ListVolumesResponseView<'static>> {
-    fn from(wrapper: ListVolumesResponseOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<ListVolumesResponseView<'static>>>
-for ListVolumesResponseOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<ListVolumesResponseView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::ListVolumesResponse {
-    type View<'a> = ListVolumesResponseView<'a>;
-    type ViewHandle = ListVolumesResponseOwnedView;
-}
-impl ::serde::Serialize for ListVolumesResponseOwnedView {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        ::serde::Serialize::serialize(&self.0, __s)
-    }
-}
-#[derive(Clone, Debug, Default)]
-pub struct DeleteVolumeRequestView<'a> {
-    /// Field 1: `volume_id`
-    pub volume_id: ::core::option::Option<&'a str>,
-    /// Field 100: `workspace`
-    pub workspace: ::core::option::Option<&'a str>,
-    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
-}
-impl<'a> ::buffa::MessageView<'a> for DeleteVolumeRequestView<'a> {
-    type Owned = super::super::DeleteVolumeRequest;
-    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
-        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
-        <Self as ::buffa::MessageView>::decode_view_ctx(
-            buf,
-            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
-                .with_element_memory(&__elem),
-        )
-    }
-    fn decode_view_with_ctx(
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
-    }
-    #[inline]
-    fn merge_view_field(
-        &mut self,
-        tag: ::buffa::encoding::Tag,
-        cur: &'a [u8],
-        before_tag: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
-        let _ = ctx;
-        #[allow(unused_variables)]
-        let view = self;
-        let mut cur = cur;
-        match tag.field_number() {
-            1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.volume_id = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            100u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.workspace = Some(::buffa::types::borrow_str(&mut cur)?);
-            }
-            _ => {
-                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
-                let span_len = before_tag.len() - cur.len();
-                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
-            }
-        }
-        ::core::result::Result::Ok(cur)
-    }
-    fn to_owned_message(
-        &self,
-    ) -> ::core::result::Result<
-        super::super::DeleteVolumeRequest,
-        ::buffa::DecodeError,
-    > {
-        self.to_owned_from_source(None)
-    }
-    #[allow(clippy::useless_conversion, clippy::needless_update)]
-    fn to_owned_from_source(
-        &self,
-        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
-    ) -> ::core::result::Result<
-        super::super::DeleteVolumeRequest,
-        ::buffa::DecodeError,
-    > {
-        #[allow(unused_imports)]
-        use ::buffa::alloc::string::ToString as _;
-        let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::DeleteVolumeRequest {
-            volume_id: self.volume_id.map(|s| s.to_string()),
-            workspace: self.workspace.map(|s| s.to_string()),
-            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
-            ..::core::default::Default::default()
-        })
-    }
-}
-impl<'a> ::buffa::ViewEncode<'a> for DeleteVolumeRequestView<'a> {
-    #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        let mut size = 0u64;
-        if let Some(ref v) = self.volume_id {
-            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        if let Some(ref v) = self.workspace {
-            size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
-        }
-        size += self.__buffa_unknown_fields.encoded_len() as u64;
-        ::buffa::saturate_size(size)
-    }
-    #[allow(clippy::needless_borrow)]
-    fn write_to(
-        &self,
-        _cache: &mut ::buffa::SizeCache,
-        buf: &mut impl ::buffa::EncodeSink,
-    ) {
-        #[allow(unused_imports)]
-        use ::buffa::Enumeration as _;
-        if let Some(ref v) = self.volume_id {
-            ::buffa::types::put_string_field(1u32, v, buf);
-        }
-        if let Some(ref v) = self.workspace {
-            ::buffa::types::put_string_field(100u32, v, buf);
-        }
-        self.__buffa_unknown_fields.write_to(buf);
-    }
-}
-/// Serializes this view as protobuf JSON.
-///
-/// Implicit-presence fields with default values are omitted, `required`
-/// fields are always emitted, explicit-presence (`optional`) fields are
-/// emitted only when set, bytes fields are base64-encoded, and enum
-/// values are their proto name strings.
-///
-/// This impl uses `serialize_map(None)` because the number of emitted
-/// fields depends on default-omission rules; serializers that require
-/// known map lengths (e.g. `bincode`) will return a runtime error.
-/// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for DeleteVolumeRequestView<'__a> {
-    fn serialize<__S: ::serde::Serializer>(
-        &self,
-        __s: __S,
-    ) -> ::core::result::Result<__S::Ok, __S::Error> {
-        use ::serde::ser::SerializeMap as _;
-        let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if let ::core::option::Option::Some(__v) = self.volume_id {
-            __map.serialize_entry("volume_id", __v)?;
-        }
-        if let ::core::option::Option::Some(__v) = self.workspace {
-            __map.serialize_entry("workspace", __v)?;
-        }
-        __map.end()
-    }
-}
-impl<'a> ::buffa::MessageName for DeleteVolumeRequestView<'a> {
-    const PACKAGE: &'static str = "pethost.sandboxes.v1";
-    const NAME: &'static str = "DeleteVolumeRequest";
-    const FULL_NAME: &'static str = "pethost.sandboxes.v1.DeleteVolumeRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.DeleteVolumeRequest";
-}
-::buffa::impl_default_view_instance!(DeleteVolumeRequestView);
-::buffa::impl_view_reborrow!(DeleteVolumeRequestView);
-/** Self-contained, `'static` owned view of a `DeleteVolumeRequest` message.
-
- Wraps [`::buffa::OwnedView`]`<`[`DeleteVolumeRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
-
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`DeleteVolumeRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
-#[derive(Clone, Debug)]
-pub struct DeleteVolumeRequestOwnedView(
-    ::buffa::OwnedView<DeleteVolumeRequestView<'static>>,
-);
-impl DeleteVolumeRequestOwnedView {
-    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
-    ///
-    /// The view borrows directly from the buffer's data; the buffer is
-    /// retained inside the returned handle.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
-    /// protobuf data.
-    pub fn decode(
-        bytes: ::buffa::bytes::Bytes,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            DeleteVolumeRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
-        )
-    }
-    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
-    /// max message size).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
-    /// exceeds the configured limits.
-    pub fn decode_with_options(
-        bytes: ::buffa::bytes::Bytes,
-        opts: &::buffa::DecodeOptions,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            DeleteVolumeRequestOwnedView(
-                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
-            ),
-        )
-    }
-    /// Build from an owned message via an encode → decode round-trip.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
-    /// message's encoded size exceeds the 2 GiB protobuf limit, or
-    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
-    /// somehow invalid (should not happen for well-formed messages).
-    pub fn from_owned(
-        msg: &super::super::DeleteVolumeRequest,
-    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
-        ::core::result::Result::Ok(
-            DeleteVolumeRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
-        )
-    }
-    /// Borrow the full [`DeleteVolumeRequestView`] with its lifetime tied to `&self`.
-    #[must_use]
-    pub fn view(&self) -> &DeleteVolumeRequestView<'_> {
-        self.0.reborrow()
-    }
-    /// Convert to the owned message type.
-    ///
-    /// Infallible: this type's constructors wire-decode their
-    /// buffer, and a view produced by wire decoding always
-    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
-    /// whose contract also governs handles converted from a raw
-    /// [`::buffa::OwnedView`].
-    #[must_use]
-    pub fn to_owned_message(&self) -> super::super::DeleteVolumeRequest {
-        self.0.to_owned_message()
-    }
-    /// The underlying bytes buffer.
-    #[must_use]
-    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
-        self.0.bytes()
-    }
-    /// Consume the handle, returning the underlying bytes buffer.
-    #[must_use]
-    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
-        self.0.into_bytes()
-    }
-    /// Field 1: `volume_id`
-    #[must_use]
-    pub fn volume_id(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().volume_id
-    }
-    /// Field 100: `workspace`
-    #[must_use]
-    pub fn workspace(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().workspace
-    }
-}
-impl ::core::convert::From<::buffa::OwnedView<DeleteVolumeRequestView<'static>>>
-for DeleteVolumeRequestOwnedView {
-    fn from(inner: ::buffa::OwnedView<DeleteVolumeRequestView<'static>>) -> Self {
-        DeleteVolumeRequestOwnedView(inner)
-    }
-}
-impl ::core::convert::From<DeleteVolumeRequestOwnedView>
-for ::buffa::OwnedView<DeleteVolumeRequestView<'static>> {
-    fn from(wrapper: DeleteVolumeRequestOwnedView) -> Self {
-        wrapper.0
-    }
-}
-impl ::core::convert::AsRef<::buffa::OwnedView<DeleteVolumeRequestView<'static>>>
-for DeleteVolumeRequestOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<DeleteVolumeRequestView<'static>> {
-        &self.0
-    }
-}
-impl ::buffa::HasMessageView for super::super::DeleteVolumeRequest {
-    type View<'a> = DeleteVolumeRequestView<'a>;
-    type ViewHandle = DeleteVolumeRequestOwnedView;
-}
-impl ::serde::Serialize for DeleteVolumeRequestOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -38616,7 +36487,7 @@ impl ::serde::Serialize for ToolResultOwnedView {
 #[derive(Clone, Debug, Default)]
 pub struct LimitReachedView<'a> {
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// "template_versions", "template_gib"; or a bound of every workspace: "secrets"
     /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
     /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
     /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -38906,7 +36777,7 @@ impl LimitReachedOwnedView {
         self.0.into_bytes()
     }
     /// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-    /// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+    /// "template_versions", "template_gib"; or a bound of every workspace: "secrets"
     /// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
     /// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
     /// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -39187,7 +37058,7 @@ impl ::serde::Serialize for StoppedOwnedView {
     }
 }
 /// FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the
-/// call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+/// call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
 /// the balance, or starts the plan if it is in its trial, in the workspace's settings.
 #[derive(Clone, Debug, Default)]
 pub struct UsageUnpaidView<'a> {

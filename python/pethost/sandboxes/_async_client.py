@@ -37,8 +37,6 @@ from pethost.sandboxes._types import (
     ListSandboxesResponse,
     ListTemplatesResponse,
     ListUsageResponse,
-    ListVolumesResponse,
-    Mount,
     Sandbox,
     SandboxEvent,
     SandboxEventKind,
@@ -47,7 +45,6 @@ from pethost.sandboxes._types import (
     Secret,
     Template,
     TerminalLink,
-    Volume,
     Workspace,
     WriteFilesResponse,
 )
@@ -308,7 +305,6 @@ class AsyncSandboxes:
         *,
         settings: SandboxSettings | None = None,
         labels: Sequence[Label] = (),
-        mounts: Sequence[Mount] = (),
         name: str = "",
         request_id: str = "",
         workspace: str = "",
@@ -326,12 +322,11 @@ class AsyncSandboxes:
             template: "name" (its newest READY version) or "name@version". Absent = "base".
             settings: To add to the template's variables, send them too (list_templates: Template.settings).
             labels: For list_sandboxes' filter. At most 32.
-            mounts: At most 4, at create only.
             name: Unique in the workspace (AlreadyExistsError + NameTaken names the sandbox that has it): a-z, 0-9 and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
             request_id: Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
             workspace: The workspace: its id or name. Omit when the account has one (WorkspaceChoice lists them).
         """
-        return _convert.sandbox_from_wire(self._keep(_convert.sandbox_seeds, await self._call(self._wire.create_sandbox, _convert.create_sandbox_request(template=template, settings=settings, labels=labels, mounts=mounts, name=name, request_id=request_id or _rt.request_id(16), workspace=workspace or self._workspace))))
+        return _convert.sandbox_from_wire(self._keep(_convert.sandbox_seeds, await self._call(self._wire.create_sandbox, _convert.create_sandbox_request(template=template, settings=settings, labels=labels, name=name, request_id=request_id or _rt.request_id(16), workspace=workspace or self._workspace))))
 
     async def get_sandbox(
         self,
@@ -465,7 +460,7 @@ class AsyncSandboxes:
         counts against Limits.vcpus and
         largest_size from here on (ResourceExhaustedError + LimitReached past them), and starts on its
         own server when that server has room for it, else
-        on another with room, when it mounts no volume and its copy is current: its server lets it go
+        on another with room, when its copy is current: its server lets it go
         first, and one its server cannot be reached for is UnavailableError, saying so. Its disk, when it is
         in object storage alone, is fetched first: waited for up to 45 s, after which it is answered
         STOPPED with how far that is (Sandbox.restore), and starts once whole; call again to wait on.
@@ -484,8 +479,7 @@ class AsyncSandboxes:
     ) -> Sandbox:
         """Delete a sandbox.
 
-        Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-        included. A DELETED sandbox is answered with that record.
+        Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox is answered with that record.
 
         Destructive: it may delete or overwrite something.
         """
@@ -669,60 +663,6 @@ class AsyncSandboxes:
             workspace: The workspace: its id or name. Omit when the account has one (WorkspaceChoice lists them).
         """
         return _convert.template_from_wire(await self._call(self._wire.delete_template, _convert.delete_template_request(name=name, workspace=workspace or self._workspace)))
-
-    async def create_volume(
-        self,
-        name: str = "",
-        *,
-        size_gib: int = 0,
-        request_id: str = "",
-        workspace: str = "",
-    ) -> Volume:
-        """Create a volume.
-
-        A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-        while nothing pays for the workspace (UsageUnpaid).
-
-        Args:
-            size_gib: 1 to 1000.
-            request_id: Any new string; send it again on a retry after a timeout or a lost answer: the retry does nothing again and answers what the first call did (24 h).
-            workspace: The workspace: its id or name. Omit when the account has one (WorkspaceChoice lists them).
-        """
-        return _convert.volume_from_wire(await self._call(self._wire.create_volume, _convert.create_volume_request(name=name, size_gib=size_gib, request_id=request_id or _rt.request_id(16), workspace=workspace or self._workspace)))
-
-    async def list_volumes(
-        self,
-        *,
-        page_size: int = 0,
-        page_token: str = "",
-        workspace: str = "",
-    ) -> ListVolumesResponse:
-        """List volumes.
-
-        The workspace's volumes.
-
-        Read-only.
-
-        Args:
-            page_size: Absent = 50; at most 500.
-            workspace: The workspace: its id or name. Omit when the account has one (WorkspaceChoice lists them).
-        """
-        return _convert.list_volumes_response_from_wire(await self._call(self._wire.list_volumes, _convert.list_volumes_request(page_size=page_size, page_token=page_token, workspace=workspace or self._workspace)))
-
-    async def delete_volume(
-        self,
-        volume_id: str,
-        *,
-        workspace: str = "",
-    ) -> Volume:
-        """Delete a volume.
-
-        Refused while a sandbox mounts it.
-
-        Args:
-            workspace: The workspace: its id or name. Omit when the account has one (WorkspaceChoice lists them).
-        """
-        return _convert.volume_from_wire(await self._call(self._wire.delete_volume, _convert.delete_volume_request(volume_id=volume_id, workspace=workspace or self._workspace)))
 
     async def list_usage(
         self,

@@ -32,7 +32,6 @@ import * as p from "pethost/sandboxes";
   m.converts("Workspace.template_bytes", { templateBytes: -9007199254740993n }, { ...empty.Workspace(), templateBytes: -9007199254740993n });
   m.reads("Workspace.template_bytes: as a number", { template_bytes: 1008 }, { ...empty.Workspace(), templateBytes: 1008n });
   m.converts("Workspace.vcpus_used", { vcpusUsed: -1009 }, { ...empty.Workspace(), vcpusUsed: -1009 });
-  m.converts("Workspace.volume_gib_used", { volumeGibUsed: -1010 }, { ...empty.Workspace(), volumeGibUsed: -1010 });
 }
 
 {
@@ -76,7 +75,6 @@ import * as p from "pethost/sandboxes";
   m.converts("Rates: nothing set", {}, empty.Rates());
   m.refuses("Rates: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("Rates.stored_gib_month", { storedGibMonth: 1005.5 }, { ...empty.Rates(), storedGibMonth: 1005.5 });
-  m.converts("Rates.volume_gib_month", { volumeGibMonth: 1006.5 }, { ...empty.Rates(), volumeGibMonth: 1006.5 });
 }
 
 {
@@ -99,7 +97,6 @@ import * as p from "pethost/sandboxes";
   m.converts("Limits.largest_size: XLARGE", { largestSize: w.Size.XLARGE }, { ...empty.Limits(), largestSize: "XLARGE" });
   m.converts("Limits.largest_size: a value newer than the SDK", { largestSize: 9999 as w.Size }, { ...empty.Limits(), largestSize: 9999 });
   m.refuses("Limits.largest_size: a name newer than the SDK", { largest_size: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
-  m.converts("Limits.volume_gib", { volumeGib: -1006 }, { ...empty.Limits(), volumeGib: -1006 });
   m.converts("Limits.template_versions", { templateVersions: -1002 }, { ...empty.Limits(), templateVersions: -1002 });
   m.converts("Limits.template_gib", { templateGib: -1003 }, { ...empty.Limits(), templateGib: -1003 });
 }
@@ -166,7 +163,6 @@ import * as p from "pethost/sandboxes";
   m.converts("Sandbox.revision", { revision: -9007199254740993n }, { ...empty.Sandbox(), revision: -9007199254740993n });
   m.reads("Sandbox.revision: as a number", { revision: 1011 }, { ...empty.Sandbox(), revision: 1011n });
   m.converts("Sandbox.disk_gib", { diskGib: -1012 }, { ...empty.Sandbox(), diskGib: -1012 });
-  m.converts("Sandbox.mounts", { mounts: [{}] }, { ...empty.Sandbox(), mounts: [empty.Mount()] });
   m.converts("Sandbox.desktop", { desktop: {} }, { ...empty.Sandbox(), desktop: empty.Desktop() });
   m.converts("Sandbox.ssh_command", { sshCommand: "ssh_command" }, { ...empty.Sandbox(), sshCommand: "ssh_command" });
   m.converts("Sandbox.panel_url", { panelUrl: "panel_url" }, { ...empty.Sandbox(), panelUrl: "panel_url" });
@@ -216,7 +212,6 @@ import * as p from "pethost/sandboxes";
   m.converts("CreateSandboxRequest.template", { template: "template" }, { ...empty.CreateSandboxRequest(), template: "template" });
   m.converts("CreateSandboxRequest.settings", { settings: {} }, { ...empty.CreateSandboxRequest(), settings: empty.SandboxSettings() });
   m.converts("CreateSandboxRequest.labels", { labels: [{}] }, { ...empty.CreateSandboxRequest(), labels: [empty.Label()] });
-  m.converts("CreateSandboxRequest.mounts", { mounts: [{}] }, { ...empty.CreateSandboxRequest(), mounts: [empty.Mount()] });
   m.converts("CreateSandboxRequest.name", { name: "name" }, { ...empty.CreateSandboxRequest(), name: "name" });
   m.converts("CreateSandboxRequest.request_id", { requestId: "request_id" }, { ...empty.CreateSandboxRequest(), requestId: "request_id" });
   m.converts("CreateSandboxRequest.workspace", { workspace: "workspace" }, { ...empty.CreateSandboxRequest(), workspace: "workspace" });
@@ -658,63 +653,6 @@ import * as p from "pethost/sandboxes";
 }
 
 {
-  const m = json(p.Volume, w.VolumeSchema);
-  m.converts("Volume: nothing set", {}, empty.Volume());
-  m.refuses("Volume: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("Volume.volume_id", { volumeId: "volume_id" }, { ...empty.Volume(), volumeId: "volume_id" });
-  m.converts("Volume.name", { name: "name" }, { ...empty.Volume(), name: "name" });
-  m.converts("Volume.size_gib", { sizeGib: -1003 }, { ...empty.Volume(), sizeGib: -1003 });
-  m.converts("Volume.used_bytes", { usedBytes: -9007199254740993n }, { ...empty.Volume(), usedBytes: -9007199254740993n });
-  m.reads("Volume.used_bytes: as a number", { used_bytes: 1005 }, { ...empty.Volume(), usedBytes: 1005n });
-  m.converts("Volume.mounted_by", { mountedBy: ["mounted_by", ""] }, { ...empty.Volume(), mountedBy: ["mounted_by", ""] });
-  m.converts("Volume.create_time", { createTime: { seconds: 1790000000n, nanos: 123000000 } }, { ...empty.Volume(), createTime: new Date(1790000000123) });
-}
-
-{
-  const m = json(p.Mount, w.MountSchema);
-  m.converts("Mount: nothing set", {}, empty.Mount());
-  m.refuses("Mount: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("Mount.volume_id", { volumeId: "volume_id" }, { ...empty.Mount(), volumeId: "volume_id" });
-  m.converts("Mount.path", { path: "path" }, { ...empty.Mount(), path: "path" });
-  m.converts("Mount.read_only", { readOnly: true }, { ...empty.Mount(), readOnly: true });
-}
-
-{
-  const m = json(p.CreateVolumeRequest, w.CreateVolumeRequestSchema);
-  m.converts("CreateVolumeRequest: nothing set", {}, empty.CreateVolumeRequest());
-  m.refuses("CreateVolumeRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("CreateVolumeRequest.name", { name: "name" }, { ...empty.CreateVolumeRequest(), name: "name" });
-  m.converts("CreateVolumeRequest.size_gib", { sizeGib: -1002 }, { ...empty.CreateVolumeRequest(), sizeGib: -1002 });
-  m.converts("CreateVolumeRequest.request_id", { requestId: "request_id" }, { ...empty.CreateVolumeRequest(), requestId: "request_id" });
-  m.converts("CreateVolumeRequest.workspace", { workspace: "workspace" }, { ...empty.CreateVolumeRequest(), workspace: "workspace" });
-}
-
-{
-  const m = json(p.ListVolumesRequest, w.ListVolumesRequestSchema);
-  m.converts("ListVolumesRequest: nothing set", {}, empty.ListVolumesRequest());
-  m.refuses("ListVolumesRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("ListVolumesRequest.page_size", { pageSize: -1001 }, { ...empty.ListVolumesRequest(), pageSize: -1001 });
-  m.converts("ListVolumesRequest.page_token", { pageToken: "page_token" }, { ...empty.ListVolumesRequest(), pageToken: "page_token" });
-  m.converts("ListVolumesRequest.workspace", { workspace: "workspace" }, { ...empty.ListVolumesRequest(), workspace: "workspace" });
-}
-
-{
-  const m = json(p.ListVolumesResponse, w.ListVolumesResponseSchema);
-  m.converts("ListVolumesResponse: nothing set", {}, empty.ListVolumesResponse());
-  m.refuses("ListVolumesResponse: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("ListVolumesResponse.volumes", { volumes: [{}] }, { ...empty.ListVolumesResponse(), volumes: [empty.Volume()] });
-  m.converts("ListVolumesResponse.next_page_token", { nextPageToken: "next_page_token" }, { ...empty.ListVolumesResponse(), nextPageToken: "next_page_token" });
-}
-
-{
-  const m = json(p.DeleteVolumeRequest, w.DeleteVolumeRequestSchema);
-  m.converts("DeleteVolumeRequest: nothing set", {}, empty.DeleteVolumeRequest());
-  m.refuses("DeleteVolumeRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
-  m.converts("DeleteVolumeRequest.volume_id", { volumeId: "volume_id" }, { ...empty.DeleteVolumeRequest(), volumeId: "volume_id" });
-  m.converts("DeleteVolumeRequest.workspace", { workspace: "workspace" }, { ...empty.DeleteVolumeRequest(), workspace: "workspace" });
-}
-
-{
   const m = json(p.ListUsageRequest, w.ListUsageRequestSchema);
   m.converts("ListUsageRequest: nothing set", {}, empty.ListUsageRequest());
   m.refuses("ListUsageRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
@@ -741,7 +679,6 @@ import * as p from "pethost/sandboxes";
   m.converts("UsageRow.meter: RUNNING", { meter: w.Meter.RUNNING }, { ...empty.UsageRow(), meter: "RUNNING" });
   m.converts("UsageRow.meter: PAUSED", { meter: w.Meter.PAUSED }, { ...empty.UsageRow(), meter: "PAUSED" });
   m.converts("UsageRow.meter: STORED_GIB", { meter: w.Meter.STORED_GIB }, { ...empty.UsageRow(), meter: "STORED_GIB" });
-  m.converts("UsageRow.meter: VOLUME_GIB", { meter: w.Meter.VOLUME_GIB }, { ...empty.UsageRow(), meter: "VOLUME_GIB" });
   m.converts("UsageRow.meter: a value newer than the SDK", { meter: 9999 as w.Meter }, { ...empty.UsageRow(), meter: 9999 });
   m.refuses("UsageRow.meter: a name newer than the SDK", { meter: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.converts("UsageRow.unit_hours", { unitHours: 1003.5 }, { ...empty.UsageRow(), unitHours: 1003.5 });

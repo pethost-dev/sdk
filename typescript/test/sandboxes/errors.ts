@@ -18,7 +18,7 @@ check("GetWorkspace: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/GetWorkspace");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -32,7 +32,7 @@ check("SetSshKeys: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/SetSshKeys");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -46,7 +46,7 @@ check("SetSecret: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/SetSecret");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -60,7 +60,7 @@ check("DeleteSecret: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/DeleteSecret");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -74,7 +74,7 @@ check("CreateSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/CreateSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -88,7 +88,7 @@ check("GetSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/GetSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -102,7 +102,7 @@ check("ListSandboxes: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ListSandboxes");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -116,7 +116,7 @@ check("UpdateSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/UpdateSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -130,7 +130,7 @@ check("PauseSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/PauseSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -144,7 +144,7 @@ check("StopSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/StopSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -158,7 +158,7 @@ check("ResumeSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ResumeSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -172,7 +172,7 @@ check("DeleteSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/DeleteSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -186,7 +186,7 @@ check("ConnectSandbox: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ConnectSandbox");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -200,7 +200,7 @@ check("GetSandboxMetrics: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/GetSandboxMetrics");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -214,7 +214,7 @@ check("ListSandboxEvents: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ListSandboxEvents");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -228,7 +228,7 @@ check("WatchSandboxEvents: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/WatchSandboxEvents");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -242,7 +242,7 @@ check("CreateTemplate: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/CreateTemplate");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -256,7 +256,7 @@ check("GetTemplate: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/GetTemplate");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -270,7 +270,7 @@ check("ListTemplates: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ListTemplates");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -284,49 +284,7 @@ check("DeleteTemplate: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/DeleteTemplate");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
-  assert.equal(call?.headers.get("Content-Type"), "application/proto");
-  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
-});
-
-check("CreateVolume: its address and headers", async () => {
-  const { api, calls } = fake();
-  await api.createVolume({});
-
-  assert.equal(calls.length, 1);
-  const [call] = calls;
-  assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/CreateVolume");
-  assert.equal(call?.method, "POST");
-  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
-  assert.equal(call?.headers.get("Content-Type"), "application/proto");
-  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
-});
-
-check("ListVolumes: its address and headers", async () => {
-  const { api, calls } = fake();
-  await api.listVolumes({});
-
-  assert.equal(calls.length, 1);
-  const [call] = calls;
-  assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ListVolumes");
-  assert.equal(call?.method, "POST");
-  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
-  assert.equal(call?.headers.get("Content-Type"), "application/proto");
-  assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
-});
-
-check("DeleteVolume: its address and headers", async () => {
-  const { api, calls } = fake();
-  await api.deleteVolume({});
-
-  assert.equal(calls.length, 1);
-  const [call] = calls;
-  assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/DeleteVolume");
-  assert.equal(call?.method, "POST");
-  assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -340,7 +298,7 @@ check("ListUsage: its address and headers", async () => {
   assert.equal(call?.url, "https://console.pethost.dev/pethost.sandboxes.v1.SandboxService/ListUsage");
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${token}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -357,7 +315,7 @@ check("RunCommand: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/RunCommand`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -374,7 +332,7 @@ check("GetCommand: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/GetCommand`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -391,7 +349,7 @@ check("StopCommand: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/StopCommand`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -408,7 +366,7 @@ check("ListCommands: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/ListCommands`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -425,7 +383,7 @@ check("WatchCommand: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/WatchCommand`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -442,7 +400,7 @@ check("ReadFile: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/ReadFile`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -459,7 +417,7 @@ check("ListFiles: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/ListFiles`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -476,7 +434,7 @@ check("WriteFiles: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/WriteFiles`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -493,7 +451,7 @@ check("WatchFiles: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/WatchFiles`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -510,7 +468,7 @@ check("ControlDesktop: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/ControlDesktop`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -527,7 +485,7 @@ check("CreateLink: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/CreateLink`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -544,7 +502,7 @@ check("PromptAgent: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/PromptAgent`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -561,7 +519,7 @@ check("GetAgentTurn: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/GetAgentTurn`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -578,7 +536,7 @@ check("StopAgentTurn: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/StopAgentTurn`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -595,7 +553,7 @@ check("ListConversations: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/ListConversations`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });
@@ -612,7 +570,7 @@ check("WatchConversation: its address and headers", async () => {
   assert.equal(call?.url, `${runtimeUrl}/pethost.sandboxes.v1.SandboxRuntimeService/WatchConversation`);
   assert.equal(call?.method, "POST");
   assert.equal(call?.headers.get("Authorization"), `Bearer ${connectionToken}`);
-  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.8.0");
+  assert.equal(call?.headers.get("User-Agent"), "pethost-typescript/0.9.0");
   assert.equal(call?.headers.get("Content-Type"), "application/connect+proto");
   assert.equal(call?.headers.get("Connect-Protocol-Version"), "1");
 });

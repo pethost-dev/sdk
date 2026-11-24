@@ -526,64 +526,6 @@ func (v *DeleteTemplateRequest) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v Volume) MarshalJSON() ([]byte, error) { return marshalJSON(toWireVolume(v)) }
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *Volume) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireVolume) }
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v Mount) MarshalJSON() ([]byte, error) { return marshalJSON(toWireMount(v)) }
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *Mount) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireMount) }
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v CreateVolumeRequest) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireCreateVolumeRequest(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *CreateVolumeRequest) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireCreateVolumeRequest)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v ListVolumesRequest) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireListVolumesRequest(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *ListVolumesRequest) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireListVolumesRequest)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v ListVolumesResponse) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireListVolumesResponse(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *ListVolumesResponse) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireListVolumesResponse)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
-func (v DeleteVolumeRequest) MarshalJSON() ([]byte, error) {
-	return marshalJSON(toWireDeleteVolumeRequest(v))
-}
-
-// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
-// API does not have is refused.
-func (v *DeleteVolumeRequest) UnmarshalJSON(data []byte) error {
-	return unmarshalJSON(data, v, fromWireDeleteVolumeRequest)
-}
-
-// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v ListUsageRequest) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireListUsageRequest(v))
 }
@@ -1215,7 +1157,7 @@ func (v *AgentSignIn) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "METER_VOLUME_GIB" for [MeterVolumeGib], or its number when the package has no name for it.
+// "METER_STORED_GIB" for [MeterStoredGib], or its number when the package has no name for it.
 func (v Meter) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireMeter(v)) }
 
 // UnmarshalJSON reads the value from its name in the API's JSON, or from its number.

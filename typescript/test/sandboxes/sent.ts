@@ -51,7 +51,6 @@ import type * as p from "pethost/sandboxes";
   m.sends("CreateSandboxRequest.template: zero is not sent", { template: "" }, {});
   m.sends("CreateSandboxRequest.settings", { settings: {} }, { settings: {} });
   m.sends("CreateSandboxRequest.labels", { labels: [{}] }, { labels: [{}] });
-  m.sends("CreateSandboxRequest.mounts", { mounts: [{}] }, { mounts: [{}] });
   m.sends("CreateSandboxRequest.name", { name: "name" }, { name: "name" });
   m.sends("CreateSandboxRequest.name: zero is not sent", { name: "" }, {});
   m.sends("CreateSandboxRequest.request_id", { requestId: "request_id" }, { requestId: "request_id" });
@@ -302,50 +301,6 @@ import type * as p from "pethost/sandboxes";
   m.sends("DeleteTemplateRequest.name: zero is not sent", { name: "" }, {});
   m.sends("DeleteTemplateRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
   m.sends("DeleteTemplateRequest.workspace: zero is not sent", { workspace: "" }, {});
-}
-
-{
-  const m = sending(w.CreateSandboxRequestSchema, (leaf: Init<typeof w.MountSchema>): Init<typeof w.CreateSandboxRequestSchema> => ({ mounts: [leaf] }), async (api, given: p.MountInput) => api.createSandbox({ mounts: [given] }), {}, "requestId");
-  m.sends("Mount: nothing set", {}, {});
-  m.sends("Mount.volume_id", { volumeId: "volume_id" }, { volumeId: "volume_id" });
-  m.sends("Mount.volume_id: zero is not sent", { volumeId: "" }, {});
-  m.sends("Mount.path", { path: "path" }, { path: "path" });
-  m.sends("Mount.path: zero is not sent", { path: "" }, {});
-  m.sends("Mount.read_only", { readOnly: true }, { readOnly: true });
-  m.sends("Mount.read_only: zero is not sent", { readOnly: false }, {});
-}
-
-{
-  const m = sending(w.CreateVolumeRequestSchema, (leaf: Init<typeof w.CreateVolumeRequestSchema>): Init<typeof w.CreateVolumeRequestSchema> => (leaf), async (api, given: p.CreateVolumeRequest) => api.createVolume(given), {}, "requestId");
-  m.sends("CreateVolumeRequest: nothing set", {}, {});
-  m.sends("CreateVolumeRequest.name", { name: "name" }, { name: "name" });
-  m.sends("CreateVolumeRequest.name: zero is not sent", { name: "" }, {});
-  m.sends("CreateVolumeRequest.size_gib", { sizeGib: -1002 }, { sizeGib: -1002 });
-  m.sends("CreateVolumeRequest.size_gib: zero is not sent", { sizeGib: 0 }, {});
-  m.sends("CreateVolumeRequest.request_id", { requestId: "request_id" }, { requestId: "request_id" });
-  m.sends("CreateVolumeRequest.request_id: zero is not sent", { requestId: "" }, {});
-  m.sends("CreateVolumeRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
-  m.sends("CreateVolumeRequest.workspace: zero is not sent", { workspace: "" }, {});
-}
-
-{
-  const m = sending(w.ListVolumesRequestSchema, (leaf: Init<typeof w.ListVolumesRequestSchema>): Init<typeof w.ListVolumesRequestSchema> => (leaf), async (api, given: p.ListVolumesRequest) => api.listVolumes(given));
-  m.sends("ListVolumesRequest: nothing set", {}, {});
-  m.sends("ListVolumesRequest.page_size", { pageSize: -1001 }, { pageSize: -1001 });
-  m.sends("ListVolumesRequest.page_size: zero is not sent", { pageSize: 0 }, {});
-  m.sends("ListVolumesRequest.page_token", { pageToken: "page_token" }, { pageToken: "page_token" });
-  m.sends("ListVolumesRequest.page_token: zero is not sent", { pageToken: "" }, {});
-  m.sends("ListVolumesRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
-  m.sends("ListVolumesRequest.workspace: zero is not sent", { workspace: "" }, {});
-}
-
-{
-  const m = sending(w.DeleteVolumeRequestSchema, (leaf: Init<typeof w.DeleteVolumeRequestSchema>): Init<typeof w.DeleteVolumeRequestSchema> => (leaf), async (api, given: p.DeleteVolumeRequest) => api.deleteVolume(given));
-  m.sends("DeleteVolumeRequest: nothing set", {}, {});
-  m.sends("DeleteVolumeRequest.volume_id", { volumeId: "volume_id" }, { volumeId: "volume_id" });
-  m.sends("DeleteVolumeRequest.volume_id: zero is not sent", { volumeId: "" }, {});
-  m.sends("DeleteVolumeRequest.workspace", { workspace: "workspace" }, { workspace: "workspace" });
-  m.sends("DeleteVolumeRequest.workspace: zero is not sent", { workspace: "" }, {});
 }
 
 {
@@ -729,24 +684,6 @@ import type * as p from "pethost/sandboxes";
   const m = sending(w.DeleteTemplateRequestSchema, (leaf: Init<typeof w.DeleteTemplateRequestSchema>) => leaf, async (api, given: p.DeleteTemplateRequest) => api.deleteTemplate(given), { workspace: "the client's" });
   m.sends("DeleteTemplateRequest: the client's workspace", {}, { workspace: "the client's" });
   m.sends("DeleteTemplateRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
-}
-
-{
-  const m = sending(w.CreateVolumeRequestSchema, (leaf: Init<typeof w.CreateVolumeRequestSchema>) => leaf, async (api, given: p.CreateVolumeRequest) => api.createVolume(given), { workspace: "the client's" }, "requestId");
-  m.sends("CreateVolumeRequest: the client's workspace", {}, { workspace: "the client's" });
-  m.sends("CreateVolumeRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
-}
-
-{
-  const m = sending(w.ListVolumesRequestSchema, (leaf: Init<typeof w.ListVolumesRequestSchema>) => leaf, async (api, given: p.ListVolumesRequest) => api.listVolumes(given), { workspace: "the client's" });
-  m.sends("ListVolumesRequest: the client's workspace", {}, { workspace: "the client's" });
-  m.sends("ListVolumesRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
-}
-
-{
-  const m = sending(w.DeleteVolumeRequestSchema, (leaf: Init<typeof w.DeleteVolumeRequestSchema>) => leaf, async (api, given: p.DeleteVolumeRequest) => api.deleteVolume(given), { workspace: "the client's" });
-  m.sends("DeleteVolumeRequest: the client's workspace", {}, { workspace: "the client's" });
-  m.sends("DeleteVolumeRequest: its own workspace", { workspace: "its own" }, { workspace: "its own" });
 }
 
 {

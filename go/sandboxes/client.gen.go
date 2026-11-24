@@ -249,17 +249,16 @@ func (c *Client) StopSandbox(ctx context.Context, request *StopSandboxRequest) (
 // its plan allows now; it resumes on its server, which kept its place, never refused for room.
 // A STOPPED one counts against [Limits.Vcpus] and [Limits.LargestSize] from here on
 // ([CodeResourceExhausted] + [LimitReached] past them), and starts on its own server when that
-// server has room for it, else on another with room, when it mounts no volume and its copy is
-// current: its server lets it go first, and one its server cannot be reached for is
-// [CodeUnavailable], saying so. Its disk, when it is in object storage alone, is fetched
-// first: waited for up to 45 s, after which it is answered STOPPED with how far that is
-// ([Sandbox.Restore]), and starts once whole; call again to wait on. A STOPPED one whose
-// server is gone (StateMessage says so) starts on a server from its last copy in object
-// storage. A sandbox that starts on another server changes its addresses with it
-// (Connection.URL, its ports' URLs, SSHCommand), and its events and metrics begin again there.
-// While it moves, [Client.ResumeSandbox] waits for the move within its 45 s, and the calls
-// that change it are [CodeUnavailable] ("moving"): try again in a moment. [CodeUnavailable]
-// without [NoCapacity]: no server answers now; try again.
+// server has room for it, else on another with room, when its copy is current: its server lets
+// it go first, and one its server cannot be reached for is [CodeUnavailable], saying so. Its
+// disk, when it is in object storage alone, is fetched first: waited for up to 45 s, after
+// which it is answered STOPPED with how far that is ([Sandbox.Restore]), and starts once
+// whole; call again to wait on. A STOPPED one whose server is gone (StateMessage says so)
+// starts on a server from its last copy in object storage. A sandbox that starts on another
+// server changes its addresses with it (Connection.URL, its ports' URLs, SSHCommand), and its
+// events and metrics begin again there. While it moves, [Client.ResumeSandbox] waits for the
+// move within its 45 s, and the calls that change it are [CodeUnavailable] ("moving"): try
+// again in a moment. [CodeUnavailable] without [NoCapacity]: no server answers now; try again.
 func (c *Client) ResumeSandbox(ctx context.Context, request *ResumeSandboxRequest) (*Sandbox, error) {
 	sent := orZero(request)
 	response, err := c.sandboxService.ResumeSandbox(ctx, toWireResumeSandboxRequest(sent))
@@ -273,8 +272,8 @@ func (c *Client) ResumeSandbox(ctx context.Context, request *ResumeSandboxReques
 
 // DeleteSandbox: delete a sandbox. It may delete or overwrite.
 //
-// Drops its memory and disk for good; its volumes stay. Answers its final record, usage
-// included. A DELETED sandbox is answered with that record.
+// Drops its memory and disk for good. Answers its final record, usage included. A DELETED
+// sandbox is answered with that record.
 func (c *Client) DeleteSandbox(ctx context.Context, request *DeleteSandboxRequest) (*Sandbox, error) {
 	sent := orZero(request)
 	response, err := c.sandboxService.DeleteSandbox(ctx, toWireDeleteSandboxRequest(sent))
@@ -421,57 +420,6 @@ func (c *Client) DeleteTemplate(ctx context.Context, request *DeleteTemplateRequ
 		return nil, fromWireError(err)
 	}
 	return new(fromWireTemplate(response)), nil
-}
-
-// CreateVolume: create a volume.
-//
-// An empty RequestID is sent as a new one, made for the call.
-//
-// A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused
-// while nothing pays for the workspace ([UsageUnpaid]).
-func (c *Client) CreateVolume(ctx context.Context, request *CreateVolumeRequest) (*Volume, error) {
-	sent := orZero(request)
-	if sent.Workspace == "" {
-		sent.Workspace = c.workspace
-	}
-	if sent.RequestID == "" {
-		sent.RequestID = newRequestID()
-	}
-	response, err := c.sandboxService.CreateVolume(ctx, toWireCreateVolumeRequest(sent))
-	if err != nil {
-		return nil, fromWireError(err)
-	}
-	return new(fromWireVolume(response)), nil
-}
-
-// ListVolumes: list volumes. It only reads.
-//
-// The workspace's volumes.
-func (c *Client) ListVolumes(ctx context.Context, request *ListVolumesRequest) (*ListVolumesResponse, error) {
-	sent := orZero(request)
-	if sent.Workspace == "" {
-		sent.Workspace = c.workspace
-	}
-	response, err := c.sandboxService.ListVolumes(ctx, toWireListVolumesRequest(sent))
-	if err != nil {
-		return nil, fromWireError(err)
-	}
-	return new(fromWireListVolumesResponse(response)), nil
-}
-
-// DeleteVolume: delete a volume.
-//
-// Refused while a sandbox mounts it.
-func (c *Client) DeleteVolume(ctx context.Context, request *DeleteVolumeRequest) (*Volume, error) {
-	sent := orZero(request)
-	if sent.Workspace == "" {
-		sent.Workspace = c.workspace
-	}
-	response, err := c.sandboxService.DeleteVolume(ctx, toWireDeleteVolumeRequest(sent))
-	if err != nil {
-		return nil, fromWireError(err)
-	}
-	return new(fromWireVolume(response)), nil
 }
 
 // ListUsage: list usage. It only reads.

@@ -380,25 +380,6 @@ check("CreateTemplate: a request_id given is sent as it is", async () => {
   assert.deepStrictEqual(sent(calls, "CreateTemplate", w.CreateTemplateRequestSchema).map((message) => message.requestId), ["given"]);
 });
 
-check("CreateVolume: a request_id of its own for each call that gives none", async () => {
-  const { api, calls } = servers();
-  const request = {};
-  await api.createVolume(request);
-  await api.createVolume(request);
-
-  assert.deepStrictEqual(request, {}, "the caller's request was changed");
-  const ids = sent(calls, "CreateVolume", w.CreateVolumeRequestSchema).map((message) => message.requestId);
-  assert.equal(ids.length, 2);
-  for (const id of ids) assert.match(id, filledId);
-  assert.notEqual(ids[0], ids[1]);
-});
-
-check("CreateVolume: a request_id given is sent as it is", async () => {
-  const { api, calls } = servers();
-  await api.createVolume({ requestId: "given" });
-  assert.deepStrictEqual(sent(calls, "CreateVolume", w.CreateVolumeRequestSchema).map((message) => message.requestId), ["given"]);
-});
-
 check("RunCommand: a request_id of its own for each call that gives none", async () => {
   const { api, calls } = servers();
   const request = { sandboxId: "s1" };

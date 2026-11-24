@@ -55,7 +55,7 @@ use proto::pethost::sandboxes::v1 as wire;
 const STREAMS: [&str; 4] = ["WatchSandboxEvents", "WatchCommand", "WatchFiles", "WatchConversation"];
 
 /// The service of each call, which its path names.
-const SERVICES: [(&str, &str); 40] = [
+const SERVICES: [(&str, &str); 37] = [
     ("GetWorkspace", "SandboxService"),
     ("SetSshKeys", "SandboxService"),
     ("SetSecret", "SandboxService"),
@@ -76,9 +76,6 @@ const SERVICES: [(&str, &str); 40] = [
     ("GetTemplate", "SandboxService"),
     ("ListTemplates", "SandboxService"),
     ("DeleteTemplate", "SandboxService"),
-    ("CreateVolume", "SandboxService"),
-    ("ListVolumes", "SandboxService"),
-    ("DeleteVolume", "SandboxService"),
     ("ListUsage", "SandboxService"),
     ("RunCommand", "SandboxRuntimeService"),
     ("GetCommand", "SandboxRuntimeService"),
@@ -288,12 +285,11 @@ mod samples {
     use super::*;
 
     pub fn meter(k: usize) -> types::Meter {
-        match k % 6 {
+        match k % 5 {
             0 => types::Meter::Unspecified,
             1 => types::Meter::Running,
             2 => types::Meter::Paused,
             3 => types::Meter::StoredGib,
-            4 => types::Meter::VolumeGib,
             _ => types::Meter::Unrecognized(10),
         }
     }
@@ -497,7 +493,6 @@ mod samples {
             message.sizes = states::many(k, [samples::size_info(k + 6, later), samples::size_info(k + 7, later)]);
             message.template_bytes = states::plain(k, -(i64::from(states::number(8, k)) << 44));
             message.vcpus_used = states::plain(k, -(states::number(9, k) as i32));
-            message.volume_gib_used = states::plain(k, -(states::number(10, k) as i32));
         })
     }
 
@@ -528,7 +523,6 @@ mod samples {
     pub fn rates(k: usize, later: bool) -> types::Rates {
         states::make(|message: &mut types::Rates| {
             message.stored_gib_month = states::plain(k, f64::from(states::number(5, k)) + 0.5);
-            message.volume_gib_month = states::plain(k, f64::from(states::number(6, k)) + 0.5);
         })
     }
 
@@ -544,7 +538,6 @@ mod samples {
         states::make(|message: &mut types::Limits| {
             message.vcpus = states::plain(k, -(states::number(4, k) as i32));
             message.largest_size = samples::size(k + 1);
-            message.volume_gib = states::plain(k, -(states::number(6, k) as i32));
             message.template_versions = states::plain(k, -(states::number(2, k) as i32));
             message.template_gib = states::plain(k, -(states::number(3, k) as i32));
         })
@@ -593,16 +586,15 @@ mod samples {
             message.settings = states::maybe(k, samples::sandbox_settings(k + 7, later));
             message.revision = states::plain(k, -(i64::from(states::number(11, k)) << 44));
             message.disk_gib = states::plain(k, -(states::number(12, k) as i32));
-            message.mounts = states::many(k, [samples::mount(k + 10, later), samples::mount(k + 11, later)]);
-            message.desktop = states::maybe(k, samples::desktop(k + 11, later));
+            message.desktop = states::maybe(k, samples::desktop(k + 10, later));
             message.ssh_command = states::plain(k, states::text("ssh_command", k));
             message.panel_url = states::plain(k, states::text("panel_url", k));
-            message.create_time = states::maybe(k, states::time(states::number(17, k + 14)));
-            message.usage = states::maybe(k, samples::usage(k + 15, later));
-            message.connection = states::maybe(k, samples::connection(k + 16, later));
-            message.restore = states::maybe(k, samples::restore(k + 17, later));
-            message.next_state = samples::sandbox_state(k + 18);
-            message.next_state_time = states::maybe(k, states::time(states::number(24, k + 19)));
+            message.create_time = states::maybe(k, states::time(states::number(17, k + 13)));
+            message.usage = states::maybe(k, samples::usage(k + 14, later));
+            message.connection = states::maybe(k, samples::connection(k + 15, later));
+            message.restore = states::maybe(k, samples::restore(k + 16, later));
+            message.next_state = samples::sandbox_state(k + 17);
+            message.next_state_time = states::maybe(k, states::time(states::number(24, k + 18)));
             message.stored_bytes = states::plain(k, -(i64::from(states::number(25, k)) << 44));
             message.name = states::plain(k, states::text("name", k));
         })
@@ -629,7 +621,6 @@ mod samples {
             template: states::plain(k, states::text("template", k)),
             settings: states::maybe(k, samples::sandbox_settings(k + 1, later)),
             labels: states::many(k, [samples::label(k + 2, later), samples::label(k + 3, later)]),
-            mounts: states::many(k, [samples::mount(k + 3, later), samples::mount(k + 4, later)]),
             name: states::plain(k, states::text("name", k)),
             request_id: states::plain(k, states::text("request_id", k)),
             workspace: states::plain(k, states::text("workspace", k)),
@@ -967,56 +958,6 @@ mod samples {
     pub fn delete_template_request(k: usize, later: bool) -> types::DeleteTemplateRequest {
         types::DeleteTemplateRequest {
             name: states::plain(k, states::text("name", k)),
-            workspace: states::plain(k, states::text("workspace", k)),
-        }
-    }
-
-    pub fn volume(k: usize, later: bool) -> types::Volume {
-        states::make(|message: &mut types::Volume| {
-            message.volume_id = states::plain(k, states::text("volume_id", k));
-            message.name = states::plain(k, states::text("name", k));
-            message.size_gib = states::plain(k, -(states::number(3, k) as i32));
-            message.used_bytes = states::plain(k, -(i64::from(states::number(5, k)) << 44));
-            message.mounted_by = states::many(k, [states::text("mounted_by", k), states::text("mounted_by", k + 1)]);
-            message.create_time = states::maybe(k, states::time(states::number(7, k + 5)));
-        })
-    }
-
-    pub fn mount(k: usize, later: bool) -> types::Mount {
-        types::Mount {
-            volume_id: states::plain(k, states::text("volume_id", k)),
-            path: states::plain(k, states::text("path", k)),
-            read_only: states::flag(1, k),
-        }
-    }
-
-    pub fn create_volume_request(k: usize, later: bool) -> types::CreateVolumeRequest {
-        types::CreateVolumeRequest {
-            name: states::plain(k, states::text("name", k)),
-            size_gib: states::plain(k, -(states::number(2, k) as i32)),
-            request_id: states::plain(k, states::text("request_id", k)),
-            workspace: states::plain(k, states::text("workspace", k)),
-        }
-    }
-
-    pub fn list_volumes_request(k: usize, later: bool) -> types::ListVolumesRequest {
-        types::ListVolumesRequest {
-            page_size: states::plain(k, -(states::number(1, k) as i32)),
-            page_token: states::plain(k, states::text("page_token", k)),
-            workspace: states::plain(k, states::text("workspace", k)),
-        }
-    }
-
-    pub fn list_volumes_response(k: usize, later: bool) -> types::ListVolumesResponse {
-        states::make(|message: &mut types::ListVolumesResponse| {
-            message.volumes = states::many(k, [samples::volume(k, later), samples::volume(k + 1, later)]);
-            message.next_page_token = states::plain(k, states::text("next_page_token", k));
-        })
-    }
-
-    pub fn delete_volume_request(k: usize, later: bool) -> types::DeleteVolumeRequest {
-        types::DeleteVolumeRequest {
-            volume_id: states::plain(k, states::text("volume_id", k)),
             workspace: states::plain(k, states::text("workspace", k)),
         }
     }
@@ -1589,12 +1530,11 @@ mod on_wire {
 
     pub fn meter(k: usize) -> buffa::EnumValue<wire::Meter> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 6 {
+        let number = match k % 5 {
             0 => 0,
             1 => 5,
             2 => 9,
             3 => 7,
-            4 => 8,
             _ => 10,
         };
         buffa::EnumValue::from(number)
@@ -1842,7 +1782,6 @@ mod on_wire {
             ),
             template_bytes: states::present(states::plain(k, -(i64::from(states::number(8, k)) << 44))),
             vcpus_used: states::present(states::plain(k, -(states::number(9, k) as i32))),
-            volume_gib_used: states::present(states::plain(k, -(states::number(10, k) as i32))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -1888,7 +1827,6 @@ mod on_wire {
     pub fn rates(k: usize, received: bool) -> wire::Rates {
         let mut message = wire::Rates {
             stored_gib_month: states::present(states::plain(k, f64::from(states::number(5, k)) + 0.5)),
-            volume_gib_month: states::present(states::plain(k, f64::from(states::number(6, k)) + 0.5)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -1914,7 +1852,6 @@ mod on_wire {
         let mut message = wire::Limits {
             vcpus: states::present(states::plain(k, -(states::number(4, k) as i32))),
             largest_size: states::set(on_wire::size(k + 1)),
-            volume_gib: states::present(states::plain(k, -(states::number(6, k) as i32))),
             template_versions: states::present(states::plain(k, -(states::number(2, k) as i32))),
             template_gib: states::present(states::plain(k, -(states::number(3, k) as i32))),
             ..Default::default()
@@ -1988,16 +1925,15 @@ mod on_wire {
             settings: states::maybe(k, on_wire::sandbox_settings(k + 7, received)).into(),
             revision: states::present(states::plain(k, -(i64::from(states::number(11, k)) << 44))),
             disk_gib: states::present(states::plain(k, -(states::number(12, k) as i32))),
-            mounts: states::many(k, [on_wire::mount(k + 10, received), on_wire::mount(k + 11, received)]),
-            desktop: states::maybe(k, on_wire::desktop(k + 11, received)).into(),
+            desktop: states::maybe(k, on_wire::desktop(k + 10, received)).into(),
             ssh_command: states::present(states::plain(k, states::text("ssh_command", k))),
             panel_url: states::present(states::plain(k, states::text("panel_url", k))),
-            create_time: states::maybe(k, states::time_on_wire(states::number(17, k + 14))).into(),
-            usage: states::maybe(k, on_wire::usage(k + 15, received)).into(),
-            connection: states::maybe(k, on_wire::connection(k + 16, received)).into(),
-            restore: states::maybe(k, on_wire::restore(k + 17, received)).into(),
-            next_state: states::set(on_wire::sandbox_state(k + 18)),
-            next_state_time: states::maybe(k, states::time_on_wire(states::number(24, k + 19))).into(),
+            create_time: states::maybe(k, states::time_on_wire(states::number(17, k + 13))).into(),
+            usage: states::maybe(k, on_wire::usage(k + 14, received)).into(),
+            connection: states::maybe(k, on_wire::connection(k + 15, received)).into(),
+            restore: states::maybe(k, on_wire::restore(k + 16, received)).into(),
+            next_state: states::set(on_wire::sandbox_state(k + 17)),
+            next_state_time: states::maybe(k, states::time_on_wire(states::number(24, k + 18))).into(),
             stored_bytes: states::present(states::plain(k, -(i64::from(states::number(25, k)) << 44))),
             name: states::present(states::plain(k, states::text("name", k))),
             ..Default::default()
@@ -2039,7 +1975,6 @@ mod on_wire {
             template: states::present(states::plain(k, states::text("template", k))),
             settings: states::maybe(k, on_wire::sandbox_settings(k + 1, received)).into(),
             labels: states::many(k, [on_wire::label(k + 2, received), on_wire::label(k + 3, received)]),
-            mounts: states::many(k, [on_wire::mount(k + 3, received), on_wire::mount(k + 4, received)]),
             name: states::present(states::plain(k, states::text("name", k))),
             request_id: states::present(states::plain(k, states::text("request_id", k))),
             workspace: states::present(states::plain(k, states::text("workspace", k))),
@@ -2574,86 +2509,6 @@ mod on_wire {
     pub fn delete_template_request(k: usize, received: bool) -> wire::DeleteTemplateRequest {
         let mut message = wire::DeleteTemplateRequest {
             name: states::present(states::plain(k, states::text("name", k))),
-            workspace: states::present(states::plain(k, states::text("workspace", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn volume(k: usize, received: bool) -> wire::Volume {
-        let mut message = wire::Volume {
-            volume_id: states::present(states::plain(k, states::text("volume_id", k))),
-            name: states::present(states::plain(k, states::text("name", k))),
-            size_gib: states::present(states::plain(k, -(states::number(3, k) as i32))),
-            used_bytes: states::present(states::plain(k, -(i64::from(states::number(5, k)) << 44))),
-            mounted_by: states::many(k, [states::text("mounted_by", k), states::text("mounted_by", k + 1)]),
-            create_time: states::maybe(k, states::time_on_wire(states::number(7, k + 5))).into(),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn mount(k: usize, received: bool) -> wire::Mount {
-        let mut message = wire::Mount {
-            volume_id: states::present(states::plain(k, states::text("volume_id", k))),
-            path: states::present(states::plain(k, states::text("path", k))),
-            read_only: states::present(states::flag(1, k)),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn create_volume_request(k: usize, received: bool) -> wire::CreateVolumeRequest {
-        let mut message = wire::CreateVolumeRequest {
-            name: states::present(states::plain(k, states::text("name", k))),
-            size_gib: states::present(states::plain(k, -(states::number(2, k) as i32))),
-            request_id: states::present(states::plain(k, states::text("request_id", k))),
-            workspace: states::present(states::plain(k, states::text("workspace", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn list_volumes_request(k: usize, received: bool) -> wire::ListVolumesRequest {
-        let mut message = wire::ListVolumesRequest {
-            page_size: states::present(states::plain(k, -(states::number(1, k) as i32))),
-            page_token: states::present(states::plain(k, states::text("page_token", k))),
-            workspace: states::present(states::plain(k, states::text("workspace", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn list_volumes_response(k: usize, received: bool) -> wire::ListVolumesResponse {
-        let mut message = wire::ListVolumesResponse {
-            volumes: states::many(k, [on_wire::volume(k, received), on_wire::volume(k + 1, received)]),
-            next_page_token: states::present(states::plain(k, states::text("next_page_token", k))),
-            ..Default::default()
-        };
-        if received && k % 2 == 1 {
-            message.__buffa_unknown_fields.push(states::later_field());
-        }
-        message
-    }
-
-    pub fn delete_volume_request(k: usize, received: bool) -> wire::DeleteVolumeRequest {
-        let mut message = wire::DeleteVolumeRequest {
-            volume_id: states::present(states::plain(k, states::text("volume_id", k))),
             workspace: states::present(states::plain(k, states::text("workspace", k))),
             ..Default::default()
         };
@@ -3894,56 +3749,6 @@ async fn delete_template_request_is_sent() {
 }
 
 #[tokio::test]
-async fn create_volume_request_is_sent() {
-    for k in 0..2 {
-        let request = samples::create_volume_request(k, true);
-        let expected = on_wire::create_volume_request(k, false);
-
-        let answer = ok(&wire::Volume::default());
-        let call = |client: Client| async move { client.create_volume(request).await };
-        let (sent, response): (wire::CreateVolumeRequest, _) = exchange("CreateVolume", answer, call).await;
-        // A request_id left empty is filled, once per call.
-        let mut sent = sent;
-        if expected.request_id.is_none() {
-            request_id(sent.request_id.take());
-        }
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::Volume::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn list_volumes_request_is_sent() {
-    for k in 0..2 {
-        let request = samples::list_volumes_request(k, true);
-        let expected = on_wire::list_volumes_request(k, false);
-
-        let answer = ok(&wire::ListVolumesResponse::default());
-        let call = |client: Client| async move { client.list_volumes(request).await };
-        let (sent, response): (wire::ListVolumesRequest, _) = exchange("ListVolumes", answer, call).await;
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::ListVolumesResponse::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn delete_volume_request_is_sent() {
-    for k in 0..2 {
-        let request = samples::delete_volume_request(k, true);
-        let expected = on_wire::delete_volume_request(k, false);
-
-        let answer = ok(&wire::Volume::default());
-        let call = |client: Client| async move { client.delete_volume(request).await };
-        let (sent, response): (wire::DeleteVolumeRequest, _) = exchange("DeleteVolume", answer, call).await;
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::Volume::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
 async fn list_usage_request_is_sent() {
     for k in 0..2 {
         let request = samples::list_usage_request(k, true);
@@ -4247,28 +4052,6 @@ async fn label_is_sent() {
             states::make(|message: &mut types::CreateSandboxRequest| message.labels = vec![samples::label(k, true)]);
         let expected =
             states::make(|message: &mut wire::CreateSandboxRequest| message.labels = vec![on_wire::label(k, false)]);
-
-        let answer = ok(&wire::Sandbox::default());
-        let call = |client: Client| async move { client.create_sandbox(request).await };
-        let (sent, response): (wire::CreateSandboxRequest, _) = exchange("CreateSandbox", answer, call).await;
-        // A request_id left empty is filled, once per call.
-        let mut sent = sent;
-        if expected.request_id.is_none() {
-            request_id(sent.request_id.take());
-        }
-
-        assert_eq!(sent, expected, "at k = {k}");
-        assert_eq!(response.unwrap(), types::Sandbox::default(), "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn mount_is_sent() {
-    for k in 0..2 {
-        let request =
-            states::make(|message: &mut types::CreateSandboxRequest| message.mounts = vec![samples::mount(k, true)]);
-        let expected =
-            states::make(|message: &mut wire::CreateSandboxRequest| message.mounts = vec![on_wire::mount(k, false)]);
 
         let answer = ok(&wire::Sandbox::default());
         let call = |client: Client| async move { client.create_sandbox(request).await };
@@ -4888,32 +4671,6 @@ async fn list_templates_response_is_received() {
 }
 
 #[tokio::test]
-async fn volume_is_received() {
-    for k in 0..2 {
-        let answer = ok(&on_wire::volume(k, true));
-        let expected = samples::volume(k, true);
-
-        let call = |client: Client| async move { client.create_volume(types::CreateVolumeRequest::default()).await };
-        let (_, response): (wire::CreateVolumeRequest, _) = exchange("CreateVolume", answer, call).await;
-
-        assert_eq!(response.unwrap(), expected, "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn list_volumes_response_is_received() {
-    for k in 0..2 {
-        let answer = ok(&on_wire::list_volumes_response(k, true));
-        let expected = samples::list_volumes_response(k, true);
-
-        let call = |client: Client| async move { client.list_volumes(types::ListVolumesRequest::default()).await };
-        let (_, response): (wire::ListVolumesRequest, _) = exchange("ListVolumes", answer, call).await;
-
-        assert_eq!(response.unwrap(), expected, "at k = {k}");
-    }
-}
-
-#[tokio::test]
 async fn list_usage_response_is_received() {
     for k in 0..2 {
         let answer = ok(&on_wire::list_usage_response(k, true));
@@ -5326,21 +5083,6 @@ async fn sandbox_settings_is_received() {
         }));
         let expected =
             states::make(|message: &mut types::Sandbox| message.settings = Some(samples::sandbox_settings(k, true)));
-
-        let call = |client: Client| async move { client.create_sandbox(types::CreateSandboxRequest::default()).await };
-        let (_, response): (wire::CreateSandboxRequest, _) = exchange("CreateSandbox", answer, call).await;
-
-        assert_eq!(response.unwrap(), expected, "at k = {k}");
-    }
-}
-
-#[tokio::test]
-async fn mount_is_received() {
-    for k in 0..2 {
-        let answer = ok(&states::make(|message: &mut wire::Sandbox| {
-            message.mounts = vec![on_wire::mount(k, true)]
-        }));
-        let expected = states::make(|message: &mut types::Sandbox| message.mounts = vec![samples::mount(k, true)]);
 
         let call = |client: Client| async move { client.create_sandbox(types::CreateSandboxRequest::default()).await };
         let (_, response): (wire::CreateSandboxRequest, _) = exchange("CreateSandbox", answer, call).await;
@@ -6015,63 +5757,6 @@ async fn delete_template_sends_the_clients_workspace_where_the_request_names_non
 }
 
 #[tokio::test]
-async fn create_volume_sends_the_clients_workspace_where_the_request_names_none() {
-    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
-        let request = types::CreateVolumeRequest {
-            workspace: given.to_owned(),
-            ..Default::default()
-        };
-
-        let answer = ok(&wire::Volume::default());
-        let call = |client: Client| async move {
-            let client = client.with_workspace("the client's");
-            client.create_volume(request).await
-        };
-        let (got, _): (wire::CreateVolumeRequest, _) = exchange("CreateVolume", answer, call).await;
-
-        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
-    }
-}
-
-#[tokio::test]
-async fn list_volumes_sends_the_clients_workspace_where_the_request_names_none() {
-    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
-        let request = types::ListVolumesRequest {
-            workspace: given.to_owned(),
-            ..Default::default()
-        };
-
-        let answer = ok(&wire::ListVolumesResponse::default());
-        let call = |client: Client| async move {
-            let client = client.with_workspace("the client's");
-            client.list_volumes(request).await
-        };
-        let (got, _): (wire::ListVolumesRequest, _) = exchange("ListVolumes", answer, call).await;
-
-        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
-    }
-}
-
-#[tokio::test]
-async fn delete_volume_sends_the_clients_workspace_where_the_request_names_none() {
-    for (given, sent) in [("", "the client's"), ("its own", "its own")] {
-        let request = types::DeleteVolumeRequest {
-            workspace: given.to_owned(),
-            ..Default::default()
-        };
-
-        let answer = ok(&wire::Volume::default());
-        let call = |client: Client| async move {
-            let client = client.with_workspace("the client's");
-            client.delete_volume(request).await
-        };
-        let (got, _): (wire::DeleteVolumeRequest, _) = exchange("DeleteVolume", answer, call).await;
-
-        assert_eq!(got.workspace.as_deref(), Some(sent), "given {given:?}");
-    }
-}
-
-#[tokio::test]
 async fn list_usage_sends_the_clients_workspace_where_the_request_names_none() {
     for (given, sent) in [("", "the client's"), ("its own", "its own")] {
         let request = types::ListUsageRequest {
@@ -6211,13 +5896,7 @@ where
 
 #[test]
 fn meter_is_json() {
-    let names = [
-        "METER_UNSPECIFIED",
-        "METER_RUNNING",
-        "METER_PAUSED",
-        "METER_STORED_GIB",
-        "METER_VOLUME_GIB",
-    ];
+    let names = ["METER_UNSPECIFIED", "METER_RUNNING", "METER_PAUSED", "METER_STORED_GIB"];
     an_enum_is_json(&names, 10, samples::meter);
 }
 
@@ -6442,7 +6121,6 @@ fn workspace_is_json() {
         "sizes",
         "template_bytes",
         "vcpus_used",
-        "volume_gib_used",
     ];
     a_message_is_json(2, &names, samples::workspace, on_wire::workspace);
 }
@@ -6470,7 +6148,7 @@ fn billing_is_json() {
 
 #[test]
 fn rates_is_json() {
-    let names = ["stored_gib_month", "volume_gib_month"];
+    let names = ["stored_gib_month"];
     a_message_is_json(2, &names, samples::rates, on_wire::rates);
 }
 
@@ -6482,13 +6160,7 @@ fn ssh_key_is_json() {
 
 #[test]
 fn limits_is_json() {
-    let names = [
-        "vcpus",
-        "largest_size",
-        "volume_gib",
-        "template_versions",
-        "template_gib",
-    ];
+    let names = ["vcpus", "largest_size", "template_versions", "template_gib"];
     a_message_is_json(6, &names, samples::limits, on_wire::limits);
 }
 
@@ -6534,7 +6206,6 @@ fn sandbox_is_json() {
         "settings",
         "revision",
         "disk_gib",
-        "mounts",
         "desktop",
         "ssh_command",
         "panel_url",
@@ -6564,15 +6235,7 @@ fn usage_is_json() {
 
 #[test]
 fn create_sandbox_request_is_json() {
-    let names = [
-        "template",
-        "settings",
-        "labels",
-        "mounts",
-        "name",
-        "request_id",
-        "workspace",
-    ];
+    let names = ["template", "settings", "labels", "name", "request_id", "workspace"];
     a_message_is_json(
         2,
         &names,
@@ -6936,64 +6599,6 @@ fn delete_template_request_is_json() {
         &names,
         samples::delete_template_request,
         on_wire::delete_template_request,
-    );
-}
-
-#[test]
-fn volume_is_json() {
-    let names = [
-        "volume_id",
-        "name",
-        "size_gib",
-        "used_bytes",
-        "mounted_by",
-        "create_time",
-    ];
-    a_message_is_json(2, &names, samples::volume, on_wire::volume);
-}
-
-#[test]
-fn mount_is_json() {
-    let names = ["volume_id", "path", "read_only"];
-    a_message_is_json(2, &names, samples::mount, on_wire::mount);
-}
-
-#[test]
-fn create_volume_request_is_json() {
-    let names = ["name", "size_gib", "request_id", "workspace"];
-    a_message_is_json(
-        2,
-        &names,
-        samples::create_volume_request,
-        on_wire::create_volume_request,
-    );
-}
-
-#[test]
-fn list_volumes_request_is_json() {
-    let names = ["page_size", "page_token", "workspace"];
-    a_message_is_json(2, &names, samples::list_volumes_request, on_wire::list_volumes_request);
-}
-
-#[test]
-fn list_volumes_response_is_json() {
-    let names = ["volumes", "next_page_token"];
-    a_message_is_json(
-        2,
-        &names,
-        samples::list_volumes_response,
-        on_wire::list_volumes_response,
-    );
-}
-
-#[test]
-fn delete_volume_request_is_json() {
-    let names = ["volume_id", "workspace"];
-    a_message_is_json(
-        2,
-        &names,
-        samples::delete_volume_request,
-        on_wire::delete_volume_request,
     );
 }
 

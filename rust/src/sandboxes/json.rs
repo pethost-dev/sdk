@@ -361,32 +361,6 @@ json!(
     wire::DeleteTemplateRequest::from,
     types::DeleteTemplateRequest::from
 );
-json!(types::Volume, wire::Volume, wire::Volume::from, types::Volume::from);
-json!(types::Mount, wire::Mount, wire::Mount::from, types::Mount::from);
-json!(
-    types::CreateVolumeRequest,
-    wire::CreateVolumeRequest,
-    wire::CreateVolumeRequest::from,
-    types::CreateVolumeRequest::from
-);
-json!(
-    types::ListVolumesRequest,
-    wire::ListVolumesRequest,
-    wire::ListVolumesRequest::from,
-    types::ListVolumesRequest::from
-);
-json!(
-    types::ListVolumesResponse,
-    wire::ListVolumesResponse,
-    wire::ListVolumesResponse::from,
-    types::ListVolumesResponse::from
-);
-json!(
-    types::DeleteVolumeRequest,
-    wire::DeleteVolumeRequest,
-    wire::DeleteVolumeRequest::from,
-    types::DeleteVolumeRequest::from
-);
 json!(
     types::ListUsageRequest,
     wire::ListUsageRequest,

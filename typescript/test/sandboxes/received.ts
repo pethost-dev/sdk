@@ -15,20 +15,20 @@ const anyCall = (api: Sandboxes): Promise<unknown> => api.getWorkspace({});
 // What each message reads as when nothing is set in it: from a response, and from its JSON.
 export const empty = {
   GetWorkspaceRequest: () => ({ workspace: "" }),
-  Workspace: () => ({ workspaceId: "", name: "", sshKeys: [], secrets: [], sizes: [], templateBytes: 0n, vcpusUsed: 0, volumeGibUsed: 0 }),
+  Workspace: () => ({ workspaceId: "", name: "", sshKeys: [], secrets: [], sizes: [], templateBytes: 0n, vcpusUsed: 0 }),
   SizeInfo: () => ({ vcpus: 0, memoryMib: 0, diskGib: 0 }),
   Billing: () => ({ currency: "", includedMicros: 0n, includedTotalMicros: 0n, balanceMicros: 0n, suspended: false, trial: false }),
-  Rates: () => ({ storedGibMonth: 0, volumeGibMonth: 0 }),
+  Rates: () => ({ storedGibMonth: 0 }),
   SshKey: () => ({ publicKey: "", comment: "", fingerprint: "" }),
-  Limits: () => ({ vcpus: 0, volumeGib: 0, templateVersions: 0, templateGib: 0 }),
+  Limits: () => ({ vcpus: 0, templateVersions: 0, templateGib: 0 }),
   SetSshKeysRequest: () => ({ sshKeys: [], workspace: "" }),
   Secret: () => ({ name: "", hosts: [] }),
   SetSecretRequest: () => ({ name: "", value: "", hosts: [], workspace: "" }),
   DeleteSecretRequest: () => ({ name: "", workspace: "" }),
-  Sandbox: () => ({ sandboxId: "", stateMessage: "", template: "", labels: [], revision: 0n, diskGib: 0, mounts: [], sshCommand: "", panelUrl: "", storedBytes: 0n, name: "" }),
+  Sandbox: () => ({ sandboxId: "", stateMessage: "", template: "", labels: [], revision: 0n, diskGib: 0, sshCommand: "", panelUrl: "", storedBytes: 0n, name: "" }),
   Restore: () => ({ fetchedBytes: 0n, totalBytes: 0n }),
   Usage: () => ({ runningSeconds: 0n, pausedSeconds: 0n, storedGibHours: 0, costMicros: 0n }),
-  CreateSandboxRequest: () => ({ template: "", labels: [], mounts: [], name: "", requestId: "", workspace: "" }),
+  CreateSandboxRequest: () => ({ template: "", labels: [], name: "", requestId: "", workspace: "" }),
   GetSandboxRequest: () => ({ sandboxId: "" }),
   ListSandboxesRequest: () => ({ states: [], labels: [], pageSize: 0, pageToken: "", name: "", workspace: "" }),
   ListSandboxesResponse: () => ({ sandboxes: [], nextPageToken: "" }),
@@ -65,12 +65,6 @@ export const empty = {
   ListTemplatesRequest: () => ({ name: "", pageSize: 0, pageToken: "", workspace: "" }),
   ListTemplatesResponse: () => ({ templates: [], nextPageToken: "" }),
   DeleteTemplateRequest: () => ({ name: "", workspace: "" }),
-  Volume: () => ({ volumeId: "", name: "", sizeGib: 0, usedBytes: 0n, mountedBy: [] }),
-  Mount: () => ({ volumeId: "", path: "", readOnly: false }),
-  CreateVolumeRequest: () => ({ name: "", sizeGib: 0, requestId: "", workspace: "" }),
-  ListVolumesRequest: () => ({ pageSize: 0, pageToken: "", workspace: "" }),
-  ListVolumesResponse: () => ({ volumes: [], nextPageToken: "" }),
-  DeleteVolumeRequest: () => ({ volumeId: "", workspace: "" }),
   ListUsageRequest: () => ({ pageSize: 0, pageToken: "", workspace: "" }),
   ListUsageResponse: () => ({ rows: [], nextPageToken: "" }),
   UsageRow: () => ({ unitHours: 0, costMicros: 0n }),
@@ -143,7 +137,6 @@ export const empty = {
   m.reads("Workspace.sizes", { sizes: [{}] }, { ...empty.Workspace(), sizes: [empty.SizeInfo()] });
   m.reads("Workspace.template_bytes", { templateBytes: -9007199254740993n }, { ...empty.Workspace(), templateBytes: -9007199254740993n });
   m.reads("Workspace.vcpus_used", { vcpusUsed: -1009 }, { ...empty.Workspace(), vcpusUsed: -1009 });
-  m.reads("Workspace.volume_gib_used", { volumeGibUsed: -1010 }, { ...empty.Workspace(), volumeGibUsed: -1010 });
 }
 
 {
@@ -183,7 +176,6 @@ export const empty = {
   m.reads("Rates: nothing set", {}, empty.Rates());
   m.reads("Rates: a field newer than the SDK", newer(w.RatesSchema), empty.Rates());
   m.reads("Rates.stored_gib_month", { storedGibMonth: 1005.5 }, { ...empty.Rates(), storedGibMonth: 1005.5 });
-  m.reads("Rates.volume_gib_month", { volumeGibMonth: 1006.5 }, { ...empty.Rates(), volumeGibMonth: 1006.5 });
 }
 
 {
@@ -205,7 +197,6 @@ export const empty = {
   m.reads("Limits.largest_size: LARGE", { largestSize: w.Size.LARGE }, { ...empty.Limits(), largestSize: "LARGE" });
   m.reads("Limits.largest_size: XLARGE", { largestSize: w.Size.XLARGE }, { ...empty.Limits(), largestSize: "XLARGE" });
   m.reads("Limits.largest_size: a value newer than the SDK", { largestSize: 9999 as w.Size }, { ...empty.Limits(), largestSize: 9999 });
-  m.reads("Limits.volume_gib", { volumeGib: -1006 }, { ...empty.Limits(), volumeGib: -1006 });
   m.reads("Limits.template_versions", { templateVersions: -1002 }, { ...empty.Limits(), templateVersions: -1002 });
   m.reads("Limits.template_gib", { templateGib: -1003 }, { ...empty.Limits(), templateGib: -1003 });
 }
@@ -243,7 +234,6 @@ export const empty = {
   m.reads("Sandbox.settings", { settings: {} }, { ...empty.Sandbox(), settings: empty.SandboxSettings() });
   m.reads("Sandbox.revision", { revision: -9007199254740993n }, { ...empty.Sandbox(), revision: -9007199254740993n });
   m.reads("Sandbox.disk_gib", { diskGib: -1012 }, { ...empty.Sandbox(), diskGib: -1012 });
-  m.reads("Sandbox.mounts", { mounts: [{}] }, { ...empty.Sandbox(), mounts: [empty.Mount()] });
   m.reads("Sandbox.desktop", { desktop: {} }, { ...empty.Sandbox(), desktop: empty.Desktop() });
   m.reads("Sandbox.ssh_command", { sshCommand: "ssh_command" }, { ...empty.Sandbox(), sshCommand: "ssh_command" });
   m.reads("Sandbox.panel_url", { panelUrl: "panel_url" }, { ...empty.Sandbox(), panelUrl: "panel_url" });
@@ -540,35 +530,6 @@ export const empty = {
 }
 
 {
-  const m = reading(w.VolumeSchema, (leaf: Init<typeof w.VolumeSchema>): Init<typeof w.VolumeSchema> => (leaf), async (api) => (await api.createVolume({})));
-  m.reads("Volume: nothing set", {}, empty.Volume());
-  m.reads("Volume: a field newer than the SDK", newer(w.VolumeSchema), empty.Volume());
-  m.reads("Volume.volume_id", { volumeId: "volume_id" }, { ...empty.Volume(), volumeId: "volume_id" });
-  m.reads("Volume.name", { name: "name" }, { ...empty.Volume(), name: "name" });
-  m.reads("Volume.size_gib", { sizeGib: -1003 }, { ...empty.Volume(), sizeGib: -1003 });
-  m.reads("Volume.used_bytes", { usedBytes: -9007199254740993n }, { ...empty.Volume(), usedBytes: -9007199254740993n });
-  m.reads("Volume.mounted_by", { mountedBy: ["mounted_by", ""] }, { ...empty.Volume(), mountedBy: ["mounted_by", ""] });
-  m.reads("Volume.create_time", { createTime: { seconds: 1790000000n, nanos: 999600000 } }, { ...empty.Volume(), createTime: new Date(1790000000999) });
-}
-
-{
-  const m = reading(w.SandboxSchema, (leaf: Init<typeof w.MountSchema>): Init<typeof w.SandboxSchema> => ({ mounts: [leaf] }), async (api) => (await api.createSandbox({}))?.mounts?.[0]);
-  m.reads("Mount: nothing set", {}, empty.Mount());
-  m.reads("Mount: a field newer than the SDK", newer(w.MountSchema), empty.Mount());
-  m.reads("Mount.volume_id", { volumeId: "volume_id" }, { ...empty.Mount(), volumeId: "volume_id" });
-  m.reads("Mount.path", { path: "path" }, { ...empty.Mount(), path: "path" });
-  m.reads("Mount.read_only", { readOnly: true }, { ...empty.Mount(), readOnly: true });
-}
-
-{
-  const m = reading(w.ListVolumesResponseSchema, (leaf: Init<typeof w.ListVolumesResponseSchema>): Init<typeof w.ListVolumesResponseSchema> => (leaf), async (api) => (await api.listVolumes({})));
-  m.reads("ListVolumesResponse: nothing set", {}, empty.ListVolumesResponse());
-  m.reads("ListVolumesResponse: a field newer than the SDK", newer(w.ListVolumesResponseSchema), empty.ListVolumesResponse());
-  m.reads("ListVolumesResponse.volumes", { volumes: [{}] }, { ...empty.ListVolumesResponse(), volumes: [empty.Volume()] });
-  m.reads("ListVolumesResponse.next_page_token", { nextPageToken: "next_page_token" }, { ...empty.ListVolumesResponse(), nextPageToken: "next_page_token" });
-}
-
-{
   const m = reading(w.ListUsageResponseSchema, (leaf: Init<typeof w.ListUsageResponseSchema>): Init<typeof w.ListUsageResponseSchema> => (leaf), async (api) => (await api.listUsage({})));
   m.reads("ListUsageResponse: nothing set", {}, empty.ListUsageResponse());
   m.reads("ListUsageResponse: a field newer than the SDK", newer(w.ListUsageResponseSchema), empty.ListUsageResponse());
@@ -584,7 +545,6 @@ export const empty = {
   m.reads("UsageRow.meter: RUNNING", { meter: w.Meter.RUNNING }, { ...empty.UsageRow(), meter: "RUNNING" });
   m.reads("UsageRow.meter: PAUSED", { meter: w.Meter.PAUSED }, { ...empty.UsageRow(), meter: "PAUSED" });
   m.reads("UsageRow.meter: STORED_GIB", { meter: w.Meter.STORED_GIB }, { ...empty.UsageRow(), meter: "STORED_GIB" });
-  m.reads("UsageRow.meter: VOLUME_GIB", { meter: w.Meter.VOLUME_GIB }, { ...empty.UsageRow(), meter: "VOLUME_GIB" });
   m.reads("UsageRow.meter: a value newer than the SDK", { meter: 9999 as w.Meter }, { ...empty.UsageRow(), meter: 9999 });
   m.reads("UsageRow.unit_hours", { unitHours: 1003.5 }, { ...empty.UsageRow(), unitHours: 1003.5 });
   m.reads("UsageRow.size: SMALL", { size: w.Size.SMALL }, { ...empty.UsageRow(), size: "SMALL" });

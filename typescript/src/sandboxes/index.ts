@@ -15,7 +15,6 @@ import * as wire from "../wire/v1/sandboxes_pb.ts";
  * - `RUNNING`: A second of a RUNNING sandbox, at its size (UsageRow.size).
  * - `PAUSED`: A second of a PAUSED sandbox, at its size (UsageRow.size).
  * - `STORED_GIB`: A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
- * - `VOLUME_GIB`: A GiB of a volume's size.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -27,8 +26,6 @@ export const Meter = {
   PAUSED: "PAUSED",
   /** A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own. */
   STORED_GIB: "STORED_GIB",
-  /** A GiB of a volume's size. */
-  VOLUME_GIB: "VOLUME_GIB",
 } as const;
 
 /**
@@ -373,7 +370,7 @@ export const AgentTurnState = {
  * - `SHORT_MEMORY`: Its own memory runs short, so it starts no sandbox for now: try again later.
  * - `DISK`: Its disk has no more free space than it keeps, what it could evict gone: try again
  *   later.
- * - `DISK_CAP`: The disks and volumes it holds reach as much as it holds: try again later.
+ * - `DISK_CAP`: The disks it holds reach as much as it holds: try again later.
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -385,7 +382,7 @@ export const RoomBound = {
   SHORT_MEMORY: "SHORT_MEMORY",
   /** Its disk has no more free space than it keeps, what it could evict gone: try again later. */
   DISK: "DISK",
-  /** The disks and volumes it holds reach as much as it holds: try again later. */
+  /** The disks it holds reach as much as it holds: try again later. */
   DISK_CAP: "DISK_CAP",
 } as const;
 
@@ -420,9 +417,8 @@ export interface Workspace {
    * counted as 0): what Limits.templateGib holds.
    */
   templateBytes: bigint;
-  /** What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volumeGib. */
+  /** What its sandboxes count of Limits.vcpus now. */
   vcpusUsed: number;
-  volumeGibUsed: number;
 }
 
 /** {@link Workspace} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -487,8 +483,8 @@ export interface Billing {
   /**
    * True = nothing pays for its usage now: the included usage is used up and the balance is empty.
    * Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox starts, resumes
-   * or wakes, and no volume or template is made ({@link UsageUnpaid}), until its owner adds to the
-   * balance or the plan's next period begins. What it stores is still counted.
+   * or wakes, and no template is made ({@link UsageUnpaid}), until its owner adds to the balance or
+   * the plan's next period begins. What it stores is still counted.
    */
   suspended: boolean;
   /**
@@ -507,14 +503,12 @@ export const Billing: JsonCodec<Billing, Billing> = {
 
 /**
  * What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in the
- * currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a PAUSED
+ * currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a PAUSED
  * sandbox costs is its size's (SizeInfo.runningHour, pausedHour).
  */
 export interface Rates {
   /** Meter.STORED_GIB: what a STOPPED sandbox holds in object storage. */
   storedGibMonth: number;
-  /** Meter.VOLUME_GIB: a volume's whole size. */
-  volumeGibMonth: number;
 }
 
 /** {@link Rates} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -555,8 +549,6 @@ export interface Limits {
   vcpus: number;
   /** The largest size it may create, start or change a sandbox to. */
   largestSize?: Size | number;
-  /** The most GiB its volumes may take together ({@link Sandboxes.createVolume | createVolume}). */
-  volumeGib: number;
   /**
    * The workspace's own templates: at most templateVersions versions of one name, FAILED ones aside,
    * and templateGib GiB in all of what its versions take in object storage
@@ -689,14 +681,12 @@ export const DeleteSecretRequest: JsonCodec<DeleteSecretRequest, DeleteSecretReq
  * out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
  * space"), its disk kept.
  *
- * A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
- * no room for it ({@link Sandboxes.resumeSandbox | resumeSandbox}), its addresses with it. If a
- * server is lost, each of its sandboxes with a copy is STOPPED from its last copy, saying when
- * that was if it ran since, and starts on another server at its next
- * {@link Sandboxes.resumeSandbox | resumeSandbox}; one without a copy is DELETED, as are its
- * volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
- * (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
- * starts.
+ * A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+ * ({@link Sandboxes.resumeSandbox | resumeSandbox}), its addresses with it. If a server is lost,
+ * each of its sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran
+ * since, and starts on another server at its next {@link Sandboxes.resumeSandbox | resumeSandbox};
+ * one without a copy is DELETED. While nothing pays for its workspace (Billing.suspended), its
+ * RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them starts.
  */
 export interface Sandbox {
   /** 16 characters, a-z and 0-9: also its DNS label. */
@@ -722,7 +712,6 @@ export interface Sandbox {
    * it to the new size's. No size whose disk is smaller is allowed (SIZES).
    */
   diskGib: number;
-  mounts: Mount[];
   /** Its screen: every sandbox has one ({@link Sandboxes.controlDesktop | controlDesktop}). */
   desktop?: Desktop;
   /**
@@ -802,10 +791,9 @@ export const Restore: JsonCodec<Restore, Restore> = {
  * paused price (SizeInfo.pausedHour, a share of runningHour), since its server keeps its place for
  * it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the bytes of
  * its own its disk holds (Sandbox.storedBytes), which object storage keeps, never its empty space:
- * a long sleep costs least STOPPED. A volume counts its whole size. No other minimum: pausing and
- * waking never turns running time into a cheaper one, nor counts a second twice, since a stretch
- * counts from where the one before it was counted to (Sandbox.usage,
- * {@link Sandboxes.listUsage | listUsage}).
+ * a long sleep costs least STOPPED. No other minimum: pausing and waking never turns running time
+ * into a cheaper one, nor counts a second twice, since a stretch counts from where the one before
+ * it was counted to (Sandbox.usage, {@link Sandboxes.listUsage | listUsage}).
  */
 export interface Usage {
   /** At every size, each run 10 seconds at least. */
@@ -837,8 +825,6 @@ export interface CreateSandboxRequest {
   settings?: SandboxSettingsInput | undefined;
   /** For {@link Sandboxes.listSandboxes | listSandboxes}' filter. At most 32. */
   labels?: readonly LabelInput[] | undefined;
-  /** At most 4, at create only. */
-  mounts?: readonly MountInput[] | undefined;
   /**
    * Unique in the workspace (ALREADY_EXISTS + {@link NameTaken} names the sandbox that has it): a-z,
    * 0-9 and "-", at most 63, not 16 of a-z and 0-9 alone, a sandboxId's shape. Absent = none.
@@ -1668,120 +1654,6 @@ export interface DeleteTemplateRequest {
 export const DeleteTemplateRequest: JsonCodec<DeleteTemplateRequest, DeleteTemplateRequest> = {
   toJson: (value) => writeJson(wire.DeleteTemplateRequestSchema, convert.toDeleteTemplateRequest(value)),
   fromJson: (json) => convert.fromDeleteTemplateRequest(readJson(wire.DeleteTemplateRequestSchema, json)),
-};
-
-export interface Volume {
-  volumeId: string;
-  name: string;
-  /** Counted as storage, used or not. */
-  sizeGib: number;
-  usedBytes: bigint;
-  /** Sandbox ids. */
-  mountedBy: string[];
-  createTime?: Date;
-}
-
-/** {@link Volume} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const Volume: JsonCodec<Volume, Volume> = {
-  toJson: (value) => writeJson(wire.VolumeSchema, convert.toVolume(value)),
-  fromJson: (json) => convert.fromVolume(readJson(wire.VolumeSchema, json)),
-};
-
-/**
- * A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by any
- * number.
- */
-export interface Mount {
-  volumeId: string;
-  /** Absolute: /data. At most 255 bytes. */
-  path: string;
-  readOnly: boolean;
-}
-
-/**
- * A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by any
- * number.
- */
-export interface MountInput {
-  volumeId?: string | undefined;
-  /** Absolute: /data. At most 255 bytes. */
-  path?: string | undefined;
-  readOnly?: boolean | undefined;
-}
-
-/**
- * {@link MountInput} as the API's JSON, and the API's JSON as {@link Mount}: {@link JsonCodec}
- * says how.
- */
-export const Mount: JsonCodec<MountInput, Mount> = {
-  toJson: (value) => writeJson(wire.MountSchema, convert.toMount(value)),
-  fromJson: (json) => convert.fromMount(readJson(wire.MountSchema, json)),
-};
-
-export interface CreateVolumeRequest {
-  name?: string | undefined;
-  /** 1 to 1000. */
-  sizeGib?: number | undefined;
-  /**
-   * Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-   * nothing again and answers what the first call did (24 h).
-   */
-  requestId?: string | undefined;
-  /**
-   * The workspace: its id or name. Omit when the account has one ({@link WorkspaceChoice} lists
-   * them).
-   */
-  workspace?: string | undefined;
-}
-
-/** {@link CreateVolumeRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const CreateVolumeRequest: JsonCodec<CreateVolumeRequest, CreateVolumeRequest> = {
-  toJson: (value) => writeJson(wire.CreateVolumeRequestSchema, convert.toCreateVolumeRequest(value)),
-  fromJson: (json) => convert.fromCreateVolumeRequest(readJson(wire.CreateVolumeRequestSchema, json)),
-};
-
-export interface ListVolumesRequest {
-  /** Absent = 50; at most 500. */
-  pageSize?: number | undefined;
-  pageToken?: string | undefined;
-  /**
-   * The workspace: its id or name. Omit when the account has one ({@link WorkspaceChoice} lists
-   * them).
-   */
-  workspace?: string | undefined;
-}
-
-/** {@link ListVolumesRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const ListVolumesRequest: JsonCodec<ListVolumesRequest, ListVolumesRequest> = {
-  toJson: (value) => writeJson(wire.ListVolumesRequestSchema, convert.toListVolumesRequest(value)),
-  fromJson: (json) => convert.fromListVolumesRequest(readJson(wire.ListVolumesRequestSchema, json)),
-};
-
-export interface ListVolumesResponse {
-  volumes: Volume[];
-  /** Absent on the last page. */
-  nextPageToken: string;
-}
-
-/** {@link ListVolumesResponse} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const ListVolumesResponse: JsonCodec<ListVolumesResponse, ListVolumesResponse> = {
-  toJson: (value) => writeJson(wire.ListVolumesResponseSchema, convert.toListVolumesResponse(value)),
-  fromJson: (json) => convert.fromListVolumesResponse(readJson(wire.ListVolumesResponseSchema, json)),
-};
-
-export interface DeleteVolumeRequest {
-  volumeId?: string | undefined;
-  /**
-   * The workspace: its id or name. Omit when the account has one ({@link WorkspaceChoice} lists
-   * them).
-   */
-  workspace?: string | undefined;
-}
-
-/** {@link DeleteVolumeRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
-export const DeleteVolumeRequest: JsonCodec<DeleteVolumeRequest, DeleteVolumeRequest> = {
-  toJson: (value) => writeJson(wire.DeleteVolumeRequestSchema, convert.toDeleteVolumeRequest(value)),
-  fromJson: (json) => convert.fromDeleteVolumeRequest(readJson(wire.DeleteVolumeRequestSchema, json)),
 };
 
 export interface ListUsageRequest {
@@ -2860,7 +2732,7 @@ export const ToolResult: JsonCodec<ToolResult, ToolResult> = {
 /** RESOURCE_EXHAUSTED: a limit of the workspace. */
 export interface LimitReached {
   /**
-   * A field of Workspace.limits: "vcpus", "largestSize" (max is that Size's number), "volumeGib",
+   * A field of Workspace.limits: "vcpus", "largestSize" (max is that Size's number),
    * "templateVersions", "templateGib"; or a bound of every workspace: "secrets"
    * ({@link Sandboxes.setSecret | setSecret}), or "starts_per_minute", the sandboxes it may start in
    * any minute, against abuse. A start is free: a {@link Sandboxes.createSandbox | createSandbox},
@@ -2898,8 +2770,8 @@ export const Stopped: JsonCodec<Stopped, Stopped> = {
 
 /**
  * FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the call
- * starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to the
- * balance, or starts the plan if it is in its trial, in the workspace's settings.
+ * starts, resumes or wakes no sandbox, and makes no template: its owner adds to the balance, or
+ * starts the plan if it is in its trial, in the workspace's settings.
  */
 export type UsageUnpaid = Record<string, never>;
 
@@ -3078,8 +2950,8 @@ export class SandboxesError extends Error {
   declare readonly stopped?: Stopped;
   /**
    * FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the call
-   * starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to the
-   * balance, or starts the plan if it is in its trial, in the workspace's settings.
+   * starts, resumes or wakes no sandbox, and makes no template: its owner adds to the balance, or
+   * starts the plan if it is in its trial, in the workspace's settings.
    */
   declare readonly usageUnpaid?: UsageUnpaid;
   /**
@@ -3165,7 +3037,7 @@ export interface CallOptions {
  *
  * ## Model
  *
- * Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+ * Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
  *
  * ```
  * its workspace, any other on its `workspace`, else the caller's only one.
@@ -3185,8 +3057,7 @@ export interface CallOptions {
  * Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (createTemplate).
  * ```
  *
- * Volume (volumeId): a disk that outlives sandboxes, mounted into them at a path. Secret (name): a
- * value the workspace keeps and no sandbox holds.
+ * Secret (name): a value the workspace keeps and no sandbox holds.
  *
  * ## Idle and wake
  *
@@ -3244,7 +3115,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.8.0");
+      request.header.set("User-Agent", "pethost-typescript/0.9.0");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3256,7 +3127,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.8.0");
+      request.header.set("User-Agent", "pethost-typescript/0.9.0");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>
@@ -3498,13 +3369,13 @@ export class Sandboxes {
    * on its server, which kept its place, never refused for room. A STOPPED one counts against
    * Limits.vcpus and largestSize from here on (RESOURCE_EXHAUSTED + {@link LimitReached} past them),
    * and starts on its own server when that server has room for it, else on another with room, when
-   * it mounts no volume and its copy is current: its server lets it go first, and one its server
-   * cannot be reached for is UNAVAILABLE, saying so. Its disk, when it is in object storage alone,
-   * is fetched first: waited for up to 45 s, after which it is answered STOPPED with how far that is
-   * (Sandbox.restore), and starts once whole; call again to wait on. A STOPPED one whose server is
-   * gone (stateMessage says so) starts on a server from its last copy in object storage. A sandbox
-   * that starts on another server changes its addresses with it (connection.url, its ports' URLs,
-   * sshCommand), and its events and metrics begin again there. While it moves,
+   * its copy is current: its server lets it go first, and one its server cannot be reached for is
+   * UNAVAILABLE, saying so. Its disk, when it is in object storage alone, is fetched first: waited
+   * for up to 45 s, after which it is answered STOPPED with how far that is (Sandbox.restore), and
+   * starts once whole; call again to wait on. A STOPPED one whose server is gone (stateMessage says
+   * so) starts on a server from its last copy in object storage. A sandbox that starts on another
+   * server changes its addresses with it (connection.url, its ports' URLs, sshCommand), and its
+   * events and metrics begin again there. While it moves,
    * {@link Sandboxes.resumeSandbox | resumeSandbox} waits for the move within its 45 s, and the
    * calls that change it are UNAVAILABLE ("moving"): try again in a moment. UNAVAILABLE without
    * {@link NoCapacity}: no server answers now; try again.
@@ -3525,8 +3396,8 @@ export class Sandboxes {
   /**
    * Delete a sandbox.
    *
-   * Drops its memory and disk for good; its volumes stay. Answers its final record, usage included.
-   * A DELETED sandbox is answered with that record.
+   * Drops its memory and disk for good. Answers its final record, usage included. A DELETED sandbox
+   * is answered with that record.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -3702,57 +3573,6 @@ export class Sandboxes {
     const wireRequest = convert.toDeleteTemplateRequest({ ...request, workspace: request.workspace || this.#workspace });
     try {
       return convert.fromTemplate(await this.#sandboxService.deleteTemplate(wireRequest, { signal: options?.signal }));
-    } catch (error) {
-      throw toError(error);
-    }
-  }
-
-  /**
-   * Create a volume.
-   *
-   * A disk outside every sandbox, on one server: a sandbox that mounts it runs there. Refused while
-   * nothing pays for the workspace ({@link UsageUnpaid}).
-   *
-   * @throws {@link SandboxesError} when the call fails.
-   */
-  async createVolume(request: CreateVolumeRequest, options?: CallOptions): Promise<Volume> {
-    const wireRequest = convert.toCreateVolumeRequest({ ...request, workspace: request.workspace || this.#workspace, requestId: request.requestId || newRequestId() });
-    try {
-      return convert.fromVolume(await this.#sandboxService.createVolume(wireRequest, { signal: options?.signal }));
-    } catch (error) {
-      throw toError(error);
-    }
-  }
-
-  /**
-   * List volumes.
-   *
-   * The workspace's volumes.
-   *
-   * Reads only: it changes nothing.
-   *
-   * @throws {@link SandboxesError} when the call fails.
-   */
-  async listVolumes(request: ListVolumesRequest, options?: CallOptions): Promise<ListVolumesResponse> {
-    const wireRequest = convert.toListVolumesRequest({ ...request, workspace: request.workspace || this.#workspace });
-    try {
-      return convert.fromListVolumesResponse(await this.#sandboxService.listVolumes(wireRequest, { signal: options?.signal }));
-    } catch (error) {
-      throw toError(error);
-    }
-  }
-
-  /**
-   * Delete a volume.
-   *
-   * Refused while a sandbox mounts it.
-   *
-   * @throws {@link SandboxesError} when the call fails.
-   */
-  async deleteVolume(request: DeleteVolumeRequest, options?: CallOptions): Promise<Volume> {
-    const wireRequest = convert.toDeleteVolumeRequest({ ...request, workspace: request.workspace || this.#workspace });
-    try {
-      return convert.fromVolume(await this.#sandboxService.deleteVolume(wireRequest, { signal: options?.signal }));
     } catch (error) {
       throw toError(error);
     }

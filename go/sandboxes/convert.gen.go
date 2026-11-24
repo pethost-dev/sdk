@@ -30,7 +30,6 @@ func fromWireWorkspace(w *sandboxesv1.Workspace) Workspace {
 		sliceFromWire(w.GetSizes(), fromWireSizeInfo),
 		w.GetTemplateBytes(),
 		w.GetVcpusUsed(),
-		w.GetVolumeGibUsed(),
 	}
 }
 
@@ -45,7 +44,6 @@ func toWireWorkspace(v Workspace) *sandboxesv1.Workspace {
 		Sizes:         sliceToWire(v.Sizes, toWireSizeInfo),
 		TemplateBytes: nonZero(v.TemplateBytes),
 		VcpusUsed:     nonZero(v.VcpusUsed),
-		VolumeGibUsed: nonZero(v.VolumeGibUsed),
 	}
 	return b.Build()
 }
@@ -103,14 +101,12 @@ func toWireBilling(v Billing) *sandboxesv1.Billing {
 func fromWireRates(w *sandboxesv1.Rates) Rates {
 	return Rates{
 		w.GetStoredGibMonth(),
-		w.GetVolumeGibMonth(),
 	}
 }
 
 func toWireRates(v Rates) *sandboxesv1.Rates {
 	b := sandboxesv1.Rates_builder{
 		StoredGibMonth: nonZero(v.StoredGibMonth),
-		VolumeGibMonth: nonZero(v.VolumeGibMonth),
 	}
 	return b.Build()
 }
@@ -136,7 +132,6 @@ func fromWireLimits(w *sandboxesv1.Limits) Limits {
 	return Limits{
 		w.GetVcpus(),
 		fromWireSize(w.GetLargestSize()),
-		w.GetVolumeGib(),
 		w.GetTemplateVersions(),
 		w.GetTemplateGib(),
 	}
@@ -146,7 +141,6 @@ func toWireLimits(v Limits) *sandboxesv1.Limits {
 	b := sandboxesv1.Limits_builder{
 		Vcpus:            nonZero(v.Vcpus),
 		LargestSize:      nonZero(toWireSize(v.LargestSize)),
-		VolumeGib:        nonZero(v.VolumeGib),
 		TemplateVersions: nonZero(v.TemplateVersions),
 		TemplateGib:      nonZero(v.TemplateGib),
 	}
@@ -231,7 +225,6 @@ func fromWireSandbox(w *sandboxesv1.Sandbox) Sandbox {
 		pointerFromWire(w.GetSettings(), fromWireSandboxSettings),
 		w.GetRevision(),
 		w.GetDiskGib(),
-		sliceFromWire(w.GetMounts(), fromWireMount),
 		pointerFromWire(w.GetDesktop(), fromWireDesktop),
 		w.GetSshCommand(),
 		w.GetPanelUrl(),
@@ -258,7 +251,6 @@ func toWireSandbox(v Sandbox) *sandboxesv1.Sandbox {
 		Settings:      pointerToWire(v.Settings, toWireSandboxSettings),
 		Revision:      nonZero(v.Revision),
 		DiskGib:       nonZero(v.DiskGib),
-		Mounts:        sliceToWire(v.Mounts, toWireMount),
 		Desktop:       pointerToWire(v.Desktop, toWireDesktop),
 		SshCommand:    nonZero(v.SSHCommand),
 		PanelUrl:      nonZero(v.PanelURL),
@@ -313,7 +305,6 @@ func fromWireCreateSandboxRequest(w *sandboxesv1.CreateSandboxRequest) CreateSan
 		w.GetTemplate(),
 		pointerFromWire(w.GetSettings(), fromWireSandboxSettings),
 		sliceFromWire(w.GetLabels(), fromWireLabel),
-		sliceFromWire(w.GetMounts(), fromWireMount),
 		w.GetName(),
 		w.GetRequestId(),
 		w.GetWorkspace(),
@@ -325,7 +316,6 @@ func toWireCreateSandboxRequest(v CreateSandboxRequest) *sandboxesv1.CreateSandb
 		Template:  nonZero(v.Template),
 		Settings:  pointerToWire(v.Settings, toWireSandboxSettings),
 		Labels:    sliceToWire(v.Labels, toWireLabel),
-		Mounts:    sliceToWire(v.Mounts, toWireMount),
 		Name:      nonZero(v.Name),
 		RequestId: nonZero(v.RequestID),
 		Workspace: nonZero(v.Workspace),
@@ -1052,113 +1042,6 @@ func fromWireDeleteTemplateRequest(w *sandboxesv1.DeleteTemplateRequest) DeleteT
 func toWireDeleteTemplateRequest(v DeleteTemplateRequest) *sandboxesv1.DeleteTemplateRequest {
 	b := sandboxesv1.DeleteTemplateRequest_builder{
 		Name:      nonZero(v.Name),
-		Workspace: nonZero(v.Workspace),
-	}
-	return b.Build()
-}
-
-func fromWireVolume(w *sandboxesv1.Volume) Volume {
-	return Volume{
-		w.GetVolumeId(),
-		w.GetName(),
-		w.GetSizeGib(),
-		w.GetUsedBytes(),
-		w.GetMountedBy(),
-		timeFromWire(w.GetCreateTime()),
-	}
-}
-
-func toWireVolume(v Volume) *sandboxesv1.Volume {
-	b := sandboxesv1.Volume_builder{
-		VolumeId:   nonZero(v.VolumeID),
-		Name:       nonZero(v.Name),
-		SizeGib:    nonZero(v.SizeGib),
-		UsedBytes:  nonZero(v.UsedBytes),
-		MountedBy:  v.MountedBy,
-		CreateTime: timeToWire(v.CreateTime),
-	}
-	return b.Build()
-}
-
-func fromWireMount(w *sandboxesv1.Mount) Mount {
-	return Mount{
-		w.GetVolumeId(),
-		w.GetPath(),
-		w.GetReadOnly(),
-		unknownOf(w),
-	}
-}
-
-func toWireMount(v Mount) *sandboxesv1.Mount {
-	b := sandboxesv1.Mount_builder{
-		VolumeId: nonZero(v.VolumeID),
-		Path:     nonZero(v.Path),
-		ReadOnly: nonZero(v.ReadOnly),
-	}
-	return withUnknown(b.Build(), v.unknown)
-}
-
-func fromWireCreateVolumeRequest(w *sandboxesv1.CreateVolumeRequest) CreateVolumeRequest {
-	return CreateVolumeRequest{
-		w.GetName(),
-		w.GetSizeGib(),
-		w.GetRequestId(),
-		w.GetWorkspace(),
-	}
-}
-
-func toWireCreateVolumeRequest(v CreateVolumeRequest) *sandboxesv1.CreateVolumeRequest {
-	b := sandboxesv1.CreateVolumeRequest_builder{
-		Name:      nonZero(v.Name),
-		SizeGib:   nonZero(v.SizeGib),
-		RequestId: nonZero(v.RequestID),
-		Workspace: nonZero(v.Workspace),
-	}
-	return b.Build()
-}
-
-func fromWireListVolumesRequest(w *sandboxesv1.ListVolumesRequest) ListVolumesRequest {
-	return ListVolumesRequest{
-		w.GetPageSize(),
-		w.GetPageToken(),
-		w.GetWorkspace(),
-	}
-}
-
-func toWireListVolumesRequest(v ListVolumesRequest) *sandboxesv1.ListVolumesRequest {
-	b := sandboxesv1.ListVolumesRequest_builder{
-		PageSize:  nonZero(v.PageSize),
-		PageToken: nonZero(v.PageToken),
-		Workspace: nonZero(v.Workspace),
-	}
-	return b.Build()
-}
-
-func fromWireListVolumesResponse(w *sandboxesv1.ListVolumesResponse) ListVolumesResponse {
-	return ListVolumesResponse{
-		sliceFromWire(w.GetVolumes(), fromWireVolume),
-		w.GetNextPageToken(),
-	}
-}
-
-func toWireListVolumesResponse(v ListVolumesResponse) *sandboxesv1.ListVolumesResponse {
-	b := sandboxesv1.ListVolumesResponse_builder{
-		Volumes:       sliceToWire(v.Volumes, toWireVolume),
-		NextPageToken: nonZero(v.NextPageToken),
-	}
-	return b.Build()
-}
-
-func fromWireDeleteVolumeRequest(w *sandboxesv1.DeleteVolumeRequest) DeleteVolumeRequest {
-	return DeleteVolumeRequest{
-		w.GetVolumeId(),
-		w.GetWorkspace(),
-	}
-}
-
-func toWireDeleteVolumeRequest(v DeleteVolumeRequest) *sandboxesv1.DeleteVolumeRequest {
-	b := sandboxesv1.DeleteVolumeRequest_builder{
-		VolumeId:  nonZero(v.VolumeID),
 		Workspace: nonZero(v.Workspace),
 	}
 	return b.Build()
@@ -2495,7 +2378,6 @@ func _() {
 	_ = same[MeterRunning-Meter(sandboxesv1.Meter_METER_RUNNING)]
 	_ = same[MeterPaused-Meter(sandboxesv1.Meter_METER_PAUSED)]
 	_ = same[MeterStoredGib-Meter(sandboxesv1.Meter_METER_STORED_GIB)]
-	_ = same[MeterVolumeGib-Meter(sandboxesv1.Meter_METER_VOLUME_GIB)]
 	_ = same[SandboxStateUnspecified-SandboxState(sandboxesv1.SandboxState_SANDBOX_STATE_UNSPECIFIED)]
 	_ = same[SandboxStateRunning-SandboxState(sandboxesv1.SandboxState_SANDBOX_STATE_RUNNING)]
 	_ = same[SandboxStatePaused-SandboxState(sandboxesv1.SandboxState_SANDBOX_STATE_PAUSED)]

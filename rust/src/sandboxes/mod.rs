@@ -37,7 +37,7 @@
 //!
 //! ## Model
 //!
-//! Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+//! Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 //!
 //! ```text
 //! its workspace, any other on its `workspace`, else the caller's only one.
@@ -56,7 +56,7 @@
 //! Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
 //! ```
 //!
-//! Volume (`volume_id`): a disk that outlives sandboxes, mounted into them at a path. Secret (name): a value the workspace keeps and no sandbox holds.
+//! Secret (name): a value the workspace keeps and no sandbox holds.
 //!
 //! ## Idle and wake
 //!

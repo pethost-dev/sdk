@@ -24,14 +24,13 @@
 // Without a shell, give the person Sandbox.panel_url: its terminal and desktop, once signed in.
 //
 // MODEL
-//   Workspace: secrets, SSH keys, templates, volumes, sandboxes. A call naming a sandbox acts on
+//   Workspace: secrets, SSH keys, templates, sandboxes. A call naming a sandbox acts on
 //     its workspace, any other on its `workspace`, else the caller's only one.
 //   Sandbox (sandbox_id; a name if given, unique in its workspace, which ListSandboxes finds): a
 //     microVM from a template: RUNNING; PAUSED, memory, processes and disk kept on its server,
 //     never refused for room; STOPPED, its disk in object storage, processes ended; DELETED.
 //   Template ("name" or "name@version"): what a sandbox starts from: "base" (Ubuntu, Python,
 //     Node.js, coding agents, Docker, Chrome), or one saved from a sandbox (CreateTemplate).
-//   Volume (volume_id): a disk that outlives sandboxes, mounted into them at a path.
 //   Secret (name): a value the workspace keeps and no sandbox holds.
 //
 // IDLE AND WAKE
@@ -95,7 +94,6 @@ const (
 	Meter_METER_PAUSED      Meter = 9 // A second of a PAUSED sandbox, at its size (UsageRow.size).
 	// A GiB a STOPPED sandbox holds in object storage: what its disk holds of its own.
 	Meter_METER_STORED_GIB Meter = 7
-	Meter_METER_VOLUME_GIB Meter = 8 // A GiB of a volume's size.
 )
 
 // Enum value maps for Meter.
@@ -105,14 +103,12 @@ var (
 		5: "METER_RUNNING",
 		9: "METER_PAUSED",
 		7: "METER_STORED_GIB",
-		8: "METER_VOLUME_GIB",
 	}
 	Meter_value = map[string]int32{
 		"METER_UNSPECIFIED": 0,
 		"METER_RUNNING":     5,
 		"METER_PAUSED":      9,
 		"METER_STORED_GIB":  7,
-		"METER_VOLUME_GIB":  8,
 	}
 )
 
@@ -950,7 +946,7 @@ const (
 	RoomBound_ROOM_BOUND_SHORT_MEMORY RoomBound = 2
 	// Its disk has no more free space than it keeps, what it could evict gone: try again later.
 	RoomBound_ROOM_BOUND_DISK RoomBound = 3
-	// The disks and volumes it holds reach as much as it holds: try again later.
+	// The disks it holds reach as much as it holds: try again later.
 	RoomBound_ROOM_BOUND_DISK_CAP RoomBound = 4
 )
 
@@ -1083,7 +1079,6 @@ type Workspace struct {
 	xxx_hidden_Sizes         *[]*SizeInfo           `protobuf:"bytes,7,rep,name=sizes"`
 	xxx_hidden_TemplateBytes int64                  `protobuf:"varint,8,opt,name=template_bytes,json=templateBytes"`
 	xxx_hidden_VcpusUsed     int32                  `protobuf:"varint,9,opt,name=vcpus_used,json=vcpusUsed"`
-	xxx_hidden_VolumeGibUsed int32                  `protobuf:"varint,10,opt,name=volume_gib_used,json=volumeGibUsed"`
 	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
 	XXX_presence             [1]uint32
 	unknownFields            protoimpl.UnknownFields
@@ -1190,21 +1185,14 @@ func (x *Workspace) GetVcpusUsed() int32 {
 	return 0
 }
 
-func (x *Workspace) GetVolumeGibUsed() int32 {
-	if x != nil {
-		return x.xxx_hidden_VolumeGibUsed
-	}
-	return 0
-}
-
 func (x *Workspace) SetWorkspaceId(v string) {
 	x.xxx_hidden_WorkspaceId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 10)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 9)
 }
 
 func (x *Workspace) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 10)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 9)
 }
 
 func (x *Workspace) SetLimits(v *Limits) {
@@ -1229,17 +1217,12 @@ func (x *Workspace) SetSizes(v []*SizeInfo) {
 
 func (x *Workspace) SetTemplateBytes(v int64) {
 	x.xxx_hidden_TemplateBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 10)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 7, 9)
 }
 
 func (x *Workspace) SetVcpusUsed(v int32) {
 	x.xxx_hidden_VcpusUsed = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 10)
-}
-
-func (x *Workspace) SetVolumeGibUsed(v int32) {
-	x.xxx_hidden_VolumeGibUsed = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 10)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 9)
 }
 
 func (x *Workspace) HasWorkspaceId() bool {
@@ -1284,13 +1267,6 @@ func (x *Workspace) HasVcpusUsed() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 8)
 }
 
-func (x *Workspace) HasVolumeGibUsed() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 9)
-}
-
 func (x *Workspace) ClearWorkspaceId() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_WorkspaceId = nil
@@ -1319,11 +1295,6 @@ func (x *Workspace) ClearVcpusUsed() {
 	x.xxx_hidden_VcpusUsed = 0
 }
 
-func (x *Workspace) ClearVolumeGibUsed() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 9)
-	x.xxx_hidden_VolumeGibUsed = 0
-}
-
 type Workspace_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -1337,9 +1308,7 @@ type Workspace_builder struct {
 	// What its own template versions take in object storage now (Template.size_bytes, SAVING ones
 	// counted as 0): what Limits.template_gib holds.
 	TemplateBytes *int64
-	// What its sandboxes count of Limits.vcpus now, and its volumes of Limits.volume_gib.
 	VcpusUsed     *int32
-	VolumeGibUsed *int32
 }
 
 func (b0 Workspace_builder) Build() *Workspace {
@@ -1347,11 +1316,11 @@ func (b0 Workspace_builder) Build() *Workspace {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.WorkspaceId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 10)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 9)
 		x.xxx_hidden_WorkspaceId = b.WorkspaceId
 	}
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 10)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 9)
 		x.xxx_hidden_Name = b.Name
 	}
 	x.xxx_hidden_Limits = b.Limits
@@ -1360,16 +1329,12 @@ func (b0 Workspace_builder) Build() *Workspace {
 	x.xxx_hidden_Billing = b.Billing
 	x.xxx_hidden_Sizes = &b.Sizes
 	if b.TemplateBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 10)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 7, 9)
 		x.xxx_hidden_TemplateBytes = *b.TemplateBytes
 	}
 	if b.VcpusUsed != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 10)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 9)
 		x.xxx_hidden_VcpusUsed = *b.VcpusUsed
-	}
-	if b.VolumeGibUsed != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 10)
-		x.xxx_hidden_VolumeGibUsed = *b.VolumeGibUsed
 	}
 	return m0
 }
@@ -1862,7 +1827,7 @@ type Billing_builder struct {
 	BalanceMicros *int64
 	// True = nothing pays for its usage now: the included usage is used up and the balance is
 	// empty. Its RUNNING and PAUSED sandboxes were STOPPED (STATE_REASON_UNPAID), no sandbox
-	// starts, resumes or wakes, and no volume or template is made (UsageUnpaid), until its owner
+	// starts, resumes or wakes, and no template is made (UsageUnpaid), until its owner
 	// adds to the balance or the plan's next period begins.
 	// What it stores is still counted.
 	Suspended *bool
@@ -1906,12 +1871,11 @@ func (b0 Billing_builder) Build() *Billing {
 }
 
 // What a GiB of each meter that counts bytes costs for a month of 730 hours, by the second, in
-// the currency's unit: 0.20 = 20 cents. The same number in every currency. What a RUNNING or a
+// the currency's unit: 0.03 = 3 cents. The same number in every currency. What a RUNNING or a
 // PAUSED sandbox costs is its size's (SizeInfo.running_hour, paused_hour).
 type Rates struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_StoredGibMonth float64                `protobuf:"fixed64,5,opt,name=stored_gib_month,json=storedGibMonth"`
-	xxx_hidden_VolumeGibMonth float64                `protobuf:"fixed64,6,opt,name=volume_gib_month,json=volumeGibMonth"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
@@ -1950,21 +1914,9 @@ func (x *Rates) GetStoredGibMonth() float64 {
 	return 0
 }
 
-func (x *Rates) GetVolumeGibMonth() float64 {
-	if x != nil {
-		return x.xxx_hidden_VolumeGibMonth
-	}
-	return 0
-}
-
 func (x *Rates) SetStoredGibMonth(v float64) {
 	x.xxx_hidden_StoredGibMonth = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
-}
-
-func (x *Rates) SetVolumeGibMonth(v float64) {
-	x.xxx_hidden_VolumeGibMonth = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
 }
 
 func (x *Rates) HasStoredGibMonth() bool {
@@ -1974,28 +1926,15 @@ func (x *Rates) HasStoredGibMonth() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
 }
 
-func (x *Rates) HasVolumeGibMonth() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
 func (x *Rates) ClearStoredGibMonth() {
 	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
 	x.xxx_hidden_StoredGibMonth = 0
-}
-
-func (x *Rates) ClearVolumeGibMonth() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_VolumeGibMonth = 0
 }
 
 type Rates_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	StoredGibMonth *float64
-	VolumeGibMonth *float64
 }
 
 func (b0 Rates_builder) Build() *Rates {
@@ -2003,12 +1942,8 @@ func (b0 Rates_builder) Build() *Rates {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.StoredGibMonth != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
 		x.xxx_hidden_StoredGibMonth = *b.StoredGibMonth
-	}
-	if b.VolumeGibMonth != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
-		x.xxx_hidden_VolumeGibMonth = *b.VolumeGibMonth
 	}
 	return m0
 }
@@ -2163,7 +2098,6 @@ type Limits struct {
 	state                       protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Vcpus            int32                  `protobuf:"varint,4,opt,name=vcpus"`
 	xxx_hidden_LargestSize      Size                   `protobuf:"varint,5,opt,name=largest_size,json=largestSize,enum=pethost.sandboxes.v1.Size"`
-	xxx_hidden_VolumeGib        int32                  `protobuf:"varint,6,opt,name=volume_gib,json=volumeGib"`
 	xxx_hidden_TemplateVersions int32                  `protobuf:"varint,2,opt,name=template_versions,json=templateVersions"`
 	xxx_hidden_TemplateGib      int32                  `protobuf:"varint,3,opt,name=template_gib,json=templateGib"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
@@ -2213,13 +2147,6 @@ func (x *Limits) GetLargestSize() Size {
 	return Size_SIZE_UNSPECIFIED
 }
 
-func (x *Limits) GetVolumeGib() int32 {
-	if x != nil {
-		return x.xxx_hidden_VolumeGib
-	}
-	return 0
-}
-
 func (x *Limits) GetTemplateVersions() int32 {
 	if x != nil {
 		return x.xxx_hidden_TemplateVersions
@@ -2236,27 +2163,22 @@ func (x *Limits) GetTemplateGib() int32 {
 
 func (x *Limits) SetVcpus(v int32) {
 	x.xxx_hidden_Vcpus = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
 }
 
 func (x *Limits) SetLargestSize(v Size) {
 	x.xxx_hidden_LargestSize = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 5)
-}
-
-func (x *Limits) SetVolumeGib(v int32) {
-	x.xxx_hidden_VolumeGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
 }
 
 func (x *Limits) SetTemplateVersions(v int32) {
 	x.xxx_hidden_TemplateVersions = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
 }
 
 func (x *Limits) SetTemplateGib(v int32) {
 	x.xxx_hidden_TemplateGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 5)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
 }
 
 func (x *Limits) HasVcpus() bool {
@@ -2273,25 +2195,18 @@ func (x *Limits) HasLargestSize() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
 }
 
-func (x *Limits) HasVolumeGib() bool {
+func (x *Limits) HasTemplateVersions() bool {
 	if x == nil {
 		return false
 	}
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
 }
 
-func (x *Limits) HasTemplateVersions() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
-}
-
 func (x *Limits) HasTemplateGib() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
 func (x *Limits) ClearVcpus() {
@@ -2304,18 +2219,13 @@ func (x *Limits) ClearLargestSize() {
 	x.xxx_hidden_LargestSize = Size_SIZE_UNSPECIFIED
 }
 
-func (x *Limits) ClearVolumeGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_VolumeGib = 0
-}
-
 func (x *Limits) ClearTemplateVersions() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
 	x.xxx_hidden_TemplateVersions = 0
 }
 
 func (x *Limits) ClearTemplateGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
 	x.xxx_hidden_TemplateGib = 0
 }
 
@@ -2331,8 +2241,6 @@ type Limits_builder struct {
 	Vcpus *int32
 	// The largest size it may create, start or change a sandbox to.
 	LargestSize *Size
-	// The most GiB its volumes may take together (CreateVolume).
-	VolumeGib *int32
 	// The workspace's own templates: at most template_versions versions of one name, FAILED ones
 	// aside, and template_gib GiB in all of what its versions take in object storage
 	// (Workspace.template_bytes), which is not billed. A CreateTemplate past either, or while
@@ -2348,23 +2256,19 @@ func (b0 Limits_builder) Build() *Limits {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Vcpus != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
 		x.xxx_hidden_Vcpus = *b.Vcpus
 	}
 	if b.LargestSize != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
 		x.xxx_hidden_LargestSize = *b.LargestSize
 	}
-	if b.VolumeGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 5)
-		x.xxx_hidden_VolumeGib = *b.VolumeGib
-	}
 	if b.TemplateVersions != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
 		x.xxx_hidden_TemplateVersions = *b.TemplateVersions
 	}
 	if b.TemplateGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 5)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
 		x.xxx_hidden_TemplateGib = *b.TemplateGib
 	}
 	return m0
@@ -2895,12 +2799,11 @@ func (b0 DeleteSecretRequest_builder) Build() *DeleteSecretRequest {
 // out, it stops the RUNNING sandbox whose disk grew most (CRASH, "its server ran out of disk
 // space"), its disk kept.
 //
-// A STOPPED sandbox without volumes, its copy current, starts on another server when its own has
-// no room for it (ResumeSandbox), its addresses with it. If a server is lost, each of its
-// sandboxes with a copy is STOPPED from its last copy, saying when that was if it ran since, and
-// starts on another server at its next ResumeSandbox; one without a copy is DELETED, as are its
-// volumes, which the sandboxes that mounted them lose. While nothing pays for its workspace
-// (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
+// A STOPPED sandbox, its copy current, starts on another server when its own has no room for it
+// (ResumeSandbox), its addresses with it. If a server is lost, each of its sandboxes with a copy
+// is STOPPED from its last copy, saying when that was if it ran since, and starts on another
+// server at its next ResumeSandbox; one without a copy is DELETED. While nothing pays for its
+// workspace (Billing.suspended), its RUNNING and PAUSED sandboxes are STOPPED (UNPAID), and none of them
 // starts.
 type Sandbox struct {
 	state                    protoimpl.MessageState `protogen:"opaque.v1"`
@@ -2914,7 +2817,6 @@ type Sandbox struct {
 	xxx_hidden_Settings      *SandboxSettings       `protobuf:"bytes,10,opt,name=settings"`
 	xxx_hidden_Revision      int64                  `protobuf:"varint,11,opt,name=revision"`
 	xxx_hidden_DiskGib       int32                  `protobuf:"varint,12,opt,name=disk_gib,json=diskGib"`
-	xxx_hidden_Mounts        *[]*Mount              `protobuf:"bytes,13,rep,name=mounts"`
 	xxx_hidden_Desktop       *Desktop               `protobuf:"bytes,14,opt,name=desktop"`
 	xxx_hidden_SshCommand    *string                `protobuf:"bytes,15,opt,name=ssh_command,json=sshCommand"`
 	xxx_hidden_PanelUrl      *string                `protobuf:"bytes,16,opt,name=panel_url,json=panelUrl"`
@@ -3042,15 +2944,6 @@ func (x *Sandbox) GetDiskGib() int32 {
 	return 0
 }
 
-func (x *Sandbox) GetMounts() []*Mount {
-	if x != nil {
-		if x.xxx_hidden_Mounts != nil {
-			return *x.xxx_hidden_Mounts
-		}
-	}
-	return nil
-}
-
 func (x *Sandbox) GetDesktop() *Desktop {
 	if x != nil {
 		return x.xxx_hidden_Desktop
@@ -3108,7 +3001,7 @@ func (x *Sandbox) GetRestore() *Restore {
 
 func (x *Sandbox) GetNextState() SandboxState {
 	if x != nil {
-		if protoimpl.X.Present(&(x.XXX_presence[0]), 18) {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 17) {
 			return x.xxx_hidden_NextState
 		}
 	}
@@ -3141,22 +3034,22 @@ func (x *Sandbox) GetName() string {
 
 func (x *Sandbox) SetSandboxId(v string) {
 	x.xxx_hidden_SandboxId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 21)
 }
 
 func (x *Sandbox) SetState(v SandboxState) {
 	x.xxx_hidden_State = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 21)
 }
 
 func (x *Sandbox) SetStateReason(v StateReason) {
 	x.xxx_hidden_StateReason = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 21)
 }
 
 func (x *Sandbox) SetStateMessage(v string) {
 	x.xxx_hidden_StateMessage = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 21)
 }
 
 func (x *Sandbox) SetStateTime(v *timestamppb.Timestamp) {
@@ -3165,7 +3058,7 @@ func (x *Sandbox) SetStateTime(v *timestamppb.Timestamp) {
 
 func (x *Sandbox) SetTemplate(v string) {
 	x.xxx_hidden_Template = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 21)
 }
 
 func (x *Sandbox) SetLabels(v []*Label) {
@@ -3178,16 +3071,12 @@ func (x *Sandbox) SetSettings(v *SandboxSettings) {
 
 func (x *Sandbox) SetRevision(v int64) {
 	x.xxx_hidden_Revision = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 8, 21)
 }
 
 func (x *Sandbox) SetDiskGib(v int32) {
 	x.xxx_hidden_DiskGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 22)
-}
-
-func (x *Sandbox) SetMounts(v []*Mount) {
-	x.xxx_hidden_Mounts = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 9, 21)
 }
 
 func (x *Sandbox) SetDesktop(v *Desktop) {
@@ -3196,12 +3085,12 @@ func (x *Sandbox) SetDesktop(v *Desktop) {
 
 func (x *Sandbox) SetSshCommand(v string) {
 	x.xxx_hidden_SshCommand = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 11, 21)
 }
 
 func (x *Sandbox) SetPanelUrl(v string) {
 	x.xxx_hidden_PanelUrl = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 13, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 12, 21)
 }
 
 func (x *Sandbox) SetCreateTime(v *timestamppb.Timestamp) {
@@ -3222,7 +3111,7 @@ func (x *Sandbox) SetRestore(v *Restore) {
 
 func (x *Sandbox) SetNextState(v SandboxState) {
 	x.xxx_hidden_NextState = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 18, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 17, 21)
 }
 
 func (x *Sandbox) SetNextStateTime(v *timestamppb.Timestamp) {
@@ -3231,12 +3120,12 @@ func (x *Sandbox) SetNextStateTime(v *timestamppb.Timestamp) {
 
 func (x *Sandbox) SetStoredBytes(v int64) {
 	x.xxx_hidden_StoredBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 19, 21)
 }
 
 func (x *Sandbox) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 21, 22)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 20, 21)
 }
 
 func (x *Sandbox) HasSandboxId() bool {
@@ -3313,14 +3202,14 @@ func (x *Sandbox) HasSshCommand() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 11)
 }
 
 func (x *Sandbox) HasPanelUrl() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 13)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 12)
 }
 
 func (x *Sandbox) HasCreateTime() bool {
@@ -3355,7 +3244,7 @@ func (x *Sandbox) HasNextState() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 18)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 17)
 }
 
 func (x *Sandbox) HasNextStateTime() bool {
@@ -3369,14 +3258,14 @@ func (x *Sandbox) HasStoredBytes() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 20)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 19)
 }
 
 func (x *Sandbox) HasName() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 21)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 20)
 }
 
 func (x *Sandbox) ClearSandboxId() {
@@ -3427,12 +3316,12 @@ func (x *Sandbox) ClearDesktop() {
 }
 
 func (x *Sandbox) ClearSshCommand() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 11)
 	x.xxx_hidden_SshCommand = nil
 }
 
 func (x *Sandbox) ClearPanelUrl() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 13)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 12)
 	x.xxx_hidden_PanelUrl = nil
 }
 
@@ -3453,7 +3342,7 @@ func (x *Sandbox) ClearRestore() {
 }
 
 func (x *Sandbox) ClearNextState() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 18)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 17)
 	x.xxx_hidden_NextState = SandboxState_SANDBOX_STATE_UNSPECIFIED
 }
 
@@ -3462,12 +3351,12 @@ func (x *Sandbox) ClearNextStateTime() {
 }
 
 func (x *Sandbox) ClearStoredBytes() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 20)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 19)
 	x.xxx_hidden_StoredBytes = 0
 }
 
 func (x *Sandbox) ClearName() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 21)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 20)
 	x.xxx_hidden_Name = nil
 }
 
@@ -3489,7 +3378,6 @@ type Sandbox_builder struct {
 	// grows it to the new size's. No size whose disk is smaller is allowed
 	// (SIZES).
 	DiskGib *int32
-	Mounts  []*Mount
 	Desktop *Desktop
 	// "ssh <id>@<server> -p 2222": signs in with a key of the workspace, or a ConnectSandbox token
 	// as the password.
@@ -3525,44 +3413,43 @@ func (b0 Sandbox_builder) Build() *Sandbox {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.SandboxId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 21)
 		x.xxx_hidden_SandboxId = b.SandboxId
 	}
 	if b.State != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 21)
 		x.xxx_hidden_State = *b.State
 	}
 	if b.StateReason != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 21)
 		x.xxx_hidden_StateReason = *b.StateReason
 	}
 	if b.StateMessage != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 21)
 		x.xxx_hidden_StateMessage = b.StateMessage
 	}
 	x.xxx_hidden_StateTime = b.StateTime
 	if b.Template != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 21)
 		x.xxx_hidden_Template = b.Template
 	}
 	x.xxx_hidden_Labels = &b.Labels
 	x.xxx_hidden_Settings = b.Settings
 	if b.Revision != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 8, 21)
 		x.xxx_hidden_Revision = *b.Revision
 	}
 	if b.DiskGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 9, 21)
 		x.xxx_hidden_DiskGib = *b.DiskGib
 	}
-	x.xxx_hidden_Mounts = &b.Mounts
 	x.xxx_hidden_Desktop = b.Desktop
 	if b.SshCommand != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 11, 21)
 		x.xxx_hidden_SshCommand = b.SshCommand
 	}
 	if b.PanelUrl != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 13, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 12, 21)
 		x.xxx_hidden_PanelUrl = b.PanelUrl
 	}
 	x.xxx_hidden_CreateTime = b.CreateTime
@@ -3570,16 +3457,16 @@ func (b0 Sandbox_builder) Build() *Sandbox {
 	x.xxx_hidden_Connection = b.Connection
 	x.xxx_hidden_Restore = b.Restore
 	if b.NextState != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 18, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 17, 21)
 		x.xxx_hidden_NextState = *b.NextState
 	}
 	x.xxx_hidden_NextStateTime = b.NextStateTime
 	if b.StoredBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 19, 21)
 		x.xxx_hidden_StoredBytes = *b.StoredBytes
 	}
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 21, 22)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 20, 21)
 		x.xxx_hidden_Name = b.Name
 	}
 	return m0
@@ -3703,10 +3590,9 @@ func (b0 Restore_builder) Build() *Restore {
 // its paused price (SizeInfo.paused_hour, a share of running_hour), since its server keeps its
 // place for it; one paused for its server's restart counts nothing. A STOPPED sandbox counts the
 // bytes of its own its disk holds (Sandbox.stored_bytes), which object storage keeps, never its
-// empty space: a long sleep costs least STOPPED. A volume counts its whole size. No other
-// minimum: pausing and waking never turns running time into a cheaper one, nor counts a second
-// twice, since a stretch counts from where the one before it was counted to (Sandbox.usage,
-// ListUsage).
+// empty space: a long sleep costs least STOPPED. No other minimum: pausing and waking never
+// turns running time into a cheaper one, nor counts a second twice, since a stretch counts from
+// where the one before it was counted to (Sandbox.usage, ListUsage).
 type Usage struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_RunningSeconds int64                  `protobuf:"varint,1,opt,name=running_seconds,json=runningSeconds"`
@@ -3879,7 +3765,6 @@ type CreateSandboxRequest struct {
 	xxx_hidden_Template    *string                `protobuf:"bytes,1,opt,name=template"`
 	xxx_hidden_Settings    *SandboxSettings       `protobuf:"bytes,3,opt,name=settings"`
 	xxx_hidden_Labels      *[]*Label              `protobuf:"bytes,4,rep,name=labels"`
-	xxx_hidden_Mounts      *[]*Mount              `protobuf:"bytes,6,rep,name=mounts"`
 	xxx_hidden_Name        *string                `protobuf:"bytes,8,opt,name=name"`
 	xxx_hidden_RequestId   *string                `protobuf:"bytes,101,opt,name=request_id,json=requestId"`
 	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
@@ -3940,15 +3825,6 @@ func (x *CreateSandboxRequest) GetLabels() []*Label {
 	return nil
 }
 
-func (x *CreateSandboxRequest) GetMounts() []*Mount {
-	if x != nil {
-		if x.xxx_hidden_Mounts != nil {
-			return *x.xxx_hidden_Mounts
-		}
-	}
-	return nil
-}
-
 func (x *CreateSandboxRequest) GetName() string {
 	if x != nil {
 		if x.xxx_hidden_Name != nil {
@@ -3981,7 +3857,7 @@ func (x *CreateSandboxRequest) GetWorkspace() string {
 
 func (x *CreateSandboxRequest) SetTemplate(v string) {
 	x.xxx_hidden_Template = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
 }
 
 func (x *CreateSandboxRequest) SetSettings(v *SandboxSettings) {
@@ -3992,23 +3868,19 @@ func (x *CreateSandboxRequest) SetLabels(v []*Label) {
 	x.xxx_hidden_Labels = &v
 }
 
-func (x *CreateSandboxRequest) SetMounts(v []*Mount) {
-	x.xxx_hidden_Mounts = &v
-}
-
 func (x *CreateSandboxRequest) SetName(v string) {
 	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
 }
 
 func (x *CreateSandboxRequest) SetRequestId(v string) {
 	x.xxx_hidden_RequestId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 6)
 }
 
 func (x *CreateSandboxRequest) SetWorkspace(v string) {
 	x.xxx_hidden_Workspace = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 7)
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 6)
 }
 
 func (x *CreateSandboxRequest) HasTemplate() bool {
@@ -4029,21 +3901,21 @@ func (x *CreateSandboxRequest) HasName() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
 func (x *CreateSandboxRequest) HasRequestId() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
 }
 
 func (x *CreateSandboxRequest) HasWorkspace() bool {
 	if x == nil {
 		return false
 	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
 }
 
 func (x *CreateSandboxRequest) ClearTemplate() {
@@ -4056,17 +3928,17 @@ func (x *CreateSandboxRequest) ClearSettings() {
 }
 
 func (x *CreateSandboxRequest) ClearName() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
 	x.xxx_hidden_Name = nil
 }
 
 func (x *CreateSandboxRequest) ClearRequestId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
 	x.xxx_hidden_RequestId = nil
 }
 
 func (x *CreateSandboxRequest) ClearWorkspace() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
 	x.xxx_hidden_Workspace = nil
 }
 
@@ -4077,7 +3949,6 @@ type CreateSandboxRequest_builder struct {
 	// To add to the template's variables, send them too (ListTemplates: Template.settings).
 	Settings *SandboxSettings
 	Labels   []*Label
-	Mounts   []*Mount
 	// Unique in the workspace (ALREADY_EXISTS + NameTaken names the sandbox that has it): a-z, 0-9
 	// and "-", at most 63, not 16 of a-z and 0-9 alone, a sandbox_id's shape. Absent = none.
 	Name *string
@@ -4092,22 +3963,21 @@ func (b0 CreateSandboxRequest_builder) Build() *CreateSandboxRequest {
 	b, x := &b0, m0
 	_, _ = b, x
 	if b.Template != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
 		x.xxx_hidden_Template = b.Template
 	}
 	x.xxx_hidden_Settings = b.Settings
 	x.xxx_hidden_Labels = &b.Labels
-	x.xxx_hidden_Mounts = &b.Mounts
 	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
 		x.xxx_hidden_Name = b.Name
 	}
 	if b.RequestId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 6)
 		x.xxx_hidden_RequestId = b.RequestId
 	}
 	if b.Workspace != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 7)
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 6)
 		x.xxx_hidden_Workspace = b.Workspace
 	}
 	return m0
@@ -9717,881 +9587,6 @@ func (b0 DeleteTemplateRequest_builder) Build() *DeleteTemplateRequest {
 	return m0
 }
 
-type Volume struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_VolumeId    *string                `protobuf:"bytes,1,opt,name=volume_id,json=volumeId"`
-	xxx_hidden_Name        *string                `protobuf:"bytes,2,opt,name=name"`
-	xxx_hidden_SizeGib     int32                  `protobuf:"varint,3,opt,name=size_gib,json=sizeGib"`
-	xxx_hidden_UsedBytes   int64                  `protobuf:"varint,5,opt,name=used_bytes,json=usedBytes"`
-	xxx_hidden_MountedBy   []string               `protobuf:"bytes,6,rep,name=mounted_by,json=mountedBy"`
-	xxx_hidden_CreateTime  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=create_time,json=createTime"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *Volume) Reset() {
-	*x = Volume{}
-	mi := &file_v1_sandboxes_proto_msgTypes[51]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Volume) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Volume) ProtoMessage() {}
-
-func (x *Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[51]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *Volume) GetVolumeId() string {
-	if x != nil {
-		if x.xxx_hidden_VolumeId != nil {
-			return *x.xxx_hidden_VolumeId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *Volume) GetName() string {
-	if x != nil {
-		if x.xxx_hidden_Name != nil {
-			return *x.xxx_hidden_Name
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *Volume) GetSizeGib() int32 {
-	if x != nil {
-		return x.xxx_hidden_SizeGib
-	}
-	return 0
-}
-
-func (x *Volume) GetUsedBytes() int64 {
-	if x != nil {
-		return x.xxx_hidden_UsedBytes
-	}
-	return 0
-}
-
-func (x *Volume) GetMountedBy() []string {
-	if x != nil {
-		return x.xxx_hidden_MountedBy
-	}
-	return nil
-}
-
-func (x *Volume) GetCreateTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.xxx_hidden_CreateTime
-	}
-	return nil
-}
-
-func (x *Volume) SetVolumeId(v string) {
-	x.xxx_hidden_VolumeId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 6)
-}
-
-func (x *Volume) SetName(v string) {
-	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
-}
-
-func (x *Volume) SetSizeGib(v int32) {
-	x.xxx_hidden_SizeGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
-}
-
-func (x *Volume) SetUsedBytes(v int64) {
-	x.xxx_hidden_UsedBytes = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
-}
-
-func (x *Volume) SetMountedBy(v []string) {
-	x.xxx_hidden_MountedBy = v
-}
-
-func (x *Volume) SetCreateTime(v *timestamppb.Timestamp) {
-	x.xxx_hidden_CreateTime = v
-}
-
-func (x *Volume) HasVolumeId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *Volume) HasName() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *Volume) HasSizeGib() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
-}
-
-func (x *Volume) HasUsedBytes() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
-}
-
-func (x *Volume) HasCreateTime() bool {
-	if x == nil {
-		return false
-	}
-	return x.xxx_hidden_CreateTime != nil
-}
-
-func (x *Volume) ClearVolumeId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_VolumeId = nil
-}
-
-func (x *Volume) ClearName() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_Name = nil
-}
-
-func (x *Volume) ClearSizeGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_SizeGib = 0
-}
-
-func (x *Volume) ClearUsedBytes() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
-	x.xxx_hidden_UsedBytes = 0
-}
-
-func (x *Volume) ClearCreateTime() {
-	x.xxx_hidden_CreateTime = nil
-}
-
-type Volume_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	VolumeId   *string
-	Name       *string
-	SizeGib    *int32
-	UsedBytes  *int64
-	MountedBy  []string
-	CreateTime *timestamppb.Timestamp
-}
-
-func (b0 Volume_builder) Build() *Volume {
-	m0 := &Volume{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.VolumeId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 6)
-		x.xxx_hidden_VolumeId = b.VolumeId
-	}
-	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
-		x.xxx_hidden_Name = b.Name
-	}
-	if b.SizeGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
-		x.xxx_hidden_SizeGib = *b.SizeGib
-	}
-	if b.UsedBytes != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
-		x.xxx_hidden_UsedBytes = *b.UsedBytes
-	}
-	x.xxx_hidden_MountedBy = b.MountedBy
-	x.xxx_hidden_CreateTime = b.CreateTime
-	return m0
-}
-
-// A volume mounted into a sandbox at create: read-write by one sandbox at a time, read-only by
-// any number.
-type Mount struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_VolumeId    *string                `protobuf:"bytes,1,opt,name=volume_id,json=volumeId"`
-	xxx_hidden_Path        *string                `protobuf:"bytes,2,opt,name=path"`
-	xxx_hidden_ReadOnly    bool                   `protobuf:"varint,3,opt,name=read_only,json=readOnly"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *Mount) Reset() {
-	*x = Mount{}
-	mi := &file_v1_sandboxes_proto_msgTypes[52]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Mount) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Mount) ProtoMessage() {}
-
-func (x *Mount) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[52]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *Mount) GetVolumeId() string {
-	if x != nil {
-		if x.xxx_hidden_VolumeId != nil {
-			return *x.xxx_hidden_VolumeId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *Mount) GetPath() string {
-	if x != nil {
-		if x.xxx_hidden_Path != nil {
-			return *x.xxx_hidden_Path
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *Mount) GetReadOnly() bool {
-	if x != nil {
-		return x.xxx_hidden_ReadOnly
-	}
-	return false
-}
-
-func (x *Mount) SetVolumeId(v string) {
-	x.xxx_hidden_VolumeId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
-}
-
-func (x *Mount) SetPath(v string) {
-	x.xxx_hidden_Path = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
-}
-
-func (x *Mount) SetReadOnly(v bool) {
-	x.xxx_hidden_ReadOnly = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
-}
-
-func (x *Mount) HasVolumeId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *Mount) HasPath() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *Mount) HasReadOnly() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
-}
-
-func (x *Mount) ClearVolumeId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_VolumeId = nil
-}
-
-func (x *Mount) ClearPath() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_Path = nil
-}
-
-func (x *Mount) ClearReadOnly() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_ReadOnly = false
-}
-
-type Mount_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	VolumeId *string
-	Path     *string
-	ReadOnly *bool
-}
-
-func (b0 Mount_builder) Build() *Mount {
-	m0 := &Mount{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.VolumeId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
-		x.xxx_hidden_VolumeId = b.VolumeId
-	}
-	if b.Path != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
-		x.xxx_hidden_Path = b.Path
-	}
-	if b.ReadOnly != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
-		x.xxx_hidden_ReadOnly = *b.ReadOnly
-	}
-	return m0
-}
-
-type CreateVolumeRequest struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name        *string                `protobuf:"bytes,1,opt,name=name"`
-	xxx_hidden_SizeGib     int32                  `protobuf:"varint,2,opt,name=size_gib,json=sizeGib"`
-	xxx_hidden_RequestId   *string                `protobuf:"bytes,101,opt,name=request_id,json=requestId"`
-	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *CreateVolumeRequest) Reset() {
-	*x = CreateVolumeRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[53]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateVolumeRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateVolumeRequest) ProtoMessage() {}
-
-func (x *CreateVolumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[53]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *CreateVolumeRequest) GetName() string {
-	if x != nil {
-		if x.xxx_hidden_Name != nil {
-			return *x.xxx_hidden_Name
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *CreateVolumeRequest) GetSizeGib() int32 {
-	if x != nil {
-		return x.xxx_hidden_SizeGib
-	}
-	return 0
-}
-
-func (x *CreateVolumeRequest) GetRequestId() string {
-	if x != nil {
-		if x.xxx_hidden_RequestId != nil {
-			return *x.xxx_hidden_RequestId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *CreateVolumeRequest) GetWorkspace() string {
-	if x != nil {
-		if x.xxx_hidden_Workspace != nil {
-			return *x.xxx_hidden_Workspace
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *CreateVolumeRequest) SetName(v string) {
-	x.xxx_hidden_Name = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
-}
-
-func (x *CreateVolumeRequest) SetSizeGib(v int32) {
-	x.xxx_hidden_SizeGib = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 4)
-}
-
-func (x *CreateVolumeRequest) SetRequestId(v string) {
-	x.xxx_hidden_RequestId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
-}
-
-func (x *CreateVolumeRequest) SetWorkspace(v string) {
-	x.xxx_hidden_Workspace = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 4)
-}
-
-func (x *CreateVolumeRequest) HasName() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *CreateVolumeRequest) HasSizeGib() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *CreateVolumeRequest) HasRequestId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
-}
-
-func (x *CreateVolumeRequest) HasWorkspace() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
-}
-
-func (x *CreateVolumeRequest) ClearName() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_Name = nil
-}
-
-func (x *CreateVolumeRequest) ClearSizeGib() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_SizeGib = 0
-}
-
-func (x *CreateVolumeRequest) ClearRequestId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_RequestId = nil
-}
-
-func (x *CreateVolumeRequest) ClearWorkspace() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
-	x.xxx_hidden_Workspace = nil
-}
-
-type CreateVolumeRequest_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	Name    *string
-	SizeGib *int32
-	// Any new string; send it again on a retry after a timeout or a lost answer: the retry does
-	// nothing again and answers what the first call did (24 h).
-	RequestId *string
-	Workspace *string
-}
-
-func (b0 CreateVolumeRequest_builder) Build() *CreateVolumeRequest {
-	m0 := &CreateVolumeRequest{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.Name != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
-		x.xxx_hidden_Name = b.Name
-	}
-	if b.SizeGib != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 4)
-		x.xxx_hidden_SizeGib = *b.SizeGib
-	}
-	if b.RequestId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
-		x.xxx_hidden_RequestId = b.RequestId
-	}
-	if b.Workspace != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 4)
-		x.xxx_hidden_Workspace = b.Workspace
-	}
-	return m0
-}
-
-type ListVolumesRequest struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_PageSize    int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize"`
-	xxx_hidden_PageToken   *string                `protobuf:"bytes,2,opt,name=page_token,json=pageToken"`
-	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *ListVolumesRequest) Reset() {
-	*x = ListVolumesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[54]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVolumesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVolumesRequest) ProtoMessage() {}
-
-func (x *ListVolumesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[54]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *ListVolumesRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.xxx_hidden_PageSize
-	}
-	return 0
-}
-
-func (x *ListVolumesRequest) GetPageToken() string {
-	if x != nil {
-		if x.xxx_hidden_PageToken != nil {
-			return *x.xxx_hidden_PageToken
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *ListVolumesRequest) GetWorkspace() string {
-	if x != nil {
-		if x.xxx_hidden_Workspace != nil {
-			return *x.xxx_hidden_Workspace
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *ListVolumesRequest) SetPageSize(v int32) {
-	x.xxx_hidden_PageSize = v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
-}
-
-func (x *ListVolumesRequest) SetPageToken(v string) {
-	x.xxx_hidden_PageToken = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
-}
-
-func (x *ListVolumesRequest) SetWorkspace(v string) {
-	x.xxx_hidden_Workspace = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
-}
-
-func (x *ListVolumesRequest) HasPageSize() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *ListVolumesRequest) HasPageToken() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *ListVolumesRequest) HasWorkspace() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
-}
-
-func (x *ListVolumesRequest) ClearPageSize() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_PageSize = 0
-}
-
-func (x *ListVolumesRequest) ClearPageToken() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_PageToken = nil
-}
-
-func (x *ListVolumesRequest) ClearWorkspace() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
-	x.xxx_hidden_Workspace = nil
-}
-
-type ListVolumesRequest_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	PageSize  *int32
-	PageToken *string
-	Workspace *string
-}
-
-func (b0 ListVolumesRequest_builder) Build() *ListVolumesRequest {
-	m0 := &ListVolumesRequest{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.PageSize != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
-		x.xxx_hidden_PageSize = *b.PageSize
-	}
-	if b.PageToken != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
-		x.xxx_hidden_PageToken = b.PageToken
-	}
-	if b.Workspace != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
-		x.xxx_hidden_Workspace = b.Workspace
-	}
-	return m0
-}
-
-type ListVolumesResponse struct {
-	state                    protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Volumes       *[]*Volume             `protobuf:"bytes,1,rep,name=volumes"`
-	xxx_hidden_NextPageToken *string                `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken"`
-	XXX_raceDetectHookData   protoimpl.RaceDetectHookData
-	XXX_presence             [1]uint32
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
-}
-
-func (x *ListVolumesResponse) Reset() {
-	*x = ListVolumesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[55]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVolumesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVolumesResponse) ProtoMessage() {}
-
-func (x *ListVolumesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[55]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *ListVolumesResponse) GetVolumes() []*Volume {
-	if x != nil {
-		if x.xxx_hidden_Volumes != nil {
-			return *x.xxx_hidden_Volumes
-		}
-	}
-	return nil
-}
-
-func (x *ListVolumesResponse) GetNextPageToken() string {
-	if x != nil {
-		if x.xxx_hidden_NextPageToken != nil {
-			return *x.xxx_hidden_NextPageToken
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *ListVolumesResponse) SetVolumes(v []*Volume) {
-	x.xxx_hidden_Volumes = &v
-}
-
-func (x *ListVolumesResponse) SetNextPageToken(v string) {
-	x.xxx_hidden_NextPageToken = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
-}
-
-func (x *ListVolumesResponse) HasNextPageToken() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *ListVolumesResponse) ClearNextPageToken() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_NextPageToken = nil
-}
-
-type ListVolumesResponse_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	Volumes       []*Volume
-	NextPageToken *string
-}
-
-func (b0 ListVolumesResponse_builder) Build() *ListVolumesResponse {
-	m0 := &ListVolumesResponse{}
-	b, x := &b0, m0
-	_, _ = b, x
-	x.xxx_hidden_Volumes = &b.Volumes
-	if b.NextPageToken != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
-		x.xxx_hidden_NextPageToken = b.NextPageToken
-	}
-	return m0
-}
-
-type DeleteVolumeRequest struct {
-	state                  protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_VolumeId    *string                `protobuf:"bytes,1,opt,name=volume_id,json=volumeId"`
-	xxx_hidden_Workspace   *string                `protobuf:"bytes,100,opt,name=workspace"`
-	XXX_raceDetectHookData protoimpl.RaceDetectHookData
-	XXX_presence           [1]uint32
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
-}
-
-func (x *DeleteVolumeRequest) Reset() {
-	*x = DeleteVolumeRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[56]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteVolumeRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteVolumeRequest) ProtoMessage() {}
-
-func (x *DeleteVolumeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[56]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-func (x *DeleteVolumeRequest) GetVolumeId() string {
-	if x != nil {
-		if x.xxx_hidden_VolumeId != nil {
-			return *x.xxx_hidden_VolumeId
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *DeleteVolumeRequest) GetWorkspace() string {
-	if x != nil {
-		if x.xxx_hidden_Workspace != nil {
-			return *x.xxx_hidden_Workspace
-		}
-		return ""
-	}
-	return ""
-}
-
-func (x *DeleteVolumeRequest) SetVolumeId(v string) {
-	x.xxx_hidden_VolumeId = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
-}
-
-func (x *DeleteVolumeRequest) SetWorkspace(v string) {
-	x.xxx_hidden_Workspace = &v
-	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
-}
-
-func (x *DeleteVolumeRequest) HasVolumeId() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
-}
-
-func (x *DeleteVolumeRequest) HasWorkspace() bool {
-	if x == nil {
-		return false
-	}
-	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
-}
-
-func (x *DeleteVolumeRequest) ClearVolumeId() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
-	x.xxx_hidden_VolumeId = nil
-}
-
-func (x *DeleteVolumeRequest) ClearWorkspace() {
-	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
-	x.xxx_hidden_Workspace = nil
-}
-
-type DeleteVolumeRequest_builder struct {
-	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
-
-	VolumeId  *string
-	Workspace *string
-}
-
-func (b0 DeleteVolumeRequest_builder) Build() *DeleteVolumeRequest {
-	m0 := &DeleteVolumeRequest{}
-	b, x := &b0, m0
-	_, _ = b, x
-	if b.VolumeId != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
-		x.xxx_hidden_VolumeId = b.VolumeId
-	}
-	if b.Workspace != nil {
-		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
-		x.xxx_hidden_Workspace = b.Workspace
-	}
-	return m0
-}
-
 type ListUsageRequest struct {
 	state                  protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Since       *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=since"`
@@ -10607,7 +9602,7 @@ type ListUsageRequest struct {
 
 func (x *ListUsageRequest) Reset() {
 	*x = ListUsageRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[57]
+	mi := &file_v1_sandboxes_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10619,7 +9614,7 @@ func (x *ListUsageRequest) String() string {
 func (*ListUsageRequest) ProtoMessage() {}
 
 func (x *ListUsageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[57]
+	mi := &file_v1_sandboxes_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10795,7 +9790,7 @@ type ListUsageResponse struct {
 
 func (x *ListUsageResponse) Reset() {
 	*x = ListUsageResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[58]
+	mi := &file_v1_sandboxes_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10807,7 +9802,7 @@ func (x *ListUsageResponse) String() string {
 func (*ListUsageResponse) ProtoMessage() {}
 
 func (x *ListUsageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[58]
+	mi := &file_v1_sandboxes_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10892,7 +9887,7 @@ type UsageRow struct {
 
 func (x *UsageRow) Reset() {
 	*x = UsageRow{}
-	mi := &file_v1_sandboxes_proto_msgTypes[59]
+	mi := &file_v1_sandboxes_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10904,7 +9899,7 @@ func (x *UsageRow) String() string {
 func (*UsageRow) ProtoMessage() {}
 
 func (x *UsageRow) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[59]
+	mi := &file_v1_sandboxes_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11094,7 +10089,7 @@ type RunCommandRequest struct {
 
 func (x *RunCommandRequest) Reset() {
 	*x = RunCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[60]
+	mi := &file_v1_sandboxes_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11106,7 +10101,7 @@ func (x *RunCommandRequest) String() string {
 func (*RunCommandRequest) ProtoMessage() {}
 
 func (x *RunCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[60]
+	mi := &file_v1_sandboxes_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11467,7 +10462,7 @@ type Command struct {
 
 func (x *Command) Reset() {
 	*x = Command{}
-	mi := &file_v1_sandboxes_proto_msgTypes[61]
+	mi := &file_v1_sandboxes_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11479,7 +10474,7 @@ func (x *Command) String() string {
 func (*Command) ProtoMessage() {}
 
 func (x *Command) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[61]
+	mi := &file_v1_sandboxes_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11876,7 +10871,7 @@ type GetCommandRequest struct {
 
 func (x *GetCommandRequest) Reset() {
 	*x = GetCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[62]
+	mi := &file_v1_sandboxes_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11888,7 +10883,7 @@ func (x *GetCommandRequest) String() string {
 func (*GetCommandRequest) ProtoMessage() {}
 
 func (x *GetCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[62]
+	mi := &file_v1_sandboxes_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12076,7 +11071,7 @@ type StopCommandRequest struct {
 
 func (x *StopCommandRequest) Reset() {
 	*x = StopCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[63]
+	mi := &file_v1_sandboxes_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12088,7 +11083,7 @@ func (x *StopCommandRequest) String() string {
 func (*StopCommandRequest) ProtoMessage() {}
 
 func (x *StopCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[63]
+	mi := &file_v1_sandboxes_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12186,7 +11181,7 @@ type ListCommandsRequest struct {
 
 func (x *ListCommandsRequest) Reset() {
 	*x = ListCommandsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[64]
+	mi := &file_v1_sandboxes_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12198,7 +11193,7 @@ func (x *ListCommandsRequest) String() string {
 func (*ListCommandsRequest) ProtoMessage() {}
 
 func (x *ListCommandsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[64]
+	mi := &file_v1_sandboxes_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12262,7 +11257,7 @@ type ListCommandsResponse struct {
 
 func (x *ListCommandsResponse) Reset() {
 	*x = ListCommandsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[65]
+	mi := &file_v1_sandboxes_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12274,7 +11269,7 @@ func (x *ListCommandsResponse) String() string {
 func (*ListCommandsResponse) ProtoMessage() {}
 
 func (x *ListCommandsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[65]
+	mi := &file_v1_sandboxes_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12324,7 +11319,7 @@ type WatchCommandRequest struct {
 
 func (x *WatchCommandRequest) Reset() {
 	*x = WatchCommandRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[66]
+	mi := &file_v1_sandboxes_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12336,7 +11331,7 @@ func (x *WatchCommandRequest) String() string {
 func (*WatchCommandRequest) ProtoMessage() {}
 
 func (x *WatchCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[66]
+	mi := &file_v1_sandboxes_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12432,7 +11427,7 @@ type CommandOutput struct {
 
 func (x *CommandOutput) Reset() {
 	*x = CommandOutput{}
-	mi := &file_v1_sandboxes_proto_msgTypes[67]
+	mi := &file_v1_sandboxes_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12444,7 +11439,7 @@ func (x *CommandOutput) String() string {
 func (*CommandOutput) ProtoMessage() {}
 
 func (x *CommandOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[67]
+	mi := &file_v1_sandboxes_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12607,7 +11602,7 @@ func (b0 CommandOutput_builder) Build() *CommandOutput {
 type case_CommandOutput_Output protoreflect.FieldNumber
 
 func (x case_CommandOutput_Output) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[67].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[61].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -12650,7 +11645,7 @@ type ReadFileRequest struct {
 
 func (x *ReadFileRequest) Reset() {
 	*x = ReadFileRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[68]
+	mi := &file_v1_sandboxes_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12662,7 +11657,7 @@ func (x *ReadFileRequest) String() string {
 func (*ReadFileRequest) ProtoMessage() {}
 
 func (x *ReadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[68]
+	mi := &file_v1_sandboxes_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12820,7 +11815,7 @@ type File struct {
 
 func (x *File) Reset() {
 	*x = File{}
-	mi := &file_v1_sandboxes_proto_msgTypes[69]
+	mi := &file_v1_sandboxes_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12832,7 +11827,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[69]
+	mi := &file_v1_sandboxes_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13016,7 +12011,7 @@ func (b0 File_builder) Build() *File {
 type case_File_Content protoreflect.FieldNumber
 
 func (x case_File_Content) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[69].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[63].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -13054,7 +12049,7 @@ type ListFilesRequest struct {
 
 func (x *ListFilesRequest) Reset() {
 	*x = ListFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[70]
+	mi := &file_v1_sandboxes_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13066,7 +12061,7 @@ func (x *ListFilesRequest) String() string {
 func (*ListFilesRequest) ProtoMessage() {}
 
 func (x *ListFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[70]
+	mi := &file_v1_sandboxes_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13226,7 +12221,7 @@ type ListFilesResponse struct {
 
 func (x *ListFilesResponse) Reset() {
 	*x = ListFilesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[71]
+	mi := &file_v1_sandboxes_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13238,7 +12233,7 @@ func (x *ListFilesResponse) String() string {
 func (*ListFilesResponse) ProtoMessage() {}
 
 func (x *ListFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[71]
+	mi := &file_v1_sandboxes_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13325,7 +12320,7 @@ type FileInfo struct {
 
 func (x *FileInfo) Reset() {
 	*x = FileInfo{}
-	mi := &file_v1_sandboxes_proto_msgTypes[72]
+	mi := &file_v1_sandboxes_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13337,7 +12332,7 @@ func (x *FileInfo) String() string {
 func (*FileInfo) ProtoMessage() {}
 
 func (x *FileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[72]
+	mi := &file_v1_sandboxes_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13584,7 +12579,7 @@ type WriteFilesRequest struct {
 
 func (x *WriteFilesRequest) Reset() {
 	*x = WriteFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[73]
+	mi := &file_v1_sandboxes_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13596,7 +12591,7 @@ func (x *WriteFilesRequest) String() string {
 func (*WriteFilesRequest) ProtoMessage() {}
 
 func (x *WriteFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[73]
+	mi := &file_v1_sandboxes_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13680,7 +12675,7 @@ type FileChange struct {
 
 func (x *FileChange) Reset() {
 	*x = FileChange{}
-	mi := &file_v1_sandboxes_proto_msgTypes[74]
+	mi := &file_v1_sandboxes_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13692,7 +12687,7 @@ func (x *FileChange) String() string {
 func (*FileChange) ProtoMessage() {}
 
 func (x *FileChange) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[74]
+	mi := &file_v1_sandboxes_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14026,7 +13021,7 @@ func (b0 FileChange_builder) Build() *FileChange {
 type case_FileChange_Change protoreflect.FieldNumber
 
 func (x case_FileChange_Change) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[74].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[68].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -14081,7 +13076,7 @@ type Delete struct {
 
 func (x *Delete) Reset() {
 	*x = Delete{}
-	mi := &file_v1_sandboxes_proto_msgTypes[75]
+	mi := &file_v1_sandboxes_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14093,7 +13088,7 @@ func (x *Delete) String() string {
 func (*Delete) ProtoMessage() {}
 
 func (x *Delete) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[75]
+	mi := &file_v1_sandboxes_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14124,7 +13119,7 @@ type MakeDirectory struct {
 
 func (x *MakeDirectory) Reset() {
 	*x = MakeDirectory{}
-	mi := &file_v1_sandboxes_proto_msgTypes[76]
+	mi := &file_v1_sandboxes_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14136,7 +13131,7 @@ func (x *MakeDirectory) String() string {
 func (*MakeDirectory) ProtoMessage() {}
 
 func (x *MakeDirectory) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[76]
+	mi := &file_v1_sandboxes_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14173,7 +13168,7 @@ type TextEdit struct {
 
 func (x *TextEdit) Reset() {
 	*x = TextEdit{}
-	mi := &file_v1_sandboxes_proto_msgTypes[77]
+	mi := &file_v1_sandboxes_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14185,7 +13180,7 @@ func (x *TextEdit) String() string {
 func (*TextEdit) ProtoMessage() {}
 
 func (x *TextEdit) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[77]
+	mi := &file_v1_sandboxes_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14285,7 +13280,7 @@ type WriteFilesResponse struct {
 
 func (x *WriteFilesResponse) Reset() {
 	*x = WriteFilesResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[78]
+	mi := &file_v1_sandboxes_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14297,7 +13292,7 @@ func (x *WriteFilesResponse) String() string {
 func (*WriteFilesResponse) ProtoMessage() {}
 
 func (x *WriteFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[78]
+	mi := &file_v1_sandboxes_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14425,7 +13420,7 @@ type WatchFilesRequest struct {
 
 func (x *WatchFilesRequest) Reset() {
 	*x = WatchFilesRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[79]
+	mi := &file_v1_sandboxes_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14437,7 +13432,7 @@ func (x *WatchFilesRequest) String() string {
 func (*WatchFilesRequest) ProtoMessage() {}
 
 func (x *WatchFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[79]
+	mi := &file_v1_sandboxes_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14568,7 +13563,7 @@ type FileEvent struct {
 
 func (x *FileEvent) Reset() {
 	*x = FileEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[80]
+	mi := &file_v1_sandboxes_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14580,7 +13575,7 @@ func (x *FileEvent) String() string {
 func (*FileEvent) ProtoMessage() {}
 
 func (x *FileEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[80]
+	mi := &file_v1_sandboxes_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14710,7 +13705,7 @@ type ControlDesktopRequest struct {
 
 func (x *ControlDesktopRequest) Reset() {
 	*x = ControlDesktopRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[81]
+	mi := &file_v1_sandboxes_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14722,7 +13717,7 @@ func (x *ControlDesktopRequest) String() string {
 func (*ControlDesktopRequest) ProtoMessage() {}
 
 func (x *ControlDesktopRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[81]
+	mi := &file_v1_sandboxes_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14806,7 +13801,7 @@ type ControlDesktopResponse struct {
 
 func (x *ControlDesktopResponse) Reset() {
 	*x = ControlDesktopResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[82]
+	mi := &file_v1_sandboxes_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14818,7 +13813,7 @@ func (x *ControlDesktopResponse) String() string {
 func (*ControlDesktopResponse) ProtoMessage() {}
 
 func (x *ControlDesktopResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[82]
+	mi := &file_v1_sandboxes_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14974,7 +13969,7 @@ type Screenshot struct {
 
 func (x *Screenshot) Reset() {
 	*x = Screenshot{}
-	mi := &file_v1_sandboxes_proto_msgTypes[83]
+	mi := &file_v1_sandboxes_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14986,7 +13981,7 @@ func (x *Screenshot) String() string {
 func (*Screenshot) ProtoMessage() {}
 
 func (x *Screenshot) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[83]
+	mi := &file_v1_sandboxes_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15198,7 +14193,7 @@ type DesktopAction struct {
 
 func (x *DesktopAction) Reset() {
 	*x = DesktopAction{}
-	mi := &file_v1_sandboxes_proto_msgTypes[84]
+	mi := &file_v1_sandboxes_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15210,7 +14205,7 @@ func (x *DesktopAction) String() string {
 func (*DesktopAction) ProtoMessage() {}
 
 func (x *DesktopAction) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[84]
+	mi := &file_v1_sandboxes_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15515,7 +14510,7 @@ func (b0 DesktopAction_builder) Build() *DesktopAction {
 type case_DesktopAction_Action protoreflect.FieldNumber
 
 func (x case_DesktopAction_Action) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[84].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[78].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -15580,7 +14575,7 @@ type Point struct {
 
 func (x *Point) Reset() {
 	*x = Point{}
-	mi := &file_v1_sandboxes_proto_msgTypes[85]
+	mi := &file_v1_sandboxes_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15592,7 +14587,7 @@ func (x *Point) String() string {
 func (*Point) ProtoMessage() {}
 
 func (x *Point) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[85]
+	mi := &file_v1_sandboxes_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15688,7 +14683,7 @@ type Click struct {
 
 func (x *Click) Reset() {
 	*x = Click{}
-	mi := &file_v1_sandboxes_proto_msgTypes[86]
+	mi := &file_v1_sandboxes_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15700,7 +14695,7 @@ func (x *Click) String() string {
 func (*Click) ProtoMessage() {}
 
 func (x *Click) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[86]
+	mi := &file_v1_sandboxes_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15882,7 +14877,7 @@ type Drag struct {
 
 func (x *Drag) Reset() {
 	*x = Drag{}
-	mi := &file_v1_sandboxes_proto_msgTypes[87]
+	mi := &file_v1_sandboxes_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15894,7 +14889,7 @@ func (x *Drag) String() string {
 func (*Drag) ProtoMessage() {}
 
 func (x *Drag) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[87]
+	mi := &file_v1_sandboxes_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15946,7 +14941,7 @@ type Scroll struct {
 
 func (x *Scroll) Reset() {
 	*x = Scroll{}
-	mi := &file_v1_sandboxes_proto_msgTypes[88]
+	mi := &file_v1_sandboxes_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15958,7 +14953,7 @@ func (x *Scroll) String() string {
 func (*Scroll) ProtoMessage() {}
 
 func (x *Scroll) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[88]
+	mi := &file_v1_sandboxes_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16110,7 +15105,7 @@ type Desktop struct {
 
 func (x *Desktop) Reset() {
 	*x = Desktop{}
-	mi := &file_v1_sandboxes_proto_msgTypes[89]
+	mi := &file_v1_sandboxes_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16122,7 +15117,7 @@ func (x *Desktop) String() string {
 func (*Desktop) ProtoMessage() {}
 
 func (x *Desktop) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[89]
+	mi := &file_v1_sandboxes_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16216,7 +15211,7 @@ type CreateLinkRequest struct {
 
 func (x *CreateLinkRequest) Reset() {
 	*x = CreateLinkRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[90]
+	mi := &file_v1_sandboxes_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16228,7 +15223,7 @@ func (x *CreateLinkRequest) String() string {
 func (*CreateLinkRequest) ProtoMessage() {}
 
 func (x *CreateLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[90]
+	mi := &file_v1_sandboxes_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16522,7 +15517,7 @@ func (b0 CreateLinkRequest_builder) Build() *CreateLinkRequest {
 type case_CreateLinkRequest_Target protoreflect.FieldNumber
 
 func (x case_CreateLinkRequest_Target) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[90].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[84].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -16580,7 +15575,7 @@ type TerminalLink struct {
 
 func (x *TerminalLink) Reset() {
 	*x = TerminalLink{}
-	mi := &file_v1_sandboxes_proto_msgTypes[91]
+	mi := &file_v1_sandboxes_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16592,7 +15587,7 @@ func (x *TerminalLink) String() string {
 func (*TerminalLink) ProtoMessage() {}
 
 func (x *TerminalLink) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[91]
+	mi := &file_v1_sandboxes_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16659,7 +15654,7 @@ type DesktopLink struct {
 
 func (x *DesktopLink) Reset() {
 	*x = DesktopLink{}
-	mi := &file_v1_sandboxes_proto_msgTypes[92]
+	mi := &file_v1_sandboxes_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16671,7 +15666,7 @@ func (x *DesktopLink) String() string {
 func (*DesktopLink) ProtoMessage() {}
 
 func (x *DesktopLink) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[92]
+	mi := &file_v1_sandboxes_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16736,7 +15731,7 @@ type Link struct {
 
 func (x *Link) Reset() {
 	*x = Link{}
-	mi := &file_v1_sandboxes_proto_msgTypes[93]
+	mi := &file_v1_sandboxes_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16748,7 +15743,7 @@ func (x *Link) String() string {
 func (*Link) ProtoMessage() {}
 
 func (x *Link) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[93]
+	mi := &file_v1_sandboxes_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16879,7 +15874,7 @@ type PromptAgentRequest struct {
 
 func (x *PromptAgentRequest) Reset() {
 	*x = PromptAgentRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[94]
+	mi := &file_v1_sandboxes_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16891,7 +15886,7 @@ func (x *PromptAgentRequest) String() string {
 func (*PromptAgentRequest) ProtoMessage() {}
 
 func (x *PromptAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[94]
+	mi := &file_v1_sandboxes_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17195,7 +16190,7 @@ type AgentTurn struct {
 
 func (x *AgentTurn) Reset() {
 	*x = AgentTurn{}
-	mi := &file_v1_sandboxes_proto_msgTypes[95]
+	mi := &file_v1_sandboxes_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17207,7 +16202,7 @@ func (x *AgentTurn) String() string {
 func (*AgentTurn) ProtoMessage() {}
 
 func (x *AgentTurn) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[95]
+	mi := &file_v1_sandboxes_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17571,7 +16566,7 @@ type GetAgentTurnRequest struct {
 
 func (x *GetAgentTurnRequest) Reset() {
 	*x = GetAgentTurnRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[96]
+	mi := &file_v1_sandboxes_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17583,7 +16578,7 @@ func (x *GetAgentTurnRequest) String() string {
 func (*GetAgentTurnRequest) ProtoMessage() {}
 
 func (x *GetAgentTurnRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[96]
+	mi := &file_v1_sandboxes_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17712,7 +16707,7 @@ type StopAgentTurnRequest struct {
 
 func (x *StopAgentTurnRequest) Reset() {
 	*x = StopAgentTurnRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[97]
+	mi := &file_v1_sandboxes_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17724,7 +16719,7 @@ func (x *StopAgentTurnRequest) String() string {
 func (*StopAgentTurnRequest) ProtoMessage() {}
 
 func (x *StopAgentTurnRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[97]
+	mi := &file_v1_sandboxes_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17824,7 +16819,7 @@ type ListConversationsRequest struct {
 
 func (x *ListConversationsRequest) Reset() {
 	*x = ListConversationsRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[98]
+	mi := &file_v1_sandboxes_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17836,7 +16831,7 @@ func (x *ListConversationsRequest) String() string {
 func (*ListConversationsRequest) ProtoMessage() {}
 
 func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[98]
+	mi := &file_v1_sandboxes_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17964,7 +16959,7 @@ type ListConversationsResponse struct {
 
 func (x *ListConversationsResponse) Reset() {
 	*x = ListConversationsResponse{}
-	mi := &file_v1_sandboxes_proto_msgTypes[99]
+	mi := &file_v1_sandboxes_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17976,7 +16971,7 @@ func (x *ListConversationsResponse) String() string {
 func (*ListConversationsResponse) ProtoMessage() {}
 
 func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[99]
+	mi := &file_v1_sandboxes_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18064,7 +17059,7 @@ type Conversation struct {
 
 func (x *Conversation) Reset() {
 	*x = Conversation{}
-	mi := &file_v1_sandboxes_proto_msgTypes[100]
+	mi := &file_v1_sandboxes_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18076,7 +17071,7 @@ func (x *Conversation) String() string {
 func (*Conversation) ProtoMessage() {}
 
 func (x *Conversation) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[100]
+	mi := &file_v1_sandboxes_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18353,7 +17348,7 @@ type WatchConversationRequest struct {
 
 func (x *WatchConversationRequest) Reset() {
 	*x = WatchConversationRequest{}
-	mi := &file_v1_sandboxes_proto_msgTypes[101]
+	mi := &file_v1_sandboxes_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18365,7 +17360,7 @@ func (x *WatchConversationRequest) String() string {
 func (*WatchConversationRequest) ProtoMessage() {}
 
 func (x *WatchConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[101]
+	mi := &file_v1_sandboxes_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18496,7 +17491,7 @@ type AgentEvent struct {
 
 func (x *AgentEvent) Reset() {
 	*x = AgentEvent{}
-	mi := &file_v1_sandboxes_proto_msgTypes[102]
+	mi := &file_v1_sandboxes_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18508,7 +17503,7 @@ func (x *AgentEvent) String() string {
 func (*AgentEvent) ProtoMessage() {}
 
 func (x *AgentEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[102]
+	mi := &file_v1_sandboxes_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18868,7 +17863,7 @@ func (b0 AgentEvent_builder) Build() *AgentEvent {
 type case_AgentEvent_Event protoreflect.FieldNumber
 
 func (x case_AgentEvent_Event) String() string {
-	md := file_v1_sandboxes_proto_msgTypes[102].Descriptor()
+	md := file_v1_sandboxes_proto_msgTypes[96].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -18927,7 +17922,7 @@ type CaughtUp struct {
 
 func (x *CaughtUp) Reset() {
 	*x = CaughtUp{}
-	mi := &file_v1_sandboxes_proto_msgTypes[103]
+	mi := &file_v1_sandboxes_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18939,7 +17934,7 @@ func (x *CaughtUp) String() string {
 func (*CaughtUp) ProtoMessage() {}
 
 func (x *CaughtUp) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[103]
+	mi := &file_v1_sandboxes_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18976,7 +17971,7 @@ type ToolCall struct {
 
 func (x *ToolCall) Reset() {
 	*x = ToolCall{}
-	mi := &file_v1_sandboxes_proto_msgTypes[104]
+	mi := &file_v1_sandboxes_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18988,7 +17983,7 @@ func (x *ToolCall) String() string {
 func (*ToolCall) ProtoMessage() {}
 
 func (x *ToolCall) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[104]
+	mi := &file_v1_sandboxes_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19120,7 +18115,7 @@ type ToolResult struct {
 
 func (x *ToolResult) Reset() {
 	*x = ToolResult{}
-	mi := &file_v1_sandboxes_proto_msgTypes[105]
+	mi := &file_v1_sandboxes_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19132,7 +18127,7 @@ func (x *ToolResult) String() string {
 func (*ToolResult) ProtoMessage() {}
 
 func (x *ToolResult) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[105]
+	mi := &file_v1_sandboxes_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19262,7 +18257,7 @@ type LimitReached struct {
 
 func (x *LimitReached) Reset() {
 	*x = LimitReached{}
-	mi := &file_v1_sandboxes_proto_msgTypes[106]
+	mi := &file_v1_sandboxes_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19274,7 +18269,7 @@ func (x *LimitReached) String() string {
 func (*LimitReached) ProtoMessage() {}
 
 func (x *LimitReached) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[106]
+	mi := &file_v1_sandboxes_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19362,7 +18357,7 @@ type LimitReached_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	// A field of Workspace.limits: "vcpus", "largest_size" (max is that Size's number),
-	// "volume_gib", "template_versions", "template_gib"; or a bound of every workspace: "secrets"
+	// "template_versions", "template_gib"; or a bound of every workspace: "secrets"
 	// (SetSecret), or "starts_per_minute", the sandboxes it may start in any minute, against
 	// abuse. A start is free: a CreateSandbox, or a ResumeSandbox of a STOPPED sandbox. A
 	// ResumeSandbox of a PAUSED one, and a wake by a call into one (IDLE AND WAKE), are none.
@@ -19400,7 +18395,7 @@ type Stopped struct {
 
 func (x *Stopped) Reset() {
 	*x = Stopped{}
-	mi := &file_v1_sandboxes_proto_msgTypes[107]
+	mi := &file_v1_sandboxes_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19412,7 +18407,7 @@ func (x *Stopped) String() string {
 func (*Stopped) ProtoMessage() {}
 
 func (x *Stopped) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[107]
+	mi := &file_v1_sandboxes_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19436,7 +18431,7 @@ func (b0 Stopped_builder) Build() *Stopped {
 }
 
 // FAILED_PRECONDITION: nothing pays for the workspace's usage now (Billing.suspended), so the
-// call starts, resumes or wakes no sandbox, and makes no volume or template: its owner adds to
+// call starts, resumes or wakes no sandbox, and makes no template: its owner adds to
 // the balance, or starts the plan if it is in its trial, in the workspace's settings.
 type UsageUnpaid struct {
 	state         protoimpl.MessageState `protogen:"opaque.v1"`
@@ -19446,7 +18441,7 @@ type UsageUnpaid struct {
 
 func (x *UsageUnpaid) Reset() {
 	*x = UsageUnpaid{}
-	mi := &file_v1_sandboxes_proto_msgTypes[108]
+	mi := &file_v1_sandboxes_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19458,7 +18453,7 @@ func (x *UsageUnpaid) String() string {
 func (*UsageUnpaid) ProtoMessage() {}
 
 func (x *UsageUnpaid) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[108]
+	mi := &file_v1_sandboxes_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19495,7 +18490,7 @@ type Restoring struct {
 
 func (x *Restoring) Reset() {
 	*x = Restoring{}
-	mi := &file_v1_sandboxes_proto_msgTypes[109]
+	mi := &file_v1_sandboxes_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19507,7 +18502,7 @@ func (x *Restoring) String() string {
 func (*Restoring) ProtoMessage() {}
 
 func (x *Restoring) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[109]
+	mi := &file_v1_sandboxes_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19600,7 +18595,7 @@ type NoCapacity struct {
 
 func (x *NoCapacity) Reset() {
 	*x = NoCapacity{}
-	mi := &file_v1_sandboxes_proto_msgTypes[110]
+	mi := &file_v1_sandboxes_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19612,7 +18607,7 @@ func (x *NoCapacity) String() string {
 func (*NoCapacity) ProtoMessage() {}
 
 func (x *NoCapacity) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[110]
+	mi := &file_v1_sandboxes_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19680,7 +18675,7 @@ type NameTaken struct {
 
 func (x *NameTaken) Reset() {
 	*x = NameTaken{}
-	mi := &file_v1_sandboxes_proto_msgTypes[111]
+	mi := &file_v1_sandboxes_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19692,7 +18687,7 @@ func (x *NameTaken) String() string {
 func (*NameTaken) ProtoMessage() {}
 
 func (x *NameTaken) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[111]
+	mi := &file_v1_sandboxes_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19760,7 +18755,7 @@ type WorkspaceChoice struct {
 
 func (x *WorkspaceChoice) Reset() {
 	*x = WorkspaceChoice{}
-	mi := &file_v1_sandboxes_proto_msgTypes[112]
+	mi := &file_v1_sandboxes_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19772,7 +18767,7 @@ func (x *WorkspaceChoice) String() string {
 func (*WorkspaceChoice) ProtoMessage() {}
 
 func (x *WorkspaceChoice) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[112]
+	mi := &file_v1_sandboxes_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19852,7 +18847,7 @@ type AgentSignIn struct {
 
 func (x *AgentSignIn) Reset() {
 	*x = AgentSignIn{}
-	mi := &file_v1_sandboxes_proto_msgTypes[113]
+	mi := &file_v1_sandboxes_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19864,7 +18859,7 @@ func (x *AgentSignIn) String() string {
 func (*AgentSignIn) ProtoMessage() {}
 
 func (x *AgentSignIn) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_sandboxes_proto_msgTypes[113]
+	mi := &file_v1_sandboxes_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19958,7 +18953,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\n" +
 	"\x12v1/sandboxes.proto\x12\x14pethost.sandboxes.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"3\n" +
 	"\x13GetWorkspaceRequest\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"\xc6\x03\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\x9e\x03\n" +
 	"\tWorkspace\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x124\n" +
@@ -19969,9 +18964,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x05sizes\x18\a \x03(\v2\x1e.pethost.sandboxes.v1.SizeInfoR\x05sizes\x12%\n" +
 	"\x0etemplate_bytes\x18\b \x01(\x03R\rtemplateBytes\x12\x1d\n" +
 	"\n" +
-	"vcpus_used\x18\t \x01(\x05R\tvcpusUsed\x12&\n" +
-	"\x0fvolume_gib_used\x18\n" +
-	" \x01(\x05R\rvolumeGibUsed\"\xda\x01\n" +
+	"vcpus_used\x18\t \x01(\x05R\tvcpusUsed\"\xda\x01\n" +
 	"\bSizeInfo\x12.\n" +
 	"\x04size\x18\x01 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\x04size\x12\x14\n" +
 	"\x05vcpus\x18\x02 \x01(\x05R\x05vcpus\x12\x1d\n" +
@@ -19989,20 +18982,17 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x0ebalance_micros\x18\x05 \x01(\x03R\rbalanceMicros\x12\x1c\n" +
 	"\tsuspended\x18\x06 \x01(\bR\tsuspended\x12\x14\n" +
 	"\x05trial\x18\a \x01(\bR\x05trial\x121\n" +
-	"\x05rates\x18\b \x01(\v2\x1b.pethost.sandboxes.v1.RatesR\x05rates\"s\n" +
+	"\x05rates\x18\b \x01(\v2\x1b.pethost.sandboxes.v1.RatesR\x05rates\"I\n" +
 	"\x05Rates\x12(\n" +
-	"\x10stored_gib_month\x18\x05 \x01(\x01R\x0estoredGibMonth\x12(\n" +
-	"\x10volume_gib_month\x18\x06 \x01(\x01R\x0evolumeGibMonthJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05\"c\n" +
+	"\x10stored_gib_month\x18\x05 \x01(\x01R\x0estoredGibMonthJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05\"c\n" +
 	"\x06SshKey\x12\x1d\n" +
 	"\n" +
 	"public_key\x18\x01 \x01(\tR\tpublicKey\x12\x18\n" +
 	"\acomment\x18\x02 \x01(\tR\acomment\x12 \n" +
-	"\vfingerprint\x18\x03 \x01(\tR\vfingerprint\"\x98\x02\n" +
+	"\vfingerprint\x18\x03 \x01(\tR\vfingerprint\"\xf9\x01\n" +
 	"\x06Limits\x12\x14\n" +
 	"\x05vcpus\x18\x04 \x01(\x05R\x05vcpus\x12=\n" +
-	"\flargest_size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\vlargestSize\x12\x1d\n" +
-	"\n" +
-	"volume_gib\x18\x06 \x01(\x05R\tvolumeGib\x12+\n" +
+	"\flargest_size\x18\x05 \x01(\x0e2\x1a.pethost.sandboxes.v1.SizeR\vlargestSize\x12+\n" +
 	"\x11template_versions\x18\x02 \x01(\x05R\x10templateVersions\x12!\n" +
 	"\ftemplate_gib\x18\x03 \x01(\x05R\vtemplateGibJ\x04\b\x01\x10\x02J\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"R\x11starts_per_minuteR\x0fstarts_per_hourR\x0estarts_per_day\"L\n" +
@@ -20021,7 +19011,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\tworkspace\x18d \x01(\tR\tworkspace\"G\n" +
 	"\x13DeleteSecretRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"\xd3\b\n" +
+	"\tworkspace\x18d \x01(\tR\tworkspace\"\x9e\b\n" +
 	"\aSandbox\x12\x1d\n" +
 	"\n" +
 	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\x128\n" +
@@ -20035,8 +19025,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\bsettings\x18\n" +
 	" \x01(\v2%.pethost.sandboxes.v1.SandboxSettingsR\bsettings\x12\x1a\n" +
 	"\brevision\x18\v \x01(\x03R\brevision\x12\x19\n" +
-	"\bdisk_gib\x18\f \x01(\x05R\adiskGib\x123\n" +
-	"\x06mounts\x18\r \x03(\v2\x1b.pethost.sandboxes.v1.MountR\x06mounts\x127\n" +
+	"\bdisk_gib\x18\f \x01(\x05R\adiskGib\x127\n" +
 	"\adesktop\x18\x0e \x01(\v2\x1d.pethost.sandboxes.v1.DesktopR\adesktop\x12\x1f\n" +
 	"\vssh_command\x18\x0f \x01(\tR\n" +
 	"sshCommand\x12\x1b\n" +
@@ -20062,12 +19051,11 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x0epaused_seconds\x18\b \x01(\x03R\rpausedSeconds\x12(\n" +
 	"\x10stored_gib_hours\x18\x06 \x01(\x01R\x0estoredGibHours\x12\x1f\n" +
 	"\vcost_micros\x18\a \x01(\x03R\n" +
-	"costMicrosJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\xc2\x02\n" +
+	"costMicrosJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\x8d\x02\n" +
 	"\x14CreateSandboxRequest\x12\x1a\n" +
 	"\btemplate\x18\x01 \x01(\tR\btemplate\x12A\n" +
 	"\bsettings\x18\x03 \x01(\v2%.pethost.sandboxes.v1.SandboxSettingsR\bsettings\x123\n" +
-	"\x06labels\x18\x04 \x03(\v2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x123\n" +
-	"\x06mounts\x18\x06 \x03(\v2\x1b.pethost.sandboxes.v1.MountR\x06mounts\x12\x12\n" +
+	"\x06labels\x18\x04 \x03(\v2\x1b.pethost.sandboxes.v1.LabelR\x06labels\x12\x12\n" +
 	"\x04name\x18\b \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
 	"request_id\x18e \x01(\tR\trequestId\x12\x1c\n" +
@@ -20266,37 +19254,6 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"I\n" +
 	"\x15DeleteTemplateRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"\xdb\x01\n" +
-	"\x06Volume\x12\x1b\n" +
-	"\tvolume_id\x18\x01 \x01(\tR\bvolumeId\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
-	"\bsize_gib\x18\x03 \x01(\x05R\asizeGib\x12\x1d\n" +
-	"\n" +
-	"used_bytes\x18\x05 \x01(\x03R\tusedBytes\x12\x1d\n" +
-	"\n" +
-	"mounted_by\x18\x06 \x03(\tR\tmountedBy\x12;\n" +
-	"\vcreate_time\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"createTimeJ\x04\b\x04\x10\x05J\x04\b\b\x10\t\"U\n" +
-	"\x05Mount\x12\x1b\n" +
-	"\tvolume_id\x18\x01 \x01(\tR\bvolumeId\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path\x12\x1b\n" +
-	"\tread_only\x18\x03 \x01(\bR\breadOnly\"\x81\x01\n" +
-	"\x13CreateVolumeRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
-	"\bsize_gib\x18\x02 \x01(\x05R\asizeGib\x12\x1d\n" +
-	"\n" +
-	"request_id\x18e \x01(\tR\trequestId\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"n\n" +
-	"\x12ListVolumesRequest\x12\x1b\n" +
-	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
-	"\n" +
-	"page_token\x18\x02 \x01(\tR\tpageToken\x12\x1c\n" +
-	"\tworkspace\x18d \x01(\tR\tworkspace\"u\n" +
-	"\x13ListVolumesResponse\x126\n" +
-	"\avolumes\x18\x01 \x03(\v2\x1c.pethost.sandboxes.v1.VolumeR\avolumes\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"P\n" +
-	"\x13DeleteVolumeRequest\x12\x1b\n" +
-	"\tvolume_id\x18\x01 \x01(\tR\bvolumeId\x12\x1c\n" +
 	"\tworkspace\x18d \x01(\tR\tworkspace\"\xd0\x01\n" +
 	"\x10ListUsageRequest\x120\n" +
 	"\x05since\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x05since\x120\n" +
@@ -20622,13 +19579,12 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\"Q\n" +
 	"\vAgentSignIn\x12\x1a\n" +
 	"\bvariable\x18\x01 \x01(\tR\bvariable\x12&\n" +
-	"\x0fsign_in_command\x18\x02 \x01(\tR\rsignInCommand*\x8d\x01\n" +
+	"\x0fsign_in_command\x18\x02 \x01(\tR\rsignInCommand*w\n" +
 	"\x05Meter\x12\x15\n" +
 	"\x11METER_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rMETER_RUNNING\x10\x05\x12\x10\n" +
 	"\fMETER_PAUSED\x10\t\x12\x14\n" +
-	"\x10METER_STORED_GIB\x10\a\x12\x14\n" +
-	"\x10METER_VOLUME_GIB\x10\b\"\x04\b\x01\x10\x01\"\x04\b\x02\x10\x02\"\x04\b\x03\x10\x03\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06*\x98\x01\n" +
+	"\x10METER_STORED_GIB\x10\a\"\x04\b\x01\x10\x01\"\x04\b\x02\x10\x02\"\x04\b\x03\x10\x03\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06*\x98\x01\n" +
 	"\fSandboxState\x12\x1d\n" +
 	"\x19SANDBOX_STATE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15SANDBOX_STATE_RUNNING\x10\x01\x12\x18\n" +
@@ -20732,7 +19688,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x11ROOM_BOUND_MEMORY\x10\x01\x12\x1b\n" +
 	"\x17ROOM_BOUND_SHORT_MEMORY\x10\x02\x12\x13\n" +
 	"\x0fROOM_BOUND_DISK\x10\x03\x12\x17\n" +
-	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\xaf\x17\n" +
+	"\x13ROOM_BOUND_DISK_CAP\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x062\xd1\x14\n" +
 	"\x0eSandboxService\x12w\n" +
 	"\fGetWorkspace\x12).pethost.sandboxes.v1.GetWorkspaceRequest\x1a\x1f.pethost.sandboxes.v1.Workspace\"\x1b\x90\x02\x01\x8a\xb5\x18\x14\x12\x12Read the workspace\x12q\n" +
 	"\n" +
@@ -20763,13 +19719,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x17Read a template version\x12\x81\x01\n" +
 	"\rListTemplates\x12*.pethost.sandboxes.v1.ListTemplatesRequest\x1a+.pethost.sandboxes.v1.ListTemplatesResponse\"\x17\x90\x02\x01\x8a\xb5\x18\x10\x12\x0eList templates\x12y\n" +
 	"\x0eDeleteTemplate\x12+.pethost.sandboxes.v1.DeleteTemplateRequest\x1a\x1e.pethost.sandboxes.v1.Template\"\x1a\x90\x02\x02\x9a\xb5\x18\x13\n" +
-	"\x11Delete a template\x12n\n" +
-	"\fCreateVolume\x12).pethost.sandboxes.v1.CreateVolumeRequest\x1a\x1c.pethost.sandboxes.v1.Volume\"\x15\x9a\xb5\x18\x11\n" +
-	"\x0fCreate a volume\x12y\n" +
-	"\vListVolumes\x12(.pethost.sandboxes.v1.ListVolumesRequest\x1a).pethost.sandboxes.v1.ListVolumesResponse\"\x15\x90\x02\x01\x9a\xb5\x18\x0e\n" +
-	"\fList volumes\x12q\n" +
-	"\fDeleteVolume\x12).pethost.sandboxes.v1.DeleteVolumeRequest\x1a\x1c.pethost.sandboxes.v1.Volume\"\x18\x90\x02\x02\x9a\xb5\x18\x11\n" +
-	"\x0fDelete a volume\x12q\n" +
+	"\x11Delete a template\x12q\n" +
 	"\tListUsage\x12&.pethost.sandboxes.v1.ListUsageRequest\x1a'.pethost.sandboxes.v1.ListUsageResponse\"\x13\x90\x02\x01\x9a\xb5\x18\f\n" +
 	"\n" +
 	"List usage2\xd9\x0f\n" +
@@ -20806,7 +19756,7 @@ const file_v1_sandboxes_proto_rawDesc = "" +
 	"\x18com.pethost.sandboxes.v1B\x0eSandboxesProtoZ>github.com/pethost-dev/sdk/go/internal/sandboxesv1;sandboxesv1\xa2\x02\x03PSX\xaa\x02\x14Pethost.Sandboxes.V1\xca\x02\x14Pethost\\Sandboxes\\V1\xe2\x02 Pethost\\Sandboxes\\V1\\GPBMetadata\xea\x02\x16Pethost::Sandboxes::V1b\beditionsp\xe9\az\fv1/mcp.protoz\x11v1/optional.protoz\fv1/sdk.proto"
 
 var file_v1_sandboxes_proto_enumTypes = make([]protoimpl.EnumInfo, 17)
-var file_v1_sandboxes_proto_msgTypes = make([]protoimpl.MessageInfo, 114)
+var file_v1_sandboxes_proto_msgTypes = make([]protoimpl.MessageInfo, 108)
 var file_v1_sandboxes_proto_goTypes = []any{
 	(Meter)(0),                        // 0: pethost.sandboxes.v1.Meter
 	(SandboxState)(0),                 // 1: pethost.sandboxes.v1.SandboxState
@@ -20876,70 +19826,64 @@ var file_v1_sandboxes_proto_goTypes = []any{
 	(*ListTemplatesRequest)(nil),      // 65: pethost.sandboxes.v1.ListTemplatesRequest
 	(*ListTemplatesResponse)(nil),     // 66: pethost.sandboxes.v1.ListTemplatesResponse
 	(*DeleteTemplateRequest)(nil),     // 67: pethost.sandboxes.v1.DeleteTemplateRequest
-	(*Volume)(nil),                    // 68: pethost.sandboxes.v1.Volume
-	(*Mount)(nil),                     // 69: pethost.sandboxes.v1.Mount
-	(*CreateVolumeRequest)(nil),       // 70: pethost.sandboxes.v1.CreateVolumeRequest
-	(*ListVolumesRequest)(nil),        // 71: pethost.sandboxes.v1.ListVolumesRequest
-	(*ListVolumesResponse)(nil),       // 72: pethost.sandboxes.v1.ListVolumesResponse
-	(*DeleteVolumeRequest)(nil),       // 73: pethost.sandboxes.v1.DeleteVolumeRequest
-	(*ListUsageRequest)(nil),          // 74: pethost.sandboxes.v1.ListUsageRequest
-	(*ListUsageResponse)(nil),         // 75: pethost.sandboxes.v1.ListUsageResponse
-	(*UsageRow)(nil),                  // 76: pethost.sandboxes.v1.UsageRow
-	(*RunCommandRequest)(nil),         // 77: pethost.sandboxes.v1.RunCommandRequest
-	(*Command)(nil),                   // 78: pethost.sandboxes.v1.Command
-	(*GetCommandRequest)(nil),         // 79: pethost.sandboxes.v1.GetCommandRequest
-	(*StopCommandRequest)(nil),        // 80: pethost.sandboxes.v1.StopCommandRequest
-	(*ListCommandsRequest)(nil),       // 81: pethost.sandboxes.v1.ListCommandsRequest
-	(*ListCommandsResponse)(nil),      // 82: pethost.sandboxes.v1.ListCommandsResponse
-	(*WatchCommandRequest)(nil),       // 83: pethost.sandboxes.v1.WatchCommandRequest
-	(*CommandOutput)(nil),             // 84: pethost.sandboxes.v1.CommandOutput
-	(*ReadFileRequest)(nil),           // 85: pethost.sandboxes.v1.ReadFileRequest
-	(*File)(nil),                      // 86: pethost.sandboxes.v1.File
-	(*ListFilesRequest)(nil),          // 87: pethost.sandboxes.v1.ListFilesRequest
-	(*ListFilesResponse)(nil),         // 88: pethost.sandboxes.v1.ListFilesResponse
-	(*FileInfo)(nil),                  // 89: pethost.sandboxes.v1.FileInfo
-	(*WriteFilesRequest)(nil),         // 90: pethost.sandboxes.v1.WriteFilesRequest
-	(*FileChange)(nil),                // 91: pethost.sandboxes.v1.FileChange
-	(*Delete)(nil),                    // 92: pethost.sandboxes.v1.Delete
-	(*MakeDirectory)(nil),             // 93: pethost.sandboxes.v1.MakeDirectory
-	(*TextEdit)(nil),                  // 94: pethost.sandboxes.v1.TextEdit
-	(*WriteFilesResponse)(nil),        // 95: pethost.sandboxes.v1.WriteFilesResponse
-	(*WatchFilesRequest)(nil),         // 96: pethost.sandboxes.v1.WatchFilesRequest
-	(*FileEvent)(nil),                 // 97: pethost.sandboxes.v1.FileEvent
-	(*ControlDesktopRequest)(nil),     // 98: pethost.sandboxes.v1.ControlDesktopRequest
-	(*ControlDesktopResponse)(nil),    // 99: pethost.sandboxes.v1.ControlDesktopResponse
-	(*Screenshot)(nil),                // 100: pethost.sandboxes.v1.Screenshot
-	(*DesktopAction)(nil),             // 101: pethost.sandboxes.v1.DesktopAction
-	(*Point)(nil),                     // 102: pethost.sandboxes.v1.Point
-	(*Click)(nil),                     // 103: pethost.sandboxes.v1.Click
-	(*Drag)(nil),                      // 104: pethost.sandboxes.v1.Drag
-	(*Scroll)(nil),                    // 105: pethost.sandboxes.v1.Scroll
-	(*Desktop)(nil),                   // 106: pethost.sandboxes.v1.Desktop
-	(*CreateLinkRequest)(nil),         // 107: pethost.sandboxes.v1.CreateLinkRequest
-	(*TerminalLink)(nil),              // 108: pethost.sandboxes.v1.TerminalLink
-	(*DesktopLink)(nil),               // 109: pethost.sandboxes.v1.DesktopLink
-	(*Link)(nil),                      // 110: pethost.sandboxes.v1.Link
-	(*PromptAgentRequest)(nil),        // 111: pethost.sandboxes.v1.PromptAgentRequest
-	(*AgentTurn)(nil),                 // 112: pethost.sandboxes.v1.AgentTurn
-	(*GetAgentTurnRequest)(nil),       // 113: pethost.sandboxes.v1.GetAgentTurnRequest
-	(*StopAgentTurnRequest)(nil),      // 114: pethost.sandboxes.v1.StopAgentTurnRequest
-	(*ListConversationsRequest)(nil),  // 115: pethost.sandboxes.v1.ListConversationsRequest
-	(*ListConversationsResponse)(nil), // 116: pethost.sandboxes.v1.ListConversationsResponse
-	(*Conversation)(nil),              // 117: pethost.sandboxes.v1.Conversation
-	(*WatchConversationRequest)(nil),  // 118: pethost.sandboxes.v1.WatchConversationRequest
-	(*AgentEvent)(nil),                // 119: pethost.sandboxes.v1.AgentEvent
-	(*CaughtUp)(nil),                  // 120: pethost.sandboxes.v1.CaughtUp
-	(*ToolCall)(nil),                  // 121: pethost.sandboxes.v1.ToolCall
-	(*ToolResult)(nil),                // 122: pethost.sandboxes.v1.ToolResult
-	(*LimitReached)(nil),              // 123: pethost.sandboxes.v1.LimitReached
-	(*Stopped)(nil),                   // 124: pethost.sandboxes.v1.Stopped
-	(*UsageUnpaid)(nil),               // 125: pethost.sandboxes.v1.UsageUnpaid
-	(*Restoring)(nil),                 // 126: pethost.sandboxes.v1.Restoring
-	(*NoCapacity)(nil),                // 127: pethost.sandboxes.v1.NoCapacity
-	(*NameTaken)(nil),                 // 128: pethost.sandboxes.v1.NameTaken
-	(*WorkspaceChoice)(nil),           // 129: pethost.sandboxes.v1.WorkspaceChoice
-	(*AgentSignIn)(nil),               // 130: pethost.sandboxes.v1.AgentSignIn
-	(*timestamppb.Timestamp)(nil),     // 131: google.protobuf.Timestamp
+	(*ListUsageRequest)(nil),          // 68: pethost.sandboxes.v1.ListUsageRequest
+	(*ListUsageResponse)(nil),         // 69: pethost.sandboxes.v1.ListUsageResponse
+	(*UsageRow)(nil),                  // 70: pethost.sandboxes.v1.UsageRow
+	(*RunCommandRequest)(nil),         // 71: pethost.sandboxes.v1.RunCommandRequest
+	(*Command)(nil),                   // 72: pethost.sandboxes.v1.Command
+	(*GetCommandRequest)(nil),         // 73: pethost.sandboxes.v1.GetCommandRequest
+	(*StopCommandRequest)(nil),        // 74: pethost.sandboxes.v1.StopCommandRequest
+	(*ListCommandsRequest)(nil),       // 75: pethost.sandboxes.v1.ListCommandsRequest
+	(*ListCommandsResponse)(nil),      // 76: pethost.sandboxes.v1.ListCommandsResponse
+	(*WatchCommandRequest)(nil),       // 77: pethost.sandboxes.v1.WatchCommandRequest
+	(*CommandOutput)(nil),             // 78: pethost.sandboxes.v1.CommandOutput
+	(*ReadFileRequest)(nil),           // 79: pethost.sandboxes.v1.ReadFileRequest
+	(*File)(nil),                      // 80: pethost.sandboxes.v1.File
+	(*ListFilesRequest)(nil),          // 81: pethost.sandboxes.v1.ListFilesRequest
+	(*ListFilesResponse)(nil),         // 82: pethost.sandboxes.v1.ListFilesResponse
+	(*FileInfo)(nil),                  // 83: pethost.sandboxes.v1.FileInfo
+	(*WriteFilesRequest)(nil),         // 84: pethost.sandboxes.v1.WriteFilesRequest
+	(*FileChange)(nil),                // 85: pethost.sandboxes.v1.FileChange
+	(*Delete)(nil),                    // 86: pethost.sandboxes.v1.Delete
+	(*MakeDirectory)(nil),             // 87: pethost.sandboxes.v1.MakeDirectory
+	(*TextEdit)(nil),                  // 88: pethost.sandboxes.v1.TextEdit
+	(*WriteFilesResponse)(nil),        // 89: pethost.sandboxes.v1.WriteFilesResponse
+	(*WatchFilesRequest)(nil),         // 90: pethost.sandboxes.v1.WatchFilesRequest
+	(*FileEvent)(nil),                 // 91: pethost.sandboxes.v1.FileEvent
+	(*ControlDesktopRequest)(nil),     // 92: pethost.sandboxes.v1.ControlDesktopRequest
+	(*ControlDesktopResponse)(nil),    // 93: pethost.sandboxes.v1.ControlDesktopResponse
+	(*Screenshot)(nil),                // 94: pethost.sandboxes.v1.Screenshot
+	(*DesktopAction)(nil),             // 95: pethost.sandboxes.v1.DesktopAction
+	(*Point)(nil),                     // 96: pethost.sandboxes.v1.Point
+	(*Click)(nil),                     // 97: pethost.sandboxes.v1.Click
+	(*Drag)(nil),                      // 98: pethost.sandboxes.v1.Drag
+	(*Scroll)(nil),                    // 99: pethost.sandboxes.v1.Scroll
+	(*Desktop)(nil),                   // 100: pethost.sandboxes.v1.Desktop
+	(*CreateLinkRequest)(nil),         // 101: pethost.sandboxes.v1.CreateLinkRequest
+	(*TerminalLink)(nil),              // 102: pethost.sandboxes.v1.TerminalLink
+	(*DesktopLink)(nil),               // 103: pethost.sandboxes.v1.DesktopLink
+	(*Link)(nil),                      // 104: pethost.sandboxes.v1.Link
+	(*PromptAgentRequest)(nil),        // 105: pethost.sandboxes.v1.PromptAgentRequest
+	(*AgentTurn)(nil),                 // 106: pethost.sandboxes.v1.AgentTurn
+	(*GetAgentTurnRequest)(nil),       // 107: pethost.sandboxes.v1.GetAgentTurnRequest
+	(*StopAgentTurnRequest)(nil),      // 108: pethost.sandboxes.v1.StopAgentTurnRequest
+	(*ListConversationsRequest)(nil),  // 109: pethost.sandboxes.v1.ListConversationsRequest
+	(*ListConversationsResponse)(nil), // 110: pethost.sandboxes.v1.ListConversationsResponse
+	(*Conversation)(nil),              // 111: pethost.sandboxes.v1.Conversation
+	(*WatchConversationRequest)(nil),  // 112: pethost.sandboxes.v1.WatchConversationRequest
+	(*AgentEvent)(nil),                // 113: pethost.sandboxes.v1.AgentEvent
+	(*CaughtUp)(nil),                  // 114: pethost.sandboxes.v1.CaughtUp
+	(*ToolCall)(nil),                  // 115: pethost.sandboxes.v1.ToolCall
+	(*ToolResult)(nil),                // 116: pethost.sandboxes.v1.ToolResult
+	(*LimitReached)(nil),              // 117: pethost.sandboxes.v1.LimitReached
+	(*Stopped)(nil),                   // 118: pethost.sandboxes.v1.Stopped
+	(*UsageUnpaid)(nil),               // 119: pethost.sandboxes.v1.UsageUnpaid
+	(*Restoring)(nil),                 // 120: pethost.sandboxes.v1.Restoring
+	(*NoCapacity)(nil),                // 121: pethost.sandboxes.v1.NoCapacity
+	(*NameTaken)(nil),                 // 122: pethost.sandboxes.v1.NameTaken
+	(*WorkspaceChoice)(nil),           // 123: pethost.sandboxes.v1.WorkspaceChoice
+	(*AgentSignIn)(nil),               // 124: pethost.sandboxes.v1.AgentSignIn
+	(*timestamppb.Timestamp)(nil),     // 125: google.protobuf.Timestamp
 }
 var file_v1_sandboxes_proto_depIdxs = []int32{
 	23,  // 0: pethost.sandboxes.v1.Workspace.limits:type_name -> pethost.sandboxes.v1.Limits
@@ -20948,199 +19892,189 @@ var file_v1_sandboxes_proto_depIdxs = []int32{
 	20,  // 3: pethost.sandboxes.v1.Workspace.billing:type_name -> pethost.sandboxes.v1.Billing
 	19,  // 4: pethost.sandboxes.v1.Workspace.sizes:type_name -> pethost.sandboxes.v1.SizeInfo
 	3,   // 5: pethost.sandboxes.v1.SizeInfo.size:type_name -> pethost.sandboxes.v1.Size
-	131, // 6: pethost.sandboxes.v1.Billing.period_end_time:type_name -> google.protobuf.Timestamp
+	125, // 6: pethost.sandboxes.v1.Billing.period_end_time:type_name -> google.protobuf.Timestamp
 	21,  // 7: pethost.sandboxes.v1.Billing.rates:type_name -> pethost.sandboxes.v1.Rates
 	3,   // 8: pethost.sandboxes.v1.Limits.largest_size:type_name -> pethost.sandboxes.v1.Size
-	131, // 9: pethost.sandboxes.v1.Secret.update_time:type_name -> google.protobuf.Timestamp
+	125, // 9: pethost.sandboxes.v1.Secret.update_time:type_name -> google.protobuf.Timestamp
 	1,   // 10: pethost.sandboxes.v1.Sandbox.state:type_name -> pethost.sandboxes.v1.SandboxState
 	2,   // 11: pethost.sandboxes.v1.Sandbox.state_reason:type_name -> pethost.sandboxes.v1.StateReason
-	131, // 12: pethost.sandboxes.v1.Sandbox.state_time:type_name -> google.protobuf.Timestamp
+	125, // 12: pethost.sandboxes.v1.Sandbox.state_time:type_name -> google.protobuf.Timestamp
 	49,  // 13: pethost.sandboxes.v1.Sandbox.labels:type_name -> pethost.sandboxes.v1.Label
 	42,  // 14: pethost.sandboxes.v1.Sandbox.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	69,  // 15: pethost.sandboxes.v1.Sandbox.mounts:type_name -> pethost.sandboxes.v1.Mount
-	106, // 16: pethost.sandboxes.v1.Sandbox.desktop:type_name -> pethost.sandboxes.v1.Desktop
-	131, // 17: pethost.sandboxes.v1.Sandbox.create_time:type_name -> google.protobuf.Timestamp
-	30,  // 18: pethost.sandboxes.v1.Sandbox.usage:type_name -> pethost.sandboxes.v1.Usage
-	41,  // 19: pethost.sandboxes.v1.Sandbox.connection:type_name -> pethost.sandboxes.v1.Connection
-	29,  // 20: pethost.sandboxes.v1.Sandbox.restore:type_name -> pethost.sandboxes.v1.Restore
-	1,   // 21: pethost.sandboxes.v1.Sandbox.next_state:type_name -> pethost.sandboxes.v1.SandboxState
-	131, // 22: pethost.sandboxes.v1.Sandbox.next_state_time:type_name -> google.protobuf.Timestamp
-	42,  // 23: pethost.sandboxes.v1.CreateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	49,  // 24: pethost.sandboxes.v1.CreateSandboxRequest.labels:type_name -> pethost.sandboxes.v1.Label
-	69,  // 25: pethost.sandboxes.v1.CreateSandboxRequest.mounts:type_name -> pethost.sandboxes.v1.Mount
-	1,   // 26: pethost.sandboxes.v1.ListSandboxesRequest.states:type_name -> pethost.sandboxes.v1.SandboxState
-	49,  // 27: pethost.sandboxes.v1.ListSandboxesRequest.labels:type_name -> pethost.sandboxes.v1.Label
-	28,  // 28: pethost.sandboxes.v1.ListSandboxesResponse.sandboxes:type_name -> pethost.sandboxes.v1.Sandbox
-	42,  // 29: pethost.sandboxes.v1.UpdateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	131, // 30: pethost.sandboxes.v1.Connection.expire_time:type_name -> google.protobuf.Timestamp
-	3,   // 31: pethost.sandboxes.v1.SandboxSettings.size:type_name -> pethost.sandboxes.v1.Size
-	43,  // 32: pethost.sandboxes.v1.SandboxSettings.lifecycle:type_name -> pethost.sandboxes.v1.Lifecycle
-	44,  // 33: pethost.sandboxes.v1.SandboxSettings.egress:type_name -> pethost.sandboxes.v1.Egress
-	45,  // 34: pethost.sandboxes.v1.SandboxSettings.ingress:type_name -> pethost.sandboxes.v1.Ingress
-	47,  // 35: pethost.sandboxes.v1.SandboxSettings.environment:type_name -> pethost.sandboxes.v1.Environment
-	46,  // 36: pethost.sandboxes.v1.Ingress.public_ports:type_name -> pethost.sandboxes.v1.PublicPort
-	48,  // 37: pethost.sandboxes.v1.Environment.variables:type_name -> pethost.sandboxes.v1.EnvVar
-	131, // 38: pethost.sandboxes.v1.GetSandboxMetricsRequest.since:type_name -> google.protobuf.Timestamp
-	131, // 39: pethost.sandboxes.v1.GetSandboxMetricsRequest.until:type_name -> google.protobuf.Timestamp
-	52,  // 40: pethost.sandboxes.v1.GetSandboxMetricsResponse.points:type_name -> pethost.sandboxes.v1.MetricsPoint
-	131, // 41: pethost.sandboxes.v1.MetricsPoint.time:type_name -> google.protobuf.Timestamp
-	4,   // 42: pethost.sandboxes.v1.ListSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
-	56,  // 43: pethost.sandboxes.v1.ListSandboxEventsResponse.events:type_name -> pethost.sandboxes.v1.SandboxEvent
-	4,   // 44: pethost.sandboxes.v1.WatchSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
-	131, // 45: pethost.sandboxes.v1.SandboxEvent.time:type_name -> google.protobuf.Timestamp
-	57,  // 46: pethost.sandboxes.v1.SandboxEvent.lifecycle:type_name -> pethost.sandboxes.v1.LifecycleEvent
-	58,  // 47: pethost.sandboxes.v1.SandboxEvent.command:type_name -> pethost.sandboxes.v1.CommandEvent
-	59,  // 48: pethost.sandboxes.v1.SandboxEvent.egress:type_name -> pethost.sandboxes.v1.EgressEvent
-	60,  // 49: pethost.sandboxes.v1.SandboxEvent.port:type_name -> pethost.sandboxes.v1.PortEvent
-	61,  // 50: pethost.sandboxes.v1.SandboxEvent.agent_turn:type_name -> pethost.sandboxes.v1.AgentTurnEvent
-	5,   // 51: pethost.sandboxes.v1.LifecycleEvent.change:type_name -> pethost.sandboxes.v1.LifecycleChange
-	2,   // 52: pethost.sandboxes.v1.LifecycleEvent.reason:type_name -> pethost.sandboxes.v1.StateReason
-	3,   // 53: pethost.sandboxes.v1.LifecycleEvent.size:type_name -> pethost.sandboxes.v1.Size
-	7,   // 54: pethost.sandboxes.v1.CommandEvent.state:type_name -> pethost.sandboxes.v1.CommandState
-	8,   // 55: pethost.sandboxes.v1.CommandEvent.started_by:type_name -> pethost.sandboxes.v1.StartedBy
-	14,  // 56: pethost.sandboxes.v1.AgentTurnEvent.agent:type_name -> pethost.sandboxes.v1.Agent
-	15,  // 57: pethost.sandboxes.v1.AgentTurnEvent.state:type_name -> pethost.sandboxes.v1.AgentTurnState
-	6,   // 58: pethost.sandboxes.v1.Template.state:type_name -> pethost.sandboxes.v1.TemplateState
-	42,  // 59: pethost.sandboxes.v1.Template.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
-	131, // 60: pethost.sandboxes.v1.Template.create_time:type_name -> google.protobuf.Timestamp
-	3,   // 61: pethost.sandboxes.v1.Template.min_size:type_name -> pethost.sandboxes.v1.Size
-	62,  // 62: pethost.sandboxes.v1.ListTemplatesResponse.templates:type_name -> pethost.sandboxes.v1.Template
-	131, // 63: pethost.sandboxes.v1.Volume.create_time:type_name -> google.protobuf.Timestamp
-	68,  // 64: pethost.sandboxes.v1.ListVolumesResponse.volumes:type_name -> pethost.sandboxes.v1.Volume
-	131, // 65: pethost.sandboxes.v1.ListUsageRequest.since:type_name -> google.protobuf.Timestamp
-	131, // 66: pethost.sandboxes.v1.ListUsageRequest.until:type_name -> google.protobuf.Timestamp
-	76,  // 67: pethost.sandboxes.v1.ListUsageResponse.rows:type_name -> pethost.sandboxes.v1.UsageRow
-	131, // 68: pethost.sandboxes.v1.UsageRow.day:type_name -> google.protobuf.Timestamp
-	0,   // 69: pethost.sandboxes.v1.UsageRow.meter:type_name -> pethost.sandboxes.v1.Meter
-	3,   // 70: pethost.sandboxes.v1.UsageRow.size:type_name -> pethost.sandboxes.v1.Size
-	7,   // 71: pethost.sandboxes.v1.Command.state:type_name -> pethost.sandboxes.v1.CommandState
-	8,   // 72: pethost.sandboxes.v1.Command.started_by:type_name -> pethost.sandboxes.v1.StartedBy
-	131, // 73: pethost.sandboxes.v1.Command.start_time:type_name -> google.protobuf.Timestamp
-	131, // 74: pethost.sandboxes.v1.Command.end_time:type_name -> google.protobuf.Timestamp
-	78,  // 75: pethost.sandboxes.v1.ListCommandsResponse.commands:type_name -> pethost.sandboxes.v1.Command
-	78,  // 76: pethost.sandboxes.v1.CommandOutput.ended:type_name -> pethost.sandboxes.v1.Command
-	89,  // 77: pethost.sandboxes.v1.ListFilesResponse.files:type_name -> pethost.sandboxes.v1.FileInfo
-	9,   // 78: pethost.sandboxes.v1.FileInfo.kind:type_name -> pethost.sandboxes.v1.FileKind
-	131, // 79: pethost.sandboxes.v1.FileInfo.modify_time:type_name -> google.protobuf.Timestamp
-	91,  // 80: pethost.sandboxes.v1.WriteFilesRequest.changes:type_name -> pethost.sandboxes.v1.FileChange
-	94,  // 81: pethost.sandboxes.v1.FileChange.edit:type_name -> pethost.sandboxes.v1.TextEdit
-	92,  // 82: pethost.sandboxes.v1.FileChange.delete:type_name -> pethost.sandboxes.v1.Delete
-	93,  // 83: pethost.sandboxes.v1.FileChange.make_directory:type_name -> pethost.sandboxes.v1.MakeDirectory
-	10,  // 84: pethost.sandboxes.v1.WriteFilesResponse.failure:type_name -> pethost.sandboxes.v1.FileFailure
-	11,  // 85: pethost.sandboxes.v1.FileEvent.kind:type_name -> pethost.sandboxes.v1.FileEventKind
-	101, // 86: pethost.sandboxes.v1.ControlDesktopRequest.actions:type_name -> pethost.sandboxes.v1.DesktopAction
-	100, // 87: pethost.sandboxes.v1.ControlDesktopResponse.screenshot:type_name -> pethost.sandboxes.v1.Screenshot
-	12,  // 88: pethost.sandboxes.v1.ControlDesktopResponse.failure:type_name -> pethost.sandboxes.v1.DesktopFailure
-	103, // 89: pethost.sandboxes.v1.DesktopAction.click:type_name -> pethost.sandboxes.v1.Click
-	102, // 90: pethost.sandboxes.v1.DesktopAction.move_mouse:type_name -> pethost.sandboxes.v1.Point
-	104, // 91: pethost.sandboxes.v1.DesktopAction.drag:type_name -> pethost.sandboxes.v1.Drag
-	105, // 92: pethost.sandboxes.v1.DesktopAction.scroll:type_name -> pethost.sandboxes.v1.Scroll
-	13,  // 93: pethost.sandboxes.v1.Click.button:type_name -> pethost.sandboxes.v1.MouseButton
-	102, // 94: pethost.sandboxes.v1.Drag.path:type_name -> pethost.sandboxes.v1.Point
-	108, // 95: pethost.sandboxes.v1.CreateLinkRequest.terminal:type_name -> pethost.sandboxes.v1.TerminalLink
-	109, // 96: pethost.sandboxes.v1.CreateLinkRequest.desktop:type_name -> pethost.sandboxes.v1.DesktopLink
-	131, // 97: pethost.sandboxes.v1.Link.expire_time:type_name -> google.protobuf.Timestamp
-	14,  // 98: pethost.sandboxes.v1.PromptAgentRequest.agent:type_name -> pethost.sandboxes.v1.Agent
-	14,  // 99: pethost.sandboxes.v1.AgentTurn.agent:type_name -> pethost.sandboxes.v1.Agent
-	15,  // 100: pethost.sandboxes.v1.AgentTurn.state:type_name -> pethost.sandboxes.v1.AgentTurnState
-	131, // 101: pethost.sandboxes.v1.AgentTurn.start_time:type_name -> google.protobuf.Timestamp
-	131, // 102: pethost.sandboxes.v1.AgentTurn.end_time:type_name -> google.protobuf.Timestamp
-	117, // 103: pethost.sandboxes.v1.ListConversationsResponse.conversations:type_name -> pethost.sandboxes.v1.Conversation
-	14,  // 104: pethost.sandboxes.v1.Conversation.agent:type_name -> pethost.sandboxes.v1.Agent
-	131, // 105: pethost.sandboxes.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
-	131, // 106: pethost.sandboxes.v1.AgentEvent.time:type_name -> google.protobuf.Timestamp
-	121, // 107: pethost.sandboxes.v1.AgentEvent.tool_call:type_name -> pethost.sandboxes.v1.ToolCall
-	122, // 108: pethost.sandboxes.v1.AgentEvent.tool_result:type_name -> pethost.sandboxes.v1.ToolResult
-	112, // 109: pethost.sandboxes.v1.AgentEvent.turn_end:type_name -> pethost.sandboxes.v1.AgentTurn
-	120, // 110: pethost.sandboxes.v1.AgentEvent.caught_up:type_name -> pethost.sandboxes.v1.CaughtUp
-	131, // 111: pethost.sandboxes.v1.LimitReached.retry_time:type_name -> google.protobuf.Timestamp
-	16,  // 112: pethost.sandboxes.v1.NoCapacity.bound:type_name -> pethost.sandboxes.v1.RoomBound
-	18,  // 113: pethost.sandboxes.v1.WorkspaceChoice.workspaces:type_name -> pethost.sandboxes.v1.Workspace
-	17,  // 114: pethost.sandboxes.v1.SandboxService.GetWorkspace:input_type -> pethost.sandboxes.v1.GetWorkspaceRequest
-	24,  // 115: pethost.sandboxes.v1.SandboxService.SetSshKeys:input_type -> pethost.sandboxes.v1.SetSshKeysRequest
-	26,  // 116: pethost.sandboxes.v1.SandboxService.SetSecret:input_type -> pethost.sandboxes.v1.SetSecretRequest
-	27,  // 117: pethost.sandboxes.v1.SandboxService.DeleteSecret:input_type -> pethost.sandboxes.v1.DeleteSecretRequest
-	31,  // 118: pethost.sandboxes.v1.SandboxService.CreateSandbox:input_type -> pethost.sandboxes.v1.CreateSandboxRequest
-	32,  // 119: pethost.sandboxes.v1.SandboxService.GetSandbox:input_type -> pethost.sandboxes.v1.GetSandboxRequest
-	33,  // 120: pethost.sandboxes.v1.SandboxService.ListSandboxes:input_type -> pethost.sandboxes.v1.ListSandboxesRequest
-	35,  // 121: pethost.sandboxes.v1.SandboxService.UpdateSandbox:input_type -> pethost.sandboxes.v1.UpdateSandboxRequest
-	36,  // 122: pethost.sandboxes.v1.SandboxService.PauseSandbox:input_type -> pethost.sandboxes.v1.PauseSandboxRequest
-	37,  // 123: pethost.sandboxes.v1.SandboxService.StopSandbox:input_type -> pethost.sandboxes.v1.StopSandboxRequest
-	38,  // 124: pethost.sandboxes.v1.SandboxService.ResumeSandbox:input_type -> pethost.sandboxes.v1.ResumeSandboxRequest
-	39,  // 125: pethost.sandboxes.v1.SandboxService.DeleteSandbox:input_type -> pethost.sandboxes.v1.DeleteSandboxRequest
-	40,  // 126: pethost.sandboxes.v1.SandboxService.ConnectSandbox:input_type -> pethost.sandboxes.v1.ConnectSandboxRequest
-	50,  // 127: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:input_type -> pethost.sandboxes.v1.GetSandboxMetricsRequest
-	53,  // 128: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:input_type -> pethost.sandboxes.v1.ListSandboxEventsRequest
-	55,  // 129: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:input_type -> pethost.sandboxes.v1.WatchSandboxEventsRequest
-	63,  // 130: pethost.sandboxes.v1.SandboxService.CreateTemplate:input_type -> pethost.sandboxes.v1.CreateTemplateRequest
-	64,  // 131: pethost.sandboxes.v1.SandboxService.GetTemplate:input_type -> pethost.sandboxes.v1.GetTemplateRequest
-	65,  // 132: pethost.sandboxes.v1.SandboxService.ListTemplates:input_type -> pethost.sandboxes.v1.ListTemplatesRequest
-	67,  // 133: pethost.sandboxes.v1.SandboxService.DeleteTemplate:input_type -> pethost.sandboxes.v1.DeleteTemplateRequest
-	70,  // 134: pethost.sandboxes.v1.SandboxService.CreateVolume:input_type -> pethost.sandboxes.v1.CreateVolumeRequest
-	71,  // 135: pethost.sandboxes.v1.SandboxService.ListVolumes:input_type -> pethost.sandboxes.v1.ListVolumesRequest
-	73,  // 136: pethost.sandboxes.v1.SandboxService.DeleteVolume:input_type -> pethost.sandboxes.v1.DeleteVolumeRequest
-	74,  // 137: pethost.sandboxes.v1.SandboxService.ListUsage:input_type -> pethost.sandboxes.v1.ListUsageRequest
-	77,  // 138: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:input_type -> pethost.sandboxes.v1.RunCommandRequest
-	79,  // 139: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:input_type -> pethost.sandboxes.v1.GetCommandRequest
-	80,  // 140: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:input_type -> pethost.sandboxes.v1.StopCommandRequest
-	81,  // 141: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:input_type -> pethost.sandboxes.v1.ListCommandsRequest
-	83,  // 142: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:input_type -> pethost.sandboxes.v1.WatchCommandRequest
-	85,  // 143: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:input_type -> pethost.sandboxes.v1.ReadFileRequest
-	87,  // 144: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:input_type -> pethost.sandboxes.v1.ListFilesRequest
-	90,  // 145: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:input_type -> pethost.sandboxes.v1.WriteFilesRequest
-	96,  // 146: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:input_type -> pethost.sandboxes.v1.WatchFilesRequest
-	98,  // 147: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:input_type -> pethost.sandboxes.v1.ControlDesktopRequest
-	107, // 148: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:input_type -> pethost.sandboxes.v1.CreateLinkRequest
-	111, // 149: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:input_type -> pethost.sandboxes.v1.PromptAgentRequest
-	113, // 150: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:input_type -> pethost.sandboxes.v1.GetAgentTurnRequest
-	114, // 151: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:input_type -> pethost.sandboxes.v1.StopAgentTurnRequest
-	115, // 152: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:input_type -> pethost.sandboxes.v1.ListConversationsRequest
-	118, // 153: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:input_type -> pethost.sandboxes.v1.WatchConversationRequest
-	18,  // 154: pethost.sandboxes.v1.SandboxService.GetWorkspace:output_type -> pethost.sandboxes.v1.Workspace
-	18,  // 155: pethost.sandboxes.v1.SandboxService.SetSshKeys:output_type -> pethost.sandboxes.v1.Workspace
-	25,  // 156: pethost.sandboxes.v1.SandboxService.SetSecret:output_type -> pethost.sandboxes.v1.Secret
-	25,  // 157: pethost.sandboxes.v1.SandboxService.DeleteSecret:output_type -> pethost.sandboxes.v1.Secret
-	28,  // 158: pethost.sandboxes.v1.SandboxService.CreateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 159: pethost.sandboxes.v1.SandboxService.GetSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	34,  // 160: pethost.sandboxes.v1.SandboxService.ListSandboxes:output_type -> pethost.sandboxes.v1.ListSandboxesResponse
-	28,  // 161: pethost.sandboxes.v1.SandboxService.UpdateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 162: pethost.sandboxes.v1.SandboxService.PauseSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 163: pethost.sandboxes.v1.SandboxService.StopSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 164: pethost.sandboxes.v1.SandboxService.ResumeSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	28,  // 165: pethost.sandboxes.v1.SandboxService.DeleteSandbox:output_type -> pethost.sandboxes.v1.Sandbox
-	41,  // 166: pethost.sandboxes.v1.SandboxService.ConnectSandbox:output_type -> pethost.sandboxes.v1.Connection
-	51,  // 167: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:output_type -> pethost.sandboxes.v1.GetSandboxMetricsResponse
-	54,  // 168: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:output_type -> pethost.sandboxes.v1.ListSandboxEventsResponse
-	56,  // 169: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:output_type -> pethost.sandboxes.v1.SandboxEvent
-	62,  // 170: pethost.sandboxes.v1.SandboxService.CreateTemplate:output_type -> pethost.sandboxes.v1.Template
-	62,  // 171: pethost.sandboxes.v1.SandboxService.GetTemplate:output_type -> pethost.sandboxes.v1.Template
-	66,  // 172: pethost.sandboxes.v1.SandboxService.ListTemplates:output_type -> pethost.sandboxes.v1.ListTemplatesResponse
-	62,  // 173: pethost.sandboxes.v1.SandboxService.DeleteTemplate:output_type -> pethost.sandboxes.v1.Template
-	68,  // 174: pethost.sandboxes.v1.SandboxService.CreateVolume:output_type -> pethost.sandboxes.v1.Volume
-	72,  // 175: pethost.sandboxes.v1.SandboxService.ListVolumes:output_type -> pethost.sandboxes.v1.ListVolumesResponse
-	68,  // 176: pethost.sandboxes.v1.SandboxService.DeleteVolume:output_type -> pethost.sandboxes.v1.Volume
-	75,  // 177: pethost.sandboxes.v1.SandboxService.ListUsage:output_type -> pethost.sandboxes.v1.ListUsageResponse
-	78,  // 178: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:output_type -> pethost.sandboxes.v1.Command
-	78,  // 179: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:output_type -> pethost.sandboxes.v1.Command
-	78,  // 180: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:output_type -> pethost.sandboxes.v1.Command
-	82,  // 181: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:output_type -> pethost.sandboxes.v1.ListCommandsResponse
-	84,  // 182: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:output_type -> pethost.sandboxes.v1.CommandOutput
-	86,  // 183: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:output_type -> pethost.sandboxes.v1.File
-	88,  // 184: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:output_type -> pethost.sandboxes.v1.ListFilesResponse
-	95,  // 185: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:output_type -> pethost.sandboxes.v1.WriteFilesResponse
-	97,  // 186: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:output_type -> pethost.sandboxes.v1.FileEvent
-	99,  // 187: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:output_type -> pethost.sandboxes.v1.ControlDesktopResponse
-	110, // 188: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:output_type -> pethost.sandboxes.v1.Link
-	112, // 189: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:output_type -> pethost.sandboxes.v1.AgentTurn
-	112, // 190: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
-	112, // 191: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
-	116, // 192: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:output_type -> pethost.sandboxes.v1.ListConversationsResponse
-	119, // 193: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:output_type -> pethost.sandboxes.v1.AgentEvent
-	154, // [154:194] is the sub-list for method output_type
-	114, // [114:154] is the sub-list for method input_type
-	114, // [114:114] is the sub-list for extension type_name
-	114, // [114:114] is the sub-list for extension extendee
-	0,   // [0:114] is the sub-list for field type_name
+	100, // 15: pethost.sandboxes.v1.Sandbox.desktop:type_name -> pethost.sandboxes.v1.Desktop
+	125, // 16: pethost.sandboxes.v1.Sandbox.create_time:type_name -> google.protobuf.Timestamp
+	30,  // 17: pethost.sandboxes.v1.Sandbox.usage:type_name -> pethost.sandboxes.v1.Usage
+	41,  // 18: pethost.sandboxes.v1.Sandbox.connection:type_name -> pethost.sandboxes.v1.Connection
+	29,  // 19: pethost.sandboxes.v1.Sandbox.restore:type_name -> pethost.sandboxes.v1.Restore
+	1,   // 20: pethost.sandboxes.v1.Sandbox.next_state:type_name -> pethost.sandboxes.v1.SandboxState
+	125, // 21: pethost.sandboxes.v1.Sandbox.next_state_time:type_name -> google.protobuf.Timestamp
+	42,  // 22: pethost.sandboxes.v1.CreateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	49,  // 23: pethost.sandboxes.v1.CreateSandboxRequest.labels:type_name -> pethost.sandboxes.v1.Label
+	1,   // 24: pethost.sandboxes.v1.ListSandboxesRequest.states:type_name -> pethost.sandboxes.v1.SandboxState
+	49,  // 25: pethost.sandboxes.v1.ListSandboxesRequest.labels:type_name -> pethost.sandboxes.v1.Label
+	28,  // 26: pethost.sandboxes.v1.ListSandboxesResponse.sandboxes:type_name -> pethost.sandboxes.v1.Sandbox
+	42,  // 27: pethost.sandboxes.v1.UpdateSandboxRequest.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	125, // 28: pethost.sandboxes.v1.Connection.expire_time:type_name -> google.protobuf.Timestamp
+	3,   // 29: pethost.sandboxes.v1.SandboxSettings.size:type_name -> pethost.sandboxes.v1.Size
+	43,  // 30: pethost.sandboxes.v1.SandboxSettings.lifecycle:type_name -> pethost.sandboxes.v1.Lifecycle
+	44,  // 31: pethost.sandboxes.v1.SandboxSettings.egress:type_name -> pethost.sandboxes.v1.Egress
+	45,  // 32: pethost.sandboxes.v1.SandboxSettings.ingress:type_name -> pethost.sandboxes.v1.Ingress
+	47,  // 33: pethost.sandboxes.v1.SandboxSettings.environment:type_name -> pethost.sandboxes.v1.Environment
+	46,  // 34: pethost.sandboxes.v1.Ingress.public_ports:type_name -> pethost.sandboxes.v1.PublicPort
+	48,  // 35: pethost.sandboxes.v1.Environment.variables:type_name -> pethost.sandboxes.v1.EnvVar
+	125, // 36: pethost.sandboxes.v1.GetSandboxMetricsRequest.since:type_name -> google.protobuf.Timestamp
+	125, // 37: pethost.sandboxes.v1.GetSandboxMetricsRequest.until:type_name -> google.protobuf.Timestamp
+	52,  // 38: pethost.sandboxes.v1.GetSandboxMetricsResponse.points:type_name -> pethost.sandboxes.v1.MetricsPoint
+	125, // 39: pethost.sandboxes.v1.MetricsPoint.time:type_name -> google.protobuf.Timestamp
+	4,   // 40: pethost.sandboxes.v1.ListSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
+	56,  // 41: pethost.sandboxes.v1.ListSandboxEventsResponse.events:type_name -> pethost.sandboxes.v1.SandboxEvent
+	4,   // 42: pethost.sandboxes.v1.WatchSandboxEventsRequest.kinds:type_name -> pethost.sandboxes.v1.SandboxEventKind
+	125, // 43: pethost.sandboxes.v1.SandboxEvent.time:type_name -> google.protobuf.Timestamp
+	57,  // 44: pethost.sandboxes.v1.SandboxEvent.lifecycle:type_name -> pethost.sandboxes.v1.LifecycleEvent
+	58,  // 45: pethost.sandboxes.v1.SandboxEvent.command:type_name -> pethost.sandboxes.v1.CommandEvent
+	59,  // 46: pethost.sandboxes.v1.SandboxEvent.egress:type_name -> pethost.sandboxes.v1.EgressEvent
+	60,  // 47: pethost.sandboxes.v1.SandboxEvent.port:type_name -> pethost.sandboxes.v1.PortEvent
+	61,  // 48: pethost.sandboxes.v1.SandboxEvent.agent_turn:type_name -> pethost.sandboxes.v1.AgentTurnEvent
+	5,   // 49: pethost.sandboxes.v1.LifecycleEvent.change:type_name -> pethost.sandboxes.v1.LifecycleChange
+	2,   // 50: pethost.sandboxes.v1.LifecycleEvent.reason:type_name -> pethost.sandboxes.v1.StateReason
+	3,   // 51: pethost.sandboxes.v1.LifecycleEvent.size:type_name -> pethost.sandboxes.v1.Size
+	7,   // 52: pethost.sandboxes.v1.CommandEvent.state:type_name -> pethost.sandboxes.v1.CommandState
+	8,   // 53: pethost.sandboxes.v1.CommandEvent.started_by:type_name -> pethost.sandboxes.v1.StartedBy
+	14,  // 54: pethost.sandboxes.v1.AgentTurnEvent.agent:type_name -> pethost.sandboxes.v1.Agent
+	15,  // 55: pethost.sandboxes.v1.AgentTurnEvent.state:type_name -> pethost.sandboxes.v1.AgentTurnState
+	6,   // 56: pethost.sandboxes.v1.Template.state:type_name -> pethost.sandboxes.v1.TemplateState
+	42,  // 57: pethost.sandboxes.v1.Template.settings:type_name -> pethost.sandboxes.v1.SandboxSettings
+	125, // 58: pethost.sandboxes.v1.Template.create_time:type_name -> google.protobuf.Timestamp
+	3,   // 59: pethost.sandboxes.v1.Template.min_size:type_name -> pethost.sandboxes.v1.Size
+	62,  // 60: pethost.sandboxes.v1.ListTemplatesResponse.templates:type_name -> pethost.sandboxes.v1.Template
+	125, // 61: pethost.sandboxes.v1.ListUsageRequest.since:type_name -> google.protobuf.Timestamp
+	125, // 62: pethost.sandboxes.v1.ListUsageRequest.until:type_name -> google.protobuf.Timestamp
+	70,  // 63: pethost.sandboxes.v1.ListUsageResponse.rows:type_name -> pethost.sandboxes.v1.UsageRow
+	125, // 64: pethost.sandboxes.v1.UsageRow.day:type_name -> google.protobuf.Timestamp
+	0,   // 65: pethost.sandboxes.v1.UsageRow.meter:type_name -> pethost.sandboxes.v1.Meter
+	3,   // 66: pethost.sandboxes.v1.UsageRow.size:type_name -> pethost.sandboxes.v1.Size
+	7,   // 67: pethost.sandboxes.v1.Command.state:type_name -> pethost.sandboxes.v1.CommandState
+	8,   // 68: pethost.sandboxes.v1.Command.started_by:type_name -> pethost.sandboxes.v1.StartedBy
+	125, // 69: pethost.sandboxes.v1.Command.start_time:type_name -> google.protobuf.Timestamp
+	125, // 70: pethost.sandboxes.v1.Command.end_time:type_name -> google.protobuf.Timestamp
+	72,  // 71: pethost.sandboxes.v1.ListCommandsResponse.commands:type_name -> pethost.sandboxes.v1.Command
+	72,  // 72: pethost.sandboxes.v1.CommandOutput.ended:type_name -> pethost.sandboxes.v1.Command
+	83,  // 73: pethost.sandboxes.v1.ListFilesResponse.files:type_name -> pethost.sandboxes.v1.FileInfo
+	9,   // 74: pethost.sandboxes.v1.FileInfo.kind:type_name -> pethost.sandboxes.v1.FileKind
+	125, // 75: pethost.sandboxes.v1.FileInfo.modify_time:type_name -> google.protobuf.Timestamp
+	85,  // 76: pethost.sandboxes.v1.WriteFilesRequest.changes:type_name -> pethost.sandboxes.v1.FileChange
+	88,  // 77: pethost.sandboxes.v1.FileChange.edit:type_name -> pethost.sandboxes.v1.TextEdit
+	86,  // 78: pethost.sandboxes.v1.FileChange.delete:type_name -> pethost.sandboxes.v1.Delete
+	87,  // 79: pethost.sandboxes.v1.FileChange.make_directory:type_name -> pethost.sandboxes.v1.MakeDirectory
+	10,  // 80: pethost.sandboxes.v1.WriteFilesResponse.failure:type_name -> pethost.sandboxes.v1.FileFailure
+	11,  // 81: pethost.sandboxes.v1.FileEvent.kind:type_name -> pethost.sandboxes.v1.FileEventKind
+	95,  // 82: pethost.sandboxes.v1.ControlDesktopRequest.actions:type_name -> pethost.sandboxes.v1.DesktopAction
+	94,  // 83: pethost.sandboxes.v1.ControlDesktopResponse.screenshot:type_name -> pethost.sandboxes.v1.Screenshot
+	12,  // 84: pethost.sandboxes.v1.ControlDesktopResponse.failure:type_name -> pethost.sandboxes.v1.DesktopFailure
+	97,  // 85: pethost.sandboxes.v1.DesktopAction.click:type_name -> pethost.sandboxes.v1.Click
+	96,  // 86: pethost.sandboxes.v1.DesktopAction.move_mouse:type_name -> pethost.sandboxes.v1.Point
+	98,  // 87: pethost.sandboxes.v1.DesktopAction.drag:type_name -> pethost.sandboxes.v1.Drag
+	99,  // 88: pethost.sandboxes.v1.DesktopAction.scroll:type_name -> pethost.sandboxes.v1.Scroll
+	13,  // 89: pethost.sandboxes.v1.Click.button:type_name -> pethost.sandboxes.v1.MouseButton
+	96,  // 90: pethost.sandboxes.v1.Drag.path:type_name -> pethost.sandboxes.v1.Point
+	102, // 91: pethost.sandboxes.v1.CreateLinkRequest.terminal:type_name -> pethost.sandboxes.v1.TerminalLink
+	103, // 92: pethost.sandboxes.v1.CreateLinkRequest.desktop:type_name -> pethost.sandboxes.v1.DesktopLink
+	125, // 93: pethost.sandboxes.v1.Link.expire_time:type_name -> google.protobuf.Timestamp
+	14,  // 94: pethost.sandboxes.v1.PromptAgentRequest.agent:type_name -> pethost.sandboxes.v1.Agent
+	14,  // 95: pethost.sandboxes.v1.AgentTurn.agent:type_name -> pethost.sandboxes.v1.Agent
+	15,  // 96: pethost.sandboxes.v1.AgentTurn.state:type_name -> pethost.sandboxes.v1.AgentTurnState
+	125, // 97: pethost.sandboxes.v1.AgentTurn.start_time:type_name -> google.protobuf.Timestamp
+	125, // 98: pethost.sandboxes.v1.AgentTurn.end_time:type_name -> google.protobuf.Timestamp
+	111, // 99: pethost.sandboxes.v1.ListConversationsResponse.conversations:type_name -> pethost.sandboxes.v1.Conversation
+	14,  // 100: pethost.sandboxes.v1.Conversation.agent:type_name -> pethost.sandboxes.v1.Agent
+	125, // 101: pethost.sandboxes.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
+	125, // 102: pethost.sandboxes.v1.AgentEvent.time:type_name -> google.protobuf.Timestamp
+	115, // 103: pethost.sandboxes.v1.AgentEvent.tool_call:type_name -> pethost.sandboxes.v1.ToolCall
+	116, // 104: pethost.sandboxes.v1.AgentEvent.tool_result:type_name -> pethost.sandboxes.v1.ToolResult
+	106, // 105: pethost.sandboxes.v1.AgentEvent.turn_end:type_name -> pethost.sandboxes.v1.AgentTurn
+	114, // 106: pethost.sandboxes.v1.AgentEvent.caught_up:type_name -> pethost.sandboxes.v1.CaughtUp
+	125, // 107: pethost.sandboxes.v1.LimitReached.retry_time:type_name -> google.protobuf.Timestamp
+	16,  // 108: pethost.sandboxes.v1.NoCapacity.bound:type_name -> pethost.sandboxes.v1.RoomBound
+	18,  // 109: pethost.sandboxes.v1.WorkspaceChoice.workspaces:type_name -> pethost.sandboxes.v1.Workspace
+	17,  // 110: pethost.sandboxes.v1.SandboxService.GetWorkspace:input_type -> pethost.sandboxes.v1.GetWorkspaceRequest
+	24,  // 111: pethost.sandboxes.v1.SandboxService.SetSshKeys:input_type -> pethost.sandboxes.v1.SetSshKeysRequest
+	26,  // 112: pethost.sandboxes.v1.SandboxService.SetSecret:input_type -> pethost.sandboxes.v1.SetSecretRequest
+	27,  // 113: pethost.sandboxes.v1.SandboxService.DeleteSecret:input_type -> pethost.sandboxes.v1.DeleteSecretRequest
+	31,  // 114: pethost.sandboxes.v1.SandboxService.CreateSandbox:input_type -> pethost.sandboxes.v1.CreateSandboxRequest
+	32,  // 115: pethost.sandboxes.v1.SandboxService.GetSandbox:input_type -> pethost.sandboxes.v1.GetSandboxRequest
+	33,  // 116: pethost.sandboxes.v1.SandboxService.ListSandboxes:input_type -> pethost.sandboxes.v1.ListSandboxesRequest
+	35,  // 117: pethost.sandboxes.v1.SandboxService.UpdateSandbox:input_type -> pethost.sandboxes.v1.UpdateSandboxRequest
+	36,  // 118: pethost.sandboxes.v1.SandboxService.PauseSandbox:input_type -> pethost.sandboxes.v1.PauseSandboxRequest
+	37,  // 119: pethost.sandboxes.v1.SandboxService.StopSandbox:input_type -> pethost.sandboxes.v1.StopSandboxRequest
+	38,  // 120: pethost.sandboxes.v1.SandboxService.ResumeSandbox:input_type -> pethost.sandboxes.v1.ResumeSandboxRequest
+	39,  // 121: pethost.sandboxes.v1.SandboxService.DeleteSandbox:input_type -> pethost.sandboxes.v1.DeleteSandboxRequest
+	40,  // 122: pethost.sandboxes.v1.SandboxService.ConnectSandbox:input_type -> pethost.sandboxes.v1.ConnectSandboxRequest
+	50,  // 123: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:input_type -> pethost.sandboxes.v1.GetSandboxMetricsRequest
+	53,  // 124: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:input_type -> pethost.sandboxes.v1.ListSandboxEventsRequest
+	55,  // 125: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:input_type -> pethost.sandboxes.v1.WatchSandboxEventsRequest
+	63,  // 126: pethost.sandboxes.v1.SandboxService.CreateTemplate:input_type -> pethost.sandboxes.v1.CreateTemplateRequest
+	64,  // 127: pethost.sandboxes.v1.SandboxService.GetTemplate:input_type -> pethost.sandboxes.v1.GetTemplateRequest
+	65,  // 128: pethost.sandboxes.v1.SandboxService.ListTemplates:input_type -> pethost.sandboxes.v1.ListTemplatesRequest
+	67,  // 129: pethost.sandboxes.v1.SandboxService.DeleteTemplate:input_type -> pethost.sandboxes.v1.DeleteTemplateRequest
+	68,  // 130: pethost.sandboxes.v1.SandboxService.ListUsage:input_type -> pethost.sandboxes.v1.ListUsageRequest
+	71,  // 131: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:input_type -> pethost.sandboxes.v1.RunCommandRequest
+	73,  // 132: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:input_type -> pethost.sandboxes.v1.GetCommandRequest
+	74,  // 133: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:input_type -> pethost.sandboxes.v1.StopCommandRequest
+	75,  // 134: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:input_type -> pethost.sandboxes.v1.ListCommandsRequest
+	77,  // 135: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:input_type -> pethost.sandboxes.v1.WatchCommandRequest
+	79,  // 136: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:input_type -> pethost.sandboxes.v1.ReadFileRequest
+	81,  // 137: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:input_type -> pethost.sandboxes.v1.ListFilesRequest
+	84,  // 138: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:input_type -> pethost.sandboxes.v1.WriteFilesRequest
+	90,  // 139: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:input_type -> pethost.sandboxes.v1.WatchFilesRequest
+	92,  // 140: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:input_type -> pethost.sandboxes.v1.ControlDesktopRequest
+	101, // 141: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:input_type -> pethost.sandboxes.v1.CreateLinkRequest
+	105, // 142: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:input_type -> pethost.sandboxes.v1.PromptAgentRequest
+	107, // 143: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:input_type -> pethost.sandboxes.v1.GetAgentTurnRequest
+	108, // 144: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:input_type -> pethost.sandboxes.v1.StopAgentTurnRequest
+	109, // 145: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:input_type -> pethost.sandboxes.v1.ListConversationsRequest
+	112, // 146: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:input_type -> pethost.sandboxes.v1.WatchConversationRequest
+	18,  // 147: pethost.sandboxes.v1.SandboxService.GetWorkspace:output_type -> pethost.sandboxes.v1.Workspace
+	18,  // 148: pethost.sandboxes.v1.SandboxService.SetSshKeys:output_type -> pethost.sandboxes.v1.Workspace
+	25,  // 149: pethost.sandboxes.v1.SandboxService.SetSecret:output_type -> pethost.sandboxes.v1.Secret
+	25,  // 150: pethost.sandboxes.v1.SandboxService.DeleteSecret:output_type -> pethost.sandboxes.v1.Secret
+	28,  // 151: pethost.sandboxes.v1.SandboxService.CreateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 152: pethost.sandboxes.v1.SandboxService.GetSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	34,  // 153: pethost.sandboxes.v1.SandboxService.ListSandboxes:output_type -> pethost.sandboxes.v1.ListSandboxesResponse
+	28,  // 154: pethost.sandboxes.v1.SandboxService.UpdateSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 155: pethost.sandboxes.v1.SandboxService.PauseSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 156: pethost.sandboxes.v1.SandboxService.StopSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 157: pethost.sandboxes.v1.SandboxService.ResumeSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	28,  // 158: pethost.sandboxes.v1.SandboxService.DeleteSandbox:output_type -> pethost.sandboxes.v1.Sandbox
+	41,  // 159: pethost.sandboxes.v1.SandboxService.ConnectSandbox:output_type -> pethost.sandboxes.v1.Connection
+	51,  // 160: pethost.sandboxes.v1.SandboxService.GetSandboxMetrics:output_type -> pethost.sandboxes.v1.GetSandboxMetricsResponse
+	54,  // 161: pethost.sandboxes.v1.SandboxService.ListSandboxEvents:output_type -> pethost.sandboxes.v1.ListSandboxEventsResponse
+	56,  // 162: pethost.sandboxes.v1.SandboxService.WatchSandboxEvents:output_type -> pethost.sandboxes.v1.SandboxEvent
+	62,  // 163: pethost.sandboxes.v1.SandboxService.CreateTemplate:output_type -> pethost.sandboxes.v1.Template
+	62,  // 164: pethost.sandboxes.v1.SandboxService.GetTemplate:output_type -> pethost.sandboxes.v1.Template
+	66,  // 165: pethost.sandboxes.v1.SandboxService.ListTemplates:output_type -> pethost.sandboxes.v1.ListTemplatesResponse
+	62,  // 166: pethost.sandboxes.v1.SandboxService.DeleteTemplate:output_type -> pethost.sandboxes.v1.Template
+	69,  // 167: pethost.sandboxes.v1.SandboxService.ListUsage:output_type -> pethost.sandboxes.v1.ListUsageResponse
+	72,  // 168: pethost.sandboxes.v1.SandboxRuntimeService.RunCommand:output_type -> pethost.sandboxes.v1.Command
+	72,  // 169: pethost.sandboxes.v1.SandboxRuntimeService.GetCommand:output_type -> pethost.sandboxes.v1.Command
+	72,  // 170: pethost.sandboxes.v1.SandboxRuntimeService.StopCommand:output_type -> pethost.sandboxes.v1.Command
+	76,  // 171: pethost.sandboxes.v1.SandboxRuntimeService.ListCommands:output_type -> pethost.sandboxes.v1.ListCommandsResponse
+	78,  // 172: pethost.sandboxes.v1.SandboxRuntimeService.WatchCommand:output_type -> pethost.sandboxes.v1.CommandOutput
+	80,  // 173: pethost.sandboxes.v1.SandboxRuntimeService.ReadFile:output_type -> pethost.sandboxes.v1.File
+	82,  // 174: pethost.sandboxes.v1.SandboxRuntimeService.ListFiles:output_type -> pethost.sandboxes.v1.ListFilesResponse
+	89,  // 175: pethost.sandboxes.v1.SandboxRuntimeService.WriteFiles:output_type -> pethost.sandboxes.v1.WriteFilesResponse
+	91,  // 176: pethost.sandboxes.v1.SandboxRuntimeService.WatchFiles:output_type -> pethost.sandboxes.v1.FileEvent
+	93,  // 177: pethost.sandboxes.v1.SandboxRuntimeService.ControlDesktop:output_type -> pethost.sandboxes.v1.ControlDesktopResponse
+	104, // 178: pethost.sandboxes.v1.SandboxRuntimeService.CreateLink:output_type -> pethost.sandboxes.v1.Link
+	106, // 179: pethost.sandboxes.v1.SandboxRuntimeService.PromptAgent:output_type -> pethost.sandboxes.v1.AgentTurn
+	106, // 180: pethost.sandboxes.v1.SandboxRuntimeService.GetAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
+	106, // 181: pethost.sandboxes.v1.SandboxRuntimeService.StopAgentTurn:output_type -> pethost.sandboxes.v1.AgentTurn
+	110, // 182: pethost.sandboxes.v1.SandboxRuntimeService.ListConversations:output_type -> pethost.sandboxes.v1.ListConversationsResponse
+	113, // 183: pethost.sandboxes.v1.SandboxRuntimeService.WatchConversation:output_type -> pethost.sandboxes.v1.AgentEvent
+	147, // [147:184] is the sub-list for method output_type
+	110, // [110:147] is the sub-list for method input_type
+	110, // [110:110] is the sub-list for extension type_name
+	110, // [110:110] is the sub-list for extension extendee
+	0,   // [0:110] is the sub-list for field type_name
 }
 
 func init() { file_v1_sandboxes_proto_init() }
@@ -21159,16 +20093,16 @@ func file_v1_sandboxes_proto_init() {
 		(*sandboxEvent_Port)(nil),
 		(*sandboxEvent_AgentTurn)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[67].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[61].OneofWrappers = []any{
 		(*commandOutput_Stdout)(nil),
 		(*commandOutput_Stderr)(nil),
 		(*commandOutput_Ended)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[69].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[63].OneofWrappers = []any{
 		(*file_Text)(nil),
 		(*file_Data)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[74].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[68].OneofWrappers = []any{
 		(*fileChange_Text)(nil),
 		(*fileChange_Data)(nil),
 		(*fileChange_Edit)(nil),
@@ -21176,7 +20110,7 @@ func file_v1_sandboxes_proto_init() {
 		(*fileChange_Delete)(nil),
 		(*fileChange_MakeDirectory)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[84].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[78].OneofWrappers = []any{
 		(*desktopAction_Click)(nil),
 		(*desktopAction_MoveMouse)(nil),
 		(*desktopAction_Drag)(nil),
@@ -21185,14 +20119,14 @@ func file_v1_sandboxes_proto_init() {
 		(*desktopAction_PressKeys)(nil),
 		(*desktopAction_WaitMs)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[90].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[84].OneofWrappers = []any{
 		(*createLinkRequest_Port)(nil),
 		(*createLinkRequest_Terminal)(nil),
 		(*createLinkRequest_Desktop)(nil),
 		(*createLinkRequest_DownloadPath)(nil),
 		(*createLinkRequest_UploadPath)(nil),
 	}
-	file_v1_sandboxes_proto_msgTypes[102].OneofWrappers = []any{
+	file_v1_sandboxes_proto_msgTypes[96].OneofWrappers = []any{
 		(*agentEvent_Prompt)(nil),
 		(*agentEvent_Message)(nil),
 		(*agentEvent_ToolCall)(nil),
@@ -21206,7 +20140,7 @@ func file_v1_sandboxes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_sandboxes_proto_rawDesc), len(file_v1_sandboxes_proto_rawDesc)),
 			NumEnums:      17,
-			NumMessages:   114,
+			NumMessages:   108,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
