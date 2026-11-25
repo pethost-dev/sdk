@@ -1584,13 +1584,36 @@ func fromWireControlDesktopRequest(w *sandboxesv1.ControlDesktopRequest) Control
 	return ControlDesktopRequest{
 		w.GetSandboxId(),
 		sliceFromWire(w.GetActions(), fromWireDesktopAction),
+		w.GetSkipScreenshot(),
+		pointerFromWire(w.GetScreenshotRegion(), fromWireScreenRegion),
 	}
 }
 
 func toWireControlDesktopRequest(v ControlDesktopRequest) *sandboxesv1.ControlDesktopRequest {
 	b := sandboxesv1.ControlDesktopRequest_builder{
-		SandboxId: nonZero(v.SandboxID),
-		Actions:   sliceToWire(v.Actions, toWireDesktopAction),
+		SandboxId:        nonZero(v.SandboxID),
+		Actions:          sliceToWire(v.Actions, toWireDesktopAction),
+		SkipScreenshot:   nonZero(v.SkipScreenshot),
+		ScreenshotRegion: pointerToWire(v.ScreenshotRegion, toWireScreenRegion),
+	}
+	return b.Build()
+}
+
+func fromWireScreenRegion(w *sandboxesv1.ScreenRegion) ScreenRegion {
+	return ScreenRegion{
+		w.GetX(),
+		w.GetY(),
+		w.GetWidth(),
+		w.GetHeight(),
+	}
+}
+
+func toWireScreenRegion(v ScreenRegion) *sandboxesv1.ScreenRegion {
+	b := sandboxesv1.ScreenRegion_builder{
+		X:      nonZero(v.X),
+		Y:      nonZero(v.Y),
+		Width:  nonZero(v.Width),
+		Height: nonZero(v.Height),
 	}
 	return b.Build()
 }
@@ -1622,6 +1645,7 @@ func fromWireScreenshot(w *sandboxesv1.Screenshot) Screenshot {
 		w.GetHeight(),
 		w.GetCursorX(),
 		w.GetCursorY(),
+		w.GetScale(),
 	}
 }
 
@@ -1633,6 +1657,7 @@ func toWireScreenshot(v Screenshot) *sandboxesv1.Screenshot {
 		Height:   nonZero(v.Height),
 		CursorX:  nonZero(v.CursorX),
 		CursorY:  nonZero(v.CursorY),
+		Scale:    nonZero(v.Scale),
 	}
 	return b.Build()
 }
@@ -1667,6 +1692,12 @@ func fromWireDesktopActionAction(w *sandboxesv1.DesktopAction) DesktopActionActi
 		return DesktopActionPressKeys(w.GetPressKeys())
 	case sandboxesv1.DesktopAction_WaitMs_case:
 		return DesktopActionWaitMs(w.GetWaitMs())
+	case sandboxesv1.DesktopAction_MouseDown_case:
+		return DesktopActionMouseDown(fromWireMouseButtonChange(w.GetMouseDown()))
+	case sandboxesv1.DesktopAction_MouseUp_case:
+		return DesktopActionMouseUp(fromWireMouseButtonChange(w.GetMouseUp()))
+	case sandboxesv1.DesktopAction_HoldKeys_case:
+		return DesktopActionHoldKeys(fromWireHoldKeys(w.GetHoldKeys()))
 	}
 	return nil
 }
@@ -1699,6 +1730,18 @@ func (v DesktopActionWaitMs) toDesktopActionAction(b *sandboxesv1.DesktopAction_
 	b.WaitMs = new(uint32(v))
 }
 
+func (v DesktopActionMouseDown) toDesktopActionAction(b *sandboxesv1.DesktopAction_builder) {
+	b.MouseDown = toWireMouseButtonChange(MouseButtonChange(v))
+}
+
+func (v DesktopActionMouseUp) toDesktopActionAction(b *sandboxesv1.DesktopAction_builder) {
+	b.MouseUp = toWireMouseButtonChange(MouseButtonChange(v))
+}
+
+func (v DesktopActionHoldKeys) toDesktopActionAction(b *sandboxesv1.DesktopAction_builder) {
+	b.HoldKeys = toWireHoldKeys(HoldKeys(v))
+}
+
 var (
 	_ DesktopActionAction = DesktopActionClick{}
 	_ DesktopActionAction = DesktopActionMoveMouse{}
@@ -1707,7 +1750,38 @@ var (
 	_ DesktopActionAction = DesktopActionTypeText("")
 	_ DesktopActionAction = DesktopActionPressKeys("")
 	_ DesktopActionAction = DesktopActionWaitMs(0)
+	_ DesktopActionAction = DesktopActionMouseDown{}
+	_ DesktopActionAction = DesktopActionMouseUp{}
+	_ DesktopActionAction = DesktopActionHoldKeys{}
 )
+
+func fromWireMouseButtonChange(w *sandboxesv1.MouseButtonChange) MouseButtonChange {
+	return MouseButtonChange{
+		fromWireMouseButton(w.GetButton()),
+	}
+}
+
+func toWireMouseButtonChange(v MouseButtonChange) *sandboxesv1.MouseButtonChange {
+	b := sandboxesv1.MouseButtonChange_builder{
+		Button: nonZero(toWireMouseButton(v.Button)),
+	}
+	return b.Build()
+}
+
+func fromWireHoldKeys(w *sandboxesv1.HoldKeys) HoldKeys {
+	return HoldKeys{
+		w.GetKeys(),
+		w.GetDurationMs(),
+	}
+}
+
+func toWireHoldKeys(v HoldKeys) *sandboxesv1.HoldKeys {
+	b := sandboxesv1.HoldKeys_builder{
+		Keys:       nonZero(v.Keys),
+		DurationMs: nonZero(v.DurationMs),
+	}
+	return b.Build()
+}
 
 func fromWirePoint(w *sandboxesv1.Point) Point {
 	return Point{
@@ -1731,16 +1805,18 @@ func fromWireClick(w *sandboxesv1.Click) Click {
 		fromWireMouseButton(w.GetButton()),
 		w.GetCount(),
 		w.GetHoldKeys(),
+		w.GetAtPointer(),
 	}
 }
 
 func toWireClick(v Click) *sandboxesv1.Click {
 	b := sandboxesv1.Click_builder{
-		X:        nonZero(v.X),
-		Y:        nonZero(v.Y),
-		Button:   nonZero(toWireMouseButton(v.Button)),
-		Count:    nonZero(v.Count),
-		HoldKeys: nonZero(v.HoldKeys),
+		X:         nonZero(v.X),
+		Y:         nonZero(v.Y),
+		Button:    nonZero(toWireMouseButton(v.Button)),
+		Count:     nonZero(v.Count),
+		HoldKeys:  nonZero(v.HoldKeys),
+		AtPointer: nonZero(v.AtPointer),
 	}
 	return b.Build()
 }
@@ -1748,12 +1824,14 @@ func toWireClick(v Click) *sandboxesv1.Click {
 func fromWireDrag(w *sandboxesv1.Drag) Drag {
 	return Drag{
 		sliceFromWire(w.GetPath(), fromWirePoint),
+		w.GetHoldKeys(),
 	}
 }
 
 func toWireDrag(v Drag) *sandboxesv1.Drag {
 	b := sandboxesv1.Drag_builder{
-		Path: sliceToWire(v.Path, toWirePoint),
+		Path:     sliceToWire(v.Path, toWirePoint),
+		HoldKeys: nonZero(v.HoldKeys),
 	}
 	return b.Build()
 }
@@ -1764,15 +1842,19 @@ func fromWireScroll(w *sandboxesv1.Scroll) Scroll {
 		w.GetY(),
 		w.GetDown(),
 		w.GetRight(),
+		w.GetHoldKeys(),
+		w.GetAtPointer(),
 	}
 }
 
 func toWireScroll(v Scroll) *sandboxesv1.Scroll {
 	b := sandboxesv1.Scroll_builder{
-		X:     nonZero(v.X),
-		Y:     nonZero(v.Y),
-		Down:  nonZero(v.Down),
-		Right: nonZero(v.Right),
+		X:         nonZero(v.X),
+		Y:         nonZero(v.Y),
+		Down:      nonZero(v.Down),
+		Right:     nonZero(v.Right),
+		HoldKeys:  nonZero(v.HoldKeys),
+		AtPointer: nonZero(v.AtPointer),
 	}
 	return b.Build()
 }
@@ -1823,6 +1905,8 @@ func fromWireCreateLinkTarget(w *sandboxesv1.CreateLinkRequest) CreateLinkTarget
 		return CreateLinkDownloadPath(w.GetDownloadPath())
 	case sandboxesv1.CreateLinkRequest_UploadPath_case:
 		return CreateLinkUploadPath(w.GetUploadPath())
+	case sandboxesv1.CreateLinkRequest_Browser_case:
+		return CreateLinkBrowser(fromWireBrowserLink(w.GetBrowser()))
 	}
 	return nil
 }
@@ -1847,12 +1931,17 @@ func (v CreateLinkUploadPath) toCreateLinkTarget(b *sandboxesv1.CreateLinkReques
 	b.UploadPath = new(string(v))
 }
 
+func (v CreateLinkBrowser) toCreateLinkTarget(b *sandboxesv1.CreateLinkRequest_builder) {
+	b.Browser = toWireBrowserLink(BrowserLink(v))
+}
+
 var (
 	_ CreateLinkTarget = CreateLinkPort(0)
 	_ CreateLinkTarget = CreateLinkTerminal{}
 	_ CreateLinkTarget = CreateLinkDesktop{}
 	_ CreateLinkTarget = CreateLinkDownloadPath("")
 	_ CreateLinkTarget = CreateLinkUploadPath("")
+	_ CreateLinkTarget = CreateLinkBrowser{}
 )
 
 func fromWireTerminalLink(w *sandboxesv1.TerminalLink) TerminalLink {
@@ -1878,6 +1967,15 @@ func toWireDesktopLink(v DesktopLink) *sandboxesv1.DesktopLink {
 	b := sandboxesv1.DesktopLink_builder{
 		ViewOnly: nonZero(v.ViewOnly),
 	}
+	return b.Build()
+}
+
+func fromWireBrowserLink(w *sandboxesv1.BrowserLink) BrowserLink {
+	return BrowserLink{}
+}
+
+func toWireBrowserLink(v BrowserLink) *sandboxesv1.BrowserLink {
+	b := sandboxesv1.BrowserLink_builder{}
 	return b.Build()
 }
 
@@ -2448,6 +2546,8 @@ func _() {
 	_ = same[MouseButtonLeft-MouseButton(sandboxesv1.MouseButton_MOUSE_BUTTON_LEFT)]
 	_ = same[MouseButtonRight-MouseButton(sandboxesv1.MouseButton_MOUSE_BUTTON_RIGHT)]
 	_ = same[MouseButtonMiddle-MouseButton(sandboxesv1.MouseButton_MOUSE_BUTTON_MIDDLE)]
+	_ = same[MouseButtonBack-MouseButton(sandboxesv1.MouseButton_MOUSE_BUTTON_BACK)]
+	_ = same[MouseButtonForward-MouseButton(sandboxesv1.MouseButton_MOUSE_BUTTON_FORWARD)]
 	_ = same[AgentUnspecified-Agent(sandboxesv1.Agent_AGENT_UNSPECIFIED)]
 	_ = same[AgentClaudeCode-Agent(sandboxesv1.Agent_AGENT_CLAUDE_CODE)]
 	_ = same[AgentCodex-Agent(sandboxesv1.Agent_AGENT_CODEX)]

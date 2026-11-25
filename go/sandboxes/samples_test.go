@@ -352,9 +352,12 @@ var shapes = []shape{
 	shapeOf(sampleWatchFilesRequest, &sandboxesv1.WatchFilesRequest{}),
 	shapeOf(sampleFileEvent, &sandboxesv1.FileEvent{}),
 	shapeOf(sampleControlDesktopRequest, &sandboxesv1.ControlDesktopRequest{}),
+	shapeOf(sampleScreenRegion, &sandboxesv1.ScreenRegion{}),
 	shapeOf(sampleControlDesktopResponse, &sandboxesv1.ControlDesktopResponse{}),
 	shapeOf(sampleScreenshot, &sandboxesv1.Screenshot{}),
 	shapeOf(sampleDesktopAction, &sandboxesv1.DesktopAction{}),
+	shapeOf(sampleMouseButtonChange, &sandboxesv1.MouseButtonChange{}),
+	shapeOf(sampleHoldKeys, &sandboxesv1.HoldKeys{}),
 	shapeOf(samplePoint, &sandboxesv1.Point{}),
 	shapeOf(sampleClick, &sandboxesv1.Click{}),
 	shapeOf(sampleDrag, &sandboxesv1.Drag{}),
@@ -363,6 +366,7 @@ var shapes = []shape{
 	shapeOf(sampleCreateLinkRequest, &sandboxesv1.CreateLinkRequest{}),
 	shapeOf(sampleTerminalLink, &sandboxesv1.TerminalLink{}),
 	shapeOf(sampleDesktopLink, &sandboxesv1.DesktopLink{}),
+	shapeOf(sampleBrowserLink, &sandboxesv1.BrowserLink{}),
 	shapeOf(sampleLink, &sandboxesv1.Link{}),
 	shapeOf(samplePromptAgentRequest, &sandboxesv1.PromptAgentRequest{}),
 	shapeOf(sampleAgentTurn, &sandboxesv1.AgentTurn{}),
@@ -1137,8 +1141,19 @@ func sampleFileEvent(s seed) FileEvent {
 
 func sampleControlDesktopRequest(s seed) ControlDesktopRequest {
 	return ControlDesktopRequest{
-		SandboxID: plain[string](s.at("pethost.sandboxes.v1.ControlDesktopRequest.sandbox_id")),
-		Actions:   list(s.at("pethost.sandboxes.v1.ControlDesktopRequest.actions"), sampleDesktopAction),
+		SandboxID:        plain[string](s.at("pethost.sandboxes.v1.ControlDesktopRequest.sandbox_id")),
+		Actions:          list(s.at("pethost.sandboxes.v1.ControlDesktopRequest.actions"), sampleDesktopAction),
+		SkipScreenshot:   plain[bool](s.at("pethost.sandboxes.v1.ControlDesktopRequest.skip_screenshot")),
+		ScreenshotRegion: pointer(s.at("pethost.sandboxes.v1.ControlDesktopRequest.screenshot_region"), sampleScreenRegion),
+	}
+}
+
+func sampleScreenRegion(s seed) ScreenRegion {
+	return ScreenRegion{
+		X:      plain[int32](s.at("pethost.sandboxes.v1.ScreenRegion.x")),
+		Y:      plain[int32](s.at("pethost.sandboxes.v1.ScreenRegion.y")),
+		Width:  plain[int32](s.at("pethost.sandboxes.v1.ScreenRegion.width")),
+		Height: plain[int32](s.at("pethost.sandboxes.v1.ScreenRegion.height")),
 	}
 }
 
@@ -1159,6 +1174,7 @@ func sampleScreenshot(s seed) Screenshot {
 		Height:   plain[int32](s.at("pethost.sandboxes.v1.Screenshot.height")),
 		CursorX:  plain[int32](s.at("pethost.sandboxes.v1.Screenshot.cursor_x")),
 		CursorY:  plain[int32](s.at("pethost.sandboxes.v1.Screenshot.cursor_y")),
+		Scale:    plain[int32](s.at("pethost.sandboxes.v1.Screenshot.scale")),
 	}
 }
 
@@ -1169,7 +1185,7 @@ func sampleDesktopAction(s seed) DesktopAction {
 }
 
 func sampleDesktopActionAction(s seed) DesktopActionAction {
-	switch s.member(7) {
+	switch s.member(10) {
 	case 0:
 		return DesktopActionClick(member(s, sampleClick))
 	case 1:
@@ -1184,8 +1200,27 @@ func sampleDesktopActionAction(s seed) DesktopActionAction {
 		return DesktopActionPressKeys(plain[string](s))
 	case 6:
 		return DesktopActionWaitMs(plain[uint32](s))
+	case 7:
+		return DesktopActionMouseDown(member(s, sampleMouseButtonChange))
+	case 8:
+		return DesktopActionMouseUp(member(s, sampleMouseButtonChange))
+	case 9:
+		return DesktopActionHoldKeys(member(s, sampleHoldKeys))
 	}
 	return nil
+}
+
+func sampleMouseButtonChange(s seed) MouseButtonChange {
+	return MouseButtonChange{
+		Button: plain[MouseButton](s.at("pethost.sandboxes.v1.MouseButtonChange.button")),
+	}
+}
+
+func sampleHoldKeys(s seed) HoldKeys {
+	return HoldKeys{
+		Keys:       plain[string](s.at("pethost.sandboxes.v1.HoldKeys.keys")),
+		DurationMs: plain[uint32](s.at("pethost.sandboxes.v1.HoldKeys.duration_ms")),
+	}
 }
 
 func samplePoint(s seed) Point {
@@ -1197,26 +1232,30 @@ func samplePoint(s seed) Point {
 
 func sampleClick(s seed) Click {
 	return Click{
-		X:        plain[int32](s.at("pethost.sandboxes.v1.Click.x")),
-		Y:        plain[int32](s.at("pethost.sandboxes.v1.Click.y")),
-		Button:   plain[MouseButton](s.at("pethost.sandboxes.v1.Click.button")),
-		Count:    plain[int32](s.at("pethost.sandboxes.v1.Click.count")),
-		HoldKeys: plain[string](s.at("pethost.sandboxes.v1.Click.hold_keys")),
+		X:         plain[int32](s.at("pethost.sandboxes.v1.Click.x")),
+		Y:         plain[int32](s.at("pethost.sandboxes.v1.Click.y")),
+		Button:    plain[MouseButton](s.at("pethost.sandboxes.v1.Click.button")),
+		Count:     plain[int32](s.at("pethost.sandboxes.v1.Click.count")),
+		HoldKeys:  plain[string](s.at("pethost.sandboxes.v1.Click.hold_keys")),
+		AtPointer: plain[bool](s.at("pethost.sandboxes.v1.Click.at_pointer")),
 	}
 }
 
 func sampleDrag(s seed) Drag {
 	return Drag{
-		Path: list(s.at("pethost.sandboxes.v1.Drag.path"), samplePoint),
+		Path:     list(s.at("pethost.sandboxes.v1.Drag.path"), samplePoint),
+		HoldKeys: plain[string](s.at("pethost.sandboxes.v1.Drag.hold_keys")),
 	}
 }
 
 func sampleScroll(s seed) Scroll {
 	return Scroll{
-		X:     plain[int32](s.at("pethost.sandboxes.v1.Scroll.x")),
-		Y:     plain[int32](s.at("pethost.sandboxes.v1.Scroll.y")),
-		Down:  plain[int32](s.at("pethost.sandboxes.v1.Scroll.down")),
-		Right: plain[int32](s.at("pethost.sandboxes.v1.Scroll.right")),
+		X:         plain[int32](s.at("pethost.sandboxes.v1.Scroll.x")),
+		Y:         plain[int32](s.at("pethost.sandboxes.v1.Scroll.y")),
+		Down:      plain[int32](s.at("pethost.sandboxes.v1.Scroll.down")),
+		Right:     plain[int32](s.at("pethost.sandboxes.v1.Scroll.right")),
+		HoldKeys:  plain[string](s.at("pethost.sandboxes.v1.Scroll.hold_keys")),
+		AtPointer: plain[bool](s.at("pethost.sandboxes.v1.Scroll.at_pointer")),
 	}
 }
 
@@ -1236,7 +1275,7 @@ func sampleCreateLinkRequest(s seed) CreateLinkRequest {
 }
 
 func sampleCreateLinkTarget(s seed) CreateLinkTarget {
-	switch s.member(5) {
+	switch s.member(6) {
 	case 0:
 		return CreateLinkPort(plain[uint32](s))
 	case 1:
@@ -1247,6 +1286,8 @@ func sampleCreateLinkTarget(s seed) CreateLinkTarget {
 		return CreateLinkDownloadPath(plain[string](s))
 	case 4:
 		return CreateLinkUploadPath(plain[string](s))
+	case 5:
+		return CreateLinkBrowser(member(s, sampleBrowserLink))
 	}
 	return nil
 }
@@ -1261,6 +1302,10 @@ func sampleDesktopLink(s seed) DesktopLink {
 	return DesktopLink{
 		ViewOnly: plain[bool](s.at("pethost.sandboxes.v1.DesktopLink.view_only")),
 	}
+}
+
+func sampleBrowserLink(s seed) BrowserLink {
+	return BrowserLink{}
 }
 
 func sampleLink(s seed) Link {

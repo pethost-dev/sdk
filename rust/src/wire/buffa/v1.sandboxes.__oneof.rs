@@ -275,6 +275,9 @@ pub mod desktop_action {
         TypeText(::buffa::alloc::string::String),
         PressKeys(::buffa::alloc::string::String),
         WaitMs(u32),
+        MouseDown(::buffa::alloc::boxed::Box<super::super::super::MouseButtonChange>),
+        MouseUp(::buffa::alloc::boxed::Box<super::super::super::MouseButtonChange>),
+        HoldKeys(::buffa::alloc::boxed::Box<super::super::super::HoldKeys>),
     }
     impl ::buffa::Oneof for Action {}
     impl From<super::super::super::Click> for Action {
@@ -317,6 +320,16 @@ pub mod desktop_action {
             Self::Some(Action::from(v))
         }
     }
+    impl From<super::super::super::HoldKeys> for Action {
+        fn from(v: super::super::super::HoldKeys) -> Self {
+            Self::HoldKeys(::buffa::alloc::boxed::Box::new(v))
+        }
+    }
+    impl From<super::super::super::HoldKeys> for ::core::option::Option<Action> {
+        fn from(v: super::super::super::HoldKeys) -> Self {
+            Self::Some(Action::from(v))
+        }
+    }
     impl ::serde::Serialize for Action {
         fn serialize<S: ::serde::Serializer>(
             &self,
@@ -349,6 +362,15 @@ pub mod desktop_action {
                         &::buffa::json_helpers::ProtoJson(v),
                     )?;
                 }
+                Self::MouseDown(v) => {
+                    map.serialize_entry("mouse_down", &**v)?;
+                }
+                Self::MouseUp(v) => {
+                    map.serialize_entry("mouse_up", &**v)?;
+                }
+                Self::HoldKeys(v) => {
+                    map.serialize_entry("hold_keys", &**v)?;
+                }
             }
             map.end()
         }
@@ -364,6 +386,7 @@ pub mod create_link_request {
         Desktop(::buffa::alloc::boxed::Box<super::super::super::DesktopLink>),
         DownloadPath(::buffa::alloc::string::String),
         UploadPath(::buffa::alloc::string::String),
+        Browser(::buffa::alloc::boxed::Box<super::super::super::BrowserLink>),
     }
     impl ::buffa::Oneof for Target {}
     impl From<super::super::super::TerminalLink> for Target {
@@ -383,6 +406,16 @@ pub mod create_link_request {
     }
     impl From<super::super::super::DesktopLink> for ::core::option::Option<Target> {
         fn from(v: super::super::super::DesktopLink) -> Self {
+            Self::Some(Target::from(v))
+        }
+    }
+    impl From<super::super::super::BrowserLink> for Target {
+        fn from(v: super::super::super::BrowserLink) -> Self {
+            Self::Browser(::buffa::alloc::boxed::Box::new(v))
+        }
+    }
+    impl From<super::super::super::BrowserLink> for ::core::option::Option<Target> {
+        fn from(v: super::super::super::BrowserLink) -> Self {
             Self::Some(Target::from(v))
         }
     }
@@ -408,6 +441,9 @@ pub mod create_link_request {
                 }
                 Self::UploadPath(v) => {
                     map.serialize_entry("upload_path", v)?;
+                }
+                Self::Browser(v) => {
+                    map.serialize_entry("browser", &**v)?;
                 }
             }
             map.end()

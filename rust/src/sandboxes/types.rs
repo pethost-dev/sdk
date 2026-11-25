@@ -451,7 +451,7 @@ pub struct Egress {
 /// The ports anyone may open at their own address; any other port needs `Pethost-Token` ([`Client::create_link`](crate::sandboxes::Client::create_link) port).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Ingress {
-    /// At most 20.
+    /// At most 20. The desktop's own ports, its views\' 5900, 5901, 6080 and 6081 and its browser's 9222 and 9223, answer nobody at a port's address, public or with a token: the desktop and browser links reach them ([`Client::create_link`](crate::sandboxes::Client::create_link)).
     pub public_ports: ::std::vec::Vec<PublicPort>,
 }
 
@@ -1164,6 +1164,21 @@ pub enum FileEventKind {
 pub struct ControlDesktopRequest {
     pub sandbox_id: ::std::string::String,
     pub actions: ::std::vec::Vec<DesktopAction>,
+    /// True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a caller that does not look after every action.
+    pub skip_screenshot: bool,
+    /// Only this part of the screen, scaled up by a whole factor ([`Screenshot::scale`](crate::sandboxes::types::Screenshot::scale)) to fit the screen: a closer look at small text. The actions\' points stay the screen's. Absent = the whole screen.
+    pub screenshot_region: ::core::option::Option<ScreenRegion>,
+}
+
+/// A rectangle of the screen, in its pixels.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ScreenRegion {
+    /// Its left edge.
+    pub x: i32,
+    /// Its top edge.
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
 }
 
 /// What [`Client::control_desktop`](crate::sandboxes::Client::control_desktop) returns.
@@ -1197,13 +1212,17 @@ pub enum DesktopFailure {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct Screenshot {
+    /// Empty with `skip_screenshot`.
     pub image: ::std::vec::Vec<u8>,
     /// \"image/png\"
     pub mime_type: ::std::string::String,
+    /// The image's, the screen's with `skip_screenshot`.
     pub width: i32,
     pub height: i32,
     pub cursor_x: i32,
     pub cursor_y: i32,
+    /// How many times larger than the screen's pixels the image's are: 1, or more for a `screenshot_region`.
+    pub scale: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -1222,9 +1241,30 @@ pub enum DesktopActionAction {
     Scroll(Scroll),
     /// Text to type.
     TypeText(::std::string::String),
-    /// Keys pressed together: \"Return\", \"ctrl+c\", \"ctrl+shift+t\".
+    /// Keys pressed together, joined by \"+\": \"Return\", \"ctrl+c\", \"ctrl+shift+t\"; several such, apart by spaces, one after the other: \"ctrl+a BackSpace\", \"Down Down Down\".
     PressKeys(::std::string::String),
+    /// At most 30000.
     WaitMs(u32),
+    /// Presses a button where the pointer is (`move_mouse` first) and leaves it down, across calls, until its `mouse_up`: a drag the caller moves itself.
+    MouseDown(MouseButtonChange),
+    /// Lets a button go where the pointer is.
+    MouseUp(MouseButtonChange),
+    HoldKeys(HoldKeys),
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct MouseButtonChange {
+    /// Absent = LEFT.
+    pub button: MouseButton,
+}
+
+/// Keys held down together for a time, then let go.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct HoldKeys {
+    /// Joined by \"+\": \"shift\", \"ctrl+alt\".
+    pub keys: ::std::string::String,
+    /// At most 30000.
+    pub duration_ms: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -1239,10 +1279,12 @@ pub struct Click {
     pub y: i32,
     /// Absent = LEFT.
     pub button: MouseButton,
-    /// Absent = 1; 2 double-clicks.
+    /// Absent = 1; 2 double-clicks, 3 triple-clicks.
     pub count: i32,
     /// Held while clicking: \"shift\", \"ctrl+alt\".
     pub hold_keys: ::std::string::String,
+    /// True = where the pointer is, whatever x and y say.
+    pub at_pointer: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -1254,6 +1296,9 @@ pub enum MouseButton {
     Left,
     Right,
     Middle,
+    /// A browser's back.
+    Back,
+    Forward,
     /// A value this version of the crate does not know, as the number the API sent.
     Unrecognized(i32),
 }
@@ -1262,6 +1307,8 @@ pub enum MouseButton {
 pub struct Drag {
     /// From the first point to the last, the left button down.
     pub path: ::std::vec::Vec<Point>,
+    /// Held while dragging: \"shift\", \"ctrl+alt\".
+    pub hold_keys: ::std::string::String,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -1272,6 +1319,10 @@ pub struct Scroll {
     pub down: i32,
     /// Negative scrolls left.
     pub right: i32,
+    /// Held while scrolling: \"shift\", \"ctrl\".
+    pub hold_keys: ::std::string::String,
+    /// True = where the pointer is, whatever x and y say.
+    pub at_pointer: bool,
 }
 
 /// A screen, in pixels.
@@ -1304,6 +1355,7 @@ pub enum CreateLinkRequestTarget {
     DownloadPath(::std::string::String),
     /// PUT the file's bytes to the URL; missing directories are made.
     UploadPath(::std::string::String),
+    Browser(BrowserLink),
 }
 
 /// A terminal page; a WebSocket to the same URL carries its bytes both ways, and the text message {\"resize\":{\"cols\":C,\"rows\":R}} resizes it.
@@ -1319,6 +1371,10 @@ pub struct DesktopLink {
     /// True = the viewer cannot click or type.
     pub view_only: bool,
 }
+
+/// The browser on the sandbox's desktop, for a program that drives it: [`Link::url`](crate::sandboxes::types::Link::url) is the WebSocket of the Chrome DevTools Protocol, \"wss://browser-\<id\>.\<server\>/\<token\>\", which Playwright's chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and Stagehand take as it is; \"https://\" in its place answers \<that\>/json/version and \<that\>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some seconds), so a desktop link watches what the program does, and [`Client::control_desktop`](crate::sandboxes::Client::control_desktop) acts on the same pages; inside the sandbox a program takes http://localhost:9222, where the browser starts at the first connection, and the coding agents have it as their \"browser\" MCP server. Its profile is on the sandbox's disk: a stop keeps the sites it is signed in to, and a template saved from the sandbox carries them to every sandbox started from it. One browser a sandbox: a program that wants several at once uses several sandboxes. Whoever holds the link drives the browser as the sandbox's person, its files and signed-in sites within reach: give it only to a program you trust. A connection is a session, as a terminal is: the sandbox does not idle while one is open, and `revoke_tokens` ends it. A sandbox on a base before this link is refused, saying so: one created from the template \"base\" has it, while a template saved on an older base keeps that base.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct BrowserLink {}
 
 /// What [`Client::create_link`](crate::sandboxes::Client::create_link) returns.
 #[derive(Debug, Clone, PartialEq, Default)]

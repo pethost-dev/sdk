@@ -282,11 +282,15 @@ const fromMouseButton: Record<w.MouseButton, p.MouseButton | undefined> = {
   [w.MouseButton.LEFT]: "LEFT",
   [w.MouseButton.RIGHT]: "RIGHT",
   [w.MouseButton.MIDDLE]: "MIDDLE",
+  [w.MouseButton.BACK]: "BACK",
+  [w.MouseButton.FORWARD]: "FORWARD",
 };
 const toMouseButton: Record<p.MouseButton, w.MouseButton> = {
   LEFT: w.MouseButton.LEFT,
   RIGHT: w.MouseButton.RIGHT,
   MIDDLE: w.MouseButton.MIDDLE,
+  BACK: w.MouseButton.BACK,
+  FORWARD: w.MouseButton.FORWARD,
 };
 
 const fromAgent: Record<w.Agent, p.Agent | undefined> = {
@@ -1742,6 +1746,8 @@ export function fromControlDesktopRequest(m: w.ControlDesktopRequest): p.Control
   return compact<p.ControlDesktopRequest>({
     sandboxId: m.sandboxId,
     actions: m.actions.map(fromDesktopAction),
+    skipScreenshot: m.skipScreenshot,
+    screenshotRegion: m.screenshotRegion && fromScreenRegion(m.screenshotRegion),
   });
 }
 
@@ -1749,7 +1755,27 @@ export function toControlDesktopRequest(m: p.ControlDesktopRequest): MessageInit
   return {
     sandboxId: m.sandboxId || undefined,
     actions: m.actions?.map(toDesktopAction),
+    skipScreenshot: m.skipScreenshot || undefined,
+    screenshotRegion: m.screenshotRegion && toScreenRegion(m.screenshotRegion),
   } satisfies Fields<w.ControlDesktopRequest>;
+}
+
+export function fromScreenRegion(m: w.ScreenRegion): p.ScreenRegionInput {
+  return compact<p.ScreenRegionInput>({
+    x: m.x,
+    y: m.y,
+    width: m.width,
+    height: m.height,
+  });
+}
+
+export function toScreenRegion(m: p.ScreenRegionInput): MessageInitShape<typeof w.ScreenRegionSchema> {
+  return {
+    x: m.x || undefined,
+    y: m.y || undefined,
+    width: m.width || undefined,
+    height: m.height || undefined,
+  } satisfies Fields<w.ScreenRegion>;
 }
 
 export function fromControlDesktopResponse(m: w.ControlDesktopResponse): p.ControlDesktopResponse {
@@ -1778,6 +1804,7 @@ export function fromScreenshot(m: w.Screenshot): p.Screenshot {
     height: m.height,
     cursorX: m.cursorX,
     cursorY: m.cursorY,
+    scale: m.scale,
   });
 }
 
@@ -1789,6 +1816,7 @@ export function toScreenshot(m: p.Screenshot): MessageInitShape<typeof w.Screens
     height: m.height || undefined,
     cursorX: m.cursorX || undefined,
     cursorY: m.cursorY || undefined,
+    scale: m.scale || undefined,
   } satisfies Fields<w.Screenshot>;
 }
 
@@ -1796,7 +1824,7 @@ export function fromDesktopAction(m: w.DesktopAction): p.DesktopActionInput {
   return { ...fromDesktopAction_action(m.action) };
 }
 
-function fromDesktopAction_action(o: w.DesktopAction["action"]): Part<p.DesktopActionInput, "click" | "moveMouse" | "drag" | "scroll" | "typeText" | "pressKeys" | "waitMs"> {
+function fromDesktopAction_action(o: w.DesktopAction["action"]): Part<p.DesktopActionInput, "click" | "moveMouse" | "drag" | "scroll" | "typeText" | "pressKeys" | "waitMs" | "mouseDown" | "mouseUp" | "holdKeys"> {
   switch (o.case) {
     case "click": return { click: fromClick(o.value) };
     case "moveMouse": return { moveMouse: fromPoint(o.value) };
@@ -1805,6 +1833,9 @@ function fromDesktopAction_action(o: w.DesktopAction["action"]): Part<p.DesktopA
     case "typeText": return { typeText: o.value };
     case "pressKeys": return { pressKeys: o.value };
     case "waitMs": return { waitMs: o.value };
+    case "mouseDown": return { mouseDown: fromMouseButtonChange(o.value) };
+    case "mouseUp": return { mouseUp: fromMouseButtonChange(o.value) };
+    case "holdKeys": return { holdKeys: fromHoldKeys(o.value) };
     case undefined: return {};
     default: o satisfies never; return {};
   }
@@ -1817,7 +1848,7 @@ export function toDesktopAction(m: p.DesktopActionInput): MessageInitShape<typeo
 }
 
 function toDesktopAction_action(m: p.DesktopActionInput): MessageInitShape<typeof w.DesktopActionSchema>["action"] {
-  written<Unwritten<MessageInitShape<typeof w.DesktopActionSchema>["action"], "click" | "moveMouse" | "drag" | "scroll" | "typeText" | "pressKeys" | "waitMs">>();
+  written<Unwritten<MessageInitShape<typeof w.DesktopActionSchema>["action"], "click" | "moveMouse" | "drag" | "scroll" | "typeText" | "pressKeys" | "waitMs" | "mouseDown" | "mouseUp" | "holdKeys">>();
   const set: NonNullable<MessageInitShape<typeof w.DesktopActionSchema>["action"]>[] = [];
   if (m.click !== undefined) set.push({ case: "click", value: toClick(m.click) });
   if (m.moveMouse !== undefined) set.push({ case: "moveMouse", value: toPoint(m.moveMouse) });
@@ -1826,7 +1857,36 @@ function toDesktopAction_action(m: p.DesktopActionInput): MessageInitShape<typeo
   if (m.typeText !== undefined) set.push({ case: "typeText", value: m.typeText });
   if (m.pressKeys !== undefined) set.push({ case: "pressKeys", value: m.pressKeys });
   if (m.waitMs !== undefined) set.push({ case: "waitMs", value: m.waitMs });
+  if (m.mouseDown !== undefined) set.push({ case: "mouseDown", value: toMouseButtonChange(m.mouseDown) });
+  if (m.mouseUp !== undefined) set.push({ case: "mouseUp", value: toMouseButtonChange(m.mouseUp) });
+  if (m.holdKeys !== undefined) set.push({ case: "holdKeys", value: toHoldKeys(m.holdKeys) });
   return only("action", set);
+}
+
+export function fromMouseButtonChange(m: w.MouseButtonChange): p.MouseButtonChangeInput {
+  return compact<p.MouseButtonChangeInput>({
+    button: named(fromMouseButton, m.button, "MouseButtonChange.button"),
+  });
+}
+
+export function toMouseButtonChange(m: p.MouseButtonChangeInput): MessageInitShape<typeof w.MouseButtonChangeSchema> {
+  return {
+    button: m.button && toMouseButton[m.button],
+  } satisfies Fields<w.MouseButtonChange>;
+}
+
+export function fromHoldKeys(m: w.HoldKeys): p.HoldKeysInput {
+  return compact<p.HoldKeysInput>({
+    keys: m.keys,
+    durationMs: m.durationMs,
+  });
+}
+
+export function toHoldKeys(m: p.HoldKeysInput): MessageInitShape<typeof w.HoldKeysSchema> {
+  return {
+    keys: m.keys || undefined,
+    durationMs: m.durationMs || undefined,
+  } satisfies Fields<w.HoldKeys>;
 }
 
 export function fromPoint(m: w.Point): p.PointInput {
@@ -1850,6 +1910,7 @@ export function fromClick(m: w.Click): p.ClickInput {
     button: named(fromMouseButton, m.button, "Click.button"),
     count: m.count,
     holdKeys: m.holdKeys,
+    atPointer: m.atPointer,
   });
 }
 
@@ -1860,18 +1921,21 @@ export function toClick(m: p.ClickInput): MessageInitShape<typeof w.ClickSchema>
     button: m.button && toMouseButton[m.button],
     count: m.count || undefined,
     holdKeys: m.holdKeys || undefined,
+    atPointer: m.atPointer || undefined,
   } satisfies Fields<w.Click>;
 }
 
 export function fromDrag(m: w.Drag): p.DragInput {
   return compact<p.DragInput>({
     path: m.path.map(fromPoint),
+    holdKeys: m.holdKeys,
   });
 }
 
 export function toDrag(m: p.DragInput): MessageInitShape<typeof w.DragSchema> {
   return {
     path: m.path?.map(toPoint),
+    holdKeys: m.holdKeys || undefined,
   } satisfies Fields<w.Drag>;
 }
 
@@ -1881,6 +1945,8 @@ export function fromScroll(m: w.Scroll): p.ScrollInput {
     y: m.y,
     down: m.down,
     right: m.right,
+    holdKeys: m.holdKeys,
+    atPointer: m.atPointer,
   });
 }
 
@@ -1890,6 +1956,8 @@ export function toScroll(m: p.ScrollInput): MessageInitShape<typeof w.ScrollSche
     y: m.y || undefined,
     down: m.down || undefined,
     right: m.right || undefined,
+    holdKeys: m.holdKeys || undefined,
+    atPointer: m.atPointer || undefined,
   } satisfies Fields<w.Scroll>;
 }
 
@@ -1914,13 +1982,14 @@ export function fromCreateLinkRequest(m: w.CreateLinkRequest): p.CreateLinkReque
   }), ...fromCreateLinkRequest_target(m.target) };
 }
 
-function fromCreateLinkRequest_target(o: w.CreateLinkRequest["target"]): Part<p.CreateLinkRequest, "port" | "terminal" | "desktop" | "downloadPath" | "uploadPath"> {
+function fromCreateLinkRequest_target(o: w.CreateLinkRequest["target"]): Part<p.CreateLinkRequest, "port" | "terminal" | "desktop" | "downloadPath" | "uploadPath" | "browser"> {
   switch (o.case) {
     case "port": return { port: o.value };
     case "terminal": return { terminal: fromTerminalLink(o.value) };
     case "desktop": return { desktop: fromDesktopLink(o.value) };
     case "downloadPath": return { downloadPath: o.value };
     case "uploadPath": return { uploadPath: o.value };
+    case "browser": return { browser: fromBrowserLink(o.value) };
     case undefined: return {};
     default: o satisfies never; return {};
   }
@@ -1935,13 +2004,14 @@ export function toCreateLinkRequest(m: p.CreateLinkRequest): MessageInitShape<ty
 }
 
 function toCreateLinkRequest_target(m: p.CreateLinkRequest): MessageInitShape<typeof w.CreateLinkRequestSchema>["target"] {
-  written<Unwritten<MessageInitShape<typeof w.CreateLinkRequestSchema>["target"], "port" | "terminal" | "desktop" | "downloadPath" | "uploadPath">>();
+  written<Unwritten<MessageInitShape<typeof w.CreateLinkRequestSchema>["target"], "port" | "terminal" | "desktop" | "downloadPath" | "uploadPath" | "browser">>();
   const set: NonNullable<MessageInitShape<typeof w.CreateLinkRequestSchema>["target"]>[] = [];
   if (m.port !== undefined) set.push({ case: "port", value: m.port });
   if (m.terminal !== undefined) set.push({ case: "terminal", value: toTerminalLink(m.terminal) });
   if (m.desktop !== undefined) set.push({ case: "desktop", value: toDesktopLink(m.desktop) });
   if (m.downloadPath !== undefined) set.push({ case: "downloadPath", value: m.downloadPath });
   if (m.uploadPath !== undefined) set.push({ case: "uploadPath", value: m.uploadPath });
+  if (m.browser !== undefined) set.push({ case: "browser", value: toBrowserLink(m.browser) });
   return only("target", set);
 }
 
@@ -1967,6 +2037,15 @@ export function toDesktopLink(m: p.DesktopLinkInput): MessageInitShape<typeof w.
   return {
     viewOnly: m.viewOnly || undefined,
   } satisfies Fields<w.DesktopLink>;
+}
+
+export function fromBrowserLink(_: w.BrowserLink): p.BrowserLinkInput {
+  return {};
+}
+
+export function toBrowserLink(_: p.BrowserLinkInput): MessageInitShape<typeof w.BrowserLinkSchema> {
+  return {
+  } satisfies Fields<w.BrowserLink>;
 }
 
 export function fromLink(m: w.Link): p.Link {

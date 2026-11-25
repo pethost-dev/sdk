@@ -313,6 +313,11 @@ class DesktopFailure(OpenEnum):
 
 
 class MouseButton(OpenEnum):
+    """
+    Attributes:
+        BACK: A browser's back.
+    """
+
     UNSPECIFIED = 0
 
     LEFT = 1
@@ -320,6 +325,11 @@ class MouseButton(OpenEnum):
     RIGHT = 2
 
     MIDDLE = 3
+
+    BACK = 4
+    """A browser's back."""
+
+    FORWARD = 5
 
 
 class Agent(OpenEnum):
@@ -1295,11 +1305,16 @@ class Ingress:
     (create_link port).
 
     Attributes:
-        public_ports: At most 20.
+        public_ports: At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+            and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+            links reach them (create_link).
     """
 
     public_ports: Sequence[PublicPort] = ()
-    """At most 20."""
+    """At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+    and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+    links reach them (create_link).
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -2912,6 +2927,48 @@ class FileEvent:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ScreenRegion:
+    """A rectangle of the screen, in its pixels.
+
+    Attributes:
+        x: Its left edge.
+        y: Its top edge.
+    """
+
+    x: int = 0
+    """Its left edge."""
+
+    y: int = 0
+    """Its top edge."""
+
+    width: int = 0
+
+    height: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.screen_region_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ScreenRegion:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.screen_region_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ControlDesktopResponse:
     """
     Attributes:
@@ -2959,21 +3016,32 @@ class Screenshot:
     """Coordinates are pixels of the screen (Sandbox.desktop), from the top left.
 
     Attributes:
-        mime_type: "image/png\"
+        image: Empty with skip_screenshot.
+        mime_type: "image/png"
+        width: The image's, the screen's with skip_screenshot.
+        scale: How many times larger than the screen's pixels the image's are: 1, or more for a
+            screenshot_region.
     """
 
     image: bytes = b""
+    """Empty with skip_screenshot."""
 
     mime_type: str = ""
     """"image/png\""""
 
     width: int = 0
+    """The image's, the screen's with skip_screenshot."""
 
     height: int = 0
 
     cursor_x: int = 0
 
     cursor_y: int = 0
+
+    scale: int = 0
+    """How many times larger than the screen's pixels the image's are: 1, or more for a
+    screenshot_region.
+    """
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3000,11 +3068,16 @@ class Screenshot:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True, init=False)
 class DesktopAction:
-    """At most one of `click`, `move_mouse`, `drag`, `scroll`, `type_text`, `press_keys`, `wait_ms`. The others are None.
+    """At most one of `click`, `move_mouse`, `drag`, `scroll`, `type_text`, `press_keys`, `wait_ms`, `mouse_down`, `mouse_up`, `hold_keys`. The others are None.
 
     Attributes:
         type_text: Text to type.
-        press_keys: Keys pressed together: "Return", "ctrl+c", "ctrl+shift+t".
+        press_keys: Keys pressed together, joined by "+": "Return", "ctrl+c", "ctrl+shift+t"; several such,
+            apart by spaces, one after the other: "ctrl+a BackSpace", "Down Down Down".
+        wait_ms: At most 30000.
+        mouse_down: Presses a button where the pointer is (move_mouse first) and leaves it down, across calls,
+            until its mouse_up: a drag the caller moves itself.
+        mouse_up: Lets a button go where the pointer is.
     """
 
     click: Click | None = None
@@ -3019,9 +3092,22 @@ class DesktopAction:
     """Text to type."""
 
     press_keys: str | None = None
-    """Keys pressed together: "Return", "ctrl+c", "ctrl+shift+t"."""
+    """Keys pressed together, joined by "+": "Return", "ctrl+c", "ctrl+shift+t"; several such,
+    apart by spaces, one after the other: "ctrl+a BackSpace", "Down Down Down".
+    """
 
     wait_ms: int | None = None
+    """At most 30000."""
+
+    mouse_down: MouseButtonChange | None = None
+    """Presses a button where the pointer is (move_mouse first) and leaves it down, across calls,
+    until its mouse_up: a drag the caller moves itself.
+    """
+
+    mouse_up: MouseButtonChange | None = None
+    """Lets a button go where the pointer is."""
+
+    hold_keys: HoldKeys | None = None
 
     @overload
     def __init__(
@@ -3034,6 +3120,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3047,6 +3136,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3060,6 +3152,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3073,6 +3168,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3086,6 +3184,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3099,6 +3200,9 @@ class DesktopAction:
         type_text: str,
         press_keys: None = None,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3112,6 +3216,9 @@ class DesktopAction:
         type_text: None = None,
         press_keys: str,
         wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
     ) -> None: ...
 
     @overload
@@ -3125,6 +3232,57 @@ class DesktopAction:
         type_text: None = None,
         press_keys: None = None,
         wait_ms: int,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        click: None = None,
+        move_mouse: None = None,
+        drag: None = None,
+        scroll: None = None,
+        type_text: None = None,
+        press_keys: None = None,
+        wait_ms: None = None,
+        mouse_down: MouseButtonChange,
+        mouse_up: None = None,
+        hold_keys: None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        click: None = None,
+        move_mouse: None = None,
+        drag: None = None,
+        scroll: None = None,
+        type_text: None = None,
+        press_keys: None = None,
+        wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: MouseButtonChange,
+        hold_keys: None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        click: None = None,
+        move_mouse: None = None,
+        drag: None = None,
+        scroll: None = None,
+        type_text: None = None,
+        press_keys: None = None,
+        wait_ms: None = None,
+        mouse_down: None = None,
+        mouse_up: None = None,
+        hold_keys: HoldKeys,
     ) -> None: ...
 
     def __init__(
@@ -3137,8 +3295,11 @@ class DesktopAction:
         type_text: str | None = None,
         press_keys: str | None = None,
         wait_ms: int | None = None,
+        mouse_down: MouseButtonChange | None = None,
+        mouse_up: MouseButtonChange | None = None,
+        hold_keys: HoldKeys | None = None,
     ) -> None:
-        _one_of("DesktopAction", click=click, move_mouse=move_mouse, drag=drag, scroll=scroll, type_text=type_text, press_keys=press_keys, wait_ms=wait_ms)
+        _one_of("DesktopAction", click=click, move_mouse=move_mouse, drag=drag, scroll=scroll, type_text=type_text, press_keys=press_keys, wait_ms=wait_ms, mouse_down=mouse_down, mouse_up=mouse_up, hold_keys=hold_keys)
         object.__setattr__(self, "click", click)
         object.__setattr__(self, "move_mouse", move_mouse)
         object.__setattr__(self, "drag", drag)
@@ -3146,6 +3307,9 @@ class DesktopAction:
         object.__setattr__(self, "type_text", type_text)
         object.__setattr__(self, "press_keys", press_keys)
         object.__setattr__(self, "wait_ms", wait_ms)
+        object.__setattr__(self, "mouse_down", mouse_down)
+        object.__setattr__(self, "mouse_up", mouse_up)
+        object.__setattr__(self, "hold_keys", hold_keys)
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3167,6 +3331,77 @@ class DesktopAction:
         from . import _convert
 
         return _convert.desktop_action_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MouseButtonChange:
+    """
+    Attributes:
+        button: Absent = LEFT.
+    """
+
+    button: MouseButton = MouseButton.UNSPECIFIED
+    """Absent = LEFT."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.mouse_button_change_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MouseButtonChange:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.mouse_button_change_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class HoldKeys:
+    """Keys held down together for a time, then let go.
+
+    Attributes:
+        keys: Joined by "+": "shift", "ctrl+alt".
+        duration_ms: At most 30000.
+    """
+
+    keys: str = ""
+    """Joined by "+": "shift", "ctrl+alt"."""
+
+    duration_ms: int = 0
+    """At most 30000."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.hold_keys_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HoldKeys:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.hold_keys_from_dict(data)
 
 
 @final
@@ -3204,8 +3439,9 @@ class Click:
     """
     Attributes:
         button: Absent = LEFT.
-        count: Absent = 1; 2 double-clicks.
+        count: Absent = 1; 2 double-clicks, 3 triple-clicks.
         hold_keys: Held while clicking: "shift", "ctrl+alt".
+        at_pointer: True = where the pointer is, whatever x and y say.
     """
 
     x: int = 0
@@ -3216,10 +3452,13 @@ class Click:
     """Absent = LEFT."""
 
     count: int = 0
-    """Absent = 1; 2 double-clicks."""
+    """Absent = 1; 2 double-clicks, 3 triple-clicks."""
 
     hold_keys: str = ""
     """Held while clicking: "shift", "ctrl+alt"."""
+
+    at_pointer: bool = False
+    """True = where the pointer is, whatever x and y say."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3249,10 +3488,14 @@ class Drag:
     """
     Attributes:
         path: From the first point to the last, the left button down.
+        hold_keys: Held while dragging: "shift", "ctrl+alt".
     """
 
     path: Sequence[Point] = ()
     """From the first point to the last, the left button down."""
+
+    hold_keys: str = ""
+    """Held while dragging: "shift", "ctrl+alt"."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3283,6 +3526,8 @@ class Scroll:
     Attributes:
         down: Wheel clicks; negative scrolls up.
         right: Negative scrolls left.
+        hold_keys: Held while scrolling: "shift", "ctrl".
+        at_pointer: True = where the pointer is, whatever x and y say.
     """
 
     x: int = 0
@@ -3294,6 +3539,12 @@ class Scroll:
 
     right: int = 0
     """Negative scrolls left."""
+
+    hold_keys: str = ""
+    """Held while scrolling: "shift", "ctrl"."""
+
+    at_pointer: bool = False
+    """True = where the pointer is, whatever x and y say."""
 
     def to_dict(self) -> dict[str, Any]:
         """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
@@ -3415,6 +3666,50 @@ class DesktopLink:
         from . import _convert
 
         return _convert.desktop_link_from_dict(data)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BrowserLink:
+    """The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
+    the Chrome DevTools Protocol, "wss://browser-<id>.<server>/<token>", which Playwright's
+    chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
+    Stagehand take as it is; "https://" in its place answers <that>/json/version and
+    <that>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
+    takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
+    browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
+    seconds), so a desktop link watches what the program does, and control_desktop acts on the same
+    pages; inside the sandbox a program takes http://localhost:9222, where the browser starts at the
+    first connection, and the coding agents have it as their "browser" MCP server. Its profile is on
+    the sandbox's disk: a stop keeps the sites it is signed in to, and a template saved from the
+    sandbox carries them to every sandbox started from it. One browser a sandbox: a program that
+    wants several at once uses several sandboxes. Whoever holds the link drives the browser as the
+    sandbox's person, its files and signed-in sites within reach: give it only to a program you
+    trust. A connection is a session, as a terminal is: the sandbox does not idle while one is open,
+    and revoke_tokens ends it. A sandbox on a base before this link is refused, saying so: one
+    created from the template "base" has it, while a template saved on an older base keeps that base.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        """This message as the API's JSON has it, for `json.dumps`: a key is the API's name of a field, an
+        enum its value's full name, a 64-bit integer a string, a time RFC 3339, bytes base64. What is
+        absent is left out, a zero where the type has no None too, and an enum's value this version does
+        not know is its number.
+        """
+        from . import _convert
+
+        return _convert.browser_link_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> BrowserLink:
+        """The message the API's JSON says, as `json.loads` read it: what `to_dict` gives, and what the API
+        answers over HTTP. A key that is no field of the message is a ValueError, as the API refuses it,
+        and so is an enum's name this version does not know; a value that is not of its field's kind is
+        a ValueError or a TypeError, an integer out of its kind's range an OverflowError.
+        """
+        from . import _convert
+
+        return _convert.browser_link_from_dict(data)
 
 
 @final

@@ -497,6 +497,12 @@ json!(
     types::ControlDesktopRequest::from
 );
 json!(
+    types::ScreenRegion,
+    wire::ScreenRegion,
+    wire::ScreenRegion::from,
+    types::ScreenRegion::from
+);
+json!(
     types::ControlDesktopResponse,
     wire::ControlDesktopResponse,
     wire::ControlDesktopResponse::from,
@@ -513,6 +519,18 @@ json!(
     wire::DesktopAction,
     wire::DesktopAction::from,
     types::DesktopAction::from
+);
+json!(
+    types::MouseButtonChange,
+    wire::MouseButtonChange,
+    wire::MouseButtonChange::from,
+    types::MouseButtonChange::from
+);
+json!(
+    types::HoldKeys,
+    wire::HoldKeys,
+    wire::HoldKeys::from,
+    types::HoldKeys::from
 );
 json!(types::Point, wire::Point, wire::Point::from, types::Point::from);
 json!(types::Click, wire::Click, wire::Click::from, types::Click::from);
@@ -536,6 +554,12 @@ json!(
     wire::DesktopLink,
     wire::DesktopLink::from,
     types::DesktopLink::from
+);
+json!(
+    types::BrowserLink,
+    wire::BrowserLink,
+    wire::BrowserLink::from,
+    types::BrowserLink::from
 );
 json!(types::Link, wire::Link, wire::Link::from, types::Link::from);
 json!(

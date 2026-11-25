@@ -10600,7 +10600,9 @@ impl ::serde::Serialize for EgressOwnedView {
 /// (CreateLink port).
 #[derive(Clone, Debug, Default)]
 pub struct IngressView<'a> {
-    /// At most 20.
+    /// At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+    /// and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+    /// links reach them (CreateLink).
     ///
     /// Field 1: `public_ports`
     pub public_ports: ::buffa::RepeatedView<
@@ -10835,7 +10837,9 @@ impl IngressOwnedView {
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
     }
-    /// At most 20.
+    /// At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+    /// and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+    /// links reach them (CreateLink).
     ///
     /// Field 1: `public_ports`
     #[must_use]
@@ -27423,6 +27427,19 @@ pub struct ControlDesktopRequestView<'a> {
         'a,
         super::super::__buffa::view::DesktopActionView<'a>,
     >,
+    /// True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a
+    /// caller that does not look after every action.
+    ///
+    /// Field 3: `skip_screenshot`
+    pub skip_screenshot: ::core::option::Option<bool>,
+    /// Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the
+    /// screen: a closer look at small text. The actions' points stay the screen's. Absent = the
+    /// whole screen.
+    ///
+    /// Field 4: `screenshot_region`
+    pub screenshot_region: ::buffa::MessageFieldView<
+        super::super::__buffa::view::ScreenRegionView<'a>,
+    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ControlDesktopRequestView<'a> {
@@ -27461,6 +27478,34 @@ impl<'a> ::buffa::MessageView<'a> for ControlDesktopRequestView<'a> {
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
                 view.sandbox_id = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.skip_screenshot = Some(::buffa::types::decode_bool(&mut cur)?);
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.screenshot_region.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.screenshot_region = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::ScreenRegionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -27516,6 +27561,16 @@ impl<'a> ::buffa::MessageView<'a> for ControlDesktopRequestView<'a> {
                 .iter()
                 .map(|v| v.to_owned_from_source(__buffa_src))
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            skip_screenshot: self.skip_screenshot,
+            screenshot_region: match self.screenshot_region.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::ScreenRegion,
+                        ::buffa::Inline<super::super::ScreenRegion>,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -27533,6 +27588,17 @@ impl<'a> ::buffa::ViewEncode<'a> for ControlDesktopRequestView<'a> {
         for v in &self.actions {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
+        if self.skip_screenshot.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        if self.screenshot_region.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.screenshot_region.compute_size(__cache);
             __cache.set(__slot, inner_size);
             size
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
@@ -27560,6 +27626,17 @@ impl<'a> ::buffa::ViewEncode<'a> for ControlDesktopRequestView<'a> {
             );
             v.write_to(__cache, buf);
         }
+        if let Some(v) = self.skip_screenshot {
+            ::buffa::types::put_bool_field(3u32, v, buf);
+        }
+        if self.screenshot_region.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                4u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.screenshot_region.write_to(__cache, buf);
+        }
         self.__buffa_unknown_fields.write_to(buf);
     }
 }
@@ -27586,6 +27663,15 @@ impl<'__a> ::serde::Serialize for ControlDesktopRequestView<'__a> {
         }
         if !self.actions.is_empty() {
             __map.serialize_entry("actions", &*self.actions)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.skip_screenshot {
+            __map.serialize_entry("skip_screenshot", &__v)?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.screenshot_region.as_option()
+            {
+                __map.serialize_entry("screenshot_region", __v)?;
+            }
         }
         __map.end()
     }
@@ -27694,6 +27780,25 @@ impl ControlDesktopRequestOwnedView {
     ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::DesktopActionView<'_>> {
         &self.0.reborrow().actions
     }
+    /// True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a
+    /// caller that does not look after every action.
+    ///
+    /// Field 3: `skip_screenshot`
+    #[must_use]
+    pub fn skip_screenshot(&self) -> ::core::option::Option<bool> {
+        self.0.reborrow().skip_screenshot
+    }
+    /// Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the
+    /// screen: a closer look at small text. The actions' points stay the screen's. Absent = the
+    /// whole screen.
+    ///
+    /// Field 4: `screenshot_region`
+    #[must_use]
+    pub fn screenshot_region(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::ScreenRegionView<'_>> {
+        &self.0.reborrow().screenshot_region
+    }
 }
 impl ::core::convert::From<::buffa::OwnedView<ControlDesktopRequestView<'static>>>
 for ControlDesktopRequestOwnedView {
@@ -27718,6 +27823,332 @@ impl ::buffa::HasMessageView for super::super::ControlDesktopRequest {
     type ViewHandle = ControlDesktopRequestOwnedView;
 }
 impl ::serde::Serialize for ControlDesktopRequestOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+/// A rectangle of the screen, in its pixels.
+#[derive(Clone, Debug, Default)]
+pub struct ScreenRegionView<'a> {
+    /// Its left edge.
+    ///
+    /// Field 1: `x`
+    pub x: ::core::option::Option<i32>,
+    /// Its top edge.
+    ///
+    /// Field 2: `y`
+    pub y: ::core::option::Option<i32>,
+    /// Field 3: `width`
+    pub width: ::core::option::Option<i32>,
+    /// Field 4: `height`
+    pub height: ::core::option::Option<i32>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for ScreenRegionView<'a> {
+    type Owned = super::super::ScreenRegion;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.x = Some(::buffa::types::decode_int32(&mut cur)?);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.y = Some(::buffa::types::decode_int32(&mut cur)?);
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.width = Some(::buffa::types::decode_int32(&mut cur)?);
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.height = Some(::buffa::types::decode_int32(&mut cur)?);
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::ScreenRegion, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::ScreenRegion, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::ScreenRegion {
+            x: self.x,
+            y: self.y,
+            width: self.width,
+            height: self.height,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for ScreenRegionView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(v) = self.x {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.y {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.width {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.height {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.x {
+            ::buffa::types::put_int32_field(1u32, v, buf);
+        }
+        if let Some(v) = self.y {
+            ::buffa::types::put_int32_field(2u32, v, buf);
+        }
+        if let Some(v) = self.width {
+            ::buffa::types::put_int32_field(3u32, v, buf);
+        }
+        if let Some(v) = self.height {
+            ::buffa::types::put_int32_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for ScreenRegionView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if let ::core::option::Option::Some(__v) = self.x {
+            __map.serialize_entry("x", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.y {
+            __map.serialize_entry("y", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.width {
+            __map.serialize_entry("width", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.height {
+            __map.serialize_entry("height", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for ScreenRegionView<'a> {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "ScreenRegion";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ScreenRegion";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ScreenRegion";
+}
+::buffa::impl_default_view_instance!(ScreenRegionView);
+::buffa::impl_view_reborrow!(ScreenRegionView);
+/** Self-contained, `'static` owned view of a `ScreenRegion` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`ScreenRegionView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ScreenRegionView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct ScreenRegionOwnedView(::buffa::OwnedView<ScreenRegionView<'static>>);
+impl ScreenRegionOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            ScreenRegionOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            ScreenRegionOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::ScreenRegion,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            ScreenRegionOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`ScreenRegionView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &ScreenRegionView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::ScreenRegion {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Its left edge.
+    ///
+    /// Field 1: `x`
+    #[must_use]
+    pub fn x(&self) -> ::core::option::Option<i32> {
+        self.0.reborrow().x
+    }
+    /// Its top edge.
+    ///
+    /// Field 2: `y`
+    #[must_use]
+    pub fn y(&self) -> ::core::option::Option<i32> {
+        self.0.reborrow().y
+    }
+    /// Field 3: `width`
+    #[must_use]
+    pub fn width(&self) -> ::core::option::Option<i32> {
+        self.0.reborrow().width
+    }
+    /// Field 4: `height`
+    #[must_use]
+    pub fn height(&self) -> ::core::option::Option<i32> {
+        self.0.reborrow().height
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<ScreenRegionView<'static>>>
+for ScreenRegionOwnedView {
+    fn from(inner: ::buffa::OwnedView<ScreenRegionView<'static>>) -> Self {
+        ScreenRegionOwnedView(inner)
+    }
+}
+impl ::core::convert::From<ScreenRegionOwnedView>
+for ::buffa::OwnedView<ScreenRegionView<'static>> {
+    fn from(wrapper: ScreenRegionOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<ScreenRegionView<'static>>>
+for ScreenRegionOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<ScreenRegionView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::ScreenRegion {
+    type View<'a> = ScreenRegionView<'a>;
+    type ViewHandle = ScreenRegionOwnedView;
+}
+impl ::serde::Serialize for ScreenRegionOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -28112,12 +28543,16 @@ impl ::serde::Serialize for ControlDesktopResponseOwnedView {
 /// Coordinates are pixels of the screen (Sandbox.desktop), from the top left.
 #[derive(Clone, Debug, Default)]
 pub struct ScreenshotView<'a> {
+    /// Empty with skip_screenshot.
+    ///
     /// Field 1: `image`
     pub image: ::core::option::Option<&'a [u8]>,
     /// "image/png"
     ///
     /// Field 2: `mime_type`
     pub mime_type: ::core::option::Option<&'a str>,
+    /// The image's, the screen's with skip_screenshot.
+    ///
     /// Field 3: `width`
     pub width: ::core::option::Option<i32>,
     /// Field 4: `height`
@@ -28126,6 +28561,11 @@ pub struct ScreenshotView<'a> {
     pub cursor_x: ::core::option::Option<i32>,
     /// Field 6: `cursor_y`
     pub cursor_y: ::core::option::Option<i32>,
+    /// How many times larger than the screen's pixels the image's are: 1, or more for a
+    /// screenshot_region.
+    ///
+    /// Field 7: `scale`
+    pub scale: ::core::option::Option<i32>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ScreenshotView<'a> {
@@ -28200,6 +28640,13 @@ impl<'a> ::buffa::MessageView<'a> for ScreenshotView<'a> {
                 )?;
                 view.cursor_y = Some(::buffa::types::decode_int32(&mut cur)?);
             }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.scale = Some(::buffa::types::decode_int32(&mut cur)?);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -28228,6 +28675,7 @@ impl<'a> ::buffa::MessageView<'a> for ScreenshotView<'a> {
             height: self.height,
             cursor_x: self.cursor_x,
             cursor_y: self.cursor_y,
+            scale: self.scale,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -28255,6 +28703,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ScreenshotView<'a> {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
         if let Some(v) = self.cursor_y {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.scale {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -28285,6 +28736,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ScreenshotView<'a> {
         }
         if let Some(v) = self.cursor_y {
             ::buffa::types::put_int32_field(6u32, v, buf);
+        }
+        if let Some(v) = self.scale {
+            ::buffa::types::put_int32_field(7u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -28324,6 +28778,9 @@ impl<'__a> ::serde::Serialize for ScreenshotView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.cursor_y {
             __map.serialize_entry("cursor_y", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.scale {
+            __map.serialize_entry("scale", &::buffa::json_helpers::ProtoJson(&__v))?;
         }
         __map.end()
     }
@@ -28416,6 +28873,8 @@ impl ScreenshotOwnedView {
     pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
         self.0.into_bytes()
     }
+    /// Empty with skip_screenshot.
+    ///
     /// Field 1: `image`
     #[must_use]
     pub fn image(&self) -> ::core::option::Option<&'_ [u8]> {
@@ -28428,6 +28887,8 @@ impl ScreenshotOwnedView {
     pub fn mime_type(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().mime_type
     }
+    /// The image's, the screen's with skip_screenshot.
+    ///
     /// Field 3: `width`
     #[must_use]
     pub fn width(&self) -> ::core::option::Option<i32> {
@@ -28447,6 +28908,14 @@ impl ScreenshotOwnedView {
     #[must_use]
     pub fn cursor_y(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().cursor_y
+    }
+    /// How many times larger than the screen's pixels the image's are: 1, or more for a
+    /// screenshot_region.
+    ///
+    /// Field 7: `scale`
+    #[must_use]
+    pub fn scale(&self) -> ::core::option::Option<i32> {
+        self.0.reborrow().scale
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<ScreenshotView<'static>>>
@@ -28673,6 +29142,99 @@ impl<'a> ::buffa::MessageView<'a> for DesktopActionView<'a> {
                     ),
                 );
             }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if let Some(
+                    super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                        ref mut existing,
+                    ),
+                ) = view.action
+                {
+                    ::buffa::MessageView::merge_into_view(
+                        &mut **existing,
+                        sub,
+                        __sub_ctx,
+                    )?;
+                } else {
+                    view.action = Some(
+                        super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                            ::buffa::alloc::boxed::Box::new(
+                                <super::super::__buffa::view::MouseButtonChangeView as ::buffa::MessageView>::decode_view_ctx(
+                                    sub,
+                                    __sub_ctx,
+                                )?,
+                            ),
+                        ),
+                    );
+                }
+            }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if let Some(
+                    super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                        ref mut existing,
+                    ),
+                ) = view.action
+                {
+                    ::buffa::MessageView::merge_into_view(
+                        &mut **existing,
+                        sub,
+                        __sub_ctx,
+                    )?;
+                } else {
+                    view.action = Some(
+                        super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                            ::buffa::alloc::boxed::Box::new(
+                                <super::super::__buffa::view::MouseButtonChangeView as ::buffa::MessageView>::decode_view_ctx(
+                                    sub,
+                                    __sub_ctx,
+                                )?,
+                            ),
+                        ),
+                    );
+                }
+            }
+            10u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if let Some(
+                    super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                        ref mut existing,
+                    ),
+                ) = view.action
+                {
+                    ::buffa::MessageView::merge_into_view(
+                        &mut **existing,
+                        sub,
+                        __sub_ctx,
+                    )?;
+                } else {
+                    view.action = Some(
+                        super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                            ::buffa::alloc::boxed::Box::new(
+                                <super::super::__buffa::view::HoldKeysView as ::buffa::MessageView>::decode_view_ctx(
+                                    sub,
+                                    __sub_ctx,
+                                )?,
+                            ),
+                        ),
+                    );
+                }
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -28756,6 +29318,33 @@ impl<'a> ::buffa::MessageView<'a> for DesktopActionView<'a> {
                                     *v,
                                 )
                             }
+                            super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::desktop_action::Action::MouseDown(
+                                    ::buffa::alloc::boxed::Box::new(
+                                        v.to_owned_from_source(__buffa_src)?,
+                                    ),
+                                )
+                            }
+                            super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::desktop_action::Action::MouseUp(
+                                    ::buffa::alloc::boxed::Box::new(
+                                        v.to_owned_from_source(__buffa_src)?,
+                                    ),
+                                )
+                            }
+                            super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::desktop_action::Action::HoldKeys(
+                                    ::buffa::alloc::boxed::Box::new(
+                                        v.to_owned_from_source(__buffa_src)?,
+                                    ),
+                                )
+                            }
                         },
                     )
                 }
@@ -28825,6 +29414,36 @@ impl<'a> ::buffa::ViewEncode<'a> for DesktopActionView<'a> {
                 ) => {
                     size += 1u64 + ::buffa::types::uint32_encoded_len(*v) as u64;
                 }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                    x,
+                ) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                    x,
+                ) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                    x,
+                ) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
             }
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -28891,6 +29510,36 @@ impl<'a> ::buffa::ViewEncode<'a> for DesktopActionView<'a> {
                 ) => {
                     ::buffa::types::put_uint32_field(7u32, *x, buf);
                 }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                    x,
+                ) => {
+                    ::buffa::types::put_len_delimited_header(
+                        8u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                    x,
+                ) => {
+                    ::buffa::types::put_len_delimited_header(
+                        9u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                    x,
+                ) => {
+                    ::buffa::types::put_len_delimited_header(
+                        10u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
             }
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -28950,6 +29599,21 @@ impl<'__a> ::serde::Serialize for DesktopActionView<'__a> {
                             "wait_ms",
                             &::buffa::json_helpers::ProtoJson(v),
                         )?;
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseDown(
+                    v,
+                ) => {
+                    __map.serialize_entry("mouse_down", v)?;
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::MouseUp(
+                    v,
+                ) => {
+                    __map.serialize_entry("mouse_up", v)?;
+                }
+                super::super::__buffa::view::oneof::desktop_action::Action::HoldKeys(
+                    v,
+                ) => {
+                    __map.serialize_entry("hold_keys", v)?;
                 }
             }
         }
@@ -29077,6 +29741,543 @@ impl ::buffa::HasMessageView for super::super::DesktopAction {
     type ViewHandle = DesktopActionOwnedView;
 }
 impl ::serde::Serialize for DesktopActionOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+#[derive(Clone, Debug, Default)]
+pub struct MouseButtonChangeView<'a> {
+    /// Absent = LEFT.
+    ///
+    /// Field 1: `button`
+    pub button: ::core::option::Option<::buffa::EnumValue<super::super::MouseButton>>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for MouseButtonChangeView<'a> {
+    type Owned = super::super::MouseButtonChange;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.button = Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(&mut cur)?),
+                );
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::MouseButtonChange, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::MouseButtonChange, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::MouseButtonChange {
+            button: self.button,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for MouseButtonChangeView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.button {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.button {
+            ::buffa::types::put_int32_field(1u32, v.to_i32(), buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for MouseButtonChangeView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if let ::core::option::Option::Some(ref __v) = self.button {
+            __map.serialize_entry("button", __v)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for MouseButtonChangeView<'a> {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "MouseButtonChange";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.MouseButtonChange";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.MouseButtonChange";
+}
+::buffa::impl_default_view_instance!(MouseButtonChangeView);
+::buffa::impl_view_reborrow!(MouseButtonChangeView);
+/** Self-contained, `'static` owned view of a `MouseButtonChange` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`MouseButtonChangeView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`MouseButtonChangeView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct MouseButtonChangeOwnedView(
+    ::buffa::OwnedView<MouseButtonChangeView<'static>>,
+);
+impl MouseButtonChangeOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MouseButtonChangeOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MouseButtonChangeOwnedView(
+                ::buffa::OwnedView::decode_with_options(bytes, opts)?,
+            ),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::MouseButtonChange,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            MouseButtonChangeOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`MouseButtonChangeView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &MouseButtonChangeView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::MouseButtonChange {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Absent = LEFT.
+    ///
+    /// Field 1: `button`
+    #[must_use]
+    pub fn button(
+        &self,
+    ) -> ::core::option::Option<::buffa::EnumValue<super::super::MouseButton>> {
+        self.0.reborrow().button
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<MouseButtonChangeView<'static>>>
+for MouseButtonChangeOwnedView {
+    fn from(inner: ::buffa::OwnedView<MouseButtonChangeView<'static>>) -> Self {
+        MouseButtonChangeOwnedView(inner)
+    }
+}
+impl ::core::convert::From<MouseButtonChangeOwnedView>
+for ::buffa::OwnedView<MouseButtonChangeView<'static>> {
+    fn from(wrapper: MouseButtonChangeOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<MouseButtonChangeView<'static>>>
+for MouseButtonChangeOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<MouseButtonChangeView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::MouseButtonChange {
+    type View<'a> = MouseButtonChangeView<'a>;
+    type ViewHandle = MouseButtonChangeOwnedView;
+}
+impl ::serde::Serialize for MouseButtonChangeOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+/// Keys held down together for a time, then let go.
+#[derive(Clone, Debug, Default)]
+pub struct HoldKeysView<'a> {
+    /// Joined by "+": "shift", "ctrl+alt".
+    ///
+    /// Field 1: `keys`
+    pub keys: ::core::option::Option<&'a str>,
+    /// At most 30000.
+    ///
+    /// Field 2: `duration_ms`
+    pub duration_ms: ::core::option::Option<u32>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for HoldKeysView<'a> {
+    type Owned = super::super::HoldKeys;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.keys = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.duration_ms = Some(::buffa::types::decode_uint32(&mut cur)?);
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::HoldKeys, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::HoldKeys, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::HoldKeys {
+            keys: self.keys.map(|s| s.to_string()),
+            duration_ms: self.duration_ms,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for HoldKeysView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.duration_ms {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.keys {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(v) = self.duration_ms {
+            ::buffa::types::put_uint32_field(2u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for HoldKeysView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if let ::core::option::Option::Some(__v) = self.keys {
+            __map.serialize_entry("keys", __v)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.duration_ms {
+            __map
+                .serialize_entry(
+                    "duration_ms",
+                    &::buffa::json_helpers::ProtoJson(&__v),
+                )?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for HoldKeysView<'a> {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "HoldKeys";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.HoldKeys";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.HoldKeys";
+}
+::buffa::impl_default_view_instance!(HoldKeysView);
+::buffa::impl_view_reborrow!(HoldKeysView);
+/** Self-contained, `'static` owned view of a `HoldKeys` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`HoldKeysView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`HoldKeysView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct HoldKeysOwnedView(::buffa::OwnedView<HoldKeysView<'static>>);
+impl HoldKeysOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(HoldKeysOwnedView(::buffa::OwnedView::decode(bytes)?))
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            HoldKeysOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::HoldKeys,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            HoldKeysOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`HoldKeysView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &HoldKeysView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::HoldKeys {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Joined by "+": "shift", "ctrl+alt".
+    ///
+    /// Field 1: `keys`
+    #[must_use]
+    pub fn keys(&self) -> ::core::option::Option<&'_ str> {
+        self.0.reborrow().keys
+    }
+    /// At most 30000.
+    ///
+    /// Field 2: `duration_ms`
+    #[must_use]
+    pub fn duration_ms(&self) -> ::core::option::Option<u32> {
+        self.0.reborrow().duration_ms
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<HoldKeysView<'static>>>
+for HoldKeysOwnedView {
+    fn from(inner: ::buffa::OwnedView<HoldKeysView<'static>>) -> Self {
+        HoldKeysOwnedView(inner)
+    }
+}
+impl ::core::convert::From<HoldKeysOwnedView>
+for ::buffa::OwnedView<HoldKeysView<'static>> {
+    fn from(wrapper: HoldKeysOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<HoldKeysView<'static>>>
+for HoldKeysOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<HoldKeysView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::HoldKeys {
+    type View<'a> = HoldKeysView<'a>;
+    type ViewHandle = HoldKeysOwnedView;
+}
+impl ::serde::Serialize for HoldKeysOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -29356,7 +30557,7 @@ pub struct ClickView<'a> {
     ///
     /// Field 3: `button`
     pub button: ::core::option::Option<::buffa::EnumValue<super::super::MouseButton>>,
-    /// Absent = 1; 2 double-clicks.
+    /// Absent = 1; 2 double-clicks, 3 triple-clicks.
     ///
     /// Field 4: `count`
     pub count: ::core::option::Option<i32>,
@@ -29364,6 +30565,10 @@ pub struct ClickView<'a> {
     ///
     /// Field 5: `hold_keys`
     pub hold_keys: ::core::option::Option<&'a str>,
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    pub at_pointer: ::core::option::Option<bool>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ClickView<'a> {
@@ -29433,6 +30638,13 @@ impl<'a> ::buffa::MessageView<'a> for ClickView<'a> {
                 )?;
                 view.hold_keys = Some(::buffa::types::borrow_str(&mut cur)?);
             }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.at_pointer = Some(::buffa::types::decode_bool(&mut cur)?);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -29460,6 +30672,7 @@ impl<'a> ::buffa::MessageView<'a> for ClickView<'a> {
             button: self.button,
             count: self.count,
             hold_keys: self.hold_keys.map(|s| s.to_string()),
+            at_pointer: self.at_pointer,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -29486,6 +30699,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ClickView<'a> {
         if let Some(ref v) = self.hold_keys {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if self.at_pointer.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -29511,6 +30727,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ClickView<'a> {
         }
         if let Some(ref v) = self.hold_keys {
             ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        if let Some(v) = self.at_pointer {
+            ::buffa::types::put_bool_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -29547,6 +30766,9 @@ impl<'__a> ::serde::Serialize for ClickView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.hold_keys {
             __map.serialize_entry("hold_keys", __v)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.at_pointer {
+            __map.serialize_entry("at_pointer", &__v)?;
         }
         __map.end()
     }
@@ -29654,7 +30876,7 @@ impl ClickOwnedView {
     ) -> ::core::option::Option<::buffa::EnumValue<super::super::MouseButton>> {
         self.0.reborrow().button
     }
-    /// Absent = 1; 2 double-clicks.
+    /// Absent = 1; 2 double-clicks, 3 triple-clicks.
     ///
     /// Field 4: `count`
     #[must_use]
@@ -29667,6 +30889,13 @@ impl ClickOwnedView {
     #[must_use]
     pub fn hold_keys(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().hold_keys
+    }
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    #[must_use]
+    pub fn at_pointer(&self) -> ::core::option::Option<bool> {
+        self.0.reborrow().at_pointer
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<ClickView<'static>>> for ClickOwnedView {
@@ -29702,6 +30931,10 @@ pub struct DragView<'a> {
     ///
     /// Field 1: `path`
     pub path: ::buffa::RepeatedView<'a, super::super::__buffa::view::PointView<'a>>,
+    /// Held while dragging: "shift", "ctrl+alt".
+    ///
+    /// Field 2: `hold_keys`
+    pub hold_keys: ::core::option::Option<&'a str>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for DragView<'a> {
@@ -29734,6 +30967,13 @@ impl<'a> ::buffa::MessageView<'a> for DragView<'a> {
         let view = self;
         let mut cur = cur;
         match tag.field_number() {
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.hold_keys = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
             1u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -29779,6 +31019,7 @@ impl<'a> ::buffa::MessageView<'a> for DragView<'a> {
                 .iter()
                 .map(|v| v.to_owned_from_source(__buffa_src))
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            hold_keys: self.hold_keys.map(|s| s.to_string()),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -29798,6 +31039,9 @@ impl<'a> ::buffa::ViewEncode<'a> for DragView<'a> {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.hold_keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -29816,6 +31060,9 @@ impl<'a> ::buffa::ViewEncode<'a> for DragView<'a> {
                 buf,
             );
             v.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.hold_keys {
+            ::buffa::types::put_string_field(2u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -29840,6 +31087,9 @@ impl<'__a> ::serde::Serialize for DragView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if !self.path.is_empty() {
             __map.serialize_entry("path", &*self.path)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.hold_keys {
+            __map.serialize_entry("hold_keys", __v)?;
         }
         __map.end()
     }
@@ -29937,6 +31187,13 @@ impl DragOwnedView {
     ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::PointView<'_>> {
         &self.0.reborrow().path
     }
+    /// Held while dragging: "shift", "ctrl+alt".
+    ///
+    /// Field 2: `hold_keys`
+    #[must_use]
+    pub fn hold_keys(&self) -> ::core::option::Option<&'_ str> {
+        self.0.reborrow().hold_keys
+    }
 }
 impl ::core::convert::From<::buffa::OwnedView<DragView<'static>>> for DragOwnedView {
     fn from(inner: ::buffa::OwnedView<DragView<'static>>) -> Self {
@@ -29979,6 +31236,14 @@ pub struct ScrollView<'a> {
     ///
     /// Field 4: `right`
     pub right: ::core::option::Option<i32>,
+    /// Held while scrolling: "shift", "ctrl".
+    ///
+    /// Field 5: `hold_keys`
+    pub hold_keys: ::core::option::Option<&'a str>,
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    pub at_pointer: ::core::option::Option<bool>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ScrollView<'a> {
@@ -30039,6 +31304,20 @@ impl<'a> ::buffa::MessageView<'a> for ScrollView<'a> {
                 )?;
                 view.right = Some(::buffa::types::decode_int32(&mut cur)?);
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.hold_keys = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.at_pointer = Some(::buffa::types::decode_bool(&mut cur)?);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -30065,6 +31344,8 @@ impl<'a> ::buffa::MessageView<'a> for ScrollView<'a> {
             y: self.y,
             down: self.down,
             right: self.right,
+            hold_keys: self.hold_keys.map(|s| s.to_string()),
+            at_pointer: self.at_pointer,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -30088,6 +31369,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ScrollView<'a> {
         if let Some(v) = self.right {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.hold_keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.at_pointer.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -30110,6 +31397,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ScrollView<'a> {
         }
         if let Some(v) = self.right {
             ::buffa::types::put_int32_field(4u32, v, buf);
+        }
+        if let Some(ref v) = self.hold_keys {
+            ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        if let Some(v) = self.at_pointer {
+            ::buffa::types::put_bool_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -30143,6 +31436,12 @@ impl<'__a> ::serde::Serialize for ScrollView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.right {
             __map.serialize_entry("right", &::buffa::json_helpers::ProtoJson(&__v))?;
+        }
+        if let ::core::option::Option::Some(__v) = self.hold_keys {
+            __map.serialize_entry("hold_keys", __v)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.at_pointer {
+            __map.serialize_entry("at_pointer", &__v)?;
         }
         __map.end()
     }
@@ -30254,6 +31553,20 @@ impl ScrollOwnedView {
     #[must_use]
     pub fn right(&self) -> ::core::option::Option<i32> {
         self.0.reborrow().right
+    }
+    /// Held while scrolling: "shift", "ctrl".
+    ///
+    /// Field 5: `hold_keys`
+    #[must_use]
+    pub fn hold_keys(&self) -> ::core::option::Option<&'_ str> {
+        self.0.reborrow().hold_keys
+    }
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    #[must_use]
+    pub fn at_pointer(&self) -> ::core::option::Option<bool> {
+        self.0.reborrow().at_pointer
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<ScrollView<'static>>> for ScrollOwnedView {
@@ -30705,6 +32018,37 @@ impl<'a> ::buffa::MessageView<'a> for CreateLinkRequestView<'a> {
                     ),
                 );
             }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if let Some(
+                    super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                        ref mut existing,
+                    ),
+                ) = view.target
+                {
+                    ::buffa::MessageView::merge_into_view(
+                        &mut **existing,
+                        sub,
+                        __sub_ctx,
+                    )?;
+                } else {
+                    view.target = Some(
+                        super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                            ::buffa::alloc::boxed::Box::new(
+                                <super::super::__buffa::view::BrowserLinkView as ::buffa::MessageView>::decode_view_ctx(
+                                    sub,
+                                    __sub_ctx,
+                                )?,
+                            ),
+                        ),
+                    );
+                }
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -30772,6 +32116,15 @@ impl<'a> ::buffa::MessageView<'a> for CreateLinkRequestView<'a> {
                                     v.to_string(),
                                 )
                             }
+                            super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::create_link_request::Target::Browser(
+                                    ::buffa::alloc::boxed::Box::new(
+                                        v.to_owned_from_source(__buffa_src)?,
+                                    ),
+                                )
+                            }
                         },
                     )
                 }
@@ -30828,6 +32181,16 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateLinkRequestView<'a> {
                 ) => {
                     size += 1u64 + ::buffa::types::string_encoded_len(x) as u64;
                 }
+                super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                    x,
+                ) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
             }
         }
         if let Some(v) = self.ttl_seconds {
@@ -30883,6 +32246,16 @@ impl<'a> ::buffa::ViewEncode<'a> for CreateLinkRequestView<'a> {
                     x,
                 ) => {
                     ::buffa::types::put_string_field(6u32, x, buf);
+                }
+                super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                    x,
+                ) => {
+                    ::buffa::types::put_len_delimited_header(
+                        8u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
                 }
             }
         }
@@ -30946,6 +32319,11 @@ impl<'__a> ::serde::Serialize for CreateLinkRequestView<'__a> {
                     v,
                 ) => {
                     __map.serialize_entry("upload_path", v)?;
+                }
+                super::super::__buffa::view::oneof::create_link_request::Target::Browser(
+                    v,
+                ) => {
+                    __map.serialize_entry("browser", v)?;
                 }
             }
         }
@@ -31590,6 +32968,244 @@ impl ::buffa::HasMessageView for super::super::DesktopLink {
     type ViewHandle = DesktopLinkOwnedView;
 }
 impl ::serde::Serialize for DesktopLinkOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+/// The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
+/// the Chrome DevTools Protocol, "wss://browser-\<id\>.\<server\>/\<token\>", which Playwright's
+/// chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
+/// Stagehand take as it is; "<https://"> in its place answers \<that\>/json/version and
+/// \<that\>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
+/// takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
+/// browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
+/// seconds), so a desktop link watches what the program does, and ControlDesktop acts on the same
+/// pages; inside the sandbox a program takes <http://localhost:9222,> where the browser starts at the
+/// first connection, and the coding agents have it as their "browser" MCP server. Its profile is on
+/// the sandbox's disk: a stop keeps the sites it is signed in to, and a template saved from the
+/// sandbox carries them to every sandbox started from it. One browser a sandbox: a program that
+/// wants several at once uses several sandboxes. Whoever holds the link drives the browser as the
+/// sandbox's person, its files and signed-in sites within reach: give it only to a program you
+/// trust. A connection is a session, as a terminal is: the sandbox does not idle while one is open,
+/// and revoke_tokens ends it. A sandbox on a base before this link is refused, saying so: one
+/// created from the template "base" has it, while a template saved on an older base keeps that base.
+#[derive(Clone, Debug, Default)]
+pub struct BrowserLinkView<'a> {
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for BrowserLinkView<'a> {
+    type Owned = super::super::BrowserLink;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::BrowserLink, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::BrowserLink, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::BrowserLink {
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for BrowserLinkView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for BrowserLinkView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for BrowserLinkView<'a> {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "BrowserLink";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.BrowserLink";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.BrowserLink";
+}
+::buffa::impl_default_view_instance!(BrowserLinkView);
+::buffa::impl_view_reborrow!(BrowserLinkView);
+/** Self-contained, `'static` owned view of a `BrowserLink` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`BrowserLinkView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`BrowserLinkView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct BrowserLinkOwnedView(::buffa::OwnedView<BrowserLinkView<'static>>);
+impl BrowserLinkOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            BrowserLinkOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            BrowserLinkOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::BrowserLink,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            BrowserLinkOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`BrowserLinkView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &BrowserLinkView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::BrowserLink {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<BrowserLinkView<'static>>>
+for BrowserLinkOwnedView {
+    fn from(inner: ::buffa::OwnedView<BrowserLinkView<'static>>) -> Self {
+        BrowserLinkOwnedView(inner)
+    }
+}
+impl ::core::convert::From<BrowserLinkOwnedView>
+for ::buffa::OwnedView<BrowserLinkView<'static>> {
+    fn from(wrapper: BrowserLinkOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<BrowserLinkView<'static>>>
+for BrowserLinkOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<BrowserLinkView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::BrowserLink {
+    type View<'a> = BrowserLinkView<'a>;
+    type ViewHandle = BrowserLinkOwnedView;
+}
+impl ::serde::Serialize for BrowserLinkOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,

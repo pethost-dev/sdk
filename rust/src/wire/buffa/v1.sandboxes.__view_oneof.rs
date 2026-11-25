@@ -118,6 +118,21 @@ pub mod desktop_action {
         TypeText(&'a str),
         PressKeys(&'a str),
         WaitMs(u32),
+        MouseDown(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::MouseButtonChangeView<'a>,
+            >,
+        ),
+        MouseUp(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::MouseButtonChangeView<'a>,
+            >,
+        ),
+        HoldKeys(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::HoldKeysView<'a>,
+            >,
+        ),
     }
 }
 pub mod create_link_request {
@@ -138,6 +153,11 @@ pub mod create_link_request {
         ),
         DownloadPath(&'a str),
         UploadPath(&'a str),
+        Browser(
+            ::buffa::alloc::boxed::Box<
+                super::super::super::super::__buffa::view::BrowserLinkView<'a>,
+            >,
+        ),
     }
 }
 pub mod agent_event {

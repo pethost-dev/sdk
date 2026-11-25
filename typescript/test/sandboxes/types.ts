@@ -172,15 +172,18 @@ optional<p.TextEditInput>({ oldText: true, newText: true });
 optional<p.WriteFilesResponse>({ doneCount: false, failureMessage: false, failure: true });
 optional<p.WatchFilesRequest>({ sandboxId: true, path: true, recursive: true });
 optional<p.FileEvent>({ path: false, kind: true, toPath: false });
-optional<p.ControlDesktopRequest>({ sandboxId: true, actions: true });
+optional<p.ControlDesktopRequest>({ sandboxId: true, actions: true, skipScreenshot: true, screenshotRegion: true });
+optional<p.ScreenRegionInput>({ x: true, y: true, width: true, height: true });
 optional<p.ControlDesktopResponse>({ doneCount: false, failureMessage: false, screenshot: true, failure: true });
-optional<p.Screenshot>({ image: false, mimeType: false, width: false, height: false, cursorX: false, cursorY: false });
+optional<p.Screenshot>({ image: false, mimeType: false, width: false, height: false, cursorX: false, cursorY: false, scale: false });
 // @ts-expect-error two members of pethost.sandboxes.v1.DesktopAction.action
 accepts<p.DesktopActionInput>({ click: {}, moveMouse: {} });
+optional<p.MouseButtonChangeInput>({ button: true });
+optional<p.HoldKeysInput>({ keys: true, durationMs: true });
 optional<p.PointInput>({ x: true, y: true });
-optional<p.ClickInput>({ x: true, y: true, button: true, count: true, holdKeys: true });
-optional<p.DragInput>({ path: true });
-optional<p.ScrollInput>({ x: true, y: true, down: true, right: true });
+optional<p.ClickInput>({ x: true, y: true, button: true, count: true, holdKeys: true, atPointer: true });
+optional<p.DragInput>({ path: true, holdKeys: true });
+optional<p.ScrollInput>({ x: true, y: true, down: true, right: true, holdKeys: true, atPointer: true });
 optional<p.Desktop>({ width: false, height: false });
 // @ts-expect-error two members of pethost.sandboxes.v1.CreateLinkRequest.target
 accepts<p.CreateLinkRequest>({ port: 1002, terminal: {} });

@@ -307,6 +307,8 @@ export const DesktopFailure = {
  * - `LEFT`
  * - `RIGHT`
  * - `MIDDLE`
+ * - `BACK`: A browser's back.
+ * - `FORWARD`
  *
  * In a response, a value this version of the SDK does not know is its number.
  */
@@ -315,6 +317,9 @@ export const MouseButton = {
   LEFT: "LEFT",
   RIGHT: "RIGHT",
   MIDDLE: "MIDDLE",
+  /** A browser's back. */
+  BACK: "BACK",
+  FORWARD: "FORWARD",
 } as const;
 
 /**
@@ -1120,7 +1125,11 @@ export const Egress: JsonCodec<EgressInput, Egress> = {
  * ({@link Sandboxes.createLink | createLink} port).
  */
 export interface Ingress {
-  /** At most 20. */
+  /**
+   * At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+   * and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+   * links reach them ({@link Sandboxes.createLink | createLink}).
+   */
   publicPorts: PublicPort[];
 }
 
@@ -1129,7 +1138,11 @@ export interface Ingress {
  * ({@link Sandboxes.createLink | createLink} port).
  */
 export interface IngressInput {
-  /** At most 20. */
+  /**
+   * At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+   * and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+   * links reach them ({@link Sandboxes.createLink | createLink}).
+   */
   publicPorts?: readonly PublicPortInput[] | undefined;
 }
 
@@ -2144,12 +2157,38 @@ export const FileEvent: JsonCodec<FileEvent, FileEvent> = {
 export interface ControlDesktopRequest {
   sandboxId?: string | undefined;
   actions?: readonly DesktopActionInput[] | undefined;
+  /**
+   * True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a
+   * caller that does not look after every action.
+   */
+  skipScreenshot?: boolean | undefined;
+  /**
+   * Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the screen:
+   * a closer look at small text. The actions' points stay the screen's. Absent = the whole screen.
+   */
+  screenshotRegion?: ScreenRegionInput | undefined;
 }
 
 /** {@link ControlDesktopRequest} as the API's JSON, and back: {@link JsonCodec} says how. */
 export const ControlDesktopRequest: JsonCodec<ControlDesktopRequest, ControlDesktopRequest> = {
   toJson: (value) => writeJson(wire.ControlDesktopRequestSchema, convert.toControlDesktopRequest(value)),
   fromJson: (json) => convert.fromControlDesktopRequest(readJson(wire.ControlDesktopRequestSchema, json)),
+};
+
+/** A rectangle of the screen, in its pixels. */
+export interface ScreenRegionInput {
+  /** Its left edge. */
+  x?: number | undefined;
+  /** Its top edge. */
+  y?: number | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+}
+
+/** {@link ScreenRegionInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const ScreenRegion: JsonCodec<ScreenRegionInput, ScreenRegionInput> = {
+  toJson: (value) => writeJson(wire.ScreenRegionSchema, convert.toScreenRegion(value)),
+  fromJson: (json) => convert.fromScreenRegion(readJson(wire.ScreenRegionSchema, json)),
 };
 
 export interface ControlDesktopResponse {
@@ -2170,13 +2209,20 @@ export const ControlDesktopResponse: JsonCodec<ControlDesktopResponse, ControlDe
 
 /** Coordinates are pixels of the screen (Sandbox.desktop), from the top left. */
 export interface Screenshot {
+  /** Empty with skipScreenshot. */
   image: Uint8Array;
   /** "image/png" */
   mimeType: string;
+  /** The image's, the screen's with skipScreenshot. */
   width: number;
   height: number;
   cursorX: number;
   cursorY: number;
+  /**
+   * How many times larger than the screen's pixels the image's are: 1, or more for a
+   * screenshotRegion.
+   */
+  scale: number;
 }
 
 /** {@link Screenshot} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2189,7 +2235,7 @@ export type DesktopActionInput = (
   | {
       /**
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       click?: ClickInput | undefined;
       moveMouse?: undefined;
@@ -2198,11 +2244,14 @@ export type DesktopActionInput = (
       typeText?: undefined;
       pressKeys?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       moveMouse?: PointInput | undefined;
       click?: undefined;
@@ -2211,11 +2260,14 @@ export type DesktopActionInput = (
       typeText?: undefined;
       pressKeys?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       drag?: DragInput | undefined;
       click?: undefined;
@@ -2224,11 +2276,14 @@ export type DesktopActionInput = (
       typeText?: undefined;
       pressKeys?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       scroll?: ScrollInput | undefined;
       click?: undefined;
@@ -2237,13 +2292,16 @@ export type DesktopActionInput = (
       typeText?: undefined;
       pressKeys?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
        * Text to type.
        *
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       typeText?: string | undefined;
       click?: undefined;
@@ -2252,13 +2310,17 @@ export type DesktopActionInput = (
       scroll?: undefined;
       pressKeys?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
-       * Keys pressed together: "Return", "ctrl+c", "ctrl+shift+t".
+       * Keys pressed together, joined by "+": "Return", "ctrl+c", "ctrl+shift+t"; several such, apart by
+       * spaces, one after the other: "ctrl+a BackSpace", "Down Down Down".
        *
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       pressKeys?: string | undefined;
       click?: undefined;
@@ -2267,11 +2329,16 @@ export type DesktopActionInput = (
       scroll?: undefined;
       typeText?: undefined;
       waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
     }
   | {
       /**
+       * At most 30000.
+       *
        * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
-       * `waitMs`.
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
        */
       waitMs?: number | undefined;
       click?: undefined;
@@ -2280,6 +2347,62 @@ export type DesktopActionInput = (
       scroll?: undefined;
       typeText?: undefined;
       pressKeys?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
+    }
+  | {
+      /**
+       * Presses a button where the pointer is (moveMouse first) and leaves it down, across calls, until
+       * its mouseUp: a drag the caller moves itself.
+       *
+       * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
+       */
+      mouseDown?: MouseButtonChangeInput | undefined;
+      click?: undefined;
+      moveMouse?: undefined;
+      drag?: undefined;
+      scroll?: undefined;
+      typeText?: undefined;
+      pressKeys?: undefined;
+      waitMs?: undefined;
+      mouseUp?: undefined;
+      holdKeys?: undefined;
+    }
+  | {
+      /**
+       * Lets a button go where the pointer is.
+       *
+       * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
+       */
+      mouseUp?: MouseButtonChangeInput | undefined;
+      click?: undefined;
+      moveMouse?: undefined;
+      drag?: undefined;
+      scroll?: undefined;
+      typeText?: undefined;
+      pressKeys?: undefined;
+      waitMs?: undefined;
+      mouseDown?: undefined;
+      holdKeys?: undefined;
+    }
+  | {
+      /**
+       * `action`: at most one of `click`, `moveMouse`, `drag`, `scroll`, `typeText`, `pressKeys`,
+       * `waitMs`, `mouseDown`, `mouseUp`, `holdKeys`.
+       */
+      holdKeys?: HoldKeysInput | undefined;
+      click?: undefined;
+      moveMouse?: undefined;
+      drag?: undefined;
+      scroll?: undefined;
+      typeText?: undefined;
+      pressKeys?: undefined;
+      waitMs?: undefined;
+      mouseDown?: undefined;
+      mouseUp?: undefined;
     }
 );
 
@@ -2287,6 +2410,31 @@ export type DesktopActionInput = (
 export const DesktopAction: JsonCodec<DesktopActionInput, DesktopActionInput> = {
   toJson: (value) => writeJson(wire.DesktopActionSchema, convert.toDesktopAction(value)),
   fromJson: (json) => convert.fromDesktopAction(readJson(wire.DesktopActionSchema, json)),
+};
+
+export interface MouseButtonChangeInput {
+  /** Absent = LEFT. */
+  button?: MouseButton | undefined;
+}
+
+/** {@link MouseButtonChangeInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const MouseButtonChange: JsonCodec<MouseButtonChangeInput, MouseButtonChangeInput> = {
+  toJson: (value) => writeJson(wire.MouseButtonChangeSchema, convert.toMouseButtonChange(value)),
+  fromJson: (json) => convert.fromMouseButtonChange(readJson(wire.MouseButtonChangeSchema, json)),
+};
+
+/** Keys held down together for a time, then let go. */
+export interface HoldKeysInput {
+  /** Joined by "+": "shift", "ctrl+alt". */
+  keys?: string | undefined;
+  /** At most 30000. */
+  durationMs?: number | undefined;
+}
+
+/** {@link HoldKeysInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const HoldKeys: JsonCodec<HoldKeysInput, HoldKeysInput> = {
+  toJson: (value) => writeJson(wire.HoldKeysSchema, convert.toHoldKeys(value)),
+  fromJson: (json) => convert.fromHoldKeys(readJson(wire.HoldKeysSchema, json)),
 };
 
 export interface PointInput {
@@ -2305,10 +2453,12 @@ export interface ClickInput {
   y?: number | undefined;
   /** Absent = LEFT. */
   button?: MouseButton | undefined;
-  /** Absent = 1; 2 double-clicks. */
+  /** Absent = 1; 2 double-clicks, 3 triple-clicks. */
   count?: number | undefined;
   /** Held while clicking: "shift", "ctrl+alt". */
   holdKeys?: string | undefined;
+  /** True = where the pointer is, whatever x and y say. */
+  atPointer?: boolean | undefined;
 }
 
 /** {@link ClickInput} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2320,6 +2470,8 @@ export const Click: JsonCodec<ClickInput, ClickInput> = {
 export interface DragInput {
   /** From the first point to the last, the left button down. */
   path?: readonly PointInput[] | undefined;
+  /** Held while dragging: "shift", "ctrl+alt". */
+  holdKeys?: string | undefined;
 }
 
 /** {@link DragInput} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2335,6 +2487,10 @@ export interface ScrollInput {
   down?: number | undefined;
   /** Negative scrolls left. */
   right?: number | undefined;
+  /** Held while scrolling: "shift", "ctrl". */
+  holdKeys?: string | undefined;
+  /** True = where the pointer is, whatever x and y say. */
+  atPointer?: boolean | undefined;
 }
 
 /** {@link ScrollInput} as the API's JSON, and back: {@link JsonCodec} says how. */
@@ -2367,53 +2523,67 @@ export type CreateLinkRequest = {
        * answer holds). Link.url is its address and Link.token a token for it alone, which each request
        * sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
        *
-       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`.
+       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`.
        */
       port?: number | undefined;
       terminal?: undefined;
       desktop?: undefined;
       downloadPath?: undefined;
       uploadPath?: undefined;
+      browser?: undefined;
     }
   | {
-      /** `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`. */
+      /** `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`. */
       terminal?: TerminalLinkInput | undefined;
       port?: undefined;
       desktop?: undefined;
       downloadPath?: undefined;
       uploadPath?: undefined;
+      browser?: undefined;
     }
   | {
-      /** `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`. */
+      /** `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`. */
       desktop?: DesktopLinkInput | undefined;
       port?: undefined;
       terminal?: undefined;
       downloadPath?: undefined;
       uploadPath?: undefined;
+      browser?: undefined;
     }
   | {
       /**
        * GET the URL: the file, or a directory as a .tar.
        *
-       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`.
+       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`.
        */
       downloadPath?: string | undefined;
       port?: undefined;
       terminal?: undefined;
       desktop?: undefined;
       uploadPath?: undefined;
+      browser?: undefined;
     }
   | {
       /**
        * PUT the file's bytes to the URL; missing directories are made.
        *
-       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`.
+       * `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`.
        */
       uploadPath?: string | undefined;
       port?: undefined;
       terminal?: undefined;
       desktop?: undefined;
       downloadPath?: undefined;
+      browser?: undefined;
+    }
+  | {
+      /** `target`: at most one of `port`, `terminal`, `desktop`, `downloadPath`, `uploadPath`, `browser`. */
+      browser?: BrowserLinkInput | undefined;
+      port?: undefined;
+      terminal?: undefined;
+      desktop?: undefined;
+      downloadPath?: undefined;
+      uploadPath?: undefined;
     }
 );
 
@@ -2448,6 +2618,34 @@ export interface DesktopLinkInput {
 export const DesktopLink: JsonCodec<DesktopLinkInput, DesktopLinkInput> = {
   toJson: (value) => writeJson(wire.DesktopLinkSchema, convert.toDesktopLink(value)),
   fromJson: (json) => convert.fromDesktopLink(readJson(wire.DesktopLinkSchema, json)),
+};
+
+/**
+ * The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
+ * the Chrome DevTools Protocol, "wss://browser-\<id>.\<server>/\<token>", which Playwright's
+ * chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
+ * Stagehand take as it is; "https://" in its place answers \<that>/json/version and
+ * \<that>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
+ * takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
+ * browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
+ * seconds), so a desktop link watches what the program does, and
+ * {@link Sandboxes.controlDesktop | controlDesktop} acts on the same pages; inside the sandbox a
+ * program takes http://localhost:9222, where the browser starts at the first connection, and the
+ * coding agents have it as their "browser" MCP server. Its profile is on the sandbox's disk: a
+ * stop keeps the sites it is signed in to, and a template saved from the sandbox carries them to
+ * every sandbox started from it. One browser a sandbox: a program that wants several at once uses
+ * several sandboxes. Whoever holds the link drives the browser as the sandbox's person, its files
+ * and signed-in sites within reach: give it only to a program you trust. A connection is a
+ * session, as a terminal is: the sandbox does not idle while one is open, and revokeTokens ends
+ * it. A sandbox on a base before this link is refused, saying so: one created from the template
+ * "base" has it, while a template saved on an older base keeps that base.
+ */
+export type BrowserLinkInput = Record<string, never>;
+
+/** {@link BrowserLinkInput} as the API's JSON, and back: {@link JsonCodec} says how. */
+export const BrowserLink: JsonCodec<BrowserLinkInput, BrowserLinkInput> = {
+  toJson: (value) => writeJson(wire.BrowserLinkSchema, convert.toBrowserLink(value)),
+  fromJson: (json) => convert.fromBrowserLink(readJson(wire.BrowserLinkSchema, json)),
 };
 
 export interface Link {
@@ -3115,7 +3313,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.9.0");
+      request.header.set("User-Agent", "pethost-typescript/0.10.0");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3127,7 +3325,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.9.0");
+      request.header.set("User-Agent", "pethost-typescript/0.10.0");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>
@@ -3510,7 +3708,9 @@ export class Sandboxes {
    * this one saves. Refused ({@link LimitReached}, templateGib) while the workspace's templates take
    * its templateGib, or while another of its versions is SAVING; one whose own bytes would pass what
    * is left is FAILED before its upload. Refused while nothing pays for the workspace
-   * ({@link UsageUnpaid}). Sandboxes keep the version they started from.
+   * ({@link UsageUnpaid}). Sandboxes keep the version they started from. The disk holds the
+   * browser's profile: every sandbox started from the version is signed in to the sites the sandbox
+   * was, as whoever signed in, so sign out first of what its users must not reach.
    *
    * @throws {@link SandboxesError} when the call fails.
    */
@@ -3815,9 +4015,12 @@ export class Sandboxes {
   /**
    * Use the desktop.
    *
-   * Does the actions in order, then answers with a screenshot of the screen as they left it. Stops
-   * at the first that fails; with no actions, just the screenshot. The first starts the desktop,
-   * which takes some seconds. FAILED_PRECONDITION = the desktop did not start (its words).
+   * Does the actions in order, then answers with a screenshot of the screen as they left it, and
+   * where the pointer is. Stops at the first that fails; with no actions, just the screenshot. The
+   * first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did not
+   * start, or the sandbox has not started since its server took the release of a field the request
+   * holds: stop it and start it again (its words say which). A program that drives the browser by
+   * its pages rather than by the screen takes {@link Sandboxes.createLink | createLink} browser.
    *
    * Destructive: it may delete or overwrite something.
    *
@@ -3839,8 +4042,9 @@ export class Sandboxes {
    * Make a link.
    *
    * A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file to
-   * download or upload; or a private port's address and a token for it. It expires. A download or
-   * upload link works once. Making one wakes nothing.
+   * download or upload, or the browser for Playwright or Puppeteer ({@link BrowserLinkInput}); or a
+   * private port's address and a token for it. It expires. A download or upload link works once.
+   * Making one wakes nothing.
    *
    * A private port answers only a request that sends its token as the header `Pethost-Token:
    * <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and

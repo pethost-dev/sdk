@@ -2301,6 +2301,9 @@ pub enum MouseButton {
     MOUSE_BUTTON_LEFT = 1i32,
     MOUSE_BUTTON_RIGHT = 2i32,
     MOUSE_BUTTON_MIDDLE = 3i32,
+    /// A browser's back.
+    MOUSE_BUTTON_BACK = 4i32,
+    MOUSE_BUTTON_FORWARD = 5i32,
 }
 impl MouseButton {
     ///Idiomatic alias for [`Self::MOUSE_BUTTON_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -2315,6 +2318,12 @@ impl MouseButton {
     ///Idiomatic alias for [`Self::MOUSE_BUTTON_MIDDLE`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Middle: Self = Self::MOUSE_BUTTON_MIDDLE;
+    ///Idiomatic alias for [`Self::MOUSE_BUTTON_BACK`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Back: Self = Self::MOUSE_BUTTON_BACK;
+    ///Idiomatic alias for [`Self::MOUSE_BUTTON_FORWARD`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Forward: Self = Self::MOUSE_BUTTON_FORWARD;
 }
 impl ::core::default::Default for MouseButton {
     fn default() -> Self {
@@ -2414,6 +2423,8 @@ impl ::buffa::Enumeration for MouseButton {
             1i32 => ::core::option::Option::Some(Self::MOUSE_BUTTON_LEFT),
             2i32 => ::core::option::Option::Some(Self::MOUSE_BUTTON_RIGHT),
             3i32 => ::core::option::Option::Some(Self::MOUSE_BUTTON_MIDDLE),
+            4i32 => ::core::option::Option::Some(Self::MOUSE_BUTTON_BACK),
+            5i32 => ::core::option::Option::Some(Self::MOUSE_BUTTON_FORWARD),
             _ => ::core::option::Option::None,
         }
     }
@@ -2426,6 +2437,8 @@ impl ::buffa::Enumeration for MouseButton {
             Self::MOUSE_BUTTON_LEFT => "MOUSE_BUTTON_LEFT",
             Self::MOUSE_BUTTON_RIGHT => "MOUSE_BUTTON_RIGHT",
             Self::MOUSE_BUTTON_MIDDLE => "MOUSE_BUTTON_MIDDLE",
+            Self::MOUSE_BUTTON_BACK => "MOUSE_BUTTON_BACK",
+            Self::MOUSE_BUTTON_FORWARD => "MOUSE_BUTTON_FORWARD",
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -2440,6 +2453,10 @@ impl ::buffa::Enumeration for MouseButton {
             "MOUSE_BUTTON_MIDDLE" => {
                 ::core::option::Option::Some(Self::MOUSE_BUTTON_MIDDLE)
             }
+            "MOUSE_BUTTON_BACK" => ::core::option::Option::Some(Self::MOUSE_BUTTON_BACK),
+            "MOUSE_BUTTON_FORWARD" => {
+                ::core::option::Option::Some(Self::MOUSE_BUTTON_FORWARD)
+            }
             _ => ::core::option::Option::None,
         }
     }
@@ -2449,6 +2466,8 @@ impl ::buffa::Enumeration for MouseButton {
             Self::MOUSE_BUTTON_LEFT,
             Self::MOUSE_BUTTON_RIGHT,
             Self::MOUSE_BUTTON_MIDDLE,
+            Self::MOUSE_BUTTON_BACK,
+            Self::MOUSE_BUTTON_FORWARD,
         ]
     }
 }
@@ -10009,7 +10028,9 @@ pub const __EGRESS_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::typ
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct Ingress {
-    /// At most 20.
+    /// At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+    /// and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+    /// links reach them (CreateLink).
     ///
     /// Field 1: `public_ports`
     #[serde(
@@ -22039,6 +22060,28 @@ pub struct ControlDesktopRequest {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub actions: ::buffa::alloc::vec::Vec<DesktopAction>,
+    /// True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a
+    /// caller that does not look after every action.
+    ///
+    /// Field 3: `skip_screenshot`
+    #[serde(
+        rename = "skip_screenshot",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub skip_screenshot: ::core::option::Option<bool>,
+    /// Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the
+    /// screen: a closer look at small text. The actions' points stay the screen's. Absent = the
+    /// whole screen.
+    ///
+    /// Field 4: `screenshot_region`
+    #[serde(
+        rename = "screenshot_region",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub screenshot_region: ::buffa::MessageField<
+        ScreenRegion,
+        ::buffa::Inline<ScreenRegion>,
+    >,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -22048,6 +22091,8 @@ impl ::core::fmt::Debug for ControlDesktopRequest {
         f.debug_struct("ControlDesktopRequest")
             .field("sandbox_id", &self.sandbox_id)
             .field("actions", &self.actions)
+            .field("skip_screenshot", &self.skip_screenshot)
+            .field("screenshot_region", &self.screenshot_region)
             .finish()
     }
 }
@@ -22067,6 +22112,13 @@ impl ControlDesktopRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.sandbox_id = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::skip_screenshot`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_skip_screenshot(mut self, value: bool) -> Self {
+        self.skip_screenshot = Some(value);
         self
     }
 }
@@ -22101,6 +22153,17 @@ impl ::buffa::Message for ControlDesktopRequest {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if self.skip_screenshot.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
+        if self.screenshot_region.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.screenshot_region.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
+                    + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -22121,6 +22184,17 @@ impl ::buffa::Message for ControlDesktopRequest {
                 buf,
             );
             v.write_to(__cache, buf);
+        }
+        if let Some(v) = self.skip_screenshot {
+            ::buffa::types::put_bool_field(3u32, v, buf);
+        }
+        if self.screenshot_region.is_set() {
+            ::buffa::types::put_len_delimited_header(
+                4u32,
+                u64::from(__cache.consume_next()),
+                buf,
+            );
+            self.screenshot_region.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -22159,6 +22233,26 @@ impl ::buffa::Message for ControlDesktopRequest {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.actions.push(elem);
             }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.skip_screenshot = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.screenshot_region.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -22169,6 +22263,8 @@ impl ::buffa::Message for ControlDesktopRequest {
     fn clear(&mut self) {
         self.sandbox_id = ::core::option::Option::None;
         self.actions.clear();
+        self.skip_screenshot = ::core::option::Option::None;
+        self.screenshot_region = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -22199,6 +22295,241 @@ pub const __CONTROL_DESKTOP_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEnt
     type_url: "type.googleapis.com/pethost.sandboxes.v1.ControlDesktopRequest",
     to_json: ::buffa::type_registry::any_to_json::<ControlDesktopRequest>,
     from_json: ::buffa::type_registry::any_from_json::<ControlDesktopRequest>,
+    is_wkt: false,
+};
+/// A rectangle of the screen, in its pixels.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct ScreenRegion {
+    /// Its left edge.
+    ///
+    /// Field 1: `x`
+    #[serde(
+        rename = "x",
+        with = "::buffa::json_helpers::opt_int32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub x: ::core::option::Option<i32>,
+    /// Its top edge.
+    ///
+    /// Field 2: `y`
+    #[serde(
+        rename = "y",
+        with = "::buffa::json_helpers::opt_int32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub y: ::core::option::Option<i32>,
+    /// Field 3: `width`
+    #[serde(
+        rename = "width",
+        with = "::buffa::json_helpers::opt_int32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub width: ::core::option::Option<i32>,
+    /// Field 4: `height`
+    #[serde(
+        rename = "height",
+        with = "::buffa::json_helpers::opt_int32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub height: ::core::option::Option<i32>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for ScreenRegion {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("ScreenRegion")
+            .field("x", &self.x)
+            .field("y", &self.y)
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .finish()
+    }
+}
+impl ScreenRegion {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ScreenRegion";
+}
+impl ScreenRegion {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::x`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_x(mut self, value: i32) -> Self {
+        self.x = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::y`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_y(mut self, value: i32) -> Self {
+        self.y = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::width`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_width(mut self, value: i32) -> Self {
+        self.width = Some(value);
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::height`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_height(mut self, value: i32) -> Self {
+        self.height = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(ScreenRegion);
+impl ::buffa::MessageName for ScreenRegion {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "ScreenRegion";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.ScreenRegion";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.ScreenRegion";
+}
+impl ::buffa::Message for ScreenRegion {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(v) = self.x {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.y {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.width {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.height {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.x {
+            ::buffa::types::put_int32_field(1u32, v, buf);
+        }
+        if let Some(v) = self.y {
+            ::buffa::types::put_int32_field(2u32, v, buf);
+        }
+        if let Some(v) = self.width {
+            ::buffa::types::put_int32_field(3u32, v, buf);
+        }
+        if let Some(v) = self.height {
+            ::buffa::types::put_int32_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.x = ::core::option::Option::Some(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.y = ::core::option::Option::Some(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.width = ::core::option::Option::Some(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.height = ::core::option::Option::Some(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.x = ::core::option::Option::None;
+        self.y = ::core::option::Option::None;
+        self.width = ::core::option::Option::None;
+        self.height = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for ScreenRegion {
+    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.ScreenRegion";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for ScreenRegion {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __SCREEN_REGION_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.sandboxes.v1.ScreenRegion",
+    to_json: ::buffa::type_registry::any_to_json::<ScreenRegion>,
+    from_json: ::buffa::type_registry::any_from_json::<ScreenRegion>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]
@@ -22454,6 +22785,8 @@ pub const __CONTROL_DESKTOP_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEn
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
 pub struct Screenshot {
+    /// Empty with skip_screenshot.
+    ///
     /// Field 1: `image`
     #[serde(
         rename = "image",
@@ -22469,6 +22802,8 @@ pub struct Screenshot {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub mime_type: ::core::option::Option<::buffa::alloc::string::String>,
+    /// The image's, the screen's with skip_screenshot.
+    ///
     /// Field 3: `width`
     #[serde(
         rename = "width",
@@ -22497,6 +22832,16 @@ pub struct Screenshot {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub cursor_y: ::core::option::Option<i32>,
+    /// How many times larger than the screen's pixels the image's are: 1, or more for a
+    /// screenshot_region.
+    ///
+    /// Field 7: `scale`
+    #[serde(
+        rename = "scale",
+        with = "::buffa::json_helpers::opt_int32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub scale: ::core::option::Option<i32>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -22510,6 +22855,7 @@ impl ::core::fmt::Debug for Screenshot {
             .field("height", &self.height)
             .field("cursor_x", &self.cursor_x)
             .field("cursor_y", &self.cursor_y)
+            .field("scale", &self.scale)
             .finish()
     }
 }
@@ -22566,6 +22912,13 @@ impl Screenshot {
         self.cursor_y = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::scale`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_scale(mut self, value: i32) -> Self {
+        self.scale = Some(value);
+        self
+    }
 }
 ::buffa::impl_default_instance!(Screenshot);
 impl ::buffa::MessageName for Screenshot {
@@ -22605,6 +22958,9 @@ impl ::buffa::Message for Screenshot {
         if let Some(v) = self.cursor_y {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
+        if let Some(v) = self.scale {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -22632,6 +22988,9 @@ impl ::buffa::Message for Screenshot {
         }
         if let Some(v) = self.cursor_y {
             ::buffa::types::put_int32_field(6u32, v, buf);
+        }
+        if let Some(v) = self.scale {
+            ::buffa::types::put_int32_field(7u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -22704,6 +23063,15 @@ impl ::buffa::Message for Screenshot {
                     ::buffa::types::decode_int32(buf)?,
                 );
             }
+            7u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.scale = ::core::option::Option::Some(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -22718,6 +23086,7 @@ impl ::buffa::Message for Screenshot {
         self.height = ::core::option::Option::None;
         self.cursor_x = ::core::option::Option::None;
         self.cursor_y = ::core::option::Option::None;
+        self.scale = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -22835,6 +23204,30 @@ impl ::buffa::Message for DesktopAction {
                 __buffa::oneof::desktop_action::Action::WaitMs(v) => {
                     size += 1u64 + ::buffa::types::uint32_encoded_len(*v) as u64;
                 }
+                __buffa::oneof::desktop_action::Action::MouseDown(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
+                __buffa::oneof::desktop_action::Action::MouseUp(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
+                __buffa::oneof::desktop_action::Action::HoldKeys(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
             }
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -22889,6 +23282,30 @@ impl ::buffa::Message for DesktopAction {
                 }
                 __buffa::oneof::desktop_action::Action::WaitMs(x) => {
                     ::buffa::types::put_uint32_field(7u32, *x, buf);
+                }
+                __buffa::oneof::desktop_action::Action::MouseDown(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        8u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+                __buffa::oneof::desktop_action::Action::MouseUp(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        9u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+                __buffa::oneof::desktop_action::Action::HoldKeys(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        10u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
                 }
             }
         }
@@ -23017,6 +23434,66 @@ impl ::buffa::Message for DesktopAction {
                         ::buffa::types::decode_uint32(buf)?,
                     ),
                 );
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::desktop_action::Action::MouseDown(ref mut existing),
+                ) = self.action
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.action = ::core::option::Option::Some(
+                        __buffa::oneof::desktop_action::Action::MouseDown(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
+            }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::desktop_action::Action::MouseUp(ref mut existing),
+                ) = self.action
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.action = ::core::option::Option::Some(
+                        __buffa::oneof::desktop_action::Action::MouseUp(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
+            }
+            10u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::desktop_action::Action::HoldKeys(ref mut existing),
+                ) = self.action
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.action = ::core::option::Option::Some(
+                        __buffa::oneof::desktop_action::Action::HoldKeys(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -23232,6 +23709,78 @@ impl<'de> ::serde::Deserialize<'de> for DesktopAction {
                                 );
                             }
                         }
+                        "mouse_down" => {
+                            let v: ::core::option::Option<MouseButtonChange> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            MouseButtonChange,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_action.is_some() {
+                                    return Err(
+                                        ::serde::de::Error::custom(
+                                            "multiple oneof fields set for 'action'",
+                                        ),
+                                    );
+                                }
+                                __oneof_action = Some(
+                                    __buffa::oneof::desktop_action::Action::MouseDown(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
+                        "mouse_up" => {
+                            let v: ::core::option::Option<MouseButtonChange> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            MouseButtonChange,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_action.is_some() {
+                                    return Err(
+                                        ::serde::de::Error::custom(
+                                            "multiple oneof fields set for 'action'",
+                                        ),
+                                    );
+                                }
+                                __oneof_action = Some(
+                                    __buffa::oneof::desktop_action::Action::MouseUp(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
+                        "hold_keys" => {
+                            let v: ::core::option::Option<HoldKeys> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            HoldKeys,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_action.is_some() {
+                                    return Err(
+                                        ::serde::de::Error::custom(
+                                            "multiple oneof fields set for 'action'",
+                                        ),
+                                    );
+                                }
+                                __oneof_action = Some(
+                                    __buffa::oneof::desktop_action::Action::HoldKeys(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
                         _ => {
                             map.next_value::<::serde::de::IgnoredAny>()?;
                         }
@@ -23273,6 +23822,319 @@ pub mod desktop_action {
     #[doc(inline)]
     pub use super::__buffa::view::oneof::desktop_action::Action as ActionView;
 }
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct MouseButtonChange {
+    /// Absent = LEFT.
+    ///
+    /// Field 1: `button`
+    #[serde(
+        rename = "button",
+        with = "::buffa::json_helpers::opt_enum",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub button: ::core::option::Option<::buffa::EnumValue<MouseButton>>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for MouseButtonChange {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("MouseButtonChange").field("button", &self.button).finish()
+    }
+}
+impl MouseButtonChange {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.MouseButtonChange";
+}
+impl MouseButtonChange {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::button`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_button(
+        mut self,
+        value: impl Into<::buffa::EnumValue<MouseButton>>,
+    ) -> Self {
+        self.button = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(MouseButtonChange);
+impl ::buffa::MessageName for MouseButtonChange {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "MouseButtonChange";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.MouseButtonChange";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.MouseButtonChange";
+}
+impl ::buffa::Message for MouseButtonChange {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.button {
+            size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.button {
+            ::buffa::types::put_int32_field(1u32, v.to_i32(), buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.button = ::core::option::Option::Some(
+                    ::buffa::EnumValue::from(::buffa::types::decode_int32(buf)?),
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.button = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for MouseButtonChange {
+    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.MouseButtonChange";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for MouseButtonChange {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __MOUSE_BUTTON_CHANGE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.sandboxes.v1.MouseButtonChange",
+    to_json: ::buffa::type_registry::any_to_json::<MouseButtonChange>,
+    from_json: ::buffa::type_registry::any_from_json::<MouseButtonChange>,
+    is_wkt: false,
+};
+/// Keys held down together for a time, then let go.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct HoldKeys {
+    /// Joined by "+": "shift", "ctrl+alt".
+    ///
+    /// Field 1: `keys`
+    #[serde(rename = "keys", skip_serializing_if = "::core::option::Option::is_none")]
+    pub keys: ::core::option::Option<::buffa::alloc::string::String>,
+    /// At most 30000.
+    ///
+    /// Field 2: `duration_ms`
+    #[serde(
+        rename = "duration_ms",
+        with = "::buffa::json_helpers::opt_uint32",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub duration_ms: ::core::option::Option<u32>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for HoldKeys {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("HoldKeys")
+            .field("keys", &self.keys)
+            .field("duration_ms", &self.duration_ms)
+            .finish()
+    }
+}
+impl HoldKeys {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.HoldKeys";
+}
+impl HoldKeys {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::keys`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_keys(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.keys = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::duration_ms`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_duration_ms(mut self, value: u32) -> Self {
+        self.duration_ms = Some(value);
+        self
+    }
+}
+::buffa::impl_default_instance!(HoldKeys);
+impl ::buffa::MessageName for HoldKeys {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "HoldKeys";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.HoldKeys";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.HoldKeys";
+}
+impl ::buffa::Message for HoldKeys {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if let Some(ref v) = self.keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if let Some(v) = self.duration_ms {
+            size += 1u64 + ::buffa::types::uint32_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.keys {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(v) = self.duration_ms {
+            ::buffa::types::put_uint32_field(2u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self.keys.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.duration_ms = ::core::option::Option::Some(
+                    ::buffa::types::decode_uint32(buf)?,
+                );
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.keys = ::core::option::Option::None;
+        self.duration_ms = ::core::option::Option::None;
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for HoldKeys {
+    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.HoldKeys";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for HoldKeys {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __HOLD_KEYS_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.sandboxes.v1.HoldKeys",
+    to_json: ::buffa::type_registry::any_to_json::<HoldKeys>,
+    from_json: ::buffa::type_registry::any_from_json::<HoldKeys>,
+    is_wkt: false,
+};
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
@@ -23465,7 +24327,7 @@ pub struct Click {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub button: ::core::option::Option<::buffa::EnumValue<MouseButton>>,
-    /// Absent = 1; 2 double-clicks.
+    /// Absent = 1; 2 double-clicks, 3 triple-clicks.
     ///
     /// Field 4: `count`
     #[serde(
@@ -23482,6 +24344,14 @@ pub struct Click {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub hold_keys: ::core::option::Option<::buffa::alloc::string::String>,
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    #[serde(
+        rename = "at_pointer",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub at_pointer: ::core::option::Option<bool>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -23494,6 +24364,7 @@ impl ::core::fmt::Debug for Click {
             .field("button", &self.button)
             .field("count", &self.count)
             .field("hold_keys", &self.hold_keys)
+            .field("at_pointer", &self.at_pointer)
             .finish()
     }
 }
@@ -23546,6 +24417,13 @@ impl Click {
         self.hold_keys = Some(value.into());
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::at_pointer`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_at_pointer(mut self, value: bool) -> Self {
+        self.at_pointer = Some(value);
+        self
+    }
 }
 ::buffa::impl_default_instance!(Click);
 impl ::buffa::MessageName for Click {
@@ -23582,6 +24460,9 @@ impl ::buffa::Message for Click {
         if let Some(ref v) = self.hold_keys {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if self.at_pointer.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -23606,6 +24487,9 @@ impl ::buffa::Message for Click {
         }
         if let Some(ref v) = self.hold_keys {
             ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        if let Some(v) = self.at_pointer {
+            ::buffa::types::put_bool_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -23668,6 +24552,15 @@ impl ::buffa::Message for Click {
                     buf,
                 )?;
             }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.at_pointer = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -23681,6 +24574,7 @@ impl ::buffa::Message for Click {
         self.button = ::core::option::Option::None;
         self.count = ::core::option::Option::None;
         self.hold_keys = ::core::option::Option::None;
+        self.at_pointer = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -23726,13 +24620,24 @@ pub struct Drag {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub path: ::buffa::alloc::vec::Vec<Point>,
+    /// Held while dragging: "shift", "ctrl+alt".
+    ///
+    /// Field 2: `hold_keys`
+    #[serde(
+        rename = "hold_keys",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub hold_keys: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
 impl ::core::fmt::Debug for Drag {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("Drag").field("path", &self.path).finish()
+        f.debug_struct("Drag")
+            .field("path", &self.path)
+            .field("hold_keys", &self.hold_keys)
+            .finish()
     }
 }
 impl Drag {
@@ -23741,6 +24646,18 @@ impl Drag {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.Drag";
+}
+impl Drag {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::hold_keys`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_hold_keys(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.hold_keys = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(Drag);
 impl ::buffa::MessageName for Drag {
@@ -23770,6 +24687,9 @@ impl ::buffa::Message for Drag {
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
                     + inner_size as u64;
         }
+        if let Some(ref v) = self.hold_keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -23787,6 +24707,9 @@ impl ::buffa::Message for Drag {
                 buf,
             );
             v.write_to(__cache, buf);
+        }
+        if let Some(ref v) = self.hold_keys {
+            ::buffa::types::put_string_field(2u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -23813,6 +24736,18 @@ impl ::buffa::Message for Drag {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.path.push(elem);
             }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .hold_keys
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -23822,6 +24757,7 @@ impl ::buffa::Message for Drag {
     }
     fn clear(&mut self) {
         self.path.clear();
+        self.hold_keys = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -23890,6 +24826,22 @@ pub struct Scroll {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub right: ::core::option::Option<i32>,
+    /// Held while scrolling: "shift", "ctrl".
+    ///
+    /// Field 5: `hold_keys`
+    #[serde(
+        rename = "hold_keys",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub hold_keys: ::core::option::Option<::buffa::alloc::string::String>,
+    /// True = where the pointer is, whatever x and y say.
+    ///
+    /// Field 6: `at_pointer`
+    #[serde(
+        rename = "at_pointer",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub at_pointer: ::core::option::Option<bool>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -23901,6 +24853,8 @@ impl ::core::fmt::Debug for Scroll {
             .field("y", &self.y)
             .field("down", &self.down)
             .field("right", &self.right)
+            .field("hold_keys", &self.hold_keys)
+            .field("at_pointer", &self.at_pointer)
             .finish()
     }
 }
@@ -23940,6 +24894,23 @@ impl Scroll {
         self.right = Some(value);
         self
     }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::hold_keys`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_hold_keys(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.hold_keys = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::at_pointer`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_at_pointer(mut self, value: bool) -> Self {
+        self.at_pointer = Some(value);
+        self
+    }
 }
 ::buffa::impl_default_instance!(Scroll);
 impl ::buffa::MessageName for Scroll {
@@ -23973,6 +24944,12 @@ impl ::buffa::Message for Scroll {
         if let Some(v) = self.right {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
+        if let Some(ref v) = self.hold_keys {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        if self.at_pointer.is_some() {
+            size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -23994,6 +24971,12 @@ impl ::buffa::Message for Scroll {
         }
         if let Some(v) = self.right {
             ::buffa::types::put_int32_field(4u32, v, buf);
+        }
+        if let Some(ref v) = self.hold_keys {
+            ::buffa::types::put_string_field(5u32, v, buf);
+        }
+        if let Some(v) = self.at_pointer {
+            ::buffa::types::put_bool_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -24044,6 +25027,27 @@ impl ::buffa::Message for Scroll {
                     ::buffa::types::decode_int32(buf)?,
                 );
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .hold_keys
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.at_pointer = ::core::option::Option::Some(
+                    ::buffa::types::decode_bool(buf)?,
+                );
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -24056,6 +25060,8 @@ impl ::buffa::Message for Scroll {
         self.y = ::core::option::Option::None;
         self.down = ::core::option::Option::None;
         self.right = ::core::option::Option::None;
+        self.hold_keys = ::core::option::Option::None;
+        self.at_pointer = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -24368,6 +25374,14 @@ impl ::buffa::Message for CreateLinkRequest {
                 __buffa::oneof::create_link_request::Target::UploadPath(x) => {
                     size += 1u64 + ::buffa::types::string_encoded_len(x) as u64;
                 }
+                __buffa::oneof::create_link_request::Target::Browser(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
+                            + inner as u64;
+                }
             }
         }
         if let Some(v) = self.ttl_seconds {
@@ -24412,6 +25426,14 @@ impl ::buffa::Message for CreateLinkRequest {
                 }
                 __buffa::oneof::create_link_request::Target::UploadPath(x) => {
                     ::buffa::types::put_string_field(6u32, x, buf);
+                }
+                __buffa::oneof::create_link_request::Target::Browser(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        8u32,
+                        u64::from(__cache.consume_next()),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
                 }
             }
         }
@@ -24519,6 +25541,28 @@ impl ::buffa::Message for CreateLinkRequest {
                         ::buffa::types::decode_string(buf)?,
                     ),
                 );
+            }
+            8u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::create_link_request::Target::Browser(
+                        ref mut existing,
+                    ),
+                ) = self.target
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.target = ::core::option::Option::Some(
+                        __buffa::oneof::create_link_request::Target::Browser(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -24728,6 +25772,30 @@ impl<'de> ::serde::Deserialize<'de> for CreateLinkRequest {
                                 }
                                 __oneof_target = Some(
                                     __buffa::oneof::create_link_request::Target::UploadPath(v),
+                                );
+                            }
+                        }
+                        "browser" => {
+                            let v: ::core::option::Option<BrowserLink> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            BrowserLink,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_target.is_some() {
+                                    return Err(
+                                        ::serde::de::Error::custom(
+                                            "multiple oneof fields set for 'target'",
+                                        ),
+                                    );
+                                }
+                                __oneof_target = Some(
+                                    __buffa::oneof::create_link_request::Target::Browser(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
                                 );
                             }
                         }
@@ -25052,6 +26120,126 @@ pub const __DESKTOP_LINK_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buff
     type_url: "type.googleapis.com/pethost.sandboxes.v1.DesktopLink",
     to_json: ::buffa::type_registry::any_to_json::<DesktopLink>,
     from_json: ::buffa::type_registry::any_from_json::<DesktopLink>,
+    is_wkt: false,
+};
+/// The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
+/// the Chrome DevTools Protocol, "wss://browser-\<id\>.\<server\>/\<token\>", which Playwright's
+/// chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
+/// Stagehand take as it is; "<https://"> in its place answers \<that\>/json/version and
+/// \<that\>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
+/// takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
+/// browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
+/// seconds), so a desktop link watches what the program does, and ControlDesktop acts on the same
+/// pages; inside the sandbox a program takes <http://localhost:9222,> where the browser starts at the
+/// first connection, and the coding agents have it as their "browser" MCP server. Its profile is on
+/// the sandbox's disk: a stop keeps the sites it is signed in to, and a template saved from the
+/// sandbox carries them to every sandbox started from it. One browser a sandbox: a program that
+/// wants several at once uses several sandboxes. Whoever holds the link drives the browser as the
+/// sandbox's person, its files and signed-in sites within reach: give it only to a program you
+/// trust. A connection is a session, as a terminal is: the sandbox does not idle while one is open,
+/// and revoke_tokens ends it. A sandbox on a base before this link is refused, saying so: one
+/// created from the template "base" has it, while a template saved on an older base keeps that base.
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct BrowserLink {
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for BrowserLink {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("BrowserLink").finish()
+    }
+}
+impl BrowserLink {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.BrowserLink";
+}
+::buffa::impl_default_instance!(BrowserLink);
+impl ::buffa::MessageName for BrowserLink {
+    const PACKAGE: &'static str = "pethost.sandboxes.v1";
+    const NAME: &'static str = "BrowserLink";
+    const FULL_NAME: &'static str = "pethost.sandboxes.v1.BrowserLink";
+    const TYPE_URL: &'static str = "type.googleapis.com/pethost.sandboxes.v1.BrowserLink";
+}
+impl ::buffa::Message for BrowserLink {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::EncodeSink,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for BrowserLink {
+    const PROTO_FQN: &'static str = "pethost.sandboxes.v1.BrowserLink";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for BrowserLink {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __BROWSER_LINK_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/pethost.sandboxes.v1.BrowserLink",
+    to_json: ::buffa::type_registry::any_to_json::<BrowserLink>,
+    from_json: ::buffa::type_registry::any_from_json::<BrowserLink>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]

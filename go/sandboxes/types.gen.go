@@ -465,7 +465,9 @@ type Egress struct {
 // The ports anyone may open at their own address; any other port needs `Pethost-Token`
 // ([Client.CreateLink] port).
 type Ingress struct {
-	// At most 20.
+	// At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's
+	// 9222 and 9223, answer nobody at a port's address, public or with a token: the desktop and
+	// browser links reach them ([Client.CreateLink]).
 	PublicPorts []PublicPort
 
 	// What a newer API sent in this message that this version of the package has no field
@@ -1086,6 +1088,23 @@ type FileEvent struct {
 type ControlDesktopRequest struct {
 	SandboxID string
 	Actions   []DesktopAction
+	// True = no image: the answer's screenshot holds the screen's size and the pointer alone, for
+	// a caller that does not look after every action.
+	SkipScreenshot bool
+	// Only this part of the screen, scaled up by a whole factor ([Screenshot.Scale]) to fit the
+	// screen: a closer look at small text. The actions' points stay the screen's. Absent = the
+	// whole screen.
+	ScreenshotRegion *ScreenRegion
+}
+
+// A rectangle of the screen, in its pixels.
+type ScreenRegion struct {
+	// Its left edge.
+	X int32
+	// Its top edge.
+	Y      int32
+	Width  int32
+	Height int32
 }
 
 // ControlDesktopResponse is the response of [Client.ControlDesktop].
@@ -1101,25 +1120,32 @@ type ControlDesktopResponse struct {
 
 // Coordinates are pixels of the screen ([Sandbox.Desktop]), from the top left.
 type Screenshot struct {
+	// Empty with [ControlDesktopRequest.SkipScreenshot].
 	Image []byte
 	// "image/png"
 	MimeType string
-	Width    int32
-	Height   int32
-	CursorX  int32
-	CursorY  int32
+	// The image's, the screen's with [ControlDesktopRequest.SkipScreenshot].
+	Width   int32
+	Height  int32
+	CursorX int32
+	CursorY int32
+	// How many times larger than the screen's pixels the image's are: 1, or more for a
+	// [ControlDesktopRequest.ScreenshotRegion].
+	Scale int32
 }
 
 type DesktopAction struct {
 	// One of [DesktopActionClick], [DesktopActionMoveMouse], [DesktopActionDrag],
-	// [DesktopActionScroll], [DesktopActionTypeText], [DesktopActionPressKeys] or
-	// [DesktopActionWaitMs]; nil = none.
+	// [DesktopActionScroll], [DesktopActionTypeText], [DesktopActionPressKeys],
+	// [DesktopActionWaitMs], [DesktopActionMouseDown], [DesktopActionMouseUp] or
+	// [DesktopActionHoldKeys]; nil = none.
 	Action DesktopActionAction
 }
 
 // DesktopActionAction is what [DesktopAction.Action] holds: one of [DesktopActionClick],
 // [DesktopActionMoveMouse], [DesktopActionDrag], [DesktopActionScroll],
-// [DesktopActionTypeText], [DesktopActionPressKeys] or [DesktopActionWaitMs].
+// [DesktopActionTypeText], [DesktopActionPressKeys], [DesktopActionWaitMs],
+// [DesktopActionMouseDown], [DesktopActionMouseUp] or [DesktopActionHoldKeys].
 //
 // nil = none.
 type DesktopActionAction interface {
@@ -1145,11 +1171,43 @@ type DesktopActionTypeText string
 
 // DesktopActionPressKeys is a member of [DesktopActionAction].
 //
-// Keys pressed together: "Return", "ctrl+c", "ctrl+shift+t".
+// Keys pressed together, joined by "+": "Return", "ctrl+c", "ctrl+shift+t"; several such,
+// apart by spaces, one after the other: "ctrl+a BackSpace", "Down Down Down".
 type DesktopActionPressKeys string
 
 // DesktopActionWaitMs is a member of [DesktopActionAction].
+//
+// At most 30000.
 type DesktopActionWaitMs uint32
+
+// DesktopActionMouseDown is a member of [DesktopActionAction], with the fields of
+// [MouseButtonChange].
+//
+// Presses a button where the pointer is ([DesktopActionMoveMouse] first) and leaves it down,
+// across calls, until its [DesktopActionMouseUp]: a drag the caller moves itself.
+type DesktopActionMouseDown MouseButtonChange
+
+// DesktopActionMouseUp is a member of [DesktopActionAction], with the fields of
+// [MouseButtonChange].
+//
+// Lets a button go where the pointer is.
+type DesktopActionMouseUp MouseButtonChange
+
+// DesktopActionHoldKeys is a member of [DesktopActionAction], with the fields of [HoldKeys].
+type DesktopActionHoldKeys HoldKeys
+
+type MouseButtonChange struct {
+	// Absent = LEFT.
+	Button MouseButton
+}
+
+// Keys held down together for a time, then let go.
+type HoldKeys struct {
+	// Joined by "+": "shift", "ctrl+alt".
+	Keys string
+	// At most 30000.
+	DurationMs uint32
+}
 
 type Point struct {
 	X int32
@@ -1161,15 +1219,19 @@ type Click struct {
 	Y int32
 	// Absent = LEFT.
 	Button MouseButton
-	// Absent = 1; 2 double-clicks.
+	// Absent = 1; 2 double-clicks, 3 triple-clicks.
 	Count int32
 	// Held while clicking: "shift", "ctrl+alt".
 	HoldKeys string
+	// True = where the pointer is, whatever x and y say.
+	AtPointer bool
 }
 
 type Drag struct {
 	// From the first point to the last, the left button down.
 	Path []Point
+	// Held while dragging: "shift", "ctrl+alt".
+	HoldKeys string
 }
 
 type Scroll struct {
@@ -1179,6 +1241,10 @@ type Scroll struct {
 	Down int32
 	// Negative scrolls left.
 	Right int32
+	// Held while scrolling: "shift", "ctrl".
+	HoldKeys string
+	// True = where the pointer is, whatever x and y say.
+	AtPointer bool
 }
 
 // A screen, in pixels.
@@ -1190,16 +1256,16 @@ type Desktop struct {
 // CreateLinkRequest is the request of [Client.CreateLink].
 type CreateLinkRequest struct {
 	SandboxID string
-	// One of [CreateLinkPort], [CreateLinkTerminal], [CreateLinkDesktop], [CreateLinkDownloadPath]
-	// or [CreateLinkUploadPath]; nil = none.
+	// One of [CreateLinkPort], [CreateLinkTerminal], [CreateLinkDesktop],
+	// [CreateLinkDownloadPath], [CreateLinkUploadPath] or [CreateLinkBrowser]; nil = none.
 	Target CreateLinkTarget
 	// Absent = 3600; at most 86400.
 	TTLSeconds uint32
 }
 
 // CreateLinkTarget is what [CreateLinkRequest.Target] holds: one of [CreateLinkPort],
-// [CreateLinkTerminal], [CreateLinkDesktop], [CreateLinkDownloadPath] or
-// [CreateLinkUploadPath].
+// [CreateLinkTerminal], [CreateLinkDesktop], [CreateLinkDownloadPath], [CreateLinkUploadPath]
+// or [CreateLinkBrowser].
 //
 // nil = none.
 type CreateLinkTarget interface {
@@ -1230,6 +1296,9 @@ type CreateLinkDownloadPath string
 // PUT the file's bytes to the URL; missing directories are made.
 type CreateLinkUploadPath string
 
+// CreateLinkBrowser is a member of [CreateLinkTarget], with the fields of [BrowserLink].
+type CreateLinkBrowser BrowserLink
+
 // A terminal page; a WebSocket to the same URL carries its bytes both ways, and the text
 // message {"resize":{"cols":C,"rows":R}} resizes it.
 type TerminalLink struct {
@@ -1242,6 +1311,27 @@ type DesktopLink struct {
 	// True = the viewer cannot click or type.
 	ViewOnly bool
 }
+
+// The browser on the sandbox's desktop, for a program that drives it: [Link.URL] is the
+// WebSocket of the Chrome DevTools Protocol, "wss://browser-<id>.<server>/<token>", which
+// Playwright's chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}),
+// browser-use and Stagehand take as it is; "https://" in its place answers <that>/json/version
+// and <that>/json/list, for a client that adds those to an HTTP address as Playwright does
+// (Puppeteer takes the WebSocket: browserWSEndpoint), and every WebSocket path under it
+// reaches the same browser. It is the Chrome the desktop shows, started with the desktop if it
+// does not run (some seconds), so a desktop link watches what the program does, and
+// [Client.ControlDesktop] acts on the same pages; inside the sandbox a program takes
+// http://localhost:9222, where the browser starts at the first connection, and the coding
+// agents have it as their "browser" MCP server. Its profile is on the sandbox's disk: a stop
+// keeps the sites it is signed in to, and a template saved from the sandbox carries them to
+// every sandbox started from it. One browser a sandbox: a program that wants several at once
+// uses several sandboxes. Whoever holds the link drives the browser as the sandbox's person,
+// its files and signed-in sites within reach: give it only to a program you trust. A
+// connection is a session, as a terminal is: the sandbox does not idle while one is open, and
+// [UpdateSandboxRequest.RevokeTokens] ends it. A sandbox on a base before this link is
+// refused, saying so: one created from the template "base" has it, while a template saved on
+// an older base keeps that base.
+type BrowserLink struct{}
 
 // Link is the response of [Client.CreateLink].
 type Link struct {
@@ -1948,7 +2038,7 @@ func (v DesktopFailure) String() string {
 }
 
 // The API may add values: one that this version of the package does not know keeps its number
-// and prints as "MouseButton(4)".
+// and prints as "MouseButton(6)".
 type MouseButton int32
 
 const (
@@ -1956,10 +2046,13 @@ const (
 	MouseButtonLeft        MouseButton = 1
 	MouseButtonRight       MouseButton = 2
 	MouseButtonMiddle      MouseButton = 3
+	// A browser's back.
+	MouseButtonBack    MouseButton = 4
+	MouseButtonForward MouseButton = 5
 )
 
-// String is the value's name as the API's documentation writes it: "MIDDLE" for
-// [MouseButtonMiddle].
+// String is the value's name as the API's documentation writes it: "FORWARD" for
+// [MouseButtonForward].
 func (v MouseButton) String() string {
 	switch v {
 	case MouseButtonUnspecified:
@@ -1970,6 +2063,10 @@ func (v MouseButton) String() string {
 		return "RIGHT"
 	case MouseButtonMiddle:
 		return "MIDDLE"
+	case MouseButtonBack:
+		return "BACK"
+	case MouseButtonForward:
+		return "FORWARD"
 	}
 	return "MouseButton(" + strconv.Itoa(int(v)) + ")"
 }

@@ -472,6 +472,22 @@ import type * as p from "pethost/sandboxes";
   m.sends("ControlDesktopRequest.sandbox_id", { sandboxId: "sandbox_id" }, { sandboxId: "sandbox_id" });
   m.sends("ControlDesktopRequest.sandbox_id: zero is not sent", { sandboxId: "" }, {});
   m.sends("ControlDesktopRequest.actions", { actions: [{}] }, { actions: [{}] });
+  m.sends("ControlDesktopRequest.skip_screenshot", { skipScreenshot: true }, { skipScreenshot: true });
+  m.sends("ControlDesktopRequest.skip_screenshot: zero is not sent", { skipScreenshot: false }, {});
+  m.sends("ControlDesktopRequest.screenshot_region", { screenshotRegion: {} }, { screenshotRegion: {} });
+}
+
+{
+  const m = sending(w.ControlDesktopRequestSchema, (leaf: Init<typeof w.ScreenRegionSchema>): Init<typeof w.ControlDesktopRequestSchema> => ({ screenshotRegion: leaf }), async (api, given: p.ScreenRegionInput) => api.controlDesktop({ screenshotRegion: given }), { atConnection: true });
+  m.sends("ScreenRegion: nothing set", {}, {});
+  m.sends("ScreenRegion.x", { x: -1001 }, { x: -1001 });
+  m.sends("ScreenRegion.x: zero is not sent", { x: 0 }, {});
+  m.sends("ScreenRegion.y", { y: -1002 }, { y: -1002 });
+  m.sends("ScreenRegion.y: zero is not sent", { y: 0 }, {});
+  m.sends("ScreenRegion.width", { width: -1003 }, { width: -1003 });
+  m.sends("ScreenRegion.width: zero is not sent", { width: 0 }, {});
+  m.sends("ScreenRegion.height", { height: -1004 }, { height: -1004 });
+  m.sends("ScreenRegion.height: zero is not sent", { height: 0 }, {});
 }
 
 {
@@ -487,7 +503,29 @@ import type * as p from "pethost/sandboxes";
   m.sends("DesktopAction.press_keys: zero", { pressKeys: "" }, { action: { case: "pressKeys", value: "" } });
   m.sends("DesktopAction.wait_ms", { waitMs: 1007 }, { action: { case: "waitMs", value: 1007 } });
   m.sends("DesktopAction.wait_ms: zero", { waitMs: 0 }, { action: { case: "waitMs", value: 0 } });
+  m.sends("DesktopAction.mouse_down", { mouseDown: {} }, { action: { case: "mouseDown", value: {} } });
+  m.sends("DesktopAction.mouse_up", { mouseUp: {} }, { action: { case: "mouseUp", value: {} } });
+  m.sends("DesktopAction.hold_keys", { holdKeys: {} }, { action: { case: "holdKeys", value: {} } });
   m.refuses("DesktopAction.action: two members", { click: {}, moveMouse: {} }, "action: click and moveMouse are both set; set one");
+}
+
+{
+  const m = sending(w.ControlDesktopRequestSchema, (leaf: Init<typeof w.MouseButtonChangeSchema>): Init<typeof w.ControlDesktopRequestSchema> => ({ actions: [{ action: { case: "mouseDown", value: leaf } }] }), async (api, given: p.MouseButtonChangeInput) => api.controlDesktop({ actions: [{ mouseDown: given }] }), { atConnection: true });
+  m.sends("MouseButtonChange: nothing set", {}, {});
+  m.sends("MouseButtonChange.button: LEFT", { button: "LEFT" }, { button: w.MouseButton.LEFT });
+  m.sends("MouseButtonChange.button: RIGHT", { button: "RIGHT" }, { button: w.MouseButton.RIGHT });
+  m.sends("MouseButtonChange.button: MIDDLE", { button: "MIDDLE" }, { button: w.MouseButton.MIDDLE });
+  m.sends("MouseButtonChange.button: BACK", { button: "BACK" }, { button: w.MouseButton.BACK });
+  m.sends("MouseButtonChange.button: FORWARD", { button: "FORWARD" }, { button: w.MouseButton.FORWARD });
+}
+
+{
+  const m = sending(w.ControlDesktopRequestSchema, (leaf: Init<typeof w.HoldKeysSchema>): Init<typeof w.ControlDesktopRequestSchema> => ({ actions: [{ action: { case: "holdKeys", value: leaf } }] }), async (api, given: p.HoldKeysInput) => api.controlDesktop({ actions: [{ holdKeys: given }] }), { atConnection: true });
+  m.sends("HoldKeys: nothing set", {}, {});
+  m.sends("HoldKeys.keys", { keys: "keys" }, { keys: "keys" });
+  m.sends("HoldKeys.keys: zero is not sent", { keys: "" }, {});
+  m.sends("HoldKeys.duration_ms", { durationMs: 1002 }, { durationMs: 1002 });
+  m.sends("HoldKeys.duration_ms: zero is not sent", { durationMs: 0 }, {});
 }
 
 {
@@ -509,16 +547,22 @@ import type * as p from "pethost/sandboxes";
   m.sends("Click.button: LEFT", { button: "LEFT" }, { button: w.MouseButton.LEFT });
   m.sends("Click.button: RIGHT", { button: "RIGHT" }, { button: w.MouseButton.RIGHT });
   m.sends("Click.button: MIDDLE", { button: "MIDDLE" }, { button: w.MouseButton.MIDDLE });
+  m.sends("Click.button: BACK", { button: "BACK" }, { button: w.MouseButton.BACK });
+  m.sends("Click.button: FORWARD", { button: "FORWARD" }, { button: w.MouseButton.FORWARD });
   m.sends("Click.count", { count: -1004 }, { count: -1004 });
   m.sends("Click.count: zero is not sent", { count: 0 }, {});
   m.sends("Click.hold_keys", { holdKeys: "hold_keys" }, { holdKeys: "hold_keys" });
   m.sends("Click.hold_keys: zero is not sent", { holdKeys: "" }, {});
+  m.sends("Click.at_pointer", { atPointer: true }, { atPointer: true });
+  m.sends("Click.at_pointer: zero is not sent", { atPointer: false }, {});
 }
 
 {
   const m = sending(w.ControlDesktopRequestSchema, (leaf: Init<typeof w.DragSchema>): Init<typeof w.ControlDesktopRequestSchema> => ({ actions: [{ action: { case: "drag", value: leaf } }] }), async (api, given: p.DragInput) => api.controlDesktop({ actions: [{ drag: given }] }), { atConnection: true });
   m.sends("Drag: nothing set", {}, {});
   m.sends("Drag.path", { path: [{}] }, { path: [{}] });
+  m.sends("Drag.hold_keys", { holdKeys: "hold_keys" }, { holdKeys: "hold_keys" });
+  m.sends("Drag.hold_keys: zero is not sent", { holdKeys: "" }, {});
 }
 
 {
@@ -532,6 +576,10 @@ import type * as p from "pethost/sandboxes";
   m.sends("Scroll.down: zero is not sent", { down: 0 }, {});
   m.sends("Scroll.right", { right: -1004 }, { right: -1004 });
   m.sends("Scroll.right: zero is not sent", { right: 0 }, {});
+  m.sends("Scroll.hold_keys", { holdKeys: "hold_keys" }, { holdKeys: "hold_keys" });
+  m.sends("Scroll.hold_keys: zero is not sent", { holdKeys: "" }, {});
+  m.sends("Scroll.at_pointer", { atPointer: true }, { atPointer: true });
+  m.sends("Scroll.at_pointer: zero is not sent", { atPointer: false }, {});
 }
 
 {
@@ -547,6 +595,7 @@ import type * as p from "pethost/sandboxes";
   m.sends("CreateLinkRequest.download_path: zero", { downloadPath: "" }, { target: { case: "downloadPath", value: "" } });
   m.sends("CreateLinkRequest.upload_path", { uploadPath: "upload_path" }, { target: { case: "uploadPath", value: "upload_path" } });
   m.sends("CreateLinkRequest.upload_path: zero", { uploadPath: "" }, { target: { case: "uploadPath", value: "" } });
+  m.sends("CreateLinkRequest.browser", { browser: {} }, { target: { case: "browser", value: {} } });
   m.sends("CreateLinkRequest.ttl_seconds", { ttlSeconds: 1007 }, { ttlSeconds: 1007 });
   m.sends("CreateLinkRequest.ttl_seconds: zero is not sent", { ttlSeconds: 0 }, {});
   m.refuses("CreateLinkRequest.target: two members", { port: 1002, terminal: {} }, "target: port and terminal are both set; set one");
@@ -564,6 +613,11 @@ import type * as p from "pethost/sandboxes";
   m.sends("DesktopLink: nothing set", {}, {});
   m.sends("DesktopLink.view_only", { viewOnly: true }, { viewOnly: true });
   m.sends("DesktopLink.view_only: zero is not sent", { viewOnly: false }, {});
+}
+
+{
+  const m = sending(w.CreateLinkRequestSchema, (leaf: Init<typeof w.BrowserLinkSchema>): Init<typeof w.CreateLinkRequestSchema> => ({ target: { case: "browser", value: leaf } }), async (api, given: p.BrowserLinkInput) => api.createLink({ browser: given }), { atConnection: true });
+  m.sends("BrowserLink: nothing set", {}, {});
 }
 
 {

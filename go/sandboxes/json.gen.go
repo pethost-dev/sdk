@@ -795,6 +795,15 @@ func (v *ControlDesktopRequest) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v ScreenRegion) MarshalJSON() ([]byte, error) { return marshalJSON(toWireScreenRegion(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *ScreenRegion) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireScreenRegion)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v ControlDesktopResponse) MarshalJSON() ([]byte, error) {
 	return marshalJSON(toWireControlDesktopResponse(v))
 }
@@ -850,6 +859,52 @@ func (v DesktopActionScroll) MarshalJSON() ([]byte, error) { return Scroll(v).Ma
 func (v *DesktopActionScroll) UnmarshalJSON(data []byte) error {
 	return (*Scroll)(v).UnmarshalJSON(data)
 }
+
+// MarshalJSON writes the member alone as the API's JSON of a [MouseButtonChange].
+func (v DesktopActionMouseDown) MarshalJSON() ([]byte, error) {
+	return MouseButtonChange(v).MarshalJSON()
+}
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [MouseButtonChange].
+func (v *DesktopActionMouseDown) UnmarshalJSON(data []byte) error {
+	return (*MouseButtonChange)(v).UnmarshalJSON(data)
+}
+
+// MarshalJSON writes the member alone as the API's JSON of a [MouseButtonChange].
+func (v DesktopActionMouseUp) MarshalJSON() ([]byte, error) {
+	return MouseButtonChange(v).MarshalJSON()
+}
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [MouseButtonChange].
+func (v *DesktopActionMouseUp) UnmarshalJSON(data []byte) error {
+	return (*MouseButtonChange)(v).UnmarshalJSON(data)
+}
+
+// MarshalJSON writes the member alone as the API's JSON of a [HoldKeys].
+func (v DesktopActionHoldKeys) MarshalJSON() ([]byte, error) { return HoldKeys(v).MarshalJSON() }
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [HoldKeys].
+func (v *DesktopActionHoldKeys) UnmarshalJSON(data []byte) error {
+	return (*HoldKeys)(v).UnmarshalJSON(data)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v MouseButtonChange) MarshalJSON() ([]byte, error) {
+	return marshalJSON(toWireMouseButtonChange(v))
+}
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *MouseButtonChange) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireMouseButtonChange)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v HoldKeys) MarshalJSON() ([]byte, error) { return marshalJSON(toWireHoldKeys(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *HoldKeys) UnmarshalJSON(data []byte) error { return unmarshalJSON(data, v, fromWireHoldKeys) }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v Point) MarshalJSON() ([]byte, error) { return marshalJSON(toWirePoint(v)) }
@@ -913,6 +968,14 @@ func (v *CreateLinkDesktop) UnmarshalJSON(data []byte) error {
 	return (*DesktopLink)(v).UnmarshalJSON(data)
 }
 
+// MarshalJSON writes the member alone as the API's JSON of a [BrowserLink].
+func (v CreateLinkBrowser) MarshalJSON() ([]byte, error) { return BrowserLink(v).MarshalJSON() }
+
+// UnmarshalJSON reads the member alone from the API's JSON of a [BrowserLink].
+func (v *CreateLinkBrowser) UnmarshalJSON(data []byte) error {
+	return (*BrowserLink)(v).UnmarshalJSON(data)
+}
+
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
 func (v TerminalLink) MarshalJSON() ([]byte, error) { return marshalJSON(toWireTerminalLink(v)) }
 
@@ -929,6 +992,15 @@ func (v DesktopLink) MarshalJSON() ([]byte, error) { return marshalJSON(toWireDe
 // API does not have is refused.
 func (v *DesktopLink) UnmarshalJSON(data []byte) error {
 	return unmarshalJSON(data, v, fromWireDesktopLink)
+}
+
+// MarshalJSON writes the message as the API's JSON, for encoding/json.
+func (v BrowserLink) MarshalJSON() ([]byte, error) { return marshalJSON(toWireBrowserLink(v)) }
+
+// UnmarshalJSON reads the message whole from the API's JSON, for encoding/json: a field the
+// API does not have is refused.
+func (v *BrowserLink) UnmarshalJSON(data []byte) error {
+	return unmarshalJSON(data, v, fromWireBrowserLink)
 }
 
 // MarshalJSON writes the message as the API's JSON, for encoding/json.
@@ -1290,7 +1362,7 @@ func (v *DesktopFailure) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON writes the value as the API's JSON has it: its whole name there,
-// "MOUSE_BUTTON_MIDDLE" for [MouseButtonMiddle], or its number when the package has no name
+// "MOUSE_BUTTON_FORWARD" for [MouseButtonForward], or its number when the package has no name
 // for it.
 func (v MouseButton) MarshalJSON() ([]byte, error) { return marshalEnumJSON(toWireMouseButton(v)) }
 

@@ -79,7 +79,7 @@ func TestConnectionCalls(t *testing.T) {
 		if got := p.server.header.Get("Authorization"); got != "Bearer "+runtimeToken {
 			t.Errorf("%s carried %q to the server", call.name, got)
 		}
-		if got := p.server.header.Get("User-Agent"); got != "pethost-go/0.9.0" {
+		if got := p.server.header.Get("User-Agent"); got != "pethost-go/0.10.0" {
 			t.Errorf("%s said it was %q", call.name, got)
 		}
 	}

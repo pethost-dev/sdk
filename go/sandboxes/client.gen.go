@@ -361,7 +361,9 @@ func (c *Client) WatchSandboxEvents(ctx context.Context, request *WatchSandboxEv
 // Refused ([LimitReached], [Limits.TemplateGib]) while the workspace's templates take its
 // [Limits.TemplateGib], or while another of its versions is SAVING; one whose own bytes would
 // pass what is left is FAILED before its upload. Refused while nothing pays for the workspace
-// ([UsageUnpaid]). Sandboxes keep the version they started from.
+// ([UsageUnpaid]). Sandboxes keep the version they started from. The disk holds the browser's
+// profile: every sandbox started from the version is signed in to the sites the sandbox was,
+// as whoever signed in, so sign out first of what its users must not reach.
 func (c *Client) CreateTemplate(ctx context.Context, request *CreateTemplateRequest) (*Template, error) {
 	sent := orZero(request)
 	if sent.RequestID == "" {
@@ -595,10 +597,12 @@ func (c *Client) WatchFiles(ctx context.Context, request *WatchFilesRequest) ite
 //
 // It is called at the Connection of the request's SandboxID, as [Client] says.
 //
-// Does the actions in order, then answers with a screenshot of the screen as they left it.
-// Stops at the first that fails; with no actions, just the screenshot. The first starts the
-// desktop, which takes some seconds. [CodeFailedPrecondition] = the desktop did not start (its
-// words).
+// Does the actions in order, then answers with a screenshot of the screen as they left it, and
+// where the pointer is. Stops at the first that fails; with no actions, just the screenshot.
+// The first starts the desktop, which takes some seconds. [CodeFailedPrecondition] = the
+// desktop did not start, or the sandbox has not started since its server took the release of a
+// field the request holds: stop it and start it again (its words say which). A program that
+// drives the browser by its pages rather than by the screen takes [Client.CreateLink] browser.
 func (c *Client) ControlDesktop(ctx context.Context, request *ControlDesktopRequest) (*ControlDesktopResponse, error) {
 	sent := orZero(request)
 	response, err := atConnection(ctx, c, sent.SandboxID, sandboxesv1connect.NewSandboxRuntimeServiceClient, sandboxesv1connect.SandboxRuntimeServiceClient.ControlDesktop, toWireControlDesktopRequest(sent))
@@ -613,8 +617,9 @@ func (c *Client) ControlDesktop(ctx context.Context, request *ControlDesktopRequ
 // It is called at the Connection of the request's SandboxID, as [Client] says.
 //
 // A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-// to download or upload; or a private port's address and a token for it. It expires. A
-// download or upload link works once. Making one wakes nothing.
+// to download or upload, or the browser for Playwright or Puppeteer ([BrowserLink]); or a
+// private port's address and a token for it. It expires. A download or upload link works once.
+// Making one wakes nothing.
 //
 // A private port answers only a request that sends its token as the header `Pethost-Token:
 // <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes

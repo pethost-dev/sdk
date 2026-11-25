@@ -18,6 +18,7 @@ from pethost.sandboxes._types import (
     Agent,
     AgentEvent,
     AgentTurn,
+    BrowserLink,
     Command,
     CommandOutput,
     Connection,
@@ -42,6 +43,7 @@ from pethost.sandboxes._types import (
     SandboxEventKind,
     SandboxSettings,
     SandboxState,
+    ScreenRegion,
     Secret,
     Template,
     TerminalLink,
@@ -596,7 +598,9 @@ class AsyncSandboxes:
         Refused (LimitReached, template_gib) while the workspace's templates take its template_gib,
         or while another of its versions is SAVING; one whose own bytes would pass what is left is
         FAILED before its upload. Refused while nothing pays for the workspace (UsageUnpaid).
-        Sandboxes keep the version they started from.
+        Sandboxes keep the version they started from. The disk holds the browser's profile: every
+        sandbox started from the version is signed in to the sites the sandbox was, as whoever
+        signed in, so sign out first of what its users must not reach.
 
         Args:
             name: A name the workspace has gets its next version.
@@ -881,17 +885,25 @@ class AsyncSandboxes:
         sandbox_id: str,
         *,
         actions: Sequence[DesktopAction] = (),
+        skip_screenshot: bool = False,
+        screenshot_region: ScreenRegion | None = None,
     ) -> ControlDesktopResponse:
         """Use the desktop.
 
-        Does the actions in order, then answers with a screenshot of the screen as they left it.
-        Stops at the first that fails; with no actions, just the screenshot. The first starts the
-        desktop, which takes some seconds. FailedPreconditionError = the desktop did not start (its
-        words).
+        Does the actions in order, then answers with a screenshot of the screen as they left it, and
+        where the pointer is. Stops at the first that fails; with no actions, just the screenshot.
+        The first starts the desktop, which takes some seconds. FailedPreconditionError = the desktop did
+        not start, or the sandbox has not started since its server took the release of a field the
+        request holds: stop it and start it again (its words say which). A program that drives the
+        browser by its pages rather than by the screen takes create_link browser.
 
         Destructive: it may delete or overwrite something.
+
+        Args:
+            skip_screenshot: True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a caller that does not look after every action.
+            screenshot_region: Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the screen: a closer look at small text. The actions' points stay the screen's. Absent = the whole screen.
         """
-        return _convert.control_desktop_response_from_wire(await self._run(sandbox_id, _Runtime.control_desktop, _convert.control_desktop_request(sandbox_id=sandbox_id, actions=actions)))
+        return _convert.control_desktop_response_from_wire(await self._run(sandbox_id, _Runtime.control_desktop, _convert.control_desktop_request(sandbox_id=sandbox_id, actions=actions, skip_screenshot=skip_screenshot, screenshot_region=screenshot_region)))
 
     @overload
     async def create_link(
@@ -903,13 +915,15 @@ class AsyncSandboxes:
         desktop: None = None,
         download_path: None = None,
         upload_path: None = None,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -922,7 +936,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -942,13 +956,15 @@ class AsyncSandboxes:
         desktop: None = None,
         download_path: None = None,
         upload_path: None = None,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -961,7 +977,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -981,13 +997,15 @@ class AsyncSandboxes:
         desktop: None = None,
         download_path: None = None,
         upload_path: None = None,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -1000,7 +1018,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -1020,13 +1038,15 @@ class AsyncSandboxes:
         desktop: DesktopLink,
         download_path: None = None,
         upload_path: None = None,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -1039,7 +1059,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -1059,13 +1079,15 @@ class AsyncSandboxes:
         desktop: None = None,
         download_path: str,
         upload_path: None = None,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -1078,7 +1100,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -1098,13 +1120,15 @@ class AsyncSandboxes:
         desktop: None = None,
         download_path: None = None,
         upload_path: str,
+        browser: None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -1117,7 +1141,48 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
+
+        Args:
+            port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
+            download_path: GET the URL: the file, or a directory as a .tar.
+            upload_path: PUT the file's bytes to the URL; missing directories are made.
+            ttl_seconds: Absent = 3600; at most 86400.
+        """
+        ...
+
+    @overload
+    async def create_link(
+        self,
+        sandbox_id: str,
+        *,
+        port: None = None,
+        terminal: None = None,
+        desktop: None = None,
+        download_path: None = None,
+        upload_path: None = None,
+        browser: BrowserLink,
+        ttl_seconds: int = 0,
+    ) -> Link:
+        """Make a link.
+
+        A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
+
+        A private port answers only a request that sends its token as the header `Pethost-Token:
+        <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
+        takes the header off; the rest reaches the program as it was sent, Authorization and Cookie
+        included. A preflight that names the header is answered 204 by the server itself, and the
+        answer to a request whose token it took carries Access-Control-Allow-Origin with the request's
+        origin, without credentials, so that a page of any origin may call the port with a token it
+        holds. A browser's tab, a WebSocket or an image sends no such header: what a browser opens is a
+        public port (Ingress), or a port forwarded by `ssh -L`. Every sandbox's address is under one
+        domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
+        its pages set to its own address with the `__Host-` prefix.
+
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -1136,13 +1201,15 @@ class AsyncSandboxes:
         desktop: DesktopLink | None = None,
         download_path: str | None = None,
         upload_path: str | None = None,
+        browser: BrowserLink | None = None,
         ttl_seconds: int = 0,
     ) -> Link:
         """Make a link.
 
         A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-        to download or upload; or a private port's address and a token for it. It expires. A
-        download or upload link works once. Making one wakes nothing.
+        to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+        port's address and a token for it. It expires. A download or upload link works once. Making
+        one wakes nothing.
 
         A private port answers only a request that sends its token as the header `Pethost-Token:
         <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -1155,7 +1222,7 @@ class AsyncSandboxes:
         domain: the server takes the Domain off a cookie an answer sets, and an app keeps the cookies
         its pages set to its own address with the `__Host-` prefix.
 
-        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`.
+        At most one of `port`, `terminal`, `desktop`, `download_path`, `upload_path`, `browser`.
 
         Args:
             port: A private port, for a program or curl, not a browser tab: a person's browser opens a public port (update_sandbox settings.ingress.public_ports, whose url the answer holds). Link.url is its address and Link.token a token for it alone, which each request sends as `Pethost-Token: <token>`: one without it, or with another token, is answered 401.
@@ -1163,7 +1230,7 @@ class AsyncSandboxes:
             upload_path: PUT the file's bytes to the URL; missing directories are made.
             ttl_seconds: Absent = 3600; at most 86400.
         """
-        return _convert.link_from_wire(await self._run(sandbox_id, _Runtime.create_link, _convert.create_link_request(sandbox_id=sandbox_id, port=port, terminal=terminal, desktop=desktop, download_path=download_path, upload_path=upload_path, ttl_seconds=ttl_seconds)))
+        return _convert.link_from_wire(await self._run(sandbox_id, _Runtime.create_link, _convert.create_link_request(sandbox_id=sandbox_id, port=port, terminal=terminal, desktop=desktop, download_path=download_path, upload_path=upload_path, browser=browser, ttl_seconds=ttl_seconds)))
 
     async def prompt_agent(
         self,

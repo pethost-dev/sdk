@@ -89,18 +89,22 @@ export const empty = {
   WriteFilesResponse: () => ({ doneCount: 0, failureMessage: "" }),
   WatchFilesRequest: () => ({ sandboxId: "", path: "", recursive: false }),
   FileEvent: () => ({ path: "", toPath: "" }),
-  ControlDesktopRequest: () => ({ sandboxId: "", actions: [] }),
+  ControlDesktopRequest: () => ({ sandboxId: "", actions: [], skipScreenshot: false }),
+  ScreenRegion: () => ({ x: 0, y: 0, width: 0, height: 0 }),
   ControlDesktopResponse: () => ({ doneCount: 0, failureMessage: "" }),
-  Screenshot: () => ({ image: new Uint8Array(), mimeType: "", width: 0, height: 0, cursorX: 0, cursorY: 0 }),
+  Screenshot: () => ({ image: new Uint8Array(), mimeType: "", width: 0, height: 0, cursorX: 0, cursorY: 0, scale: 0 }),
   DesktopAction: () => ({}),
+  MouseButtonChange: () => ({}),
+  HoldKeys: () => ({ keys: "", durationMs: 0 }),
   Point: () => ({ x: 0, y: 0 }),
-  Click: () => ({ x: 0, y: 0, count: 0, holdKeys: "" }),
-  Drag: () => ({ path: [] }),
-  Scroll: () => ({ x: 0, y: 0, down: 0, right: 0 }),
+  Click: () => ({ x: 0, y: 0, count: 0, holdKeys: "", atPointer: false }),
+  Drag: () => ({ path: [], holdKeys: "" }),
+  Scroll: () => ({ x: 0, y: 0, down: 0, right: 0, holdKeys: "", atPointer: false }),
   Desktop: () => ({ width: 0, height: 0 }),
   CreateLinkRequest: () => ({ sandboxId: "", ttlSeconds: 0 }),
   TerminalLink: () => ({ command: "" }),
   DesktopLink: () => ({ viewOnly: false }),
+  BrowserLink: () => ({}),
   Link: () => ({ url: "", token: "" }),
   PromptAgentRequest: () => ({ sandboxId: "", prompt: "", conversationId: "", model: "", cwd: "", requestId: "" }),
   AgentTurn: () => ({ turnId: "", conversationId: "", model: "", reply: "", failureMessage: "", inputTokens: 0n, outputTokens: 0n }),
@@ -687,6 +691,7 @@ export const empty = {
   m.reads("Screenshot.height", { height: -1004 }, { ...empty.Screenshot(), height: -1004 });
   m.reads("Screenshot.cursor_x", { cursorX: -1005 }, { ...empty.Screenshot(), cursorX: -1005 });
   m.reads("Screenshot.cursor_y", { cursorY: -1006 }, { ...empty.Screenshot(), cursorY: -1006 });
+  m.reads("Screenshot.scale", { scale: -1007 }, { ...empty.Screenshot(), scale: -1007 });
 }
 
 {

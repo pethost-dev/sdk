@@ -949,6 +949,18 @@ import * as p from "pethost/sandboxes";
   m.refuses("ControlDesktopRequest: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("ControlDesktopRequest.sandbox_id", { sandboxId: "sandbox_id" }, { ...empty.ControlDesktopRequest(), sandboxId: "sandbox_id" });
   m.converts("ControlDesktopRequest.actions", { actions: [{}] }, { ...empty.ControlDesktopRequest(), actions: [empty.DesktopAction()] });
+  m.converts("ControlDesktopRequest.skip_screenshot", { skipScreenshot: true }, { ...empty.ControlDesktopRequest(), skipScreenshot: true });
+  m.converts("ControlDesktopRequest.screenshot_region", { screenshotRegion: {} }, { ...empty.ControlDesktopRequest(), screenshotRegion: empty.ScreenRegion() });
+}
+
+{
+  const m = json(p.ScreenRegion, w.ScreenRegionSchema);
+  m.converts("ScreenRegion: nothing set", {}, empty.ScreenRegion());
+  m.refuses("ScreenRegion: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("ScreenRegion.x", { x: -1001 }, { ...empty.ScreenRegion(), x: -1001 });
+  m.converts("ScreenRegion.y", { y: -1002 }, { ...empty.ScreenRegion(), y: -1002 });
+  m.converts("ScreenRegion.width", { width: -1003 }, { ...empty.ScreenRegion(), width: -1003 });
+  m.converts("ScreenRegion.height", { height: -1004 }, { ...empty.ScreenRegion(), height: -1004 });
 }
 
 {
@@ -974,6 +986,7 @@ import * as p from "pethost/sandboxes";
   m.converts("Screenshot.height", { height: -1004 }, { ...empty.Screenshot(), height: -1004 });
   m.converts("Screenshot.cursor_x", { cursorX: -1005 }, { ...empty.Screenshot(), cursorX: -1005 });
   m.converts("Screenshot.cursor_y", { cursorY: -1006 }, { ...empty.Screenshot(), cursorY: -1006 });
+  m.converts("Screenshot.scale", { scale: -1007 }, { ...empty.Screenshot(), scale: -1007 });
 }
 
 {
@@ -990,6 +1003,30 @@ import * as p from "pethost/sandboxes";
   m.converts("DesktopAction.press_keys: zero", { action: { case: "pressKeys", value: "" } }, { ...empty.DesktopAction(), pressKeys: "" });
   m.converts("DesktopAction.wait_ms", { action: { case: "waitMs", value: 1007 } }, { ...empty.DesktopAction(), waitMs: 1007 });
   m.converts("DesktopAction.wait_ms: zero", { action: { case: "waitMs", value: 0 } }, { ...empty.DesktopAction(), waitMs: 0 });
+  m.converts("DesktopAction.mouse_down", { action: { case: "mouseDown", value: {} } }, { ...empty.DesktopAction(), mouseDown: empty.MouseButtonChange() });
+  m.converts("DesktopAction.mouse_up", { action: { case: "mouseUp", value: {} } }, { ...empty.DesktopAction(), mouseUp: empty.MouseButtonChange() });
+  m.converts("DesktopAction.hold_keys", { action: { case: "holdKeys", value: {} } }, { ...empty.DesktopAction(), holdKeys: empty.HoldKeys() });
+}
+
+{
+  const m = json(p.MouseButtonChange, w.MouseButtonChangeSchema);
+  m.converts("MouseButtonChange: nothing set", {}, empty.MouseButtonChange());
+  m.refuses("MouseButtonChange: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("MouseButtonChange.button: LEFT", { button: w.MouseButton.LEFT }, { ...empty.MouseButtonChange(), button: "LEFT" });
+  m.converts("MouseButtonChange.button: RIGHT", { button: w.MouseButton.RIGHT }, { ...empty.MouseButtonChange(), button: "RIGHT" });
+  m.converts("MouseButtonChange.button: MIDDLE", { button: w.MouseButton.MIDDLE }, { ...empty.MouseButtonChange(), button: "MIDDLE" });
+  m.converts("MouseButtonChange.button: BACK", { button: w.MouseButton.BACK }, { ...empty.MouseButtonChange(), button: "BACK" });
+  m.converts("MouseButtonChange.button: FORWARD", { button: w.MouseButton.FORWARD }, { ...empty.MouseButtonChange(), button: "FORWARD" });
+  m.refuses("MouseButtonChange.button: a name newer than the SDK", { button: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
+  m.refuses("MouseButtonChange.button: a number newer than the SDK", { button: 9999 }, "9999");
+}
+
+{
+  const m = json(p.HoldKeys, w.HoldKeysSchema);
+  m.converts("HoldKeys: nothing set", {}, empty.HoldKeys());
+  m.refuses("HoldKeys: a field the API does not have", { no_such_field: true }, "no_such_field");
+  m.converts("HoldKeys.keys", { keys: "keys" }, { ...empty.HoldKeys(), keys: "keys" });
+  m.converts("HoldKeys.duration_ms", { durationMs: 1002 }, { ...empty.HoldKeys(), durationMs: 1002 });
 }
 
 {
@@ -1009,10 +1046,13 @@ import * as p from "pethost/sandboxes";
   m.converts("Click.button: LEFT", { button: w.MouseButton.LEFT }, { ...empty.Click(), button: "LEFT" });
   m.converts("Click.button: RIGHT", { button: w.MouseButton.RIGHT }, { ...empty.Click(), button: "RIGHT" });
   m.converts("Click.button: MIDDLE", { button: w.MouseButton.MIDDLE }, { ...empty.Click(), button: "MIDDLE" });
+  m.converts("Click.button: BACK", { button: w.MouseButton.BACK }, { ...empty.Click(), button: "BACK" });
+  m.converts("Click.button: FORWARD", { button: w.MouseButton.FORWARD }, { ...empty.Click(), button: "FORWARD" });
   m.refuses("Click.button: a name newer than the SDK", { button: "NEWER_THAN_THE_SDK" }, "NEWER_THAN_THE_SDK");
   m.refuses("Click.button: a number newer than the SDK", { button: 9999 }, "9999");
   m.converts("Click.count", { count: -1004 }, { ...empty.Click(), count: -1004 });
   m.converts("Click.hold_keys", { holdKeys: "hold_keys" }, { ...empty.Click(), holdKeys: "hold_keys" });
+  m.converts("Click.at_pointer", { atPointer: true }, { ...empty.Click(), atPointer: true });
 }
 
 {
@@ -1020,6 +1060,7 @@ import * as p from "pethost/sandboxes";
   m.converts("Drag: nothing set", {}, empty.Drag());
   m.refuses("Drag: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("Drag.path", { path: [{}] }, { ...empty.Drag(), path: [empty.Point()] });
+  m.converts("Drag.hold_keys", { holdKeys: "hold_keys" }, { ...empty.Drag(), holdKeys: "hold_keys" });
 }
 
 {
@@ -1030,6 +1071,8 @@ import * as p from "pethost/sandboxes";
   m.converts("Scroll.y", { y: -1002 }, { ...empty.Scroll(), y: -1002 });
   m.converts("Scroll.down", { down: -1003 }, { ...empty.Scroll(), down: -1003 });
   m.converts("Scroll.right", { right: -1004 }, { ...empty.Scroll(), right: -1004 });
+  m.converts("Scroll.hold_keys", { holdKeys: "hold_keys" }, { ...empty.Scroll(), holdKeys: "hold_keys" });
+  m.converts("Scroll.at_pointer", { atPointer: true }, { ...empty.Scroll(), atPointer: true });
 }
 
 {
@@ -1053,6 +1096,7 @@ import * as p from "pethost/sandboxes";
   m.converts("CreateLinkRequest.download_path: zero", { target: { case: "downloadPath", value: "" } }, { ...empty.CreateLinkRequest(), downloadPath: "" });
   m.converts("CreateLinkRequest.upload_path", { target: { case: "uploadPath", value: "upload_path" } }, { ...empty.CreateLinkRequest(), uploadPath: "upload_path" });
   m.converts("CreateLinkRequest.upload_path: zero", { target: { case: "uploadPath", value: "" } }, { ...empty.CreateLinkRequest(), uploadPath: "" });
+  m.converts("CreateLinkRequest.browser", { target: { case: "browser", value: {} } }, { ...empty.CreateLinkRequest(), browser: empty.BrowserLink() });
   m.converts("CreateLinkRequest.ttl_seconds", { ttlSeconds: 1007 }, { ...empty.CreateLinkRequest(), ttlSeconds: 1007 });
 }
 
@@ -1068,6 +1112,12 @@ import * as p from "pethost/sandboxes";
   m.converts("DesktopLink: nothing set", {}, empty.DesktopLink());
   m.refuses("DesktopLink: a field the API does not have", { no_such_field: true }, "no_such_field");
   m.converts("DesktopLink.view_only", { viewOnly: true }, { ...empty.DesktopLink(), viewOnly: true });
+}
+
+{
+  const m = json(p.BrowserLink, w.BrowserLinkSchema);
+  m.converts("BrowserLink: nothing set", {}, empty.BrowserLink());
+  m.refuses("BrowserLink: a field the API does not have", { no_such_field: true }, "no_such_field");
 }
 
 {

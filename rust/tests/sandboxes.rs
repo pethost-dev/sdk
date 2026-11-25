@@ -433,12 +433,14 @@ mod samples {
     }
 
     pub fn mouse_button(k: usize) -> types::MouseButton {
-        match k % 5 {
+        match k % 7 {
             0 => types::MouseButton::Unspecified,
             1 => types::MouseButton::Left,
             2 => types::MouseButton::Right,
             3 => types::MouseButton::Middle,
-            _ => types::MouseButton::Unrecognized(4),
+            4 => types::MouseButton::Back,
+            5 => types::MouseButton::Forward,
+            _ => types::MouseButton::Unrecognized(6),
         }
     }
 
@@ -1212,6 +1214,17 @@ mod samples {
                     samples::desktop_action(k + 2, later),
                 ],
             ),
+            skip_screenshot: states::flag(1, k),
+            screenshot_region: states::maybe(k, samples::screen_region(k + 3, later)),
+        }
+    }
+
+    pub fn screen_region(k: usize, later: bool) -> types::ScreenRegion {
+        types::ScreenRegion {
+            x: states::plain(k, -(states::number(1, k) as i32)),
+            y: states::plain(k, -(states::number(2, k) as i32)),
+            width: states::plain(k, -(states::number(3, k) as i32)),
+            height: states::plain(k, -(states::number(4, k) as i32)),
         }
     }
 
@@ -1232,12 +1245,13 @@ mod samples {
             message.height = states::plain(k, -(states::number(4, k) as i32));
             message.cursor_x = states::plain(k, -(states::number(5, k) as i32));
             message.cursor_y = states::plain(k, -(states::number(6, k) as i32));
+            message.scale = states::plain(k, -(states::number(7, k) as i32));
         })
     }
 
     pub fn desktop_action(k: usize, later: bool) -> types::DesktopAction {
         types::DesktopAction {
-            action: match k % 16 {
+            action: match k % 22 {
                 0 => None,
                 1 => None,
                 2 => Some(types::DesktopActionAction::Click(samples::click(k, later))),
@@ -1247,14 +1261,37 @@ mod samples {
                 6 => Some(types::DesktopActionAction::TypeText(states::text("type_text", k))),
                 7 => Some(types::DesktopActionAction::PressKeys(states::text("press_keys", k))),
                 8 => Some(types::DesktopActionAction::WaitMs(states::number(7, k))),
-                9 => Some(types::DesktopActionAction::Click(Default::default())),
-                10 => Some(types::DesktopActionAction::MoveMouse(Default::default())),
-                11 => Some(types::DesktopActionAction::Drag(Default::default())),
-                12 => Some(types::DesktopActionAction::Scroll(Default::default())),
-                13 => Some(types::DesktopActionAction::TypeText(Default::default())),
-                14 => Some(types::DesktopActionAction::PressKeys(Default::default())),
-                _ => Some(types::DesktopActionAction::WaitMs(Default::default())),
+                9 => Some(types::DesktopActionAction::MouseDown(samples::mouse_button_change(
+                    k, later,
+                ))),
+                10 => Some(types::DesktopActionAction::MouseUp(samples::mouse_button_change(
+                    k, later,
+                ))),
+                11 => Some(types::DesktopActionAction::HoldKeys(samples::hold_keys(k, later))),
+                12 => Some(types::DesktopActionAction::Click(Default::default())),
+                13 => Some(types::DesktopActionAction::MoveMouse(Default::default())),
+                14 => Some(types::DesktopActionAction::Drag(Default::default())),
+                15 => Some(types::DesktopActionAction::Scroll(Default::default())),
+                16 => Some(types::DesktopActionAction::TypeText(Default::default())),
+                17 => Some(types::DesktopActionAction::PressKeys(Default::default())),
+                18 => Some(types::DesktopActionAction::WaitMs(Default::default())),
+                19 => Some(types::DesktopActionAction::MouseDown(Default::default())),
+                20 => Some(types::DesktopActionAction::MouseUp(Default::default())),
+                _ => Some(types::DesktopActionAction::HoldKeys(Default::default())),
             },
+        }
+    }
+
+    pub fn mouse_button_change(k: usize, later: bool) -> types::MouseButtonChange {
+        types::MouseButtonChange {
+            button: samples::mouse_button(k),
+        }
+    }
+
+    pub fn hold_keys(k: usize, later: bool) -> types::HoldKeys {
+        types::HoldKeys {
+            keys: states::plain(k, states::text("keys", k)),
+            duration_ms: states::plain(k, states::number(2, k)),
         }
     }
 
@@ -1272,12 +1309,14 @@ mod samples {
             button: samples::mouse_button(k + 2),
             count: states::plain(k, -(states::number(4, k) as i32)),
             hold_keys: states::plain(k, states::text("hold_keys", k)),
+            at_pointer: states::flag(1, k),
         }
     }
 
     pub fn drag(k: usize, later: bool) -> types::Drag {
         types::Drag {
             path: states::many(k, [samples::point(k, later), samples::point(k + 1, later)]),
+            hold_keys: states::plain(k, states::text("hold_keys", k)),
         }
     }
 
@@ -1287,6 +1326,8 @@ mod samples {
             y: states::plain(k, -(states::number(2, k) as i32)),
             down: states::plain(k, -(states::number(3, k) as i32)),
             right: states::plain(k, -(states::number(4, k) as i32)),
+            hold_keys: states::plain(k, states::text("hold_keys", k)),
+            at_pointer: states::flag(1, k),
         }
     }
 
@@ -1300,7 +1341,7 @@ mod samples {
     pub fn create_link_request(k: usize, later: bool) -> types::CreateLinkRequest {
         types::CreateLinkRequest {
             sandbox_id: states::plain(k, states::text("sandbox_id", k)),
-            target: match k % 12 {
+            target: match k % 14 {
                 0 => None,
                 1 => None,
                 2 => Some(types::CreateLinkRequestTarget::Port(states::number(2, k))),
@@ -1316,11 +1357,13 @@ mod samples {
                     "upload_path",
                     k,
                 ))),
-                7 => Some(types::CreateLinkRequestTarget::Port(Default::default())),
-                8 => Some(types::CreateLinkRequestTarget::Terminal(Default::default())),
-                9 => Some(types::CreateLinkRequestTarget::Desktop(Default::default())),
-                10 => Some(types::CreateLinkRequestTarget::DownloadPath(Default::default())),
-                _ => Some(types::CreateLinkRequestTarget::UploadPath(Default::default())),
+                7 => Some(types::CreateLinkRequestTarget::Browser(samples::browser_link(k, later))),
+                8 => Some(types::CreateLinkRequestTarget::Port(Default::default())),
+                9 => Some(types::CreateLinkRequestTarget::Terminal(Default::default())),
+                10 => Some(types::CreateLinkRequestTarget::Desktop(Default::default())),
+                11 => Some(types::CreateLinkRequestTarget::DownloadPath(Default::default())),
+                12 => Some(types::CreateLinkRequestTarget::UploadPath(Default::default())),
+                _ => Some(types::CreateLinkRequestTarget::Browser(Default::default())),
             },
             ttl_seconds: states::plain(k, states::number(7, k)),
         }
@@ -1336,6 +1379,10 @@ mod samples {
         types::DesktopLink {
             view_only: states::flag(1, k),
         }
+    }
+
+    pub fn browser_link(_k: usize, later: bool) -> types::BrowserLink {
+        types::BrowserLink {}
     }
 
     pub fn link(k: usize, later: bool) -> types::Link {
@@ -1704,12 +1751,14 @@ mod on_wire {
 
     pub fn mouse_button(k: usize) -> buffa::EnumValue<wire::MouseButton> {
         // By the proto's numbers: the variants' names are the converters' to get right.
-        let number = match k % 5 {
+        let number = match k % 7 {
             0 => 0,
             1 => 1,
             2 => 2,
             3 => 3,
-            _ => 4,
+            4 => 4,
+            5 => 5,
+            _ => 6,
         };
         buffa::EnumValue::from(number)
     }
@@ -2906,6 +2955,22 @@ mod on_wire {
                     on_wire::desktop_action(k + 2, received),
                 ],
             ),
+            skip_screenshot: states::present(states::flag(1, k)),
+            screenshot_region: states::maybe(k, on_wire::screen_region(k + 3, received)).into(),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn screen_region(k: usize, received: bool) -> wire::ScreenRegion {
+        let mut message = wire::ScreenRegion {
+            x: states::present(states::plain(k, -(states::number(1, k) as i32))),
+            y: states::present(states::plain(k, -(states::number(2, k) as i32))),
+            width: states::present(states::plain(k, -(states::number(3, k) as i32))),
+            height: states::present(states::plain(k, -(states::number(4, k) as i32))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2936,6 +3001,7 @@ mod on_wire {
             height: states::present(states::plain(k, -(states::number(4, k) as i32))),
             cursor_x: states::present(states::plain(k, -(states::number(5, k) as i32))),
             cursor_y: states::present(states::plain(k, -(states::number(6, k) as i32))),
+            scale: states::present(states::plain(k, -(states::number(7, k) as i32))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -2946,7 +3012,7 @@ mod on_wire {
 
     pub fn desktop_action(k: usize, received: bool) -> wire::DesktopAction {
         let mut message = wire::DesktopAction {
-            action: match k % 16 {
+            action: match k % 22 {
                 0 | 1 => None,
                 2 => Some(wire::__buffa::oneof::desktop_action::Action::Click(Box::new(
                     on_wire::click(k, received),
@@ -2971,20 +3037,59 @@ mod on_wire {
                 8 => Some(wire::__buffa::oneof::desktop_action::Action::WaitMs(states::number(
                     7, k,
                 ))),
-                9 => Some(wire::__buffa::oneof::desktop_action::Action::Click(Default::default())),
-                10 => Some(wire::__buffa::oneof::desktop_action::Action::MoveMouse(
+                9 => Some(wire::__buffa::oneof::desktop_action::Action::MouseDown(Box::new(
+                    on_wire::mouse_button_change(k, received),
+                ))),
+                10 => Some(wire::__buffa::oneof::desktop_action::Action::MouseUp(Box::new(
+                    on_wire::mouse_button_change(k, received),
+                ))),
+                11 => Some(wire::__buffa::oneof::desktop_action::Action::HoldKeys(Box::new(
+                    on_wire::hold_keys(k, received),
+                ))),
+                12 => Some(wire::__buffa::oneof::desktop_action::Action::Click(Default::default())),
+                13 => Some(wire::__buffa::oneof::desktop_action::Action::MoveMouse(
                     Default::default(),
                 )),
-                11 => Some(wire::__buffa::oneof::desktop_action::Action::Drag(Default::default())),
-                12 => Some(wire::__buffa::oneof::desktop_action::Action::Scroll(Default::default())),
-                13 => Some(wire::__buffa::oneof::desktop_action::Action::TypeText(
+                14 => Some(wire::__buffa::oneof::desktop_action::Action::Drag(Default::default())),
+                15 => Some(wire::__buffa::oneof::desktop_action::Action::Scroll(Default::default())),
+                16 => Some(wire::__buffa::oneof::desktop_action::Action::TypeText(
                     Default::default(),
                 )),
-                14 => Some(wire::__buffa::oneof::desktop_action::Action::PressKeys(
+                17 => Some(wire::__buffa::oneof::desktop_action::Action::PressKeys(
                     Default::default(),
                 )),
-                _ => Some(wire::__buffa::oneof::desktop_action::Action::WaitMs(Default::default())),
+                18 => Some(wire::__buffa::oneof::desktop_action::Action::WaitMs(Default::default())),
+                19 => Some(wire::__buffa::oneof::desktop_action::Action::MouseDown(
+                    Default::default(),
+                )),
+                20 => Some(wire::__buffa::oneof::desktop_action::Action::MouseUp(Default::default())),
+                _ => Some(wire::__buffa::oneof::desktop_action::Action::HoldKeys(
+                    Default::default(),
+                )),
             },
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn mouse_button_change(k: usize, received: bool) -> wire::MouseButtonChange {
+        let mut message = wire::MouseButtonChange {
+            button: states::set(on_wire::mouse_button(k)),
+            ..Default::default()
+        };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn hold_keys(k: usize, received: bool) -> wire::HoldKeys {
+        let mut message = wire::HoldKeys {
+            keys: states::present(states::plain(k, states::text("keys", k))),
+            duration_ms: states::present(states::plain(k, states::number(2, k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3012,6 +3117,7 @@ mod on_wire {
             button: states::set(on_wire::mouse_button(k + 2)),
             count: states::present(states::plain(k, -(states::number(4, k) as i32))),
             hold_keys: states::present(states::plain(k, states::text("hold_keys", k))),
+            at_pointer: states::present(states::flag(1, k)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3023,6 +3129,7 @@ mod on_wire {
     pub fn drag(k: usize, received: bool) -> wire::Drag {
         let mut message = wire::Drag {
             path: states::many(k, [on_wire::point(k, received), on_wire::point(k + 1, received)]),
+            hold_keys: states::present(states::plain(k, states::text("hold_keys", k))),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3037,6 +3144,8 @@ mod on_wire {
             y: states::present(states::plain(k, -(states::number(2, k) as i32))),
             down: states::present(states::plain(k, -(states::number(3, k) as i32))),
             right: states::present(states::plain(k, -(states::number(4, k) as i32))),
+            hold_keys: states::present(states::plain(k, states::text("hold_keys", k))),
+            at_pointer: states::present(states::flag(1, k)),
             ..Default::default()
         };
         if received && k % 2 == 1 {
@@ -3060,7 +3169,7 @@ mod on_wire {
     pub fn create_link_request(k: usize, received: bool) -> wire::CreateLinkRequest {
         let mut message = wire::CreateLinkRequest {
             sandbox_id: states::present(states::plain(k, states::text("sandbox_id", k))),
-            target: match k % 12 {
+            target: match k % 14 {
                 0 | 1 => None,
                 2 => Some(wire::__buffa::oneof::create_link_request::Target::Port(states::number(
                     2, k,
@@ -3077,19 +3186,25 @@ mod on_wire {
                 6 => Some(wire::__buffa::oneof::create_link_request::Target::UploadPath(
                     states::text("upload_path", k),
                 )),
-                7 => Some(wire::__buffa::oneof::create_link_request::Target::Port(
+                7 => Some(wire::__buffa::oneof::create_link_request::Target::Browser(Box::new(
+                    on_wire::browser_link(k, received),
+                ))),
+                8 => Some(wire::__buffa::oneof::create_link_request::Target::Port(
                     Default::default(),
                 )),
-                8 => Some(wire::__buffa::oneof::create_link_request::Target::Terminal(
+                9 => Some(wire::__buffa::oneof::create_link_request::Target::Terminal(
                     Default::default(),
                 )),
-                9 => Some(wire::__buffa::oneof::create_link_request::Target::Desktop(
+                10 => Some(wire::__buffa::oneof::create_link_request::Target::Desktop(
                     Default::default(),
                 )),
-                10 => Some(wire::__buffa::oneof::create_link_request::Target::DownloadPath(
+                11 => Some(wire::__buffa::oneof::create_link_request::Target::DownloadPath(
                     Default::default(),
                 )),
-                _ => Some(wire::__buffa::oneof::create_link_request::Target::UploadPath(
+                12 => Some(wire::__buffa::oneof::create_link_request::Target::UploadPath(
+                    Default::default(),
+                )),
+                _ => Some(wire::__buffa::oneof::create_link_request::Target::Browser(
                     Default::default(),
                 )),
             },
@@ -3118,6 +3233,14 @@ mod on_wire {
             view_only: states::present(states::flag(1, k)),
             ..Default::default()
         };
+        if received && k % 2 == 1 {
+            message.__buffa_unknown_fields.push(states::later_field());
+        }
+        message
+    }
+
+    pub fn browser_link(k: usize, received: bool) -> wire::BrowserLink {
+        let mut message = wire::BrowserLink { ..Default::default() };
         if received && k % 2 == 1 {
             message.__buffa_unknown_fields.push(states::later_field());
         }
@@ -3924,7 +4047,7 @@ async fn control_desktop_request_is_sent() {
 
 #[tokio::test]
 async fn create_link_request_is_sent() {
-    for k in 0..12 {
+    for k in 0..14 {
         let request = samples::create_link_request(k, true);
         let expected = on_wire::create_link_request(k, false);
 
@@ -4088,12 +4211,35 @@ async fn file_change_is_sent() {
 
 #[tokio::test]
 async fn desktop_action_is_sent() {
-    for k in 0..16 {
+    for k in 0..22 {
         let request = states::make(|message: &mut types::ControlDesktopRequest| {
             message.actions = vec![samples::desktop_action(k, true)]
         });
         let expected = states::make(|message: &mut wire::ControlDesktopRequest| {
             message.actions = vec![on_wire::desktop_action(k, false)]
+        });
+
+        let answer = ok(&wire::ControlDesktopResponse::default());
+        let call = |client: Client| async move { client.control_desktop(request).await };
+        let (sent, response): (wire::ControlDesktopRequest, _) = exchange("ControlDesktop", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::ControlDesktopResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn screen_region_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::ControlDesktopRequest| {
+            message.screenshot_region = Some(samples::screen_region(k, true))
+        });
+        let expected = states::make(|message: &mut wire::ControlDesktopRequest| {
+            message.screenshot_region = Some(on_wire::screen_region(k, false)).into()
         });
 
         let answer = ok(&wire::ControlDesktopResponse::default());
@@ -4141,6 +4287,27 @@ async fn desktop_link_is_sent() {
         let expected = states::make(|message: &mut wire::CreateLinkRequest| {
             message.target = Some(wire::__buffa::oneof::create_link_request::Target::Desktop(Box::new(
                 on_wire::desktop_link(k, false),
+            )))
+        });
+
+        let answer = ok(&wire::Link::default());
+        let call = |client: Client| async move { client.create_link(request).await };
+        let (sent, response): (wire::CreateLinkRequest, _) = exchange("CreateLink", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(response.unwrap(), types::Link::default(), "at k = {k}");
+    }
+}
+
+#[tokio::test]
+async fn browser_link_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::CreateLinkRequest| {
+            message.target = Some(types::CreateLinkRequestTarget::Browser(samples::browser_link(k, true)))
+        });
+        let expected = states::make(|message: &mut wire::CreateLinkRequest| {
+            message.target = Some(wire::__buffa::oneof::create_link_request::Target::Browser(Box::new(
+                on_wire::browser_link(k, false),
             )))
         });
 
@@ -4346,7 +4513,7 @@ async fn make_directory_is_sent() {
 
 #[tokio::test]
 async fn click_is_sent() {
-    for k in 0..5 {
+    for k in 0..7 {
         let request = states::make(|message: &mut types::ControlDesktopRequest| {
             message.actions = vec![states::make(|message: &mut types::DesktopAction| {
                 message.action = Some(types::DesktopActionAction::Click(samples::click(k, true)))
@@ -4443,6 +4610,66 @@ async fn scroll_is_sent() {
             message.actions = vec![states::make(|message: &mut wire::DesktopAction| {
                 message.action = Some(wire::__buffa::oneof::desktop_action::Action::Scroll(Box::new(
                     on_wire::scroll(k, false),
+                )))
+            })]
+        });
+
+        let answer = ok(&wire::ControlDesktopResponse::default());
+        let call = |client: Client| async move { client.control_desktop(request).await };
+        let (sent, response): (wire::ControlDesktopRequest, _) = exchange("ControlDesktop", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::ControlDesktopResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn mouse_button_change_is_sent() {
+    for k in 0..7 {
+        let request = states::make(|message: &mut types::ControlDesktopRequest| {
+            message.actions = vec![states::make(|message: &mut types::DesktopAction| {
+                message.action = Some(types::DesktopActionAction::MouseDown(samples::mouse_button_change(
+                    k, true,
+                )))
+            })]
+        });
+        let expected = states::make(|message: &mut wire::ControlDesktopRequest| {
+            message.actions = vec![states::make(|message: &mut wire::DesktopAction| {
+                message.action = Some(wire::__buffa::oneof::desktop_action::Action::MouseDown(Box::new(
+                    on_wire::mouse_button_change(k, false),
+                )))
+            })]
+        });
+
+        let answer = ok(&wire::ControlDesktopResponse::default());
+        let call = |client: Client| async move { client.control_desktop(request).await };
+        let (sent, response): (wire::ControlDesktopRequest, _) = exchange("ControlDesktop", answer, call).await;
+
+        assert_eq!(sent, expected, "at k = {k}");
+        assert_eq!(
+            response.unwrap(),
+            types::ControlDesktopResponse::default(),
+            "at k = {k}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn hold_keys_is_sent() {
+    for k in 0..2 {
+        let request = states::make(|message: &mut types::ControlDesktopRequest| {
+            message.actions = vec![states::make(|message: &mut types::DesktopAction| {
+                message.action = Some(types::DesktopActionAction::HoldKeys(samples::hold_keys(k, true)))
+            })]
+        });
+        let expected = states::make(|message: &mut wire::ControlDesktopRequest| {
+            message.actions = vec![states::make(|message: &mut wire::DesktopAction| {
+                message.action = Some(wire::__buffa::oneof::desktop_action::Action::HoldKeys(Box::new(
+                    on_wire::hold_keys(k, false),
                 )))
             })]
         });
@@ -6057,8 +6284,10 @@ fn mouse_button_is_json() {
         "MOUSE_BUTTON_LEFT",
         "MOUSE_BUTTON_RIGHT",
         "MOUSE_BUTTON_MIDDLE",
+        "MOUSE_BUTTON_BACK",
+        "MOUSE_BUTTON_FORWARD",
     ];
-    an_enum_is_json(&names, 4, samples::mouse_button);
+    an_enum_is_json(&names, 6, samples::mouse_button);
 }
 
 #[test]
@@ -6810,13 +7039,19 @@ fn file_event_is_json() {
 
 #[test]
 fn control_desktop_request_is_json() {
-    let names = ["sandbox_id", "actions"];
+    let names = ["sandbox_id", "actions", "skip_screenshot", "screenshot_region"];
     a_message_is_json(
         2,
         &names,
         samples::control_desktop_request,
         on_wire::control_desktop_request,
     );
+}
+
+#[test]
+fn screen_region_is_json() {
+    let names = ["x", "y", "width", "height"];
+    a_message_is_json(2, &names, samples::screen_region, on_wire::screen_region);
 }
 
 #[test]
@@ -6832,7 +7067,7 @@ fn control_desktop_response_is_json() {
 
 #[test]
 fn screenshot_is_json() {
-    let names = ["image", "mime_type", "width", "height", "cursor_x", "cursor_y"];
+    let names = ["image", "mime_type", "width", "height", "cursor_x", "cursor_y", "scale"];
     a_message_is_json(2, &names, samples::screenshot, on_wire::screenshot);
 }
 
@@ -6846,8 +7081,23 @@ fn desktop_action_is_json() {
         "type_text",
         "press_keys",
         "wait_ms",
+        "mouse_down",
+        "mouse_up",
+        "hold_keys",
     ];
-    a_message_is_json(16, &names, samples::desktop_action, on_wire::desktop_action);
+    a_message_is_json(22, &names, samples::desktop_action, on_wire::desktop_action);
+}
+
+#[test]
+fn mouse_button_change_is_json() {
+    let names = ["button"];
+    a_message_is_json(7, &names, samples::mouse_button_change, on_wire::mouse_button_change);
+}
+
+#[test]
+fn hold_keys_is_json() {
+    let names = ["keys", "duration_ms"];
+    a_message_is_json(2, &names, samples::hold_keys, on_wire::hold_keys);
 }
 
 #[test]
@@ -6858,19 +7108,19 @@ fn point_is_json() {
 
 #[test]
 fn click_is_json() {
-    let names = ["x", "y", "button", "count", "hold_keys"];
-    a_message_is_json(5, &names, samples::click, on_wire::click);
+    let names = ["x", "y", "button", "count", "hold_keys", "at_pointer"];
+    a_message_is_json(7, &names, samples::click, on_wire::click);
 }
 
 #[test]
 fn drag_is_json() {
-    let names = ["path"];
+    let names = ["path", "hold_keys"];
     a_message_is_json(2, &names, samples::drag, on_wire::drag);
 }
 
 #[test]
 fn scroll_is_json() {
-    let names = ["x", "y", "down", "right"];
+    let names = ["x", "y", "down", "right", "hold_keys", "at_pointer"];
     a_message_is_json(2, &names, samples::scroll, on_wire::scroll);
 }
 
@@ -6889,9 +7139,10 @@ fn create_link_request_is_json() {
         "desktop",
         "download_path",
         "upload_path",
+        "browser",
         "ttl_seconds",
     ];
-    a_message_is_json(12, &names, samples::create_link_request, on_wire::create_link_request);
+    a_message_is_json(14, &names, samples::create_link_request, on_wire::create_link_request);
 }
 
 #[test]
@@ -6904,6 +7155,12 @@ fn terminal_link_is_json() {
 fn desktop_link_is_json() {
     let names = ["view_only"];
     a_message_is_json(2, &names, samples::desktop_link, on_wire::desktop_link);
+}
+
+#[test]
+fn browser_link_is_json() {
+    let names = [];
+    a_message_is_json(2, &names, samples::browser_link, on_wire::browser_link);
 }
 
 #[test]

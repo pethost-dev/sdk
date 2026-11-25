@@ -341,6 +341,8 @@ pub(crate) fn mouse_button_from_wire(value: buffa::EnumValue<wire::MouseButton>)
         buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_LEFT) => types::MouseButton::Left,
         buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_RIGHT) => types::MouseButton::Right,
         buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_MIDDLE) => types::MouseButton::Middle,
+        buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_BACK) => types::MouseButton::Back,
+        buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_FORWARD) => types::MouseButton::Forward,
         buffa::EnumValue::Unknown(number) => types::MouseButton::Unrecognized(number),
     }
 }
@@ -351,6 +353,8 @@ pub(crate) fn mouse_button_to_wire(value: types::MouseButton) -> buffa::EnumValu
         types::MouseButton::Left => buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_LEFT),
         types::MouseButton::Right => buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_RIGHT),
         types::MouseButton::Middle => buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_MIDDLE),
+        types::MouseButton::Back => buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_BACK),
+        types::MouseButton::Forward => buffa::EnumValue::Known(wire::MouseButton::MOUSE_BUTTON_FORWARD),
         types::MouseButton::Unrecognized(number) => buffa::EnumValue::from(number),
     }
 }
@@ -3235,11 +3239,18 @@ impl From<wire::FileEvent> for types::FileEvent {
 
 impl From<types::ControlDesktopRequest> for wire::ControlDesktopRequest {
     fn from(message: types::ControlDesktopRequest) -> Self {
-        let types::ControlDesktopRequest { sandbox_id, actions } = message;
+        let types::ControlDesktopRequest {
+            sandbox_id,
+            actions,
+            skip_screenshot,
+            screenshot_region,
+        } = message;
 
         Self {
             sandbox_id: self::present(sandbox_id),
             actions: actions.into_iter().map(wire::DesktopAction::from).collect(),
+            skip_screenshot: self::present(skip_screenshot),
+            screenshot_region: screenshot_region.map(wire::ScreenRegion::from).into(),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3250,12 +3261,49 @@ impl From<wire::ControlDesktopRequest> for types::ControlDesktopRequest {
         let wire::ControlDesktopRequest {
             sandbox_id,
             actions,
+            skip_screenshot,
+            screenshot_region,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             sandbox_id: sandbox_id.unwrap_or_default(),
             actions: actions.into_iter().map(types::DesktopAction::from).collect(),
+            skip_screenshot: skip_screenshot.unwrap_or_default(),
+            screenshot_region: screenshot_region.into_option().map(types::ScreenRegion::from),
+        }
+    }
+}
+
+impl From<types::ScreenRegion> for wire::ScreenRegion {
+    fn from(message: types::ScreenRegion) -> Self {
+        let types::ScreenRegion { x, y, width, height } = message;
+
+        Self {
+            x: self::present(x),
+            y: self::present(y),
+            width: self::present(width),
+            height: self::present(height),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::ScreenRegion> for types::ScreenRegion {
+    fn from(message: wire::ScreenRegion) -> Self {
+        let wire::ScreenRegion {
+            x,
+            y,
+            width,
+            height,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            x: x.unwrap_or_default(),
+            y: y.unwrap_or_default(),
+            width: width.unwrap_or_default(),
+            height: height.unwrap_or_default(),
         }
     }
 }
@@ -3307,6 +3355,7 @@ impl From<types::Screenshot> for wire::Screenshot {
             height,
             cursor_x,
             cursor_y,
+            scale,
         } = message;
 
         Self {
@@ -3316,6 +3365,7 @@ impl From<types::Screenshot> for wire::Screenshot {
             height: self::present(height),
             cursor_x: self::present(cursor_x),
             cursor_y: self::present(cursor_y),
+            scale: self::present(scale),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3330,6 +3380,7 @@ impl From<wire::Screenshot> for types::Screenshot {
             height,
             cursor_x,
             cursor_y,
+            scale,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3340,6 +3391,7 @@ impl From<wire::Screenshot> for types::Screenshot {
             height: height.unwrap_or_default(),
             cursor_x: cursor_x.unwrap_or_default(),
             cursor_y: cursor_y.unwrap_or_default(),
+            scale: scale.unwrap_or_default(),
         }
     }
 }
@@ -3371,6 +3423,19 @@ impl From<types::DesktopAction> for wire::DesktopAction {
                 Some(types::DesktopActionAction::WaitMs(value)) => {
                     Some(wire::__buffa::oneof::desktop_action::Action::WaitMs(value))
                 }
+                Some(types::DesktopActionAction::MouseDown(value)) => {
+                    Some(wire::__buffa::oneof::desktop_action::Action::MouseDown(Box::new(
+                        wire::MouseButtonChange::from(value),
+                    )))
+                }
+                Some(types::DesktopActionAction::MouseUp(value)) => {
+                    Some(wire::__buffa::oneof::desktop_action::Action::MouseUp(Box::new(
+                        wire::MouseButtonChange::from(value),
+                    )))
+                }
+                Some(types::DesktopActionAction::HoldKeys(value)) => Some(
+                    wire::__buffa::oneof::desktop_action::Action::HoldKeys(Box::new(wire::HoldKeys::from(value))),
+                ),
                 None => None,
             },
             __buffa_unknown_fields: Default::default(),
@@ -3408,8 +3473,68 @@ impl From<wire::DesktopAction> for types::DesktopAction {
                 Some(wire::__buffa::oneof::desktop_action::Action::WaitMs(value)) => {
                     Some(types::DesktopActionAction::WaitMs(value))
                 }
+                Some(wire::__buffa::oneof::desktop_action::Action::MouseDown(value)) => Some(
+                    types::DesktopActionAction::MouseDown(types::MouseButtonChange::from(*value)),
+                ),
+                Some(wire::__buffa::oneof::desktop_action::Action::MouseUp(value)) => Some(
+                    types::DesktopActionAction::MouseUp(types::MouseButtonChange::from(*value)),
+                ),
+                Some(wire::__buffa::oneof::desktop_action::Action::HoldKeys(value)) => {
+                    Some(types::DesktopActionAction::HoldKeys(types::HoldKeys::from(*value)))
+                }
                 None => None,
             },
+        }
+    }
+}
+
+impl From<types::MouseButtonChange> for wire::MouseButtonChange {
+    fn from(message: types::MouseButtonChange) -> Self {
+        let types::MouseButtonChange { button } = message;
+
+        Self {
+            button: self::present(button).map(mouse_button_to_wire),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::MouseButtonChange> for types::MouseButtonChange {
+    fn from(message: wire::MouseButtonChange) -> Self {
+        let wire::MouseButtonChange {
+            button,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            button: button.map(mouse_button_from_wire).unwrap_or_default(),
+        }
+    }
+}
+
+impl From<types::HoldKeys> for wire::HoldKeys {
+    fn from(message: types::HoldKeys) -> Self {
+        let types::HoldKeys { keys, duration_ms } = message;
+
+        Self {
+            keys: self::present(keys),
+            duration_ms: self::present(duration_ms),
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::HoldKeys> for types::HoldKeys {
+    fn from(message: wire::HoldKeys) -> Self {
+        let wire::HoldKeys {
+            keys,
+            duration_ms,
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {
+            keys: keys.unwrap_or_default(),
+            duration_ms: duration_ms.unwrap_or_default(),
         }
     }
 }
@@ -3449,6 +3574,7 @@ impl From<types::Click> for wire::Click {
             button,
             count,
             hold_keys,
+            at_pointer,
         } = message;
 
         Self {
@@ -3457,6 +3583,7 @@ impl From<types::Click> for wire::Click {
             button: self::present(button).map(mouse_button_to_wire),
             count: self::present(count),
             hold_keys: self::present(hold_keys),
+            at_pointer: self::present(at_pointer),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3470,6 +3597,7 @@ impl From<wire::Click> for types::Click {
             button,
             count,
             hold_keys,
+            at_pointer,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3479,16 +3607,18 @@ impl From<wire::Click> for types::Click {
             button: button.map(mouse_button_from_wire).unwrap_or_default(),
             count: count.unwrap_or_default(),
             hold_keys: hold_keys.unwrap_or_default(),
+            at_pointer: at_pointer.unwrap_or_default(),
         }
     }
 }
 
 impl From<types::Drag> for wire::Drag {
     fn from(message: types::Drag) -> Self {
-        let types::Drag { path } = message;
+        let types::Drag { path, hold_keys } = message;
 
         Self {
             path: path.into_iter().map(wire::Point::from).collect(),
+            hold_keys: self::present(hold_keys),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3498,24 +3628,35 @@ impl From<wire::Drag> for types::Drag {
     fn from(message: wire::Drag) -> Self {
         let wire::Drag {
             path,
+            hold_keys,
             __buffa_unknown_fields: _,
         } = message;
 
         Self {
             path: path.into_iter().map(types::Point::from).collect(),
+            hold_keys: hold_keys.unwrap_or_default(),
         }
     }
 }
 
 impl From<types::Scroll> for wire::Scroll {
     fn from(message: types::Scroll) -> Self {
-        let types::Scroll { x, y, down, right } = message;
+        let types::Scroll {
+            x,
+            y,
+            down,
+            right,
+            hold_keys,
+            at_pointer,
+        } = message;
 
         Self {
             x: self::present(x),
             y: self::present(y),
             down: self::present(down),
             right: self::present(right),
+            hold_keys: self::present(hold_keys),
+            at_pointer: self::present(at_pointer),
             __buffa_unknown_fields: Default::default(),
         }
     }
@@ -3528,6 +3669,8 @@ impl From<wire::Scroll> for types::Scroll {
             y,
             down,
             right,
+            hold_keys,
+            at_pointer,
             __buffa_unknown_fields: _,
         } = message;
 
@@ -3536,6 +3679,8 @@ impl From<wire::Scroll> for types::Scroll {
             y: y.unwrap_or_default(),
             down: down.unwrap_or_default(),
             right: right.unwrap_or_default(),
+            hold_keys: hold_keys.unwrap_or_default(),
+            at_pointer: at_pointer.unwrap_or_default(),
         }
     }
 }
@@ -3597,6 +3742,11 @@ impl From<types::CreateLinkRequest> for wire::CreateLinkRequest {
                 Some(types::CreateLinkRequestTarget::UploadPath(value)) => {
                     Some(wire::__buffa::oneof::create_link_request::Target::UploadPath(value))
                 }
+                Some(types::CreateLinkRequestTarget::Browser(value)) => {
+                    Some(wire::__buffa::oneof::create_link_request::Target::Browser(Box::new(
+                        wire::BrowserLink::from(value),
+                    )))
+                }
                 None => None,
             },
             ttl_seconds: self::present(ttl_seconds),
@@ -3632,6 +3782,9 @@ impl From<wire::CreateLinkRequest> for types::CreateLinkRequest {
                 Some(wire::__buffa::oneof::create_link_request::Target::UploadPath(value)) => {
                     Some(types::CreateLinkRequestTarget::UploadPath(value))
                 }
+                Some(wire::__buffa::oneof::create_link_request::Target::Browser(value)) => Some(
+                    types::CreateLinkRequestTarget::Browser(types::BrowserLink::from(*value)),
+                ),
                 None => None,
             },
             ttl_seconds: ttl_seconds.unwrap_or_default(),
@@ -3684,6 +3837,26 @@ impl From<wire::DesktopLink> for types::DesktopLink {
         Self {
             view_only: view_only.unwrap_or_default(),
         }
+    }
+}
+
+impl From<types::BrowserLink> for wire::BrowserLink {
+    fn from(message: types::BrowserLink) -> Self {
+        let types::BrowserLink {} = message;
+
+        Self {
+            __buffa_unknown_fields: Default::default(),
+        }
+    }
+}
+
+impl From<wire::BrowserLink> for types::BrowserLink {
+    fn from(message: wire::BrowserLink) -> Self {
+        let wire::BrowserLink {
+            __buffa_unknown_fields: _,
+        } = message;
+
+        Self {}
     }
 }
 

@@ -259,7 +259,9 @@ service SandboxService {
   // Refused (LimitReached, template_gib) while the workspace's templates take its template_gib,
   // or while another of its versions is SAVING; one whose own bytes would pass what is left is
   // FAILED before its upload. Refused while nothing pays for the workspace (UsageUnpaid).
-  // Sandboxes keep the version they started from.
+  // Sandboxes keep the version they started from. The disk holds the browser's profile: every
+  // sandbox started from the version is signed in to the sites the sandbox was, as whoever
+  // signed in, so sign out first of what its users must not reach.
   rpc CreateTemplate(CreateTemplateRequest) returns (Template) {
     option (pethost.panel.v1.mcp_tool) = {title: "Save a template"};
   }
@@ -387,10 +389,12 @@ service SandboxRuntimeService {
 
   // ── Desktop ──────────────────────────────────────────────────────────────
 
-  // Does the actions in order, then answers with a screenshot of the screen as they left it.
-  // Stops at the first that fails; with no actions, just the screenshot. The first starts the
-  // desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did not start (its
-  // words).
+  // Does the actions in order, then answers with a screenshot of the screen as they left it, and
+  // where the pointer is. Stops at the first that fails; with no actions, just the screenshot.
+  // The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
+  // not start, or the sandbox has not started since its server took the release of a field the
+  // request holds: stop it and start it again (its words say which). A program that drives the
+  // browser by its pages rather than by the screen takes CreateLink browser.
   rpc ControlDesktop(ControlDesktopRequest) returns (ControlDesktopResponse) {
     option (pethost.panel.v1.mcp_tool) = {title: "Use the desktop", destructive: true};
   }
@@ -398,8 +402,9 @@ service SandboxRuntimeService {
   // ── Links ────────────────────────────────────────────────────────────────
 
   // A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
-  // to download or upload; or a private port's address and a token for it. It expires. A
-  // download or upload link works once. Making one wakes nothing.
+  // to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
+  // port's address and a token for it. It expires. A download or upload link works once. Making
+  // one wakes nothing.
   //
   // A private port answers only a request that sends its token as the header `Pethost-Token:
   // <token>`: a program's, curl's, a page's fetch. The server checks it before anything wakes and
@@ -901,7 +906,10 @@ message Egress {
 // The ports anyone may open at their own address; any other port needs `Pethost-Token`
 // (CreateLink port).
 message Ingress {
-  repeated PublicPort public_ports = 1; // At most 20.
+  // At most 20. The desktop's own ports, its views' 5900, 5901, 6080 and 6081 and its browser's 9222
+  // and 9223, answer nobody at a port's address, public or with a token: the desktop and browser
+  // links reach them (CreateLink).
+  repeated PublicPort public_ports = 1;
 }
 
 message PublicPort {
@@ -1410,7 +1418,22 @@ enum FileEventKind {
 message ControlDesktopRequest {
   string sandbox_id = 1;
   repeated DesktopAction actions = 2;
+  // True = no image: the answer's screenshot holds the screen's size and the pointer alone, for a
+  // caller that does not look after every action.
+  bool skip_screenshot = 3;
+  // Only this part of the screen, scaled up by a whole factor (Screenshot.scale) to fit the
+  // screen: a closer look at small text. The actions' points stay the screen's. Absent = the
+  // whole screen.
+  ScreenRegion screenshot_region = 4;
   reserved 100;
+}
+
+// A rectangle of the screen, in its pixels.
+message ScreenRegion {
+  int32 x = 1; // Its left edge.
+  int32 y = 2; // Its top edge.
+  int32 width = 3;
+  int32 height = 4;
 }
 
 message ControlDesktopResponse {
@@ -1428,12 +1451,15 @@ enum DesktopFailure {
 
 // Coordinates are pixels of the screen (Sandbox.desktop), from the top left.
 message Screenshot {
-  bytes image = 1 [(pethost.panel.v1.mcp_image) = true];
+  bytes image = 1 [(pethost.panel.v1.mcp_image) = true]; // Empty with skip_screenshot.
   string mime_type = 2; // "image/png"
-  int32 width = 3;
+  int32 width = 3; // The image's, the screen's with skip_screenshot.
   int32 height = 4;
   int32 cursor_x = 5;
   int32 cursor_y = 6;
+  // How many times larger than the screen's pixels the image's are: 1, or more for a
+  // screenshot_region.
+  int32 scale = 7;
 }
 
 message DesktopAction {
@@ -1443,9 +1469,26 @@ message DesktopAction {
     Drag drag = 3;
     Scroll scroll = 4;
     string type_text = 5; // Text to type.
-    string press_keys = 6; // Keys pressed together: "Return", "ctrl+c", "ctrl+shift+t".
-    uint32 wait_ms = 7;
+    // Keys pressed together, joined by "+": "Return", "ctrl+c", "ctrl+shift+t"; several such,
+    // apart by spaces, one after the other: "ctrl+a BackSpace", "Down Down Down".
+    string press_keys = 6;
+    uint32 wait_ms = 7; // At most 30000.
+    // Presses a button where the pointer is (move_mouse first) and leaves it down, across calls,
+    // until its mouse_up: a drag the caller moves itself.
+    MouseButtonChange mouse_down = 8;
+    MouseButtonChange mouse_up = 9; // Lets a button go where the pointer is.
+    HoldKeys hold_keys = 10;
   }
+}
+
+message MouseButtonChange {
+  MouseButton button = 1; // Absent = LEFT.
+}
+
+// Keys held down together for a time, then let go.
+message HoldKeys {
+  string keys = 1; // Joined by "+": "shift", "ctrl+alt".
+  uint32 duration_ms = 2; // At most 30000.
 }
 
 message Point {
@@ -1457,8 +1500,9 @@ message Click {
   int32 x = 1;
   int32 y = 2;
   MouseButton button = 3; // Absent = LEFT.
-  int32 count = 4; // Absent = 1; 2 double-clicks.
+  int32 count = 4; // Absent = 1; 2 double-clicks, 3 triple-clicks.
   string hold_keys = 5; // Held while clicking: "shift", "ctrl+alt".
+  bool at_pointer = 6; // True = where the pointer is, whatever x and y say.
 }
 
 enum MouseButton {
@@ -1466,10 +1510,13 @@ enum MouseButton {
   MOUSE_BUTTON_LEFT = 1;
   MOUSE_BUTTON_RIGHT = 2;
   MOUSE_BUTTON_MIDDLE = 3;
+  MOUSE_BUTTON_BACK = 4; // A browser's back.
+  MOUSE_BUTTON_FORWARD = 5;
 }
 
 message Drag {
   repeated Point path = 1; // From the first point to the last, the left button down.
+  string hold_keys = 2; // Held while dragging: "shift", "ctrl+alt".
 }
 
 message Scroll {
@@ -1477,6 +1524,8 @@ message Scroll {
   int32 y = 2;
   int32 down = 3; // Wheel clicks; negative scrolls up.
   int32 right = 4; // Negative scrolls left.
+  string hold_keys = 5; // Held while scrolling: "shift", "ctrl".
+  bool at_pointer = 6; // True = where the pointer is, whatever x and y say.
 }
 
 // A screen, in pixels.
@@ -1499,6 +1548,7 @@ message CreateLinkRequest {
     DesktopLink desktop = 4;
     string download_path = 5; // GET the URL: the file, or a directory as a .tar.
     string upload_path = 6; // PUT the file's bytes to the URL; missing directories are made.
+    BrowserLink browser = 8;
   }
   uint32 ttl_seconds = 7; // Absent = 3600; at most 86400.
   reserved 100;
@@ -1514,6 +1564,25 @@ message TerminalLink {
 message DesktopLink {
   bool view_only = 1; // True = the viewer cannot click or type.
 }
+
+// The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
+// the Chrome DevTools Protocol, "wss://browser-<id>.<server>/<token>", which Playwright's
+// chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
+// Stagehand take as it is; "https://" in its place answers <that>/json/version and
+// <that>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
+// takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
+// browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
+// seconds), so a desktop link watches what the program does, and ControlDesktop acts on the same
+// pages; inside the sandbox a program takes http://localhost:9222, where the browser starts at the
+// first connection, and the coding agents have it as their "browser" MCP server. Its profile is on
+// the sandbox's disk: a stop keeps the sites it is signed in to, and a template saved from the
+// sandbox carries them to every sandbox started from it. One browser a sandbox: a program that
+// wants several at once uses several sandboxes. Whoever holds the link drives the browser as the
+// sandbox's person, its files and signed-in sites within reach: give it only to a program you
+// trust. A connection is a session, as a terminal is: the sandbox does not idle while one is open,
+// and revoke_tokens ends it. A sandbox on a base before this link is refused, saying so: one
+// created from the template "base" has it, while a template saved on an older base keeps that base.
+message BrowserLink {}
 
 message Link {
   // The link itself, its token in it; a port's address, for a port.

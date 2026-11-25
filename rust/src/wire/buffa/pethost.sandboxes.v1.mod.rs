@@ -108,9 +108,12 @@ pub mod __buffa {
         reg.register_json_any(super::__WATCH_FILES_REQUEST_JSON_ANY);
         reg.register_json_any(super::__FILE_EVENT_JSON_ANY);
         reg.register_json_any(super::__CONTROL_DESKTOP_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__SCREEN_REGION_JSON_ANY);
         reg.register_json_any(super::__CONTROL_DESKTOP_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__SCREENSHOT_JSON_ANY);
         reg.register_json_any(super::__DESKTOP_ACTION_JSON_ANY);
+        reg.register_json_any(super::__MOUSE_BUTTON_CHANGE_JSON_ANY);
+        reg.register_json_any(super::__HOLD_KEYS_JSON_ANY);
         reg.register_json_any(super::__POINT_JSON_ANY);
         reg.register_json_any(super::__CLICK_JSON_ANY);
         reg.register_json_any(super::__DRAG_JSON_ANY);
@@ -119,6 +122,7 @@ pub mod __buffa {
         reg.register_json_any(super::__CREATE_LINK_REQUEST_JSON_ANY);
         reg.register_json_any(super::__TERMINAL_LINK_JSON_ANY);
         reg.register_json_any(super::__DESKTOP_LINK_JSON_ANY);
+        reg.register_json_any(super::__BROWSER_LINK_JSON_ANY);
         reg.register_json_any(super::__LINK_JSON_ANY);
         reg.register_json_any(super::__PROMPT_AGENT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__AGENT_TURN_JSON_ANY);
@@ -447,6 +451,10 @@ pub use self::__buffa::view::ControlDesktopRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::ControlDesktopRequestOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::ScreenRegionView;
+#[doc(inline)]
+pub use self::__buffa::view::ScreenRegionOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::ControlDesktopResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::ControlDesktopResponseOwnedView;
@@ -458,6 +466,14 @@ pub use self::__buffa::view::ScreenshotOwnedView;
 pub use self::__buffa::view::DesktopActionView;
 #[doc(inline)]
 pub use self::__buffa::view::DesktopActionOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::MouseButtonChangeView;
+#[doc(inline)]
+pub use self::__buffa::view::MouseButtonChangeOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::HoldKeysView;
+#[doc(inline)]
+pub use self::__buffa::view::HoldKeysOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::PointView;
 #[doc(inline)]
@@ -490,6 +506,10 @@ pub use self::__buffa::view::TerminalLinkOwnedView;
 pub use self::__buffa::view::DesktopLinkView;
 #[doc(inline)]
 pub use self::__buffa::view::DesktopLinkOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::BrowserLinkView;
+#[doc(inline)]
+pub use self::__buffa::view::BrowserLinkOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::LinkView;
 #[doc(inline)]

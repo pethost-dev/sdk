@@ -1475,6 +1475,32 @@ def file_event_from_dict(_j: dict[str, _Any]) -> _t.FileEvent:
     return file_event_from_wire(_rt.from_dict(_pb.FileEvent, _j))
 
 
+def screen_region_from_wire(_w: _pb.ScreenRegion) -> _t.ScreenRegion:
+    return _t.ScreenRegion(
+        x=_w.x,
+        y=_w.y,
+        width=_w.width,
+        height=_w.height,
+    )
+
+
+def screen_region_to_wire(_v: _t.ScreenRegion) -> _pb.ScreenRegion:
+    return _pb.ScreenRegion(
+        x=_v.x or None,
+        y=_v.y or None,
+        width=_v.width or None,
+        height=_v.height or None,
+    )
+
+
+def screen_region_to_dict(_v: _t.ScreenRegion) -> dict[str, _Any]:
+    return _rt.to_dict(screen_region_to_wire(_v))
+
+
+def screen_region_from_dict(_j: dict[str, _Any]) -> _t.ScreenRegion:
+    return screen_region_from_wire(_rt.from_dict(_pb.ScreenRegion, _j))
+
+
 def control_desktop_response_from_wire(_w: _pb.ControlDesktopResponse) -> _t.ControlDesktopResponse:
     return _t.ControlDesktopResponse(
         done_count=_w.done_count,
@@ -1509,6 +1535,7 @@ def screenshot_from_wire(_w: _pb.Screenshot) -> _t.Screenshot:
         height=_w.height,
         cursor_x=_w.cursor_x,
         cursor_y=_w.cursor_y,
+        scale=_w.scale,
     )
 
 
@@ -1520,6 +1547,7 @@ def screenshot_to_wire(_v: _t.Screenshot) -> _pb.Screenshot:
         height=_v.height or None,
         cursor_x=_v.cursor_x or None,
         cursor_y=_v.cursor_y or None,
+        scale=_v.scale or None,
     )
 
 
@@ -1563,6 +1591,18 @@ def desktop_action_from_wire(_w: _pb.DesktopAction) -> _t.DesktopAction:
         return _t.DesktopAction(
             wait_ms=_k.value,
         )
+    if _k.field == "mouse_down":
+        return _t.DesktopAction(
+            mouse_down=mouse_button_change_from_wire(_k.value),
+        )
+    if _k.field == "mouse_up":
+        return _t.DesktopAction(
+            mouse_up=mouse_button_change_from_wire(_k.value),
+        )
+    if _k.field == "hold_keys":
+        return _t.DesktopAction(
+            hold_keys=hold_keys_from_wire(_k.value),
+        )
     _rt.never(_k)
 
 
@@ -1582,6 +1622,12 @@ def desktop_action_to_wire(_v: _t.DesktopAction) -> _pb.DesktopAction:
         _w.action = _Oneof[_Literal["press_keys"], str]("press_keys", _v.press_keys)
     elif _v.wait_ms is not None:
         _w.action = _Oneof[_Literal["wait_ms"], int]("wait_ms", _v.wait_ms)
+    elif _v.mouse_down is not None:
+        _w.action = _Oneof[_Literal["mouse_down"], _pb.MouseButtonChange]("mouse_down", mouse_button_change_to_wire(_v.mouse_down))
+    elif _v.mouse_up is not None:
+        _w.action = _Oneof[_Literal["mouse_up"], _pb.MouseButtonChange]("mouse_up", mouse_button_change_to_wire(_v.mouse_up))
+    elif _v.hold_keys is not None:
+        _w.action = _Oneof[_Literal["hold_keys"], _pb.HoldKeys]("hold_keys", hold_keys_to_wire(_v.hold_keys))
     return _w
 
 
@@ -1591,6 +1637,48 @@ def desktop_action_to_dict(_v: _t.DesktopAction) -> dict[str, _Any]:
 
 def desktop_action_from_dict(_j: dict[str, _Any]) -> _t.DesktopAction:
     return desktop_action_from_wire(_rt.from_dict(_pb.DesktopAction, _j))
+
+
+def mouse_button_change_from_wire(_w: _pb.MouseButtonChange) -> _t.MouseButtonChange:
+    return _t.MouseButtonChange(
+        button=mouse_button_from_wire(_w.button),
+    )
+
+
+def mouse_button_change_to_wire(_v: _t.MouseButtonChange) -> _pb.MouseButtonChange:
+    return _pb.MouseButtonChange(
+        button=mouse_button_to_wire(_v.button) if _v.button.value else None,
+    )
+
+
+def mouse_button_change_to_dict(_v: _t.MouseButtonChange) -> dict[str, _Any]:
+    return _rt.to_dict(mouse_button_change_to_wire(_v))
+
+
+def mouse_button_change_from_dict(_j: dict[str, _Any]) -> _t.MouseButtonChange:
+    return mouse_button_change_from_wire(_rt.from_dict(_pb.MouseButtonChange, _j))
+
+
+def hold_keys_from_wire(_w: _pb.HoldKeys) -> _t.HoldKeys:
+    return _t.HoldKeys(
+        keys=_w.keys,
+        duration_ms=_w.duration_ms,
+    )
+
+
+def hold_keys_to_wire(_v: _t.HoldKeys) -> _pb.HoldKeys:
+    return _pb.HoldKeys(
+        keys=_v.keys or None,
+        duration_ms=_v.duration_ms or None,
+    )
+
+
+def hold_keys_to_dict(_v: _t.HoldKeys) -> dict[str, _Any]:
+    return _rt.to_dict(hold_keys_to_wire(_v))
+
+
+def hold_keys_from_dict(_j: dict[str, _Any]) -> _t.HoldKeys:
+    return hold_keys_from_wire(_rt.from_dict(_pb.HoldKeys, _j))
 
 
 def point_from_wire(_w: _pb.Point) -> _t.Point:
@@ -1622,6 +1710,7 @@ def click_from_wire(_w: _pb.Click) -> _t.Click:
         button=mouse_button_from_wire(_w.button),
         count=_w.count,
         hold_keys=_w.hold_keys,
+        at_pointer=_w.at_pointer,
     )
 
 
@@ -1632,6 +1721,7 @@ def click_to_wire(_v: _t.Click) -> _pb.Click:
         button=mouse_button_to_wire(_v.button) if _v.button.value else None,
         count=_v.count or None,
         hold_keys=_v.hold_keys or None,
+        at_pointer=_v.at_pointer or None,
     )
 
 
@@ -1646,12 +1736,14 @@ def click_from_dict(_j: dict[str, _Any]) -> _t.Click:
 def drag_from_wire(_w: _pb.Drag) -> _t.Drag:
     return _t.Drag(
         path=tuple(point_from_wire(_x) for _x in _w.path),
+        hold_keys=_w.hold_keys,
     )
 
 
 def drag_to_wire(_v: _t.Drag) -> _pb.Drag:
     return _pb.Drag(
         path=[point_to_wire(_x) for _x in _v.path],
+        hold_keys=_v.hold_keys or None,
     )
 
 
@@ -1669,6 +1761,8 @@ def scroll_from_wire(_w: _pb.Scroll) -> _t.Scroll:
         y=_w.y,
         down=_w.down,
         right=_w.right,
+        hold_keys=_w.hold_keys,
+        at_pointer=_w.at_pointer,
     )
 
 
@@ -1678,6 +1772,8 @@ def scroll_to_wire(_v: _t.Scroll) -> _pb.Scroll:
         y=_v.y or None,
         down=_v.down or None,
         right=_v.right or None,
+        hold_keys=_v.hold_keys or None,
+        at_pointer=_v.at_pointer or None,
     )
 
 
@@ -1749,6 +1845,22 @@ def desktop_link_to_dict(_v: _t.DesktopLink) -> dict[str, _Any]:
 
 def desktop_link_from_dict(_j: dict[str, _Any]) -> _t.DesktopLink:
     return desktop_link_from_wire(_rt.from_dict(_pb.DesktopLink, _j))
+
+
+def browser_link_from_wire(_w: _pb.BrowserLink) -> _t.BrowserLink:
+    return _t.BrowserLink()
+
+
+def browser_link_to_wire(_v: _t.BrowserLink) -> _pb.BrowserLink:
+    return _pb.BrowserLink()
+
+
+def browser_link_to_dict(_v: _t.BrowserLink) -> dict[str, _Any]:
+    return _rt.to_dict(browser_link_to_wire(_v))
+
+
+def browser_link_from_dict(_j: dict[str, _Any]) -> _t.BrowserLink:
+    return browser_link_from_wire(_rt.from_dict(_pb.BrowserLink, _j))
 
 
 def link_from_wire(_w: _pb.Link) -> _t.Link:
@@ -2615,10 +2727,14 @@ def control_desktop_request(
     *,
     sandbox_id: str,
     actions: Sequence[_t.DesktopAction],
+    skip_screenshot: bool,
+    screenshot_region: _t.ScreenRegion | None,
 ) -> _pb.ControlDesktopRequest:
     _w = _pb.ControlDesktopRequest(
         sandbox_id=sandbox_id or None,
         actions=[desktop_action_to_wire(_x) for _x in actions],
+        skip_screenshot=skip_screenshot or None,
+        screenshot_region=screen_region_to_wire(screenshot_region) if screenshot_region is not None else None,
     )
     return _rt.checked(_w)
 
@@ -2631,9 +2747,10 @@ def create_link_request(
     desktop: _t.DesktopLink | None,
     download_path: str | None,
     upload_path: str | None,
+    browser: _t.BrowserLink | None,
     ttl_seconds: int,
 ) -> _pb.CreateLinkRequest:
-    _rt.one_of("create_link", port=port, terminal=terminal, desktop=desktop, download_path=download_path, upload_path=upload_path)
+    _rt.one_of("create_link", port=port, terminal=terminal, desktop=desktop, download_path=download_path, upload_path=upload_path, browser=browser)
     _w = _pb.CreateLinkRequest(
         sandbox_id=sandbox_id or None,
         ttl_seconds=ttl_seconds or None,
@@ -2648,6 +2765,8 @@ def create_link_request(
         _w.target = _Oneof[_Literal["download_path"], str]("download_path", download_path)
     elif upload_path is not None:
         _w.target = _Oneof[_Literal["upload_path"], str]("upload_path", upload_path)
+    elif browser is not None:
+        _w.target = _Oneof[_Literal["browser"], _pb.BrowserLink]("browser", browser_link_to_wire(browser))
     return _rt.checked(_w)
 
 
