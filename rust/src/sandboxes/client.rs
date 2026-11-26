@@ -608,7 +608,7 @@ impl Client {
 
     /// Use the desktop.
     ///
-    /// Does the actions in order, then answers with a screenshot of the screen as they left it, and where the pointer is. Stops at the first that fails; with no actions, just the screenshot. The first starts the desktop, which takes some seconds. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the desktop did not start, or the sandbox has not started since its server took the release of a field the request holds: stop it and start it again (its words say which). A program that drives the browser by its pages rather than by the screen takes [`Client::create_link`](crate::sandboxes::Client::create_link) browser.
+    /// Does the actions in order, then answers with a screenshot of the screen as they left it, and where the pointer is. Stops at the first that fails; with no actions, just the screenshot. The first starts the desktop, which takes some seconds. [`ErrorCode::FailedPrecondition`](crate::ErrorCode::FailedPrecondition) = the desktop did not start, or the sandbox has not started since its server took the release of a field the request holds: stop it and start it again (its words say which). A program that drives the browser by its pages rather than by the screen takes [`Client::create_link`](crate::sandboxes::Client::create_link) browser; code that drives the screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its variables between runs: [`Client::run_command`](crate::sandboxes::Client::run_command) `pethost-code run --session NAME --language python|javascript` with the code as stdin.
     pub async fn control_desktop(
         &self,
         request: types::ControlDesktopRequest,

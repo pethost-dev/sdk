@@ -602,7 +602,10 @@ func (c *Client) WatchFiles(ctx context.Context, request *WatchFilesRequest) ite
 // The first starts the desktop, which takes some seconds. [CodeFailedPrecondition] = the
 // desktop did not start, or the sandbox has not started since its server took the release of a
 // field the request holds: stop it and start it again (its words say which). A program that
-// drives the browser by its pages rather than by the screen takes [Client.CreateLink] browser.
+// drives the browser by its pages rather than by the screen takes [Client.CreateLink] browser;
+// code that drives the screen with PyAutoGUI, or the browser with Playwright, runs in a
+// session that keeps its variables between runs: [Client.RunCommand] `pethost-code run
+// --session NAME --language python|javascript` with the code as stdin.
 func (c *Client) ControlDesktop(ctx context.Context, request *ControlDesktopRequest) (*ControlDesktopResponse, error) {
 	sent := orZero(request)
 	response, err := atConnection(ctx, c, sent.SandboxID, sandboxesv1connect.NewSandboxRuntimeServiceClient, sandboxesv1connect.SandboxRuntimeServiceClient.ControlDesktop, toWireControlDesktopRequest(sent))

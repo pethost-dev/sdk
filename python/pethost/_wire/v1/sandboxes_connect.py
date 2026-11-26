@@ -2233,7 +2233,10 @@ class SandboxRuntimeService(Protocol):
         The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
         not start, or the sandbox has not started since its server took the release of a field the
         request holds: stop it and start it again (its words say which). A program that drives the
-        browser by its pages rather than by the screen takes CreateLink browser.
+        browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+        screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+        variables between runs: RunCommand `pethost-code run --session NAME --language
+        python|javascript` with the code as stdin.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -2747,7 +2750,10 @@ class SandboxRuntimeServiceClient(ConnectClient):
         The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
         not start, or the sandbox has not started since its server took the release of a field the
         request holds: stop it and start it again (its words say which). A program that drives the
-        browser by its pages rather than by the screen takes CreateLink browser.
+        browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+        screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+        variables between runs: RunCommand `pethost-code run --session NAME --language
+        python|javascript` with the code as stdin.
         """
         return await self.execute_unary(
             request=request,
@@ -3020,7 +3026,10 @@ class SandboxRuntimeServiceSync(Protocol):
         The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
         not start, or the sandbox has not started since its server took the release of a field the
         request holds: stop it and start it again (its words say which). A program that drives the
-        browser by its pages rather than by the screen takes CreateLink browser.
+        browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+        screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+        variables between runs: RunCommand `pethost-code run --session NAME --language
+        python|javascript` with the code as stdin.
         """
         raise ConnectError(Code.UNIMPLEMENTED, 'Not implemented')
 
@@ -3523,7 +3532,10 @@ class SandboxRuntimeServiceClientSync(ConnectClientSync):
         The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
         not start, or the sandbox has not started since its server took the release of a field the
         request holds: stop it and start it again (its words say which). A program that drives the
-        browser by its pages rather than by the screen takes CreateLink browser.
+        browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+        screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+        variables between runs: RunCommand `pethost-code run --session NAME --language
+        python|javascript` with the code as stdin.
         """
         return self.execute_unary(
             request=request,

@@ -1357,7 +1357,10 @@ type SandboxRuntimeServiceClient interface {
 	// The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
 	// not start, or the sandbox has not started since its server took the release of a field the
 	// request holds: stop it and start it again (its words say which). A program that drives the
-	// browser by its pages rather than by the screen takes CreateLink browser.
+	// browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+	// screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+	// variables between runs: RunCommand `pethost-code run --session NAME --language
+	// python|javascript` with the code as stdin.
 	ControlDesktop(context.Context, *sandboxesv1.ControlDesktopRequest) (*sandboxesv1.ControlDesktopResponse, error)
 	// A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
 	// to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private
@@ -1495,7 +1498,10 @@ type SandboxRuntimeServiceHandler interface {
 	// The first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did
 	// not start, or the sandbox has not started since its server took the release of a field the
 	// request holds: stop it and start it again (its words say which). A program that drives the
-	// browser by its pages rather than by the screen takes CreateLink browser.
+	// browser by its pages rather than by the screen takes CreateLink browser; code that drives the
+	// screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+	// variables between runs: RunCommand `pethost-code run --session NAME --language
+	// python|javascript` with the code as stdin.
 	ControlDesktop(context.Context, *sandboxesv1.ControlDesktopRequest) (*sandboxesv1.ControlDesktopResponse, error)
 	// A URL, for a browser or curl, into one thing of the sandbox: a terminal, the screen, a file
 	// to download or upload, or the browser for Playwright or Puppeteer (BrowserLink); or a private

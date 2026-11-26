@@ -12,7 +12,7 @@ documentation.
 ## Install
 
 ```sh
-go get github.com/pethost-dev/sdk/go@v0.10.0
+go get github.com/pethost-dev/sdk/go@v0.10.1
 ```
 
 It needs Go 1.26 or later. The package is `pethost`, which its path does not say, so an

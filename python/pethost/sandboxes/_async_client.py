@@ -895,7 +895,10 @@ class AsyncSandboxes:
         The first starts the desktop, which takes some seconds. FailedPreconditionError = the desktop did
         not start, or the sandbox has not started since its server took the release of a field the
         request holds: stop it and start it again (its words say which). A program that drives the
-        browser by its pages rather than by the screen takes create_link browser.
+        browser by its pages rather than by the screen takes create_link browser; code that drives the
+        screen with PyAutoGUI, or the browser with Playwright, runs in a session that keeps its
+        variables between runs: run_command `pethost-code run --session NAME --language
+        python|javascript` with the code as stdin.
 
         Destructive: it may delete or overwrite something.
 

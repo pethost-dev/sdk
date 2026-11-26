@@ -2623,22 +2623,21 @@ export const DesktopLink: JsonCodec<DesktopLinkInput, DesktopLinkInput> = {
 /**
  * The browser on the sandbox's desktop, for a program that drives it: Link.url is the WebSocket of
  * the Chrome DevTools Protocol, "wss://browser-\<id>.\<server>/\<token>", which Playwright's
- * chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}), browser-use and
- * Stagehand take as it is; "https://" in its place answers \<that>/json/version and
+ * chromium.connectOverCDP(url), Puppeteer's connect({browserWSEndpoint: url}) and browser-use's
+ * Browser(cdp_url=url) take as it is; "https://" in its place answers \<that>/json/version and
  * \<that>/json/list, for a client that adds those to an HTTP address as Playwright does (Puppeteer
  * takes the WebSocket: browserWSEndpoint), and every WebSocket path under it reaches the same
  * browser. It is the Chrome the desktop shows, started with the desktop if it does not run (some
  * seconds), so a desktop link watches what the program does, and
  * {@link Sandboxes.controlDesktop | controlDesktop} acts on the same pages; inside the sandbox a
  * program takes http://localhost:9222, where the browser starts at the first connection, and the
- * coding agents have it as their "browser" MCP server. Its profile is on the sandbox's disk: a
- * stop keeps the sites it is signed in to, and a template saved from the sandbox carries them to
- * every sandbox started from it. One browser a sandbox: a program that wants several at once uses
+ * coding agents drive it with playwright-cli. Its profile is on the sandbox's disk: a stop keeps
+ * the sites it is signed in to, and a template saved from the sandbox carries them to every
+ * sandbox started from it. One browser a sandbox: a program that wants several at once uses
  * several sandboxes. Whoever holds the link drives the browser as the sandbox's person, its files
  * and signed-in sites within reach: give it only to a program you trust. A connection is a
  * session, as a terminal is: the sandbox does not idle while one is open, and revokeTokens ends
- * it. A sandbox on a base before this link is refused, saying so: one created from the template
- * "base" has it, while a template saved on an older base keeps that base.
+ * it.
  */
 export type BrowserLinkInput = Record<string, never>;
 
@@ -3313,7 +3312,7 @@ export class Sandboxes {
     this.#workspace = options.workspace;
     const identify: connect.Interceptor = (next) => (request) => {
       request.header.set("Authorization", `Bearer ${options.token}`);
-      request.header.set("User-Agent", "pethost-typescript/0.10.0");
+      request.header.set("User-Agent", "pethost-typescript/0.10.1");
       return next(request);
     };
     const transport = connectWeb.createConnectTransport({
@@ -3325,7 +3324,7 @@ export class Sandboxes {
     this.#sandboxService = connect.createClient(wire.SandboxService, transport);
 
     const named: connect.Interceptor = (next) => (request) => {
-      request.header.set("User-Agent", "pethost-typescript/0.10.0");
+      request.header.set("User-Agent", "pethost-typescript/0.10.1");
       return next(request);
     };
     this.#transportTo = (baseUrl) =>
@@ -4020,7 +4019,10 @@ export class Sandboxes {
    * first starts the desktop, which takes some seconds. FAILED_PRECONDITION = the desktop did not
    * start, or the sandbox has not started since its server took the release of a field the request
    * holds: stop it and start it again (its words say which). A program that drives the browser by
-   * its pages rather than by the screen takes {@link Sandboxes.createLink | createLink} browser.
+   * its pages rather than by the screen takes {@link Sandboxes.createLink | createLink} browser;
+   * code that drives the screen with PyAutoGUI, or the browser with Playwright, runs in a session
+   * that keeps its variables between runs: {@link Sandboxes.runCommand | runCommand} `pethost-code
+   * run --session NAME --language python|javascript` with the code as stdin.
    *
    * Destructive: it may delete or overwrite something.
    *
